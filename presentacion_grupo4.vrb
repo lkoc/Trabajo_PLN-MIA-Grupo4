@@ -1,0 +1,49 @@
+\frametitle{A.1. Descarga de Audio desde YouTube}
+
+  \begin{columns}[T]
+    \column{0.7\textwidth}
+      \begin{block}{Especificaciones Técnicas}
+        \small
+        \begin{itemize}
+          \item \textbf{Duración:} 50--100 horas de audio ($\approx$ 1000 videos 5 min)
+          \item \textbf{Framerate:} 16 kHz (estándar ASR)
+          \item \textbf{Canales:} Política, Farándula, Comida, Viajes peruanos
+          \item \textbf{Formato output:} WAV mono a 16kHz
+        \end{itemize}
+      \end{block}
+
+      \begin{block}{Arquitectura Python}
+        \small
+        \begin{itemize}
+          \item \textbf{Herramienta:} \texttt{yt-dlp} (descendiente youtube-dl)
+          \item \textbf{Flujo:}
+          \begin{enumerate}[itemsep=1.1pt]
+            \item Scraping URLs de canales peruanos
+            \item Descarga mejor calidad audio
+            \item Conversión a WAV 16kHz mono
+            \item Almacenamiento en carpetas categorizadas
+          \end{enumerate}
+          \item \textbf{Manejo errores:} Reintentos con backoff
+          \item \textbf{Storage:} Carpetas por categoría/fecha
+        \end{itemize}
+      \end{block}
+
+    \column{0.25\textwidth}
+      \vspace{-0.3cm}
+      \begin{block}{Pseudocódigo}
+        \tiny
+        \begin{lstlisting}[basicstyle=\tiny\ttfamily,breaklines=true]
+import yt_dlp
+
+ydl = yt_dlp.YoutubeDL({
+  'format': 'bestaudio',
+  'audio-format': 'wav',
+  'audio-quality': '192',
+  'quiet': False
+})
+
+for url in url_list:
+  ydl.download([url])
+        \end{lstlisting}
+      \end{block}
+  \end{columns}

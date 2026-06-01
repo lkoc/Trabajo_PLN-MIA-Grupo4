@@ -1,0 +1,43 @@
+%%{init: {'flowchart': {'curve': 'linear', 'useMaxWidth': false, 'htmlLabels': true, 'rankSpacing': 50, 'nodeSpacing': 25}, 'theme': 'base', 'themeVariables': { 'primaryColor':'#e3f2fd', 'primaryBorderColor':'#1976d2', 'lineColor':'#0d47a1', 'textColor':'#0d47a1', 'fontSize':'12px', 'fontFamily': 'Arial'}}}%%
+
+flowchart TB
+    subgraph fila1["📥 RECOLECCIÓN"]
+        direction LR
+        A["🎬 INPUT<br/>Videos YouTube"]
+        B["🔊 DESCARGA<br/>yt-dlp"]
+        C["🎧 AUDIO<br/>WAV 16 kHz"]
+        D["📝 TRANSCRIPCIÓN<br/>Whisper ASR"]
+        A --> B --> C --> D
+    end
+
+    subgraph fila2["🏷️ DATASET"]
+        direction LR
+        E["✂️ SEGMENTOS<br/>30-60s"]
+        F["7️⃣ CATEGORÍAS<br/>Manual"]
+        G["🗄️ DB<br/>SQLite MD5"]
+        E --> F --> G
+    end
+
+    subgraph fila3["🚀 ML PIPELINE"]
+        direction LR
+        H["🧠 ENTRENAMIENTO<br/>BERT/RoBERTa"]
+        I["✅ MODELO<br/>ONNX Format"]
+        J["🎯 INFERENCIA<br/>Local 100%"]
+        K["📊 SALIDA<br/>Reportes"]
+        H --> I --> J --> K
+    end
+
+    fila1 --> fila2
+    fila2 --> fila3
+
+    classDef nodo1 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#0d47a1,font-weight:bold
+    classDef nodo2 fill:#64b5f6,stroke:#0d47a1,stroke-width:2px,color:#ffffff,font-weight:bold
+    classDef nodo3 fill:#1565c0,stroke:#0d47a1,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    
+    class A,B,C,D nodo1
+    class E,F,G nodo2
+    class H,I,J,K nodo3
+    
+    style fila1 fill:transparent,stroke:#1976d2,stroke-width:2px,color:#1976d2
+    style fila2 fill:transparent,stroke:#0d47a1,stroke-width:2px,color:#0d47a1
+    style fila3 fill:transparent,stroke:#0d47a1,stroke-width:2px,color:#0d47a1
