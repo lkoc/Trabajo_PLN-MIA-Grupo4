@@ -401,7 +401,6 @@ INPUT .\presentacion_grupo4.nav
 INPUT .\presentacion_grupo4.nav
 INPUT presentacion_grupo4.nav
 INPUT C:\MiKTeX\fonts\tfm\jknappen\ec\ecss0500.tfm
-INPUT C:\MiKTeX\fonts\tfm\jknappen\ec\ecsx0500.tfm
 INPUT C:\MiKTeX\fonts\tfm\jknappen\ec\ecss1440.tfm
 INPUT C:\MiKTeX\fonts\tfm\jknappen\ec\ecsx1000.tfm
 INPUT C:\MiKTeX\fonts\tfm\jknappen\ec\ecss0700.tfm
@@ -487,8 +486,6 @@ INPUT C:\Users\QU1267\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\ec
 INPUT C:\Users\QU1267\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\ecss1200.pk
 INPUT C:\Users\QU1267\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\ecss0500.pk
 INPUT C:\Users\QU1267\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\ecss0500.pk
-INPUT C:\Users\QU1267\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\ecsx0500.pk
-INPUT C:\Users\QU1267\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\ecsx0500.pk
 INPUT C:\Users\QU1267\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\ecss0700.pk
 INPUT C:\Users\QU1267\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\ecss0700.pk
 INPUT C:\Users\QU1267\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\ecsx1000.pk

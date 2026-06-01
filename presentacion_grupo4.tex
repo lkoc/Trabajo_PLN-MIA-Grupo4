@@ -44,6 +44,18 @@
 \setlist[itemize]{itemsep=2pt, topsep=2pt}
 \setlist[enumerate]{itemsep=2pt, topsep=2pt}
 
+% Eliminar autor del pie de página
+\setbeamertemplate{footline}{%
+  \hbox{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.25ex,dp=1ex]{palette quaternary}%
+      \hspace*{1em}
+      \usebeamerfont{page number in head/foot}%
+      \usebeamercolor[fg]{page number in head/foot}%
+      \insertframenumber\hspace*{1em}
+    \end{beamercolorbox}%
+  }%
+}
+
 \title{Moderador Automático de Contenido en Videos}
 \subtitle{Transcripción, Etiquetado y Clasificación de Contenido Inapropiado}
 \author{
