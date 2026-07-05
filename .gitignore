@@ -35,3 +35,21 @@ resultados/logs/*
 # Temporales
 preview_*.png
 review_*.png
+
+# Archivos grandes — modelos y pesos (>100 MB rechazados por GitHub)
+*.h5
+*.weights
+*.weights.h5
+*.pkl
+*.pt
+*.pth
+*.bin
+*.onnx
+*.safetensors
+modelos/**/*.h5
+modelos/**/*.pkl
+PLN_clases/**/transformer_weights*
+
+# Datos de subtítulos generados (pueden ser voluminosos)
+datos/raw/subtitulos/
+datos/raw/transcripts_raw.jsonl
