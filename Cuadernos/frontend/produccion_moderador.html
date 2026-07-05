@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang='es'>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>Moderador de contenido local</title>
+  <style>
+    :root { --bg: #f4f6f8; --panel: #fff; --ink: #17202a; --muted: #627386; --line: #d5dde6; --brand: #9f1d2b; --warn: #b7791f; --bad: #b4232f; --ok: #0f7a45; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--ink); }
+    header { background: var(--brand); color: white; padding: 14px 22px; }
+    main { max-width: 1180px; margin: 0 auto; padding: 18px; display: grid; grid-template-columns: 420px 1fr; gap: 16px; }
+    section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+    h1 { margin: 0; font-size: 22px; }
+    h2 { margin: 0 0 12px; font-size: 16px; }
+    textarea { width: 100%; min-height: 270px; border: 1px solid var(--line); border-radius: 6px; padding: 10px; font-family: inherit; line-height: 1.45; }
+    button, input[type=file]::file-selector-button { border: 1px solid var(--line); background: white; border-radius: 6px; padding: 8px 10px; cursor: pointer; }
+    button.primary { background: var(--brand); color: white; border-color: var(--brand); }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .result { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 10px; background: #fbfcfd; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+    .tag { border-radius: 999px; padding: 4px 8px; font-size: 12px; background: #edf2f7; }
+    .tag.bad { background: #fde2e4; color: var(--bad); }
+    .tag.ok { background: #dcfce7; color: var(--ok); }
+    .score { color: var(--muted); font-size: 12px; }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header><h1>Moderador de contenido local</h1></header>
+  <main>
+    <section>
+      <h2>Entrada</h2>
+      <div class='toolbar'>
+        <input id='modelFile' type='file' accept='.json'>
+        <button id='runBtn' class='primary'>Analizar</button>
+        <button id='clearBtn'>Limpiar</button>
+      </div>
+      <p class='muted'>Cargar primero el archivo models/modelo_ligero_palabras.json.</p>
+      <textarea id='textInput' placeholder='Pegar aqui una transcripcion o fragmento de video.'></textarea>
+    </section>
+    <section>
+      <h2>Resultado</h2>
+      <div id='summary' class='muted'>Sin analisis.</div>
+      <div id='results'></div>
+    </section>
+  </main>
+  <script>
+    let model = null;
+    const modelFile = document.getElementById('modelFile');
+    const textInput = document.getElementById('textInput');
+    const results = document.getElementById('results');
+    const summary = document.getElementById('summary');
+
+    modelFile.addEventListener('change', async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      model = JSON.parse(await file.text());
+      summary.textContent = `Modelo cargado con ${model.labels.length} etiquetas.`;
+    });
+
+    function chunkText(text, maxWords=120) {
+      const words = text.trim().split(/\s+/).filter(Boolean);
+      const chunks = [];
+      for (let i = 0; i < words.length; i += maxWords) chunks.push(words.slice(i, i + maxWords).join(' '));
+      return chunks.filter(Boolean);
+    }
+
+    function scoreChunk(text) {
+      const clean = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const scores = {};
+      for (const label of model.labels) {
+        scores[label] = 0;
+        for (const item of (model.terms[label] || [])) {
+          const term = item.term.toLowerCase();
+          if (clean.includes(term)) scores[label] += item.weight;
+        }
+      }
+      return Object.entries(scores).sort((a, b) => b[1] - a[1]);
+    }
+
+    function renderResult(chunk, idx) {
+      const scores = scoreChunk(chunk).filter(x => x[1] > 0).slice(0, 3);
+      const labels = scores.length ? scores : [['sin_alerta', 0]];
+      const tags = labels.map(([label, score]) => `<span class='tag ${label === 'sin_alerta' || label === 'limpio' ? 'ok' : 'bad'}'>${label.replaceAll('_', ' ')}</span>`).join('');
+      const scoreText = scores.map(([label, score]) => `${label}: ${score.toFixed(2)}`).join(' | ');
+      return `<div class='result'><b>Chunk ${idx + 1}</b><div class='tags'>${tags}</div><div class='score'>${scoreText || 'Sin coincidencias del modelo ligero.'}</div><p>${chunk}</p></div>`;
+    }
+
+    document.getElementById('runBtn').addEventListener('click', () => {
+      if (!model) { alert('Cargar primero el modelo ligero JSON.'); return; }
+      const chunks = chunkText(textInput.value);
+      results.innerHTML = chunks.map(renderResult).join('');
+      summary.textContent = `${chunks.length} chunks analizados localmente.`;
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      textInput.value = '';
+      results.innerHTML = '';
+      summary.textContent = model ? `Modelo cargado con ${model.labels.length} etiquetas.` : 'Sin analisis.';
+    });
+  </script>
+</body>
+</html>

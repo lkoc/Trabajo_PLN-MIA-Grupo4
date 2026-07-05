@@ -1,0 +1,112 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{cite}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
+
+\title{Moderacion Textual Local de Contenido en Videos Peruanos de YouTube}
+
+\author{
+\IEEEauthorblockN{Grupo 4}
+\IEEEauthorblockA{
+Curso de Procesamiento de Lenguaje Natural\\
+Maestria en Inteligencia Artificial, Universidad Nacional de Ingenieria\\
+Koc Gongora, Luis Enrique; Mancilla Antay, Alex Felipe; Melendez Garcia, Herbert Antonio; Paitan Cano, Dennis Jack
+}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+La revision manual de videos publicos en plataformas sociales requiere procesar gran volumen de texto, lenguaje local y expresiones ambiguas. Este trabajo propone un flujo local para moderacion textual de videos peruanos de YouTube basado en recoleccion sin APIs, limpieza, segmentacion en fragmentos, etiquetado humano y entrenamiento de un clasificador reproducible. El artefacto prioriza evidencia textual revisable y no reemplaza la decision humana. La propuesta se orienta a construir un corpus peruano inicial y un baseline local que permita evaluar categorias como contenido seguro, acoso, contenido sexual, racismo y riesgos contextuales.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Procesamiento de lenguaje natural, moderacion de contenido, clasificacion de texto, YouTube, corpus peruano.
+\end{IEEEkeywords}
+
+\section{Introduccion}
+
+Los videos de YouTube concentran opinion politica, periodismo, entretenimiento, farandula y conversaciones informales. En el contexto peruano, la interpretacion automatica del texto puede ser dificil por modismos, ironia, apodos, referencias culturales y cambios de registro entre canales. Un clasificador generico puede identificar patrones de toxicidad, pero no necesariamente entrega evidencia suficiente para revisar casos locales.
+
+Este trabajo aborda la construccion de un moderador textual local para videos publicos de YouTube. El sistema procesa titulos, descripciones, subtitulos o transcripciones, genera fragmentos auditables y sugiere categorias de moderacion. La salida debe apoyar revision humana mediante el fragmento activador, la categoria sugerida y un score interpretable.
+
+Las contribuciones iniciales son: (i) un flujo reproducible sin APIs para preparar texto de videos publicos; (ii) una estructura de etiquetado humano para moderacion textual; (iii) un baseline local de clasificacion; y (iv) una regla de agregacion de riesgo por video basada en evidencia textual.
+
+\section{Trabajo Relacionado}
+
+Los modelos Transformer han mejorado la representacion de lenguaje mediante preentrenamiento bidireccional, como BERT \cite{devlin2019bert}. Para espanol, BETO ofrece una alternativa preentrenada sobre corpus en espanol \cite{canete2020beto}. En tareas de transcripcion, Whisper permite reconocimiento automatico de voz con un enfoque robusto de supervision debil \cite{radford2022whisper}.
+
+La evaluacion de modelos de lenguaje no debe limitarse a exactitud global. CheckList propone pruebas de comportamiento para analizar capacidades, invariancias y casos limite \cite{ribeiro2020checklist}. En moderacion textual, los datasets de ataques personales y lenguaje abusivo muestran que el etiquetado humano, la definicion de categorias y el sesgo del corpus son factores criticos \cite{wulczyn2017exmachina}, \cite{vidgen2020directions}.
+
+\section{Corpus y Recoleccion}
+
+El corpus se construye a partir de canales peruanos candidatos en politica, periodismo, humor, farandula y viajes. La diversidad de registros es necesaria para que el clasificador no aprenda solo lenguaje agresivo o solo lenguaje formal. La recoleccion se realiza con herramientas locales como \texttt{yt-dlp}, Selenium o parsers HTML cuando corresponda, sin usar APIs externas.
+
+Cada registro debe conservar, como minimo, identificador de video, canal, URL, titulo, fecha, duracion, fuente del texto, estado de descarga y observaciones de descarte. Los canales sin URL oficial verificada se mantienen como candidatos y no entran a descarga automatica hasta documentar su fuente.
+
+\section{Metodo}
+
+La Fig.~\ref{fig:pipeline} resume el flujo propuesto. El texto se obtiene desde subtitulos disponibles o transcripcion local. Luego se normaliza, se segmenta en chunks y se entrega a un frontend HTML para etiquetado humano. La data etiquetada alimenta un baseline local con TF-IDF y un clasificador lineal. Si el corpus crece, se evalua una extension con BETO o RoBERTa.
+
+\begin{figure*}[t]
+\centering
+\input{figuras/pipeline_moderacion.tex}
+\caption{Pipeline local para construir un corpus etiquetado y un clasificador de moderacion textual con evidencia revisable.}
+\label{fig:pipeline}
+\end{figure*}
+
+\subsection{Categorias de Moderacion}
+
+La primera version usa pocas categorias para aumentar acuerdo entre anotadores. La Tabla~\ref{tab:categorias} resume el conjunto minimo.
+
+\begin{table}[h]
+\centering
+\caption{Categorias MVP de moderacion textual}
+\label{tab:categorias}
+\begin{tabular}{p{0.23\linewidth}p{0.65\linewidth}}
+\toprule
+\textbf{Categoria} & \textbf{Criterio breve} \\
+\midrule
+Seguro & Texto informativo, humor sin ataque directo o descripcion neutral. \\
+Acoso & Insulto, burla, humillacion o ataque personal. \\
+Sexual & Lenguaje sexual explicito, acoso sexual o insinuacion no pertinente. \\
+Racismo & Ataque por origen, etnia, nacionalidad o color de piel. \\
+Contexto sensible & Cita, ironia, parodia o noticia que requiere revision adicional. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Agregacion por Video}
+
+La unidad minima de etiqueta es el chunk textual. El video se marca con riesgo si varios fragmentos superan el umbral de una categoria o si un fragmento critico supera una probabilidad alta. La salida final debe incluir categoria, score, fragmentos activadores y evidencia textual.
+
+\section{Evaluacion}
+
+La evaluacion se organiza en tres niveles. Primero, se mide acuerdo entre anotadores con Cohen's kappa sobre una muestra del corpus. Segundo, se entrena un baseline con division de entrenamiento, validacion y prueba. Tercero, se analizan errores por categoria, canal y tipo de lenguaje.
+
+Las metricas principales son F1 macro, precision y recall por categoria. Debido al desbalance esperado, la exactitud global no debe ser la metrica central. La revision manual de top-fragmentos permite verificar si la evidencia presentada por el sistema es util para el moderador humano.
+
+\section{Discusion}
+
+El artefacto tiene limites importantes. La moderacion propuesta es textual, por lo que no evalua imagenes, gestos o contexto visual. Tambien puede fallar con ironia, sarcasmo, citas y referencias locales ambiguas. Por ello, la salida debe tratarse como alerta de priorizacion y no como sancion automatica.
+
+El sesgo por fuente es otro riesgo. Un corpus concentrado en pocos canales puede hacer que el clasificador confunda estilo de comunicacion con categoria de riesgo. Para reducir este problema, la seleccion de fuentes debe mezclar registros formales, informales, humoristicos y descriptivos.
+
+\section{Conclusiones}
+
+Este trabajo propone una estructura inicial para construir un moderador textual local de videos peruanos de YouTube. La contribucion principal es integrar recoleccion sin APIs, chunks auditables, etiquetado humano, entrenamiento local y evidencia revisable. Como trabajo futuro se plantea ampliar el corpus, mejorar la guia de anotacion, calibrar umbrales y comparar el baseline con modelos Transformer en espanol.
+
+\bibliographystyle{IEEEtran}
+\bibliography{referencias}
+
+\end{document}

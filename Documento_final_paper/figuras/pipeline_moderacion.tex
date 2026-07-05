@@ -1,0 +1,18 @@
+\begin{tikzpicture}[
+  node distance=0.55cm,
+  stage/.style={draw, rounded corners, align=center, minimum height=0.72cm, text width=2.05cm, font=\footnotesize},
+  arrow/.style={-Latex, thick}
+]
+  \node[stage, fill=blue!8] (a) {Videos publicos\\YouTube};
+  \node[stage, fill=blue!8, right=of a] (b) {Subtitulos o\\ASR local};
+  \node[stage, fill=green!10, right=of b] (c) {Limpieza y\\chunks};
+  \node[stage, fill=yellow!14, right=of c] (d) {Etiquetado\\humano};
+  \node[stage, fill=red!8, right=of d] (e) {Modelo\\local};
+  \node[stage, fill=green!10, right=of e] (f) {Evidencia para\\revision};
+
+  \draw[arrow] (a) -- (b);
+  \draw[arrow] (b) -- (c);
+  \draw[arrow] (c) -- (d);
+  \draw[arrow] (d) -- (e);
+  \draw[arrow] (e) -- (f);
+\end{tikzpicture}

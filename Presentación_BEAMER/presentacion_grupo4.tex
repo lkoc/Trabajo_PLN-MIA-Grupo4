@@ -1,0 +1,761 @@
+\documentclass[aspectratio=169,11pt]{beamer}
+\usetheme{default}
+\usefonttheme{professionalfonts}
+
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,fit,calc}
+
+% Colores
+\definecolor{paperbg}{RGB}{250,250,248}
+\definecolor{darkred}{RGB}{165,36,52}
+\definecolor{accentteal}{RGB}{21,112,112}
+\definecolor{accentgold}{RGB}{183,125,36}
+\definecolor{accentblue}{RGB}{49,100,168}
+\definecolor{ink}{RGB}{28,35,43}
+\definecolor{muted}{RGB}{88,99,111}
+\definecolor{softred}{RGB}{250,231,234}
+\definecolor{softblue}{RGB}{232,239,250}
+\definecolor{softgreen}{RGB}{224,242,238}
+\definecolor{softgold}{RGB}{251,241,220}
+\definecolor{softgray}{RGB}{242,244,246}
+\definecolor{linegray}{RGB}{214,221,228}
+
+\setbeamercolor{normal text}{fg=ink,bg=paperbg}
+\setbeamercolor{title}{fg=ink}
+\setbeamercolor{subtitle}{fg=muted}
+\setbeamercolor{frametitle}{fg=ink,bg=paperbg}
+\setbeamercolor{block title}{fg=ink,bg=paperbg}
+\setbeamercolor{block body}{bg=white,fg=ink}
+\setbeamerfont{title}{size=\Huge,series=\bfseries}
+\setbeamerfont{subtitle}{size=\large}
+\setbeamerfont{frametitle}{size=\Large,series=\bfseries}
+\setbeamerfont{block title}{size=\normalsize,series=\bfseries}
+\setbeamerfont{block body}{size=\normalsize}
+\setbeamersize{text margin left=8mm,text margin right=8mm}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{frametitle}{%
+  \vspace{0.8mm}
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[darkred] (current page.north west) rectangle ([xshift=2.0mm,yshift=-\paperheight]current page.north west);
+    \fill[accentteal] ([xshift=2.0mm]current page.north west) rectangle ([xshift=3.2mm,yshift=-\paperheight]current page.north west);
+  \end{tikzpicture}
+  \insertframetitle\par
+  \vspace{0.2mm}
+  {\color{linegray}\rule{\linewidth}{0.45pt}}
+}
+\setbeamertemplate{block begin}{%
+  \par\vskip0.35ex
+  \begin{beamercolorbox}[wd=\linewidth,sep=0.58em,rounded=true,shadow=false]{block body}
+    {\usebeamerfont{block title}\color{darkred}\insertblocktitle}\par\vspace{0.25em}
+    \usebeamerfont{block body}
+}
+\setbeamertemplate{block end}{%
+  \end{beamercolorbox}
+  \vskip0.45ex
+}
+\setbeamertemplate{footline}{%
+  \pgfmathsetlengthmacro{\progressbar}{\paperwidth*\insertframenumber/\inserttotalframenumber}
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[linegray] ([yshift=2.3mm]current page.south west) rectangle ([yshift=2.55mm]current page.south east);
+    \fill[darkred] ([yshift=2.3mm]current page.south west) rectangle
+      ([xshift=\progressbar,yshift=2.55mm]current page.south west);
+  \end{tikzpicture}
+  \hfill{\scriptsize\color{muted}\insertframenumber/\inserttotalframenumber}\hspace*{8mm}\vspace{2.0mm}
+}
+
+\newcommand{\tagbox}[2]{%
+  \tikz[baseline=(X.base)]\node[rounded corners=9pt,inner xsep=6pt,inner ysep=3pt,fill=#1,draw=linegray] (X) {\scriptsize #2};%
+}
+\newcommand{\kicker}[1]{{\small\bfseries\color{accentteal}#1}}
+\newcommand{\lead}[1]{{\large\color{ink}#1}}
+\newcommand{\smallmuted}[1]{{\scriptsize\color{muted}#1}}
+\newcommand{\metriccard}[3]{%
+  \begin{beamercolorbox}[wd=\linewidth,sep=0.58em,rounded=true,shadow=false]{block body}
+    {\scriptsize\color{muted}#1}\par
+    {\Large\bfseries\color{#2}#3}
+  \end{beamercolorbox}
+}
+
+\title{Moderador de Contenido en Videos de YouTube}
+\subtitle{Corpus peruano, etiquetado humano y clasificador local de riesgo textual}
+\author{
+  \textbf{Grupo 4}\\
+  Koc Góngora, Luis Enrique\\
+  Mancilla Antay, Alex Felipe\\
+  Melendez Garcia, Herbert Antonio\\
+  Paitan Cano, Dennis Jack
+}
+\institute{
+Maestría en Inteligencia Artificial\\
+Universidad Nacional de Ingeniería (UNI)\\
+Procesamiento de Lenguaje Natural
+}
+\date{Semestre 2026-1}
+
+\begin{document}
+
+% ==================== 1 ====================
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[paperbg] (current page.south west) rectangle (current page.north east);
+    \fill[darkred] (current page.north west) rectangle ([xshift=3.4mm]current page.south west);
+    \fill[accentteal] ([xshift=3.4mm]current page.north west) rectangle ([xshift=5.1mm]current page.south west);
+    \fill[softred] ([xshift=9.5cm,yshift=-0.55cm]current page.north west) rectangle ([xshift=15.9cm,yshift=-1.15cm]current page.north west);
+    \fill[softgreen] ([xshift=9.5cm,yshift=-1.35cm]current page.north west) rectangle ([xshift=14.8cm,yshift=-1.95cm]current page.north west);
+    \fill[softblue] ([xshift=9.5cm,yshift=-2.15cm]current page.north west) rectangle ([xshift=15.4cm,yshift=-2.75cm]current page.north west);
+  \end{tikzpicture}
+
+  \vspace{8mm}
+  \kicker{Procesamiento de Lenguaje Natural}
+
+  \vspace{7mm}
+  {\usebeamerfont{title}\color{ink}\inserttitle\par}
+  \vspace{2mm}
+  {\usebeamerfont{subtitle}\color{muted}\insertsubtitle\par}
+
+  \vspace{7mm}
+  \tagbox{softgreen}{corpus peruano}
+  \tagbox{softblue}{etiquetado humano}
+  \tagbox{softred}{clasificador local}
+
+  \vfill
+  {\small\color{ink}\textbf{Grupo 4}}\par
+  {\scriptsize\color{muted}Koc Góngora, Luis Enrique \quad Mancilla Antay, Alex Felipe\par
+  Melendez Garcia, Herbert Antonio \quad Paitan Cano, Dennis Jack}\par
+  \vspace{2mm}
+  {\scriptsize\color{muted}Maestría en Inteligencia Artificial -- UNI \quad | \quad Semestre 2026-1}
+\end{frame}
+
+% ==================== 2 ====================
+\begin{frame}
+  \frametitle{Idea Central del Trabajo}
+
+  \lead{El trabajo construye un moderador textual para videos peruanos, con corpus propio, anotación humana y evidencia visible para revisión.}
+
+  \vspace{5mm}
+  \begin{columns}[T]
+    \column{0.31\textwidth}
+      \metriccard{Objeto de estudio}{accentblue}{Videos públicos}
+      \vspace{1mm}
+      {\small Política y farándula analizadas desde título, descripción, subtítulos y transcripción.}
+
+    \column{0.31\textwidth}
+      \metriccard{Problema aplicado}{darkred}{Revisión lenta}
+      \vspace{1mm}
+      {\small El volumen crece y el lenguaje depende del contexto peruano, con ironía y modismos.}
+
+    \column{0.31\textwidth}
+      \metriccard{Artefacto}{accentteal}{Flujo local}
+      \vspace{1mm}
+      {\small Scraping, chunks, etiquetado, entrenamiento e inferencia sin servicios externos.}
+  \end{columns}
+
+  \vfill
+  \centering
+  \tagbox{softgreen}{sin APIs externas}
+  \tagbox{softblue}{datos trazables}
+  \tagbox{softred}{decisión con revisión humana}
+\end{frame}
+
+% ==================== 3 ====================
+\begin{frame}
+  \frametitle{Contexto y Problemática}
+
+  \kicker{Dónde aparece la dificultad}
+  \vspace{1.5mm}
+
+  \begin{columns}[T]
+    \column{0.32\textwidth}
+      \metriccard{Fuente}{accentblue}{YouTube}
+      \vspace{1mm}
+      {\small Opinión política, noticias, entrevistas, clips y entretenimiento en un flujo continuo.}
+
+    \column{0.32\textwidth}
+      \metriccard{Lenguaje}{accentgold}{Local}
+      \vspace{1mm}
+      {\small Modismos, ironía, apodos y referencias culturales que cambian el sentido del texto.}
+
+    \column{0.32\textwidth}
+      \metriccard{Riesgo}{darkred}{No auditable}
+      \vspace{1mm}
+      {\small Un dictamen automático sin fragmentos activadores no permite revisar ni corregir.}
+  \end{columns}
+
+  \vspace{7mm}
+  \centering
+  \begin{tikzpicture}[
+    box/.style={draw=linegray,rounded corners=10pt,fill=white,minimum width=2.85cm,minimum height=0.78cm,align=center,font=\small},
+    arr/.style={-Latex,thick,draw=darkred}
+  ]
+    \node[box,fill=softblue] (a) {Videos públicos};
+    \node[box,right=0.45cm of a,fill=softgray] (b) {Texto transcrito};
+    \node[box,right=0.45cm of b,fill=softred] (c) {Riesgo textual};
+    \node[box,right=0.45cm of c,fill=softgreen] (d) {Revisión humana};
+    \draw[arr] (a) -- (b);
+    \draw[arr] (b) -- (c);
+    \draw[arr] (c) -- (d);
+  \end{tikzpicture}
+\end{frame}
+
+% ==================== 4 ====================
+\begin{frame}
+  \frametitle{Brecha y Formulación del Problema}
+
+  \begin{block}{Brecha}
+    Existen clasificadores de toxicidad y odio, pero el proyecto requiere un corpus local, una guía de anotación sencilla y un flujo reproducible que funcione sin servicios externos.
+  \end{block}
+
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \begin{block}{Problema general}
+        ¿Cómo construir un moderador textual local que clasifique fragmentos de videos peruanos y entregue evidencia verificable para apoyar la revisión humana?
+      \end{block}
+
+    \column{0.42\textwidth}
+      \begin{block}{Problemas específicos}
+        \begin{itemize}
+          \item ¿Qué fuentes y categorías usar?
+          \item ¿Cómo crear chunks auditables?
+          \item ¿Cómo entrenar un baseline defendible?
+          \item ¿Cómo agregar riesgo por video?
+        \end{itemize}
+      \end{block}
+  \end{columns}
+
+\end{frame}
+
+% ==================== 5 ====================
+\begin{frame}
+  \frametitle{Propuesta de Solución: Artefacto}
+
+  \begin{center}
+  \begin{tikzpicture}[
+    stage/.style={draw=linegray,rounded corners,fill=white,minimum width=1.95cm,minimum height=0.9cm,align=center,font=\small},
+    artifact/.style={draw=darkred,thick,rounded corners,fill=softred,minimum width=2.25cm,minimum height=0.95cm,align=center,font=\small\bfseries},
+    arr/.style={-Latex,thick,draw=darkred}
+  ]
+    \node[stage,fill=softblue] (s1) {Scraping\\web público};
+    \node[stage,right=0.22cm of s1] (s2) {Subtítulos o\\ASR local};
+    \node[stage,right=0.22cm of s2] (s3) {Limpieza y\\chunks};
+    \node[stage,right=0.22cm of s3] (s4) {Etiquetado\\HTML};
+    \node[stage,right=0.22cm of s4] (s5) {Modelo\\local};
+    \node[artifact,right=0.22cm of s5] (s6) {Frontend\\producción};
+    \draw[arr] (s1) -- (s2);
+    \draw[arr] (s2) -- (s3);
+    \draw[arr] (s3) -- (s4);
+    \draw[arr] (s4) -- (s5);
+    \draw[arr] (s5) -- (s6);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{3mm}
+  \begin{block}{Producto verificable}
+    El artefacto no reemplaza al moderador humano. Prioriza fragmentos, asigna categorías sugeridas, muestra texto activador y permite auditar errores.
+  \end{block}
+
+  \begin{block}{Restricción de implementación}
+    La recolección, etiquetado, entrenamiento e inferencia se ejecutan localmente. No se usan APIs para obtener etiquetas ni para clasificar contenido.
+  \end{block}
+\end{frame}
+
+% ==================== 6 ====================
+\begin{frame}
+  \frametitle{Canales Sugeridos para Scraping}
+
+  \lead{La recolección debe mezclar fuentes de lenguaje formal, opinión, humor, farándula y viajes para que el clasificador no aprenda un solo registro.}
+
+  \vspace{5mm}
+  \begin{columns}[T]
+    \column{0.24\textwidth}
+      \metriccard{01}{accentblue}{Formal}
+      \vspace{1mm}
+      {\scriptsize Noticias, entrevistas y periodismo con dicción más estable.}
+
+    \column{0.24\textwidth}
+      \metriccard{02}{accentteal}{Opinión}
+      \vspace{1mm}
+      {\scriptsize Debate político, sátira y explicaciones con lenguaje local.}
+
+    \column{0.24\textwidth}
+      \metriccard{03}{darkred}{Farándula}
+      \vspace{1mm}
+      {\scriptsize Conflicto público, rumores, ataques personales y contexto sensible.}
+
+    \column{0.24\textwidth}
+      \metriccard{04}{accentgold}{Viajes}
+      \vspace{1mm}
+      {\scriptsize Lenguaje descriptivo y limpio para balancear clases seguras.}
+  \end{columns}
+
+  \vfill
+  \tagbox{softgreen}{priorizar subtítulos}
+  \tagbox{softblue}{audio claro}
+  \tagbox{softgold}{episodios completos}
+  \tagbox{softred}{validar canal oficial}
+\end{frame}
+
+% ==================== 7 ====================
+\begin{frame}
+  \frametitle{Candidatos Principales para Descarga}
+
+  \kicker{Lista operativa alineada con el cuaderno 01}
+  \vspace{2mm}
+
+  \begin{columns}[T]
+    \column{0.33\textwidth}
+      \metriccard{Política}{accentblue}{Análisis}
+      \vspace{1mm}
+      {\small
+      \begin{itemize}
+        \item Marco Sifuentes / Ocram
+        \item El diario de Curwen
+        \item Sin Guion / Rosa María Palacios
+        \item RPP, Canal N, Exitosa
+        \item Willax y opinión
+      \end{itemize}}
+
+    \column{0.33\textwidth}
+      \metriccard{Humor / streaming}{accentgold}{Contexto}
+      \vspace{1mm}
+      {\small
+      \begin{itemize}
+        \item Hablando Huevadas
+        \item Todo Good
+        \item Clips de entrevistas
+        \item Conversación informal
+      \end{itemize}}
+
+    \column{0.33\textwidth}
+      \metriccard{Farándula}{darkred}{Contraste}
+      \vspace{1mm}
+      {\small
+      \begin{itemize}
+        \item Magaly TV La Firme
+        \item Amor y Fuego
+        \item América Hoy
+        \item Programas de espectáculo
+      \end{itemize}}
+  \end{columns}
+\end{frame}
+
+% ==================== 8 ====================
+\begin{frame}
+  \frametitle{Candidatos Complementarios y Verificación}
+
+  \begin{columns}[T]
+    \column{0.33\textwidth}
+      \metriccard{Por confirmar}{darkred}{URL oficial}
+      \vspace{1mm}
+      {\small
+      \begin{itemize}
+        \item Cacas / El Cacas
+        \item Goblinciano
+        \item Instarándula
+        \item Otros clips virales
+      \end{itemize}}
+
+    \column{0.33\textwidth}
+      \metriccard{Viajes}{accentteal}{Clase segura}
+      \vspace{1mm}
+      {\small
+      \begin{itemize}
+        \item Misias pero viajeras
+        \item Buen Viaje
+        \item Viaja y Prueba
+        \item Canales regionales
+      \end{itemize}}
+
+    \column{0.33\textwidth}
+      \begin{block}{Regla de descarga}
+        Usar solo canales públicos con URL oficial verificada, audio claro y episodios completos. Registrar descartes por copyright, duplicados o baja calidad.
+      \end{block}
+  \end{columns}
+\end{frame}
+
+% ==================== 8 ====================
+\begin{frame}
+  \frametitle{Categorías MVP de Moderación}
+
+  \lead{El primer modelo debe usar pocas clases para mejorar acuerdo entre anotadores y reducir ruido en el entrenamiento.}
+
+  \vspace{5mm}
+  \begin{columns}[T]
+    \column{0.24\textwidth}
+      \metriccard{Clase 0}{accentteal}{Seguro}
+      \vspace{1mm}
+      {\small Texto normal, informativo o humor sin ataque directo.}
+
+    \column{0.24\textwidth}
+      \metriccard{Clase 1}{darkred}{Acoso}
+      \vspace{1mm}
+      {\small Insulto, burla, humillación o ataque personal.}
+
+    \column{0.24\textwidth}
+      \metriccard{Clase 2}{accentgold}{Sexual}
+      \vspace{1mm}
+      {\small Lenguaje sexual explícito o acoso sexual.}
+
+    \column{0.24\textwidth}
+      \metriccard{Clase 3}{accentblue}{Racismo}
+      \vspace{1mm}
+      {\small Ataque por origen, etnia, nacionalidad o color de piel.}
+  \end{columns}
+
+  \vfill
+  \tagbox{softgreen}{MVP defendible}
+  \tagbox{softblue}{mejor acuerdo humano}
+  \tagbox{softred}{menos solapamiento}
+\end{frame}
+
+% ==================== 9 ====================
+\begin{frame}
+  \frametitle{Extensiones Controladas}
+
+  \lead{Las clases nuevas se agregan solo cuando haya ejemplos suficientes y reglas de anotación estables.}
+
+  \vspace{5mm}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Riesgo alto}
+        \begin{itemize}
+          \item Odio o discriminación general.
+          \item Amenaza o incitación a violencia.
+          \item Privacidad / doxxing.
+        \end{itemize}
+      \end{block}
+
+    \column{0.48\textwidth}
+      \begin{block}{Riesgo contextual}
+        \begin{itemize}
+          \item Desinformación dañina.
+          \item Spam o estafa.
+          \item Cita, ironía, noticia o parodia.
+        \end{itemize}
+      \end{block}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Control de Calidad Humana}
+
+  \begin{columns}[T]
+    \column{0.31\textwidth}
+      \metriccard{Muestra}{accentblue}{2 anotadores}
+      \vspace{1mm}
+      {\small Revisión independiente de una parte del corpus.}
+
+    \column{0.31\textwidth}
+      \metriccard{Consenso}{accentgold}{Casos dudosos}
+      \vspace{1mm}
+      {\small Discusión documentada para ejemplos ambiguos.}
+
+    \column{0.31\textwidth}
+      \metriccard{Acuerdo}{accentteal}{Kappa}
+      \vspace{1mm}
+      {\small Reporte de Cohen's kappa antes del entrenamiento final.}
+  \end{columns}
+
+  \vspace{5mm}
+  \begin{block}{Regla metodológica}
+    Antes de ampliar etiquetas, se revisan errores, desacuerdos y sesgos por tipo de canal. La guía se actualiza con ejemplos reales.
+  \end{block}
+\end{frame}
+
+% ==================== 8 ====================
+\begin{frame}
+  \frametitle{Unidad de Análisis}
+
+  \begin{center}
+  \begin{tikzpicture}[
+    box/.style={draw=linegray,rounded corners,fill=white,minimum width=2.9cm,minimum height=0.8cm,align=center,font=\small},
+    chunk/.style={draw=linegray,rounded corners,fill=softblue,minimum width=1.8cm,minimum height=0.65cm,align=center,font=\scriptsize},
+    arr/.style={-Latex,draw=darkred,thick}
+  ]
+    \node[box,fill=softgray] (video) {Video público};
+    \node[chunk,below left=0.95cm and -0.15cm of video] (c1) {chunk 1};
+    \node[chunk,right=0.28cm of c1] (c2) {chunk 2};
+    \node[chunk,right=0.28cm of c2] (c3) {chunk 3};
+    \node[chunk,right=0.28cm of c3] (c4) {chunk n};
+    \node[box,below=1.0cm of c2,fill=softred] (clf) {Clasificador};
+    \node[box,right=1.05cm of clf,fill=softgreen] (out) {Riesgo por video};
+    \draw[arr] (video) -- (c2);
+    \draw[arr] (c1) -- (clf);
+    \draw[arr] (c2) -- (clf);
+    \draw[arr] (c3) -- (clf);
+    \draw[arr] (c4) -- (clf);
+    \draw[arr] (clf) -- (out);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{1mm}
+  \begin{block}{Qué se etiqueta}
+    La unidad mínima es el fragmento textual. El video conserva metadatos, fuente y evidencias para auditar el resultado agregado.
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Regla de Decisión por Video}
+
+  \begin{columns}[T]
+    \column{0.31\textwidth}
+      \metriccard{Chunk}{accentblue}{Etiqueta}
+      \vspace{1mm}
+      {\small Cada fragmento recibe categoría, probabilidad y texto activador.}
+
+    \column{0.31\textwidth}
+      \metriccard{Video}{darkred}{Riesgo}
+      \vspace{1mm}
+      {\small Se marca si varios chunks cruzan umbral o uno crítico es muy alto.}
+
+    \column{0.31\textwidth}
+      \metriccard{Salida}{accentteal}{Evidencia}
+      \vspace{1mm}
+      {\small Tabla con video, categoría, score y fragmentos revisables.}
+  \end{columns}
+
+  \vspace{5mm}
+  \begin{block}{Principio}
+    La decisión automática prioriza revisión humana; no sanciona contenido por sí sola.
+  \end{block}
+\end{frame}
+
+% ==================== 9 ====================
+\begin{frame}
+  \frametitle{Cuadernos Iniciales}
+
+  \begin{center}
+  \begin{tikzpicture}[
+    card/.style={draw=linegray,rounded corners=8pt,fill=white,minimum width=2.35cm,minimum height=1.35cm,align=center,font=\scriptsize},
+    arr/.style={-Latex,thick,draw=muted}
+  ]
+    \node[card,fill=softblue] (n1) {\textbf{01}\\Scraping\\\texttt{raw.jsonl}};
+    \node[card,right=0.25cm of n1,fill=softgreen] (n2) {\textbf{02}\\Limpieza\\chunks};
+    \node[card,right=0.25cm of n2,fill=softgold] (n3) {\textbf{03}\\Etiquetado\\HTML};
+    \node[card,right=0.25cm of n3,fill=softred] (n4) {\textbf{04}\\Entrenamiento\\modelo};
+    \node[card,right=0.25cm of n4,fill=softgray] (n5) {\textbf{05}\\Producción\\demo};
+    \draw[arr] (n1) -- (n2);
+    \draw[arr] (n2) -- (n3);
+    \draw[arr] (n3) -- (n4);
+    \draw[arr] (n4) -- (n5);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{4mm}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Entrada y curaduría}
+        \texttt{yt-dlp} y Selenium generan metadatos, subtítulos y chunks trazables. No se usan APIs ni etiquetas automáticas externas.
+      \end{block}
+
+    \column{0.48\textwidth}
+      \begin{block}{Salida del artefacto}
+        El flujo produce dataset etiquetado, baseline local, métricas y frontend de inferencia para revisión humana.
+      \end{block}
+  \end{columns}
+\end{frame}
+
+% ==================== 10 ====================
+\begin{frame}
+  \frametitle{Modelo y Entrenamiento}
+
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Baseline obligatorio}
+        \begin{itemize}
+          \item TF-IDF con unigramas y bigramas.
+          \item Linear SVM o Logistic Regression.
+          \item One-vs-rest si se conserva multi-etiqueta.
+          \item Explicable mediante términos con mayor peso.
+        \end{itemize}
+      \end{block}
+
+    \column{0.48\textwidth}
+      \begin{block}{Extensión avanzada}
+        \begin{itemize}
+          \item BETO o RoBERTa en español.
+          \item Fine-tuning solo si el dataset etiquetado es suficiente.
+          \item Comparación contra baseline, no reemplazo directo.
+        \end{itemize}
+      \end{block}
+  \end{columns}
+
+  \vfill
+  {\small\color{muted}\textbf{Criterio de defensa:} primero funciona el baseline; el Transformer solo se justifica si mejora F1 macro, recall de riesgo y análisis de errores.}
+\end{frame}
+
+% ==================== 11 ====================
+\begin{frame}
+  \frametitle{Evaluación}
+
+  \begin{center}
+  \begin{tikzpicture}[
+    eval/.style={draw=linegray,rounded corners,fill=white,minimum width=2.65cm,minimum height=0.72cm,align=center,font=\scriptsize},
+    arr/.style={-Latex,thick,draw=muted}
+  ]
+    \node[eval,fill=softblue] (a) {Acuerdo humano\\Cohen's kappa};
+    \node[eval,right=0.45cm of a] (b) {Split\\70 / 15 / 15};
+    \node[eval,right=0.45cm of b] (c) {F1 macro\\recall por riesgo};
+    \node[eval,right=0.45cm of c,fill=softgreen] (d) {Errores\\y umbrales};
+    \draw[arr] (a) -- (b);
+    \draw[arr] (b) -- (c);
+    \draw[arr] (c) -- (d);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{3mm}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Métricas}
+        \begin{itemize}
+          \item F1 macro para clases desbalanceadas.
+          \item Precision y recall por categoría.
+          \item Matriz de confusión.
+          \item Precisión de top-fragmentos revisados.
+        \end{itemize}
+      \end{block}
+
+    \column{0.48\textwidth}
+      \begin{block}{Calidad humana}
+        \begin{itemize}
+          \item Dos anotadores para una muestra.
+          \item Revisión de desacuerdos.
+          \item Guía de etiquetas con ejemplos.
+          \item Registro de casos ambiguos.
+        \end{itemize}
+      \end{block}
+  \end{columns}
+\end{frame}
+
+% ==================== 12 ====================
+\begin{frame}
+  \frametitle{Estructura del Paper / Informe}
+
+  \begin{center}
+  \begin{tikzpicture}[
+    sec/.style={draw=linegray,rounded corners,fill=white,minimum width=2.7cm,minimum height=0.72cm,align=center,font=\scriptsize},
+    arr/.style={-Latex,thick,draw=darkred}
+  ]
+    \node[sec,fill=softblue] (s1) {1. Contexto\\y problema};
+    \node[sec,right=0.35cm of s1] (s2) {2. Brecha\\y objetivos};
+    \node[sec,right=0.35cm of s2] (s3) {3. Método\\y corpus};
+    \node[sec,below=0.65cm of s3,fill=softgreen] (s4) {4. Artefacto\\y notebooks};
+    \node[sec,left=0.35cm of s4] (s5) {5. Evaluación\\y resultados};
+    \node[sec,left=0.35cm of s5,fill=softred] (s6) {6. Discusión\\y límites};
+    \draw[arr] (s1) -- (s2);
+    \draw[arr] (s2) -- (s3);
+    \draw[arr] (s3) -- (s4);
+    \draw[arr] (s4) -- (s5);
+    \draw[arr] (s5) -- (s6);
+  \end{tikzpicture}
+  \end{center}
+
+  \begin{block}{Hilo conductor}
+    Lenguaje local en videos peruanos $\rightarrow$ riesgo textual difícil de revisar manualmente $\rightarrow$ corpus anotado $\rightarrow$ clasificador local $\rightarrow$ evidencia para moderación humana.
+  \end{block}
+\end{frame}
+
+% ==================== 13 ====================
+\begin{frame}
+  \frametitle{Alcances y Límites}
+
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Alcance}
+        \begin{itemize}
+          \item Moderación textual, no visual.
+          \item Videos públicos de política y farándula.
+          \item Chunks de transcripción o subtítulos.
+          \item Clasificación local con evidencia.
+        \end{itemize}
+      \end{block}
+
+    \column{0.48\textwidth}
+      \begin{block}{Límites}
+        \begin{itemize}
+          \item No afirma verdad o falsedad absoluta.
+          \item No sustituye evaluación legal ni editorial.
+          \item Puede fallar con ironía, sarcasmo y citas.
+          \item Requiere balance y revisión de sesgos.
+        \end{itemize}
+      \end{block}
+  \end{columns}
+
+  \vspace{-1mm}
+  \begin{block}{Principio ético}
+    La salida del sistema es alerta y priorización, no sanción automática.
+  \end{block}
+\end{frame}
+
+% ==================== 14 ====================
+\begin{frame}
+  \frametitle{Plan de Trabajo}
+
+  \begin{columns}[T]
+    \column{0.24\textwidth}
+      \metriccard{Semana 1}{accentblue}{Diseño}
+      \vspace{1mm}
+      {\small Canales, categorías MVP, guía de anotación y criterios de descarte.}
+
+    \column{0.24\textwidth}
+      \metriccard{Semana 2}{accentteal}{Corpus}
+      \vspace{1mm}
+      {\small Scraping, subtítulos, transcripción local y creación de chunks.}
+
+    \column{0.24\textwidth}
+      \metriccard{Semana 3}{accentgold}{Etiquetado}
+      \vspace{1mm}
+      {\small Anotación humana, revisión de desacuerdos y dataset final.}
+
+    \column{0.24\textwidth}
+      \metriccard{Semana 4}{darkred}{Demo}
+      \vspace{1mm}
+      {\small Baseline, métricas, análisis de errores y frontend de producción.}
+  \end{columns}
+
+  \vspace{6mm}
+  \begin{block}{Mejora propuesta}
+    Mantener un registro de decisiones: por qué se incluye cada canal, por qué se descarta cada video y qué regla resolvió cada caso ambiguo.
+  \end{block}
+\end{frame}
+
+% ==================== 15 ====================
+\begin{frame}
+  \frametitle{Referencias y Fuentes Base}
+
+  \scriptsize
+  \begin{thebibliography}{99}
+    \bibitem[Radford et al., 2022]{radford2022whisper}
+    Radford, A. et al. (2022).
+    \newblock Robust Speech Recognition via Large-Scale Weak Supervision.
+    \newblock \textit{arXiv:2212.04356}.
+
+    \bibitem[Devlin et al., 2018]{devlin2018bert}
+    Devlin, J. et al. (2018).
+    \newblock BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding.
+    \newblock \textit{arXiv:1810.04805}.
+
+    \bibitem[Cañete et al., 2020]{canete2020beto}
+    Cañete, J. et al. (2020).
+    \newblock Spanish Pre-Trained BERT Model and Evaluation Data.
+    \newblock \textit{PML4DC at ICLR}.
+
+    \bibitem[Ribeiro et al., 2020]{ribeiro2020checklist}
+    Ribeiro, M. T. et al. (2020).
+    \newblock Beyond Accuracy: Behavioral Testing of NLP Models with CheckList.
+    \newblock \textit{ACL}, 4902--4912.
+
+    \bibitem[Fuentes web, 2026]{fuentes2026}
+    Canales públicos de YouTube revisables: RPP Noticias, TVPerú Noticias, El Comercio, La República, La Encerrona, Epicentro TV, Magaly TV La Firme, Amor y Fuego, América Hoy.
+  \end{thebibliography}
+\end{frame}
+
+\end{document}

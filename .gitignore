@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Datos y modelos generados
+datos/raw/*
+datos/interim/*
+datos/processed/*
+datos/etiquetado/*
+modelos/*
+resultados/metricas/*
+resultados/figuras/*
+resultados/logs/*
+
+!datos/**/README.md
+!modelos/README.md
+!resultados/**/README.md
+!.gitkeep
+
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+
+# Temporales
+preview_*.png
+review_*.png

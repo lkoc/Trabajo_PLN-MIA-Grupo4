@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang='es'>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>Etiquetado humano - Moderacion de contenido</title>
+  <style>
+    :root { --bg: #f6f7f9; --panel: #ffffff; --ink: #18202b; --muted: #5d6b7a; --line: #d7dde5; --brand: #b4232f; --ok: #0f7a45; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--ink); }
+    header { background: var(--brand); color: white; padding: 14px 22px; }
+    main { max-width: 1180px; margin: 0 auto; padding: 18px; display: grid; grid-template-columns: 1fr 330px; gap: 16px; }
+    section, aside { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+    h1 { font-size: 22px; margin: 0; }
+    h2 { font-size: 16px; margin: 0 0 12px; }
+    button, input[type=file]::file-selector-button { border: 1px solid var(--line); background: white; border-radius: 6px; padding: 8px 10px; cursor: pointer; }
+    button.primary { background: var(--brand); color: white; border-color: var(--brand); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    textarea { width: 100%; min-height: 78px; resize: vertical; border: 1px solid var(--line); border-radius: 6px; padding: 10px; font-family: inherit; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    .meta { color: var(--muted); font-size: 13px; line-height: 1.45; margin-bottom: 12px; }
+    .chunk { border: 1px solid var(--line); border-radius: 8px; padding: 16px; min-height: 220px; line-height: 1.55; background: #fbfcfd; }
+    .labels { display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .label { border: 1px solid var(--line); border-radius: 6px; padding: 8px; display: flex; gap: 8px; align-items: flex-start; }
+    .label input { margin-top: 2px; }
+    .status { margin-top: 12px; font-size: 13px; color: var(--muted); }
+    .ok { color: var(--ok); font-weight: bold; }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header><h1>Etiquetado humano - Moderacion de contenido</h1></header>
+  <main>
+    <section>
+      <div class='toolbar'>
+        <input id='fileInput' type='file' accept='.jsonl,.json'>
+        <button id='prevBtn'>Anterior</button>
+        <button id='nextBtn' class='primary'>Siguiente</button>
+        <button id='exportBtn'>Exportar JSONL</button>
+      </div>
+      <div id='meta' class='meta'>Cargar un archivo de chunks para iniciar.</div>
+      <div id='chunkText' class='chunk'>Sin datos cargados.</div>
+    </section>
+    <aside>
+      <h2>Categorias</h2>
+      <div id='labels' class='labels'></div>
+      <h2 style='margin-top:16px'>Notas</h2>
+      <textarea id='notes' placeholder='Comentario breve del anotador'></textarea>
+      <div id='status' class='status'></div>
+    </aside>
+  </main>
+  <script>
+    const LABELS = ['limpio','lenguaje_ofensivo','odio_discriminacion','acoso_amenaza','sexual_explicito','violencia','desinformacion_danina','privacidad_doxxing','spam_estafa','contexto_sensible'];
+    const state = { rows: [], index: 0 };
+    const fileInput = document.getElementById('fileInput');
+    const meta = document.getElementById('meta');
+    const chunkText = document.getElementById('chunkText');
+    const labelsBox = document.getElementById('labels');
+    const notes = document.getElementById('notes');
+    const status = document.getElementById('status');
+
+    function renderLabels() {
+      labelsBox.innerHTML = '';
+      LABELS.forEach(label => {
+        const wrap = document.createElement('label');
+        wrap.className = 'label';
+        wrap.innerHTML = `<input type='checkbox' value='${label}'> <span>${label.replaceAll('_', ' ')}</span>`;
+        labelsBox.appendChild(wrap);
+      });
+      labelsBox.addEventListener('change', event => {
+        if (event.target.value === 'limpio' && event.target.checked) {
+          document.querySelectorAll('#labels input').forEach(x => { if (x.value !== 'limpio') x.checked = false; });
+        }
+        if (event.target.value !== 'limpio' && event.target.checked) {
+          const limpio = document.querySelector('#labels input[value=limpio]');
+          if (limpio) limpio.checked = false;
+        }
+        saveCurrent();
+      });
+    }
+
+    function parseRows(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return [];
+      if (trimmed.startsWith('[')) return JSON.parse(trimmed);
+      return trimmed.split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line));
+    }
+
+    function selectedLabels() {
+      return [...document.querySelectorAll('#labels input:checked')].map(x => x.value);
+    }
+
+    function saveCurrent() {
+      const row = state.rows[state.index];
+      if (!row) return;
+      row.labels = selectedLabels();
+      row.notes = notes.value;
+      row.needs_review = row.labels.length === 0;
+      row.annotated_at = new Date().toISOString();
+    }
+
+    function render() {
+      const row = state.rows[state.index];
+      if (!row) {
+        meta.textContent = 'Sin datos cargados.';
+        chunkText.textContent = 'Sin datos cargados.';
+        return;
+      }
+      meta.textContent = `${state.index + 1}/${state.rows.length} | ${row.channel_title || ''} | ${row.video_title || row.title || ''} | ${row.start_seconds || 0}s - ${row.end_seconds || 0}s`;
+      chunkText.textContent = row.text || '';
+      document.querySelectorAll('#labels input').forEach(x => x.checked = (row.labels || []).includes(x.value));
+      notes.value = row.notes || '';
+      const etiquetados = state.rows.filter(r => (r.labels || []).length > 0).length;
+      status.innerHTML = `<span class='ok'>${etiquetados}</span> chunks etiquetados de ${state.rows.length}`;
+    }
+
+    fileInput.addEventListener('change', async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      state.rows = parseRows(text);
+      state.index = 0;
+      render();
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', () => { saveCurrent(); state.index = Math.max(0, state.index - 1); render(); });
+    document.getElementById('nextBtn').addEventListener('click', () => { saveCurrent(); state.index = Math.min(state.rows.length - 1, state.index + 1); render(); });
+    notes.addEventListener('input', saveCurrent);
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      saveCurrent();
+      const out = state.rows.map(row => JSON.stringify(row)).join('\n');
+      const blob = new Blob([out], {type: 'application/jsonl;charset=utf-8'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'dataset_etiquetado.jsonl';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    renderLabels();
+    render();
+  </script>
+</body>
+</html>
