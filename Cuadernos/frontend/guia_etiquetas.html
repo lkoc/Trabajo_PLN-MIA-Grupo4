@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang='es'>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>Guia de etiquetas - Moderacion</title>
+  <style>
+    :root { --bg:#f6f7f9; --panel:#fff; --ink:#18202b; --muted:#5d6b7a; --line:#d7dde5; --brand:#b4232f; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; background:var(--bg); color:var(--ink); }
+    header { background:var(--brand); color:#fff; padding:14px 22px; }
+    main { max-width:1200px; margin:0 auto; padding:18px; display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; }
+    h1 { margin:0; font-size:22px; }
+    h2 { margin:0 0 10px; font-size:16px; }
+    ul { margin:0; padding-left:18px; }
+    li { margin:6px 0; line-height:1.4; }
+    .note { max-width:1200px; margin:0 auto 14px; padding:0 18px; color:var(--muted); font-size:13px; }
+  </style>
+</head>
+<body>
+  <header><h1>Guia de etiquetas del proyecto</h1></header>
+  <p class='note'>Esta guia resume las etiquetas y flags definidos para el etiquetado humano/LLM en este proyecto.</p>
+  <main>
+    <section class='card'><h2>SEGURO</h2><ul><li><strong>seguro</strong>: Sin infraccion: texto informativo, descriptivo o humor sin ataque a persona o grupo.</li><li><strong>seguro_ironia_marcada</strong>: Parodia/ironia cuyo blanco NO es un grupo humano.</li></ul></section><section class='card'><h2>RACISMO_DISCRIMINACION</h2><ul><li><strong>racismo_etnico_explicito</strong>: Uso derogatorio de terminos etnicos (ej. serrano/cholo/negro/indio).</li><li><strong>racismo_linguistico</strong>: Burla de acento andino, motoseo u ortografia de migrantes.</li><li><strong>clasismo_racial</strong>: Inferiorizacion por clase con connotacion etnica (ej. huachafa/chusma/amixer).</li><li><strong>discriminacion_regional</strong>: Ataque por origen regional (Lima vs provincias, etc.).</li><li><strong>racismo_encubierto</strong>: Discriminacion disfrazada de criterio de cultura/educacion.</li></ul></section><section class='card'><h2>ACOSO</h2><ul><li><strong>misoginia_acoso_genero</strong>: Insultos sexualizados, degradacion o ataque por genero.</li><li><strong>homofobia_transfobia</strong>: Insultos o amenazas contra personas LGBTQ+.</li><li><strong>acoso_personal</strong>: Ataque dirigido a persona identificable o doxeo.</li><li><strong>amenaza_directa</strong>: Expresion explicita de intencion de dano fisico/legal/economico.</li></ul></section><section class='card'><h2>CONTENIDO_SEXUAL</h2><ul><li><strong>sexual_explicito</strong>: Descripcion grafica de actos sexuales sin proposito informativo.</li><li><strong>sexual_cosificacion</strong>: Sexualizacion/cosificacion de personas.</li><li><strong>sexual_no_consensual</strong>: Referencia a contenido sexual no consensual.</li></ul></section>
+    <section class='card'>
+      <h2>FLAGS TRANSVERSALES</h2>
+      <ul><li><strong>ironia_ambigua</strong>: No se determina claramente si hay dano o parodia critica. Requiere revision.</li><li><strong>humor_encubridor</strong>: El humor funciona como cobertura para minimizar/normalizar el dano.</li><li><strong>contexto_necesario</strong>: El chunk aislado no alcanza; se necesita contexto adicional del video.</li></ul>
+    </section>
+  </main>
+</body>
+</html>

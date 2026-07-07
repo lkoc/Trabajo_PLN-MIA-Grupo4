@@ -381,67 +381,114 @@ Procesamiento de Lenguaje Natural
   \end{columns}
 \end{frame}
 
-% ==================== 8 ====================
+% ==================== 8A ====================
 \begin{frame}
-  \frametitle{Categorías MVP de Moderación}
+  \frametitle{Taxonomía desde la Literatura Peruana}
 
-  \lead{El primer modelo debe usar pocas clases para mejorar acuerdo entre anotadores y reducir ruido en el entrenamiento.}
+  \lead{Las cuatro categorías base requieren subcategorías porque el racismo, el acoso y el daño en Perú tienen formas específicas que taxonomías genéricas no capturan.}
 
-  \vspace{5mm}
+  \vspace{4mm}
+  \begin{columns}[T]
+    \column{0.32\textwidth}
+      \begin{block}{Racismo negado}
+        {\small Portocarrero (2009): ``fundamento invisible''. El racismo se practica pero se niega; aparece como criterio de educación o clase.}
+      \end{block}
+
+    \column{0.32\textwidth}
+      \begin{block}{Racismo lingüístico}
+        {\small Almeida \& Zavala (2022): burla del acento andino, el ``motoseo'' y la ortografía de migrantes como formas de discriminación en redes.}
+      \end{block}
+
+    \column{0.32\textwidth}
+      \begin{block}{Falla en idiomas locales}
+        {\small Thakur / CDT (2025): los sistemas automáticos fallan con español andino, quechua mezclado y modismos regionales.}
+      \end{block}
+  \end{columns}
+
+  \vfill
+  \tagbox{softred}{no transferible del inglés}
+  \tagbox{softblue}{humor como cobertura del daño}
+  \tagbox{softgreen}{etiquetado humano esencial}
+\end{frame}
+
+% ==================== 8B ====================
+\begin{frame}
+  \frametitle{Categorías y Subcategorías de Etiquetado}
+
+  \kicker{Categorías no mutuamente excluyentes · 12 subcategorías con fundamento peruano}
+  \vspace{2mm}
+
   \begin{columns}[T]
     \column{0.24\textwidth}
       \metriccard{Clase 0}{accentteal}{Seguro}
       \vspace{1mm}
-      {\small Texto normal, informativo o humor sin ataque directo.}
+      {\scriptsize
+        \textbf{seguro}\\sin ataque directo\\
+        \vspace{1mm}
+        \textbf{seguro\_ironía\_marcada}\\parodia señalizada
+      }
 
     \column{0.24\textwidth}
-      \metriccard{Clase 1}{darkred}{Acoso}
+      \metriccard{Clase 1}{accentblue}{Racismo}
       \vspace{1mm}
-      {\small Insulto, burla, humillación o ataque personal.}
+      {\scriptsize
+        étnico\_explícito\\linguístico\\
+        clasismo\_racial\\regional\\encubierto\\
+        {\tiny (Zavala \& Back, 2017;\\Callirgos, 1993)}
+      }
 
     \column{0.24\textwidth}
-      \metriccard{Clase 2}{accentgold}{Sexual}
+      \metriccard{Clase 2}{darkred}{Acoso}
       \vspace{1mm}
-      {\small Lenguaje sexual explícito o acoso sexual.}
+      {\scriptsize
+        misoginia\_género\\homofobia\\
+        personal\_doxeo\\amenaza\_directa\\
+        {\tiny (Monge-Olivarría \&\\Guerra-Corrales, 2023)}
+      }
 
     \column{0.24\textwidth}
-      \metriccard{Clase 3}{accentblue}{Racismo}
+      \metriccard{Clase 3}{accentgold}{Sexual}
       \vspace{1mm}
-      {\small Ataque por origen, etnia, nacionalidad o color de piel.}
+      {\scriptsize
+        explícito\\cosificación\\
+        no\_consensual
+      }
   \end{columns}
 
   \vfill
-  \tagbox{softgreen}{MVP defendible}
-  \tagbox{softblue}{mejor acuerdo humano}
-  \tagbox{softred}{menos solapamiento}
+  \tagbox{softgreen}{12 subcategorías}
+  \tagbox{softblue}{multi-etiqueta permitido}
+  \tagbox{softred}{basadas en expertos peruanos}
 \end{frame}
 
 % ==================== 9 ====================
 \begin{frame}
-  \frametitle{Extensiones Controladas}
+  \frametitle{Flags Transversales: Ironía y Humor como Cobertura}
 
-  \lead{Las clases nuevas se agregan solo cuando haya ejemplos suficientes y reglas de anotación estables.}
+  \lead{No son categorías de daño sino indicadores de ambigüedad que el moderador humano debe resolver antes de confirmar la etiqueta.}
 
-  \vspace{5mm}
+  \vspace{4mm}
   \begin{columns}[T]
-    \column{0.48\textwidth}
-      \begin{block}{Riesgo alto}
-        \begin{itemize}
-          \item Odio o discriminación general.
-          \item Amenaza o incitación a violencia.
-          \item Privacidad / doxxing.
-        \end{itemize}
+    \column{0.32\textwidth}
+      \begin{block}{ironia\_ambigua}
+        {\small No se determina si el daño es intencional o parodia crítica del racismo. Frecuente en canales de opinión (Curwen, Goblinciano).\\{\scriptsize (Vich, 2018)}}
       \end{block}
 
-    \column{0.48\textwidth}
-      \begin{block}{Riesgo contextual}
-        \begin{itemize}
-          \item Desinformación dañina.
-          \item Spam o estafa.
-          \item Cita, ironía, noticia o parodia.
-        \end{itemize}
+    \column{0.32\textwidth}
+      \begin{block}{humor\_encubridor}
+        {\small El hablante usa el humor para negar el daño (``es broma''). Brañez Medina (2012): ``racismo negado en la vida cotidiana''. El daño puede ser real.}
+      \end{block}
+
+    \column{0.32\textwidth}
+      \begin{block}{contexto\_necesario}
+        {\small El chunk aislado no permite clasificar; se requiere el video completo. Ocurre con español andino y modismos regionales.\\{\scriptsize (Thakur / CDT, 2025)}}
       \end{block}
   \end{columns}
+
+  \vfill
+  \tagbox{softgold}{coexisten con una categoría de daño}
+  \tagbox{softblue}{activan revisión humana obligatoria}
+  \tagbox{softgreen}{guía: 7 pasos, 13 ejemplos anotados}
 \end{frame}
 
 \begin{frame}
@@ -755,6 +802,47 @@ Procesamiento de Lenguaje Natural
 
     \bibitem[Fuentes web, 2026]{fuentes2026}
     Canales públicos de YouTube revisables: RPP Noticias, TVPerú Noticias, El Comercio, La República, La Encerrona, Epicentro TV, Magaly TV La Firme, Amor y Fuego, América Hoy.
+
+    \bibitem[Zavala \& Back, 2017]{zavala2017racismo}
+    Zavala, V. \& Back, M. (Eds.) (2017).
+    \newblock \textit{Racismo y lenguaje}. Fondo Editorial PUCP. 409 pp.
+
+    \bibitem[Zavala \& Zariquiey, 2007]{zavala2007discurso}
+    Zavala, V. \& Zariquiey, R. (2007).
+    \newblock ``Yo te segrego a ti...'': discurso racista en el Perú contemporáneo.
+    \newblock En Wodak \& van Dijk (Eds.), \textit{Racismo y discurso en América Latina}, pp.~243--285. Gedisa.
+
+    \bibitem[Almeida \& Zavala, 2022]{almeida2022motoso}
+    Almeida, C. \& Zavala, V. (2022).
+    \newblock ``Motoso y terruco'': ideologías lingüísticas y racialización en la política peruana.
+    \newblock \textit{Lexis}, 46(2). doi:10.18800/lexis.202202.004.
+
+    \bibitem[Brañez Medina, 2012]{branez2012amixer}
+    Brañez Medina, R. F. (2012).
+    \newblock Identidades ``amixer'' y ``no-amixer'': racismo cultural en el espacio virtual.
+    \newblock \textit{Discurso \& Sociedad}, 6(1), 1--35.
+
+    \bibitem[Callirgos, 1993]{callirgos1993racismo}
+    Callirgos, J. C. (1993).
+    \newblock \textit{El racismo: la cuestión del otro (y de uno)}. DESCO, Lima.
+
+    \bibitem[Portocarrero, 2009]{portocarrero2009racismo}
+    Portocarrero, G. (2009).
+    \newblock \textit{Racismo y mestizaje y otros ensayos}. Fondo Editorial del Congreso del Perú.
+
+    \bibitem[Vich, 2018]{vich2018dinamicas}
+    Vich, V. (2018).
+    \newblock Dinámicas de racismo en el Perú: la perspectiva de Portocarrero.
+    \newblock \textit{Debates en Sociología}, (47), 127--145.
+
+    \bibitem[Monge-Olivarría \& Guerra-Corrales, 2023]{monge2023violencia}
+    Monge-Olivarría, C. \& Guerra-Corrales, J. (2023).
+    \newblock Violencia de género en Twitter: feminización como insulto.
+    \newblock \textit{Lengua, Literatura y Arte}.
+
+    \bibitem[Thakur / CDT, 2025]{thakur2025quechua}
+    Thakur, D. (2025).
+    \newblock \textit{Moderación de contenido en quechua en redes sociales}. CDT.
   \end{thebibliography}
 \end{frame}
 

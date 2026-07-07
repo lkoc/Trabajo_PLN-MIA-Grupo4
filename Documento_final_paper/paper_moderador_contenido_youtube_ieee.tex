@@ -65,26 +65,63 @@ La Fig.~\ref{fig:pipeline} resume el flujo propuesto. El texto se obtiene desde 
 \label{fig:pipeline}
 \end{figure*}
 
-\subsection{Categorias de Moderacion}
+\subsection{Categorias de Moderacion con Fundamento en Literatura Peruana}
 
-La primera version usa pocas categorias para aumentar acuerdo entre anotadores. La Tabla~\ref{tab:categorias} resume el conjunto minimo.
+El diseno de categorias parte de la especificidad del contexto peruano documentada en la literatura academica local. Portocarrero \cite{portocarrero2009racismo} identifico tres mecanismos estructurales del racismo peruano: el fundamento invisible (el racismo es omnipresente pero se niega socialmente), el fantasma del patron (reproduccion inconsciente de jerarquias coloniales) y la utopia del blanqueamiento (aspiracion a ascender racialmente mediante apariencia y habla). Zavala y Zariquiey \cite{zavala2007discurso} mostraron como ciertos sectores justifican practicas racistas bajo apariencia de criterios educativos o culturales, y Zavala y Back \cite{zavala2017racismo} extendieron ese marco al espacio virtual peruano. Almeida y Zavala \cite{almeida2022motoso} documentaron el \emph{racismo linguistico} sobre el espanol andino en redes sociales: el ``motoseo'' y otras marcas del habla quechua-castellano se usan para racializar y deslegitimar voces politicas. En acoso digital, Monge-Olivarria y Guerra-Corrales \cite{monge2023violencia} identificaron la feminizacion como forma de insulto en Twitter peruano.
+
+Tres rasgos del corpus hacen que la taxonomia no sea transferible directamente de datasets en ingles: (i)~el racismo cultural opera mediante lenguaje y no solo mediante insultos fenotipicos \cite{branez2012amixer}; (ii)~el humor se usa como cobertura plausible del dano, lo que Branez Medina \cite{branez2012amixer} llama ``racismo negado en la vida cotidiana''; (iii)~los sistemas de moderacion automatica fallan sistematicamente con el espanol andino, quechua mezclado y modismos regionales \cite{thakur2025quechua}. El esquema incluye \emph{flags transversales} (Tabla~\ref{tab:flags}) que no son categorias de dano sino indicadores de ambiguedad que el moderador humano debe resolver. Las categorias principales no son mutuamente excluyentes.
 
 \begin{table}[h]
 \centering
-\caption{Categorias MVP de moderacion textual}
+\caption{Taxonomia de moderacion textual con subcategorias para el contexto peruano}
 \label{tab:categorias}
-\begin{tabular}{p{0.23\linewidth}p{0.65\linewidth}}
+\small
+\begin{tabular}{p{0.40\linewidth}p{0.50\linewidth}}
 \toprule
-\textbf{Categoria} & \textbf{Criterio breve} \\
+\textbf{Etiqueta} & \textbf{Criterio / senal textual} \\
 \midrule
-Seguro & Texto informativo, humor sin ataque directo o descripcion neutral. \\
-Acoso & Insulto, burla, humillacion o ataque personal. \\
-Sexual & Lenguaje sexual explicito, acoso sexual o insinuacion no pertinente. \\
-Racismo & Ataque por origen, etnia, nacionalidad o color de piel. \\
-Contexto sensible & Cita, ironia, parodia o noticia que requiere revision adicional. \\
+\textit{SEGURO} & \\
+\quad seguro & Texto informativo, descriptivo o humor sin ataque. \\
+\quad seguro\_ironia\_marcada & Parodia cuyo blanco no es un grupo humano. \\
+\midrule
+\textit{RACISMO / DISCRIMINACION} & \\
+\quad racismo\_etnico\_explicito & Uso derogatorio de ``serrano'', ``cholo'', ``negro'', ``indio'' \cite{callirgos1993racismo}. \\
+\quad racismo\_linguistico & Burla del acento andino, el motoseo o la ortografia \cite{almeida2022motoso}. \\
+\quad clasismo\_racial & Inferioriza por clase social con connotacion etnica \cite{callirgos1993racismo}. \\
+\quad discriminacion\_regional & Ataque por ser provinciano o de fuera de Lima. \\
+\quad racismo\_encubierto & Discriminacion disfrazada de criterio de ``cultura'' \cite{zavala2007discurso}. \\
+\midrule
+\textit{ACOSO} & \\
+\quad misoginia\_acoso\_genero & Insultos sexualizados o degradacion por ser mujer \cite{monge2023violencia}. \\
+\quad homofobia\_transfobia & Insultos o amenazas contra personas LGBTQ+. \\
+\quad acoso\_personal & Ataque a persona identificable, doxeo. \\
+\quad amenaza\_directa & Expresion de intencion de dano fisico o legal. \\
+\midrule
+\textit{CONTENIDO SEXUAL} & \\
+\quad sexual\_explicito & Descripcion grafica de actos sexuales. \\
+\quad sexual\_cosificacion & Sexualizacion de personas sin contexto editorial. \\
+\quad sexual\_no\_consensual & Referencia a contenido no consensual. \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{table}[h]
+\centering
+\caption{Flags transversales de ambiguedad para el corpus peruano}
+\label{tab:flags}
+\small
+\begin{tabular}{p{0.32\linewidth}p{0.58\linewidth}}
+\toprule
+\textbf{Flag} & \textbf{Criterio} \\
+\midrule
+ironia\_ambigua & No se determina si el dano es intencional o es parodia critica del racismo \cite{vich2018dinamicas}. \\
+humor\_encubridor & El hablante usa humor para negar el dano (``es solo una broma'') \cite{branez2012amixer}. \\
+contexto\_necesario & El chunk aislado no permite clasificar sin ver el video \cite{thakur2025quechua}. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Una guia de anotacion detallada con un proceso de decision de siete pasos y trece ejemplos anotados por categoria se encuentra en el documento companion \texttt{modelos/skills/clasificacion\_moderacion\_peru.md} incluido en el repositorio del proyecto.
 
 \subsection{Agregacion por Video}
 
