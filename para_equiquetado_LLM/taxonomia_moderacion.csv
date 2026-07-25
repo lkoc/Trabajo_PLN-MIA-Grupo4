@@ -1,0 +1,18 @@
+label,categoria,descripcion,fuente
+seguro,SEGURO,"Sin infraccion. Texto informativo, descriptivo o humor sin ataque a persona o grupo.",
+seguro_ironia_marcada,SEGURO,Parodia o ironia cuyo blanco NO es un grupo humano. El anotador confirma ausencia de dano.,
+racismo_etnico_explicito,RACISMO_DISCRIMINACION,"Uso derogatorio de serrano, cholo, negro, indio u otros terminos etnicos.",Callirgos (1993); Zavala & Back (2017)
+racismo_linguistico,RACISMO_DISCRIMINACION,"Burla del acento andino, el motoseo o la ortografia de migrantes (amixer).",Almeida & Zavala (2022)
+clasismo_racial,RACISMO_DISCRIMINACION,"Inferioriza por clase social con connotacion etnica (huachafa, chusma, amixer).",Callirgos (1993); Branez Medina (2012)
+discriminacion_regional,RACISMO_DISCRIMINACION,"Ataque por ser provinciano, serrano o de fuera de Lima.",Zavala & Zariquiey (2007)
+racismo_encubierto,RACISMO_DISCRIMINACION,Discriminacion disfrazada de criterio de educacion o cultura (fundamento invisible).,Zavala & Zariquiey (2007); Portocarrero (2009)
+misoginia_acoso_genero,ACOSO,"Insultos sexualizados, degradacion o ataque por ser mujer; feminizacion como insulto.",Monge-Olivarria & Guerra-Corrales (2023)
+homofobia_transfobia,ACOSO,Insultos o amenazas contra personas LGBTQ+ por orientacion o identidad.,
+acoso_personal,ACOSO,"Ataque dirigido a persona identificable por nombre, cargo o rol; doxeo.",
+amenaza_directa,ACOSO,"Expresion explicita de intencion de dano fisico, legal o economico.",
+sexual_explicito,CONTENIDO_SEXUAL,Descripcion grafica de actos sexuales sin proposito informativo.,
+sexual_cosificacion,CONTENIDO_SEXUAL,Sexualizacion o cosificacion de personas como objetos sexuales.,
+sexual_no_consensual,CONTENIDO_SEXUAL,Referencia a contenido no consensual o revenge porn.,
+ironia_ambigua,FLAG,No se determina si el dano es intencional o parodia critica. Activa revision humana.,Vich (2018); Branez Medina (2012)
+humor_encubridor,FLAG,Humor usado para negar el dano (es broma). El dano puede ser real encubierto.,Branez Medina (2012)
+contexto_necesario,FLAG,Chunk aislado insuficiente para clasificar. Requiere ver el video completo.,Thakur / CDT (2025)

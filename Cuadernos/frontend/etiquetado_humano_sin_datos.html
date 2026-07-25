@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang='es'>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>Etiquetado humano - Moderacion de contenido</title>
+  <style>
+    :root { --bg: #f6f7f9; --panel: #ffffff; --ink: #18202b; --muted: #5d6b7a; --line: #d7dde5; --brand: #b4232f; --ok: #0f7a45; --touch: 44px; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--ink); }
+    header { background: var(--brand); color: white; padding: 12px 16px; }
+    main { max-width: 1320px; margin: 0 auto; padding: 14px; display: grid; grid-template-columns: 1fr 260px; gap: 14px; }
+    section, aside { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+    h1 { font-size: 20px; margin: 0; }
+    h2 { font-size: 16px; margin: 0 0 12px; }
+    button { border: 1px solid var(--line); background: white; border-radius: 8px; padding: 10px 14px; cursor: pointer; min-height: var(--touch); font-size: 14px; }
+    button.primary { background: var(--brand); color: white; border-color: var(--brand); }
+    button.linklike { color: #1248a3; border-color: #bcd0ee; background: #f6f9ff; }
+    .file-button { border: 1px solid #bcd0ee; background: #f6f9ff; color: #1248a3; border-radius: 8px; padding: 10px 14px; cursor: pointer; min-height: var(--touch); display: inline-flex; align-items: center; font-size: 14px; }
+    .dataset-name { color: var(--muted); font-size: 12px; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    input[type='text'], textarea { border: 1px solid var(--line); border-radius: 8px; font-family: inherit; }
+    input[type='text'] { min-height: 40px; padding: 6px 10px; }
+    textarea { width: 100%; min-height: 96px; resize: vertical; padding: 10px; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+    .top-sticky { position: sticky; top: 0; z-index: 30; background: var(--panel); padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .meta { color: var(--muted); font-size: 13px; line-height: 1.35; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chunk { border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-height: 220px; line-height: 1.55; background: #fbfcfd; }
+    .labels { display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .label { border: 1px solid var(--line); border-radius: 6px; padding: 8px; display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+    .label input { margin-top: 2px; transform: scale(1.1); }
+    .label-text { font-size: 13px; user-select: none; }
+    .annotation-layout { display: grid; grid-template-columns: 1fr 290px 290px; gap: 12px; align-items: start; }
+    .labels-panel { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: #fcfdff; max-height: 74vh; overflow: auto; }
+    .chunk-center { min-width: 0; }
+    .video-link { margin-bottom: 10px; font-size: 13px; }
+    .video-link a { color: #1248a3; text-decoration: none; font-weight: bold; }
+    .video-link a:hover { text-decoration: underline; }
+    .quick-links { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .status { margin-top: 12px; font-size: 13px; color: var(--muted); }
+    .ok { color: var(--ok); font-weight: bold; }
+    .cat-seguro { background: #eaf8ee; border-color: #b8e2c3; }
+    .cat-racismo { background: #fff1f1; border-color: #f0c2c2; }
+    .cat-acoso { background: #fff7e8; border-color: #efd7a9; }
+    .cat-sexual { background: #f1edff; border-color: #d2c5ff; }
+    .cat-flag { background: #eaf4ff; border-color: #bcd8f5; }
+
+    .guide-dialog { width: min(980px, 96vw); border: none; border-radius: 12px; padding: 0; }
+    .guide-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+    .guide-shell { background: #fff; color: var(--ink); }
+    .guide-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: #fff; }
+    .guide-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); padding: 12px; }
+    .guide-card { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: #fbfcfd; }
+    .guide-card h3 { margin: 0 0 8px; font-size: 14px; }
+    .guide-card ul { margin: 0; padding-left: 18px; }
+    .guide-card li { margin: 6px 0; font-size: 13px; line-height: 1.4; }
+
+    @media (max-width: 1150px) {
+      main { grid-template-columns: 1fr; }
+      .annotation-layout { grid-template-columns: 1fr; }
+      .labels-panel { max-height: none; }
+    }
+
+    @media (max-width: 768px) {
+      header { position: sticky; top: 0; z-index: 40; padding: 10px 12px; }
+      h1 { font-size: 17px; }
+      main { padding: 10px; gap: 10px; }
+      section, aside { padding: 10px; border-radius: 8px; }
+      .toolbar { gap: 6px; }
+      .top-sticky { top: 0; margin: -4px 0 8px; }
+      .toolbar button { flex: 1 1 31%; min-width: 96px; }
+      #annotatorId, #annotatorModel, #skillFile { width: 100% !important; }
+      .meta { font-size: 12px; }
+      .chunk { min-height: 180px; padding: 12px; }
+      .label { padding: 10px; }
+      .label-text { font-size: 14px; }
+      aside { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Etiquetado humano - Moderacion de contenido</h1>
+    <div class='quick-links'>
+      <button type='button' class='linklike' data-open-guide='1'>Guia de etiquetas y ejemplos</button>
+    </div>
+  </header>
+  <main>
+    <section>
+      <div class='toolbar top-sticky'>
+        <strong style='font-size:12px'>Anotador</strong>
+        <label style='font-size:12px'><input type='radio' name='ann_type' value='human' checked> Humano</label>
+        <label style='font-size:12px'><input type='radio' name='ann_type' value='llm'> LLM</label>
+        <input id='annotatorId' type='text' maxlength='3' placeholder='Iniciales (max. 3)' style='width:140px;font-size:12px'>
+        <input id='annotatorModel' type='text' placeholder='Modelo LLM (ej. gpt-4o)' style='display:none;width:190px;font-size:12px'>
+        <input id='skillFile' type='text' value='clasificacion_moderacion_peru.md' style='display:none;width:220px;font-size:12px;color:var(--muted)'>
+      </div>
+      <div class='toolbar'>
+        <button id='prevBtn'>Anterior</button>
+        <button id='nextBtn' class='primary'>Siguiente</button>
+        <button id='exportBtn'>Exportar JSONL</button>
+        <label for='datasetFile' class='file-button'>Cargar JSONL/JSON</label>
+        <input id='datasetFile' type='file' accept='.jsonl,.json,application/json' hidden>
+        <span id='datasetName' class='dataset-name'></span>
+        <button id='openGuideBtn' class='linklike' type='button' data-open-guide='1'>Guia</button>
+      </div>
+      <div id='meta' class='meta'>Esperando datos...</div>
+      <div id='videoSource' class='video-link'>Video original: cargando...</div>
+      <div class='annotation-layout'>
+        <div class='chunk-center'>
+          <div id='chunkText' class='chunk'>Preparando interfaz...</div>
+          <h2 style='margin-top:14px'>Notas</h2>
+          <textarea id='notes' placeholder='Comentario breve del anotador'></textarea>
+          <div id='status' class='status'></div>
+        </div>
+        <div id='labelsLeft' class='labels-panel labels'></div>
+        <div id='labelsRight' class='labels-panel labels'></div>
+      </div>
+    </section>
+    <aside>
+      <h2>Ayuda rapida</h2>
+      <p style='font-size:13px;color:var(--muted);line-height:1.45'>Este HTML no contiene datos. Carga un archivo JSONL o JSON desde tu equipo.</p>
+      <button type='button' data-open-guide='1' class='linklike'>Abrir guia de etiquetas</button>
+    </aside>
+  </main>
+
+  <dialog id='guideDialog' class='guide-dialog'>
+    <div class='guide-shell'>
+      <div class='guide-head'>
+        <h2 style='margin:0'>Guia de etiquetas del proyecto</h2>
+        <button type='button' id='closeGuideBtn'>Cerrar</button>
+      </div>
+      <div class='guide-grid'>
+        <section class='guide-card'><h3>SEGURO</h3><ul><li><strong>seguro</strong>: Sin infraccion: texto informativo, descriptivo o humor sin ataque a persona o grupo.</li><li><strong>seguro_ironia_marcada</strong>: Parodia/ironia cuyo blanco NO es un grupo humano.</li></ul></section><section class='guide-card'><h3>RACISMO_DISCRIMINACION</h3><ul><li><strong>racismo_etnico_explicito</strong>: Uso derogatorio de terminos etnicos (ej. serrano/cholo/negro/indio).</li><li><strong>racismo_linguistico</strong>: Burla de acento andino, motoseo u ortografia de migrantes.</li><li><strong>clasismo_racial</strong>: Inferiorizacion por clase con connotacion etnica (ej. huachafa/chusma/amixer).</li><li><strong>discriminacion_regional</strong>: Ataque por origen regional (Lima vs provincias, etc.).</li><li><strong>racismo_encubierto</strong>: Discriminacion disfrazada de criterio de cultura/educacion.</li></ul></section><section class='guide-card'><h3>ACOSO</h3><ul><li><strong>misoginia_acoso_genero</strong>: Insultos sexualizados, degradacion o ataque por genero.</li><li><strong>homofobia_transfobia</strong>: Insultos o amenazas contra personas LGBTQ+.</li><li><strong>acoso_personal</strong>: Ataque dirigido a persona identificable o doxeo.</li><li><strong>amenaza_directa</strong>: Expresion explicita de intencion de dano fisico/legal/economico.</li></ul></section><section class='guide-card'><h3>CONTENIDO_SEXUAL</h3><ul><li><strong>sexual_explicito</strong>: Descripcion grafica de actos sexuales sin proposito informativo.</li><li><strong>sexual_cosificacion</strong>: Sexualizacion/cosificacion de personas.</li><li><strong>sexual_no_consensual</strong>: Referencia a contenido sexual no consensual.</li></ul></section>
+        <section class='guide-card'>
+          <h3>FLAGS TRANSVERSALES</h3>
+          <ul><li><strong>ironia_ambigua</strong>: No se determina claramente si hay dano o parodia critica. Requiere revision.</li><li><strong>humor_encubridor</strong>: El humor funciona como cobertura para minimizar/normalizar el dano.</li><li><strong>contexto_necesario</strong>: El chunk aislado no alcanza; se necesita contexto adicional del video.</li></ul>
+        </section>
+      </div>
+    </div>
+  </dialog>
+
+  
+  <script>
+    const LABEL_SECTIONS = [
+      ['SEGURO', ['seguro', 'seguro_ironia_marcada']],
+      ['RACISMO / DISCRIMINACION', ['racismo_etnico_explicito','racismo_linguistico','clasismo_racial','discriminacion_regional','racismo_encubierto']],
+      ['ACOSO', ['misoginia_acoso_genero','homofobia_transfobia','acoso_personal','amenaza_directa']],
+      ['CONTENIDO SEXUAL', ['sexual_explicito','sexual_cosificacion','sexual_no_consensual']],
+    ];
+    const SECTION_CLASS = {
+      'SEGURO': 'cat-seguro',
+      'RACISMO / DISCRIMINACION': 'cat-racismo',
+      'ACOSO': 'cat-acoso',
+      'CONTENIDO SEXUAL': 'cat-sexual',
+    };
+    const SAFE_LABELS = ['seguro', 'seguro_ironia_marcada'];
+    const FLAGS = ['ironia_ambigua', 'humor_encubridor', 'contexto_necesario'];
+    const DISPLAY_LABELS = {
+      acoso_personal: 'Acoso personal/lenguaje obceno',
+      amenaza_directa: 'Amenza directa/Violencia'
+    };
+    const state = { rows: [], order: [], index: 0 };
+    const meta = document.getElementById('meta');
+    const chunkText = document.getElementById('chunkText');
+    const labelsLeft = document.getElementById('labelsLeft');
+    const labelsRight = document.getElementById('labelsRight');
+    const notes = document.getElementById('notes');
+    const status = document.getElementById('status');
+    const videoSource = document.getElementById('videoSource');
+    const STORAGE_KEY = 'moderacion.annotator.v1';
+    const guideDialog = document.getElementById('guideDialog');
+    const datasetFile = document.getElementById('datasetFile');
+    const datasetName = document.getElementById('datasetName');
+
+    function shuffleInPlace(arr) {
+      for (let i = arr.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function currentRow() {
+      if (!state.rows.length || !state.order.length) return null;
+      return state.rows[state.order[state.index]] || null;
+    }
+
+    function formatLabelName(label) {
+      return DISPLAY_LABELS[label] || label.replaceAll('_', ' ');
+    }
+
+    function createSectionBlock(parent, sectionName, labels) {
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'font-size:10px;font-weight:bold;color:var(--muted);text-transform:uppercase;margin:6px 0 2px;letter-spacing:.05em';
+      hdr.textContent = sectionName;
+      parent.appendChild(hdr);
+      const sectionClass = SECTION_CLASS[sectionName] || '';
+      labels.forEach(label => {
+        const wrap = document.createElement('label');
+        wrap.className = `label ${sectionClass}`;
+        wrap.innerHTML = `<input class='label-checkbox' type='checkbox' value='${label}'> <span class='label-text'>${formatLabelName(label)}</span>`;
+        parent.appendChild(wrap);
+      });
+    }
+
+    function renderLabels() {
+      labelsLeft.innerHTML = '';
+      labelsRight.innerHTML = '';
+      const leftSections = LABEL_SECTIONS.slice(0, 2);
+      const rightSections = LABEL_SECTIONS.slice(2);
+      leftSections.forEach(([name, labels]) => createSectionBlock(labelsLeft, name, labels));
+      rightSections.forEach(([name, labels]) => createSectionBlock(labelsRight, name, labels));
+
+      const fhdr = document.createElement('div');
+      fhdr.style.cssText = 'font-size:10px;font-weight:bold;color:var(--muted);text-transform:uppercase;margin:8px 0 2px;letter-spacing:.05em;border-top:1px solid var(--line);padding-top:6px';
+      fhdr.textContent = 'FLAGS TRANSVERSALES';
+      labelsRight.appendChild(fhdr);
+      FLAGS.forEach(flag => {
+        const wrap = document.createElement('label');
+        wrap.className = 'label cat-flag';
+        wrap.innerHTML = `<input class='label-checkbox' type='checkbox' value='${flag}'> <span class='label-text'><em>${formatLabelName(flag)}</em></span>`;
+        labelsRight.appendChild(wrap);
+      });
+
+      const labelsRoot = document.querySelector('.annotation-layout');
+      labelsRoot.addEventListener('click', event => {
+        if (!event.target.classList.contains('label-text')) return;
+        event.preventDefault();
+        const label = event.target.closest('label');
+        if (!label) return;
+        const checkbox = label.querySelector('.label-checkbox');
+        if (!checkbox) return;
+        checkbox.checked = !checkbox.checked;
+        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+
+      labelsRoot.addEventListener('change', event => {
+        if (!event.target.classList.contains('label-checkbox')) return;
+        const val = event.target.value;
+        if (SAFE_LABELS.includes(val) && event.target.checked) {
+          document.querySelectorAll('.label-checkbox').forEach(x => {
+            if (!SAFE_LABELS.includes(x.value) && !FLAGS.includes(x.value)) x.checked = false;
+          });
+        }
+        if (!SAFE_LABELS.includes(val) && !FLAGS.includes(val) && event.target.checked) {
+          SAFE_LABELS.forEach(s => {
+            const el = document.querySelector(`.label-checkbox[value='${s}']`);
+            if (el) el.checked = false;
+          });
+        }
+        saveCurrent();
+      });
+    }
+
+    function parseRows(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return [];
+      if (trimmed.startsWith('[')) return JSON.parse(trimmed);
+      return trimmed.split(String.fromCharCode(10)).map(line => line.replace(String.fromCharCode(13), '')).filter(Boolean).map(line => JSON.parse(line));
+    }
+
+    function selectedLabels() {
+      return [...document.querySelectorAll('.label-checkbox:checked')].map(x => x.value);
+    }
+
+    function formatTimestamp(totalSeconds) {
+      const sec = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function getAnnotatorMeta() {
+      const type = document.querySelector('input[name=ann_type]:checked')?.value || 'human';
+      const id = (document.getElementById('annotatorId')?.value || '').trim().toUpperCase().slice(0, 3);
+      const model = type === 'llm' ? (document.getElementById('annotatorModel')?.value.trim() || null) : null;
+      const skill = type === 'llm' ? (document.getElementById('skillFile')?.value.trim() || null) : null;
+      return { annotator_type: type, annotator_id: id, annotator_model: model, skill_file: skill };
+    }
+
+    function persistAnnotatorMeta() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(getAnnotatorMeta()));
+    }
+
+    function restoreAnnotatorMeta() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const ann = JSON.parse(raw);
+        const radio = document.querySelector(`input[name=ann_type][value='${ann.annotator_type || 'human'}']`);
+        if (radio) radio.checked = true;
+        if (ann.annotator_id) document.getElementById('annotatorId').value = ann.annotator_id;
+        if (ann.annotator_model) document.getElementById('annotatorModel').value = ann.annotator_model;
+        if (ann.skill_file) document.getElementById('skillFile').value = ann.skill_file;
+      } catch (e) {}
+    }
+
+    function updateAnnotatorFieldVisibility() {
+      const llm = document.querySelector('input[name=ann_type]:checked')?.value === 'llm';
+      document.getElementById('annotatorModel').style.display = llm ? 'inline-block' : 'none';
+      document.getElementById('skillFile').style.display = llm ? 'inline-block' : 'none';
+    }
+
+    function isLabeled(row) {
+      const nLabels = (row.labels || []).length;
+      const nFlags = (row.flags || []).length;
+      const hasNotes = Boolean((row.notes || '').trim());
+      return nLabels > 0 || nFlags > 0 || hasNotes;
+    }
+
+    function saveCurrent() {
+      const row = currentRow();
+      if (!row) return;
+      const all = selectedLabels();
+      const ann = getAnnotatorMeta();
+      row.labels = all.filter(l => !FLAGS.includes(l));
+      row.flags = all.filter(l => FLAGS.includes(l));
+      row.notes = notes.value;
+      row.needs_review = row.labels.length === 0 || row.flags.length > 0;
+      row.annotated_at = new Date().toISOString();
+      row.annotator_type = ann.annotator_type;
+      row.annotator_id = ann.annotator_id;
+      row.annotator_model = ann.annotator_model;
+      row.skill_file = ann.skill_file;
+      row.score_confianza = row.score_confianza ?? null;
+      row.justificacion = row.justificacion ?? '';
+      persistAnnotatorMeta();
+    }
+
+    function toAnnotationRecord(row) {
+      return {
+        chunk_id: row.chunk_id,
+        labels: [...(row.labels || [])],
+        flags: [...(row.flags || [])],
+        needs_review: Boolean(row.needs_review),
+        notes: row.notes || '',
+        annotator_type: row.annotator_type || 'human',
+        annotator_id: row.annotator_id || '',
+        annotator_model: row.annotator_model ?? null,
+        skill_file: row.skill_file ?? null,
+        score_confianza: row.score_confianza ?? null,
+        justificacion: row.justificacion || '',
+        annotated_at: row.annotated_at || new Date().toISOString(),
+      };
+    }
+
+    function buildMetaLine(row) {
+      const idx = state.index + 1;
+      const total = state.rows.length;
+      const channel = row.channel_title || '';
+      const title = row.video_title || row.title || '';
+      const start = Number(row.start_seconds || 0).toFixed(1);
+      const end = Number(row.end_seconds || 0).toFixed(1);
+      if (window.innerWidth <= 768) {
+        return `${idx}/${total} | ${channel || 'Canal'} | ${start}s-${end}s`;
+      }
+      return `${idx}/${total} (orden aleatorio) | ${channel} | ${title} | ${start}s - ${end}s`;
+    }
+
+    function render() {
+      const row = currentRow();
+      if (!row) {
+        meta.textContent = 'Sin chunks cargados.';
+        chunkText.textContent = 'Selecciona Cargar JSONL/JSON y elige el dataset de chunks.';
+        videoSource.textContent = 'Video original: no disponible';
+        return;
+      }
+      meta.textContent = buildMetaLine(row);
+      const start = Number(row.start_seconds || 0);
+      const videoId = (row.video_id || '').trim();
+      if (videoId) {
+        const ts = formatTimestamp(start);
+        const url = `https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(start)}s`;
+        videoSource.innerHTML = `Video original en YouTube: <a href='${url}' target='_blank' rel='noopener'>${ts}</a>`;
+      } else {
+        videoSource.textContent = 'Video original: no disponible para este chunk';
+      }
+      chunkText.textContent = row.text || '';
+      const active = [...(row.labels || []), ...(row.flags || [])];
+      document.querySelectorAll('.label-checkbox').forEach(x => x.checked = active.includes(x.value));
+      notes.value = row.notes || '';
+      updateAnnotatorFieldVisibility();
+      const ann = getAnnotatorMeta();
+      const etiquetados = state.rows.filter(isLabeled).length;
+      const icono = ann.annotator_type === 'llm' ? '🤖' : '👤';
+      status.innerHTML = `<span class='ok'>${etiquetados}</span> etiquetados de ${state.rows.length} | ${icono} <strong>${ann.annotator_id || '—'}</strong>`;
+    }
+
+    function loadEmbeddedChunks() {
+      const source = document.getElementById('embeddedChunks');
+      if (!source) return [];
+      const text = source.textContent || '[]';
+      const parsed = parseRows(text);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+
+    function activateRows(rows, sourceName = '') {
+      if (!Array.isArray(rows)) throw new Error('El dataset debe ser una lista JSON o un archivo JSONL.');
+      const seen = new Set();
+      rows.forEach((row, index) => {
+        const chunkId = String(row?.chunk_id || '').trim();
+        if (!chunkId) throw new Error(`Registro ${index + 1}: falta chunk_id.`);
+        if (seen.has(chunkId)) throw new Error(`chunk_id duplicado: ${chunkId}`);
+        if (typeof row.text !== 'string') throw new Error(`Chunk ${chunkId}: falta el texto canónico.`);
+        seen.add(chunkId);
+      });
+      state.rows = rows;
+      state.order = shuffleInPlace(rows.map((_, i) => i));
+      state.index = 0;
+      datasetName.textContent = sourceName;
+      render();
+    }
+
+    async function loadDatasetFile(file) {
+      if (!file) return;
+      try {
+        const rows = parseRows(await file.text());
+        activateRows(rows, `${file.name} · ${rows.length} chunks`);
+      } catch (error) {
+        activateRows([], 'Error de carga');
+        alert(`No se pudo cargar el dataset: ${error.message}`);
+      }
+    }
+
+    function bindGuideDialog() {
+      if (!guideDialog) return;
+      document.querySelectorAll('[data-open-guide="1"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (typeof guideDialog.showModal === 'function') {
+            guideDialog.showModal();
+          }
+        });
+      });
+      const closeBtn = document.getElementById('closeGuideBtn');
+      if (closeBtn) closeBtn.addEventListener('click', () => guideDialog.close());
+      guideDialog.addEventListener('click', (event) => {
+        if (event.target === guideDialog) guideDialog.close();
+      });
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => { saveCurrent(); state.index = Math.max(0, state.index - 1); render(); });
+    document.getElementById('nextBtn').addEventListener('click', () => { saveCurrent(); state.index = Math.min(state.rows.length - 1, state.index + 1); render(); });
+    notes.addEventListener('input', saveCurrent);
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      saveCurrent();
+      const ann = getAnnotatorMeta();
+      if (!ann.annotator_id) {
+        alert('Configura las iniciales del anotador antes de exportar.');
+        return;
+      }
+      const prefix = ann.annotator_id ? ann.annotator_id.toLowerCase() + '_' : '';
+      const labeledRows = state.rows.filter(isLabeled);
+      const out = labeledRows.map(row => JSON.stringify(toAnnotationRecord(row))).join(String.fromCharCode(10));
+      const blob = new Blob([out], { type: 'application/jsonl;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${prefix}labeled_chunks.jsonl`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    window.addEventListener('resize', () => {
+      if (currentRow()) meta.textContent = buildMetaLine(currentRow());
+    });
+
+    document.querySelectorAll('input[name=ann_type]').forEach(r => {
+      r.addEventListener('change', () => { updateAnnotatorFieldVisibility(); saveCurrent(); });
+    });
+    document.getElementById('annotatorId').addEventListener('input', saveCurrent);
+    document.getElementById('annotatorModel').addEventListener('input', saveCurrent);
+    document.getElementById('skillFile').addEventListener('input', saveCurrent);
+    datasetFile.addEventListener('change', event => loadDatasetFile(event.target.files?.[0]));
+
+    restoreAnnotatorMeta();
+    updateAnnotatorFieldVisibility();
+    renderLabels();
+    bindGuideDialog();
+    const embeddedRows = loadEmbeddedChunks();
+    activateRows(embeddedRows, embeddedRows.length ? `${embeddedRows.length} chunks embebidos` : '');
+  </script>
+</body>
+</html>
