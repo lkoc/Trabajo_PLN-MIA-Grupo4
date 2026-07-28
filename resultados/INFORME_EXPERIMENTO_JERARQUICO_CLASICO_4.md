@@ -1,6 +1,6 @@
 # Modelos clásicos planos y jerárquicos con cuatro daños
 
-Fecha: 2026-07-28T02:02:18-05:00
+Fecha: 2026-07-28T08:21:46-05:00
 
 ## Datos y diseño
 
@@ -32,10 +32,10 @@ Ganador por validation: **SVM lineal calibrado palabra+carácter · Cascada bina
 
 ## Artefactos
 
-- Resultado: `resultados\metricas\jerarquico_clasico_4\resultado.json`
-- Modelos: `modelos\jerarquico_clasico_4`
-- Comparación: `resultados\metricas\jerarquico_clasico_4\comparacion_modelos.csv`
-- Bootstrap: `resultados\metricas\jerarquico_clasico_4\bootstrap_pareado_por_video.csv`
+- Resultado: `resultados/metricas/jerarquico_clasico_4/resultado.json`
+- Modelos: `modelos/jerarquico_clasico_4`
+- Comparación: `resultados/metricas/jerarquico_clasico_4/comparacion_modelos.csv`
+- Bootstrap: `resultados/metricas/jerarquico_clasico_4/bootstrap_pareado_por_video.csv`
 
 ## Referencias (APA 7)
 
