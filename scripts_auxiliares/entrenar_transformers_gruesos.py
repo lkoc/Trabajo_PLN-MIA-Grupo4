@@ -262,6 +262,31 @@ def find_project_root(start: Path | None = None) -> Path:
 
 
 ROOT = find_project_root()
+
+
+def project_relative(path: Path) -> str:
+    """Ruta portable respecto del proyecto, incluso con artefactos enlazados.
+
+    ``Path.resolve()`` atraviesa los enlaces ``datos/modelos/resultados`` usados
+    en Colab y termina bajo Google Drive. Primero se conserva la ruta lógica;
+    si el llamador ya entregó una ruta física, se remapea desde
+    ``PLN_ARTIFACT_ROOT``.
+    """
+    candidate = Path(path)
+    if not candidate.is_absolute():
+        candidate = ROOT / candidate
+    try:
+        return candidate.absolute().relative_to(ROOT.absolute()).as_posix()
+    except ValueError:
+        configured = os.getenv("PLN_ARTIFACT_ROOT", "").strip()
+        if configured:
+            try:
+                return candidate.resolve().relative_to(
+                    Path(configured).expanduser().resolve()
+                ).as_posix()
+            except ValueError:
+                pass
+        return candidate.resolve().relative_to(ROOT.resolve()).as_posix()
 CACHE_DIR = ROOT / "datos" / "model_ready" / "transformer_grueso"
 METRICS_DIR = ROOT / "resultados" / "metricas" / "transformer_grueso"
 FIGURES_DIR = ROOT / "resultados" / "figuras" / "transformer_grueso"

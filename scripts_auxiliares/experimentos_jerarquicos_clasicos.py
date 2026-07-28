@@ -87,7 +87,7 @@ def experiment_targets(frame: pd.DataFrame) -> np.ndarray:
 
 
 def _relative(path: Path) -> str:
-    return str(path.resolve().relative_to(ROOT.resolve()))
+    return tm.project_relative(path)
 
 
 def _ids_sha256(values: Iterable[str]) -> str:

@@ -127,7 +127,7 @@ for _directory in (MODEL_DIR, METRICS_DIR, FIGURES_DIR):
 
 
 def _relative(path: Path) -> str:
-    return str(path.resolve().relative_to(ROOT.resolve()))
+    return tm.project_relative(path)
 
 
 def _json(path: Path) -> dict:

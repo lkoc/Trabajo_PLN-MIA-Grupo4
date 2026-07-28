@@ -38,7 +38,7 @@ for _directory in (METRICS_DIR, FIGURES_DIR, MODEL_DIR):
 
 def _artifact(path: Path) -> dict:
     return {
-        "path": str(path.resolve().relative_to(ROOT.resolve())),
+        "path": tm.project_relative(path),
         "sha256": sha256_file(path),
         "bytes": int(path.stat().st_size),
     }
