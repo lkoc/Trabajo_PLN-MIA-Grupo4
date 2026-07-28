@@ -28,7 +28,6 @@ $requiredRelativeFiles = @(
     "datos\ampliacion\ampliacion_amenaza_20260727_lote3\processed\dataset_etiquetado_utilizable.jsonl",
     "datos\ampliacion\ampliacion_dano_20260726\processed\dataset_etiquetado_utilizable.jsonl",
     "datos\ampliacion\ampliacion_dano_20260727_lote2\processed\dataset_etiquetado_utilizable.jsonl",
-    "modelos\moderador_transformer_grueso\registro_modelos_comparables.json",
     "modelos\moderador_transformer_grueso\baseline_clasico_mismo_split\mejor_modelo_clasico.joblib",
     "modelos\moderador_transformer_grueso\paraphrase_minilm\best_checkpoint.pt",
     "modelos\moderador_transformer_grueso\e5_small\best_checkpoint.pt",
@@ -157,6 +156,34 @@ function Write-PortableQwenPointer {
     }
 }
 
+function Write-PortableRegistry {
+    $relativePath = "modelos\moderador_transformer_grueso\registro_modelos_comparables.json"
+    $source = Join-Path $workspaceRoot $relativePath
+    $destination = Join-Path $driveRoot $relativePath
+    if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+        throw "Falta el registro de modelos: $source"
+    }
+    New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
+    # Los Path serializados en Windows contienen `\\`. pathlib en Linux no los
+    # interpreta como separadores; en la copia de Drive se publican como `/`.
+    $sourceText = Get-Content -LiteralPath $source -Raw
+    $portableText = $sourceText.Replace("\\", "/")
+    [System.IO.File]::WriteAllText(
+        $destination,
+        $portableText,
+        [System.Text.UTF8Encoding]::new($false)
+    )
+    # Verifica además que la transformación siga siendo JSON válido.
+    $null = Get-Content -LiteralPath $destination -Raw | ConvertFrom-Json
+    return [ordered]@{
+        path = $relativePath.Replace("\", "/")
+        bytes = [int64](Get-Item -LiteralPath $destination).Length
+        sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $destination).Hash.ToLower()
+        role = "portable_model_registry"
+        source_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash.ToLower()
+    }
+}
+
 function Copy-QwenResumeSnapshot {
     $pointerRelative = "modelos\qwen3_06b_lora_acoso_amenaza_4\resume_pointer.json"
     $pointerSource = Join-Path $workspaceRoot $pointerRelative
@@ -234,6 +261,7 @@ $records = @()
 foreach ($relative in $requiredRelativeFiles) {
     $records += Copy-VerifiedFile -RelativePath $relative
 }
+$records += Write-PortableRegistry
 
 $qwenResume = Copy-QwenResumeSnapshot
 $records += $qwenResume.records
