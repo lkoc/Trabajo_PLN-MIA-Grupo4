@@ -1,0 +1,59 @@
+# Ejecución híbrida local/Colab de `04_202`–`04_206`
+
+## Arquitectura
+
+Los cuadernos detectan automáticamente el entorno:
+
+- **Kernel local:** usan directamente `D:\trabajo_PLN\Trabajo_PLN-MIA-Grupo4`.
+- **Kernel de Colab desde VS Code o Colab:** montan Google Drive, crean en `/content/Trabajo_PLN-MIA-Grupo4` un checkout disperso de sólo `scripts_auxiliares` y fijan el código al commit `131016751517333284ee24559d51d2bdebebc960`.
+- En Colab, `datos`, `modelos` y `resultados` son enlaces simbólicos Linux hacia `/content/drive/MyDrive/PLN_colab_04_artifacts`. Por ello, checkpoints, métricas, figuras e informes sobreviven al cierre del runtime.
+
+No se crea un enlace permanente entre `D:` y `G:`. Esa separación evita que Google Drive sincronice archivos de checkpoints mientras todavía están siendo escritos.
+
+## 1. Preparar el paquete mínimo en Drive
+
+Con Google Drive para escritorio activo y la unidad `G:` disponible, ejecutar desde la raíz del proyecto:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts_auxiliares\sincronizar_04_20x_google_drive.ps1
+```
+
+El script copia únicamente los datasets congelados, referencias y checkpoints que comparten `04_202`–`04_206`. Cada archivo se comprueba con SHA-256 y queda registrado en:
+
+`G:\My Drive\PLN_colab_04_artifacts\MANIFIESTO_ARTEFACTOS_04_20X.json`
+
+Si existe un checkpoint reanudable de Qwen creado por `04_7`/`04_205`, se copia sólo el slot publicado por su puntero atómico, el puntero y el tokenizer. Se vuelve a comprobar que el puntero no haya cambiado durante la copia. Así `04_205` puede reanudarlo sin copiar el slot inactivo ni un archivo a medio escribir.
+
+Si `04_7` ya produjo `finetuning.json`, la misma sincronización añade `best_adapter` y los resultados finales disponibles. Esto permite que `04_205` reconozca el entrenamiento como terminado y que `04_206` lo consuma sin repetirlo.
+
+## 2. Ejecutar los cuadernos
+
+En VS Code se puede conservar el archivo `.ipynb` local y seleccionar un kernel de Colab. La primera celda:
+
+1. monta Drive;
+2. valida que estén todos los archivos declarados en el manifiesto;
+3. prepara el checkout reproducible en `/content`;
+4. instala solamente las dependencias ausentes;
+5. muestra el dispositivo y la ruta persistente.
+
+En `04_205`, `qwen4.resume_status()` muestra el checkpoint disponible y `qwen4.run_finetuning(..., resume=True, force_restart=False)` lo recupera automáticamente. No ejecutar `04_205` en Colab mientras la sesión original `04_7` siga entrenando localmente; sincronizar la instantánea no detiene ni modifica `04_7`.
+
+## 3. Recuperar resultados en el workspace local
+
+Los resultados de Colab se guardan en Drive y aparecen en Windows bajo `G:\My Drive\PLN_colab_04_artifacts`; **no se copian implícitamente a `D:`**. Para llevar al workspace los resultados Transformer:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts_auxiliares\recuperar_resultados_colab_04_20x.ps1
+```
+
+Para incluir Qwen, después de cerrar cualquier entrenamiento local que escriba sobre el mismo experimento:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts_auxiliares\recuperar_resultados_colab_04_20x.ps1 -IncludeQwen
+```
+
+La recuperación compara SHA-256. Si encuentra un archivo local distinto, se detiene para impedir una sobrescritura silenciosa. `-Force` sólo debe usarse después de revisar el conflicto. Cada recuperación genera un registro en `resultados/logs/sincronizacion_colab_04_20x/`.
+
+Una vez recuperado, el mismo código local encuentra los checkpoints en sus rutas habituales. Esto permite continuar entrenamiento, posprocesar o cargar el adaptador elegido para producción. Para producción debe utilizarse el `best_adapter` final y conservar su manifiesto/estado, no un slot transitorio de reanudación.
+
+`04_207` y `04_208` son comparación y auditoría, no fine-tuning. La ruta recomendada es recuperar primero los resultados y ejecutarlos con kernel local; así comparan en `D:` los artefactos de los modelos clásicos, Transformers y Qwen reunidos.

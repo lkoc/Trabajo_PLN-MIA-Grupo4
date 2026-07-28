@@ -56,11 +56,21 @@ MAX_FEATURES = 50_000
 
 
 def find_project_root(start: Path | None = None) -> Path:
-    start = (start or Path.cwd()).resolve()
-    for candidate in (start, *start.parents):
-        if (candidate / "datos" / "processed" / "chunks_para_etiquetar.jsonl").exists():
+    starts = []
+    configured = os.getenv("PLN_PROJECT_ROOT", "").strip()
+    if configured:
+        starts.append(Path(configured).expanduser())
+    starts.extend([start or Path.cwd(), Path(__file__).resolve().parents[1]])
+    candidates = []
+    for value in starts:
+        value = value.resolve()
+        candidates.extend((value, *value.parents))
+    for candidate in dict.fromkeys(candidates):
+        if (candidate / "scripts_auxiliares" / "modelos_gruesos_moderador.py").exists():
             return candidate
-    raise FileNotFoundError("No se encontró la raíz del proyecto.")
+    raise FileNotFoundError(
+        "No se encontró la raíz del proyecto. Defina PLN_PROJECT_ROOT en kernels remotos."
+    )
 
 
 ROOT = find_project_root()
