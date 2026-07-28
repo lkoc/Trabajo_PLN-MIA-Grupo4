@@ -5,7 +5,7 @@
 Los cuadernos detectan automáticamente el entorno:
 
 - **Kernel local:** usan directamente `D:\trabajo_PLN\Trabajo_PLN-MIA-Grupo4`.
-- **Kernel de Colab desde VS Code o Colab:** montan Google Drive, crean en `/content/Trabajo_PLN-MIA-Grupo4` un checkout disperso de sólo `scripts_auxiliares` y fijan el código al commit `5415bc722c65a5930ef5de05e4ae932a287998c1`.
+- **Kernel de Colab desde VS Code o Colab:** montan Google Drive, crean en `/content/Trabajo_PLN-MIA-Grupo4` un checkout disperso de sólo `scripts_auxiliares` y fijan el código al commit `d7e616e10a0e26e98c8cddb74a3f84ed3198554c`.
 - En Colab, `datos`, `modelos` y `resultados` son enlaces simbólicos Linux hacia `/content/drive/MyDrive/PLN_colab_04_artifacts`. Por ello, checkpoints, métricas, figuras e informes sobreviven al cierre del runtime.
 
 No se crea un enlace permanente entre `D:` y `G:`. Esa separación evita que Google Drive sincronice archivos de checkpoints mientras todavía están siendo escritos.
