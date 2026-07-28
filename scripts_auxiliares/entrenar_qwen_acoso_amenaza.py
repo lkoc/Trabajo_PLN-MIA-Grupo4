@@ -336,7 +336,10 @@ def load_frames() -> tuple[dict[str, pd.DataFrame], dict]:
     fingerprint_payload = {
         "dataset_sha256": manifest["balanced_dataset_sha256"],
         "auxiliary_sources": [
-            {"path": source["path"], "sha256": source["sha256"]}
+            {
+                "path": str(source["path"]).replace("\\", "/"),
+                "sha256": source["sha256"],
+            }
             for source in auxiliary_audit["sources"]
         ],
         "primary_labels": TARGET_LABELS,
@@ -347,6 +350,21 @@ def load_frames() -> tuple[dict[str, pd.DataFrame], dict]:
             "flags": AUX_FLAG_LOSS_WEIGHT,
         },
     }
+    # Compatibilidad con checkpoints creados originalmente en Windows. La
+    # barra usada al serializar una ruta no cambia la supervisión semántica.
+    legacy_windows_payload = {
+        **fingerprint_payload,
+        "auxiliary_sources": [
+            {"path": source["path"].replace("/", "\\"), "sha256": source["sha256"]}
+            for source in fingerprint_payload["auxiliary_sources"]
+        ],
+    }
+    compatible_fingerprints = sorted(
+        {
+            _payload_sha256(fingerprint_payload),
+            _payload_sha256(legacy_windows_payload),
+        }
+    )
     audit = {
         "created_at": tm.now_iso(),
         "dataset": _relative(dataset_path),
@@ -372,6 +390,7 @@ def load_frames() -> tuple[dict[str, pd.DataFrame], dict]:
         "target_labels": TARGET_LABELS,
         "safe_is_derived": True,
         "training_fingerprint_sha256": _payload_sha256(fingerprint_payload),
+        "compatible_training_fingerprints_sha256": compatible_fingerprints,
         "auxiliary_supervision": {
             **auxiliary_audit,
             "split_coverage": auxiliary_split_audit,
@@ -395,6 +414,31 @@ def load_frames() -> tuple[dict[str, pd.DataFrame], dict]:
     }
     tm.write_json(METRICS_DIR / "auditoria_dataset.json", audit)
     return frames, audit
+
+
+def _fingerprint_matches(value: object, audit: dict) -> bool:
+    accepted = set(audit.get("compatible_training_fingerprints_sha256", []))
+    accepted.add(audit["training_fingerprint_sha256"])
+    return isinstance(value, str) and value in accepted
+
+
+def _completed_result_is_usable(result: dict, audit: dict) -> bool:
+    if result.get("dataset_sha256") != audit["dataset_sha256"]:
+        return False
+    if not _fingerprint_matches(result.get("training_fingerprint_sha256"), audit):
+        return False
+    artifacts = result.get("adapter_files", [])
+    if not artifacts:
+        return False
+    for artifact in artifacts:
+        path = tm.project_path(artifact["path"])
+        if (
+            not path.is_file()
+            or int(path.stat().st_size) != int(artifact["bytes"])
+            or sha256_file(path) != artifact["sha256"]
+        ):
+            return False
+    return True
 
 
 def dataset_summary(audit: dict | None = None) -> pd.DataFrame:
@@ -766,7 +810,7 @@ def _save_resume_checkpoint(
 
 def _load_resume_checkpoint(
     expected_dataset_sha256: str,
-    expected_training_fingerprint_sha256: str,
+    expected_training_fingerprints_sha256: set[str],
     target_device: torch.device,
 ) -> tuple[object, dict, dict] | None:
     if not RESUME_POINTER_PATH.exists():
@@ -774,10 +818,7 @@ def _load_resume_checkpoint(
     pointer = _json(RESUME_POINTER_PATH)
     if pointer.get("dataset_sha256") != expected_dataset_sha256:
         raise ValueError("El checkpoint reanudable corresponde a otro dataset.")
-    if (
-        pointer.get("training_fingerprint_sha256")
-        != expected_training_fingerprint_sha256
-    ):
+    if pointer.get("training_fingerprint_sha256") not in expected_training_fingerprints_sha256:
         raise ValueError(
             "El checkpoint reanudable corresponde a otra supervisión auxiliar."
         )
@@ -834,11 +875,7 @@ def run_finetuning(
     frames, audit = (load_frames() if frames is None else (frames, load_frames()[1]))
     if TRAINING_RESULT_PATH.exists() and not force_restart:
         result = _json(TRAINING_RESULT_PATH)
-        if (
-            result.get("dataset_sha256") == audit["dataset_sha256"]
-            and result.get("training_fingerprint_sha256")
-            == audit["training_fingerprint_sha256"]
-        ):
+        if _completed_result_is_usable(result, audit):
             return result
     archive = _archive_for_restart() if force_restart else None
     tm.set_reproducibility()
@@ -868,7 +905,7 @@ def run_finetuning(
     loaded = (
         _load_resume_checkpoint(
             audit["dataset_sha256"],
-            audit["training_fingerprint_sha256"],
+            set(audit["compatible_training_fingerprints_sha256"]),
             target_device,
         )
         if resume and not force_restart
@@ -1233,8 +1270,9 @@ def evaluate_calibrated(
         best_state_path = MODEL_DIR / "best_adapter" / "training_state.json"
         if (
             existing.get("dataset_sha256") == audit["dataset_sha256"]
-            and existing.get("training_fingerprint_sha256")
-            == audit["training_fingerprint_sha256"]
+            and _fingerprint_matches(
+                existing.get("training_fingerprint_sha256"), audit
+            )
             and best_state_path.exists()
             and existing.get("best_adapter_training_state_sha256")
             == sha256_file(best_state_path)
