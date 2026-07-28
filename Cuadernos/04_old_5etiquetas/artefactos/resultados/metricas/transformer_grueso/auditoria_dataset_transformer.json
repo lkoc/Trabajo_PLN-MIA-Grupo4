@@ -1,0 +1,318 @@
+{
+  "created_at": "2026-07-27T10:52:35-05:00",
+  "seed": 20260727,
+  "snapshot": "datos\\etiquetado\\humano\\snapshots_entrenamiento\\revision_humana_final_r3226_db88b85c6d3a.json",
+  "snapshot_sha256": "db88b85c6d3a5c4da1d1e4e6fb32adceeec61b04683c3ac4a80efb6b539a9815",
+  "expansion_datasets": [
+    {
+      "batch_id": "ampliacion_amenaza_20260727_lote3",
+      "path": "datos\\ampliacion\\ampliacion_amenaza_20260727_lote3\\processed\\dataset_etiquetado_utilizable.jsonl",
+      "manifest": "datos\\ampliacion\\ampliacion_amenaza_20260727_lote3\\processed\\dataset_etiquetado_utilizable.manifest.json",
+      "rows": 5451,
+      "sha256": "599b562ac41748e26f195f8cf22c08b5a7bf58718070c5e8f994841c8a67a915",
+      "pending_human_rows_excluded": 0
+    },
+    {
+      "batch_id": "ampliacion_dano_20260726",
+      "path": "datos\\ampliacion\\ampliacion_dano_20260726\\processed\\dataset_etiquetado_utilizable.jsonl",
+      "manifest": "datos\\ampliacion\\ampliacion_dano_20260726\\processed\\dataset_etiquetado_utilizable.manifest.json",
+      "rows": 21987,
+      "sha256": "ac3af40ab1fa379c8718fb6673aae775e7b64a1eb560a0560925a1b1383c116c",
+      "pending_human_rows_excluded": 0
+    },
+    {
+      "batch_id": "ampliacion_dano_20260727_lote2",
+      "path": "datos\\ampliacion\\ampliacion_dano_20260727_lote2\\processed\\dataset_etiquetado_utilizable.jsonl",
+      "manifest": "datos\\ampliacion\\ampliacion_dano_20260727_lote2\\processed\\dataset_etiquetado_utilizable.manifest.json",
+      "rows": 19957,
+      "sha256": "3bfc1fc938570d65abb182f7e1c3e8f230397d69a5be8e315e927256245b0682",
+      "pending_human_rows_excluded": 0
+    }
+  ],
+  "base_metadata": {
+    "schema_version": "3.0",
+    "policy": "humano grueso aceptado/modificado reemplaza Pro dudoso; rechazo humano excluye; Pro reemplaza Flash; consenso humano externo se reserva como holdout",
+    "recalibrated_threshold": 0.9,
+    "flash_pseudo_base_weight": 0.5,
+    "rows": 69849,
+    "videos": 1856,
+    "source_counts": {
+      "flash_pseudo": 56432,
+      "pro": 11421,
+      "pro_hard_mining": 1861,
+      "human_coarse": 135
+    },
+    "human_holdout_rows": 0,
+    "routed_rows": 6116,
+    "pro_rows": 11421,
+    "pro_hard_mining_rows": 2000,
+    "human_hard_rows": 135,
+    "human_hard_adjudicated_rows": 139,
+    "human_hard_excluded_rows": 4,
+    "human_hard_pending_excluded_rows": 0,
+    "hard_review_complete": true,
+    "label_order": [
+      "seguro",
+      "seguro_ironia_marcada",
+      "racismo_etnico_explicito",
+      "racismo_linguistico",
+      "clasismo_racial",
+      "discriminacion_regional",
+      "racismo_encubierto",
+      "misoginia_acoso_genero",
+      "homofobia_transfobia",
+      "acoso_personal",
+      "amenaza_directa",
+      "sexual_explicito",
+      "sexual_cosificacion",
+      "sexual_no_consensual"
+    ],
+    "flag_order": [
+      "ironia_ambigua",
+      "humor_encubridor",
+      "contexto_necesario"
+    ],
+    "input_sha256": {
+      "chunks": "eb90debf66d5e16af72c41c17c3701197e42bdcc78b81e0f914c6a49c56f8ab4",
+      "flash": "9ee36da617d7700a642358b53d2fb9d311fd64920bd5fc69653d5115cc1409c9",
+      "pro_original": "7c6c348d742610f14b0d0c15830998bb953b721a50877ff75b88c6f079d6b4af",
+      "pro_recalibrated": "88370616e728d1dbd3f588bae5d3d95163b0139bfaa76586e56a6a3e672bfde2",
+      "human": null,
+      "pro_hard_2000": "745a9dc191482fd0a8609f5ffec3266abcf7a0bd40860d7c7b541f7dac045e34",
+      "human_hard_139": "95712ab723d1424e446e33c57a1bb4143b6e5c2c6fbca47701f6cda58dc94554",
+      "human_hard_139_manifest": "eeae0c0af334ca1e4c635619391c30283e83344487d51a231070b7a7461434df",
+      "human_review_progress_snapshot": null
+    }
+  },
+  "parts": {
+    "integrated": {
+      "rows": 117244,
+      "videos": 3230,
+      "chunk_ids_sha256": "9244df12e7e89ea6040803203d7025e780878168f81423cfe4f21b975bee1f3d",
+      "safe_rows": 110181,
+      "damage_rows": 7063,
+      "damage_pct": 6.024188871072294,
+      "category_counts": {
+        "RACISMO_DISCRIMINACION": 1856,
+        "ACOSO_GENERO_IDENTIDAD": 1961,
+        "ACOSO_PERSONAL": 2854,
+        "AMENAZA_DIRECTA": 688,
+        "CONTENIDO_SEXUAL": 2282
+      }
+    },
+    "balanced_all": {
+      "rows": 35315,
+      "videos": 2982,
+      "chunk_ids_sha256": "4f7e7533677136b236933c52165f88f2e3414310704251f7b28ba554da3a275d",
+      "safe_rows": 28252,
+      "damage_rows": 7063,
+      "damage_pct": 20.0,
+      "category_counts": {
+        "RACISMO_DISCRIMINACION": 1856,
+        "ACOSO_GENERO_IDENTIDAD": 1961,
+        "ACOSO_PERSONAL": 2854,
+        "AMENAZA_DIRECTA": 688,
+        "CONTENIDO_SEXUAL": 2282
+      }
+    },
+    "train": {
+      "rows": 24701,
+      "videos": 2086,
+      "chunk_ids_sha256": "9132a1678e24c9bb29d06fcbc1a44d8fb0c54737e571fe4f509f62fa0d8fc794",
+      "safe_rows": 19757,
+      "damage_rows": 4944,
+      "damage_pct": 20.01538399255091,
+      "category_counts": {
+        "RACISMO_DISCRIMINACION": 1319,
+        "ACOSO_GENERO_IDENTIDAD": 1394,
+        "ACOSO_PERSONAL": 1955,
+        "AMENAZA_DIRECTA": 481,
+        "CONTENIDO_SEXUAL": 1613
+      }
+    },
+    "validation": {
+      "rows": 5324,
+      "videos": 448,
+      "chunk_ids_sha256": "571e3e1b829ce1ee2a2f7143bddd99bca67833389b9f47a90aabd4759af4729c",
+      "safe_rows": 4246,
+      "damage_rows": 1078,
+      "damage_pct": 20.24793388429752,
+      "category_counts": {
+        "RACISMO_DISCRIMINACION": 281,
+        "ACOSO_GENERO_IDENTIDAD": 304,
+        "ACOSO_PERSONAL": 464,
+        "AMENAZA_DIRECTA": 96,
+        "CONTENIDO_SEXUAL": 334
+      }
+    },
+    "test": {
+      "rows": 5290,
+      "videos": 448,
+      "chunk_ids_sha256": "9c9c1880e5aa1573754562e1054cc8796e235a99fa42562b16f3269a7fa83ab5",
+      "safe_rows": 4249,
+      "damage_rows": 1041,
+      "damage_pct": 19.678638941398866,
+      "category_counts": {
+        "RACISMO_DISCRIMINACION": 256,
+        "ACOSO_GENERO_IDENTIDAD": 263,
+        "ACOSO_PERSONAL": 435,
+        "AMENAZA_DIRECTA": 111,
+        "CONTENIDO_SEXUAL": 335
+      }
+    }
+  },
+  "fine_labels_trained": false,
+  "transversal_flags_trained": false,
+  "targets": [
+    "RACISMO_DISCRIMINACION",
+    "ACOSO_GENERO_IDENTIDAD",
+    "ACOSO_PERSONAL",
+    "AMENAZA_DIRECTA",
+    "CONTENIDO_SEXUAL"
+  ],
+  "safe_is_derived": true,
+  "video_leakage": 0,
+  "ordering": "integrate_all -> safe_undersample_4to1 -> grouped_random_split",
+  "global_balance": {
+    "method": "deterministic_hash_safe_undersampling",
+    "seed": 20260727,
+    "safe_to_damage_ratio": 4,
+    "rows_before": 117244,
+    "rows_after": 35315,
+    "damage_before": 7063,
+    "damage_after": 7063,
+    "safe_before": 110181,
+    "safe_after": 28252,
+    "damage_pct_before": 6.024188871072294,
+    "damage_pct_after": 20.0,
+    "selected_chunk_ids_sha256": "4f7e7533677136b236933c52165f88f2e3414310704251f7b28ba554da3a275d",
+    "category_counts_after": {
+      "RACISMO_DISCRIMINACION": 1856,
+      "ACOSO_GENERO_IDENTIDAD": 1961,
+      "ACOSO_PERSONAL": 2854,
+      "AMENAZA_DIRECTA": 688,
+      "CONTENIDO_SEXUAL": 2282
+    }
+  },
+  "split_design": {
+    "method": "best of 500 random GroupShuffleSplit candidates",
+    "base_seed": 20260727,
+    "selected_seed": 20261273,
+    "target_fractions": {
+      "train": 0.7,
+      "validation": 0.15,
+      "test": 0.15
+    },
+    "score": 0.03307778231293099,
+    "missing_category_cells": 0
+  },
+  "integration": {
+    "schema_version": "2.0",
+    "created_at": "2026-07-27T10:30:43-05:00",
+    "purpose": "integración de todas las pasadas antes del fine-tuning Transformer",
+    "raw_canonical_campaigns": {
+      "historical": {
+        "path": "datos/processed/chunks_para_etiquetar.jsonl",
+        "rows": 69853
+      },
+      "ampliacion_amenaza_20260727_lote3": {
+        "path": "datos\\ampliacion\\ampliacion_amenaza_20260727_lote3\\processed\\chunks_para_etiquetar.jsonl",
+        "rows": 5451,
+        "usable_path": "datos\\ampliacion\\ampliacion_amenaza_20260727_lote3\\processed\\dataset_etiquetado_utilizable.jsonl",
+        "usable_rows": 5451
+      },
+      "ampliacion_dano_20260726": {
+        "path": "datos\\ampliacion\\ampliacion_dano_20260726\\processed\\chunks_para_etiquetar.jsonl",
+        "rows": 21991,
+        "usable_path": "datos\\ampliacion\\ampliacion_dano_20260726\\processed\\dataset_etiquetado_utilizable.jsonl",
+        "usable_rows": 21987
+      },
+      "ampliacion_dano_20260727_lote2": {
+        "path": "datos\\ampliacion\\ampliacion_dano_20260727_lote2\\processed\\chunks_para_etiquetar.jsonl",
+        "rows": 19971,
+        "usable_path": "datos\\ampliacion\\ampliacion_dano_20260727_lote2\\processed\\dataset_etiquetado_utilizable.jsonl",
+        "usable_rows": 19957
+      }
+    },
+    "raw_union_unique_rows": 117266,
+    "usable_unique_rows": 117244,
+    "excluded_unresolved_or_rejected_rows": 22,
+    "safe_rows": 110181,
+    "damage_unique_rows": 7063,
+    "damage_label_incidences": 9641,
+    "multilabel_damage_rows": 2229,
+    "category_counts": {
+      "RACISMO_DISCRIMINACION": 1856,
+      "ACOSO_GENERO_IDENTIDAD": 1961,
+      "ACOSO_PERSONAL": 2854,
+      "AMENAZA_DIRECTA": 688,
+      "CONTENIDO_SEXUAL": 2282
+    },
+    "campaign_counts": {
+      "historico_2026": 69849,
+      "ampliacion_dano_20260726": 21987,
+      "ampliacion_dano_20260727_lote2": 19957,
+      "ampliacion_amenaza_20260727_lote3": 5451
+    },
+    "contains_split_assignment": false,
+    "ordering": "this artifact precedes safe undersampling and splitting",
+    "label_precedence": "human accepted/modified > Pro hard mining > Pro > Flash",
+    "review_passes_are_replacements_not_new_rows": true,
+    "reasoning_pilot_included": false,
+    "reasoning_exclusion": "analysis-only; training_modified=false; failed preregistered human agreement criteria",
+    "fine_labels_trained": false,
+    "transversal_flags_trained": false,
+    "chunk_ids_sha256": "9244df12e7e89ea6040803203d7025e780878168f81423cfe4f21b975bee1f3d",
+    "training_content_sha256": "ac1953e939215c85d355e65557a79f33d734a425a3427ab541d50b13c5c6cf76",
+    "output": "datos\\model_ready\\transformer_grueso\\dataset_integrado_todas_pasadas.jsonl",
+    "output_sha256": "3f01b76d285d4cdd2a0922df1d2437a7f01abc4e05e2699c218b1f5faaba2069",
+    "human_snapshot": "datos\\etiquetado\\humano\\snapshots_entrenamiento\\revision_humana_final_r3226_db88b85c6d3a.json",
+    "human_snapshot_sha256": "db88b85c6d3a5c4da1d1e4e6fb32adceeec61b04683c3ac4a80efb6b539a9815"
+  },
+  "moderate_undersampling": {
+    "method": "deterministic_hash_safe_undersampling",
+    "seed": 20260727,
+    "safe_to_damage_ratio": 4,
+    "rows_before": 117244,
+    "rows_after": 35315,
+    "damage_before": 7063,
+    "damage_after": 7063,
+    "safe_before": 110181,
+    "safe_after": 28252,
+    "damage_pct_before": 6.024188871072294,
+    "damage_pct_after": 20.0,
+    "selected_chunk_ids_sha256": "4f7e7533677136b236933c52165f88f2e3414310704251f7b28ba554da3a275d",
+    "category_counts_after": {
+      "RACISMO_DISCRIMINACION": 1856,
+      "ACOSO_GENERO_IDENTIDAD": 1961,
+      "ACOSO_PERSONAL": 2854,
+      "AMENAZA_DIRECTA": 688,
+      "CONTENIDO_SEXUAL": 2282
+    },
+    "created_at": "2026-07-27T10:52:43-05:00",
+    "ordering": "integrate -> safe undersample 4:1 -> grouped random 70/15/15 split",
+    "input_integrated_dataset": "datos\\model_ready\\transformer_grueso\\dataset_integrado_todas_pasadas.jsonl",
+    "input_integrated_sha256": "3f01b76d285d4cdd2a0922df1d2437a7f01abc4e05e2699c218b1f5faaba2069",
+    "balanced_dataset_output": "datos\\model_ready\\transformer_grueso\\dataset_balanceado_4a1_particionado.jsonl",
+    "balanced_dataset_sha256": "df2ac01183271e44b6dcfb9cb4850bd6b1ef1cd11d9fc51c881be944670ef20f",
+    "training_output": "datos\\model_ready\\transformer_grueso\\dataset_entrenamiento_transformer_4a1.jsonl",
+    "training_output_sha256": "c92ae6fafe977d18861969f41cb072e3754cf53d1e9ab23639d972300fb62ce3",
+    "split_counts": {
+      "train": 24701,
+      "validation": 5324,
+      "test": 5290
+    },
+    "split_damage_counts": {
+      "train": 4944,
+      "validation": 1078,
+      "test": 1041
+    },
+    "split_video_counts": {
+      "train": 2086,
+      "validation": 448,
+      "test": 448
+    },
+    "fine_labels_trained": false,
+    "transversal_flags_trained": false
+  }
+}

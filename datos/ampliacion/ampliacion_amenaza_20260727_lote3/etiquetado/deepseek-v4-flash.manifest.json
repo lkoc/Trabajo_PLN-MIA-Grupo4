@@ -1,0 +1,46 @@
+{
+  "batch_id": "ampliacion_amenaza_20260727_lote3",
+  "created_at": "2026-07-27T08:58:17-05:00",
+  "model": "deepseek-v4-flash",
+  "chunks_sha256": "025b9f7e80e35bc95058983cbb5096f4f4c2c0df91c83d0b63734b708264ea3c",
+  "output_sha256": "ac9cdac4681309da9051f98997850f358ad739dfa7adb793f37fb06de7dc7fdf",
+  "prompt_sha256": "52d4fec14ad433d35ec20de5f51a6954aad69dcedd1422059419dcecc2f9e778",
+  "skill_sha256": "45f9d3231a92453835ee6dfcbb8cfff0b682718caa4111f4bca3e841573a0efb",
+  "completed": 5451,
+  "target_rows": 5451,
+  "pending": 0,
+  "damage_chunks": 383,
+  "safe_chunks": 5068,
+  "needs_review": 382,
+  "mean_confidence": 0.9372133553476426,
+  "label_counts": {
+    "seguro": 5067,
+    "seguro_ironia_marcada": 1,
+    "racismo_etnico_explicito": 25,
+    "racismo_linguistico": 1,
+    "clasismo_racial": 5,
+    "discriminacion_regional": 14,
+    "racismo_encubierto": 8,
+    "misoginia_acoso_genero": 27,
+    "homofobia_transfobia": 9,
+    "acoso_personal": 317,
+    "amenaza_directa": 186,
+    "sexual_explicito": 6,
+    "sexual_cosificacion": 2,
+    "sexual_no_consensual": 7
+  },
+  "flag_counts": {
+    "ironia_ambigua": 7,
+    "humor_encubridor": 16,
+    "contexto_necesario": 76
+  },
+  "usage_new": {
+    "prompt_tokens": 4626468,
+    "completion_tokens": 559348,
+    "total_tokens": 5185816,
+    "prompt_cache_hit_tokens": 3630848,
+    "prompt_cache_miss_tokens": 995620
+  },
+  "estimated_cost_usd_new": 0.306171,
+  "elapsed_seconds_new": 211.33
+}

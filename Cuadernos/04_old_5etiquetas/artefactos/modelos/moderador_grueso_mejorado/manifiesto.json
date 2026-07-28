@@ -1,0 +1,52 @@
+{
+  "schema_version": "3.0",
+  "outputs": [
+    "SEGURO",
+    "RACISMO_DISCRIMINACION",
+    "ACOSO_GENERO_IDENTIDAD",
+    "ACOSO_PERSONAL",
+    "AMENAZA_DIRECTA",
+    "CONTENIDO_SEXUAL"
+  ],
+  "fine_labels_trained": false,
+  "flags_trained_as_categories": false,
+  "winner_id": "svm_text_c1_w50_baseline_aeda",
+  "winner_spec": {
+    "id": "svm_text_c1_w50_baseline_aeda",
+    "model": "linear_svm_word_char",
+    "text_column": "text",
+    "C": 1.0,
+    "flash_weight": 0.5,
+    "augmented": true,
+    "model_label": "SVM lineal palabra+carácter",
+    "features": 50000,
+    "feature_seconds": 22.59465939999791,
+    "fit_seconds": 44.61758369999734,
+    "training_seconds": 67.21224309999525,
+    "flash_pseudo_weight": 0.5,
+    "model_parameters": {
+      "C": 1.0
+    },
+    "val_exact_match": 0.9219411266810872,
+    "val_jaccard_samples": 0.924527414652497,
+    "val_precision_micro": 0.9207874603470797,
+    "val_recall_micro": 0.9171933085501859,
+    "val_f1_micro": 0.9189868702858739,
+    "val_f1_macro": 0.3586739397651204,
+    "val_pr_auc_macro": 0.3198922200842263,
+    "val_damage_precision_micro": 0.24127906976744187,
+    "val_damage_recall_micro": 0.25656877897990726,
+    "val_damage_f1_micro": 0.24868913857677902,
+    "val_damage_f1_macro": 0.2377264063161685,
+    "val_damage_pr_auc_macro": 0.1860030225341732,
+    "val_n": 10633,
+    "val_inference_seconds": 4.233000000000175,
+    "val_milliseconds_per_1000": 398.1002539264718
+  },
+  "text_column": "text",
+  "context_radius": 0,
+  "test_rows_excluded": 10293,
+  "human_ids_excluded": 0,
+  "threshold_policy": "max precision subject to validation recall >= 0.8",
+  "standalone_moderation_authorized": false
+}

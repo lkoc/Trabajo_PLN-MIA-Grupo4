@@ -1,0 +1,47 @@
+{
+  "created_at": "2026-07-27T13:21:08-05:00",
+  "method": "propagate_frozen_04_2_video_split_to_full_integrated_dataset",
+  "integrated_dataset": "datos\\model_ready\\transformer_grueso\\dataset_integrado_todas_pasadas.jsonl",
+  "integrated_dataset_sha256": "3f01b76d285d4cdd2a0922df1d2437a7f01abc4e05e2699c218b1f5faaba2069",
+  "balanced_dataset": "datos\\model_ready\\transformer_grueso\\dataset_balanceado_4a1_particionado.jsonl",
+  "balanced_dataset_sha256": "df2ac01183271e44b6dcfb9cb4850bd6b1ef1cd11d9fc51c881be944670ef20f",
+  "integrated_rows": 117244,
+  "mapped_rows": 116313,
+  "unmapped_safe_rows_excluded": 931,
+  "unmapped_videos_excluded": 248,
+  "all_damage_retained": true,
+  "split_counts": {
+    "train": {
+      "rows": 80887,
+      "videos": 2086,
+      "safe": 75943,
+      "damage": 4944,
+      "chunk_ids_sha256": "a131611dfb6ba1cfcbaee0ee7cd53b5a8075a721af932e85cd66567fd342a3e8"
+    },
+    "validation": {
+      "rows": 17760,
+      "videos": 448,
+      "safe": 16682,
+      "damage": 1078,
+      "chunk_ids_sha256": "01b6b5f537a540022e3ffae16963f34eb7fb958e76586a3da141ccd9703f9531"
+    },
+    "test": {
+      "rows": 17666,
+      "videos": 448,
+      "safe": 16625,
+      "damage": 1041,
+      "chunk_ids_sha256": "c0c15bea2772fad7bcae8986fee3d874ce7d7de388b7bfdd00f636b63ec9db7d"
+    }
+  },
+  "targets": [
+    "RACISMO_DISCRIMINACION",
+    "ACOSO_GENERO_IDENTIDAD",
+    "ACOSO_PERSONAL",
+    "AMENAZA_DIRECTA",
+    "CONTENIDO_SEXUAL"
+  ],
+  "fine_labels_trained": false,
+  "transversal_flags_trained": false,
+  "usable_safe_total": 109250,
+  "usable_damage_total": 7063
+}

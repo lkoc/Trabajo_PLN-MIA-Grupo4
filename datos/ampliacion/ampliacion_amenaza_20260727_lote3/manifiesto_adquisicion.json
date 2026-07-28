@@ -1,0 +1,113 @@
+{
+  "batch_id": "ampliacion_amenaza_20260727_lote3",
+  "created_at": "2026-07-27T08:51:03-05:00",
+  "selection_seed": 27072027,
+  "selection_method": "round-robin threat-specific YouTube search",
+  "discovery_mode": "threat_search",
+  "sampling_scope": "enriched training/validation sample; not prevalence representative",
+  "max_selected_videos": 360,
+  "candidate_rows": 1450,
+  "candidate_unique_videos": 1450,
+  "excluded_existing_videos": 152,
+  "prior_unique_video_ids": 2958,
+  "prior_video_id_sources": {
+    "datos\\raw\\transcripts_raw.jsonl": 1858,
+    "datos\\processed\\chunks_para_etiquetar.jsonl": 1856,
+    "datos\\ampliacion\\ampliacion_dano_20260726": 500,
+    "datos\\ampliacion\\ampliacion_dano_20260727_lote2": 600
+  },
+  "selected_overlap_with_prior": 0,
+  "selected_videos": 360,
+  "selected_by_type": {
+    "targeted_search": 360
+  },
+  "selected_by_target": {
+    "AMENAZA_DIRECTA": 360
+  },
+  "canonical_before_sha256": "eb90debf66d5e16af72c41c17c3701197e42bdcc78b81e0f914c6a49c56f8ab4",
+  "base_transcripts_sha256": "452dc98b7473d00ffbd58e2bc7c8bf636f6acb8fd58acea73c03cb16c58b129c",
+  "selected_sha256": "5035cce73e65f5019d23bc837f377123d94e93be09515c291200247466cd98ba",
+  "channel_targets": [],
+  "search_targets": [
+    [
+      "amenaza de muerte denuncia Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "extorsionador amenaza audio WhatsApp Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "sicario amenaza empresario Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenazan periodista alcalde Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenaza fiscal juez audiencia Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "te voy a matar audio denuncia Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenaza con arma denuncia Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenaza a pareja expareja Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenazas colegio extorsión Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenaza cobrador de cupos Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenazan candidato político Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenaza en vivo televisión peruana",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenaza redes sociales denuncia Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "agresión amenazas mujer Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenaza de secuestro denuncia Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenazan transportistas extorsión Perú",
+      "AMENAZA_DIRECTA"
+    ]
+  ],
+  "updated_at": "2026-07-27T08:54:21-05:00",
+  "transcript_videos": 353,
+  "subtitle_success_rate": 0.9805555555555555,
+  "new_chunks": 5451,
+  "new_videos_with_chunks": 351,
+  "duplicates_against_base": 0,
+  "duplicates_within_batch": 129,
+  "prior_chunk_sources": {
+    "datos\\processed\\chunks_para_etiquetar.jsonl": 69853,
+    "datos\\ampliacion\\ampliacion_dano_20260726\\processed\\chunks_para_etiquetar.jsonl": 21991,
+    "datos\\ampliacion\\ampliacion_dano_20260727_lote2\\processed\\chunks_para_etiquetar.jsonl": 19971
+  },
+  "video_overlap_with_all_prior_campaigns": 0,
+  "transcripts_sha256": "f5d6e918a0806577e2f9a53654028abcdb70edbd857fc10609094acf6b5600cb",
+  "chunks_sha256": "025b9f7e80e35bc95058983cbb5096f4f4c2c0df91c83d0b63734b708264ea3c",
+  "audio_or_video_downloaded": false
+}

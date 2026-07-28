@@ -1,0 +1,51 @@
+{
+  "schema_version": "2.0",
+  "policy": "Pro reemplaza Flash; consenso humano se reserva como holdout externo",
+  "recalibrated_threshold": 0.9,
+  "flash_pseudo_base_weight": 0.5,
+  "rows": 69853,
+  "videos": 1856,
+  "source_counts": {
+    "flash_pseudo": 58432,
+    "pro": 11421
+  },
+  "human_holdout_rows": 0,
+  "routed_rows": 6116,
+  "pro_rows": 11421,
+  "label_order": [
+    "seguro",
+    "seguro_ironia_marcada",
+    "racismo_etnico_explicito",
+    "racismo_linguistico",
+    "clasismo_racial",
+    "discriminacion_regional",
+    "racismo_encubierto",
+    "misoginia_acoso_genero",
+    "homofobia_transfobia",
+    "acoso_personal",
+    "amenaza_directa",
+    "sexual_explicito",
+    "sexual_cosificacion",
+    "sexual_no_consensual"
+  ],
+  "flag_order": [
+    "ironia_ambigua",
+    "humor_encubridor",
+    "contexto_necesario"
+  ],
+  "input_sha256": {
+    "chunks": "eb90debf66d5e16af72c41c17c3701197e42bdcc78b81e0f914c6a49c56f8ab4",
+    "flash": "9ee36da617d7700a642358b53d2fb9d311fd64920bd5fc69653d5115cc1409c9",
+    "pro_original": "7c6c348d742610f14b0d0c15830998bb953b721a50877ff75b88c6f079d6b4af",
+    "pro_recalibrated": "88370616e728d1dbd3f588bae5d3d95163b0139bfaa76586e56a6a3e672bfde2",
+    "human": null
+  },
+  "seed": 42,
+  "split_policy": "GroupShuffleSplit por video; test=0.15; validation=0.15",
+  "training_rows_final": 60088,
+  "pseudo_test_rows_excluded": 9765,
+  "human_holdout_rows_excluded": 0,
+  "estimator": "TF-IDF (1,2-gramas) + regresión logística multietiqueta",
+  "epochs": null,
+  "max_iter": 1000
+}

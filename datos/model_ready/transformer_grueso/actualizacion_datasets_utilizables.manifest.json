@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "created_at": "2026-07-27T10:52:06-05:00",
+  "purpose": "preflight reproducible de adjudicación humana antes de 04_2",
+  "llm_calls": 0,
+  "model_training": false,
+  "human_review": {
+    "campaign_rows": 3114,
+    "completed": 3114,
+    "included": 3092,
+    "excluded": 22,
+    "revision": 3226,
+    "campaign": "datos\\etiquetado\\humano\\revision_humana_combinada_1918.campaign.json",
+    "campaign_sha256": "3783f357ac597f1f5f8ed882bdb1827f535e2e03209f83d2d64fe1fa489173fc",
+    "final_output": "datos\\etiquetado\\humano\\revision_humana_combinada_1918.jsonl",
+    "final_output_sha256": "40a70f51c1a141f0d16bdf2595a5ef4a259efb63523e4fc9fe040444d41f2c10",
+    "final_manifest": "datos\\etiquetado\\humano\\revision_humana_combinada_1918.manifest.json",
+    "final_manifest_sha256": "8493a8c449a169a872e0ab287bb059cfaf4d417a05ebf67638910cb1080a528f",
+    "snapshot": "datos\\etiquetado\\humano\\snapshots_entrenamiento\\revision_humana_final_r3226_db88b85c6d3a.json",
+    "snapshot_sha256": "db88b85c6d3a5c4da1d1e4e6fb32adceeec61b04683c3ac4a80efb6b539a9815"
+  },
+  "batches": [
+    {
+      "batch_id": "ampliacion_dano_20260726",
+      "cohort": "ampliacion_1779",
+      "refreshed": false,
+      "raw_rows": 21991,
+      "human_review_rows": 1779,
+      "human_included": 1775,
+      "human_excluded": 4,
+      "usable_rows": 21987,
+      "pending_human_rows": 0,
+      "usable": "datos\\ampliacion\\ampliacion_dano_20260726\\processed\\dataset_etiquetado_utilizable.jsonl",
+      "usable_sha256": "ac3af40ab1fa379c8718fb6673aae775e7b64a1eb560a0560925a1b1383c116c",
+      "manifest": "datos\\ampliacion\\ampliacion_dano_20260726\\processed\\dataset_etiquetado_utilizable.manifest.json",
+      "manifest_sha256": "eaff55930537616e4c935a638b0a3a3102deca36dcff9e12ba87d61228941d86"
+    },
+    {
+      "batch_id": "ampliacion_amenaza_20260727_lote3",
+      "cohort": "ampliacion_amenaza_20260727_lote3",
+      "refreshed": false,
+      "raw_rows": 5451,
+      "human_review_rows": 108,
+      "human_included": 108,
+      "human_excluded": 0,
+      "usable_rows": 5451,
+      "pending_human_rows": 0,
+      "usable": "datos\\ampliacion\\ampliacion_amenaza_20260727_lote3\\processed\\dataset_etiquetado_utilizable.jsonl",
+      "usable_sha256": "599b562ac41748e26f195f8cf22c08b5a7bf58718070c5e8f994841c8a67a915",
+      "manifest": "datos\\ampliacion\\ampliacion_amenaza_20260727_lote3\\processed\\dataset_etiquetado_utilizable.manifest.json",
+      "manifest_sha256": "bbc454d5482c3783a7570b02daee3cc0e254569f7c2db74d43095491d9d43371"
+    },
+    {
+      "batch_id": "ampliacion_dano_20260727_lote2",
+      "cohort": "ampliacion_dano_20260727_lote2",
+      "refreshed": false,
+      "raw_rows": 19971,
+      "human_review_rows": 1088,
+      "human_included": 1074,
+      "human_excluded": 14,
+      "usable_rows": 19957,
+      "pending_human_rows": 0,
+      "usable": "datos\\ampliacion\\ampliacion_dano_20260727_lote2\\processed\\dataset_etiquetado_utilizable.jsonl",
+      "usable_sha256": "3bfc1fc938570d65abb182f7e1c3e8f230397d69a5be8e315e927256245b0682",
+      "manifest": "datos\\ampliacion\\ampliacion_dano_20260727_lote2\\processed\\dataset_etiquetado_utilizable.manifest.json",
+      "manifest_sha256": "e6ceb8fd9e66325d7c6d7e66ff8448ab76b591944a898ef57f14505ba34c5524"
+    }
+  ],
+  "all_pending_resolved": true
+}

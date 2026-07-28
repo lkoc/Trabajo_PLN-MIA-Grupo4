@@ -1,0 +1,12 @@
+{
+  "created_at": "2026-07-27T11:15:31-05:00",
+  "model_id": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "model_revision": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+  "prefix": "",
+  "max_length": 128,
+  "rows": 24701,
+  "dimensions": 384,
+  "chunk_ids_sha256": "9132a1678e24c9bb29d06fcbc1a44d8fb0c54737e571fe4f509f62fa0d8fc794",
+  "elapsed_seconds": 384.6567322000046,
+  "rows_per_second": 64.21569657373516
+}

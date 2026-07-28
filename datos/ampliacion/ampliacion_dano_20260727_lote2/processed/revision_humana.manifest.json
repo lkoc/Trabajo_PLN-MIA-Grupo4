@@ -1,0 +1,31 @@
+{
+  "schema_version": "2.0",
+  "campaign_id": "revision_humana_combinada_1918_v2",
+  "output_id": "ampliacion_dano_20260727_lote2",
+  "completed": 1088,
+  "included_for_training": 1074,
+  "excluded_from_training": 14,
+  "action_counts": {
+    "accept_llm": 515,
+    "modify_llm": 559,
+    "reject_llm": 14
+  },
+  "cohort_counts": {
+    "ampliacion_dano_20260727_lote2": 1088
+  },
+  "split_counts": {
+    "train": 809,
+    "validation": 279
+  },
+  "created_at": "2026-07-27T09:54:15-05:00",
+  "coarse_labels_only": true,
+  "fine_labels_trained": false,
+  "transversal_flags_separate": true,
+  "source_campaign_sha256": "3783f357ac597f1f5f8ed882bdb1827f535e2e03209f83d2d64fe1fa489173fc",
+  "source_events_sha256": "ec5ef41c16e62803053b69641987f6b2ed21dee9fadbdcff39230b13fe39148c",
+  "legacy_events_sha256": "a4d3a27e6f0512fbc30ae383557fd5454647284ecc1e51e8cd1eec167b296da3",
+  "output_sha256": "460cfde2e4b91cc83e049ff7c045e52fff72b28a3120922d8bd9eb7461ff8b58",
+  "annotator_ids": [
+    "COD"
+  ]
+}

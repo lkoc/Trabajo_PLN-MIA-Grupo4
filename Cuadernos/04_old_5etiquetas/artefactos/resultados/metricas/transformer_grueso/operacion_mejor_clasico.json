@@ -1,0 +1,184 @@
+{
+  "completed_at": "2026-07-27T11:09:01-05:00",
+  "model_key": "classical__linear_svm_word_char",
+  "model_label": "SVM lineal palabra+carácter",
+  "decision_thresholds": [
+    0.525,
+    0.5499999999999999,
+    0.525,
+    0.49999999999999994,
+    0.5499999999999999
+  ],
+  "validation_damage_pr_auc_macro": 0.4611980358659765,
+  "test_damage_pr_auc_macro": 0.4173548393015466,
+  "autonomous": {
+    "validation": {
+      "n": 5324,
+      "true_damage": 1078,
+      "routed_to_human": 1240,
+      "review_rate": 0.2329075882794891,
+      "automatic_coverage": 0.7670924117205109,
+      "true_positives": 689,
+      "false_negatives": 389,
+      "false_positives": 551,
+      "true_negatives": 3695,
+      "precision": 0.5556451612903226,
+      "recall": 0.6391465677179963,
+      "negative_predictive_value": 0.9047502448579824,
+      "precision_wilson_95": [
+        0.5278587741383756,
+        0.5830878413015375
+      ],
+      "recall_wilson_95": [
+        0.6100306980799448,
+        0.6672742596418895
+      ],
+      "npv_wilson_95": [
+        0.8953627909172734,
+        0.913376988573527
+      ],
+      "damage_f1_macro": 0.48823409574287735,
+      "category_recall": {
+        "RACISMO_DISCRIMINACION": 0.5444839857651246,
+        "ACOSO_GENERO_IDENTIDAD": 0.41118421052631576,
+        "ACOSO_PERSONAL": 0.47844827586206895,
+        "AMENAZA_DIRECTA": 0.5833333333333334,
+        "CONTENIDO_SEXUAL": 0.5808383233532934
+      },
+      "minimum_category_recall": 0.41118421052631576,
+      "performance_gate_checks": {
+        "precision_point_at_least_0_90": false,
+        "recall_point_at_least_0_90": false,
+        "precision_wilson_lower_at_least_0_85": false,
+        "recall_wilson_lower_at_least_0_85": false,
+        "minimum_category_recall_at_least_0_80": false,
+        "damage_f1_macro_at_least_0_75": false
+      },
+      "performance_gate_passed": false
+    },
+    "test": {
+      "n": 5290,
+      "true_damage": 1041,
+      "routed_to_human": 1217,
+      "review_rate": 0.23005671077504725,
+      "automatic_coverage": 0.7699432892249527,
+      "true_positives": 656,
+      "false_negatives": 385,
+      "false_positives": 561,
+      "true_negatives": 3688,
+      "precision": 0.5390304026294166,
+      "recall": 0.6301633045148896,
+      "negative_predictive_value": 0.9054750797937638,
+      "precision_wilson_95": [
+        0.5109457720431554,
+        0.5668694097018747
+      ],
+      "recall_wilson_95": [
+        0.600408696918139,
+        0.658960796618111
+      ],
+      "npv_wilson_95": [
+        0.8961044523436322,
+        0.9140815785243567
+      ],
+      "damage_f1_macro": 0.45166218899337124,
+      "category_recall": {
+        "RACISMO_DISCRIMINACION": 0.5078125,
+        "ACOSO_GENERO_IDENTIDAD": 0.44866920152091255,
+        "ACOSO_PERSONAL": 0.4482758620689655,
+        "AMENAZA_DIRECTA": 0.32432432432432434,
+        "CONTENIDO_SEXUAL": 0.5970149253731343
+      },
+      "minimum_category_recall": 0.32432432432432434,
+      "performance_gate_checks": {
+        "precision_point_at_least_0_90": false,
+        "recall_point_at_least_0_90": false,
+        "precision_wilson_lower_at_least_0_85": false,
+        "recall_wilson_lower_at_least_0_85": false,
+        "minimum_category_recall_at_least_0_80": false,
+        "damage_f1_macro_at_least_0_75": false
+      },
+      "performance_gate_passed": false
+    },
+    "performance_gate_passed": false,
+    "evidence_gate_checks": {
+      "independent_human_gold_test": false,
+      "natural_prevalence_test": false,
+      "prospective_production_pilot": false
+    },
+    "authorized": false,
+    "interpretation": "La autonomía exige superar desempeño y evidencia externa. El test actual está balanceado y contiene etiquetas mayormente LLM, no un gold standard humano independiente."
+  },
+  "human_review_alert": {
+    "selection_partition": "validation",
+    "risk_definition": "max(score_categoria - umbral_decision_categoria)",
+    "validation": {
+      "n": 5324,
+      "true_damage": 1078,
+      "routed_to_human": 3454,
+      "review_rate": 0.6487603305785123,
+      "automatic_coverage": 0.3512396694214876,
+      "true_positives": 1025,
+      "false_negatives": 53,
+      "false_positives": 2429,
+      "true_negatives": 1817,
+      "precision": 0.2967573827446439,
+      "recall": 0.950834879406308,
+      "negative_predictive_value": 0.9716577540106952,
+      "precision_wilson_95": [
+        0.2817550406278689,
+        0.31221130608866404
+      ],
+      "recall_wilson_95": [
+        0.9362510570693019,
+        0.9622170059494408
+      ],
+      "npv_wilson_95": [
+        0.9631151471105354,
+        0.9782665219182719
+      ],
+      "risk_margin_cutoff": -0.1512615598795924,
+      "validation_recall_target": 0.95
+    },
+    "test": {
+      "n": 5290,
+      "true_damage": 1041,
+      "routed_to_human": 3373,
+      "review_rate": 0.6376181474480151,
+      "automatic_coverage": 0.36238185255198485,
+      "true_positives": 991,
+      "false_negatives": 50,
+      "false_positives": 2382,
+      "true_negatives": 1867,
+      "precision": 0.2938037355469908,
+      "recall": 0.951969260326609,
+      "negative_predictive_value": 0.9739175795513824,
+      "precision_wilson_95": [
+        0.27867322547442097,
+        0.3094033789611974
+      ],
+      "recall_wilson_95": [
+        0.9372358608915641,
+        0.9633792439704698
+      ],
+      "npv_wilson_95": [
+        0.9657795577741204,
+        0.9801600415906038
+      ],
+      "risk_margin_cutoff": -0.1512615598795924
+    },
+    "test_gate": {
+      "checks": {
+        "recall_point_at_least_0_90": true,
+        "recall_wilson_lower_at_least_0_85": true,
+        "negative_predictive_value_at_least_0_95": true,
+        "review_rate_at_most_0_60": false
+      },
+      "passed": false
+    },
+    "supported": false
+  },
+  "test_human_gold_rows": 16,
+  "test_human_gold_fraction": 0.0030245746691871457,
+  "recommended_operating_mode": "research_only"
+}

@@ -1,0 +1,126 @@
+{
+  "schema_version": "2.0",
+  "batch_id": "ampliacion_amenaza_20260727_lote3",
+  "created_at": "2026-07-27T10:28:25-05:00",
+  "policy": "resolved Pro > high-confidence Flash; human accept/modify included; human reject excluded; unresolved Pro excluded",
+  "coarse_training_only": true,
+  "fine_labels_trained": false,
+  "transversal_flags_are_base_targets": false,
+  "input_rows": 5451,
+  "usable_rows": 5451,
+  "human_review_queue_rows": 108,
+  "pending_human_rows": 0,
+  "human_adjudication": {
+    "complete": true,
+    "source": "human_final_1779",
+    "adjudicated": 108,
+    "pending": 0,
+    "included": 108,
+    "excluded": 0,
+    "action_counts": {
+      "accept_llm": 32,
+      "modify_llm": 76
+    },
+    "output_sha256": "cb74c8ac258b8b1f9aa5085a6c27bf184b1e3d697553f0ac1533d587885b1afe",
+    "manifest_sha256": "68fc958d0f2735f676542fdce2bb23fc898904bf08b8881e7ceee6c51f010c70",
+    "progress_snapshot_sha256": null
+  },
+  "usable_source_counts": {
+    "flash_pseudo": 4530,
+    "pro_augmented_resolved": 813,
+    "human_modified_expansion": 76,
+    "human_accepted_pro_expansion": 32
+  },
+  "pending_human_pct_new": 0.0,
+  "split": {
+    "method": "best of 500 GroupShuffleSplit candidates by coarse prevalence",
+    "seed": 26072183,
+    "group": "video_id",
+    "test_rows": 0,
+    "train_rows": 4332,
+    "validation_rows": 1119,
+    "missing_category_cells": 0,
+    "prevalence_divergence": 0.014587705817096666
+  },
+  "balance": [
+    {
+      "categoria": "RACISMO_DISCRIMINACION",
+      "antes": 1601,
+      "agregados_resueltos": 14,
+      "despues_utilizable": 1615,
+      "deficit_1000": 0,
+      "cumple_1000": true
+    },
+    {
+      "categoria": "ACOSO_GENERO_IDENTIDAD",
+      "antes": 1654,
+      "agregados_resueltos": 35,
+      "despues_utilizable": 1689,
+      "deficit_1000": 0,
+      "cumple_1000": true
+    },
+    {
+      "categoria": "ACOSO_PERSONAL",
+      "antes": 2342,
+      "agregados_resueltos": 188,
+      "despues_utilizable": 2530,
+      "deficit_1000": 0,
+      "cumple_1000": true
+    },
+    {
+      "categoria": "AMENAZA_DIRECTA",
+      "antes": 486,
+      "agregados_resueltos": 149,
+      "despues_utilizable": 635,
+      "deficit_1000": 365,
+      "cumple_1000": false
+    },
+    {
+      "categoria": "CONTENIDO_SEXUAL",
+      "antes": 1849,
+      "agregados_resueltos": 12,
+      "despues_utilizable": 1861,
+      "deficit_1000": 0,
+      "cumple_1000": true
+    }
+  ],
+  "threat_video_estimate": {
+    "targeted_videos_observed": 351,
+    "resolved_threat_chunks": 149,
+    "resolved_threat_per_targeted_video": 0.42450142450142453,
+    "bootstrap_95_ci_yield": [
+      0.3190883190883191,
+      0.5413105413105413
+    ],
+    "remaining_to_1000": 365,
+    "estimated_additional_targeted_videos_point": 860,
+    "estimated_additional_targeted_videos_conservative": 1144
+  },
+  "input_sha256": {
+    "chunks": "025b9f7e80e35bc95058983cbb5096f4f4c2c0df91c83d0b63734b708264ea3c",
+    "flash": "ac9cdac4681309da9051f98997850f358ad739dfa7adb793f37fb06de7dc7fdf",
+    "pro": "a8e4aefbdd5c18743d5d4b690b6d6a1a7312b8c4fdb6d12677fd4606c2756b79",
+    "pro_selection_manifest": "0cbbfe5248aeb195a1a6637aa5d13d046d24e9577d5eb165b89480a5930aa11e",
+    "human_expansion": "cb74c8ac258b8b1f9aa5085a6c27bf184b1e3d697553f0ac1533d587885b1afe",
+    "human_expansion_manifest": "68fc958d0f2735f676542fdce2bb23fc898904bf08b8881e7ceee6c51f010c70",
+    "human_progress_snapshot": null
+  },
+  "output_sha256": {
+    "usable": "599b562ac41748e26f195f8cf22c08b5a7bf58718070c5e8f994841c8a67a915",
+    "pending_human": "c8edd437c206a2f5eb985a8f8c7bc51e927437f6aa777b8578ab27a9a5f134cb"
+  },
+  "base_provisional_metadata": {
+    "rows": 110719,
+    "source_counts": {
+      "flash_pseudo": 56432,
+      "pro": 11421,
+      "pro_hard_mining": 1861,
+      "human_coarse": 135
+    },
+    "previous_expansion_datasets": [
+      "datos\\ampliacion\\ampliacion_dano_20260726\\processed\\dataset_etiquetado_utilizable.jsonl",
+      "datos\\ampliacion\\ampliacion_dano_20260727_lote2\\processed\\dataset_etiquetado_utilizable.jsonl"
+    ]
+  },
+  "ready_for_04_2_auto_discovery": true
+}

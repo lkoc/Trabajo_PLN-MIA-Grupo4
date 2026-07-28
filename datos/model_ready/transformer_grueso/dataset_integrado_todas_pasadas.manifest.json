@@ -1,0 +1,63 @@
+{
+  "schema_version": "2.0",
+  "created_at": "2026-07-27T10:30:43-05:00",
+  "purpose": "integración de todas las pasadas antes del fine-tuning Transformer",
+  "raw_canonical_campaigns": {
+    "historical": {
+      "path": "datos/processed/chunks_para_etiquetar.jsonl",
+      "rows": 69853
+    },
+    "ampliacion_amenaza_20260727_lote3": {
+      "path": "datos\\ampliacion\\ampliacion_amenaza_20260727_lote3\\processed\\chunks_para_etiquetar.jsonl",
+      "rows": 5451,
+      "usable_path": "datos\\ampliacion\\ampliacion_amenaza_20260727_lote3\\processed\\dataset_etiquetado_utilizable.jsonl",
+      "usable_rows": 5451
+    },
+    "ampliacion_dano_20260726": {
+      "path": "datos\\ampliacion\\ampliacion_dano_20260726\\processed\\chunks_para_etiquetar.jsonl",
+      "rows": 21991,
+      "usable_path": "datos\\ampliacion\\ampliacion_dano_20260726\\processed\\dataset_etiquetado_utilizable.jsonl",
+      "usable_rows": 21987
+    },
+    "ampliacion_dano_20260727_lote2": {
+      "path": "datos\\ampliacion\\ampliacion_dano_20260727_lote2\\processed\\chunks_para_etiquetar.jsonl",
+      "rows": 19971,
+      "usable_path": "datos\\ampliacion\\ampliacion_dano_20260727_lote2\\processed\\dataset_etiquetado_utilizable.jsonl",
+      "usable_rows": 19957
+    }
+  },
+  "raw_union_unique_rows": 117266,
+  "usable_unique_rows": 117244,
+  "excluded_unresolved_or_rejected_rows": 22,
+  "safe_rows": 110181,
+  "damage_unique_rows": 7063,
+  "damage_label_incidences": 9641,
+  "multilabel_damage_rows": 2229,
+  "category_counts": {
+    "RACISMO_DISCRIMINACION": 1856,
+    "ACOSO_GENERO_IDENTIDAD": 1961,
+    "ACOSO_PERSONAL": 2854,
+    "AMENAZA_DIRECTA": 688,
+    "CONTENIDO_SEXUAL": 2282
+  },
+  "campaign_counts": {
+    "historico_2026": 69849,
+    "ampliacion_dano_20260726": 21987,
+    "ampliacion_dano_20260727_lote2": 19957,
+    "ampliacion_amenaza_20260727_lote3": 5451
+  },
+  "contains_split_assignment": false,
+  "ordering": "this artifact precedes safe undersampling and splitting",
+  "label_precedence": "human accepted/modified > Pro hard mining > Pro > Flash",
+  "review_passes_are_replacements_not_new_rows": true,
+  "reasoning_pilot_included": false,
+  "reasoning_exclusion": "analysis-only; training_modified=false; failed preregistered human agreement criteria",
+  "fine_labels_trained": false,
+  "transversal_flags_trained": false,
+  "chunk_ids_sha256": "9244df12e7e89ea6040803203d7025e780878168f81423cfe4f21b975bee1f3d",
+  "training_content_sha256": "ac1953e939215c85d355e65557a79f33d734a425a3427ab541d50b13c5c6cf76",
+  "output": "datos\\model_ready\\transformer_grueso\\dataset_integrado_todas_pasadas.jsonl",
+  "output_sha256": "3f01b76d285d4cdd2a0922df1d2437a7f01abc4e05e2699c218b1f5faaba2069",
+  "human_snapshot": "datos\\etiquetado\\humano\\snapshots_entrenamiento\\revision_humana_final_r3226_db88b85c6d3a.json",
+  "human_snapshot_sha256": "db88b85c6d3a5c4da1d1e4e6fb32adceeec61b04683c3ac4a80efb6b539a9815"
+}

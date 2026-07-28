@@ -1,0 +1,351 @@
+{
+  "schema_version": "2.1",
+  "completed_at": "2026-07-27T10:48:36-05:00",
+  "dataset": "balanced_4to1_grouped_split",
+  "selected_dataset_rows": 120,
+  "training_rows": 72,
+  "validation_rows": 24,
+  "test_rows": 24,
+  "training_chunk_ids_sha256": "d72f99b0d1d0fd43d1de0959081039d150c8dd61c13d7906617561d09472da71",
+  "training_content_sha256": "45a700c27e855d5a6060fee46164cbbc9cf0db3dd32e3832b1226f0b3dd553a9",
+  "validation_chunk_ids_sha256": "5783e8e2b4fe5d02cbc703826a23ae2325b12778d51a3211ef73f68874255b90",
+  "test_chunk_ids_sha256": "3e7c6f407ec517c72ecba5140f53275c5d2cfd00203be149ba8c41206cf694d5",
+  "selection_partition": "validation_after_group_cv_tuning",
+  "selection_metric": "damage_pr_auc_macro",
+  "test_access_policy": "test evaluated only after winner frozen on validation",
+  "validation_only": false,
+  "test_evaluated": true,
+  "top_candidates": [
+    "linear_svm_word_char",
+    "logistic_regression",
+    "complement_nb"
+  ],
+  "group_cv_folds": 3,
+  "group_variable": "video_id",
+  "search_definition_sha256": "cc2922d24eabe3a61e547c52b2a1438846d0ffa8f7fd771316f3f268f7afd54e",
+  "hyperparameter_search_performed": true,
+  "winner_id": "tuned__linear_svm_word_char",
+  "winner_model": "linear_svm_word_char",
+  "winner_label": "SVM lineal palabra+carácter",
+  "winner_parameters": {
+    "C": 0.5,
+    "min_df": 1,
+    "max_features": 1000
+  },
+  "winner_thresholds": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+  ],
+  "winner_model_path": "datos\\model_ready\\transformer_grueso\\_smoke_classical_tuning\\models\\baseline_clasico_mismo_split\\mejor_modelo_clasico.joblib",
+  "winner_model_sha256": "1c81d59edd579b7d6f06348949caba939165a256e4b1be5404e693c0520c21e2",
+  "winner_validation_metrics": {
+    "exact_match": 1.0,
+    "jaccard_samples": 1.0,
+    "precision_micro": 1.0,
+    "recall_micro": 1.0,
+    "f1_micro": 1.0,
+    "f1_macro": 1.0,
+    "pr_auc_macro": 1.0,
+    "damage_precision_micro": 1.0,
+    "damage_recall_micro": 1.0,
+    "damage_f1_micro": 1.0,
+    "damage_f1_macro": 1.0,
+    "damage_pr_auc_macro": 1.0,
+    "n": 24.0
+  },
+  "winner_test_metrics": {
+    "exact_match": 1.0,
+    "jaccard_samples": 1.0,
+    "precision_micro": 1.0,
+    "recall_micro": 1.0,
+    "f1_micro": 1.0,
+    "f1_macro": 1.0,
+    "pr_auc_macro": 1.0,
+    "damage_precision_micro": 1.0,
+    "damage_recall_micro": 1.0,
+    "damage_f1_micro": 1.0,
+    "damage_f1_macro": 1.0,
+    "damage_pr_auc_macro": 1.0,
+    "n": 24.0
+  },
+  "best_parameters_by_model": {
+    "linear_svm_word_char": {
+      "C": 0.5,
+      "min_df": 1,
+      "max_features": 1000
+    },
+    "logistic_regression": {
+      "C": 0.5,
+      "min_df": 1,
+      "max_features": 1000
+    },
+    "complement_nb": {
+      "alpha": 0.3,
+      "min_df": 1,
+      "max_features": 1000
+    }
+  },
+  "cv_results": [
+    {
+      "model": "linear_svm_word_char",
+      "model_label": "SVM lineal palabra+carácter",
+      "configuration_index": 1,
+      "parameters": {
+        "C": 0.5,
+        "min_df": 1,
+        "max_features": 1000
+      },
+      "fold_damage_pr_auc_macro": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_cv_damage_pr_auc_macro": 1.0,
+      "std_cv_damage_pr_auc_macro": 0.0,
+      "cv_training_seconds": 0.03423109999857843
+    },
+    {
+      "model": "linear_svm_word_char",
+      "model_label": "SVM lineal palabra+carácter",
+      "configuration_index": 2,
+      "parameters": {
+        "C": 1.0,
+        "min_df": 1,
+        "max_features": 1000
+      },
+      "fold_damage_pr_auc_macro": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_cv_damage_pr_auc_macro": 1.0,
+      "std_cv_damage_pr_auc_macro": 0.0,
+      "cv_training_seconds": 0.04145950000383891
+    },
+    {
+      "model": "logistic_regression",
+      "model_label": "Regresión logística",
+      "configuration_index": 1,
+      "parameters": {
+        "C": 0.5,
+        "min_df": 1,
+        "max_features": 1000
+      },
+      "fold_damage_pr_auc_macro": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_cv_damage_pr_auc_macro": 1.0,
+      "std_cv_damage_pr_auc_macro": 0.0,
+      "cv_training_seconds": 0.022538500023074448
+    },
+    {
+      "model": "logistic_regression",
+      "model_label": "Regresión logística",
+      "configuration_index": 2,
+      "parameters": {
+        "C": 1.0,
+        "min_df": 1,
+        "max_features": 1000
+      },
+      "fold_damage_pr_auc_macro": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_cv_damage_pr_auc_macro": 1.0,
+      "std_cv_damage_pr_auc_macro": 0.0,
+      "cv_training_seconds": 0.017128300009062514
+    },
+    {
+      "model": "complement_nb",
+      "model_label": "Complement NB",
+      "configuration_index": 1,
+      "parameters": {
+        "alpha": 0.3,
+        "min_df": 1,
+        "max_features": 1000
+      },
+      "fold_damage_pr_auc_macro": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_cv_damage_pr_auc_macro": 1.0,
+      "std_cv_damage_pr_auc_macro": 0.0,
+      "cv_training_seconds": 0.01569890000973828
+    },
+    {
+      "model": "complement_nb",
+      "model_label": "Complement NB",
+      "configuration_index": 2,
+      "parameters": {
+        "alpha": 0.7,
+        "min_df": 1,
+        "max_features": 1000
+      },
+      "fold_damage_pr_auc_macro": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mean_cv_damage_pr_auc_macro": 1.0,
+      "std_cv_damage_pr_auc_macro": 0.0,
+      "cv_training_seconds": 0.01608119998127222
+    }
+  ],
+  "comparison": [
+    {
+      "experiment_id": "tuned__linear_svm_word_char",
+      "model": "linear_svm_word_char",
+      "model_label": "SVM lineal palabra+carácter",
+      "train_rows": 72,
+      "best_parameters": {
+        "C": 0.5,
+        "min_df": 1,
+        "max_features": 1000
+      },
+      "mean_cv_damage_pr_auc_macro": 1.0,
+      "std_cv_damage_pr_auc_macro": 0.0,
+      "features": 501,
+      "feature_seconds": 0.003342899988638237,
+      "fit_seconds": 0.005814100004499778,
+      "training_seconds": 0.009156999993138015,
+      "text_column": "text",
+      "flash_pseudo_weight": 0.5,
+      "model_parameters": {
+        "C": 0.5,
+        "min_df": 1
+      },
+      "validation_exact_match": 1.0,
+      "validation_jaccard_samples": 1.0,
+      "validation_precision_micro": 1.0,
+      "validation_recall_micro": 1.0,
+      "validation_f1_micro": 1.0,
+      "validation_f1_macro": 1.0,
+      "validation_pr_auc_macro": 1.0,
+      "validation_damage_precision_micro": 1.0,
+      "validation_damage_recall_micro": 1.0,
+      "validation_damage_f1_micro": 1.0,
+      "validation_damage_f1_macro": 1.0,
+      "validation_damage_pr_auc_macro": 1.0,
+      "validation_n": 24,
+      "test_exact_match": 1.0,
+      "test_jaccard_samples": 1.0,
+      "test_precision_micro": 1.0,
+      "test_recall_micro": 1.0,
+      "test_f1_micro": 1.0,
+      "test_f1_macro": 1.0,
+      "test_pr_auc_macro": 1.0,
+      "test_damage_precision_micro": 1.0,
+      "test_damage_recall_micro": 1.0,
+      "test_damage_f1_micro": 1.0,
+      "test_damage_f1_macro": 1.0,
+      "test_damage_pr_auc_macro": 1.0,
+      "test_n": 24
+    },
+    {
+      "experiment_id": "tuned__logistic_regression",
+      "model": "logistic_regression",
+      "model_label": "Regresión logística",
+      "train_rows": 72,
+      "best_parameters": {
+        "C": 0.5,
+        "min_df": 1,
+        "max_features": 1000
+      },
+      "mean_cv_damage_pr_auc_macro": 1.0,
+      "std_cv_damage_pr_auc_macro": 0.0,
+      "features": 109,
+      "feature_seconds": 0.0008067000017035753,
+      "fit_seconds": 0.003118299995549023,
+      "training_seconds": 0.003924999997252598,
+      "text_column": "text",
+      "flash_pseudo_weight": 0.5,
+      "model_parameters": {
+        "C": 0.5,
+        "min_df": 1
+      },
+      "validation_exact_match": 1.0,
+      "validation_jaccard_samples": 1.0,
+      "validation_precision_micro": 1.0,
+      "validation_recall_micro": 1.0,
+      "validation_f1_micro": 1.0,
+      "validation_f1_macro": 1.0,
+      "validation_pr_auc_macro": 1.0,
+      "validation_damage_precision_micro": 1.0,
+      "validation_damage_recall_micro": 1.0,
+      "validation_damage_f1_micro": 1.0,
+      "validation_damage_f1_macro": 1.0,
+      "validation_damage_pr_auc_macro": 1.0,
+      "validation_n": 24,
+      "test_exact_match": 1.0,
+      "test_jaccard_samples": 1.0,
+      "test_precision_micro": 1.0,
+      "test_recall_micro": 1.0,
+      "test_f1_micro": 1.0,
+      "test_f1_macro": 1.0,
+      "test_pr_auc_macro": 1.0,
+      "test_damage_precision_micro": 1.0,
+      "test_damage_recall_micro": 1.0,
+      "test_damage_f1_micro": 1.0,
+      "test_damage_f1_macro": 1.0,
+      "test_damage_pr_auc_macro": 1.0,
+      "test_n": 24
+    },
+    {
+      "experiment_id": "tuned__complement_nb",
+      "model": "complement_nb",
+      "model_label": "Complement NB",
+      "train_rows": 72,
+      "best_parameters": {
+        "alpha": 0.3,
+        "min_df": 1,
+        "max_features": 1000
+      },
+      "mean_cv_damage_pr_auc_macro": 1.0,
+      "std_cv_damage_pr_auc_macro": 0.0,
+      "features": 25,
+      "feature_seconds": 0.0006546000076923519,
+      "fit_seconds": 0.0024682999937795103,
+      "training_seconds": 0.003122900001471862,
+      "text_column": "text",
+      "flash_pseudo_weight": 0.5,
+      "model_parameters": {
+        "alpha": 0.3,
+        "min_df": 1
+      },
+      "validation_exact_match": 1.0,
+      "validation_jaccard_samples": 1.0,
+      "validation_precision_micro": 1.0,
+      "validation_recall_micro": 1.0,
+      "validation_f1_micro": 1.0,
+      "validation_f1_macro": 1.0,
+      "validation_pr_auc_macro": 1.0,
+      "validation_damage_precision_micro": 1.0,
+      "validation_damage_recall_micro": 1.0,
+      "validation_damage_f1_micro": 1.0,
+      "validation_damage_f1_macro": 1.0,
+      "validation_damage_pr_auc_macro": 1.0,
+      "validation_n": 24,
+      "test_exact_match": 1.0,
+      "test_jaccard_samples": 1.0,
+      "test_precision_micro": 1.0,
+      "test_recall_micro": 1.0,
+      "test_f1_micro": 1.0,
+      "test_f1_macro": 1.0,
+      "test_pr_auc_macro": 1.0,
+      "test_damage_precision_micro": 1.0,
+      "test_damage_recall_micro": 1.0,
+      "test_damage_f1_micro": 1.0,
+      "test_damage_f1_macro": 1.0,
+      "test_damage_pr_auc_macro": 1.0,
+      "test_n": 24
+    }
+  ]
+}

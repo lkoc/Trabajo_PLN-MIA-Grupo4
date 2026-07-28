@@ -11,7 +11,7 @@ El corpus canónico contiene 69,853 chunks y aproximadamente 9.5 millones de tok
 1. Verificar archivos, taxonomía, API y modelo cargado.
 2. Construir un piloto reproducible y balanceado por canal.
 3. Comparar modelos con el mismo prompt, muestra y parámetros.
-4. Ejecutar producción solamente mediante una bandera explícita.
+4. Ejecutar una sola fase por corrida mediante `ETIQUETADO_RUN_MODE`.
 5. Guardar por lotes, validar cada objeto y reanudar por `chunk_id`.
 6. Enviar a una segunda pasada solo los casos con flags, confianza baja, daño o una muestra de controles seguros.
 
@@ -40,7 +40,7 @@ El modelo no puede inventar etiquetas ni sustituir esas reglas por una política
 
 Una prueba real mostró que enviar los documentos completos en cada solicitud tardó más de cuatro minutos por chunk sobre CPU y agotó el timeout. Por ello `PROMPT_MODE='compact'` usa `prompt_operacional_compacto.md`, una compilación que conserva todas las etiquetas, flags, exclusiones, siete pasos, términos peruanos y ejemplos decisivos. `PROMPT_MODE='full'` permanece disponible para auditorías muy pequeñas. Ambos modos registran los hashes de las fuentes para detectar cambios.
 
-Empieza con `BATCH_SIZE=1` para validar y compara después 2 y 4; el mayor lote que conserve validez y mejore chunks/minuto amortiza el prefijo. El cuaderno limita la longitud de justificaciones para evitar generaciones abiertas.
+El benchmark de esta máquina seleccionó `BATCH_SIZE=2`, `MAX_WORKERS=2` y `MODEL_PARALLEL=2`. El cuaderno mantiene siempre ocupadas las dos ranuras de inferencia aunque un lote anterior tarde más, pero escribe los resultados en el orden reproducible de la selección. También corrige localmente las invariantes mecánicas de confianza/revisión y, si una fila todavía es inválida, vuelve a solicitar solo esa fila en vez de repetir todo el lote.
 
 ### Rendimiento medido en esta máquina
 
@@ -69,10 +69,10 @@ El cuaderno lee el texto desde `datos/processed/chunks_para_etiquetar.jsonl`. Su
 2. Abre el cuaderno desde la raíz del proyecto o desde esta carpeta.
 3. Ejecuta instalación, configuración y preflight.
 4. Define `PRIMARY_MODEL_ID` con el identificador que devuelve `lms ps` o `/v1/models`.
-5. Mantén `EJECUTAR_PILOTO = False` hasta revisar la muestra y las rutas; luego cámbialo a `True`.
-6. Ejecuta primero 5 chunks como *smoke test*, luego 20–50 para medir y finalmente el piloto de 300.
+5. Edita el bloque visible al comienzo de la primera celda de código: `RUN_MODE`, `PILOT_SAMPLE_SIZE`, `PRODUCTION_SAMPLE_SIZE`, `REVIEW_SAMPLE_SIZE` y `SAMPLE_SEED`. `PRODUCTION_SAMPLE_SIZE=None` procesa todo el corpus.
+6. Usa una única fase por ejecución: `pilot` (predeterminado), `production`, `review` o `validate`. También puedes sobrescribir el modo desde PowerShell con `$env:ETIQUETADO_RUN_MODE='production'`.
 7. Compara al menos dos modelos. Selecciona el ganador por calidad y rendimiento medidos.
-8. Solo entonces cambia `EJECUTAR_PRODUCCION = True`.
+8. Solo entonces ejecuta el cuaderno con `ETIQUETADO_RUN_MODE=production`.
 9. No combines directamente las salidas de dos anotadores: conserva una fila por `(chunk_id, annotator_id)` y consolida en el Cuaderno 03.
 
 ## Reanudación e integridad
@@ -88,7 +88,11 @@ Cada salida válida se agrega al JSONL y se fuerza a disco al terminar el lote. 
 - `ironia_ambigua` y `contexto_necesario` limitan la confianza a 0.65;
 - ausencia de texto y metadatos fuente en la salida.
 
-Si un lote falla después de los reintentos, la corrida se detiene. Esto conserva el orden canónico y evita afirmar que se procesaron filas omitidas. Al reanudar, comienza en el primer ID pendiente.
+Las fases son excluyentes, por lo que no se puede iniciar accidentalmente la revisión sin haber elegido `review`. Esta fase exige tanto la primera salida de producción como `LMSTUDIO_REVIEW_MODEL`.
+
+La producción baraja de forma determinista el corpus completo con `SAMPLE_SEED` y toma los primeros `PRODUCTION_SAMPLE_SIZE` registros. Así la membresía no depende del orden del JSONL. La misma semilla y cantidad producen exactamente los mismos IDs; si aumentas la cantidad, la selección anterior es un prefijo y solo se procesan los IDs nuevos. Cambiar la semilla crea otro archivo de salida. No reduzcas la cantidad sobre un archivo que ya contiene más filas.
+
+Si una fila falla después de los reintentos, la corrida se detiene. Las filas válidas del mismo lote se conservan en memoria y solo se reenvían las inválidas; la escritura sigue el orden reproducible de la selección. Al reanudar, comienza en el primer ID pendiente.
 
 ## Métricas de avance en vivo
 
@@ -106,8 +110,9 @@ La barra de `tqdm` muestra además completados, daño, revisión y confianza com
 Después de cada lote también se actualiza atómicamente un archivo lateral con el mismo nombre base y sufijo `.metrics.json`. Por ejemplo:
 
 ```text
-qwen-local-primary_labeled_chunks.jsonl
-qwen-local-primary_labeled_chunks.metrics.json
+qwen-local-primary_labeled_chunks_seed42.jsonl
+qwen-local-primary_labeled_chunks_seed42.metrics.json
+qwen-local-primary_labeled_chunks_seed42.manifest.json
 ```
 
 Este archivo permite consultar el avance sin abrir ni recorrer el JSONL completo mientras la corrida está activa.

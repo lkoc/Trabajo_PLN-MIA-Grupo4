@@ -1,0 +1,2 @@
+{"timestamp": "2026-07-27T10:48:36-05:00", "event": "classical_tuning_started", "selected_models": ["linear_svm_word_char", "logistic_regression", "complement_nb"], "folds": 3, "candidate_configurations": 6}
+{"timestamp": "2026-07-27T10:48:36-05:00", "event": "classical_tuning_completed", "winner": "tuned__linear_svm_word_char", "winner_parameters": {"C": 0.5, "min_df": 1, "max_features": 1000}}

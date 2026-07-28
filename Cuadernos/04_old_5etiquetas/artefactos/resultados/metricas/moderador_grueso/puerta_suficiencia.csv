@@ -1,0 +1,4 @@
+criterio,resultado,mínimo,cumple
+F1 macro de daños,0.2751560959579362,0.7,False
+Recall mínimo entre daños,0.24444444444444444,0.8,False
+Holdout humano disponible,0.0,1.0,False

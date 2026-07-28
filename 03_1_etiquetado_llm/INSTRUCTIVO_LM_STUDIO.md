@@ -85,7 +85,7 @@ Ejemplo para el modelo primario:
 
 ```powershell
 lms runtime select llama.cpp-win-x86_64-avx2@2.24.0
-lms load <model-key-qwen> --context-length 16384 --gpu off --parallel 1 --identifier qwen-local-primary -y
+lms load <model-key-qwen> --context-length 16384 --gpu off --parallel 2 --identifier qwen-local-primary -y
 ```
 
 Ejemplo para el revisor:
@@ -111,7 +111,7 @@ En esta máquina el runtime Vulkan `2.24.0` falló con `Vulkan survey did not pr
 ```powershell
 lms unload --all
 lms runtime select llama.cpp-win-x86_64-avx2@2.24.0
-lms load <model-key> --context-length 16384 --gpu off --parallel 1 --identifier qwen-local-primary -y
+lms load <model-key> --context-length 16384 --gpu off --parallel 2 --identifier qwen-local-primary -y
 ```
 
 La RX 570 tiene solo 4 GB de VRAM y el modelo requiere cerca de 6.10 GiB. No vuelvas a seleccionar Vulkan ni fuerces `--gpu max` hasta que una versión posterior del runtime reconozca correctamente las GPU. Para comprobar una actualización, ejecuta `lms runtime update` y luego `lms runtime survey`.
@@ -159,7 +159,7 @@ Inicio:
 lms daemon up
 lms server start --port 1234 --bind 127.0.0.1
 lms runtime select llama.cpp-win-x86_64-avx2@2.24.0
-lms load qwen/qwen3.5-9b --context-length 16384 --gpu off --parallel 1 --identifier qwen-local-primary -y
+lms load qwen/qwen3.5-9b --context-length 16384 --gpu off --parallel 2 --identifier qwen-local-primary -y
 ```
 
 Diagnóstico:

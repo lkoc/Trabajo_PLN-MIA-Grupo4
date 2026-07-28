@@ -1,0 +1,5524 @@
+{
+  "schema_version": "2.0",
+  "categories": [
+    "seguro",
+    "seguro_ironia_marcada",
+    "racismo_etnico_explicito",
+    "racismo_linguistico",
+    "clasismo_racial",
+    "discriminacion_regional",
+    "racismo_encubierto",
+    "misoginia_acoso_genero",
+    "homofobia_transfobia",
+    "acoso_personal",
+    "amenaza_directa",
+    "sexual_explicito",
+    "sexual_cosificacion",
+    "sexual_no_consensual"
+  ],
+  "transversal_flags": [
+    "ironia_ambigua",
+    "humor_encubridor",
+    "contexto_necesario"
+  ],
+  "category_thresholds": {
+    "seguro": 0.1,
+    "seguro_ironia_marcada": 0.5750000000000001,
+    "racismo_etnico_explicito": 0.65,
+    "racismo_linguistico": 0.5,
+    "clasismo_racial": 0.75,
+    "discriminacion_regional": 0.475,
+    "racismo_encubierto": 0.55,
+    "misoginia_acoso_genero": 0.775,
+    "homofobia_transfobia": 0.75,
+    "acoso_personal": 0.65,
+    "amenaza_directa": 0.5750000000000001,
+    "sexual_explicito": 0.7000000000000001,
+    "sexual_cosificacion": 0.5750000000000001,
+    "sexual_no_consensual": 0.5
+  },
+  "flag_thresholds": {
+    "ironia_ambigua": 0.6,
+    "humor_encubridor": 0.725,
+    "contexto_necesario": 0.475
+  },
+  "category_terms": {
+    "seguro": [
+      {
+        "term": "tambien",
+        "weight": 4.401590679681131
+      },
+      {
+        "term": "musica",
+        "weight": 3.9695294757934145
+      },
+      {
+        "term": "como que",
+        "weight": 3.44277287381323
+      },
+      {
+        "term": "creo",
+        "weight": 3.1385388653054016
+      },
+      {
+        "term": "amigos",
+        "weight": 3.0138613256587923
+      },
+      {
+        "term": "eh",
+        "weight": 2.9399676182741055
+      },
+      {
+        "term": "la mano",
+        "weight": 2.609111801659424
+      },
+      {
+        "term": "importante",
+        "weight": 2.5910405167537025
+      },
+      {
+        "term": "vamos",
+        "weight": 2.5567428702551998
+      },
+      {
+        "term": "asi que",
+        "weight": 2.380279261396977
+      },
+      {
+        "term": "mucho",
+        "weight": 2.336082153549904
+      },
+      {
+        "term": "esta muy",
+        "weight": 2.3194308758366073
+      },
+      {
+        "term": "compadre",
+        "weight": 2.2823465245290726
+      },
+      {
+        "term": "justo",
+        "weight": 2.2735979823887376
+      },
+      {
+        "term": "mi hermano",
+        "weight": 2.2542687389323115
+      },
+      {
+        "term": "mesa",
+        "weight": 2.2084799159341064
+      },
+      {
+        "term": "hemos",
+        "weight": 2.1931620862575767
+      },
+      {
+        "term": "siento que",
+        "weight": 2.1441243539557595
+      },
+      {
+        "term": "casi",
+        "weight": 2.110207060642087
+      },
+      {
+        "term": "entonces",
+        "weight": 2.101337840465661
+      },
+      {
+        "term": "tema",
+        "weight": 2.0749024402628966
+      },
+      {
+        "term": "100",
+        "weight": 2.0649596028973214
+      },
+      {
+        "term": "sea",
+        "weight": 1.9980107794083264
+      },
+      {
+        "term": "estamos",
+        "weight": 1.9670925378484974
+      },
+      {
+        "term": "en verdad",
+        "weight": 1.9482592524122078
+      },
+      {
+        "term": "me ha",
+        "weight": 1.935138031709949
+      },
+      {
+        "term": "decir",
+        "weight": 1.9336876757719137
+      },
+      {
+        "term": "vemos",
+        "weight": 1.9160224487378092
+      },
+      {
+        "term": "por ejemplo",
+        "weight": 1.914774916249536
+      },
+      {
+        "term": "cual es",
+        "weight": 1.9035196684900006
+      },
+      {
+        "term": "esto",
+        "weight": 1.8998617400427593
+      },
+      {
+        "term": "este",
+        "weight": 1.8897612132122603
+      },
+      {
+        "term": "ejemplo",
+        "weight": 1.8761437074280287
+      },
+      {
+        "term": "informacion",
+        "weight": 1.8406122841135129
+      },
+      {
+        "term": "dije",
+        "weight": 1.8387916866856286
+      },
+      {
+        "term": "proceso",
+        "weight": 1.8379455165033773
+      },
+      {
+        "term": "sabia",
+        "weight": 1.825479226819295
+      },
+      {
+        "term": "en",
+        "weight": 1.8121810794858528
+      },
+      {
+        "term": "mas menos",
+        "weight": 1.8109926903974785
+      },
+      {
+        "term": "creo que",
+        "weight": 1.8094198256123388
+      },
+      {
+        "term": "centro",
+        "weight": 1.8061270313042301
+      },
+      {
+        "term": "diferentes",
+        "weight": 1.8047207547336732
+      },
+      {
+        "term": "situacion",
+        "weight": 1.7899235343925595
+      },
+      {
+        "term": "horas",
+        "weight": 1.776158896038245
+      },
+      {
+        "term": "caso",
+        "weight": 1.7678427126069824
+      },
+      {
+        "term": "la mesa",
+        "weight": 1.764872729024335
+      },
+      {
+        "term": "visita",
+        "weight": 1.760390799472888
+      },
+      {
+        "term": "de las",
+        "weight": 1.7591816023604887
+      },
+      {
+        "term": "es el",
+        "weight": 1.7479379932787167
+      },
+      {
+        "term": "no lo",
+        "weight": 1.7474895238907986
+      },
+      {
+        "term": "para poder",
+        "weight": 1.741646966448647
+      },
+      {
+        "term": "comida",
+        "weight": 1.719876847336513
+      },
+      {
+        "term": "tienda",
+        "weight": 1.7034204199818666
+      },
+      {
+        "term": "juntos por",
+        "weight": 1.7014651923709816
+      },
+      {
+        "term": "dias",
+        "weight": 1.6858375988285221
+      },
+      {
+        "term": "uno",
+        "weight": 1.6753220386622134
+      },
+      {
+        "term": "veces",
+        "weight": 1.6611738409338574
+      },
+      {
+        "term": "perfecto",
+        "weight": 1.6518466202606774
+      },
+      {
+        "term": "agua",
+        "weight": 1.6469015878661033
+      },
+      {
+        "term": "orden",
+        "weight": 1.6443736686846635
+      },
+      {
+        "term": "venia",
+        "weight": 1.6424603040846248
+      },
+      {
+        "term": "quedo",
+        "weight": 1.6415830146655428
+      },
+      {
+        "term": "tenemos que",
+        "weight": 1.6378189914705836
+      },
+      {
+        "term": "algo",
+        "weight": 1.6364698320401598
+      },
+      {
+        "term": "es como",
+        "weight": 1.6347293856611809
+      },
+      {
+        "term": "sea no",
+        "weight": 1.6339086341443358
+      },
+      {
+        "term": "desde el",
+        "weight": 1.6338621335800096
+      },
+      {
+        "term": "por ahi",
+        "weight": 1.6283593336407494
+      },
+      {
+        "term": "siento",
+        "weight": 1.62459298338814
+      },
+      {
+        "term": "rapido",
+        "weight": 1.6211867387568584
+      },
+      {
+        "term": "norte",
+        "weight": 1.6209501759050937
+      },
+      {
+        "term": "lo que",
+        "weight": 1.612766152588004
+      },
+      {
+        "term": "cual",
+        "weight": 1.6085502816895854
+      },
+      {
+        "term": "nuestra",
+        "weight": 1.6028913690005564
+      },
+      {
+        "term": "pero la",
+        "weight": 1.6017574225842632
+      },
+      {
+        "term": "chevere",
+        "weight": 1.5953448857598056
+      },
+      {
+        "term": "11",
+        "weight": 1.592737392791432
+      },
+      {
+        "term": "puedan",
+        "weight": 1.5926542117157259
+      },
+      {
+        "term": "que lo",
+        "weight": 1.5903248894740825
+      },
+      {
+        "term": "decision",
+        "weight": 1.5866316777661909
+      }
+    ],
+    "seguro_ironia_marcada": [
+      {
+        "term": "les",
+        "weight": 6.058045887725469
+      },
+      {
+        "term": "para que",
+        "weight": 3.97139427584951
+      },
+      {
+        "term": "keiko",
+        "weight": 3.914900147232171
+      },
+      {
+        "term": "dina",
+        "weight": 3.881387631629257
+      },
+      {
+        "term": "congreso",
+        "weight": 3.7649812119392387
+      },
+      {
+        "term": "rafael",
+        "weight": 3.7283361091986142
+      },
+      {
+        "term": "impuesto",
+        "weight": 3.5431829075156056
+      },
+      {
+        "term": "educacion",
+        "weight": 3.3551156609089037
+      },
+      {
+        "term": "chiste",
+        "weight": 3.2921714683992227
+      },
+      {
+        "term": "arte",
+        "weight": 3.249947323541592
+      },
+      {
+        "term": "numero",
+        "weight": 3.1150851204584797
+      },
+      {
+        "term": "geri",
+        "weight": 3.0592210960565462
+      },
+      {
+        "term": "pi pi",
+        "weight": 3.0507999616136434
+      },
+      {
+        "term": "jeri",
+        "weight": 3.037498675063538
+      },
+      {
+        "term": "el congreso",
+        "weight": 3.0310599399692775
+      },
+      {
+        "term": "anteriores",
+        "weight": 2.998511856187801
+      },
+      {
+        "term": "lopez aliaga",
+        "weight": 2.972914114266524
+      },
+      {
+        "term": "quieren",
+        "weight": 2.957133586641707
+      },
+      {
+        "term": "lopez",
+        "weight": 2.9301235363975118
+      },
+      {
+        "term": "28 de",
+        "weight": 2.8455182843544935
+      },
+      {
+        "term": "tudela",
+        "weight": 2.8190795291293966
+      },
+      {
+        "term": "aliaga",
+        "weight": 2.812609511042451
+      },
+      {
+        "term": "votar",
+        "weight": 2.797966522512059
+      },
+      {
+        "term": "votar por",
+        "weight": 2.7954775997901127
+      },
+      {
+        "term": "periodistas",
+        "weight": 2.790961984977236
+      },
+      {
+        "term": "realmente",
+        "weight": 2.7837091341924896
+      },
+      {
+        "term": "partido",
+        "weight": 2.7738620839750596
+      },
+      {
+        "term": "pi",
+        "weight": 2.718859059008001
+      },
+      {
+        "term": "de",
+        "weight": 2.718755675742953
+      },
+      {
+        "term": "presidente",
+        "weight": 2.70701627164867
+      },
+      {
+        "term": "plata",
+        "weight": 2.6980514503215676
+      },
+      {
+        "term": "spa",
+        "weight": 2.685245648839624
+      },
+      {
+        "term": "maquina",
+        "weight": 2.6667820817589307
+      },
+      {
+        "term": "ha robado",
+        "weight": 2.6530541367973646
+      },
+      {
+        "term": "senora",
+        "weight": 2.6442093824011192
+      },
+      {
+        "term": "mi pantalla",
+        "weight": 2.6408749609335027
+      },
+      {
+        "term": "imaginense",
+        "weight": 2.6276550357016157
+      },
+      {
+        "term": "marchas",
+        "weight": 2.610562163397439
+      },
+      {
+        "term": "tus",
+        "weight": 2.6009752902219185
+      },
+      {
+        "term": "que",
+        "weight": 2.5893337179367615
+      },
+      {
+        "term": "reconciliacion",
+        "weight": 2.5814391436063624
+      },
+      {
+        "term": "no les",
+        "weight": 2.5777668418746598
+      },
+      {
+        "term": "menos",
+        "weight": 2.5583540988918836
+      },
+      {
+        "term": "van",
+        "weight": 2.557687355222714
+      },
+      {
+        "term": "los",
+        "weight": 2.5489448070161043
+      },
+      {
+        "term": "necesitan",
+        "weight": 2.536057885717955
+      },
+      {
+        "term": "porky",
+        "weight": 2.5226267693600564
+      },
+      {
+        "term": "seguridad",
+        "weight": 2.5163023089228287
+      },
+      {
+        "term": "llamado",
+        "weight": 2.4652351814344615
+      },
+      {
+        "term": "por quien",
+        "weight": 2.4634221117062527
+      },
+      {
+        "term": "de derecha",
+        "weight": 2.4550770461763967
+      },
+      {
+        "term": "fernando",
+        "weight": 2.4453481639431662
+      },
+      {
+        "term": "gobierno",
+        "weight": 2.433553413413722
+      },
+      {
+        "term": "fraudista",
+        "weight": 2.426629932007743
+      },
+      {
+        "term": "violadores",
+        "weight": 2.4193885319999784
+      },
+      {
+        "term": "hay plata",
+        "weight": 2.4126553440721406
+      },
+      {
+        "term": "pero es",
+        "weight": 2.412244317378072
+      },
+      {
+        "term": "derecha",
+        "weight": 2.4116727996598275
+      },
+      {
+        "term": "que se",
+        "weight": 2.4042351304779683
+      },
+      {
+        "term": "fujimori",
+        "weight": 2.402668301837663
+      },
+      {
+        "term": "adriana tudela",
+        "weight": 2.395377084459347
+      },
+      {
+        "term": "huevada",
+        "weight": 2.381085001237342
+      },
+      {
+        "term": "pais",
+        "weight": 2.375195537163135
+      },
+      {
+        "term": "28",
+        "weight": 2.368851020142296
+      },
+      {
+        "term": "dio",
+        "weight": 2.3666826151110096
+      },
+      {
+        "term": "latino",
+        "weight": 2.36475203278308
+      },
+      {
+        "term": "somos",
+        "weight": 2.342460347616304
+      },
+      {
+        "term": "en palacio",
+        "weight": 2.314103865440305
+      },
+      {
+        "term": "porque ya",
+        "weight": 2.308250208538802
+      },
+      {
+        "term": "perdon",
+        "weight": 2.30592821822855
+      },
+      {
+        "term": "venceremos",
+        "weight": 2.2997121340139177
+      },
+      {
+        "term": "el inca",
+        "weight": 2.2985731908849623
+      },
+      {
+        "term": "mi partido",
+        "weight": 2.2880728847805805
+      },
+      {
+        "term": "bochas",
+        "weight": 2.282386588035276
+      },
+      {
+        "term": "se para",
+        "weight": 2.2638364473679857
+      },
+      {
+        "term": "impuestos",
+        "weight": 2.255093508675434
+      },
+      {
+        "term": "la democracia",
+        "weight": 2.2540639279931347
+      },
+      {
+        "term": "de renovacion",
+        "weight": 2.250649425912524
+      },
+      {
+        "term": "la cual",
+        "weight": 2.2454733051651283
+      },
+      {
+        "term": "el arte",
+        "weight": 2.243359353104946
+      }
+    ],
+    "racismo_etnico_explicito": [
+      {
+        "term": "cholo",
+        "weight": 18.76894306545007
+      },
+      {
+        "term": "negro",
+        "weight": 12.241057435154762
+      },
+      {
+        "term": "cholos",
+        "weight": 9.726575196598418
+      },
+      {
+        "term": "cholito",
+        "weight": 9.2043231891628
+      },
+      {
+        "term": "negra",
+        "weight": 9.017363839103593
+      },
+      {
+        "term": "chino",
+        "weight": 6.701461915284264
+      },
+      {
+        "term": "__",
+        "weight": 6.577638336420012
+      },
+      {
+        "term": "marron",
+        "weight": 6.489455442319683
+      },
+      {
+        "term": "chola",
+        "weight": 5.937268393180124
+      },
+      {
+        "term": "mano",
+        "weight": 5.575866371992146
+      },
+      {
+        "term": "afrodescendiente",
+        "weight": 5.564626442952235
+      },
+      {
+        "term": "marrones",
+        "weight": 5.38041331265073
+      },
+      {
+        "term": "coreano",
+        "weight": 4.892244018707819
+      },
+      {
+        "term": "huevon",
+        "weight": 4.658727577567407
+      },
+      {
+        "term": "racista",
+        "weight": 4.24967887158133
+      },
+      {
+        "term": "jorge",
+        "weight": 4.210065654213925
+      },
+      {
+        "term": "chinos",
+        "weight": 4.106508528689364
+      },
+      {
+        "term": "negros",
+        "weight": 3.887286889514463
+      },
+      {
+        "term": "son",
+        "weight": 3.713337116796262
+      },
+      {
+        "term": "danzas",
+        "weight": 3.5713200700552212
+      },
+      {
+        "term": "china",
+        "weight": 3.549356699790351
+      },
+      {
+        "term": "era un",
+        "weight": 3.4017173290640916
+      },
+      {
+        "term": "peru",
+        "weight": 3.2888904684599995
+      },
+      {
+        "term": "indigenas",
+        "weight": 3.261636474843775
+      },
+      {
+        "term": "peruanos",
+        "weight": 3.2426042156112733
+      },
+      {
+        "term": "los",
+        "weight": 3.1591389661529354
+      },
+      {
+        "term": "idiota",
+        "weight": 3.110432447878406
+      },
+      {
+        "term": "cultura",
+        "weight": 3.0511628447842756
+      },
+      {
+        "term": "boliviano",
+        "weight": 3.032988461106273
+      },
+      {
+        "term": "gorro",
+        "weight": 3.0136844445734905
+      },
+      {
+        "term": "bolivia",
+        "weight": 3.003315631633453
+      },
+      {
+        "term": "blanca",
+        "weight": 2.94843518323259
+      },
+      {
+        "term": "habla",
+        "weight": 2.9417361014349463
+      },
+      {
+        "term": "van",
+        "weight": 2.8334342440761726
+      },
+      {
+        "term": "literalmente",
+        "weight": 2.8310314894621866
+      },
+      {
+        "term": "saber",
+        "weight": 2.825367158033351
+      },
+      {
+        "term": "serrano",
+        "weight": 2.8222253493044747
+      },
+      {
+        "term": "los peruanos",
+        "weight": 2.8095332189596616
+      },
+      {
+        "term": "vaya",
+        "weight": 2.7647006461057577
+      },
+      {
+        "term": "soy",
+        "weight": 2.74738039679673
+      },
+      {
+        "term": "es negro",
+        "weight": 2.7167001645975155
+      },
+      {
+        "term": "ni que",
+        "weight": 2.7118084703606997
+      },
+      {
+        "term": "bolivianos",
+        "weight": 2.700020449608631
+      },
+      {
+        "term": "hablar",
+        "weight": 2.6926252378981212
+      },
+      {
+        "term": "moreno",
+        "weight": 2.6633229815209654
+      },
+      {
+        "term": "robar",
+        "weight": 2.6407427311092433
+      },
+      {
+        "term": "estaban",
+        "weight": 2.599161848457999
+      },
+      {
+        "term": "pero no",
+        "weight": 2.5908534978000772
+      },
+      {
+        "term": "delincuente",
+        "weight": 2.5849999239819765
+      },
+      {
+        "term": "desarrollan",
+        "weight": 2.5790184969083705
+      },
+      {
+        "term": "daisy",
+        "weight": 2.5782789844962775
+      },
+      {
+        "term": "mosquito",
+        "weight": 2.562264411714938
+      },
+      {
+        "term": "el chino",
+        "weight": 2.559204515963043
+      },
+      {
+        "term": "los chinos",
+        "weight": 2.5163074250804187
+      },
+      {
+        "term": "negrito",
+        "weight": 2.515240598093638
+      },
+      {
+        "term": "risa",
+        "weight": 2.5143811636022364
+      },
+      {
+        "term": "los cerros",
+        "weight": 2.507713707921865
+      },
+      {
+        "term": "esa",
+        "weight": 2.5005398713352425
+      },
+      {
+        "term": "dice",
+        "weight": 2.486232950219301
+      },
+      {
+        "term": "bandida",
+        "weight": 2.4699033202149416
+      },
+      {
+        "term": "blanco",
+        "weight": 2.4661955629067065
+      },
+      {
+        "term": "no",
+        "weight": 2.450092570867684
+      },
+      {
+        "term": "la criminalidad",
+        "weight": 2.4369717206117367
+      },
+      {
+        "term": "no no",
+        "weight": 2.4256835795562197
+      },
+      {
+        "term": "video",
+        "weight": 2.408347777017384
+      },
+      {
+        "term": "sacha",
+        "weight": 2.386527902458185
+      },
+      {
+        "term": "cobarde",
+        "weight": 2.375071367544001
+      },
+      {
+        "term": "venezolano",
+        "weight": 2.373096288321292
+      },
+      {
+        "term": "de hambre",
+        "weight": 2.366255786313966
+      },
+      {
+        "term": "papacito",
+        "weight": 2.364444562937806
+      },
+      {
+        "term": "paga",
+        "weight": 2.3403276332620924
+      },
+      {
+        "term": "votar",
+        "weight": 2.330111622191784
+      },
+      {
+        "term": "votar por",
+        "weight": 2.304419124808924
+      },
+      {
+        "term": "criminalidad",
+        "weight": 2.3036223887967853
+      },
+      {
+        "term": "tu",
+        "weight": 2.298295334347996
+      },
+      {
+        "term": "color",
+        "weight": 2.287377428162479
+      },
+      {
+        "term": "oh",
+        "weight": 2.279150865889365
+      },
+      {
+        "term": "de __",
+        "weight": 2.278812906687005
+      },
+      {
+        "term": "ha traido",
+        "weight": 2.2775794105210654
+      },
+      {
+        "term": "cerros",
+        "weight": 2.2774002763794514
+      }
+    ],
+    "racismo_linguistico": [
+      {
+        "term": "dueno",
+        "weight": 3.832695800081367
+      },
+      {
+        "term": "habla",
+        "weight": 3.6949278990217693
+      },
+      {
+        "term": "la selva",
+        "weight": 3.5319218171592572
+      },
+      {
+        "term": "tranquilo tranquilo",
+        "weight": 3.4721217632528254
+      },
+      {
+        "term": "selva",
+        "weight": 3.390138607910877
+      },
+      {
+        "term": "eres",
+        "weight": 3.330490166009204
+      },
+      {
+        "term": "da",
+        "weight": 3.326001711227222
+      },
+      {
+        "term": "exito",
+        "weight": 3.27650889481102
+      },
+      {
+        "term": "eres de",
+        "weight": 3.269693992299159
+      },
+      {
+        "term": "hablar",
+        "weight": 3.24031103948657
+      },
+      {
+        "term": "hablan",
+        "weight": 3.0364125179655224
+      },
+      {
+        "term": "bolivia",
+        "weight": 3.0267215825327516
+      },
+      {
+        "term": "cruza",
+        "weight": 2.973557361671364
+      },
+      {
+        "term": "de ventas",
+        "weight": 2.8769953906823535
+      },
+      {
+        "term": "cambiemos",
+        "weight": 2.8480955466650726
+      },
+      {
+        "term": "imaginas",
+        "weight": 2.8289136469007077
+      },
+      {
+        "term": "senora lo",
+        "weight": 2.816482278968397
+      },
+      {
+        "term": "no jefe",
+        "weight": 2.811217942365901
+      },
+      {
+        "term": "textil",
+        "weight": 2.757066573311926
+      },
+      {
+        "term": "un hogar",
+        "weight": 2.742837111927765
+      },
+      {
+        "term": "es dueno",
+        "weight": 2.72052428053051
+      },
+      {
+        "term": "por que",
+        "weight": 2.694292959590852
+      },
+      {
+        "term": "tu que",
+        "weight": 2.689937924344572
+      },
+      {
+        "term": "ch",
+        "weight": 2.6799858704500066
+      },
+      {
+        "term": "en tr",
+        "weight": 2.6722056452942935
+      },
+      {
+        "term": "de hablar",
+        "weight": 2.671575860913885
+      },
+      {
+        "term": "exitoso",
+        "weight": 2.6308970921742074
+      },
+      {
+        "term": "es peruana",
+        "weight": 2.622567024264291
+      },
+      {
+        "term": "entonces nosotros",
+        "weight": 2.619313314747493
+      },
+      {
+        "term": "al toque",
+        "weight": 2.597925794362391
+      },
+      {
+        "term": "vehiculo",
+        "weight": 2.586403456867801
+      },
+      {
+        "term": "mi cultura",
+        "weight": 2.5817612066312954
+      },
+      {
+        "term": "ay",
+        "weight": 2.5449705676969185
+      },
+      {
+        "term": "moradita",
+        "weight": 2.531123530420088
+      },
+      {
+        "term": "ventas",
+        "weight": 2.5202178518268554
+      },
+      {
+        "term": "no casi",
+        "weight": 2.512022858616159
+      },
+      {
+        "term": "su vehiculo",
+        "weight": 2.5076284959966997
+      },
+      {
+        "term": "es es",
+        "weight": 2.490742711303541
+      },
+      {
+        "term": "problema eh",
+        "weight": 2.4901150494100985
+      },
+      {
+        "term": "usted",
+        "weight": 2.483361529219167
+      },
+      {
+        "term": "programa esta",
+        "weight": 2.4202181097118025
+      },
+      {
+        "term": "tranquilo",
+        "weight": 2.4174698597540045
+      },
+      {
+        "term": "puso",
+        "weight": 2.3948103070779
+      },
+      {
+        "term": "papeles",
+        "weight": 2.358830870054281
+      },
+      {
+        "term": "yo soy",
+        "weight": 2.3096067076198556
+      },
+      {
+        "term": "me voy",
+        "weight": 2.298592515680251
+      },
+      {
+        "term": "porque esto",
+        "weight": 2.2962112290851717
+      },
+      {
+        "term": "fiorela",
+        "weight": 2.293459270236588
+      },
+      {
+        "term": "voy hacer",
+        "weight": 2.2883646737182737
+      },
+      {
+        "term": "me va",
+        "weight": 2.287941351797704
+      },
+      {
+        "term": "espanol",
+        "weight": 2.281463941106147
+      },
+      {
+        "term": "gustan las",
+        "weight": 2.2549651070601677
+      },
+      {
+        "term": "tiktok",
+        "weight": 2.239415793413114
+      },
+      {
+        "term": "gusta que",
+        "weight": 2.2089314980961396
+      },
+      {
+        "term": "jefe",
+        "weight": 2.19982871904656
+      },
+      {
+        "term": "en tiktok",
+        "weight": 2.1874847507369815
+      },
+      {
+        "term": "que te",
+        "weight": 2.1822277009826894
+      },
+      {
+        "term": "ha venido",
+        "weight": 2.181172541098082
+      },
+      {
+        "term": "el pelo",
+        "weight": 2.1699720834083096
+      },
+      {
+        "term": "casi no",
+        "weight": 2.1694064531448105
+      },
+      {
+        "term": "hogar",
+        "weight": 2.159274399957987
+      },
+      {
+        "term": "videitos",
+        "weight": 2.154558730913183
+      },
+      {
+        "term": "venido",
+        "weight": 2.1525650302163135
+      },
+      {
+        "term": "ha ido",
+        "weight": 2.1495818109652087
+      },
+      {
+        "term": "cantando",
+        "weight": 2.1344694367749657
+      },
+      {
+        "term": "te imaginas",
+        "weight": 2.1239618397965923
+      },
+      {
+        "term": "ya entonces",
+        "weight": 2.1233987329470536
+      },
+      {
+        "term": "viejas",
+        "weight": 2.121904274469597
+      },
+      {
+        "term": "del fondo",
+        "weight": 2.1175815093886814
+      },
+      {
+        "term": "toque",
+        "weight": 2.1042613607296468
+      },
+      {
+        "term": "dejo",
+        "weight": 2.0941531910469156
+      },
+      {
+        "term": "policial",
+        "weight": 2.0906112589830523
+      },
+      {
+        "term": "papelito",
+        "weight": 2.088668136395077
+      },
+      {
+        "term": "entiendo",
+        "weight": 2.082287245529868
+      },
+      {
+        "term": "entonces",
+        "weight": 2.0761415141186923
+      },
+      {
+        "term": "ah",
+        "weight": 2.067243824867071
+      },
+      {
+        "term": "escuchame",
+        "weight": 2.0620833815716733
+      },
+      {
+        "term": "se puso",
+        "weight": 2.0591715828842143
+      },
+      {
+        "term": "romantico",
+        "weight": 2.036767544426703
+      },
+      {
+        "term": "editorial",
+        "weight": 2.0273105541327547
+      }
+    ],
+    "clasismo_racial": [
+      {
+        "term": "pobres",
+        "weight": 9.321825511484445
+      },
+      {
+        "term": "pobre",
+        "weight": 8.976020964006942
+      },
+      {
+        "term": "cholo",
+        "weight": 7.424546419260081
+      },
+      {
+        "term": "cholito",
+        "weight": 6.7615647127056775
+      },
+      {
+        "term": "cholos",
+        "weight": 6.058863336348998
+      },
+      {
+        "term": "clase",
+        "weight": 5.769720864016964
+      },
+      {
+        "term": "__",
+        "weight": 5.3639006469315795
+      },
+      {
+        "term": "marrones",
+        "weight": 5.356556722904353
+      },
+      {
+        "term": "pituco",
+        "weight": 5.241453924741184
+      },
+      {
+        "term": "mano",
+        "weight": 5.117750965528467
+      },
+      {
+        "term": "chola",
+        "weight": 5.035569472991964
+      },
+      {
+        "term": "marron",
+        "weight": 4.437187921799016
+      },
+      {
+        "term": "solo",
+        "weight": 4.4316069919924574
+      },
+      {
+        "term": "huevon",
+        "weight": 4.21851761464789
+      },
+      {
+        "term": "son",
+        "weight": 3.886314152679524
+      },
+      {
+        "term": "ha traido",
+        "weight": 3.876233173600777
+      },
+      {
+        "term": "negro",
+        "weight": 3.798913052540364
+      },
+      {
+        "term": "gente",
+        "weight": 3.760466797811719
+      },
+      {
+        "term": "gringo",
+        "weight": 3.6331961651323708
+      },
+      {
+        "term": "provinciano",
+        "weight": 3.540625490834959
+      },
+      {
+        "term": "coreano",
+        "weight": 3.4586478479582428
+      },
+      {
+        "term": "su",
+        "weight": 3.374121087611524
+      },
+      {
+        "term": "traido",
+        "weight": 3.3282084907334655
+      },
+      {
+        "term": "bandida",
+        "weight": 3.3087270846863954
+      },
+      {
+        "term": "los pobres",
+        "weight": 3.2996464879481713
+      },
+      {
+        "term": "daisy",
+        "weight": 3.254718716700841
+      },
+      {
+        "term": "triste",
+        "weight": 3.229909646690682
+      },
+      {
+        "term": "bano",
+        "weight": 3.1582011442504654
+      },
+      {
+        "term": "vender",
+        "weight": 3.138554437688957
+      },
+      {
+        "term": "pobreza",
+        "weight": 3.134905422931153
+      },
+      {
+        "term": "los",
+        "weight": 3.0668315991620507
+      },
+      {
+        "term": "sucio",
+        "weight": 3.065133537516725
+      },
+      {
+        "term": "san",
+        "weight": 3.0522288529094115
+      },
+      {
+        "term": "se van",
+        "weight": 3.039219806609914
+      },
+      {
+        "term": "feo",
+        "weight": 3.0375225983820444
+      },
+      {
+        "term": "cerro",
+        "weight": 3.0086247323607016
+      },
+      {
+        "term": "esa",
+        "weight": 2.9743814027510536
+      },
+      {
+        "term": "paga",
+        "weight": 2.9313614060714115
+      },
+      {
+        "term": "logicamente",
+        "weight": 2.9243218451979267
+      },
+      {
+        "term": "plata",
+        "weight": 2.832256501578891
+      },
+      {
+        "term": "provincia",
+        "weight": 2.7855805252716412
+      },
+      {
+        "term": "estudiando",
+        "weight": 2.771797831304463
+      },
+      {
+        "term": "de pobre",
+        "weight": 2.75592740383276
+      },
+      {
+        "term": "no",
+        "weight": 2.730610485244856
+      },
+      {
+        "term": "empleada",
+        "weight": 2.7137029700204023
+      },
+      {
+        "term": "los olivos",
+        "weight": 2.680417366386741
+      },
+      {
+        "term": "mono",
+        "weight": 2.6723958682972193
+      },
+      {
+        "term": "literalmente",
+        "weight": 2.6511784963189933
+      },
+      {
+        "term": "comas",
+        "weight": 2.6406177595211227
+      },
+      {
+        "term": "olivos",
+        "weight": 2.636277817828967
+      },
+      {
+        "term": "vagos",
+        "weight": 2.632882226741825
+      },
+      {
+        "term": "petroleo",
+        "weight": 2.626565979487456
+      },
+      {
+        "term": "ver un",
+        "weight": 2.619741845129668
+      },
+      {
+        "term": "de hambre",
+        "weight": 2.619146274212927
+      },
+      {
+        "term": "arriba",
+        "weight": 2.6063365491810093
+      },
+      {
+        "term": "elite",
+        "weight": 2.5707742684668755
+      },
+      {
+        "term": "toda su",
+        "weight": 2.5531035195307474
+      },
+      {
+        "term": "para los",
+        "weight": 2.507029486926556
+      },
+      {
+        "term": "viejas",
+        "weight": 2.5006031280550998
+      },
+      {
+        "term": "no entiendo",
+        "weight": 2.499463584576621
+      },
+      {
+        "term": "de __",
+        "weight": 2.496068257291531
+      },
+      {
+        "term": "trabajar",
+        "weight": 2.488962843320263
+      },
+      {
+        "term": "blanco",
+        "weight": 2.480975786867697
+      },
+      {
+        "term": "negro negro",
+        "weight": 2.4752051906597363
+      },
+      {
+        "term": "concierto",
+        "weight": 2.464930193811542
+      },
+      {
+        "term": "ninos",
+        "weight": 2.4467280459767586
+      },
+      {
+        "term": "tu que",
+        "weight": 2.4286823920362357
+      },
+      {
+        "term": "serrano",
+        "weight": 2.425493546526743
+      },
+      {
+        "term": "mira",
+        "weight": 2.4247322200980372
+      },
+      {
+        "term": "de hablar",
+        "weight": 2.423269609741248
+      },
+      {
+        "term": "monica",
+        "weight": 2.4087025423077972
+      },
+      {
+        "term": "soles",
+        "weight": 2.401602694039133
+      },
+      {
+        "term": "lema",
+        "weight": 2.398916470260255
+      },
+      {
+        "term": "cara",
+        "weight": 2.3933892635110374
+      },
+      {
+        "term": "pobres no",
+        "weight": 2.3831499450139426
+      },
+      {
+        "term": "firme",
+        "weight": 2.375463918029288
+      },
+      {
+        "term": "oy",
+        "weight": 2.3739931067068145
+      },
+      {
+        "term": "despreciable",
+        "weight": 2.373201820730774
+      },
+      {
+        "term": "de",
+        "weight": 2.3727465665777725
+      },
+      {
+        "term": "choliz soles",
+        "weight": 2.3587816914972946
+      }
+    ],
+    "discriminacion_regional": [
+      {
+        "term": "cholo",
+        "weight": 7.48106344211636
+      },
+      {
+        "term": "bolivianos",
+        "weight": 5.2189684627821515
+      },
+      {
+        "term": "danzas",
+        "weight": 5.212132733873501
+      },
+      {
+        "term": "sombrero",
+        "weight": 5.18796937249033
+      },
+      {
+        "term": "sierra",
+        "weight": 5.106568710404576
+      },
+      {
+        "term": "la sierra",
+        "weight": 5.097260863545937
+      },
+      {
+        "term": "los",
+        "weight": 4.9571409666423545
+      },
+      {
+        "term": "pobre",
+        "weight": 4.930243609905377
+      },
+      {
+        "term": "provinciano",
+        "weight": 4.887004753084905
+      },
+      {
+        "term": "__",
+        "weight": 4.885361467843484
+      },
+      {
+        "term": "lima",
+        "weight": 4.847781935850614
+      },
+      {
+        "term": "puno",
+        "weight": 4.8313939951696465
+      },
+      {
+        "term": "bolivia",
+        "weight": 4.7838767724409275
+      },
+      {
+        "term": "cholos",
+        "weight": 4.74325413608228
+      },
+      {
+        "term": "mano",
+        "weight": 4.724532454236351
+      },
+      {
+        "term": "hablar",
+        "weight": 4.657736101087086
+      },
+      {
+        "term": "pobres",
+        "weight": 4.6560874699705925
+      },
+      {
+        "term": "huevon",
+        "weight": 4.4013179599337855
+      },
+      {
+        "term": "mal",
+        "weight": 3.985377883595542
+      },
+      {
+        "term": "indigenas",
+        "weight": 3.9403165986696207
+      },
+      {
+        "term": "peru",
+        "weight": 3.9264823767292967
+      },
+      {
+        "term": "el sur",
+        "weight": 3.892990317097861
+      },
+      {
+        "term": "gente",
+        "weight": 3.879422249545336
+      },
+      {
+        "term": "san",
+        "weight": 3.7508696447495464
+      },
+      {
+        "term": "chola",
+        "weight": 3.693035730332862
+      },
+      {
+        "term": "cultura",
+        "weight": 3.6246152567568934
+      },
+      {
+        "term": "cerro",
+        "weight": 3.622592855841806
+      },
+      {
+        "term": "peruanos",
+        "weight": 3.5753620003341218
+      },
+      {
+        "term": "serrano",
+        "weight": 3.4726314097728075
+      },
+      {
+        "term": "son",
+        "weight": 3.462967666294073
+      },
+      {
+        "term": "andina",
+        "weight": 3.396965932331554
+      },
+      {
+        "term": "encima",
+        "weight": 3.3353356528917333
+      },
+      {
+        "term": "tu que",
+        "weight": 3.331817789971606
+      },
+      {
+        "term": "sacha",
+        "weight": 3.3006384847667216
+      },
+      {
+        "term": "la selva",
+        "weight": 3.272856814750633
+      },
+      {
+        "term": "los de",
+        "weight": 3.2691260955518966
+      },
+      {
+        "term": "al parecer",
+        "weight": 3.261908951888818
+      },
+      {
+        "term": "sur",
+        "weight": 3.1817288298294026
+      },
+      {
+        "term": "clase",
+        "weight": 3.173333917318795
+      },
+      {
+        "term": "provincia",
+        "weight": 3.1290922526818132
+      },
+      {
+        "term": "mosquito",
+        "weight": 3.1119994169003684
+      },
+      {
+        "term": "eres de",
+        "weight": 3.058182447584952
+      },
+      {
+        "term": "pais",
+        "weight": 3.0148952350344476
+      },
+      {
+        "term": "selva",
+        "weight": 3.0017813688290866
+      },
+      {
+        "term": "limeno",
+        "weight": 2.979813480630672
+      },
+      {
+        "term": "mis danzas",
+        "weight": 2.8533717434032466
+      },
+      {
+        "term": "cerros",
+        "weight": 2.8532553648280516
+      },
+      {
+        "term": "los peruanos",
+        "weight": 2.8523248285729963
+      },
+      {
+        "term": "coreano",
+        "weight": 2.8379141123091807
+      },
+      {
+        "term": "huevon es",
+        "weight": 2.8301159756677667
+      },
+      {
+        "term": "tiene",
+        "weight": 2.828211913257907
+      },
+      {
+        "term": "pap",
+        "weight": 2.7898057014740174
+      },
+      {
+        "term": "su",
+        "weight": 2.7878706087651026
+      },
+      {
+        "term": "no",
+        "weight": 2.7868352194201598
+      },
+      {
+        "term": "cupo",
+        "weight": 2.7620874306047187
+      },
+      {
+        "term": "escuchar",
+        "weight": 2.7558863604867527
+      },
+      {
+        "term": "idiota",
+        "weight": 2.754383853718392
+      },
+      {
+        "term": "boliviano",
+        "weight": 2.7365472982651684
+      },
+      {
+        "term": "los cerros",
+        "weight": 2.733690362289669
+      },
+      {
+        "term": "el sombrero",
+        "weight": 2.7107719727339474
+      },
+      {
+        "term": "estan",
+        "weight": 2.706430315534969
+      },
+      {
+        "term": "cantando",
+        "weight": 2.6813570248812075
+      },
+      {
+        "term": "de",
+        "weight": 2.6551681629166257
+      },
+      {
+        "term": "ceviche",
+        "weight": 2.653868604814328
+      },
+      {
+        "term": "gente de",
+        "weight": 2.649275610996923
+      },
+      {
+        "term": "es por",
+        "weight": 2.6437773117986114
+      },
+      {
+        "term": "es de",
+        "weight": 2.6307533254302196
+      },
+      {
+        "term": "ahi no",
+        "weight": 2.6258845969487803
+      },
+      {
+        "term": "ya estaria",
+        "weight": 2.624156289513426
+      },
+      {
+        "term": "parecer",
+        "weight": 2.6185317368214323
+      },
+      {
+        "term": "desarrollan",
+        "weight": 2.611946190629997
+      },
+      {
+        "term": "de aca",
+        "weight": 2.6022474834189606
+      },
+      {
+        "term": "era un",
+        "weight": 2.5818801649849576
+      },
+      {
+        "term": "san isidro",
+        "weight": 2.5774129348786587
+      },
+      {
+        "term": "oy",
+        "weight": 2.5701662296872474
+      },
+      {
+        "term": "vive",
+        "weight": 2.5594969594459767
+      },
+      {
+        "term": "isidro",
+        "weight": 2.5440015589442138
+      },
+      {
+        "term": "chiclayo",
+        "weight": 2.5437163752627874
+      },
+      {
+        "term": "hablan",
+        "weight": 2.511150445895666
+      },
+      {
+        "term": "votar",
+        "weight": 2.5071323424832226
+      }
+    ],
+    "racismo_encubierto": [
+      {
+        "term": "sierra",
+        "weight": 6.572920185279675
+      },
+      {
+        "term": "la sierra",
+        "weight": 6.489506554695777
+      },
+      {
+        "term": "cultura",
+        "weight": 5.48931522504982
+      },
+      {
+        "term": "gente",
+        "weight": 5.316364879482205
+      },
+      {
+        "term": "el sur",
+        "weight": 4.995043081759859
+      },
+      {
+        "term": "los",
+        "weight": 4.779819869863634
+      },
+      {
+        "term": "blanco",
+        "weight": 4.770506163589452
+      },
+      {
+        "term": "peru",
+        "weight": 4.430812645551472
+      },
+      {
+        "term": "danzas",
+        "weight": 4.382202048482697
+      },
+      {
+        "term": "andina",
+        "weight": 4.335254462159981
+      },
+      {
+        "term": "sur",
+        "weight": 4.3294144815429565
+      },
+      {
+        "term": "racismo",
+        "weight": 4.133879976634325
+      },
+      {
+        "term": "indigenas",
+        "weight": 3.8070763149882265
+      },
+      {
+        "term": "sombrero",
+        "weight": 3.6909547233545523
+      },
+      {
+        "term": "lima",
+        "weight": 3.676187104971612
+      },
+      {
+        "term": "ruido blanco",
+        "weight": 3.461532429635765
+      },
+      {
+        "term": "pobres",
+        "weight": 3.337420000877604
+      },
+      {
+        "term": "mano",
+        "weight": 3.3268328638062825
+      },
+      {
+        "term": "san",
+        "weight": 3.3102925295146033
+      },
+      {
+        "term": "ahi",
+        "weight": 3.235211523594148
+      },
+      {
+        "term": "ya estaria",
+        "weight": 3.1794881460408595
+      },
+      {
+        "term": "cerros",
+        "weight": 3.1559984837772035
+      },
+      {
+        "term": "su",
+        "weight": 3.0872813979886695
+      },
+      {
+        "term": "carril",
+        "weight": 3.028689811295245
+      },
+      {
+        "term": "robar",
+        "weight": 3.0051306837649117
+      },
+      {
+        "term": "va entrar",
+        "weight": 2.965155722696136
+      },
+      {
+        "term": "pituco",
+        "weight": 2.9394385122355238
+      },
+      {
+        "term": "vienen",
+        "weight": 2.9336692341772985
+      },
+      {
+        "term": "racista",
+        "weight": 2.929234472009428
+      },
+      {
+        "term": "limeno",
+        "weight": 2.90144386040856
+      },
+      {
+        "term": "era",
+        "weight": 2.8954208612131924
+      },
+      {
+        "term": "escuchar",
+        "weight": 2.8499398720445854
+      },
+      {
+        "term": "poblacion",
+        "weight": 2.817434353083453
+      },
+      {
+        "term": "michael",
+        "weight": 2.794171808705401
+      },
+      {
+        "term": "era un",
+        "weight": 2.7817512312166515
+      },
+      {
+        "term": "huevon",
+        "weight": 2.7172032807631465
+      },
+      {
+        "term": "bad",
+        "weight": 2.7099954117492255
+      },
+      {
+        "term": "bolivianos",
+        "weight": 2.704247385345052
+      },
+      {
+        "term": "plata",
+        "weight": 2.6658115874646504
+      },
+      {
+        "term": "roban",
+        "weight": 2.631372504153018
+      },
+      {
+        "term": "colonia",
+        "weight": 2.5979440457941996
+      },
+      {
+        "term": "miles",
+        "weight": 2.595100803128239
+      },
+      {
+        "term": "eh eh",
+        "weight": 2.5909909580801056
+      },
+      {
+        "term": "la poblacion",
+        "weight": 2.586840076586325
+      },
+      {
+        "term": "esta gente",
+        "weight": 2.563121528812406
+      },
+      {
+        "term": "cerro",
+        "weight": 2.5621461144291757
+      },
+      {
+        "term": "nadie",
+        "weight": 2.5562121114769685
+      },
+      {
+        "term": "claro no",
+        "weight": 2.5289629904860873
+      },
+      {
+        "term": "de",
+        "weight": 2.516392415164446
+      },
+      {
+        "term": "mayoria son",
+        "weight": 2.5157932153626015
+      },
+      {
+        "term": "rojos",
+        "weight": 2.4947352675311056
+      },
+      {
+        "term": "se de",
+        "weight": 2.4932381026170938
+      },
+      {
+        "term": "hubiese",
+        "weight": 2.490546697996122
+      },
+      {
+        "term": "persona de",
+        "weight": 2.4900879236959814
+      },
+      {
+        "term": "bolivia",
+        "weight": 2.486398589457889
+      },
+      {
+        "term": "ven",
+        "weight": 2.481915884191406
+      },
+      {
+        "term": "la gente",
+        "weight": 2.4796304503704483
+      },
+      {
+        "term": "tia",
+        "weight": 2.4785296075656533
+      },
+      {
+        "term": "migrantes",
+        "weight": 2.469108722707204
+      },
+      {
+        "term": "viniendo",
+        "weight": 2.4662819025284257
+      },
+      {
+        "term": "castillo",
+        "weight": 2.459026175191901
+      },
+      {
+        "term": "esa",
+        "weight": 2.4527858581021587
+      },
+      {
+        "term": "ruido",
+        "weight": 2.4414167942676612
+      },
+      {
+        "term": "el sombrero",
+        "weight": 2.396424583526315
+      },
+      {
+        "term": "pobrecito",
+        "weight": 2.396044237516819
+      },
+      {
+        "term": "pedro castillo",
+        "weight": 2.395809349349903
+      },
+      {
+        "term": "porque como",
+        "weight": 2.3925354384869637
+      },
+      {
+        "term": "gringos",
+        "weight": 2.3817912238901755
+      },
+      {
+        "term": "donde esta",
+        "weight": 2.378159456715611
+      },
+      {
+        "term": "atahualpa",
+        "weight": 2.3456785740447077
+      },
+      {
+        "term": "hecho mi",
+        "weight": 2.341551345025521
+      },
+      {
+        "term": "estaria",
+        "weight": 2.333446126514727
+      },
+      {
+        "term": "__",
+        "weight": 2.3303784582589078
+      },
+      {
+        "term": "gente de",
+        "weight": 2.3303767259940895
+      },
+      {
+        "term": "han",
+        "weight": 2.3287890353788487
+      },
+      {
+        "term": "en peru",
+        "weight": 2.3167522415932025
+      },
+      {
+        "term": "los cerros",
+        "weight": 2.3072363121366166
+      },
+      {
+        "term": "arroz",
+        "weight": 2.3002600064053147
+      },
+      {
+        "term": "tamales",
+        "weight": 2.296427087478316
+      },
+      {
+        "term": "de los",
+        "weight": 2.2955199494955725
+      }
+    ],
+    "misoginia_acoso_genero": [
+      {
+        "term": "mujer",
+        "weight": 11.534985098502299
+      },
+      {
+        "term": "__",
+        "weight": 9.030809156526717
+      },
+      {
+        "term": "mujeres",
+        "weight": 8.972513126794817
+      },
+      {
+        "term": "pendeja",
+        "weight": 6.284991345301261
+      },
+      {
+        "term": "concha",
+        "weight": 5.9789139622185195
+      },
+      {
+        "term": "hombres",
+        "weight": 5.7270962467664095
+      },
+      {
+        "term": "chica",
+        "weight": 5.260963625516432
+      },
+      {
+        "term": "prostitutas",
+        "weight": 5.242385438913111
+      },
+      {
+        "term": "tetas",
+        "weight": 5.141216224081332
+      },
+      {
+        "term": "perra",
+        "weight": 4.929925688891398
+      },
+      {
+        "term": "ella",
+        "weight": 4.669115831013589
+      },
+      {
+        "term": "senora",
+        "weight": 4.471781743043632
+      },
+      {
+        "term": "esa",
+        "weight": 4.448675255489905
+      },
+      {
+        "term": "chicas",
+        "weight": 4.340429581345737
+      },
+      {
+        "term": "huevona",
+        "weight": 4.097081958364322
+      },
+      {
+        "term": "mi mujer",
+        "weight": 4.089277851333305
+      },
+      {
+        "term": "machista",
+        "weight": 4.086744495778032
+      },
+      {
+        "term": "flaca",
+        "weight": 4.044035572205525
+      },
+      {
+        "term": "hombre",
+        "weight": 3.858626685376592
+      },
+      {
+        "term": "de __",
+        "weight": 3.829900422582642
+      },
+      {
+        "term": "las mujeres",
+        "weight": 3.805021001221401
+      },
+      {
+        "term": "prostituta",
+        "weight": 3.74950980325693
+      },
+      {
+        "term": "novia",
+        "weight": 3.72407190465843
+      },
+      {
+        "term": "mami",
+        "weight": 3.7215105095564542
+      },
+      {
+        "term": "enferma",
+        "weight": 3.6243673226555537
+      },
+      {
+        "term": "basura",
+        "weight": 3.6184371432459126
+      },
+      {
+        "term": "por que",
+        "weight": 3.561331682136842
+      },
+      {
+        "term": "que tu",
+        "weight": 3.498992086075092
+      },
+      {
+        "term": "mamacita",
+        "weight": 3.3920002464598578
+      },
+      {
+        "term": "tu",
+        "weight": 3.327591425333471
+      },
+      {
+        "term": "sus",
+        "weight": 3.2639868108745103
+      },
+      {
+        "term": "gorda",
+        "weight": 3.1773718121171166
+      },
+      {
+        "term": "okay",
+        "weight": 3.129668568190995
+      },
+      {
+        "term": "gordas",
+        "weight": 3.0788125006063467
+      },
+      {
+        "term": "puesto",
+        "weight": 3.064891735791845
+      },
+      {
+        "term": "estas",
+        "weight": 3.0457716022736023
+      },
+      {
+        "term": "que una",
+        "weight": 3.02913574219839
+      },
+      {
+        "term": "embarazo",
+        "weight": 2.9687831149581068
+      },
+      {
+        "term": "ven ven",
+        "weight": 2.905525530877369
+      },
+      {
+        "term": "su",
+        "weight": 2.865054312597581
+      },
+      {
+        "term": "los hombres",
+        "weight": 2.8611230587505596
+      },
+      {
+        "term": "negra",
+        "weight": 2.8404428266570685
+      },
+      {
+        "term": "vagina",
+        "weight": 2.7982119259475167
+      },
+      {
+        "term": "oye",
+        "weight": 2.7691162620483807
+      },
+      {
+        "term": "culo",
+        "weight": 2.766561094561479
+      },
+      {
+        "term": "mi novia",
+        "weight": 2.7653638850805686
+      },
+      {
+        "term": "has",
+        "weight": 2.7515416538968807
+      },
+      {
+        "term": "lo menos",
+        "weight": 2.695649767612769
+      },
+      {
+        "term": "la chica",
+        "weight": 2.681872264710892
+      },
+      {
+        "term": "su cara",
+        "weight": 2.680146576117222
+      },
+      {
+        "term": "un hombre",
+        "weight": 2.6776103946771848
+      },
+      {
+        "term": "no la",
+        "weight": 2.6691104607054603
+      },
+      {
+        "term": "baila",
+        "weight": 2.6671209147530393
+      },
+      {
+        "term": "fracasado",
+        "weight": 2.647008815834199
+      },
+      {
+        "term": "vez la",
+        "weight": 2.628222519355132
+      },
+      {
+        "term": "esa __",
+        "weight": 2.6265513964225686
+      },
+      {
+        "term": "sigan",
+        "weight": 2.621263491486103
+      },
+      {
+        "term": "las tetas",
+        "weight": 2.6205951852843934
+      },
+      {
+        "term": "jamas",
+        "weight": 2.564897455046938
+      },
+      {
+        "term": "la",
+        "weight": 2.5600894040299673
+      },
+      {
+        "term": "una __",
+        "weight": 2.5546524110908515
+      },
+      {
+        "term": "huevonas",
+        "weight": 2.5479894641322045
+      },
+      {
+        "term": "pene",
+        "weight": 2.5437810605249456
+      },
+      {
+        "term": "una chica",
+        "weight": 2.5433504012089556
+      },
+      {
+        "term": "mujeres no",
+        "weight": 2.520358364444596
+      },
+      {
+        "term": "tu mujer",
+        "weight": 2.5202427044440245
+      },
+      {
+        "term": "__ gorda",
+        "weight": 2.4971059896682974
+      },
+      {
+        "term": "parecer",
+        "weight": 2.4832300708334163
+      },
+      {
+        "term": "ven",
+        "weight": 2.471780671506752
+      },
+      {
+        "term": "amiga",
+        "weight": 2.4582695611242724
+      },
+      {
+        "term": "cara",
+        "weight": 2.4514286086573573
+      },
+      {
+        "term": "enfermas",
+        "weight": 2.4431988049792794
+      },
+      {
+        "term": "su madre",
+        "weight": 2.4237764743853467
+      },
+      {
+        "term": "me case",
+        "weight": 2.4138695833916306
+      },
+      {
+        "term": "se",
+        "weight": 2.4047823481694044
+      },
+      {
+        "term": "linda",
+        "weight": 2.4038963589976268
+      },
+      {
+        "term": "malditas",
+        "weight": 2.3858436886741012
+      },
+      {
+        "term": "chola",
+        "weight": 2.343954102694057
+      },
+      {
+        "term": "al parecer",
+        "weight": 2.3154947153243093
+      },
+      {
+        "term": "rico",
+        "weight": 2.3066145089509025
+      }
+    ],
+    "homofobia_transfobia": [
+      {
+        "term": "gay",
+        "weight": 16.393517264447166
+      },
+      {
+        "term": "homosexual",
+        "weight": 14.752635044238104
+      },
+      {
+        "term": "esclavo",
+        "weight": 8.08925238207885
+      },
+      {
+        "term": "cabro",
+        "weight": 7.89334588045092
+      },
+      {
+        "term": "lesbiana",
+        "weight": 7.563352066671647
+      },
+      {
+        "term": "homosexuales",
+        "weight": 7.348061827325891
+      },
+      {
+        "term": "okay",
+        "weight": 5.398085745714085
+      },
+      {
+        "term": "trans",
+        "weight": 5.302558757331196
+      },
+      {
+        "term": "hombre",
+        "weight": 5.257036590802353
+      },
+      {
+        "term": "gays",
+        "weight": 4.929656585968386
+      },
+      {
+        "term": "uchi",
+        "weight": 4.919799942647458
+      },
+      {
+        "term": "el esclavo",
+        "weight": 4.793632314716989
+      },
+      {
+        "term": "__",
+        "weight": 4.7115418006907275
+      },
+      {
+        "term": "lesbianas",
+        "weight": 4.56797471958595
+      },
+      {
+        "term": "orgullo",
+        "weight": 4.405623845929115
+      },
+      {
+        "term": "boy",
+        "weight": 4.338366637521978
+      },
+      {
+        "term": "lgtv",
+        "weight": 3.8912111770117326
+      },
+      {
+        "term": "pepian",
+        "weight": 3.4508806455121737
+      },
+      {
+        "term": "es gay",
+        "weight": 3.3934023720393025
+      },
+      {
+        "term": "ay",
+        "weight": 3.253388485890231
+      },
+      {
+        "term": "eso",
+        "weight": 3.2327624598957003
+      },
+      {
+        "term": "es __",
+        "weight": 3.186805592845436
+      },
+      {
+        "term": "nina",
+        "weight": 3.1746728978969645
+      },
+      {
+        "term": "ah",
+        "weight": 3.1692924764141877
+      },
+      {
+        "term": "la comunidad",
+        "weight": 3.1532893036407246
+      },
+      {
+        "term": "gusta",
+        "weight": 3.0872906798102777
+      },
+      {
+        "term": "esos",
+        "weight": 3.02838116119152
+      },
+      {
+        "term": "sabe",
+        "weight": 3.003846972850567
+      },
+      {
+        "term": "pantalon",
+        "weight": 2.9306847792993502
+      },
+      {
+        "term": "chiquitos",
+        "weight": 2.9234398964489214
+      },
+      {
+        "term": "trabajan",
+        "weight": 2.9058651595714617
+      },
+      {
+        "term": "comunidad",
+        "weight": 2.82452198169266
+      },
+      {
+        "term": "prima",
+        "weight": 2.7296651118234174
+      },
+      {
+        "term": "seas",
+        "weight": 2.706813777138273
+      },
+      {
+        "term": "lgtb",
+        "weight": 2.7006586123695175
+      },
+      {
+        "term": "le",
+        "weight": 2.6791634559047375
+      },
+      {
+        "term": "jamas",
+        "weight": 2.6735093824891005
+      },
+      {
+        "term": "hon",
+        "weight": 2.6632665145775327
+      },
+      {
+        "term": "eres",
+        "weight": 2.6602212057104935
+      },
+      {
+        "term": "calzoncillos",
+        "weight": 2.6274223635978897
+      },
+      {
+        "term": "mira",
+        "weight": 2.6138265394804847
+      },
+      {
+        "term": "no seas",
+        "weight": 2.6130828673029036
+      },
+      {
+        "term": "huecos",
+        "weight": 2.6106990244306756
+      },
+      {
+        "term": "una mujer",
+        "weight": 2.608286532975076
+      },
+      {
+        "term": "ahi",
+        "weight": 2.5649078975246993
+      },
+      {
+        "term": "del orgullo",
+        "weight": 2.5542633476665157
+      },
+      {
+        "term": "me hizo",
+        "weight": 2.5014934342397175
+      },
+      {
+        "term": "homofobico",
+        "weight": 2.4978032174514158
+      },
+      {
+        "term": "pene",
+        "weight": 2.4907107725423745
+      },
+      {
+        "term": "por favor",
+        "weight": 2.48262157216794
+      },
+      {
+        "term": "que lindo",
+        "weight": 2.474373491655501
+      },
+      {
+        "term": "le gusta",
+        "weight": 2.4584999151540265
+      },
+      {
+        "term": "hablando",
+        "weight": 2.4537854212348917
+      },
+      {
+        "term": "cacha",
+        "weight": 2.432635515713357
+      },
+      {
+        "term": "eso ya",
+        "weight": 2.4201915959776485
+      },
+      {
+        "term": "favor",
+        "weight": 2.3865560987338625
+      },
+      {
+        "term": "norteno",
+        "weight": 2.3802733753202276
+      },
+      {
+        "term": "me la",
+        "weight": 2.372401161583535
+      },
+      {
+        "term": "en su",
+        "weight": 2.3554444472052785
+      },
+      {
+        "term": "le pones",
+        "weight": 2.3450975020953693
+      },
+      {
+        "term": "gay no",
+        "weight": 2.3324371053170054
+      },
+      {
+        "term": "macho",
+        "weight": 2.307962146926563
+      },
+      {
+        "term": "el es",
+        "weight": 2.3039329277794045
+      },
+      {
+        "term": "huevon",
+        "weight": 2.2795896236705926
+      },
+      {
+        "term": "heterosexual",
+        "weight": 2.274535783746217
+      },
+      {
+        "term": "celeste",
+        "weight": 2.269194000174224
+      },
+      {
+        "term": "ya esta",
+        "weight": 2.2571367374669893
+      },
+      {
+        "term": "un hombre",
+        "weight": 2.250628384819779
+      },
+      {
+        "term": "gordo",
+        "weight": 2.2424998881285627
+      },
+      {
+        "term": "pequeno",
+        "weight": 2.2193370852639522
+      },
+      {
+        "term": "okay el",
+        "weight": 2.2127245589578832
+      },
+      {
+        "term": "hijo le",
+        "weight": 2.203707766687344
+      },
+      {
+        "term": "le ve",
+        "weight": 2.1969598856914296
+      },
+      {
+        "term": "seas __",
+        "weight": 2.1935710511691204
+      },
+      {
+        "term": "malo",
+        "weight": 2.178206756324763
+      },
+      {
+        "term": "senora",
+        "weight": 2.1780364941887562
+      },
+      {
+        "term": "sabemos",
+        "weight": 2.165587599044736
+      },
+      {
+        "term": "gustan",
+        "weight": 2.1485197580963176
+      },
+      {
+        "term": "diste cuenta",
+        "weight": 2.146882552190956
+      },
+      {
+        "term": "digo",
+        "weight": 2.142206076023699
+      }
+    ],
+    "acoso_personal": [
+      {
+        "term": "__",
+        "weight": 6.527989735256148
+      },
+      {
+        "term": "su",
+        "weight": 5.948982438279131
+      },
+      {
+        "term": "basura",
+        "weight": 5.899697573674532
+      },
+      {
+        "term": "senor",
+        "weight": 5.24844562918181
+      },
+      {
+        "term": "gordo",
+        "weight": 5.059072106162584
+      },
+      {
+        "term": "caviares",
+        "weight": 4.941101979327568
+      },
+      {
+        "term": "le",
+        "weight": 4.61668821985885
+      },
+      {
+        "term": "imbecil",
+        "weight": 4.6049311281840675
+      },
+      {
+        "term": "fracasado",
+        "weight": 4.497264489579908
+      },
+      {
+        "term": "senora",
+        "weight": 4.380984028934355
+      },
+      {
+        "term": "huevon",
+        "weight": 4.336447348003344
+      },
+      {
+        "term": "terrorista",
+        "weight": 4.186755812732773
+      },
+      {
+        "term": "que le",
+        "weight": 4.163536358059926
+      },
+      {
+        "term": "perez",
+        "weight": 4.091862632441524
+      },
+      {
+        "term": "pobre",
+        "weight": 4.017746837147086
+      },
+      {
+        "term": "eres",
+        "weight": 3.9077768101926162
+      },
+      {
+        "term": "carlos",
+        "weight": 3.6625768091854187
+      },
+      {
+        "term": "sendero",
+        "weight": 3.5572196579149793
+      },
+      {
+        "term": "amenaza",
+        "weight": 3.5049030263437135
+      },
+      {
+        "term": "enano",
+        "weight": 3.466935361851972
+      },
+      {
+        "term": "dina",
+        "weight": 3.431757761116241
+      },
+      {
+        "term": "rospiliosi",
+        "weight": 3.4193132219546225
+      },
+      {
+        "term": "terroristas",
+        "weight": 3.4072672774246637
+      },
+      {
+        "term": "alonso",
+        "weight": 3.3758367019384425
+      },
+      {
+        "term": "keiko",
+        "weight": 3.3602140480632765
+      },
+      {
+        "term": "domingo perez",
+        "weight": 3.3414516805331846
+      },
+      {
+        "term": "foto",
+        "weight": 3.3268632208494537
+      },
+      {
+        "term": "mala",
+        "weight": 3.325593681722572
+      },
+      {
+        "term": "traidor",
+        "weight": 3.323282772988139
+      },
+      {
+        "term": "quien",
+        "weight": 3.2594070947675964
+      },
+      {
+        "term": "cobarde",
+        "weight": 3.253295804768275
+      },
+      {
+        "term": "sujeto",
+        "weight": 3.241701680476344
+      },
+      {
+        "term": "sacaron",
+        "weight": 3.2076266727552203
+      },
+      {
+        "term": "de tu",
+        "weight": 3.2037504304068665
+      },
+      {
+        "term": "sus",
+        "weight": 3.200926416111675
+      },
+      {
+        "term": "no",
+        "weight": 3.1532262632505206
+      },
+      {
+        "term": "payaso",
+        "weight": 3.145997972013561
+      },
+      {
+        "term": "es un",
+        "weight": 3.039874414057552
+      },
+      {
+        "term": "tu madre",
+        "weight": 3.0102344282164264
+      },
+      {
+        "term": "mano",
+        "weight": 2.997877440201861
+      },
+      {
+        "term": "sacha",
+        "weight": 2.9905921818159045
+      },
+      {
+        "term": "circo",
+        "weight": 2.917540312367669
+      },
+      {
+        "term": "jose domingo",
+        "weight": 2.8911709288654515
+      },
+      {
+        "term": "usted",
+        "weight": 2.867717479910315
+      },
+      {
+        "term": "ese",
+        "weight": 2.8588525979602237
+      },
+      {
+        "term": "se quien",
+        "weight": 2.832496407444364
+      },
+      {
+        "term": "masa",
+        "weight": 2.823671844868484
+      },
+      {
+        "term": "publicamente",
+        "weight": 2.81374566039296
+      },
+      {
+        "term": "concha",
+        "weight": 2.7973743044644985
+      },
+      {
+        "term": "persona",
+        "weight": 2.7949989802976427
+      },
+      {
+        "term": "hijos de",
+        "weight": 2.791240127828887
+      },
+      {
+        "term": "madre",
+        "weight": 2.781366192401219
+      },
+      {
+        "term": "programa",
+        "weight": 2.7686806398277133
+      },
+      {
+        "term": "terruco",
+        "weight": 2.761462062580807
+      },
+      {
+        "term": "luminoso",
+        "weight": 2.7160420278527764
+      },
+      {
+        "term": "tan",
+        "weight": 2.687971697872198
+      },
+      {
+        "term": "sanchez",
+        "weight": 2.6879510289418946
+      },
+      {
+        "term": "buscan un",
+        "weight": 2.6768349968041303
+      },
+      {
+        "term": "periodista",
+        "weight": 2.6708390977778635
+      },
+      {
+        "term": "stream",
+        "weight": 2.6417039716931563
+      },
+      {
+        "term": "morrocoy",
+        "weight": 2.626354926606047
+      },
+      {
+        "term": "no soporto",
+        "weight": 2.6133947548689784
+      },
+      {
+        "term": "ese es",
+        "weight": 2.5995486057718415
+      },
+      {
+        "term": "el es",
+        "weight": 2.596318331202765
+      },
+      {
+        "term": "dibujito",
+        "weight": 2.5726949233131955
+      },
+      {
+        "term": "senor que",
+        "weight": 2.5635247994642465
+      },
+      {
+        "term": "domingo",
+        "weight": 2.5546780724019764
+      },
+      {
+        "term": "mal",
+        "weight": 2.5244713263592633
+      },
+      {
+        "term": "miserable",
+        "weight": 2.5104192851571434
+      },
+      {
+        "term": "edad",
+        "weight": 2.5013026673696857
+      },
+      {
+        "term": "que se",
+        "weight": 2.500963969341949
+      },
+      {
+        "term": "respeto",
+        "weight": 2.493974139728162
+      },
+      {
+        "term": "lo",
+        "weight": 2.4938033504737627
+      },
+      {
+        "term": "eres un",
+        "weight": 2.4817532515764276
+      },
+      {
+        "term": "robles",
+        "weight": 2.477582445878419
+      },
+      {
+        "term": "ignorante",
+        "weight": 2.4707578890446404
+      },
+      {
+        "term": "sendero luminoso",
+        "weight": 2.4675429171570236
+      },
+      {
+        "term": "veronica",
+        "weight": 2.4652144496256505
+      },
+      {
+        "term": "concha de",
+        "weight": 2.465085684739547
+      },
+      {
+        "term": "flaca",
+        "weight": 2.438555481682416
+      }
+    ],
+    "amenaza_directa": [
+      {
+        "term": "__",
+        "weight": 5.739227866156334
+      },
+      {
+        "term": "te voy",
+        "weight": 5.708605126423071
+      },
+      {
+        "term": "voy",
+        "weight": 5.601046369604515
+      },
+      {
+        "term": "te",
+        "weight": 4.9541578038041
+      },
+      {
+        "term": "concha",
+        "weight": 4.726613130882215
+      },
+      {
+        "term": "amenaza",
+        "weight": 4.706338724132966
+      },
+      {
+        "term": "van",
+        "weight": 4.098782573707505
+      },
+      {
+        "term": "matar",
+        "weight": 4.016029631199647
+      },
+      {
+        "term": "va",
+        "weight": 3.923754241737189
+      },
+      {
+        "term": "malditos",
+        "weight": 3.910550541103663
+      },
+      {
+        "term": "va vender",
+        "weight": 3.4780580128486993
+      },
+      {
+        "term": "mataron",
+        "weight": 3.4461422803949797
+      },
+      {
+        "term": "cobarde",
+        "weight": 3.406020089884356
+      },
+      {
+        "term": "todo lo",
+        "weight": 3.3541775535751364
+      },
+      {
+        "term": "nos",
+        "weight": 3.1253290209776154
+      },
+      {
+        "term": "eliminar",
+        "weight": 3.098145289975643
+      },
+      {
+        "term": "responsables",
+        "weight": 3.0693097733817525
+      },
+      {
+        "term": "plata",
+        "weight": 3.0680051389823304
+      },
+      {
+        "term": "hijo de",
+        "weight": 3.047356989017139
+      },
+      {
+        "term": "los pulpos",
+        "weight": 2.9653758927242966
+      },
+      {
+        "term": "yo salia",
+        "weight": 2.95744472277091
+      },
+      {
+        "term": "pulpos",
+        "weight": 2.9110576767462386
+      },
+      {
+        "term": "nino hay",
+        "weight": 2.9023327475617404
+      },
+      {
+        "term": "amenazas",
+        "weight": 2.879371913398029
+      },
+      {
+        "term": "morrocoy",
+        "weight": 2.8781664401883837
+      },
+      {
+        "term": "quien",
+        "weight": 2.875511776771848
+      },
+      {
+        "term": "va pasar",
+        "weight": 2.8380998616594764
+      },
+      {
+        "term": "amenazo",
+        "weight": 2.8098595696560627
+      },
+      {
+        "term": "manejando",
+        "weight": 2.785354451868837
+      },
+      {
+        "term": "del pueblo",
+        "weight": 2.7799603224932796
+      },
+      {
+        "term": "morir",
+        "weight": 2.7714390393465123
+      },
+      {
+        "term": "muera",
+        "weight": 2.7572073307894702
+      },
+      {
+        "term": "usted",
+        "weight": 2.729768485522257
+      },
+      {
+        "term": "aliaga",
+        "weight": 2.670497340217002
+      },
+      {
+        "term": "dinero",
+        "weight": 2.6641835708572716
+      },
+      {
+        "term": "vas ver",
+        "weight": 2.661101908229404
+      },
+      {
+        "term": "fraude",
+        "weight": 2.6555856473886577
+      },
+      {
+        "term": "miedo",
+        "weight": 2.61996020879785
+      },
+      {
+        "term": "violar",
+        "weight": 2.6173839578938445
+      },
+      {
+        "term": "soles por",
+        "weight": 2.6037219840478416
+      },
+      {
+        "term": "mato",
+        "weight": 2.593279533186328
+      },
+      {
+        "term": "insultos",
+        "weight": 2.5925782879543817
+      },
+      {
+        "term": "sacar",
+        "weight": 2.5821121029107177
+      },
+      {
+        "term": "dice que",
+        "weight": 2.5778593518758472
+      },
+      {
+        "term": "muerto",
+        "weight": 2.554559531059155
+      },
+      {
+        "term": "muerte",
+        "weight": 2.5289614042171684
+      },
+      {
+        "term": "duro",
+        "weight": 2.518966293177396
+      },
+      {
+        "term": "inocentes",
+        "weight": 2.5062810766797803
+      },
+      {
+        "term": "mano",
+        "weight": 2.476042803352481
+      },
+      {
+        "term": "diego",
+        "weight": 2.4759463494832765
+      },
+      {
+        "term": "me pagan",
+        "weight": 2.467331508564567
+      },
+      {
+        "term": "metan",
+        "weight": 2.4659543645168998
+      },
+      {
+        "term": "que hago",
+        "weight": 2.4371541868847997
+      },
+      {
+        "term": "iba",
+        "weight": 2.4241003777214427
+      },
+      {
+        "term": "prima",
+        "weight": 2.4111801750270225
+      },
+      {
+        "term": "ese nino",
+        "weight": 2.409615479875088
+      },
+      {
+        "term": "aborto",
+        "weight": 2.4041639327904933
+      },
+      {
+        "term": "que le",
+        "weight": 2.3958056069377514
+      },
+      {
+        "term": "de persona",
+        "weight": 2.3949318347913744
+      },
+      {
+        "term": "mas para",
+        "weight": 2.3825919186306197
+      },
+      {
+        "term": "los insultos",
+        "weight": 2.381787619892227
+      },
+      {
+        "term": "la denuncia",
+        "weight": 2.3740140922418975
+      },
+      {
+        "term": "senora",
+        "weight": 2.373143570711519
+      },
+      {
+        "term": "square",
+        "weight": 2.3724963618065105
+      },
+      {
+        "term": "llevo",
+        "weight": 2.359158491720046
+      },
+      {
+        "term": "un hijo",
+        "weight": 2.358381662849428
+      },
+      {
+        "term": "de humo",
+        "weight": 2.3508439300501984
+      },
+      {
+        "term": "ya no",
+        "weight": 2.3485263422187224
+      },
+      {
+        "term": "prudente",
+        "weight": 2.3419274921979714
+      },
+      {
+        "term": "discapacitado",
+        "weight": 2.334532466453123
+      },
+      {
+        "term": "elecciones",
+        "weight": 2.3262707839834604
+      },
+      {
+        "term": "va pagar",
+        "weight": 2.323162400747057
+      },
+      {
+        "term": "pasar",
+        "weight": 2.3183048156273265
+      },
+      {
+        "term": "se muera",
+        "weight": 2.2966104387549193
+      },
+      {
+        "term": "domingo perez",
+        "weight": 2.2924125670340216
+      },
+      {
+        "term": "vas",
+        "weight": 2.2922118978593504
+      },
+      {
+        "term": "le",
+        "weight": 2.27591259314188
+      },
+      {
+        "term": "madre",
+        "weight": 2.2734698250209724
+      },
+      {
+        "term": "agarrar",
+        "weight": 2.2508846076140214
+      },
+      {
+        "term": "usted es",
+        "weight": 2.250468033105261
+      }
+    ],
+    "sexual_explicito": [
+      {
+        "term": "pene",
+        "weight": 13.263122398222494
+      },
+      {
+        "term": "sexo",
+        "weight": 10.035942706780014
+      },
+      {
+        "term": "miembro",
+        "weight": 6.266049727056697
+      },
+      {
+        "term": "rico",
+        "weight": 6.164830397572123
+      },
+      {
+        "term": "culo",
+        "weight": 5.898096326756914
+      },
+      {
+        "term": "que rico",
+        "weight": 5.826370581653162
+      },
+      {
+        "term": "clitoris",
+        "weight": 5.691114885076683
+      },
+      {
+        "term": "asi",
+        "weight": 5.599899088963825
+      },
+      {
+        "term": "tu",
+        "weight": 5.560298088545164
+      },
+      {
+        "term": "claro",
+        "weight": 5.344397929244349
+      },
+      {
+        "term": "tetas",
+        "weight": 5.310755261854189
+      },
+      {
+        "term": "el pene",
+        "weight": 5.215861709435911
+      },
+      {
+        "term": "oh",
+        "weight": 5.123615753141873
+      },
+      {
+        "term": "trio",
+        "weight": 4.943135686798197
+      },
+      {
+        "term": "duro",
+        "weight": 4.5710560043953405
+      },
+      {
+        "term": "vagina",
+        "weight": 4.4799926335500535
+      },
+      {
+        "term": "el clitoris",
+        "weight": 4.293978236820057
+      },
+      {
+        "term": "salmon",
+        "weight": 4.081793260257128
+      },
+      {
+        "term": "chicas",
+        "weight": 4.077132786923616
+      },
+      {
+        "term": "intimidad",
+        "weight": 3.887024443064206
+      },
+      {
+        "term": "la concha",
+        "weight": 3.8445873706084663
+      },
+      {
+        "term": "el culo",
+        "weight": 3.815896316045721
+      },
+      {
+        "term": "mientras",
+        "weight": 3.772947129911994
+      },
+      {
+        "term": "__",
+        "weight": 3.6955349371650974
+      },
+      {
+        "term": "jorge",
+        "weight": 3.562310504346734
+      },
+      {
+        "term": "poto",
+        "weight": 3.5600629264875288
+      },
+      {
+        "term": "chica",
+        "weight": 3.504721356009205
+      },
+      {
+        "term": "te",
+        "weight": 3.5023520627325566
+      },
+      {
+        "term": "mujer",
+        "weight": 3.4556939182998967
+      },
+      {
+        "term": "te voy",
+        "weight": 3.4105085784422924
+      },
+      {
+        "term": "se la",
+        "weight": 3.394892590471062
+      },
+      {
+        "term": "okay",
+        "weight": 3.388805976866846
+      },
+      {
+        "term": "teta",
+        "weight": 3.326072626994796
+      },
+      {
+        "term": "le",
+        "weight": 3.310854480375357
+      },
+      {
+        "term": "cuarto",
+        "weight": 3.280349824869946
+      },
+      {
+        "term": "concha",
+        "weight": 3.277378885421761
+      },
+      {
+        "term": "la cama",
+        "weight": 3.275836224326798
+      },
+      {
+        "term": "el poto",
+        "weight": 3.2580242978135665
+      },
+      {
+        "term": "su mano",
+        "weight": 3.241240726732514
+      },
+      {
+        "term": "me",
+        "weight": 3.113268281245515
+      },
+      {
+        "term": "amor",
+        "weight": 3.0828551514859237
+      },
+      {
+        "term": "seca",
+        "weight": 3.0262552834734295
+      },
+      {
+        "term": "explicito",
+        "weight": 3.0191418345364
+      },
+      {
+        "term": "la intimidad",
+        "weight": 3.002347370525213
+      },
+      {
+        "term": "penes",
+        "weight": 3.0021942661761964
+      },
+      {
+        "term": "raro",
+        "weight": 2.9607417169741987
+      },
+      {
+        "term": "marido",
+        "weight": 2.9583994087205534
+      },
+      {
+        "term": "ah",
+        "weight": 2.9578667874956386
+      },
+      {
+        "term": "__ que",
+        "weight": 2.9412294239163193
+      },
+      {
+        "term": "cama",
+        "weight": 2.911874649844949
+      },
+      {
+        "term": "su pene",
+        "weight": 2.894261869112493
+      },
+      {
+        "term": "porno",
+        "weight": 2.8938765096591506
+      },
+      {
+        "term": "hoy dia",
+        "weight": 2.8596642299209454
+      },
+      {
+        "term": "fuerte",
+        "weight": 2.8101487026546494
+      },
+      {
+        "term": "debe ser",
+        "weight": 2.8055993210280383
+      },
+      {
+        "term": "sexo en",
+        "weight": 2.7676167420446425
+      },
+      {
+        "term": "un trio",
+        "weight": 2.7455495789703184
+      },
+      {
+        "term": "la chica",
+        "weight": 2.697459515532987
+      },
+      {
+        "term": "parto",
+        "weight": 2.696713474770538
+      },
+      {
+        "term": "imaginate",
+        "weight": 2.676211023156352
+      },
+      {
+        "term": "uf",
+        "weight": 2.676087601684537
+      },
+      {
+        "term": "aplaudan",
+        "weight": 2.674802527962489
+      },
+      {
+        "term": "alguna vez",
+        "weight": 2.6640893588145347
+      },
+      {
+        "term": "pa",
+        "weight": 2.6447361249329866
+      },
+      {
+        "term": "alguna",
+        "weight": 2.638589335993443
+      },
+      {
+        "term": "cogiendo",
+        "weight": 2.630433073734099
+      },
+      {
+        "term": "tambien he",
+        "weight": 2.620298998897722
+      },
+      {
+        "term": "ah ah",
+        "weight": 2.5997579780879634
+      },
+      {
+        "term": "chupar",
+        "weight": 2.582730241370227
+      },
+      {
+        "term": "lo pongo",
+        "weight": 2.5802570378010925
+      },
+      {
+        "term": "lengua",
+        "weight": 2.574942400117063
+      },
+      {
+        "term": "boca",
+        "weight": 2.5723507773716547
+      },
+      {
+        "term": "ahora pero",
+        "weight": 2.5626902414687662
+      },
+      {
+        "term": "sexuales",
+        "weight": 2.5556009129298207
+      },
+      {
+        "term": "no no",
+        "weight": 2.54617682046741
+      },
+      {
+        "term": "que fuerte",
+        "weight": 2.5306922312846902
+      },
+      {
+        "term": "flaca",
+        "weight": 2.521805770079005
+      },
+      {
+        "term": "miami",
+        "weight": 2.5150313478345394
+      },
+      {
+        "term": "quitamos",
+        "weight": 2.5001828125430943
+      },
+      {
+        "term": "claro que",
+        "weight": 2.4992712369749124
+      }
+    ],
+    "sexual_cosificacion": [
+      {
+        "term": "tetas",
+        "weight": 11.062930477376288
+      },
+      {
+        "term": "pene",
+        "weight": 8.17531076227977
+      },
+      {
+        "term": "culo",
+        "weight": 7.271901856296192
+      },
+      {
+        "term": "chica",
+        "weight": 6.837489370601739
+      },
+      {
+        "term": "que rico",
+        "weight": 6.770183793317397
+      },
+      {
+        "term": "chicas",
+        "weight": 6.535069612054553
+      },
+      {
+        "term": "sexo",
+        "weight": 5.983085147647652
+      },
+      {
+        "term": "rico",
+        "weight": 5.767824497511772
+      },
+      {
+        "term": "__",
+        "weight": 5.204720248423836
+      },
+      {
+        "term": "prostitutas",
+        "weight": 4.749662340365229
+      },
+      {
+        "term": "concha",
+        "weight": 4.492166122285414
+      },
+      {
+        "term": "le",
+        "weight": 4.414586135885254
+      },
+      {
+        "term": "las tetas",
+        "weight": 4.336306093618806
+      },
+      {
+        "term": "culito",
+        "weight": 4.265401296615718
+      },
+      {
+        "term": "mami",
+        "weight": 4.241870540053626
+      },
+      {
+        "term": "flaca",
+        "weight": 4.2221313023187115
+      },
+      {
+        "term": "poto",
+        "weight": 4.136140114627663
+      },
+      {
+        "term": "hombres",
+        "weight": 4.096801919420663
+      },
+      {
+        "term": "mujer",
+        "weight": 4.057445385169166
+      },
+      {
+        "term": "bikini",
+        "weight": 4.055612924837692
+      },
+      {
+        "term": "afrodescendiente",
+        "weight": 4.036165566156325
+      },
+      {
+        "term": "sexual",
+        "weight": 3.9995702199138985
+      },
+      {
+        "term": "ella",
+        "weight": 3.9324847406423293
+      },
+      {
+        "term": "claro",
+        "weight": 3.877244340971057
+      },
+      {
+        "term": "se la",
+        "weight": 3.872042610012111
+      },
+      {
+        "term": "mujeres",
+        "weight": 3.841086944511843
+      },
+      {
+        "term": "okay",
+        "weight": 3.8163282834772243
+      },
+      {
+        "term": "teta",
+        "weight": 3.7791713853785343
+      },
+      {
+        "term": "el poto",
+        "weight": 3.6963588245897676
+      },
+      {
+        "term": "negra",
+        "weight": 3.6810065011441555
+      },
+      {
+        "term": "prostituta",
+        "weight": 3.6800756383940274
+      },
+      {
+        "term": "baila",
+        "weight": 3.6505458764504786
+      },
+      {
+        "term": "clitoris",
+        "weight": 3.6200855428229826
+      },
+      {
+        "term": "la concha",
+        "weight": 3.5074153118826024
+      },
+      {
+        "term": "oye",
+        "weight": 3.4916673999087475
+      },
+      {
+        "term": "la",
+        "weight": 3.459076867929266
+      },
+      {
+        "term": "asi",
+        "weight": 3.373702573072647
+      },
+      {
+        "term": "dedos",
+        "weight": 3.2056481693039522
+      },
+      {
+        "term": "ahi",
+        "weight": 3.20304006098051
+      },
+      {
+        "term": "tu",
+        "weight": 3.1809414358165036
+      },
+      {
+        "term": "sus",
+        "weight": 3.152851976809932
+      },
+      {
+        "term": "imaginacion",
+        "weight": 3.151973674003764
+      },
+      {
+        "term": "la flaca",
+        "weight": 3.1474037157666586
+      },
+      {
+        "term": "su",
+        "weight": 3.1073572040776014
+      },
+      {
+        "term": "unas",
+        "weight": 3.0700639370960454
+      },
+      {
+        "term": "trio",
+        "weight": 3.006301669276921
+      },
+      {
+        "term": "perra",
+        "weight": 2.9822211503221223
+      },
+      {
+        "term": "el culo",
+        "weight": 2.9481933939393032
+      },
+      {
+        "term": "la chica",
+        "weight": 2.9352890319332547
+      },
+      {
+        "term": "chupando",
+        "weight": 2.9103378982030166
+      },
+      {
+        "term": "huevos",
+        "weight": 2.903744690851029
+      },
+      {
+        "term": "cuerpo",
+        "weight": 2.8865940901834155
+      },
+      {
+        "term": "debe ser",
+        "weight": 2.8207170889048454
+      },
+      {
+        "term": "como ella",
+        "weight": 2.8120301701689425
+      },
+      {
+        "term": "de su",
+        "weight": 2.802043995314368
+      },
+      {
+        "term": "mi novia",
+        "weight": 2.771833555002541
+      },
+      {
+        "term": "ven",
+        "weight": 2.7354678669848127
+      },
+      {
+        "term": "los dedos",
+        "weight": 2.7146804516755583
+      },
+      {
+        "term": "por favor",
+        "weight": 2.7099044056795947
+      },
+      {
+        "term": "rica",
+        "weight": 2.7027070642235587
+      },
+      {
+        "term": "rosadito",
+        "weight": 2.690030796545711
+      },
+      {
+        "term": "en cuatro",
+        "weight": 2.6594208157774073
+      },
+      {
+        "term": "culos",
+        "weight": 2.6307221835602714
+      },
+      {
+        "term": "todas",
+        "weight": 2.6191775800711574
+      },
+      {
+        "term": "mi amiga",
+        "weight": 2.610826341229296
+      },
+      {
+        "term": "novia",
+        "weight": 2.6074881877381135
+      },
+      {
+        "term": "videos",
+        "weight": 2.5931293685421957
+      },
+      {
+        "term": "senora",
+        "weight": 2.5854697658650836
+      },
+      {
+        "term": "mamacita",
+        "weight": 2.581943365044002
+      },
+      {
+        "term": "esposa",
+        "weight": 2.5819170720289972
+      },
+      {
+        "term": "dicho nada",
+        "weight": 2.565369271792998
+      },
+      {
+        "term": "un trio",
+        "weight": 2.5596863167912645
+      },
+      {
+        "term": "debe",
+        "weight": 2.5342998691709613
+      },
+      {
+        "term": "encontrar",
+        "weight": 2.524346507149061
+      },
+      {
+        "term": "modelo",
+        "weight": 2.5093197772314055
+      },
+      {
+        "term": "un pene",
+        "weight": 2.491881793393736
+      },
+      {
+        "term": "las chicas",
+        "weight": 2.485218283584318
+      },
+      {
+        "term": "me la",
+        "weight": 2.4827415089746516
+      },
+      {
+        "term": "nina que",
+        "weight": 2.4757382364233407
+      },
+      {
+        "term": "raro",
+        "weight": 2.4562690814176875
+      }
+    ],
+    "sexual_no_consensual": [
+      {
+        "term": "fotos",
+        "weight": 6.265551332711515
+      },
+      {
+        "term": "video",
+        "weight": 5.828296372121803
+      },
+      {
+        "term": "flaca",
+        "weight": 5.316874181520374
+      },
+      {
+        "term": "la flaca",
+        "weight": 5.267977014395475
+      },
+      {
+        "term": "discord",
+        "weight": 4.708160259028512
+      },
+      {
+        "term": "alonso",
+        "weight": 4.540916384855955
+      },
+      {
+        "term": "dibujito",
+        "weight": 4.071577700713455
+      },
+      {
+        "term": "intimas",
+        "weight": 3.4241434099901835
+      },
+      {
+        "term": "videos",
+        "weight": 3.4019591076231612
+      },
+      {
+        "term": "filtro",
+        "weight": 3.379538791961588
+      },
+      {
+        "term": "publicar",
+        "weight": 3.3737267562695266
+      },
+      {
+        "term": "mias",
+        "weight": 3.2954883800320998
+      },
+      {
+        "term": "gabriela",
+        "weight": 3.290362234229893
+      },
+      {
+        "term": "mi foto",
+        "weight": 3.2114779020177373
+      },
+      {
+        "term": "lo",
+        "weight": 3.1940657799973473
+      },
+      {
+        "term": "intimo",
+        "weight": 3.1416409028829215
+      },
+      {
+        "term": "su",
+        "weight": 3.0022249125995026
+      },
+      {
+        "term": "brian soto",
+        "weight": 2.9682890180480905
+      },
+      {
+        "term": "un video",
+        "weight": 2.9564587149826225
+      },
+      {
+        "term": "masa",
+        "weight": 2.9294679785292113
+      },
+      {
+        "term": "le",
+        "weight": 2.8916199098447586
+      },
+      {
+        "term": "queria",
+        "weight": 2.7637999332990812
+      },
+      {
+        "term": "peor",
+        "weight": 2.704814346508046
+      },
+      {
+        "term": "hacer",
+        "weight": 2.6576577241303663
+      },
+      {
+        "term": "acciones legales",
+        "weight": 2.6535160482711673
+      },
+      {
+        "term": "fotos que",
+        "weight": 2.6530913271478496
+      },
+      {
+        "term": "intimos",
+        "weight": 2.6289170893950935
+      },
+      {
+        "term": "el video",
+        "weight": 2.5961550671611517
+      },
+      {
+        "term": "acciones",
+        "weight": 2.55201113684616
+      },
+      {
+        "term": "seas",
+        "weight": 2.4738363110729957
+      },
+      {
+        "term": "voy",
+        "weight": 2.4697761257255144
+      },
+      {
+        "term": "menor de",
+        "weight": 2.435273605620521
+      },
+      {
+        "term": "falda",
+        "weight": 2.4238767846663185
+      },
+      {
+        "term": "virgen",
+        "weight": 2.3734577400283876
+      },
+      {
+        "term": "saliente",
+        "weight": 2.3633357449993304
+      },
+      {
+        "term": "su pareja",
+        "weight": 2.3340565108122853
+      },
+      {
+        "term": "pensando que",
+        "weight": 2.3287337493074465
+      },
+      {
+        "term": "dije bueno",
+        "weight": 2.2861320395737907
+      },
+      {
+        "term": "escondida",
+        "weight": 2.2800290359296396
+      },
+      {
+        "term": "close",
+        "weight": 2.2528739019497745
+      },
+      {
+        "term": "brian",
+        "weight": 2.244241469188577
+      },
+      {
+        "term": "foto",
+        "weight": 2.241963157982036
+      },
+      {
+        "term": "dije",
+        "weight": 2.2186315486796158
+      },
+      {
+        "term": "soto",
+        "weight": 2.196501865669192
+      },
+      {
+        "term": "video con",
+        "weight": 2.1959724890921373
+      },
+      {
+        "term": "no no",
+        "weight": 2.1930198948693014
+      },
+      {
+        "term": "plata",
+        "weight": 2.183997237290602
+      },
+      {
+        "term": "en su",
+        "weight": 2.1707587521129774
+      },
+      {
+        "term": "legales",
+        "weight": 2.1662951229018095
+      },
+      {
+        "term": "lo haremos",
+        "weight": 2.1026503444654847
+      },
+      {
+        "term": "wilfredo",
+        "weight": 2.096371076976592
+      },
+      {
+        "term": "nombre",
+        "weight": 2.0625897087252323
+      },
+      {
+        "term": "de edad",
+        "weight": 2.0596220269367906
+      },
+      {
+        "term": "negrito",
+        "weight": 2.0585947634840256
+      },
+      {
+        "term": "hija de",
+        "weight": 2.0526002551438305
+      },
+      {
+        "term": "locro",
+        "weight": 2.05034058783591
+      },
+      {
+        "term": "mano",
+        "weight": 2.0381861571665545
+      },
+      {
+        "term": "mas triste",
+        "weight": 2.0256733823777044
+      },
+      {
+        "term": "le voy",
+        "weight": 2.0061473096544544
+      },
+      {
+        "term": "triste",
+        "weight": 2.005095926908091
+      },
+      {
+        "term": "no pasan",
+        "weight": 1.9974095039981044
+      },
+      {
+        "term": "janet",
+        "weight": 1.9839496747584966
+      },
+      {
+        "term": "proceda",
+        "weight": 1.965094160312247
+      },
+      {
+        "term": "telegram",
+        "weight": 1.9609648163959903
+      },
+      {
+        "term": "transmitir",
+        "weight": 1.9604152918703475
+      },
+      {
+        "term": "estan vendiendo",
+        "weight": 1.9469354337264921
+      },
+      {
+        "term": "conciliar",
+        "weight": 1.9398764375193536
+      },
+      {
+        "term": "las fotos",
+        "weight": 1.9398003200759155
+      },
+      {
+        "term": "virgen de",
+        "weight": 1.9373552018143503
+      },
+      {
+        "term": "que solamente",
+        "weight": 1.9306594485412818
+      },
+      {
+        "term": "10 soles",
+        "weight": 1.9145861513754237
+      },
+      {
+        "term": "video por",
+        "weight": 1.8937283783266878
+      },
+      {
+        "term": "luego",
+        "weight": 1.8829448965495679
+      },
+      {
+        "term": "pareja el",
+        "weight": 1.8796605446179435
+      },
+      {
+        "term": "no pero",
+        "weight": 1.8792228005299008
+      },
+      {
+        "term": "que era",
+        "weight": 1.8772975436090464
+      },
+      {
+        "term": "refiero al",
+        "weight": 1.8735456512983062
+      },
+      {
+        "term": "se paga",
+        "weight": 1.8703399429033418
+      },
+      {
+        "term": "si tuviera",
+        "weight": 1.8681756036073793
+      },
+      {
+        "term": "de voto",
+        "weight": 1.8632033903923013
+      }
+    ]
+  },
+  "flag_terms": {
+    "ironia_ambigua": [
+      {
+        "term": "pobres",
+        "weight": 4.8937142857810585
+      },
+      {
+        "term": "danzas",
+        "weight": 4.856074809964348
+      },
+      {
+        "term": "provinciano",
+        "weight": 4.846570533229557
+      },
+      {
+        "term": "__",
+        "weight": 4.352418378824136
+      },
+      {
+        "term": "son",
+        "weight": 4.16124344722795
+      },
+      {
+        "term": "los pobres",
+        "weight": 4.110091755196296
+      },
+      {
+        "term": "el chino",
+        "weight": 3.85149183167067
+      },
+      {
+        "term": "marron",
+        "weight": 3.6577795380493776
+      },
+      {
+        "term": "eres",
+        "weight": 3.6406473492388725
+      },
+      {
+        "term": "peruanos",
+        "weight": 3.634477959506109
+      },
+      {
+        "term": "malo",
+        "weight": 3.5768306251606203
+      },
+      {
+        "term": "calmate",
+        "weight": 3.4858451770621497
+      },
+      {
+        "term": "editora",
+        "weight": 3.3981069609416674
+      },
+      {
+        "term": "gays",
+        "weight": 3.3747925216198538
+      },
+      {
+        "term": "indigenas",
+        "weight": 3.356256291776125
+      },
+      {
+        "term": "pituco",
+        "weight": 3.328536406728351
+      },
+      {
+        "term": "caviares",
+        "weight": 3.3029457767405512
+      },
+      {
+        "term": "quien",
+        "weight": 3.212274357749972
+      },
+      {
+        "term": "cholo",
+        "weight": 3.1311329838806126
+      },
+      {
+        "term": "pobre",
+        "weight": 3.1234035158196742
+      },
+      {
+        "term": "negros",
+        "weight": 3.0979710544272656
+      },
+      {
+        "term": "homosexual",
+        "weight": 3.0766273540593856
+      },
+      {
+        "term": "senor",
+        "weight": 3.0459936946637702
+      },
+      {
+        "term": "chino",
+        "weight": 3.038931507106079
+      },
+      {
+        "term": "nunca mas",
+        "weight": 3.038310216960631
+      },
+      {
+        "term": "donde estan",
+        "weight": 3.0208833057555657
+      },
+      {
+        "term": "video",
+        "weight": 3.0154818751933417
+      },
+      {
+        "term": "chicos",
+        "weight": 2.935067543736898
+      },
+      {
+        "term": "te voy",
+        "weight": 2.9344530339638997
+      },
+      {
+        "term": "lima",
+        "weight": 2.9108853236701298
+      },
+      {
+        "term": "fracasado",
+        "weight": 2.9023674577258913
+      },
+      {
+        "term": "cultura",
+        "weight": 2.8842067117157586
+      },
+      {
+        "term": "dice aqui",
+        "weight": 2.868570983041878
+      },
+      {
+        "term": "like",
+        "weight": 2.83369002646502
+      },
+      {
+        "term": "peru",
+        "weight": 2.815676592654434
+      },
+      {
+        "term": "comunistas",
+        "weight": 2.8033997632799124
+      },
+      {
+        "term": "estan pues",
+        "weight": 2.7357566842265824
+      },
+      {
+        "term": "robar",
+        "weight": 2.7290912692236042
+      },
+      {
+        "term": "somos",
+        "weight": 2.726746822470896
+      },
+      {
+        "term": "sombrero",
+        "weight": 2.708992729329378
+      },
+      {
+        "term": "votar",
+        "weight": 2.7040162221024384
+      },
+      {
+        "term": "los cerros",
+        "weight": 2.690282137200705
+      },
+      {
+        "term": "preguntan",
+        "weight": 2.678866628075502
+      },
+      {
+        "term": "los",
+        "weight": 2.6787948235810504
+      },
+      {
+        "term": "votar por",
+        "weight": 2.676546815978299
+      },
+      {
+        "term": "andina",
+        "weight": 2.675545166189168
+      },
+      {
+        "term": "el senor",
+        "weight": 2.6676263604637396
+      },
+      {
+        "term": "cabro",
+        "weight": 2.6653769878700357
+      },
+      {
+        "term": "semana santa",
+        "weight": 2.6193073569407956
+      },
+      {
+        "term": "homosexuales",
+        "weight": 2.6059864113610334
+      },
+      {
+        "term": "lleguen",
+        "weight": 2.5979549555497687
+      },
+      {
+        "term": "literalmente",
+        "weight": 2.5868917166954137
+      },
+      {
+        "term": "era un",
+        "weight": 2.586868204816841
+      },
+      {
+        "term": "vienen",
+        "weight": 2.586700791171285
+      },
+      {
+        "term": "racista",
+        "weight": 2.573887289642206
+      },
+      {
+        "term": "discurso",
+        "weight": 2.5645621948340414
+      },
+      {
+        "term": "lema",
+        "weight": 2.5546103309630026
+      },
+      {
+        "term": "cholos",
+        "weight": 2.553604772485979
+      },
+      {
+        "term": "por quien",
+        "weight": 2.535127481975527
+      },
+      {
+        "term": "cerros",
+        "weight": 2.5307577562461967
+      },
+      {
+        "term": "muertos",
+        "weight": 2.521385340440223
+      },
+      {
+        "term": "la __",
+        "weight": 2.5025546551488054
+      },
+      {
+        "term": "no el",
+        "weight": 2.4967736304560413
+      },
+      {
+        "term": "un toro",
+        "weight": 2.4953411374916623
+      },
+      {
+        "term": "le preguntan",
+        "weight": 2.4918441172687316
+      },
+      {
+        "term": "negro",
+        "weight": 2.45793549496575
+      },
+      {
+        "term": "cobarde",
+        "weight": 2.4367910989819155
+      },
+      {
+        "term": "tibio",
+        "weight": 2.431274197586902
+      },
+      {
+        "term": "porky",
+        "weight": 2.4245529281065608
+      },
+      {
+        "term": "van",
+        "weight": 2.317342553084826
+      },
+      {
+        "term": "carmen",
+        "weight": 2.2960058561412127
+      },
+      {
+        "term": "mis danzas",
+        "weight": 2.2936072078913563
+      },
+      {
+        "term": "fran",
+        "weight": 2.292890039585375
+      },
+      {
+        "term": "simple",
+        "weight": 2.261700953380289
+      },
+      {
+        "term": "las mujeres",
+        "weight": 2.2421220828749755
+      },
+      {
+        "term": "usar",
+        "weight": 2.2309204339016775
+      },
+      {
+        "term": "senora aca",
+        "weight": 2.229012226606571
+      },
+      {
+        "term": "__ por",
+        "weight": 2.214639038260766
+      },
+      {
+        "term": "habil",
+        "weight": 2.1998504523067384
+      },
+      {
+        "term": "boliviana",
+        "weight": 2.1998195570889334
+      }
+    ],
+    "humor_encubridor": [
+      {
+        "term": "__",
+        "weight": 7.901411750551523
+      },
+      {
+        "term": "pene",
+        "weight": 7.887857687253099
+      },
+      {
+        "term": "gay",
+        "weight": 7.085135737619761
+      },
+      {
+        "term": "tetas",
+        "weight": 7.011827382304125
+      },
+      {
+        "term": "cholo",
+        "weight": 6.594974407676011
+      },
+      {
+        "term": "negro",
+        "weight": 6.153455131952927
+      },
+      {
+        "term": "mujer",
+        "weight": 5.664093790912686
+      },
+      {
+        "term": "homosexual",
+        "weight": 5.574214731538924
+      },
+      {
+        "term": "sexo",
+        "weight": 5.311567573789964
+      },
+      {
+        "term": "concha",
+        "weight": 5.16221764140651
+      },
+      {
+        "term": "cholos",
+        "weight": 4.8011720055085405
+      },
+      {
+        "term": "okay",
+        "weight": 4.7187377851639045
+      },
+      {
+        "term": "mujeres",
+        "weight": 4.661859670248275
+      },
+      {
+        "term": "culo",
+        "weight": 4.471625260533217
+      },
+      {
+        "term": "que rico",
+        "weight": 4.371460028039632
+      },
+      {
+        "term": "esclavo",
+        "weight": 4.357266552200599
+      },
+      {
+        "term": "cabro",
+        "weight": 4.221569184744401
+      },
+      {
+        "term": "miembro",
+        "weight": 4.189284978922339
+      },
+      {
+        "term": "huevon",
+        "weight": 4.176415513163788
+      },
+      {
+        "term": "marron",
+        "weight": 4.035464723615594
+      },
+      {
+        "term": "claro",
+        "weight": 3.9388997582175076
+      },
+      {
+        "term": "pobre",
+        "weight": 3.9315469369240055
+      },
+      {
+        "term": "su",
+        "weight": 3.6982208977867095
+      },
+      {
+        "term": "negra",
+        "weight": 3.6735144121821057
+      },
+      {
+        "term": "risa",
+        "weight": 3.583028261074825
+      },
+      {
+        "term": "chica",
+        "weight": 3.5210430761139224
+      },
+      {
+        "term": "hombre",
+        "weight": 3.4872341645145744
+      },
+      {
+        "term": "tu",
+        "weight": 3.434946841720888
+      },
+      {
+        "term": "senora",
+        "weight": 3.400970907842196
+      },
+      {
+        "term": "hon",
+        "weight": 3.3556467700140646
+      },
+      {
+        "term": "mano",
+        "weight": 3.34002574741267
+      },
+      {
+        "term": "prostitutas",
+        "weight": 3.3294238614844502
+      },
+      {
+        "term": "cholito",
+        "weight": 3.3158829340318032
+      },
+      {
+        "term": "son",
+        "weight": 3.291249247135469
+      },
+      {
+        "term": "pobres",
+        "weight": 3.289134837683711
+      },
+      {
+        "term": "chicas",
+        "weight": 3.2804377778257203
+      },
+      {
+        "term": "jorge",
+        "weight": 3.2664306056696457
+      },
+      {
+        "term": "huon",
+        "weight": 3.235266778879563
+      },
+      {
+        "term": "gordo",
+        "weight": 3.233807052831597
+      },
+      {
+        "term": "el culo",
+        "weight": 3.1818821443093936
+      },
+      {
+        "term": "el poto",
+        "weight": 3.18125087541836
+      },
+      {
+        "term": "esa",
+        "weight": 3.1812095720520737
+      },
+      {
+        "term": "mi mujer",
+        "weight": 3.1629716696529755
+      },
+      {
+        "term": "asi",
+        "weight": 3.144090223027438
+      },
+      {
+        "term": "fracasado",
+        "weight": 3.070068620955441
+      },
+      {
+        "term": "coreano",
+        "weight": 3.0606236925113985
+      },
+      {
+        "term": "basura",
+        "weight": 3.047914240162465
+      },
+      {
+        "term": "ahi",
+        "weight": 3.0020997119365016
+      },
+      {
+        "term": "danzas",
+        "weight": 2.991801922436894
+      },
+      {
+        "term": "cara",
+        "weight": 2.970497179765197
+      },
+      {
+        "term": "senora que",
+        "weight": 2.946076967681984
+      },
+      {
+        "term": "rico",
+        "weight": 2.879398595040738
+      },
+      {
+        "term": "enano",
+        "weight": 2.869262392223812
+      },
+      {
+        "term": "lesbiana",
+        "weight": 2.8403722755114127
+      },
+      {
+        "term": "las tetas",
+        "weight": 2.830739241909137
+      },
+      {
+        "term": "te",
+        "weight": 2.811718594785225
+      },
+      {
+        "term": "culito",
+        "weight": 2.762446463927749
+      },
+      {
+        "term": "no",
+        "weight": 2.742488394172418
+      },
+      {
+        "term": "marrones",
+        "weight": 2.723159892595692
+      },
+      {
+        "term": "le",
+        "weight": 2.719798540717275
+      },
+      {
+        "term": "el pene",
+        "weight": 2.6778831466723974
+      },
+      {
+        "term": "trabajan",
+        "weight": 2.677097320814436
+      },
+      {
+        "term": "te lo",
+        "weight": 2.666795886243405
+      },
+      {
+        "term": "la chica",
+        "weight": 2.6144912590452063
+      },
+      {
+        "term": "chola",
+        "weight": 2.6142787695851606
+      },
+      {
+        "term": "oy",
+        "weight": 2.605062305079239
+      },
+      {
+        "term": "bandida",
+        "weight": 2.592786394470154
+      },
+      {
+        "term": "mira la",
+        "weight": 2.582537369344934
+      },
+      {
+        "term": "bolivianos",
+        "weight": 2.561431450360138
+      },
+      {
+        "term": "debe",
+        "weight": 2.550218449477158
+      },
+      {
+        "term": "la sierra",
+        "weight": 2.542454067903423
+      },
+      {
+        "term": "triste",
+        "weight": 2.537994918902444
+      },
+      {
+        "term": "un trio",
+        "weight": 2.5249836254861084
+      },
+      {
+        "term": "afrodescendiente",
+        "weight": 2.5104330016379324
+      },
+      {
+        "term": "se la",
+        "weight": 2.502493553154619
+      },
+      {
+        "term": "marco",
+        "weight": 2.4986396813024103
+      },
+      {
+        "term": "perra",
+        "weight": 2.4973050113091677
+      },
+      {
+        "term": "__ que",
+        "weight": 2.4839245340352445
+      },
+      {
+        "term": "senoras",
+        "weight": 2.473076704439249
+      },
+      {
+        "term": "hombres",
+        "weight": 2.461327492541391
+      }
+    ],
+    "contexto_necesario": [
+      {
+        "term": "cholo",
+        "weight": 8.774956142410165
+      },
+      {
+        "term": "cholito",
+        "weight": 6.744082045908493
+      },
+      {
+        "term": "__",
+        "weight": 6.235858049319522
+      },
+      {
+        "term": "chino",
+        "weight": 4.471183521194013
+      },
+      {
+        "term": "flaca",
+        "weight": 4.373165575329078
+      },
+      {
+        "term": "gorro",
+        "weight": 3.9787319614095384
+      },
+      {
+        "term": "delincuente",
+        "weight": 3.788099511366414
+      },
+      {
+        "term": "monica",
+        "weight": 3.683831525100607
+      },
+      {
+        "term": "chica",
+        "weight": 3.5950714228411433
+      },
+      {
+        "term": "mano",
+        "weight": 3.5853936816905243
+      },
+      {
+        "term": "pendejas",
+        "weight": 3.4053744761953126
+      },
+      {
+        "term": "imbecil",
+        "weight": 3.3792179133648887
+      },
+      {
+        "term": "no",
+        "weight": 3.2520077285020172
+      },
+      {
+        "term": "tu",
+        "weight": 3.2490791351735724
+      },
+      {
+        "term": "cheneta",
+        "weight": 3.1600280871063573
+      },
+      {
+        "term": "la flaca",
+        "weight": 3.0836972359001296
+      },
+      {
+        "term": "alonso",
+        "weight": 3.0341904746020685
+      },
+      {
+        "term": "senora",
+        "weight": 3.0265597085786786
+      },
+      {
+        "term": "no soporto",
+        "weight": 2.95588573242296
+      },
+      {
+        "term": "raro",
+        "weight": 2.8997492821191324
+      },
+      {
+        "term": "era un",
+        "weight": 2.8477705538419507
+      },
+      {
+        "term": "ademas de",
+        "weight": 2.8209434197969077
+      },
+      {
+        "term": "marrones",
+        "weight": 2.80164474142052
+      },
+      {
+        "term": "serio",
+        "weight": 2.77307721313234
+      },
+      {
+        "term": "quien",
+        "weight": 2.766292267921953
+      },
+      {
+        "term": "ojo",
+        "weight": 2.7527724204603277
+      },
+      {
+        "term": "caballo",
+        "weight": 2.7479234445477343
+      },
+      {
+        "term": "senora que",
+        "weight": 2.714077745808324
+      },
+      {
+        "term": "chinos",
+        "weight": 2.706323238798528
+      },
+      {
+        "term": "peor",
+        "weight": 2.7011773937699717
+      },
+      {
+        "term": "cosa mas",
+        "weight": 2.6820639767631573
+      },
+      {
+        "term": "negro",
+        "weight": 2.673324667468567
+      },
+      {
+        "term": "los chinos",
+        "weight": 2.6600627218882513
+      },
+      {
+        "term": "ese",
+        "weight": 2.659507752128949
+      },
+      {
+        "term": "usted",
+        "weight": 2.6571253592725332
+      },
+      {
+        "term": "ella",
+        "weight": 2.628690348226392
+      },
+      {
+        "term": "sendero",
+        "weight": 2.6278086511058976
+      },
+      {
+        "term": "asi no",
+        "weight": 2.6189005937646628
+      },
+      {
+        "term": "chicas",
+        "weight": 2.611358534093922
+      },
+      {
+        "term": "aca",
+        "weight": 2.6076609484528492
+      },
+      {
+        "term": "ha traido",
+        "weight": 2.6068741563336157
+      },
+      {
+        "term": "soporto",
+        "weight": 2.5741025576845846
+      },
+      {
+        "term": "baja",
+        "weight": 2.5492576003545877
+      },
+      {
+        "term": "las mujeres",
+        "weight": 2.537441119315078
+      },
+      {
+        "term": "tu mama",
+        "weight": 2.527016403351495
+      },
+      {
+        "term": "vender",
+        "weight": 2.5225838219215406
+      },
+      {
+        "term": "pobre",
+        "weight": 2.50751261366927
+      },
+      {
+        "term": "to",
+        "weight": 2.505261258449076
+      },
+      {
+        "term": "madre",
+        "weight": 2.500592992165742
+      },
+      {
+        "term": "quien es",
+        "weight": 2.488677026775939
+      },
+      {
+        "term": "gay",
+        "weight": 2.487641156335277
+      },
+      {
+        "term": "mama no",
+        "weight": 2.4855444096491524
+      },
+      {
+        "term": "tu madre",
+        "weight": 2.478073775179661
+      },
+      {
+        "term": "fotos",
+        "weight": 2.4491966302265125
+      },
+      {
+        "term": "ahora pero",
+        "weight": 2.445305556191111
+      },
+      {
+        "term": "yo te",
+        "weight": 2.4353582927598545
+      },
+      {
+        "term": "__ __",
+        "weight": 2.431951628780258
+      },
+      {
+        "term": "tr",
+        "weight": 2.4307619975461425
+      },
+      {
+        "term": "el show",
+        "weight": 2.4087976692068294
+      },
+      {
+        "term": "mujeres",
+        "weight": 2.407561854110004
+      },
+      {
+        "term": "tercera",
+        "weight": 2.3840984352442667
+      },
+      {
+        "term": "violo",
+        "weight": 2.3809019802824487
+      },
+      {
+        "term": "seas",
+        "weight": 2.380518963671049
+      },
+      {
+        "term": "la chica",
+        "weight": 2.35694021003885
+      },
+      {
+        "term": "si ya",
+        "weight": 2.347997027894352
+      },
+      {
+        "term": "persona de",
+        "weight": 2.3370846560154157
+      },
+      {
+        "term": "coto",
+        "weight": 2.3230830713108417
+      },
+      {
+        "term": "contra",
+        "weight": 2.3192572926115798
+      },
+      {
+        "term": "esa",
+        "weight": 2.3055013105589226
+      },
+      {
+        "term": "__ bien",
+        "weight": 2.2997478225177788
+      },
+      {
+        "term": "consuelo",
+        "weight": 2.2983106200438486
+      },
+      {
+        "term": "vendiendo",
+        "weight": 2.296639616554072
+      },
+      {
+        "term": "cosa tienes",
+        "weight": 2.288620774539658
+      },
+      {
+        "term": "papa",
+        "weight": 2.284034271120115
+      },
+      {
+        "term": "papa no",
+        "weight": 2.274472783684595
+      },
+      {
+        "term": "drogas",
+        "weight": 2.272508636000516
+      },
+      {
+        "term": "encontre",
+        "weight": 2.2647628882844897
+      },
+      {
+        "term": "el mismo",
+        "weight": 2.2647302420991324
+      },
+      {
+        "term": "raro es",
+        "weight": 2.253121360133488
+      },
+      {
+        "term": "miss",
+        "weight": 2.2446878836274036
+      }
+    ]
+  },
+  "review_margin": 0.05
+}

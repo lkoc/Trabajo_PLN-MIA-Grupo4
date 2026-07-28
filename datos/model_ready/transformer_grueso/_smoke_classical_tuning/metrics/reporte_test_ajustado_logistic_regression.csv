@@ -1,0 +1,11 @@
+,precision,recall,f1-score,support
+SEGURO,1.0,1.0,1.0,4.0
+RACISMO_DISCRIMINACION,1.0,1.0,1.0,4.0
+ACOSO_GENERO_IDENTIDAD,1.0,1.0,1.0,4.0
+ACOSO_PERSONAL,1.0,1.0,1.0,4.0
+AMENAZA_DIRECTA,1.0,1.0,1.0,4.0
+CONTENIDO_SEXUAL,1.0,1.0,1.0,4.0
+micro avg,1.0,1.0,1.0,24.0
+macro avg,1.0,1.0,1.0,24.0
+weighted avg,1.0,1.0,1.0,24.0
+samples avg,1.0,1.0,1.0,24.0

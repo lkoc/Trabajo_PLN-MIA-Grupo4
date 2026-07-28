@@ -1,0 +1,5588 @@
+{
+  "batch_id": "ampliacion_amenaza_20260727_lote3",
+  "created_at": "2026-07-27T08:58:26-05:00",
+  "source_flash": "D:\\trabajo_PLN\\Trabajo_PLN-MIA-Grupo4\\datos\\ampliacion\\ampliacion_amenaza_20260727_lote3\\etiquetado\\deepseek-v4-flash.jsonl",
+  "source_flash_sha256": "ac9cdac4681309da9051f98997850f358ad739dfa7adb793f37fb06de7dc7fdf",
+  "rule": "Flash damage OR needs_review OR score_confianza < 0.90 OR 10% safe control",
+  "threshold": 0.9,
+  "safe_control_rate": 0.1,
+  "seed": 27072027,
+  "selected_rows": 921,
+  "reason_counts": {
+    "flash_damage": 383,
+    "flash_doubt": 420,
+    "safe_control": 501
+  },
+  "chunk_ids": [
+    "yo277La4DbM_0002",
+    "NEe_yi5dW4M_0004",
+    "NEe_yi5dW4M_0005",
+    "ERWK8uN8ZR0_0006",
+    "ERWK8uN8ZR0_0013",
+    "ERWK8uN8ZR0_0018",
+    "sisC_I_cqcg_0005",
+    "mg9y8E718Bg_0000",
+    "mg9y8E718Bg_0002",
+    "mg9y8E718Bg_0004",
+    "mg9y8E718Bg_0005",
+    "mg9y8E718Bg_0006",
+    "mg9y8E718Bg_0014",
+    "mg9y8E718Bg_0022",
+    "NVLDz9tAdqk_0000",
+    "NVLDz9tAdqk_0001",
+    "azkNr8IIZKc_0001",
+    "YsFuYBSyKGI_0000",
+    "YsFuYBSyKGI_0001",
+    "xcOPKsoTNVM_0001",
+    "xcOPKsoTNVM_0005",
+    "Uq_vtERca5U_0000",
+    "Uq_vtERca5U_0001",
+    "lNf_cXlejSs_0029",
+    "fvAKMm7rLOY_0000",
+    "qIOwk9CThOM_0001",
+    "7VgKdLl4ltw_0001",
+    "7VgKdLl4ltw_0006",
+    "bgBCrGB4ch8_0000",
+    "T0uQvSHZnHk_0001",
+    "T0uQvSHZnHk_0002",
+    "T0uQvSHZnHk_0003",
+    "-X9uwKpHgbo_0001",
+    "coRUW1DUydU_0001",
+    "coRUW1DUydU_0004",
+    "vgmmZ3cZLRE_0001",
+    "qdFu29V89t0_0000",
+    "EsjI6wmT6j4_0004",
+    "EsjI6wmT6j4_0005",
+    "EsjI6wmT6j4_0006",
+    "EsjI6wmT6j4_0007",
+    "EsjI6wmT6j4_0008",
+    "EsjI6wmT6j4_0009",
+    "_VSDgFmZ1-Y_0000",
+    "_VSDgFmZ1-Y_0005",
+    "_VSDgFmZ1-Y_0007",
+    "_VSDgFmZ1-Y_0018",
+    "1Ac0iLAycIg_0003",
+    "1Ac0iLAycIg_0004",
+    "1Ac0iLAycIg_0005",
+    "1Ac0iLAycIg_0006",
+    "1Ac0iLAycIg_0009",
+    "1Ac0iLAycIg_0011",
+    "1Ac0iLAycIg_0020",
+    "Pq-RzG0h2wk_0000",
+    "Pq-RzG0h2wk_0003",
+    "1N35AwwowOY_0006",
+    "1N35AwwowOY_0011",
+    "1N35AwwowOY_0016",
+    "1N35AwwowOY_0019",
+    "X41nVaiyNRk_0003",
+    "X41nVaiyNRk_0015",
+    "X41nVaiyNRk_0036",
+    "X41nVaiyNRk_0038",
+    "X41nVaiyNRk_0042",
+    "4_tqECkJElU_0000",
+    "4_tqECkJElU_0001",
+    "4_tqECkJElU_0002",
+    "4_tqECkJElU_0003",
+    "4_tqECkJElU_0004",
+    "4_tqECkJElU_0005",
+    "4_tqECkJElU_0006",
+    "4_tqECkJElU_0007",
+    "wSRa8smkCYI_0013",
+    "wSRa8smkCYI_0014",
+    "EK6VgEZPGkU_0000",
+    "h7qCDmC4KR0_0008",
+    "h7qCDmC4KR0_0009",
+    "h7qCDmC4KR0_0010",
+    "h7qCDmC4KR0_0011",
+    "h7qCDmC4KR0_0012",
+    "h7qCDmC4KR0_0015",
+    "ql3AsY38UOg_0003",
+    "ql3AsY38UOg_0004",
+    "ql3AsY38UOg_0011",
+    "ql3AsY38UOg_0012",
+    "ql3AsY38UOg_0018",
+    "ql3AsY38UOg_0020",
+    "ql3AsY38UOg_0022",
+    "3nJ4ttSsgRc_0000",
+    "3nJ4ttSsgRc_0001",
+    "3nJ4ttSsgRc_0002",
+    "3nJ4ttSsgRc_0003",
+    "3nJ4ttSsgRc_0006",
+    "3nJ4ttSsgRc_0012",
+    "3nJ4ttSsgRc_0013",
+    "DpI-yCM5mfU_0000",
+    "I48H0HPwZL4_0002",
+    "I48H0HPwZL4_0016",
+    "I48H0HPwZL4_0019",
+    "I48H0HPwZL4_0022",
+    "I48H0HPwZL4_0023",
+    "I48H0HPwZL4_0024",
+    "I48H0HPwZL4_0053",
+    "I48H0HPwZL4_0054",
+    "I48H0HPwZL4_0055",
+    "I48H0HPwZL4_0060",
+    "I48H0HPwZL4_0063",
+    "I48H0HPwZL4_0065",
+    "I48H0HPwZL4_0084",
+    "I48H0HPwZL4_0091",
+    "I48H0HPwZL4_0092",
+    "I48H0HPwZL4_0101",
+    "I48H0HPwZL4_0103",
+    "I48H0HPwZL4_0116",
+    "I48H0HPwZL4_0122",
+    "I48H0HPwZL4_0131",
+    "I48H0HPwZL4_0153",
+    "I48H0HPwZL4_0158",
+    "I48H0HPwZL4_0169",
+    "I48H0HPwZL4_0171",
+    "I48H0HPwZL4_0206",
+    "I48H0HPwZL4_0213",
+    "I48H0HPwZL4_0228",
+    "I48H0HPwZL4_0232",
+    "I48H0HPwZL4_0233",
+    "I48H0HPwZL4_0234",
+    "I48H0HPwZL4_0238",
+    "I48H0HPwZL4_0239",
+    "I48H0HPwZL4_0240",
+    "I48H0HPwZL4_0250",
+    "I48H0HPwZL4_0253",
+    "I48H0HPwZL4_0261",
+    "I48H0HPwZL4_0270",
+    "I48H0HPwZL4_0277",
+    "I48H0HPwZL4_0278",
+    "I48H0HPwZL4_0282",
+    "I48H0HPwZL4_0284",
+    "I48H0HPwZL4_0288",
+    "I48H0HPwZL4_0290",
+    "I48H0HPwZL4_0307",
+    "I48H0HPwZL4_0322",
+    "I48H0HPwZL4_0327",
+    "I48H0HPwZL4_0328",
+    "I48H0HPwZL4_0329",
+    "I48H0HPwZL4_0330",
+    "I48H0HPwZL4_0335",
+    "I48H0HPwZL4_0340",
+    "I48H0HPwZL4_0341",
+    "I48H0HPwZL4_0364",
+    "I48H0HPwZL4_0378",
+    "I48H0HPwZL4_0386",
+    "OrGklUYCfzs_0006",
+    "OrGklUYCfzs_0007",
+    "JdKhuWR8G0Y_0000",
+    "OPdCOsVJzPk_0014",
+    "OPdCOsVJzPk_0016",
+    "OPdCOsVJzPk_0031",
+    "4vWZQeju-fM_0004",
+    "3pX38dsmddg_0003",
+    "3pX38dsmddg_0004",
+    "3pX38dsmddg_0005",
+    "3pX38dsmddg_0006",
+    "3pX38dsmddg_0007",
+    "3pX38dsmddg_0008",
+    "3pX38dsmddg_0010",
+    "3pX38dsmddg_0011",
+    "5ejmlFa4eZM_0000",
+    "RhZovhPG_FE_0009",
+    "p5D697a7d60_0000",
+    "p5D697a7d60_0001",
+    "p5D697a7d60_0002",
+    "p5D697a7d60_0003",
+    "p5D697a7d60_0005",
+    "p5D697a7d60_0006",
+    "p5D697a7d60_0011",
+    "TdpWdpKrcIY_0004",
+    "TdpWdpKrcIY_0011",
+    "7X-RDinoCLs_0008",
+    "7X-RDinoCLs_0015",
+    "7X-RDinoCLs_0018",
+    "w1xzhy7hLyU_0000",
+    "w1xzhy7hLyU_0001",
+    "w1xzhy7hLyU_0002",
+    "7zASdiUlFjs_0002",
+    "7zASdiUlFjs_0007",
+    "7zASdiUlFjs_0008",
+    "7zASdiUlFjs_0009",
+    "7zASdiUlFjs_0010",
+    "7zASdiUlFjs_0011",
+    "7zASdiUlFjs_0014",
+    "W9x8NnSTREA_0021",
+    "W9x8NnSTREA_0026",
+    "W9x8NnSTREA_0030",
+    "W9x8NnSTREA_0070",
+    "W9x8NnSTREA_0080",
+    "W9x8NnSTREA_0081",
+    "W9x8NnSTREA_0083",
+    "I8pjVrwlf1U_0003",
+    "I8pjVrwlf1U_0004",
+    "I8pjVrwlf1U_0005",
+    "I8pjVrwlf1U_0006",
+    "I8pjVrwlf1U_0007",
+    "I8pjVrwlf1U_0010",
+    "I8pjVrwlf1U_0012",
+    "I8pjVrwlf1U_0016",
+    "k_liErERBHo_0002",
+    "k_liErERBHo_0004",
+    "k_liErERBHo_0007",
+    "XtiMVXc6ZO0_0004",
+    "XtiMVXc6ZO0_0005",
+    "iviwaxCzso8_0006",
+    "iviwaxCzso8_0012",
+    "iviwaxCzso8_0015",
+    "iviwaxCzso8_0021",
+    "rQ_c3naspj4_0000",
+    "C4uIaQgpXR4_0000",
+    "vIg7rgHBm54_0011",
+    "vIg7rgHBm54_0019",
+    "K3mn7LIwR1I_0000",
+    "K3mn7LIwR1I_0002",
+    "K3mn7LIwR1I_0003",
+    "dbMP0-bTWZI_0000",
+    "dbMP0-bTWZI_0002",
+    "dbMP0-bTWZI_0013",
+    "dbMP0-bTWZI_0019",
+    "dbMP0-bTWZI_0037",
+    "dbMP0-bTWZI_0045",
+    "bu_F2K__61E_0000",
+    "bu_F2K__61E_0001",
+    "bu_F2K__61E_0002",
+    "bu_F2K__61E_0003",
+    "bu_F2K__61E_0008",
+    "bu_F2K__61E_0009",
+    "bu_F2K__61E_0010",
+    "bu_F2K__61E_0011",
+    "YLrLehuEgxs_0002",
+    "YLrLehuEgxs_0004",
+    "YLrLehuEgxs_0020",
+    "YLrLehuEgxs_0024",
+    "8D0fKSsYFTM_0001",
+    "Eo7gO3nAvRE_0004",
+    "OV2OzKsuhx0_0008",
+    "OV2OzKsuhx0_0011",
+    "OV2OzKsuhx0_0019",
+    "VuTOnLPSDVc_0003",
+    "VuTOnLPSDVc_0004",
+    "VuTOnLPSDVc_0007",
+    "VuTOnLPSDVc_0010",
+    "ZhiCbww0ObY_0011",
+    "ZhiCbww0ObY_0017",
+    "ZhiCbww0ObY_0023",
+    "ZhiCbww0ObY_0024",
+    "ZhiCbww0ObY_0028",
+    "CpHd3KiFwe0_0011",
+    "CpHd3KiFwe0_0015",
+    "5s6kDUaAHBU_0001",
+    "5s6kDUaAHBU_0002",
+    "5s6kDUaAHBU_0003",
+    "5s6kDUaAHBU_0004",
+    "5s6kDUaAHBU_0008",
+    "5s6kDUaAHBU_0009",
+    "5s6kDUaAHBU_0010",
+    "5s6kDUaAHBU_0012",
+    "bMbqaV66HHw_0003",
+    "bMbqaV66HHw_0005",
+    "XPwqyxMTtN0_0014",
+    "XPwqyxMTtN0_0030",
+    "XPwqyxMTtN0_0035",
+    "XPwqyxMTtN0_0048",
+    "XPwqyxMTtN0_0074",
+    "XPwqyxMTtN0_0080",
+    "XPwqyxMTtN0_0082",
+    "XPwqyxMTtN0_0090",
+    "XPwqyxMTtN0_0096",
+    "XPwqyxMTtN0_0099",
+    "XPwqyxMTtN0_0101",
+    "XPwqyxMTtN0_0113",
+    "XPwqyxMTtN0_0130",
+    "XPwqyxMTtN0_0140",
+    "XPwqyxMTtN0_0143",
+    "XPwqyxMTtN0_0149",
+    "XPwqyxMTtN0_0150",
+    "XPwqyxMTtN0_0153",
+    "XPwqyxMTtN0_0164",
+    "XPwqyxMTtN0_0168",
+    "XPwqyxMTtN0_0169",
+    "XPwqyxMTtN0_0201",
+    "XPwqyxMTtN0_0212",
+    "XPwqyxMTtN0_0218",
+    "XPwqyxMTtN0_0230",
+    "XPwqyxMTtN0_0232",
+    "XPwqyxMTtN0_0239",
+    "XPwqyxMTtN0_0263",
+    "XPwqyxMTtN0_0277",
+    "XPwqyxMTtN0_0290",
+    "XPwqyxMTtN0_0309",
+    "XPwqyxMTtN0_0322",
+    "XPwqyxMTtN0_0335",
+    "XPwqyxMTtN0_0350",
+    "XPwqyxMTtN0_0365",
+    "n16xHHI9AQw_0000",
+    "n16xHHI9AQw_0001",
+    "n16xHHI9AQw_0004",
+    "n16xHHI9AQw_0010",
+    "n16xHHI9AQw_0011",
+    "gvttjLwvy50_0009",
+    "Qf4lBxpiVNA_0002",
+    "xCZrulqdajo_0013",
+    "ufYRqVozg0c_0008",
+    "CA354z_oxfw_0012",
+    "CA354z_oxfw_0013",
+    "CA354z_oxfw_0023",
+    "CA354z_oxfw_0024",
+    "fzhMPg9cQMg_0002",
+    "M0bixA-eM68_0006",
+    "EgKTydo2I9w_0000",
+    "EgKTydo2I9w_0007",
+    "1AJ8UzFMICw_0001",
+    "3UsDPNFl3Zw_0000",
+    "Hoaep5rjIe0_0003",
+    "Aoy3DP_UZZA_0008",
+    "Aoy3DP_UZZA_0009",
+    "iqgX51kD3iI_0002",
+    "wK2pN18wOj8_0003",
+    "wK2pN18wOj8_0004",
+    "h6qvbFtyit4_0003",
+    "jzC0VDYQfnU_0000",
+    "jzC0VDYQfnU_0015",
+    "jzC0VDYQfnU_0016",
+    "jzC0VDYQfnU_0020",
+    "PLZVh-CAXIo_0000",
+    "PLZVh-CAXIo_0001",
+    "PLZVh-CAXIo_0002",
+    "Q7kXOjKpiwc_0002",
+    "zZEucIc0Rh8_0000",
+    "zZEucIc0Rh8_0001",
+    "zZEucIc0Rh8_0002",
+    "zZEucIc0Rh8_0003",
+    "zZEucIc0Rh8_0004",
+    "zZEucIc0Rh8_0005",
+    "rt7NAoFEi7g_0000",
+    "MSHxppLJsW0_0010",
+    "fNxaNvTRfhk_0008",
+    "JUCkC1wasvQ_0000",
+    "JUCkC1wasvQ_0003",
+    "JUCkC1wasvQ_0004",
+    "YuvuYN2Y0y4_0012",
+    "YuvuYN2Y0y4_0013",
+    "tM4wUpnabRs_0000",
+    "UfjJa-f1iZc_0012",
+    "Oxhs36TjlDo_0017",
+    "Oxhs36TjlDo_0018",
+    "Oxhs36TjlDo_0030",
+    "lxNY7_rAcn8_0000",
+    "lxNY7_rAcn8_0001",
+    "lxNY7_rAcn8_0002",
+    "lxNY7_rAcn8_0013",
+    "lxNY7_rAcn8_0027",
+    "lxNY7_rAcn8_0028",
+    "lxNY7_rAcn8_0029",
+    "lxNY7_rAcn8_0030",
+    "lxNY7_rAcn8_0031",
+    "lxNY7_rAcn8_0032",
+    "lxNY7_rAcn8_0034",
+    "6i7UmykjUhw_0004",
+    "pPOPgdWtV2k_0000",
+    "pPOPgdWtV2k_0006",
+    "pPOPgdWtV2k_0008",
+    "pPOPgdWtV2k_0010",
+    "pPOPgdWtV2k_0015",
+    "pPOPgdWtV2k_0020",
+    "pPOPgdWtV2k_0025",
+    "pPOPgdWtV2k_0029",
+    "pPOPgdWtV2k_0030",
+    "MxJoqnaKj-8_0005",
+    "MxJoqnaKj-8_0006",
+    "thyqrKr9HR4_0003",
+    "thyqrKr9HR4_0009",
+    "thyqrKr9HR4_0020",
+    "thyqrKr9HR4_0031",
+    "thyqrKr9HR4_0034",
+    "3NKVn-C33e4_0006",
+    "3NKVn-C33e4_0014",
+    "6UMSpPadM5o_0000",
+    "6UMSpPadM5o_0001",
+    "6UMSpPadM5o_0003",
+    "6UMSpPadM5o_0013",
+    "6UMSpPadM5o_0022",
+    "6UMSpPadM5o_0026",
+    "SxGp35IpRC0_0001",
+    "SxGp35IpRC0_0002",
+    "SxGp35IpRC0_0003",
+    "SxGp35IpRC0_0023",
+    "SxGp35IpRC0_0024",
+    "SxGp35IpRC0_0027",
+    "SxGp35IpRC0_0028",
+    "SxGp35IpRC0_0030",
+    "SxGp35IpRC0_0031",
+    "SxGp35IpRC0_0032",
+    "SxGp35IpRC0_0033",
+    "sQo-Tp6Xq-0_0012",
+    "sQo-Tp6Xq-0_0018",
+    "BTHrwmn4XOM_0006",
+    "BTHrwmn4XOM_0025",
+    "BTHrwmn4XOM_0032",
+    "13BeeMFU5Ng_0002",
+    "HL6n7oZHIfs_0002",
+    "yYvGBCCis6E_0015",
+    "yYvGBCCis6E_0016",
+    "yYvGBCCis6E_0028",
+    "yYvGBCCis6E_0035",
+    "yYvGBCCis6E_0048",
+    "yYvGBCCis6E_0089",
+    "Pxpd50iPpZw_0002",
+    "UG0mFTzKZ8E_0000",
+    "UG0mFTzKZ8E_0002",
+    "fFOxvLe2BMU_0000",
+    "fFOxvLe2BMU_0001",
+    "fFOxvLe2BMU_0003",
+    "fFOxvLe2BMU_0004",
+    "CO-hN-mgb5s_0004",
+    "CO-hN-mgb5s_0005",
+    "CO-hN-mgb5s_0006",
+    "CO-hN-mgb5s_0007",
+    "CO-hN-mgb5s_0008",
+    "CO-hN-mgb5s_0009",
+    "CO-hN-mgb5s_0010",
+    "CO-hN-mgb5s_0011",
+    "CO-hN-mgb5s_0012",
+    "CO-hN-mgb5s_0013",
+    "CO-hN-mgb5s_0014",
+    "COrCKqhy0DQ_0007",
+    "COrCKqhy0DQ_0014",
+    "COrCKqhy0DQ_0019",
+    "COrCKqhy0DQ_0021",
+    "48XfkBxSu_U_0004",
+    "48XfkBxSu_U_0007",
+    "48XfkBxSu_U_0010",
+    "XAsfq8Jr78k_0002",
+    "iLkuMDjVLH0_0001",
+    "iLkuMDjVLH0_0006",
+    "iLkuMDjVLH0_0008",
+    "guN0BZzKq2Y_0013",
+    "08M15vWd0YA_0005",
+    "d1xiaAYT0qs_0002",
+    "d1xiaAYT0qs_0003",
+    "PpXRfyP46hQ_0000",
+    "PpXRfyP46hQ_0001",
+    "PpXRfyP46hQ_0003",
+    "PpXRfyP46hQ_0007",
+    "PpXRfyP46hQ_0009",
+    "PpXRfyP46hQ_0029",
+    "6d9lQ4hnyA0_0002",
+    "6d9lQ4hnyA0_0003",
+    "0Xg8-d7zJz8_0011",
+    "0Xg8-d7zJz8_0014",
+    "0Xg8-d7zJz8_0017",
+    "OtVrZTm01c8_0008",
+    "OtVrZTm01c8_0009",
+    "OtVrZTm01c8_0014",
+    "OtVrZTm01c8_0021",
+    "ctdTa6-fmIk_0015",
+    "7reemmYZqCo_0000",
+    "7reemmYZqCo_0001",
+    "7reemmYZqCo_0002",
+    "7reemmYZqCo_0003",
+    "7reemmYZqCo_0004",
+    "7reemmYZqCo_0005",
+    "7reemmYZqCo_0006",
+    "utWtuP55kXQ_0000",
+    "utWtuP55kXQ_0008",
+    "utWtuP55kXQ_0009",
+    "e5pNX4bUvQM_0000",
+    "e5pNX4bUvQM_0004",
+    "9bX-lnpHeMY_0004",
+    "kiO_qzU72Zs_0001",
+    "I-aL_qhub10_0001",
+    "I-aL_qhub10_0004",
+    "HhdnnybXabY_0003",
+    "nuyb6gblbIk_0003",
+    "nuyb6gblbIk_0004",
+    "nuyb6gblbIk_0005",
+    "nuyb6gblbIk_0006",
+    "nuyb6gblbIk_0007",
+    "nuyb6gblbIk_0008",
+    "K0uVL5tL6Qc_0006",
+    "K0uVL5tL6Qc_0014",
+    "K0uVL5tL6Qc_0018",
+    "b-aCrfjgwHs_0004",
+    "b-aCrfjgwHs_0006",
+    "b-aCrfjgwHs_0007",
+    "6SFa3DJ-12Q_0002",
+    "6SFa3DJ-12Q_0004",
+    "mu80ykCUnTI_0000",
+    "E3To8DP_Vyo_0007",
+    "E3To8DP_Vyo_0008",
+    "E3To8DP_Vyo_0009",
+    "BZ9r1QPcZkQ_0004",
+    "rW4-oonQrbk_0000",
+    "rW4-oonQrbk_0001",
+    "-Jt08NnztQE_0002",
+    "-Jt08NnztQE_0011",
+    "-Jt08NnztQE_0012",
+    "-Jt08NnztQE_0023",
+    "66DiM5eHSxk_0002",
+    "8w7HByrBDlY_0000",
+    "8w7HByrBDlY_0003",
+    "X9uDA_7cRbg_0001",
+    "TLcasZoaUfY_0001",
+    "zaxxSxCw8IE_0000",
+    "zaxxSxCw8IE_0001",
+    "zaxxSxCw8IE_0002",
+    "KSxbxnNPhp0_0005",
+    "3HT4dJE99J0_0000",
+    "3HT4dJE99J0_0001",
+    "3HT4dJE99J0_0002",
+    "EapX-IQ891Y_0001",
+    "EapX-IQ891Y_0002",
+    "EapX-IQ891Y_0007",
+    "EapX-IQ891Y_0022",
+    "EapX-IQ891Y_0030",
+    "QOK1K_FJqdg_0001",
+    "QOK1K_FJqdg_0004",
+    "FO0NK90Ol64_0000",
+    "FO0NK90Ol64_0002",
+    "Qa_L0frq7yk_0007",
+    "Qa_L0frq7yk_0008",
+    "Qa_L0frq7yk_0012",
+    "Qa_L0frq7yk_0013",
+    "Qa_L0frq7yk_0014",
+    "Qa_L0frq7yk_0015",
+    "Qa_L0frq7yk_0024",
+    "Qa_L0frq7yk_0025",
+    "Qa_L0frq7yk_0027",
+    "Qa_L0frq7yk_0028",
+    "Qa_L0frq7yk_0029",
+    "Qa_L0frq7yk_0030",
+    "Qa_L0frq7yk_0031",
+    "Qa_L0frq7yk_0038",
+    "Qa_L0frq7yk_0039",
+    "Qa_L0frq7yk_0043",
+    "Qa_L0frq7yk_0044",
+    "Qa_L0frq7yk_0046",
+    "Qa_L0frq7yk_0050",
+    "Qa_L0frq7yk_0053",
+    "Qa_L0frq7yk_0062",
+    "Qa_L0frq7yk_0063",
+    "Qa_L0frq7yk_0064",
+    "Qa_L0frq7yk_0065",
+    "Qa_L0frq7yk_0066",
+    "Qa_L0frq7yk_0068",
+    "Qa_L0frq7yk_0069",
+    "Qa_L0frq7yk_0071",
+    "Qa_L0frq7yk_0075",
+    "Qa_L0frq7yk_0077",
+    "Qa_L0frq7yk_0086",
+    "Qa_L0frq7yk_0087",
+    "Qa_L0frq7yk_0088",
+    "Qa_L0frq7yk_0089",
+    "Qa_L0frq7yk_0090",
+    "Qa_L0frq7yk_0091",
+    "Qa_L0frq7yk_0092",
+    "Qa_L0frq7yk_0093",
+    "Qa_L0frq7yk_0094",
+    "Qa_L0frq7yk_0095",
+    "Qa_L0frq7yk_0096",
+    "Qa_L0frq7yk_0101",
+    "Qa_L0frq7yk_0105",
+    "5ifqblqdcXk_0005",
+    "5ifqblqdcXk_0009",
+    "HuEilh65bv0_0000",
+    "HuEilh65bv0_0008",
+    "b5sFGyfbuHQ_0006",
+    "b5sFGyfbuHQ_0007",
+    "b5sFGyfbuHQ_0011",
+    "b5sFGyfbuHQ_0012",
+    "b5sFGyfbuHQ_0021",
+    "W_Fa1AhS-n8_0011",
+    "EtN7wDzrw1I_0004",
+    "EtN7wDzrw1I_0018",
+    "EtN7wDzrw1I_0023",
+    "HX7NNpwWKMo_0000",
+    "HX7NNpwWKMo_0001",
+    "aYpisVffvXY_0005",
+    "By2PXf7Un0Y_0000",
+    "w-occQm_DbA_0027",
+    "j-i9IqDV-7w_0007",
+    "j-i9IqDV-7w_0012",
+    "QClUtgwfKyo_0000",
+    "40nvp81QsXY_0004",
+    "40nvp81QsXY_0019",
+    "40nvp81QsXY_0023",
+    "OIElj2X0qT0_0001",
+    "OIElj2X0qT0_0011",
+    "OIElj2X0qT0_0019",
+    "OIElj2X0qT0_0064",
+    "OIElj2X0qT0_0066",
+    "OIElj2X0qT0_0070",
+    "OIElj2X0qT0_0071",
+    "OIElj2X0qT0_0072",
+    "OIElj2X0qT0_0074",
+    "OIElj2X0qT0_0076",
+    "OIElj2X0qT0_0077",
+    "OIElj2X0qT0_0078",
+    "OIElj2X0qT0_0105",
+    "OIElj2X0qT0_0113",
+    "OIElj2X0qT0_0117",
+    "OIElj2X0qT0_0118",
+    "OIElj2X0qT0_0119",
+    "OIElj2X0qT0_0121",
+    "H7D7m3PrNaU_0002",
+    "H7D7m3PrNaU_0020",
+    "H7D7m3PrNaU_0025",
+    "H7D7m3PrNaU_0026",
+    "H7D7m3PrNaU_0028",
+    "QkeYKwRsJMM_0004",
+    "nsnZzJXry7s_0000",
+    "nsnZzJXry7s_0001",
+    "gyGmq8nX_qM_0006",
+    "gyGmq8nX_qM_0014",
+    "SSAFpBwMnvY_0002",
+    "SSAFpBwMnvY_0008",
+    "su8i8FN0V-8_0009",
+    "sqBPb3b3VI0_0000",
+    "b685x_JlL2w_0002",
+    "IaR_5fcW90s_0002",
+    "R1NjyhWZUC8_0000",
+    "R1NjyhWZUC8_0012",
+    "R1NjyhWZUC8_0028",
+    "h8zgWAV8CJY_0004",
+    "Zxhr2cRCJI0_0002",
+    "Zxhr2cRCJI0_0004",
+    "1-U7B7-bXwk_0000",
+    "1-U7B7-bXwk_0002",
+    "1-U7B7-bXwk_0003",
+    "jzmGF6vvv0Q_0000",
+    "jzmGF6vvv0Q_0001",
+    "jzmGF6vvv0Q_0002",
+    "jzmGF6vvv0Q_0008",
+    "Iq07BDyNRQ0_0006",
+    "iIC9zyHrkkA_0014",
+    "e4G_i3zmrPk_0002",
+    "e4G_i3zmrPk_0004",
+    "e4G_i3zmrPk_0006",
+    "e4G_i3zmrPk_0009",
+    "e4G_i3zmrPk_0010",
+    "e4G_i3zmrPk_0030",
+    "e4G_i3zmrPk_0031",
+    "e4G_i3zmrPk_0036",
+    "xWFNGqnWh-s_0000",
+    "xWFNGqnWh-s_0001",
+    "XpPR1-T2D8I_0001",
+    "ep0l5AKyl-Q_0000",
+    "ep0l5AKyl-Q_0001",
+    "ep0l5AKyl-Q_0002",
+    "ep0l5AKyl-Q_0003",
+    "ep0l5AKyl-Q_0004",
+    "ep0l5AKyl-Q_0006",
+    "ep0l5AKyl-Q_0007",
+    "cwkHgZJAlfM_0000",
+    "WuHYso49bD8_0004",
+    "WuHYso49bD8_0012",
+    "WuHYso49bD8_0014",
+    "jY_gAnunI-U_0004",
+    "aEUnj7q6MCc_0000",
+    "aEUnj7q6MCc_0004",
+    "aEUnj7q6MCc_0023",
+    "aEUnj7q6MCc_0025",
+    "aEUnj7q6MCc_0027",
+    "aEUnj7q6MCc_0030",
+    "aEUnj7q6MCc_0039",
+    "aEUnj7q6MCc_0041",
+    "aEUnj7q6MCc_0045",
+    "aEUnj7q6MCc_0051",
+    "aEUnj7q6MCc_0052",
+    "aEUnj7q6MCc_0055",
+    "aEUnj7q6MCc_0056",
+    "aEUnj7q6MCc_0057",
+    "aEUnj7q6MCc_0063",
+    "aEUnj7q6MCc_0080",
+    "aEUnj7q6MCc_0083",
+    "aEUnj7q6MCc_0087",
+    "aEUnj7q6MCc_0090",
+    "aEUnj7q6MCc_0094",
+    "aEUnj7q6MCc_0096",
+    "aEUnj7q6MCc_0098",
+    "aEUnj7q6MCc_0106",
+    "aEUnj7q6MCc_0107",
+    "aEUnj7q6MCc_0108",
+    "aEUnj7q6MCc_0110",
+    "aEUnj7q6MCc_0116",
+    "aEUnj7q6MCc_0123",
+    "aEUnj7q6MCc_0131",
+    "aEUnj7q6MCc_0132",
+    "aEUnj7q6MCc_0133",
+    "aEUnj7q6MCc_0134",
+    "aEUnj7q6MCc_0136",
+    "aEUnj7q6MCc_0138",
+    "oaUWtVUKuDQ_0000",
+    "5AdRfOm-s7E_0001",
+    "uBLs_UIpqcU_0001",
+    "nkNqLF6t65o_0001",
+    "nkNqLF6t65o_0005",
+    "nkNqLF6t65o_0011",
+    "nkNqLF6t65o_0016",
+    "24llifLHPvo_0004",
+    "24llifLHPvo_0005",
+    "24llifLHPvo_0006",
+    "1Yi-GfVQmcg_0001",
+    "1Yi-GfVQmcg_0002",
+    "1Yi-GfVQmcg_0011",
+    "1Yi-GfVQmcg_0015",
+    "fUxJzRXhjy0_0000",
+    "fUxJzRXhjy0_0001",
+    "fUxJzRXhjy0_0002",
+    "fUxJzRXhjy0_0003",
+    "fUxJzRXhjy0_0005",
+    "fUxJzRXhjy0_0014",
+    "fUxJzRXhjy0_0016",
+    "lYLY_Wfso1c_0000",
+    "N4dFYidG_kM_0000",
+    "N4dFYidG_kM_0001",
+    "N4dFYidG_kM_0004",
+    "N4dFYidG_kM_0005",
+    "N4dFYidG_kM_0010",
+    "N4dFYidG_kM_0011",
+    "N4dFYidG_kM_0012",
+    "N4dFYidG_kM_0013",
+    "N4dFYidG_kM_0014",
+    "N4dFYidG_kM_0015",
+    "9clJdcGqPSg_0000",
+    "9clJdcGqPSg_0001",
+    "Veo-N73hXcI_0000",
+    "Veo-N73hXcI_0011",
+    "Veo-N73hXcI_0014",
+    "Veo-N73hXcI_0020",
+    "e8pC7qRF958_0001",
+    "CFyWlDe8B9U_0000",
+    "QxXbMCgh2rk_0008",
+    "QxXbMCgh2rk_0010",
+    "QxXbMCgh2rk_0011",
+    "QxXbMCgh2rk_0017",
+    "dtyxW-T9W4I_0005",
+    "PbUymf8V7uc_0000",
+    "3UqCA918u-s_0001",
+    "3UqCA918u-s_0002",
+    "UtBCgbmV7Yg_0000",
+    "UtBCgbmV7Yg_0001",
+    "UtBCgbmV7Yg_0002",
+    "UtBCgbmV7Yg_0003",
+    "cotHykvHGz0_0004",
+    "G0ifY6r-Sak_0000",
+    "G0ifY6r-Sak_0001",
+    "G0ifY6r-Sak_0002",
+    "G0ifY6r-Sak_0003",
+    "G0ifY6r-Sak_0005",
+    "okHxwKGISxM_0000",
+    "okHxwKGISxM_0002",
+    "okHxwKGISxM_0007",
+    "okHxwKGISxM_0019",
+    "Vn1XMQX_HTY_0004",
+    "Vn1XMQX_HTY_0005",
+    "Vn1XMQX_HTY_0006",
+    "Vn1XMQX_HTY_0007",
+    "Vn1XMQX_HTY_0008",
+    "Vn1XMQX_HTY_0012",
+    "Vn1XMQX_HTY_0013",
+    "Vn1XMQX_HTY_0015",
+    "Vn1XMQX_HTY_0016",
+    "Vn1XMQX_HTY_0021",
+    "mTLmFx4SyH8_0001",
+    "mTLmFx4SyH8_0002",
+    "X0R9xFS7bHo_0000",
+    "X0R9xFS7bHo_0002",
+    "GmbdbzyOY1k_0000",
+    "GmbdbzyOY1k_0001",
+    "9GyAYScUyBU_0004",
+    "9GyAYScUyBU_0019",
+    "1Inc-4b45nQ_0000",
+    "1Inc-4b45nQ_0001",
+    "1Inc-4b45nQ_0002",
+    "1Inc-4b45nQ_0003",
+    "1Inc-4b45nQ_0004",
+    "1Inc-4b45nQ_0005",
+    "1Inc-4b45nQ_0006",
+    "1Inc-4b45nQ_0007",
+    "1Inc-4b45nQ_0008",
+    "1Inc-4b45nQ_0009",
+    "1Inc-4b45nQ_0010",
+    "1Inc-4b45nQ_0011",
+    "1Inc-4b45nQ_0012",
+    "1Inc-4b45nQ_0013",
+    "HAxMalCqHoo_0000",
+    "HAxMalCqHoo_0001",
+    "HAxMalCqHoo_0005",
+    "XdXM0pKrIZI_0001",
+    "Dn0kVNAelqI_0013",
+    "Dn0kVNAelqI_0020",
+    "-TrvMIWJTYc_0001",
+    "-TrvMIWJTYc_0002",
+    "-TrvMIWJTYc_0007",
+    "-TrvMIWJTYc_0009",
+    "-TrvMIWJTYc_0011",
+    "-TrvMIWJTYc_0013",
+    "hvdbNxOerMQ_0000",
+    "hvdbNxOerMQ_0001",
+    "hvdbNxOerMQ_0003",
+    "hvdbNxOerMQ_0004",
+    "hvdbNxOerMQ_0005",
+    "hvdbNxOerMQ_0006",
+    "hvdbNxOerMQ_0007",
+    "I_g77i1E-s8_0000",
+    "I_g77i1E-s8_0002",
+    "I_g77i1E-s8_0003",
+    "I_g77i1E-s8_0004",
+    "I_g77i1E-s8_0005",
+    "I_g77i1E-s8_0006",
+    "xr8Mu0v4n4E_0015",
+    "xr8Mu0v4n4E_0017",
+    "xr8Mu0v4n4E_0018",
+    "xr8Mu0v4n4E_0020",
+    "xr8Mu0v4n4E_0022",
+    "xr8Mu0v4n4E_0025",
+    "xr8Mu0v4n4E_0028",
+    "xr8Mu0v4n4E_0033",
+    "xr8Mu0v4n4E_0034",
+    "xr8Mu0v4n4E_0035",
+    "xr8Mu0v4n4E_0036",
+    "xr8Mu0v4n4E_0038",
+    "1sroVgNDRpo_0000",
+    "1sroVgNDRpo_0003",
+    "1sroVgNDRpo_0004",
+    "1sroVgNDRpo_0005",
+    "1sroVgNDRpo_0006",
+    "1sroVgNDRpo_0007",
+    "1sroVgNDRpo_0010",
+    "1sroVgNDRpo_0011",
+    "PqAwTbc_dsI_0009",
+    "MFrJxbkU54Y_0000",
+    "MFrJxbkU54Y_0001",
+    "MFrJxbkU54Y_0004",
+    "MFrJxbkU54Y_0007",
+    "MFrJxbkU54Y_0009",
+    "MFrJxbkU54Y_0011",
+    "MFrJxbkU54Y_0012",
+    "MFrJxbkU54Y_0013",
+    "MFrJxbkU54Y_0014",
+    "MFrJxbkU54Y_0015",
+    "MFrJxbkU54Y_0016",
+    "MFrJxbkU54Y_0017",
+    "MFrJxbkU54Y_0018",
+    "MFrJxbkU54Y_0022",
+    "MFrJxbkU54Y_0025",
+    "rNRew59LBLs_0002",
+    "rNRew59LBLs_0003",
+    "rNRew59LBLs_0010",
+    "rNRew59LBLs_0013",
+    "fllLrfY7jlw_0000",
+    "fllLrfY7jlw_0006",
+    "Y-VXD3Z1K5g_0004",
+    "Y-VXD3Z1K5g_0007",
+    "Y-VXD3Z1K5g_0008",
+    "Y-VXD3Z1K5g_0009",
+    "Y-VXD3Z1K5g_0013",
+    "ZH9OJkuToe4_0000",
+    "ZH9OJkuToe4_0003",
+    "ZH9OJkuToe4_0008",
+    "hHlDZ13a6SQ_0003",
+    "BvHvbeOrCLA_0001",
+    "BvHvbeOrCLA_0002",
+    "BvHvbeOrCLA_0004",
+    "BvHvbeOrCLA_0009",
+    "BvHvbeOrCLA_0015",
+    "BvHvbeOrCLA_0017",
+    "RqPT8OfplHc_0009",
+    "C9hvI66k_WQ_0013",
+    "C9hvI66k_WQ_0014",
+    "C9hvI66k_WQ_0015",
+    "C9hvI66k_WQ_0023",
+    "C9hvI66k_WQ_0024",
+    "C9hvI66k_WQ_0025",
+    "BM_-UqfPmIM_0001",
+    "sPO_-FLCnpc_0004",
+    "Cn3yiQnLc5A_0000",
+    "Cn3yiQnLc5A_0010",
+    "Cn3yiQnLc5A_0015",
+    "Cn3yiQnLc5A_0017",
+    "Cn3yiQnLc5A_0018",
+    "Cn3yiQnLc5A_0021",
+    "Cn3yiQnLc5A_0029",
+    "Cn3yiQnLc5A_0030",
+    "Cn3yiQnLc5A_0051",
+    "Cn3yiQnLc5A_0052",
+    "Cn3yiQnLc5A_0053",
+    "755FNhj_83s_0008",
+    "755FNhj_83s_0009",
+    "755FNhj_83s_0015",
+    "755FNhj_83s_0018",
+    "755FNhj_83s_0021",
+    "755FNhj_83s_0023",
+    "e8qfocBDFSM_0008",
+    "1oRkxdb-_54_0002",
+    "1oRkxdb-_54_0004",
+    "1oRkxdb-_54_0030",
+    "1oRkxdb-_54_0053",
+    "1oRkxdb-_54_0057",
+    "1oRkxdb-_54_0080",
+    "1oRkxdb-_54_0086",
+    "1oRkxdb-_54_0088",
+    "EXTaQDFa0Dc_0002",
+    "EXTaQDFa0Dc_0023",
+    "EXTaQDFa0Dc_0032",
+    "EXTaQDFa0Dc_0033",
+    "P_dH5rn-kSA_0000",
+    "P_dH5rn-kSA_0001",
+    "U0ITzawyYoY_0000",
+    "U0ITzawyYoY_0001",
+    "U0ITzawyYoY_0004",
+    "WzqR4Q3vxDI_0000",
+    "1DwyKTWI_hI_0000"
+  ],
+  "reasons": {
+    "yo277La4DbM_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "NEe_yi5dW4M_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "NEe_yi5dW4M_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ERWK8uN8ZR0_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ERWK8uN8ZR0_0013": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ERWK8uN8ZR0_0018": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "sisC_I_cqcg_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "mg9y8E718Bg_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "mg9y8E718Bg_0002": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "mg9y8E718Bg_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "mg9y8E718Bg_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "mg9y8E718Bg_0006": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "mg9y8E718Bg_0014": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "mg9y8E718Bg_0022": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "NVLDz9tAdqk_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "NVLDz9tAdqk_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "azkNr8IIZKc_0001": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "YsFuYBSyKGI_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "YsFuYBSyKGI_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "xcOPKsoTNVM_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "xcOPKsoTNVM_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Uq_vtERca5U_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Uq_vtERca5U_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "lNf_cXlejSs_0029": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "fvAKMm7rLOY_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "qIOwk9CThOM_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "7VgKdLl4ltw_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "7VgKdLl4ltw_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "bgBCrGB4ch8_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "T0uQvSHZnHk_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "T0uQvSHZnHk_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "T0uQvSHZnHk_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "-X9uwKpHgbo_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "coRUW1DUydU_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "coRUW1DUydU_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "vgmmZ3cZLRE_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "qdFu29V89t0_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "EsjI6wmT6j4_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "EsjI6wmT6j4_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "EsjI6wmT6j4_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "EsjI6wmT6j4_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "EsjI6wmT6j4_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "EsjI6wmT6j4_0009": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "_VSDgFmZ1-Y_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "_VSDgFmZ1-Y_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "_VSDgFmZ1-Y_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "_VSDgFmZ1-Y_0018": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1Ac0iLAycIg_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Ac0iLAycIg_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Ac0iLAycIg_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Ac0iLAycIg_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Ac0iLAycIg_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1Ac0iLAycIg_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1Ac0iLAycIg_0020": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Pq-RzG0h2wk_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Pq-RzG0h2wk_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1N35AwwowOY_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1N35AwwowOY_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1N35AwwowOY_0016": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1N35AwwowOY_0019": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "X41nVaiyNRk_0003": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "X41nVaiyNRk_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "X41nVaiyNRk_0036": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "X41nVaiyNRk_0038": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "X41nVaiyNRk_0042": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "4_tqECkJElU_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "4_tqECkJElU_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "4_tqECkJElU_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "4_tqECkJElU_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "4_tqECkJElU_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "4_tqECkJElU_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "4_tqECkJElU_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "4_tqECkJElU_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "wSRa8smkCYI_0013": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "wSRa8smkCYI_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "EK6VgEZPGkU_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "h7qCDmC4KR0_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "h7qCDmC4KR0_0009": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "h7qCDmC4KR0_0010": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "h7qCDmC4KR0_0011": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "h7qCDmC4KR0_0012": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "h7qCDmC4KR0_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ql3AsY38UOg_0003": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ql3AsY38UOg_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ql3AsY38UOg_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ql3AsY38UOg_0012": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "ql3AsY38UOg_0018": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ql3AsY38UOg_0020": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ql3AsY38UOg_0022": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "3nJ4ttSsgRc_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "3nJ4ttSsgRc_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3nJ4ttSsgRc_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3nJ4ttSsgRc_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3nJ4ttSsgRc_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3nJ4ttSsgRc_0012": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3nJ4ttSsgRc_0013": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "DpI-yCM5mfU_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0016": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0019": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0022": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0023": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0024": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0053": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0054": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0055": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0060": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0063": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0065": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0084": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0091": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0092": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0101": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0103": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0116": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0122": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0131": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0153": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0158": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0169": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0171": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0206": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0213": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0228": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0232": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0233": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0234": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0238": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0239": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0240": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0250": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0253": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0261": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0270": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0277": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0278": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0282": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0284": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0288": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0290": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0307": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0322": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0327": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0328": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0329": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0330": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0335": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I48H0HPwZL4_0340": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0341": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0364": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0378": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I48H0HPwZL4_0386": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OrGklUYCfzs_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OrGklUYCfzs_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "JdKhuWR8G0Y_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OPdCOsVJzPk_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OPdCOsVJzPk_0016": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OPdCOsVJzPk_0031": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "4vWZQeju-fM_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "3pX38dsmddg_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3pX38dsmddg_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3pX38dsmddg_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3pX38dsmddg_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3pX38dsmddg_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3pX38dsmddg_0008": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3pX38dsmddg_0010": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3pX38dsmddg_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "5ejmlFa4eZM_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "RhZovhPG_FE_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "p5D697a7d60_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "p5D697a7d60_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "p5D697a7d60_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "p5D697a7d60_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "p5D697a7d60_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "p5D697a7d60_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "p5D697a7d60_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "TdpWdpKrcIY_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "TdpWdpKrcIY_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "7X-RDinoCLs_0008": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "7X-RDinoCLs_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "7X-RDinoCLs_0018": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "w1xzhy7hLyU_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "w1xzhy7hLyU_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "w1xzhy7hLyU_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "7zASdiUlFjs_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "7zASdiUlFjs_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "7zASdiUlFjs_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "7zASdiUlFjs_0009": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "7zASdiUlFjs_0010": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "7zASdiUlFjs_0011": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "7zASdiUlFjs_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "W9x8NnSTREA_0021": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "W9x8NnSTREA_0026": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "W9x8NnSTREA_0030": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "W9x8NnSTREA_0070": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "W9x8NnSTREA_0080": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "W9x8NnSTREA_0081": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "W9x8NnSTREA_0083": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I8pjVrwlf1U_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I8pjVrwlf1U_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I8pjVrwlf1U_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I8pjVrwlf1U_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I8pjVrwlf1U_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I8pjVrwlf1U_0010": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I8pjVrwlf1U_0012": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I8pjVrwlf1U_0016": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "k_liErERBHo_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "k_liErERBHo_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "k_liErERBHo_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XtiMVXc6ZO0_0004": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "XtiMVXc6ZO0_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "iviwaxCzso8_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "iviwaxCzso8_0012": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "iviwaxCzso8_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "iviwaxCzso8_0021": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "rQ_c3naspj4_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "C4uIaQgpXR4_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "vIg7rgHBm54_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "vIg7rgHBm54_0019": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "K3mn7LIwR1I_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "K3mn7LIwR1I_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "K3mn7LIwR1I_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "dbMP0-bTWZI_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "dbMP0-bTWZI_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "dbMP0-bTWZI_0013": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "dbMP0-bTWZI_0019": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "dbMP0-bTWZI_0037": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "dbMP0-bTWZI_0045": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "bu_F2K__61E_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "bu_F2K__61E_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "bu_F2K__61E_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "bu_F2K__61E_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "bu_F2K__61E_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "bu_F2K__61E_0009": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "bu_F2K__61E_0010": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "bu_F2K__61E_0011": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "YLrLehuEgxs_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "YLrLehuEgxs_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "YLrLehuEgxs_0020": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "YLrLehuEgxs_0024": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "8D0fKSsYFTM_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Eo7gO3nAvRE_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OV2OzKsuhx0_0008": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OV2OzKsuhx0_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OV2OzKsuhx0_0019": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "VuTOnLPSDVc_0003": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "VuTOnLPSDVc_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "VuTOnLPSDVc_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "VuTOnLPSDVc_0010": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ZhiCbww0ObY_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ZhiCbww0ObY_0017": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ZhiCbww0ObY_0023": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ZhiCbww0ObY_0024": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ZhiCbww0ObY_0028": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "CpHd3KiFwe0_0011": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CpHd3KiFwe0_0015": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "5s6kDUaAHBU_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "5s6kDUaAHBU_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "5s6kDUaAHBU_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "5s6kDUaAHBU_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "5s6kDUaAHBU_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "5s6kDUaAHBU_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "5s6kDUaAHBU_0010": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "5s6kDUaAHBU_0012": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "bMbqaV66HHw_0003": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "bMbqaV66HHw_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0030": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0035": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0048": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0074": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0080": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0082": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0090": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0096": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0099": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0101": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0113": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0130": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0140": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0143": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0149": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0150": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0153": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0164": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0168": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0169": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0201": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0212": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0218": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0230": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0232": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0239": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0263": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0277": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0290": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "XPwqyxMTtN0_0309": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0322": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0335": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0350": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XPwqyxMTtN0_0365": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "n16xHHI9AQw_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "n16xHHI9AQw_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "n16xHHI9AQw_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "n16xHHI9AQw_0010": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "n16xHHI9AQw_0011": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "gvttjLwvy50_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Qf4lBxpiVNA_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "xCZrulqdajo_0013": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ufYRqVozg0c_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CA354z_oxfw_0012": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CA354z_oxfw_0013": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CA354z_oxfw_0023": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "CA354z_oxfw_0024": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "fzhMPg9cQMg_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "M0bixA-eM68_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "EgKTydo2I9w_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "EgKTydo2I9w_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1AJ8UzFMICw_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "3UsDPNFl3Zw_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Hoaep5rjIe0_0003": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Aoy3DP_UZZA_0008": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Aoy3DP_UZZA_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "iqgX51kD3iI_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "wK2pN18wOj8_0003": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "wK2pN18wOj8_0004": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "h6qvbFtyit4_0003": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "jzC0VDYQfnU_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "jzC0VDYQfnU_0015": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "jzC0VDYQfnU_0016": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "jzC0VDYQfnU_0020": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "PLZVh-CAXIo_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "PLZVh-CAXIo_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "PLZVh-CAXIo_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Q7kXOjKpiwc_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "zZEucIc0Rh8_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "zZEucIc0Rh8_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "zZEucIc0Rh8_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "zZEucIc0Rh8_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "zZEucIc0Rh8_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "zZEucIc0Rh8_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "rt7NAoFEi7g_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MSHxppLJsW0_0010": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "fNxaNvTRfhk_0008": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "JUCkC1wasvQ_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "JUCkC1wasvQ_0003": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "JUCkC1wasvQ_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "YuvuYN2Y0y4_0012": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "YuvuYN2Y0y4_0013": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "tM4wUpnabRs_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "UfjJa-f1iZc_0012": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Oxhs36TjlDo_0017": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Oxhs36TjlDo_0018": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Oxhs36TjlDo_0030": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "lxNY7_rAcn8_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "lxNY7_rAcn8_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "lxNY7_rAcn8_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "lxNY7_rAcn8_0013": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "lxNY7_rAcn8_0027": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "lxNY7_rAcn8_0028": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "lxNY7_rAcn8_0029": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "lxNY7_rAcn8_0030": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "lxNY7_rAcn8_0031": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "lxNY7_rAcn8_0032": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "lxNY7_rAcn8_0034": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "6i7UmykjUhw_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "pPOPgdWtV2k_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "pPOPgdWtV2k_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "pPOPgdWtV2k_0008": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "pPOPgdWtV2k_0010": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "pPOPgdWtV2k_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "pPOPgdWtV2k_0020": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "pPOPgdWtV2k_0025": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "pPOPgdWtV2k_0029": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "pPOPgdWtV2k_0030": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MxJoqnaKj-8_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "MxJoqnaKj-8_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "thyqrKr9HR4_0003": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "thyqrKr9HR4_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "thyqrKr9HR4_0020": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "thyqrKr9HR4_0031": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "thyqrKr9HR4_0034": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "3NKVn-C33e4_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "3NKVn-C33e4_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "6UMSpPadM5o_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "6UMSpPadM5o_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "6UMSpPadM5o_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "6UMSpPadM5o_0013": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "6UMSpPadM5o_0022": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "6UMSpPadM5o_0026": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "SxGp35IpRC0_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "SxGp35IpRC0_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "SxGp35IpRC0_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "SxGp35IpRC0_0023": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "SxGp35IpRC0_0024": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "SxGp35IpRC0_0027": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "SxGp35IpRC0_0028": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "SxGp35IpRC0_0030": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "SxGp35IpRC0_0031": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "SxGp35IpRC0_0032": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "SxGp35IpRC0_0033": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "sQo-Tp6Xq-0_0012": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "sQo-Tp6Xq-0_0018": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "BTHrwmn4XOM_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "BTHrwmn4XOM_0025": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "BTHrwmn4XOM_0032": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "13BeeMFU5Ng_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "HL6n7oZHIfs_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "yYvGBCCis6E_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "yYvGBCCis6E_0016": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "yYvGBCCis6E_0028": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "yYvGBCCis6E_0035": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "yYvGBCCis6E_0048": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "yYvGBCCis6E_0089": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Pxpd50iPpZw_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "UG0mFTzKZ8E_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "UG0mFTzKZ8E_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "fFOxvLe2BMU_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "fFOxvLe2BMU_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "fFOxvLe2BMU_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "fFOxvLe2BMU_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CO-hN-mgb5s_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CO-hN-mgb5s_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CO-hN-mgb5s_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CO-hN-mgb5s_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CO-hN-mgb5s_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CO-hN-mgb5s_0009": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CO-hN-mgb5s_0010": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CO-hN-mgb5s_0011": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CO-hN-mgb5s_0012": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CO-hN-mgb5s_0013": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "CO-hN-mgb5s_0014": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "COrCKqhy0DQ_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "COrCKqhy0DQ_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "COrCKqhy0DQ_0019": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "COrCKqhy0DQ_0021": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "48XfkBxSu_U_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "48XfkBxSu_U_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "48XfkBxSu_U_0010": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XAsfq8Jr78k_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "iLkuMDjVLH0_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "iLkuMDjVLH0_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "iLkuMDjVLH0_0008": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "guN0BZzKq2Y_0013": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "08M15vWd0YA_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "d1xiaAYT0qs_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "d1xiaAYT0qs_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "PpXRfyP46hQ_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "PpXRfyP46hQ_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "PpXRfyP46hQ_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "PpXRfyP46hQ_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "PpXRfyP46hQ_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "PpXRfyP46hQ_0029": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "6d9lQ4hnyA0_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "6d9lQ4hnyA0_0003": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "0Xg8-d7zJz8_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "0Xg8-d7zJz8_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "0Xg8-d7zJz8_0017": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OtVrZTm01c8_0008": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OtVrZTm01c8_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OtVrZTm01c8_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OtVrZTm01c8_0021": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ctdTa6-fmIk_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "7reemmYZqCo_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "7reemmYZqCo_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "7reemmYZqCo_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "7reemmYZqCo_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "7reemmYZqCo_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "7reemmYZqCo_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "7reemmYZqCo_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "utWtuP55kXQ_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "utWtuP55kXQ_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "utWtuP55kXQ_0009": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "e5pNX4bUvQM_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "e5pNX4bUvQM_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "9bX-lnpHeMY_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "kiO_qzU72Zs_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I-aL_qhub10_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I-aL_qhub10_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "HhdnnybXabY_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "nuyb6gblbIk_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "nuyb6gblbIk_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "nuyb6gblbIk_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "nuyb6gblbIk_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "nuyb6gblbIk_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "nuyb6gblbIk_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "K0uVL5tL6Qc_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "K0uVL5tL6Qc_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "K0uVL5tL6Qc_0018": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "b-aCrfjgwHs_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "b-aCrfjgwHs_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "b-aCrfjgwHs_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "6SFa3DJ-12Q_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "6SFa3DJ-12Q_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "mu80ykCUnTI_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "E3To8DP_Vyo_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "E3To8DP_Vyo_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "E3To8DP_Vyo_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "BZ9r1QPcZkQ_0004": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "rW4-oonQrbk_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "rW4-oonQrbk_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "-Jt08NnztQE_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "-Jt08NnztQE_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "-Jt08NnztQE_0012": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "-Jt08NnztQE_0023": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "66DiM5eHSxk_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "8w7HByrBDlY_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "8w7HByrBDlY_0003": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "X9uDA_7cRbg_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "TLcasZoaUfY_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "zaxxSxCw8IE_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "zaxxSxCw8IE_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "zaxxSxCw8IE_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "KSxbxnNPhp0_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "3HT4dJE99J0_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3HT4dJE99J0_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3HT4dJE99J0_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "EapX-IQ891Y_0001": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "EapX-IQ891Y_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "EapX-IQ891Y_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "EapX-IQ891Y_0022": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "EapX-IQ891Y_0030": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "QOK1K_FJqdg_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "QOK1K_FJqdg_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "FO0NK90Ol64_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "FO0NK90Ol64_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Qa_L0frq7yk_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0012": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0013": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0014": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0015": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0024": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Qa_L0frq7yk_0025": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0027": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0028": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0029": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0030": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0031": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0038": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0039": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0043": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0044": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Qa_L0frq7yk_0046": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0050": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Qa_L0frq7yk_0053": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Qa_L0frq7yk_0062": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0063": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0064": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0065": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0066": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0068": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0069": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0071": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0075": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0077": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Qa_L0frq7yk_0086": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0087": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0088": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0089": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0090": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0091": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0092": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0093": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0094": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0095": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0096": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Qa_L0frq7yk_0101": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Qa_L0frq7yk_0105": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "5ifqblqdcXk_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "5ifqblqdcXk_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "HuEilh65bv0_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "HuEilh65bv0_0008": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "b5sFGyfbuHQ_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "b5sFGyfbuHQ_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "b5sFGyfbuHQ_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "b5sFGyfbuHQ_0012": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "b5sFGyfbuHQ_0021": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "W_Fa1AhS-n8_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "EtN7wDzrw1I_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "EtN7wDzrw1I_0018": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "EtN7wDzrw1I_0023": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "HX7NNpwWKMo_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "HX7NNpwWKMo_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aYpisVffvXY_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "By2PXf7Un0Y_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "w-occQm_DbA_0027": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "j-i9IqDV-7w_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "j-i9IqDV-7w_0012": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "QClUtgwfKyo_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "40nvp81QsXY_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "40nvp81QsXY_0019": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "40nvp81QsXY_0023": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OIElj2X0qT0_0019": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0064": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OIElj2X0qT0_0066": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OIElj2X0qT0_0070": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0071": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0072": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0074": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0076": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0077": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0078": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0105": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OIElj2X0qT0_0113": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "OIElj2X0qT0_0117": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0118": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0119": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "OIElj2X0qT0_0121": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "H7D7m3PrNaU_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "H7D7m3PrNaU_0020": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "H7D7m3PrNaU_0025": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "H7D7m3PrNaU_0026": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "H7D7m3PrNaU_0028": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "QkeYKwRsJMM_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "nsnZzJXry7s_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "nsnZzJXry7s_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "gyGmq8nX_qM_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "gyGmq8nX_qM_0014": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "SSAFpBwMnvY_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "SSAFpBwMnvY_0008": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "su8i8FN0V-8_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "sqBPb3b3VI0_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "b685x_JlL2w_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "IaR_5fcW90s_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "R1NjyhWZUC8_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "R1NjyhWZUC8_0012": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "R1NjyhWZUC8_0028": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "h8zgWAV8CJY_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Zxhr2cRCJI0_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Zxhr2cRCJI0_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1-U7B7-bXwk_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1-U7B7-bXwk_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1-U7B7-bXwk_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "jzmGF6vvv0Q_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "jzmGF6vvv0Q_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "jzmGF6vvv0Q_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "jzmGF6vvv0Q_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Iq07BDyNRQ0_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "iIC9zyHrkkA_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "e4G_i3zmrPk_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "e4G_i3zmrPk_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "e4G_i3zmrPk_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "e4G_i3zmrPk_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "e4G_i3zmrPk_0010": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "e4G_i3zmrPk_0030": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "e4G_i3zmrPk_0031": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "e4G_i3zmrPk_0036": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "xWFNGqnWh-s_0000": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "xWFNGqnWh-s_0001": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "XpPR1-T2D8I_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ep0l5AKyl-Q_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "ep0l5AKyl-Q_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "ep0l5AKyl-Q_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "ep0l5AKyl-Q_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "ep0l5AKyl-Q_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "ep0l5AKyl-Q_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "ep0l5AKyl-Q_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "cwkHgZJAlfM_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "WuHYso49bD8_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "WuHYso49bD8_0012": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "WuHYso49bD8_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "jY_gAnunI-U_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0023": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0025": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0027": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0030": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0039": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0041": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0045": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0051": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0052": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0055": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0056": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0057": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0063": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0080": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0083": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0087": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0090": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0094": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0096": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0098": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0106": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0107": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0108": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0110": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0116": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0123": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "aEUnj7q6MCc_0131": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0132": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0133": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0134": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0136": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "aEUnj7q6MCc_0138": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "oaUWtVUKuDQ_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "5AdRfOm-s7E_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "uBLs_UIpqcU_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "nkNqLF6t65o_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "nkNqLF6t65o_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "nkNqLF6t65o_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "nkNqLF6t65o_0016": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "24llifLHPvo_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "24llifLHPvo_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "24llifLHPvo_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1Yi-GfVQmcg_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1Yi-GfVQmcg_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1Yi-GfVQmcg_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1Yi-GfVQmcg_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "fUxJzRXhjy0_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "fUxJzRXhjy0_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "fUxJzRXhjy0_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "fUxJzRXhjy0_0003": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "fUxJzRXhjy0_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "fUxJzRXhjy0_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "fUxJzRXhjy0_0016": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "lYLY_Wfso1c_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "N4dFYidG_kM_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "N4dFYidG_kM_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "N4dFYidG_kM_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "N4dFYidG_kM_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "N4dFYidG_kM_0010": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "N4dFYidG_kM_0011": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "N4dFYidG_kM_0012": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "N4dFYidG_kM_0013": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "N4dFYidG_kM_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "N4dFYidG_kM_0015": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "9clJdcGqPSg_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "9clJdcGqPSg_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Veo-N73hXcI_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Veo-N73hXcI_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Veo-N73hXcI_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Veo-N73hXcI_0020": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "e8pC7qRF958_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "CFyWlDe8B9U_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "QxXbMCgh2rk_0008": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "QxXbMCgh2rk_0010": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "QxXbMCgh2rk_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "QxXbMCgh2rk_0017": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "dtyxW-T9W4I_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "PbUymf8V7uc_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3UqCA918u-s_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "3UqCA918u-s_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "UtBCgbmV7Yg_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "UtBCgbmV7Yg_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "UtBCgbmV7Yg_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "UtBCgbmV7Yg_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "cotHykvHGz0_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "G0ifY6r-Sak_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "G0ifY6r-Sak_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "G0ifY6r-Sak_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "G0ifY6r-Sak_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "G0ifY6r-Sak_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "okHxwKGISxM_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "okHxwKGISxM_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "okHxwKGISxM_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "okHxwKGISxM_0019": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Vn1XMQX_HTY_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Vn1XMQX_HTY_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Vn1XMQX_HTY_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Vn1XMQX_HTY_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Vn1XMQX_HTY_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Vn1XMQX_HTY_0012": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Vn1XMQX_HTY_0013": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Vn1XMQX_HTY_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Vn1XMQX_HTY_0016": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Vn1XMQX_HTY_0021": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "mTLmFx4SyH8_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "mTLmFx4SyH8_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "X0R9xFS7bHo_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "X0R9xFS7bHo_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "GmbdbzyOY1k_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "GmbdbzyOY1k_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "9GyAYScUyBU_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "9GyAYScUyBU_0019": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0009": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0010": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0011": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0012": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1Inc-4b45nQ_0013": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "HAxMalCqHoo_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "HAxMalCqHoo_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "HAxMalCqHoo_0005": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "XdXM0pKrIZI_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Dn0kVNAelqI_0013": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Dn0kVNAelqI_0020": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "-TrvMIWJTYc_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "-TrvMIWJTYc_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "-TrvMIWJTYc_0007": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "-TrvMIWJTYc_0009": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "-TrvMIWJTYc_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "-TrvMIWJTYc_0013": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "hvdbNxOerMQ_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "hvdbNxOerMQ_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "hvdbNxOerMQ_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "hvdbNxOerMQ_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "hvdbNxOerMQ_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "hvdbNxOerMQ_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "hvdbNxOerMQ_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I_g77i1E-s8_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "I_g77i1E-s8_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I_g77i1E-s8_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I_g77i1E-s8_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I_g77i1E-s8_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "I_g77i1E-s8_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "xr8Mu0v4n4E_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "xr8Mu0v4n4E_0017": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "xr8Mu0v4n4E_0018": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "xr8Mu0v4n4E_0020": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "xr8Mu0v4n4E_0022": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "xr8Mu0v4n4E_0025": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "xr8Mu0v4n4E_0028": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "xr8Mu0v4n4E_0033": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "xr8Mu0v4n4E_0034": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "xr8Mu0v4n4E_0035": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "xr8Mu0v4n4E_0036": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "xr8Mu0v4n4E_0038": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1sroVgNDRpo_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1sroVgNDRpo_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1sroVgNDRpo_0004": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1sroVgNDRpo_0005": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1sroVgNDRpo_0006": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1sroVgNDRpo_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1sroVgNDRpo_0010": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1sroVgNDRpo_0011": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "PqAwTbc_dsI_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "MFrJxbkU54Y_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MFrJxbkU54Y_0001": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MFrJxbkU54Y_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "MFrJxbkU54Y_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MFrJxbkU54Y_0009": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MFrJxbkU54Y_0011": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MFrJxbkU54Y_0012": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MFrJxbkU54Y_0013": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MFrJxbkU54Y_0014": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MFrJxbkU54Y_0015": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MFrJxbkU54Y_0016": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MFrJxbkU54Y_0017": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MFrJxbkU54Y_0018": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "MFrJxbkU54Y_0022": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "MFrJxbkU54Y_0025": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "rNRew59LBLs_0002": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "rNRew59LBLs_0003": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "rNRew59LBLs_0010": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "rNRew59LBLs_0013": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "fllLrfY7jlw_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "fllLrfY7jlw_0006": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Y-VXD3Z1K5g_0004": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Y-VXD3Z1K5g_0007": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Y-VXD3Z1K5g_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Y-VXD3Z1K5g_0009": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Y-VXD3Z1K5g_0013": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ZH9OJkuToe4_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ZH9OJkuToe4_0003": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "ZH9OJkuToe4_0008": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "hHlDZ13a6SQ_0003": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "BvHvbeOrCLA_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "BvHvbeOrCLA_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "BvHvbeOrCLA_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "BvHvbeOrCLA_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "BvHvbeOrCLA_0015": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "BvHvbeOrCLA_0017": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "RqPT8OfplHc_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "C9hvI66k_WQ_0013": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "C9hvI66k_WQ_0014": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "C9hvI66k_WQ_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "C9hvI66k_WQ_0023": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "C9hvI66k_WQ_0024": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "C9hvI66k_WQ_0025": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "BM_-UqfPmIM_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "sPO_-FLCnpc_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Cn3yiQnLc5A_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Cn3yiQnLc5A_0010": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Cn3yiQnLc5A_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Cn3yiQnLc5A_0017": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Cn3yiQnLc5A_0018": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Cn3yiQnLc5A_0021": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Cn3yiQnLc5A_0029": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Cn3yiQnLc5A_0030": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "Cn3yiQnLc5A_0051": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Cn3yiQnLc5A_0052": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "Cn3yiQnLc5A_0053": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "755FNhj_83s_0008": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "755FNhj_83s_0009": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "755FNhj_83s_0015": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "755FNhj_83s_0018": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "755FNhj_83s_0021": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "755FNhj_83s_0023": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "e8qfocBDFSM_0008": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1oRkxdb-_54_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1oRkxdb-_54_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1oRkxdb-_54_0030": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1oRkxdb-_54_0053": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1oRkxdb-_54_0057": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1oRkxdb-_54_0080": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1oRkxdb-_54_0086": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "1oRkxdb-_54_0088": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "EXTaQDFa0Dc_0002": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "EXTaQDFa0Dc_0023": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "EXTaQDFa0Dc_0032": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "EXTaQDFa0Dc_0033": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "P_dH5rn-kSA_0000": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "P_dH5rn-kSA_0001": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "U0ITzawyYoY_0000": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "U0ITzawyYoY_0001": {
+      "flash_damage": false,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "U0ITzawyYoY_0004": {
+      "flash_damage": false,
+      "flash_doubt": false,
+      "safe_control": true
+    },
+    "WzqR4Q3vxDI_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    },
+    "1DwyKTWI_hI_0000": {
+      "flash_damage": true,
+      "flash_doubt": true,
+      "safe_control": false
+    }
+  },
+  "updated_at": "2026-07-27T09:00:41-05:00",
+  "model": "deepseek-v4-pro",
+  "output_sha256": "a8e4aefbdd5c18743d5d4b690b6d6a1a7312b8c4fdb6d12677fd4606c2756b79",
+  "prompt_sha256": "52d4fec14ad433d35ec20de5f51a6954aad69dcedd1422059419dcecc2f9e778",
+  "skill_sha256": "45f9d3231a92453835ee6dfcbb8cfff0b682718caa4111f4bca3e841573a0efb",
+  "completed": 921,
+  "target_rows": 921,
+  "pending": 0,
+  "damage_chunks": 294,
+  "safe_chunks": 627,
+  "needs_review": 108,
+  "mean_confidence": 0.8985559174809988,
+  "label_counts": {
+    "seguro": 621,
+    "seguro_ironia_marcada": 6,
+    "racismo_etnico_explicito": 22,
+    "racismo_linguistico": 1,
+    "clasismo_racial": 11,
+    "discriminacion_regional": 10,
+    "racismo_encubierto": 3,
+    "misoginia_acoso_genero": 38,
+    "homofobia_transfobia": 7,
+    "acoso_personal": 211,
+    "amenaza_directa": 184,
+    "sexual_explicito": 8,
+    "sexual_cosificacion": 7,
+    "sexual_no_consensual": 9
+  },
+  "flag_counts": {
+    "ironia_ambigua": 6,
+    "humor_encubridor": 26,
+    "contexto_necesario": 40
+  },
+  "usage_new": {
+    "prompt_tokens": 1010453,
+    "completion_tokens": 120402,
+    "total_tokens": 1130855,
+    "prompt_cache_hit_tokens": 631040,
+    "prompt_cache_miss_tokens": 379413
+  },
+  "estimated_cost_usd_new": 0.272082,
+  "elapsed_seconds_new": 134.38
+}

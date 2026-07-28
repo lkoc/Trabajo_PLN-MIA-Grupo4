@@ -1,0 +1,37 @@
+{
+  "completed_at": "2026-07-27T15:49:08-05:00",
+  "method": "paired percentile bootstrap resampling video clusters with replacement",
+  "seed": 20260826,
+  "replicates": 1000,
+  "test_rows": 5290,
+  "test_videos": 448,
+  "winner_selected_on_validation": "e5_small",
+  "comparison": "winner_transformer_minus_best_classical_same_split",
+  "best_classical": "linear_svm_word_char",
+  "metrics": {
+    "damage_pr_auc_macro": {
+      "mean_difference": 0.021785164029627168,
+      "ci_95_percentile": [
+        -0.010213701028467784,
+        0.05456722684677204
+      ],
+      "probability_difference_gt_zero": 0.9
+    },
+    "damage_f1_macro": {
+      "mean_difference": 0.04995975865100784,
+      "ci_95_percentile": [
+        0.02130126987581542,
+        0.0780092692308792
+      ],
+      "probability_difference_gt_zero": 1.0
+    },
+    "damage_recall_micro": {
+      "mean_difference": -0.10942830302617486,
+      "ci_95_percentile": [
+        -0.14191449014561117,
+        -0.07541023054660043
+      ],
+      "probability_difference_gt_zero": 0.0
+    }
+  }
+}

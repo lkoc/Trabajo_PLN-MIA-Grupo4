@@ -1,0 +1,16 @@
+{
+  "completed_at": "2026-07-27T15:48:47-05:00",
+  "selection_uses_validation_metric": "damage_pr_auc_macro",
+  "test_is_acceptance_gate_not_ranking_metric": true,
+  "selected_model_key": null,
+  "selected_model_label": null,
+  "operating_mode": "none",
+  "status": "no_model_is_ready_for_production",
+  "autonomous_deployment_supported": false,
+  "human_review_alert_supported": false,
+  "mandatory_limitations": [
+    "El test 4:1 no reproduce la prevalencia natural de producción.",
+    "El test no es un gold standard humano independiente.",
+    "Se requiere piloto prospectivo con decisiones humanas y auditoría por categoría."
+  ]
+}

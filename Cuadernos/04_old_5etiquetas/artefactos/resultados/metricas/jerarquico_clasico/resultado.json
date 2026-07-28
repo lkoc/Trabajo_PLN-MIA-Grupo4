@@ -1,0 +1,840 @@
+{
+  "schema_version": "1.0",
+  "created_at": "2026-07-27T13:41:32-05:00",
+  "run_signature": "9d1a7e5740f80140241f762ee8eb8a3cd691f49452f1b469f1adfedd30fce62f",
+  "configuration": {
+    "dataset_signature": "630d36bfefe23c51dc00eccea556a006c382148411f09531c981649e41ab1245",
+    "families": [
+      "linear_svm_word_char",
+      "logistic_regression"
+    ],
+    "parameters": {
+      "linear_svm_word_char": {
+        "C": 0.25,
+        "min_df": 1,
+        "max_features": 50000
+      },
+      "logistic_regression": {
+        "C": 2.0,
+        "min_df": 2,
+        "max_features": 50000
+      }
+    },
+    "calibration_folds": 3,
+    "bootstrap_replicates": 1000,
+    "include_fasttext": true
+  },
+  "dataset": {
+    "created_at": "2026-07-27T13:21:08-05:00",
+    "method": "propagate_frozen_04_2_video_split_to_full_integrated_dataset",
+    "integrated_dataset": "datos\\model_ready\\transformer_grueso\\dataset_integrado_todas_pasadas.jsonl",
+    "integrated_dataset_sha256": "3f01b76d285d4cdd2a0922df1d2437a7f01abc4e05e2699c218b1f5faaba2069",
+    "balanced_dataset": "datos\\model_ready\\transformer_grueso\\dataset_balanceado_4a1_particionado.jsonl",
+    "balanced_dataset_sha256": "df2ac01183271e44b6dcfb9cb4850bd6b1ef1cd11d9fc51c881be944670ef20f",
+    "integrated_rows": 117244,
+    "mapped_rows": 116313,
+    "unmapped_safe_rows_excluded": 931,
+    "unmapped_videos_excluded": 248,
+    "all_damage_retained": true,
+    "split_counts": {
+      "train": {
+        "rows": 80887,
+        "videos": 2086,
+        "safe": 75943,
+        "damage": 4944,
+        "chunk_ids_sha256": "a131611dfb6ba1cfcbaee0ee7cd53b5a8075a721af932e85cd66567fd342a3e8"
+      },
+      "validation": {
+        "rows": 17760,
+        "videos": 448,
+        "safe": 16682,
+        "damage": 1078,
+        "chunk_ids_sha256": "01b6b5f537a540022e3ffae16963f34eb7fb958e76586a3da141ccd9703f9531"
+      },
+      "test": {
+        "rows": 17666,
+        "videos": 448,
+        "safe": 16625,
+        "damage": 1041,
+        "chunk_ids_sha256": "c0c15bea2772fad7bcae8986fee3d874ce7d7de388b7bfdd00f636b63ec9db7d"
+      }
+    },
+    "targets": [
+      "RACISMO_DISCRIMINACION",
+      "ACOSO_GENERO_IDENTIDAD",
+      "ACOSO_PERSONAL",
+      "AMENAZA_DIRECTA",
+      "CONTENIDO_SEXUAL"
+    ],
+    "fine_labels_trained": false,
+    "transversal_flags_trained": false,
+    "usable_safe_total": 109250,
+    "usable_damage_total": 7063
+  },
+  "prior_hyperparameters": {
+    "source": {
+      "path": "resultados\\metricas\\transformer_grueso\\comparacion_modelos_clasicos_optimizados.json",
+      "sha256": "08980319c249efca695b22300e3d87e4eeaa1cb3bc54dd64f25ff2817d4bc2e8",
+      "bytes": 23960
+    },
+    "winner_model": "linear_svm_word_char",
+    "winner_label": "SVM lineal palabra+carácter",
+    "configurations": {
+      "linear_svm_word_char": {
+        "C": 0.25,
+        "min_df": 1,
+        "max_features": 50000
+      },
+      "logistic_regression": {
+        "C": 2.0,
+        "min_df": 2,
+        "max_features": 50000
+      }
+    },
+    "fasttext_parameters": {
+      "lr": 0.5,
+      "epoch": 15,
+      "wordNgrams": 2,
+      "bucket": 200000,
+      "dim": 50,
+      "loss": "ova"
+    },
+    "historical_thresholds": [
+      0.525,
+      0.5499999999999999,
+      0.525,
+      0.49999999999999994,
+      0.5499999999999999
+    ],
+    "historical_test_metrics": {
+      "exact_match": 0.76351606805293,
+      "jaccard_samples": 0.7852709514807813,
+      "precision_micro": 0.7762175613224316,
+      "recall_micro": 0.7730571782616392,
+      "f1_micro": 0.7746341463414634,
+      "f1_macro": 0.5241060579190534,
+      "pr_auc_macro": 0.5068787330152728,
+      "damage_precision_micro": 0.43721828718609146,
+      "damage_recall_micro": 0.485,
+      "damage_f1_micro": 0.45987131730443614,
+      "damage_f1_macro": 0.45166218899337124,
+      "damage_pr_auc_macro": 0.4173548393015466,
+      "n": 5290.0
+    }
+  },
+  "training": {
+    "linear_svm_word_char": {
+      "family": "linear_svm_word_char",
+      "label": "SVM lineal calibrado palabra+carácter",
+      "parameters_reused_from_04_2": {
+        "C": 0.25,
+        "min_df": 1,
+        "max_features": 50000
+      },
+      "feature_shape_train": [
+        80887,
+        50000
+      ],
+      "gate": {
+        "description": "svm/puerta",
+        "rows": 80887,
+        "positives": 4944,
+        "videos": 2086,
+        "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+        "calibration_folds": 3,
+        "fit_seconds": 77.16624829999637
+      },
+      "full_heads": [
+        {
+          "description": "svm/cabezas completas/RACISMO_DISCRIMINACION",
+          "rows": 80887,
+          "positives": 1319,
+          "videos": 2086,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 65.03376530000241
+        },
+        {
+          "description": "svm/cabezas completas/ACOSO_GENERO_IDENTIDAD",
+          "rows": 80887,
+          "positives": 1394,
+          "videos": 2086,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 62.81878619999043
+        },
+        {
+          "description": "svm/cabezas completas/ACOSO_PERSONAL",
+          "rows": 80887,
+          "positives": 1955,
+          "videos": 2086,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 67.62112019999768
+        },
+        {
+          "description": "svm/cabezas completas/AMENAZA_DIRECTA",
+          "rows": 80887,
+          "positives": 481,
+          "videos": 2086,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 89.06796109999414
+        },
+        {
+          "description": "svm/cabezas completas/CONTENIDO_SEXUAL",
+          "rows": 80887,
+          "positives": 1613,
+          "videos": 2086,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 52.126696299994364
+        }
+      ],
+      "cascade_heads": [
+        {
+          "description": "svm/cabezas cascada/RACISMO_DISCRIMINACION",
+          "rows": 9888,
+          "positives": 1319,
+          "videos": 1468,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 3.865487300005043
+        },
+        {
+          "description": "svm/cabezas cascada/ACOSO_GENERO_IDENTIDAD",
+          "rows": 9888,
+          "positives": 1394,
+          "videos": 1468,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 3.4110605999885593
+        },
+        {
+          "description": "svm/cabezas cascada/ACOSO_PERSONAL",
+          "rows": 9888,
+          "positives": 1955,
+          "videos": 1468,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 3.523132500005886
+        },
+        {
+          "description": "svm/cabezas cascada/AMENAZA_DIRECTA",
+          "rows": 9888,
+          "positives": 481,
+          "videos": 1468,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 5.403597999975318
+        },
+        {
+          "description": "svm/cabezas cascada/CONTENIDO_SEXUAL",
+          "rows": 9888,
+          "positives": 1613,
+          "videos": 1468,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 2.9303803999791853
+        }
+      ],
+      "cascade_stage2": {
+        "method": "all_damage_plus_50pct_gate_hard_negatives_plus_50pct_hash_safe",
+        "all_damage_rows": 4944,
+        "safe_rows": 4944,
+        "hard_safe_rows": 2472,
+        "hash_random_safe_rows": 2472,
+        "total_rows": 9888,
+        "selected_chunk_ids_sha256": "60c39abb7f120bc8627ddd284bb8ad4145b6c5ea15fe2c814dc24c677660ef92"
+      },
+      "training_seconds": 750.1578593000013,
+      "vectorizer": {
+        "path": "modelos\\jerarquico_clasico\\svm\\vectorizador.joblib",
+        "sha256": "5a52957d7cc2ecf50a482cef6d5d9de2f6192d5e9255c03188901c89904a8724",
+        "bytes": 1625388
+      },
+      "model_bundle": {
+        "path": "modelos\\jerarquico_clasico\\svm\\modelos_calibrados.joblib",
+        "sha256": "5a4de262695795f0bde3659477b6e4badec7ad40aacadfcb0af8c4d6e3f84e02",
+        "bytes": 4595961
+      }
+    },
+    "logistic_regression": {
+      "family": "logistic_regression",
+      "label": "Regresión logística calibrada",
+      "parameters_reused_from_04_2": {
+        "C": 2.0,
+        "min_df": 2,
+        "max_features": 50000
+      },
+      "feature_shape_train": [
+        80887,
+        50000
+      ],
+      "gate": {
+        "description": "logistic/puerta",
+        "rows": 80887,
+        "positives": 4944,
+        "videos": 2086,
+        "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+        "calibration_folds": 3,
+        "fit_seconds": 8.070449600025313
+      },
+      "full_heads": [
+        {
+          "description": "logistic/cabezas completas/RACISMO_DISCRIMINACION",
+          "rows": 80887,
+          "positives": 1319,
+          "videos": 2086,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 6.619074299989734
+        },
+        {
+          "description": "logistic/cabezas completas/ACOSO_GENERO_IDENTIDAD",
+          "rows": 80887,
+          "positives": 1394,
+          "videos": 2086,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 5.72224339999957
+        },
+        {
+          "description": "logistic/cabezas completas/ACOSO_PERSONAL",
+          "rows": 80887,
+          "positives": 1955,
+          "videos": 2086,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 6.988926099991659
+        },
+        {
+          "description": "logistic/cabezas completas/AMENAZA_DIRECTA",
+          "rows": 80887,
+          "positives": 481,
+          "videos": 2086,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 5.783717199985404
+        },
+        {
+          "description": "logistic/cabezas completas/CONTENIDO_SEXUAL",
+          "rows": 80887,
+          "positives": 1613,
+          "videos": 2086,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 5.551271200005431
+        }
+      ],
+      "cascade_heads": [
+        {
+          "description": "logistic/cabezas cascada/RACISMO_DISCRIMINACION",
+          "rows": 9888,
+          "positives": 1319,
+          "videos": 1440,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 0.4637168999761343
+        },
+        {
+          "description": "logistic/cabezas cascada/ACOSO_GENERO_IDENTIDAD",
+          "rows": 9888,
+          "positives": 1394,
+          "videos": 1440,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 0.6469477000064217
+        },
+        {
+          "description": "logistic/cabezas cascada/ACOSO_PERSONAL",
+          "rows": 9888,
+          "positives": 1955,
+          "videos": 1440,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 0.7422734000138007
+        },
+        {
+          "description": "logistic/cabezas cascada/AMENAZA_DIRECTA",
+          "rows": 9888,
+          "positives": 481,
+          "videos": 1440,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 0.7008786000078544
+        },
+        {
+          "description": "logistic/cabezas cascada/CONTENIDO_SEXUAL",
+          "rows": 9888,
+          "positives": 1613,
+          "videos": 1440,
+          "calibration": "sigmoid_on_out_of_fold_groupkfold_scores",
+          "calibration_folds": 3,
+          "fit_seconds": 0.42457679999643005
+        }
+      ],
+      "cascade_stage2": {
+        "method": "all_damage_plus_50pct_gate_hard_negatives_plus_50pct_hash_safe",
+        "all_damage_rows": 4944,
+        "safe_rows": 4944,
+        "hard_safe_rows": 2472,
+        "hash_random_safe_rows": 2472,
+        "total_rows": 9888,
+        "selected_chunk_ids_sha256": "e4f4430f34aa427944b61d2ef89a7ee2c03a2d09e98457835f96fe3b1dc89b7d"
+      },
+      "training_seconds": 231.01074519997928,
+      "vectorizer": {
+        "path": "modelos\\jerarquico_clasico\\logistic\\vectorizador.joblib",
+        "sha256": "1e64305aaa6d017f5a782e138cd9cbcbfb9eed0835ddb537f7bd4b5ba003dfbd",
+        "bytes": 1756985
+      },
+      "model_bundle": {
+        "path": "modelos\\jerarquico_clasico\\logistic\\modelos_calibrados.joblib",
+        "sha256": "a8db3d8071a243279d3dc0eff6d142b8ab9a8bc23514ca13f84b24e2125f092e",
+        "bytes": 4596664
+      }
+    },
+    "fasttext_supervised_ova": {
+      "model": "fasttext_supervised_ova",
+      "model_label": "fastText supervisado OVA (sesión 4)",
+      "features": 50,
+      "feature_seconds": 0.0,
+      "fit_seconds": 12.800782800011802,
+      "training_seconds": 12.800782800011802,
+      "text_column": "text",
+      "flash_pseudo_weight": null,
+      "sample_weights_supported": false,
+      "model_parameters": {
+        "lr": 0.5,
+        "epoch": 15,
+        "wordNgrams": 2,
+        "bucket": 200000,
+        "dim": 50,
+        "loss": "ova"
+      },
+      "configuration_origin": "PLN_clases sesión 4 + receta multietiqueta OVA oficial de fastText",
+      "fasttext_cli": "modelos\\moderador_transformer_grueso\\tools\\fasttext.exe",
+      "fasttext_cli_sha256": "9912060209b379032966f72f3a984a9c3edd0b41dd0ce782a19a30d4514efda5",
+      "parameters_reused_from_04_2": {
+        "lr": 0.5,
+        "epoch": 15,
+        "wordNgrams": 2,
+        "bucket": 200000,
+        "dim": 50,
+        "loss": "ova"
+      },
+      "training_seconds_total": 16.638488100026734,
+      "model_artifact": {
+        "path": "modelos\\jerarquico_clasico\\fasttext_plano_ampliado.bin",
+        "sha256": "889c4161c70635f164fc1fb811283370d0e124189fdcdebb87e74a415c199ad9",
+        "bytes": 85217598
+      },
+      "limitation": "fastText CLI does not consume per-row sample weights"
+    }
+  },
+  "models": {
+    "svm__flat": {
+      "label": "SVM lineal calibrado palabra+carácter · Plano",
+      "family": "linear_svm_word_char",
+      "design": "flat",
+      "thresholds": [
+        0.2,
+        0.2,
+        0.175,
+        0.25,
+        0.35
+      ],
+      "validation_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_svm__flat_validation.npy",
+        "sha256": "e9cc80ae41f23853f0eb799c6fbe0227faf35565724d916cb192e2bc37fae7ee",
+        "bytes": 710528
+      },
+      "test_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_svm__flat_test.npy",
+        "sha256": "c56247e488822effdbf9bbd3628851fa2fded3e3eadffeb98b31531488f2c362",
+        "bytes": 706768
+      },
+      "selective_operation": null
+    },
+    "svm__shared_hierarchy": {
+      "label": "SVM lineal calibrado palabra+carácter · Jerárquico clásico con TF-IDF compartido",
+      "family": "linear_svm_word_char",
+      "design": "shared_hierarchy",
+      "thresholds": [
+        0.075,
+        0.075,
+        0.05,
+        0.05,
+        0.125
+      ],
+      "validation_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_svm__shared_hierarchy_validation.npy",
+        "sha256": "d29f6e7c5e930db01845056f5f32ac3dd42316ebeed6928fcfd81fe8eccf3a81",
+        "bytes": 710528
+      },
+      "test_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_svm__shared_hierarchy_test.npy",
+        "sha256": "3da70acbad2e1e586074f761e32fb9b42b82187577b04fac8978e81e2de373a1",
+        "bytes": 706768
+      },
+      "selective_operation": {
+        "calibration_partition": "validation_expanded",
+        "validation_recall_target_for_auto_safe": 0.97,
+        "validation_precision_target_for_auto_damage": 0.9,
+        "low_auto_safe_threshold": 0.025780204684734465,
+        "high_auto_damage_threshold": 0.9767091067437927,
+        "validation": {
+          "n": 17760,
+          "auto_safe_rows": 5244,
+          "auto_damage_rows": 2,
+          "review_rows": 12514,
+          "automatic_coverage": 0.2953828828828829,
+          "review_rate": 0.7046171171171172,
+          "damage_sent_to_review_or_auto_damage_recall": 0.9703153988868275,
+          "damage_automatic_safe_false_negatives": 32,
+          "damage_automatic_safe_false_negative_rate": 0.029684601113172542,
+          "safe_sent_to_review": 11470,
+          "low_auto_safe_threshold": 0.025780204684734465,
+          "high_auto_damage_threshold": 0.9767091067437927
+        },
+        "test": {
+          "n": 17666,
+          "auto_safe_rows": 5511,
+          "auto_damage_rows": 0,
+          "review_rows": 12155,
+          "automatic_coverage": 0.3119551681195517,
+          "review_rate": 0.6880448318804483,
+          "damage_sent_to_review_or_auto_damage_recall": 0.9663784822286263,
+          "damage_automatic_safe_false_negatives": 35,
+          "damage_automatic_safe_false_negative_rate": 0.03362151777137368,
+          "safe_sent_to_review": 11149,
+          "low_auto_safe_threshold": 0.025780204684734465,
+          "high_auto_damage_threshold": 0.9767091067437927
+        }
+      }
+    },
+    "svm__cascade": {
+      "label": "SVM lineal calibrado palabra+carácter · Cascada binaria → multietiqueta",
+      "family": "linear_svm_word_char",
+      "design": "cascade",
+      "thresholds": [
+        0.15,
+        0.15,
+        0.15,
+        0.1,
+        0.25
+      ],
+      "validation_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_svm__cascade_validation.npy",
+        "sha256": "bf69b469ca48b0d1ad7bfb19de0271608115bd2706e6c49bca4801bcd3c4cbb3",
+        "bytes": 710528
+      },
+      "test_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_svm__cascade_test.npy",
+        "sha256": "ecd88fa98b0f429a497dd095274dcb375355f2d0380526eaf9e4cb82914bc6e8",
+        "bytes": 706768
+      },
+      "selective_operation": {
+        "calibration_partition": "validation_expanded",
+        "validation_recall_target_for_auto_safe": 0.97,
+        "validation_precision_target_for_auto_damage": 0.9,
+        "low_auto_safe_threshold": 0.025780204684734465,
+        "high_auto_damage_threshold": 0.9767091067437927,
+        "validation": {
+          "n": 17760,
+          "auto_safe_rows": 5244,
+          "auto_damage_rows": 2,
+          "review_rows": 12514,
+          "automatic_coverage": 0.2953828828828829,
+          "review_rate": 0.7046171171171172,
+          "damage_sent_to_review_or_auto_damage_recall": 0.9703153988868275,
+          "damage_automatic_safe_false_negatives": 32,
+          "damage_automatic_safe_false_negative_rate": 0.029684601113172542,
+          "safe_sent_to_review": 11470,
+          "low_auto_safe_threshold": 0.025780204684734465,
+          "high_auto_damage_threshold": 0.9767091067437927
+        },
+        "test": {
+          "n": 17666,
+          "auto_safe_rows": 5511,
+          "auto_damage_rows": 0,
+          "review_rows": 12155,
+          "automatic_coverage": 0.3119551681195517,
+          "review_rate": 0.6880448318804483,
+          "damage_sent_to_review_or_auto_damage_recall": 0.9663784822286263,
+          "damage_automatic_safe_false_negatives": 35,
+          "damage_automatic_safe_false_negative_rate": 0.03362151777137368,
+          "safe_sent_to_review": 11149,
+          "low_auto_safe_threshold": 0.025780204684734465,
+          "high_auto_damage_threshold": 0.9767091067437927
+        }
+      }
+    },
+    "logistic__flat": {
+      "label": "Regresión logística calibrada · Plano",
+      "family": "logistic_regression",
+      "design": "flat",
+      "thresholds": [
+        0.22499999999999998,
+        0.22499999999999998,
+        0.2,
+        0.175,
+        0.32499999999999996
+      ],
+      "validation_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_logistic__flat_validation.npy",
+        "sha256": "a446609aa73906951a8d00931f8b8f747bbe34eed17dbd34745f07da635fd5f0",
+        "bytes": 710528
+      },
+      "test_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_logistic__flat_test.npy",
+        "sha256": "1b032578cba5ac186dfcb4e5cc5abd811620dfa3ff096fbf3676bc0e1af9b842",
+        "bytes": 706768
+      },
+      "selective_operation": null
+    },
+    "logistic__shared_hierarchy": {
+      "label": "Regresión logística calibrada · Jerárquico clásico con TF-IDF compartido",
+      "family": "logistic_regression",
+      "design": "shared_hierarchy",
+      "thresholds": [
+        0.075,
+        0.075,
+        0.075,
+        0.05,
+        0.15
+      ],
+      "validation_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_logistic__shared_hierarchy_validation.npy",
+        "sha256": "4b8b975f068d8afe28399f36dd40a74bc79de6c324e1fcb8ccc8f06b20b8bcc0",
+        "bytes": 710528
+      },
+      "test_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_logistic__shared_hierarchy_test.npy",
+        "sha256": "d673c174e00195fc3073d3ab7af6c3fae8483d4a731a219db4b274dace0ddba4",
+        "bytes": 706768
+      },
+      "selective_operation": {
+        "calibration_partition": "validation_expanded",
+        "validation_recall_target_for_auto_safe": 0.97,
+        "validation_precision_target_for_auto_damage": 0.9,
+        "low_auto_safe_threshold": 0.02508349192819665,
+        "high_auto_damage_threshold": 0.99315389071584,
+        "validation": {
+          "n": 17760,
+          "auto_safe_rows": 5373,
+          "auto_damage_rows": 1,
+          "review_rows": 12386,
+          "automatic_coverage": 0.3025900900900901,
+          "review_rate": 0.6974099099099099,
+          "damage_sent_to_review_or_auto_damage_recall": 0.9703153988868275,
+          "damage_automatic_safe_false_negatives": 32,
+          "damage_automatic_safe_false_negative_rate": 0.029684601113172542,
+          "safe_sent_to_review": 11341,
+          "low_auto_safe_threshold": 0.02508349192819665,
+          "high_auto_damage_threshold": 0.99315389071584
+        },
+        "test": {
+          "n": 17666,
+          "auto_safe_rows": 5603,
+          "auto_damage_rows": 0,
+          "review_rows": 12063,
+          "automatic_coverage": 0.3171629118079928,
+          "review_rate": 0.6828370881920073,
+          "damage_sent_to_review_or_auto_damage_recall": 0.968299711815562,
+          "damage_automatic_safe_false_negatives": 33,
+          "damage_automatic_safe_false_negative_rate": 0.03170028818443804,
+          "safe_sent_to_review": 11055,
+          "low_auto_safe_threshold": 0.02508349192819665,
+          "high_auto_damage_threshold": 0.99315389071584
+        }
+      }
+    },
+    "logistic__cascade": {
+      "label": "Regresión logística calibrada · Cascada binaria → multietiqueta",
+      "family": "logistic_regression",
+      "design": "cascade",
+      "thresholds": [
+        0.15,
+        0.175,
+        0.125,
+        0.15,
+        0.22499999999999998
+      ],
+      "validation_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_logistic__cascade_validation.npy",
+        "sha256": "1da3c56f2bc9eb6b26341827df354dde0968d5d6d16133e17d700fe41bce04b8",
+        "bytes": 710528
+      },
+      "test_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_logistic__cascade_test.npy",
+        "sha256": "c6ba4c27857a5a47b1f2098569a845a87f41c30da5796aeeed7a1a2cc72f2252",
+        "bytes": 706768
+      },
+      "selective_operation": {
+        "calibration_partition": "validation_expanded",
+        "validation_recall_target_for_auto_safe": 0.97,
+        "validation_precision_target_for_auto_damage": 0.9,
+        "low_auto_safe_threshold": 0.02508349192819665,
+        "high_auto_damage_threshold": 0.99315389071584,
+        "validation": {
+          "n": 17760,
+          "auto_safe_rows": 5373,
+          "auto_damage_rows": 1,
+          "review_rows": 12386,
+          "automatic_coverage": 0.3025900900900901,
+          "review_rate": 0.6974099099099099,
+          "damage_sent_to_review_or_auto_damage_recall": 0.9703153988868275,
+          "damage_automatic_safe_false_negatives": 32,
+          "damage_automatic_safe_false_negative_rate": 0.029684601113172542,
+          "safe_sent_to_review": 11341,
+          "low_auto_safe_threshold": 0.02508349192819665,
+          "high_auto_damage_threshold": 0.99315389071584
+        },
+        "test": {
+          "n": 17666,
+          "auto_safe_rows": 5603,
+          "auto_damage_rows": 0,
+          "review_rows": 12063,
+          "automatic_coverage": 0.3171629118079928,
+          "review_rate": 0.6828370881920073,
+          "damage_sent_to_review_or_auto_damage_recall": 0.968299711815562,
+          "damage_automatic_safe_false_negatives": 33,
+          "damage_automatic_safe_false_negative_rate": 0.03170028818443804,
+          "safe_sent_to_review": 11055,
+          "low_auto_safe_threshold": 0.02508349192819665,
+          "high_auto_damage_threshold": 0.99315389071584
+        }
+      }
+    },
+    "fasttext__flat": {
+      "label": "fastText supervisado OVA · Plano",
+      "family": "fasttext_supervised_ova",
+      "design": "flat",
+      "thresholds": [
+        0.05,
+        0.05,
+        0.05,
+        0.05,
+        0.075
+      ],
+      "validation_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_fasttext__flat_validation.npy",
+        "sha256": "2d4fe3f3c8ac06f4587f841d464d5496d98baccebe925a0c88586fef3b972d85",
+        "bytes": 355328
+      },
+      "test_score_artifact": {
+        "path": "resultados\\metricas\\jerarquico_clasico\\scores_fasttext__flat_test.npy",
+        "sha256": "b525212e613c8fc41076ca65ad66a1cb6944a7d24daf7b2dccb7b077f31ce23e",
+        "bytes": 353448
+      },
+      "selective_operation": null
+    }
+  },
+  "selection": {
+    "partition": "validation_expanded",
+    "metric": "damage_pr_auc_macro",
+    "winner_key": "svm__cascade",
+    "winner_label": "SVM lineal calibrado palabra+carácter · Cascada binaria → multietiqueta",
+    "matched_flat_key": "svm__flat",
+    "paired_decision": {
+      "rule": "Mejora sólo si el IC95% del delta PR-AUC macro es > 0 y el límite superior del delta de tasa de falsos negativos es <= 0.",
+      "status": "diferencia_inconclusa_con_este_test",
+      "replace_flat_model": false,
+      "autonomous_deployment_supported": false,
+      "reason_autonomy": "El test conserva etiquetas mayormente LLM y prevalencia 4:1; se requiere un gold standard humano independiente y un piloto prospectivo."
+    },
+    "test_used_for_selection": false
+  },
+  "paired_decisions": {
+    "svm__cascade": {
+      "rule": "Mejora sólo si el IC95% del delta PR-AUC macro es > 0 y el límite superior del delta de tasa de falsos negativos es <= 0.",
+      "status": "diferencia_inconclusa_con_este_test",
+      "replace_flat_model": false,
+      "autonomous_deployment_supported": false,
+      "reason_autonomy": "El test conserva etiquetas mayormente LLM y prevalencia 4:1; se requiere un gold standard humano independiente y un piloto prospectivo."
+    },
+    "svm__shared_hierarchy": {
+      "rule": "Mejora sólo si el IC95% del delta PR-AUC macro es > 0 y el límite superior del delta de tasa de falsos negativos es <= 0.",
+      "status": "diferencia_inconclusa_con_este_test",
+      "replace_flat_model": false,
+      "autonomous_deployment_supported": false,
+      "reason_autonomy": "El test conserva etiquetas mayormente LLM y prevalencia 4:1; se requiere un gold standard humano independiente y un piloto prospectivo."
+    },
+    "logistic__cascade": {
+      "rule": "Mejora sólo si el IC95% del delta PR-AUC macro es > 0 y el límite superior del delta de tasa de falsos negativos es <= 0.",
+      "status": "diferencia_inconclusa_con_este_test",
+      "replace_flat_model": false,
+      "autonomous_deployment_supported": false,
+      "reason_autonomy": "El test conserva etiquetas mayormente LLM y prevalencia 4:1; se requiere un gold standard humano independiente y un piloto prospectivo."
+    },
+    "logistic__shared_hierarchy": {
+      "rule": "Mejora sólo si el IC95% del delta PR-AUC macro es > 0 y el límite superior del delta de tasa de falsos negativos es <= 0.",
+      "status": "diferencia_inconclusa_con_este_test",
+      "replace_flat_model": false,
+      "autonomous_deployment_supported": false,
+      "reason_autonomy": "El test conserva etiquetas mayormente LLM y prevalencia 4:1; se requiere un gold standard humano independiente y un piloto prospectivo."
+    }
+  },
+  "historical_04_2_comparison": {
+    "partition": "test_4a1",
+    "flat_reference": "SVM lineal plano histórico optimizado en 04_2",
+    "candidate": "svm__cascade",
+    "decision": {
+      "rule": "Mejora sólo si el IC95% del delta PR-AUC macro es > 0 y el límite superior del delta de tasa de falsos negativos es <= 0.",
+      "status": "modelo_plano_superior_en_pr_auc_macro",
+      "replace_flat_model": false,
+      "autonomous_deployment_supported": false,
+      "reason_autonomy": "El test conserva etiquetas mayormente LLM y prevalencia 4:1; se requiere un gold standard humano independiente y un piloto prospectivo."
+    },
+    "bootstrap_artifact": {
+      "path": "resultados\\metricas\\jerarquico_clasico\\bootstrap_ganador_vs_plano_04_2_4a1.csv",
+      "sha256": "802cfa433daa15762850d0db4e5115f7fffa103f8c2d459d7c2b2fe1a7e743b9",
+      "bytes": 786
+    },
+    "interpretation": "Comparison is paired on the same 4:1 test, but training data differ; the delta can combine model-family, architecture, and expanded-safe training effects."
+  },
+  "bootstrap": {
+    "replicates": 1000,
+    "cluster": "video_id",
+    "artifact": {
+      "path": "resultados\\metricas\\jerarquico_clasico\\bootstrap_pareado_por_video.csv",
+      "sha256": "f786da4b2adf959d6891c503217d042c1ffba40ade00dbb0a7841ee598b3d150",
+      "bytes": 2630
+    }
+  },
+  "figure_artifacts": [
+    {
+      "path": "resultados\\figuras\\jerarquico_clasico\\dataset_ampliado_por_split.png",
+      "sha256": "6b61c58034f05d1f91b06519025ee870de0310cc447a55393b91b9b2de16b715",
+      "bytes": 42141
+    },
+    {
+      "path": "resultados\\figuras\\jerarquico_clasico\\comparacion_global_test_ampliado.png",
+      "sha256": "a0f88d73c6e0ad4a774b776f7b3359b3e52b3c5249914acc49232e6728890db8",
+      "bytes": 191266
+    },
+    {
+      "path": "resultados\\figuras\\jerarquico_clasico\\recall_ganador_vs_plano.png",
+      "sha256": "8b65699db90d120c8538b0a847242e8000afb2a99c580fedd5d54ffec01ba292",
+      "bytes": 85247
+    },
+    {
+      "path": "resultados\\figuras\\jerarquico_clasico\\bootstrap_pr_auc_jerarquicos.png",
+      "sha256": "db4b79d6d845d3592163a1b72dcf556c0ee2e7595584113c95e13e77174acc22",
+      "bytes": 52106
+    }
+  ],
+  "limitations": [
+    "The expanded split reflects the available corpus, not prospective production prevalence.",
+    "Labels are mostly LLM-assisted rather than an independent human gold standard.",
+    "fastText CLI does not use per-row sample weights.",
+    "Classical shared hierarchy is post-hoc probabilistic coupling, not joint neural optimization."
+  ],
+  "report_artifact": {
+    "path": "resultados\\INFORME_EXPERIMENTO_JERARQUICO_CLASICO.md",
+    "sha256": "ad5657c84c2cf7caef7139497c67b9b8ffcb1290c4613ff5b16b355fb5ab8e8b",
+    "bytes": 5335
+  }
+}

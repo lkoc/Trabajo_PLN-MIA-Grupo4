@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
+.env
+**/.env
 
 # Datos y modelos generados
 datos/raw/*

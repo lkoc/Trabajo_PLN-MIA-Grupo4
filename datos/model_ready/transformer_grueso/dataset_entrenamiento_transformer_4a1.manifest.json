@@ -1,0 +1,46 @@
+{
+  "method": "deterministic_hash_safe_undersampling",
+  "seed": 20260727,
+  "safe_to_damage_ratio": 4,
+  "rows_before": 117244,
+  "rows_after": 35315,
+  "damage_before": 7063,
+  "damage_after": 7063,
+  "safe_before": 110181,
+  "safe_after": 28252,
+  "damage_pct_before": 6.024188871072294,
+  "damage_pct_after": 20.0,
+  "selected_chunk_ids_sha256": "4f7e7533677136b236933c52165f88f2e3414310704251f7b28ba554da3a275d",
+  "category_counts_after": {
+    "RACISMO_DISCRIMINACION": 1856,
+    "ACOSO_GENERO_IDENTIDAD": 1961,
+    "ACOSO_PERSONAL": 2854,
+    "AMENAZA_DIRECTA": 688,
+    "CONTENIDO_SEXUAL": 2282
+  },
+  "created_at": "2026-07-27T10:52:43-05:00",
+  "ordering": "integrate -> safe undersample 4:1 -> grouped random 70/15/15 split",
+  "input_integrated_dataset": "datos\\model_ready\\transformer_grueso\\dataset_integrado_todas_pasadas.jsonl",
+  "input_integrated_sha256": "3f01b76d285d4cdd2a0922df1d2437a7f01abc4e05e2699c218b1f5faaba2069",
+  "balanced_dataset_output": "datos\\model_ready\\transformer_grueso\\dataset_balanceado_4a1_particionado.jsonl",
+  "balanced_dataset_sha256": "df2ac01183271e44b6dcfb9cb4850bd6b1ef1cd11d9fc51c881be944670ef20f",
+  "training_output": "datos\\model_ready\\transformer_grueso\\dataset_entrenamiento_transformer_4a1.jsonl",
+  "training_output_sha256": "c92ae6fafe977d18861969f41cb072e3754cf53d1e9ab23639d972300fb62ce3",
+  "split_counts": {
+    "train": 24701,
+    "validation": 5324,
+    "test": 5290
+  },
+  "split_damage_counts": {
+    "train": 4944,
+    "validation": 1078,
+    "test": 1041
+  },
+  "split_video_counts": {
+    "train": 2086,
+    "validation": 448,
+    "test": 448
+  },
+  "fine_labels_trained": false,
+  "transversal_flags_trained": false
+}

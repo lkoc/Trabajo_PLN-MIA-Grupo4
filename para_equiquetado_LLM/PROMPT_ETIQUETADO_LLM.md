@@ -18,6 +18,16 @@ búsqueda simple de palabras clave ni por un clasificador heurístico. Nunca dej
 si no existe daño usa `seguro` o, únicamente cuando corresponda, `seguro_ironia_marcada`.
 `seguro` no puede coexistir con una etiqueta de daño.
 
+Respeta estrictamente la separación entre categorías principales y flags transversales:
+`ironia_ambigua`, `humor_encubridor` y `contexto_necesario` van exclusivamente en `flags`,
+nunca en `labels`. Un flag no sustituye la categoría principal. En particular,
+`humor_encubridor` debe registrarse junto con la categoría o categorías de daño que el humor
+encubre; por ejemplo, `labels=["racismo_encubierto"]` y
+`flags=["humor_encubridor"]`.
+Si el análisis produce únicamente flags pero ninguna categoría de daño, no dejes `labels`
+vacío: elimina esos flags y usa `labels=["seguro"]`. Los flags solo se conservan cuando existe
+al menos una categoría de daño sustentada por el texto.
+
 Usa un identificador constante de tres caracteres para todo el archivo: `CGT` para ChatGPT,
 `GEM` para Gemini o `DSK` para DeepSeek. Registra en `annotator_model` el nombre exacto del
 modelo utilizado y en `skill_file` el valor `clasificacion_moderacion_peru.md`.
@@ -46,6 +56,7 @@ chunk original. `ejemplo_formato_salida.jsonl` es únicamente una referencia est
 1. La cantidad de salidas coincide con la cantidad de chunks efectivamente procesados.
 2. No hay `chunk_id` vacío, inventado o duplicado.
 3. Todos los valores de `labels` y `flags` existen en la taxonomía.
+   Las filas cuya categoría sea `FLAG` aparecen solo en `flags`; nunca en `labels`.
 4. `labels` nunca está vacío y `seguro` no coexiste con daño.
 5. Cualquier flag, o confianza menor que 0.70, activa `needs_review=true`.
 6. `ironia_ambigua` o `contexto_necesario` limitan `score_confianza` a 0.65.

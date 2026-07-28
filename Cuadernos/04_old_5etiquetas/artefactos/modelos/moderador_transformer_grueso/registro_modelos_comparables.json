@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.1",
+  "created_at": "2026-07-27T15:49:09-05:00",
+  "dataset": "datos\\model_ready\\transformer_grueso\\dataset_balanceado_4a1_particionado.jsonl",
+  "dataset_sha256": "df2ac01183271e44b6dcfb9cb4850bd6b1ef1cd11d9fc51c881be944670ef20f",
+  "split_manifest": "datos\\model_ready\\transformer_grueso\\dataset_entrenamiento_transformer_4a1.manifest.json",
+  "split_manifest_sha256": "11f87f57c81b217267773fdbd971fe613a473e652c9c64ef2ef2f726e7364bd6",
+  "selection": {
+    "completed_at": "2026-07-27T15:48:47-05:00",
+    "selection_uses_validation_metric": "damage_pr_auc_macro",
+    "test_is_acceptance_gate_not_ranking_metric": true,
+    "selected_model_key": null,
+    "selected_model_label": null,
+    "operating_mode": "none",
+    "status": "no_model_is_ready_for_production",
+    "autonomous_deployment_supported": false,
+    "human_review_alert_supported": false,
+    "mandatory_limitations": [
+      "El test 4:1 no reproduce la prevalencia natural de producción.",
+      "El test no es un gold standard humano independiente.",
+      "Se requiere piloto prospectivo con decisiones humanas y auditoría por categoría."
+    ]
+  },
+  "models": [
+    {
+      "model_key": "classical__linear_svm_word_char",
+      "model_label": "SVM lineal palabra+carácter",
+      "family": "classical",
+      "artifact": {
+        "path": "modelos\\moderador_transformer_grueso\\baseline_clasico_mismo_split\\mejor_modelo_clasico.joblib",
+        "sha256": "4a5c02f1312df8929253eeb884529b1c1e1f3b63c8c266fbe886df50f1bc2efe",
+        "bytes": 4026864
+      },
+      "thresholds": [
+        0.525,
+        0.5499999999999999,
+        0.525,
+        0.49999999999999994,
+        0.5499999999999999
+      ],
+      "evaluation": {
+        "path": "resultados\\metricas\\transformer_grueso\\comparacion_modelos_clasicos.json",
+        "sha256": "f71ab0db0588800c38ccf868c9d5d989bd934cbd6ac62d1d23fae2e2f6a844b3",
+        "bytes": 16302
+      }
+    },
+    {
+      "model_key": "paraphrase_minilm",
+      "model_label": "Paraphrase Multilingual MiniLM-L12",
+      "family": "transformer_full_finetuning",
+      "artifact": {
+        "path": "modelos\\moderador_transformer_grueso\\paraphrase_minilm\\best_checkpoint.pt",
+        "sha256": "21f3107c90b34398fc159f5b62e32f7a0ffbb2b32494653498ee816d52a7c643",
+        "bytes": 470706888
+      },
+      "thresholds": [
+        0.49999999999999994,
+        0.42499999999999993,
+        0.37499999999999994,
+        0.675,
+        0.775
+      ],
+      "evaluation": {
+        "path": "resultados\\metricas\\transformer_grueso\\evaluacion_paraphrase_minilm.json",
+        "sha256": "8086e5fcc7d19d12c33b8dddb13b21b63774434cd60af3d8ce08960fb0f0e199",
+        "bytes": 2327
+      }
+    },
+    {
+      "model_key": "e5_small",
+      "model_label": "Multilingual E5-small (linaje MiniLM)",
+      "family": "transformer_full_finetuning",
+      "artifact": {
+        "path": "modelos\\moderador_transformer_grueso\\e5_small\\best_checkpoint.pt",
+        "sha256": "8220c22d92304547d26b8b05f245c2347f75570ae4e2f04337207328e3a6ef5d",
+        "bytes": 470707208
+      },
+      "thresholds": [
+        0.42499999999999993,
+        0.5499999999999999,
+        0.39999999999999997,
+        0.475,
+        0.7
+      ],
+      "evaluation": {
+        "path": "resultados\\metricas\\transformer_grueso\\evaluacion_e5_small.json",
+        "sha256": "288f3c6813f2cfa47e29072498538c85cdb069cf212aef2e12bb27442a5b7ed0",
+        "bytes": 2300
+      }
+    }
+  ]
+}

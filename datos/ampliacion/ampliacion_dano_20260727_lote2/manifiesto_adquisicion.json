@@ -1,0 +1,138 @@
+{
+  "batch_id": "ampliacion_dano_20260727_lote2",
+  "created_at": "2026-07-27T07:54:18-05:00",
+  "selection_seed": 27072026,
+  "selection_method": "fixed channel quotas plus round-robin targeted YouTube search",
+  "sampling_scope": "enriched training/validation sample; not prevalence representative",
+  "max_selected_videos": 600,
+  "candidate_rows": 2458,
+  "candidate_unique_videos": 2458,
+  "excluded_existing_videos": 942,
+  "prior_unique_video_ids": 2358,
+  "prior_video_id_sources": {
+    "datos\\raw\\transcripts_raw.jsonl": 1858,
+    "datos\\processed\\chunks_para_etiquetar.jsonl": 1856,
+    "datos\\ampliacion\\ampliacion_dano_20260726": 500
+  },
+  "selected_overlap_with_prior": 0,
+  "selected_videos": 600,
+  "selected_by_type": {
+    "high_yield_channel": 312,
+    "targeted_search": 288
+  },
+  "selected_by_target": {
+    "AMENAZA_DIRECTA": 197,
+    "ACOSO_PERSONAL|AMENAZA_DIRECTA": 95,
+    "RACISMO_DISCRIMINACION|ACOSO_PERSONAL|AMENAZA_DIRECTA": 85,
+    "CONTENIDO_SEXUAL|ACOSO_GENERO_IDENTIDAD|AMENAZA_DIRECTA": 70,
+    "ACOSO_PERSONAL|CONTENIDO_SEXUAL|AMENAZA_DIRECTA": 35,
+    "CONTENIDO_SEXUAL|ACOSO_GENERO_IDENTIDAD": 31,
+    "AMENAZA_DIRECTA|ACOSO_GENERO_IDENTIDAD": 30,
+    "RACISMO_DISCRIMINACION": 30,
+    "RACISMO_DISCRIMINACION|AMENAZA_DIRECTA": 27
+  },
+  "canonical_before_sha256": "eb90debf66d5e16af72c41c17c3701197e42bdcc78b81e0f914c6a49c56f8ab4",
+  "base_transcripts_sha256": "452dc98b7473d00ffbd58e2bc7c8bf636f6acb8fd58acea73c03cb16c58b129c",
+  "selected_sha256": "c71f638d64b1f4fc49b54addc50982aa680c05d1a3b670193a130d7ce562d534",
+  "channel_targets": [
+    {
+      "name": "Hablando Huevadas",
+      "url": "https://www.youtube.com/@HablandoHuevadasOficial",
+      "quota": 70,
+      "target": "CONTENIDO_SEXUAL|ACOSO_GENERO_IDENTIDAD|AMENAZA_DIRECTA",
+      "reason": "22.60 chunks de daño y 0.86 amenazas por video en el corpus base"
+    },
+    {
+      "name": "Goblinciano",
+      "url": "https://www.youtube.com/@Goblinciano",
+      "quota": 85,
+      "target": "RACISMO_DISCRIMINACION|ACOSO_PERSONAL|AMENAZA_DIRECTA",
+      "reason": "9.82 chunks de daño y 0.58 amenazas por video en el corpus base"
+    },
+    {
+      "name": "Juanito y Richard",
+      "url": "https://www.youtube.com/@JuanitoyRichard",
+      "quota": 85,
+      "target": "RACISMO_DISCRIMINACION|AMENAZA_DIRECTA",
+      "reason": "2.22 chunks de daño por video; máximo observado de 11 amenazas en un episodio"
+    },
+    {
+      "name": "Arde Troya con Juliana Oxenford",
+      "url": "https://www.youtube.com/@ardetroyalr",
+      "quota": 55,
+      "target": "ACOSO_PERSONAL|AMENAZA_DIRECTA",
+      "reason": "2.41 chunks de daño y 0.39 amenazas por video en el corpus base"
+    },
+    {
+      "name": "Todo Good",
+      "url": "https://www.youtube.com/@todogoodpe",
+      "quota": 40,
+      "target": "ACOSO_PERSONAL|AMENAZA_DIRECTA",
+      "reason": "2.16 chunks de daño por video en el corpus base"
+    },
+    {
+      "name": "Magaly TV La Firme",
+      "url": "https://www.youtube.com/@MagalyTVLaFirmeATV",
+      "quota": 35,
+      "target": "ACOSO_PERSONAL|CONTENIDO_SEXUAL|AMENAZA_DIRECTA",
+      "reason": "1.17 chunks de daño por video y cobertura de conflicto interpersonal"
+    }
+  ],
+  "search_targets": [
+    [
+      "amenazas de muerte Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenaza juez audiencia virtual Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "extorsionadores amenazan audio Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "sicarios amenazan periodista Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "te voy a matar denuncia Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "agresor amenaza pareja Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "denuncia amenazas farándula Perú",
+      "AMENAZA_DIRECTA"
+    ],
+    [
+      "amenazas homofóbicas Perú",
+      "AMENAZA_DIRECTA|ACOSO_GENERO_IDENTIDAD"
+    ],
+    [
+      "insultos racistas discriminación Perú denuncia",
+      "RACISMO_DISCRIMINACION"
+    ],
+    [
+      "acoso sexual denuncia televisión peruana",
+      "CONTENIDO_SEXUAL|ACOSO_GENERO_IDENTIDAD"
+    ]
+  ],
+  "updated_at": "2026-07-27T08:07:38-05:00",
+  "transcript_videos": 548,
+  "subtitle_success_rate": 0.9133333333333333,
+  "new_chunks": 19971,
+  "new_videos_with_chunks": 547,
+  "duplicates_against_base": 0,
+  "duplicates_within_batch": 64,
+  "prior_chunk_sources": {
+    "datos\\processed\\chunks_para_etiquetar.jsonl": 69853,
+    "datos\\ampliacion\\ampliacion_dano_20260726\\processed\\chunks_para_etiquetar.jsonl": 21991
+  },
+  "video_overlap_with_all_prior_campaigns": 0,
+  "transcripts_sha256": "a1d946cd37c8e09108e7334b7e6cee328082d6efb11a6dca910effae1c0be467",
+  "chunks_sha256": "36df3309bd2794de17c434db9f18345aba4d6a581ed9529f8cb331534c9f71bc",
+  "audio_or_video_downloaded": false
+}

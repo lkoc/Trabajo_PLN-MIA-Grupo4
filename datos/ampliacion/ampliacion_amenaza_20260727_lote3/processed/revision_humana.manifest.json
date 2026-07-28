@@ -1,0 +1,30 @@
+{
+  "schema_version": "2.0",
+  "campaign_id": "revision_humana_combinada_1918_v2",
+  "output_id": "ampliacion_amenaza_20260727_lote3",
+  "completed": 108,
+  "included_for_training": 108,
+  "excluded_from_training": 0,
+  "action_counts": {
+    "accept_llm": 32,
+    "modify_llm": 76
+  },
+  "cohort_counts": {
+    "ampliacion_amenaza_20260727_lote3": 108
+  },
+  "split_counts": {
+    "train": 79,
+    "validation": 29
+  },
+  "created_at": "2026-07-27T09:54:15-05:00",
+  "coarse_labels_only": true,
+  "fine_labels_trained": false,
+  "transversal_flags_separate": true,
+  "source_campaign_sha256": "3783f357ac597f1f5f8ed882bdb1827f535e2e03209f83d2d64fe1fa489173fc",
+  "source_events_sha256": "ec5ef41c16e62803053b69641987f6b2ed21dee9fadbdcff39230b13fe39148c",
+  "legacy_events_sha256": "a4d3a27e6f0512fbc30ae383557fd5454647284ecc1e51e8cd1eec167b296da3",
+  "output_sha256": "cb74c8ac258b8b1f9aa5085a6c27bf184b1e3d697553f0ac1533d587885b1afe",
+  "annotator_ids": [
+    "COD"
+  ]
+}
