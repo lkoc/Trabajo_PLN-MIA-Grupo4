@@ -189,7 +189,7 @@ def _select_flat_reference(registry: dict, frames: dict[str, pd.DataFrame]) -> d
         key = item["model_key"]
         if key not in tm.MODEL_SPECS:
             continue
-        evaluation_path = ROOT / item["evaluation"]["path"]
+        evaluation_path = tm.project_path(item["evaluation"]["path"])
         evaluation = _json(evaluation_path)
         validation_score_path = tm.METRICS_DIR / f"scores_{key}_validation.npy"
         test_score_path = tm.METRICS_DIR / f"scores_{key}_test.npy"
@@ -244,8 +244,8 @@ def _select_flat_reference(registry: dict, frames: dict[str, pd.DataFrame]) -> d
 def load_frozen_context() -> dict:
     """Carga y audita el dataset/splits registrados por 04_2."""
     registry = tm.load_model_registry()
-    dataset_path = ROOT / registry["dataset"]
-    manifest_path = ROOT / registry["split_manifest"]
+    dataset_path = tm.project_path(registry["dataset"])
+    manifest_path = tm.project_path(registry["split_manifest"])
     if registry["dataset_sha256"] != sha256_file(dataset_path):
         raise ValueError("El hash del dataset no coincide con el registro de 04_2.")
     if registry["split_manifest_sha256"] != sha256_file(manifest_path):
@@ -310,7 +310,7 @@ def expanded_safe_gate_training_frame(context: dict) -> tuple[pd.DataFrame, dict
     aunque estén disponibles en el integrado completo.
     """
     manifest = _json(context["manifest_path"])
-    integrated_path = ROOT / manifest["input_integrated_dataset"]
+    integrated_path = tm.project_path(manifest["input_integrated_dataset"])
     expected_hash = manifest.get("input_integrated_sha256")
     if not integrated_path.exists() or sha256_file(integrated_path) != expected_hash:
         raise ValueError("El dataset integrado completo está ausente o cambió de hash.")

@@ -287,6 +287,12 @@ def project_relative(path: Path) -> str:
             except ValueError:
                 pass
         return candidate.resolve().relative_to(ROOT.resolve()).as_posix()
+
+
+def project_path(value: str | Path) -> Path:
+    """Convierte una ruta serializada en Windows o POSIX a una ruta del proyecto."""
+    normalized = Path(str(value).replace("\\", "/"))
+    return normalized if normalized.is_absolute() else ROOT / normalized
 CACHE_DIR = ROOT / "datos" / "model_ready" / "transformer_grueso"
 METRICS_DIR = ROOT / "resultados" / "metricas" / "transformer_grueso"
 FIGURES_DIR = ROOT / "resultados" / "figuras" / "transformer_grueso"
@@ -3171,7 +3177,7 @@ def load_model_registry() -> dict:
     registry = json.loads(MODEL_REGISTRY_PATH.read_text(encoding="utf-8"))
     if registry.get("dataset_sha256") != sha256_file(BALANCED_DATASET_PATH):
         raise ValueError("El registro no corresponde al dataset 4:1 actual.")
-    manifest_path = ROOT / registry["split_manifest"]
+    manifest_path = project_path(registry["split_manifest"])
     if (
         not manifest_path.exists()
         or registry.get("split_manifest_sha256") != sha256_file(manifest_path)
@@ -3180,16 +3186,16 @@ def load_model_registry() -> dict:
     for model in registry["models"]:
         artifact = model.get("artifact")
         if artifact:
-            path = ROOT / artifact["path"]
+            path = project_path(artifact["path"])
             if not path.exists() or sha256_file(path) != artifact["sha256"]:
                 raise ValueError(f"Artefacto ausente o alterado: {path}")
         for artifact_file in model.get("artifact_files", []):
-            path = ROOT / artifact_file["path"]
+            path = project_path(artifact_file["path"])
             if not path.exists() or sha256_file(path) != artifact_file["sha256"]:
                 raise ValueError(f"Artefacto ausente o alterado: {path}")
         evaluation = model.get("evaluation")
         if evaluation:
-            path = ROOT / evaluation["path"]
+            path = project_path(evaluation["path"])
             if not path.exists() or sha256_file(path) != evaluation["sha256"]:
                 raise ValueError(f"Resultado ausente o alterado: {path}")
     return registry
@@ -3232,7 +3238,7 @@ def load_registered_model(
         raise KeyError(f"Modelo no registrado: {model_key}") from exc
     family = item["family"]
     if family == "classical":
-        path = ROOT / item["artifact"]["path"]
+        path = project_path(item["artifact"]["path"])
         model = path if path.suffix.lower() == ".bin" else joblib.load(path)
         return model, item
     if family == "transformer_full_finetuning":

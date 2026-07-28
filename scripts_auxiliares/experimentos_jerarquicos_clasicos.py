@@ -125,7 +125,7 @@ def load_expanded_context() -> dict:
     manifest = _json(manifest_path)
     if sha256_file(balanced_path) != manifest["balanced_dataset_sha256"]:
         raise ValueError("El dataset 4:1 no coincide con su manifiesto.")
-    integrated_path = ROOT / manifest["input_integrated_dataset"]
+    integrated_path = tm.project_path(manifest["input_integrated_dataset"])
     if sha256_file(integrated_path) != manifest["input_integrated_sha256"]:
         raise ValueError("El dataset integrado no coincide con su manifiesto.")
     balanced = pd.DataFrame(read_jsonl(balanced_path))

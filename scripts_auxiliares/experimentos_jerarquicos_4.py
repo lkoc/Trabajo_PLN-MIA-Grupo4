@@ -190,7 +190,7 @@ def expanded_safe_gate_training_frame(context: dict) -> tuple[pd.DataFrame, dict
     contaminan las particiones de evaluación.
     """
     manifest = json.loads(context["manifest_path"].read_text(encoding="utf-8"))
-    integrated_path = ROOT / manifest["input_integrated_dataset"]
+    integrated_path = tm.project_path(manifest["input_integrated_dataset"])
     expected_hash = manifest.get("input_integrated_sha256")
     if not integrated_path.exists() or sha256_file(integrated_path) != expected_hash:
         raise ValueError("El dataset integrado completo está ausente o cambió de hash.")
@@ -282,10 +282,10 @@ def _select_flat_reference(registry: dict, frames: dict[str, pd.DataFrame]) -> d
         key = item["model_key"]
         if key not in tm.MODEL_SPECS:
             continue
-        evaluation_path = ROOT / item["evaluation"]["path"]
+        evaluation_path = tm.project_path(item["evaluation"]["path"])
         validation_path = tm.METRICS_DIR / f"scores_{key}_validation.npy"
         test_path = tm.METRICS_DIR / f"scores_{key}_test.npy"
-        checkpoint_path = ROOT / item["artifact"]["path"]
+        checkpoint_path = tm.project_path(item["artifact"]["path"])
         for path in (evaluation_path, validation_path, test_path, checkpoint_path):
             if not path.exists():
                 raise FileNotFoundError(f"Falta artefacto de 04_2: {path}")

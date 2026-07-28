@@ -785,9 +785,9 @@ def _load_resume_checkpoint(
         raise ValueError("El checkpoint reanudable corresponde a otra taxonomía.")
     if pointer.get("output_labels") != OUTPUT_LABELS:
         raise ValueError("El checkpoint usa otra configuración de salidas auxiliares.")
-    directory = ROOT / pointer["directory"]
+    directory = tm.project_path(pointer["directory"])
     for artifact in pointer["files"]:
-        path = ROOT / artifact["path"]
+        path = tm.project_path(artifact["path"])
         if not path.exists() or sha256_file(path) != artifact["sha256"]:
             raise ValueError(f"Checkpoint reanudable incompleto o alterado: {path}")
     model = load_adapter(directory, target_device)
