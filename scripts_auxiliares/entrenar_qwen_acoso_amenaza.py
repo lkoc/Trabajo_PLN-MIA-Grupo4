@@ -755,9 +755,20 @@ def _rng_state() -> dict:
 def _restore_rng_state(state: dict) -> None:
     random.setstate(state["python"])
     np.random.set_state(state["numpy"])
-    torch.set_rng_state(state["torch"])
+    cpu_rng = state["torch"]
+    if isinstance(cpu_rng, torch.Tensor):
+        cpu_rng = cpu_rng.detach().to(device="cpu", dtype=torch.uint8)
+    else:
+        cpu_rng = torch.as_tensor(cpu_rng, dtype=torch.uint8, device="cpu")
+    torch.set_rng_state(cpu_rng)
     if torch.cuda.is_available() and state.get("cuda") is not None:
-        torch.cuda.set_rng_state_all(state["cuda"])
+        cuda_rng = [
+            value.detach().to(device="cpu", dtype=torch.uint8)
+            if isinstance(value, torch.Tensor)
+            else torch.as_tensor(value, dtype=torch.uint8, device="cpu")
+            for value in state["cuda"]
+        ]
+        torch.cuda.set_rng_state_all(cuda_rng)
 
 
 def _resume_slot_path(slot: str) -> Path:
@@ -856,11 +867,28 @@ def resume_status() -> dict:
             and pointer_epoch is not None
             and pointer_epoch <= MAX_EPOCHS
         )
+        can_force_extend = (
+            epochs_completed < MAX_EPOCHS
+            and pointer_epoch is not None
+            and pointer_epoch > MAX_EPOCHS
+        )
         return {
-            "status": "extendable" if can_extend else "completed",
+            "status": (
+                "extendable"
+                if can_extend
+                else "force_extendable"
+                if can_force_extend
+                else "completed"
+            ),
             "epochs_completed": epochs_completed,
             "configured_max_epochs": MAX_EPOCHS,
-            "next_epoch": pointer_epoch if can_extend else None,
+            "next_epoch": (
+                pointer_epoch
+                if can_extend
+                else epochs_completed + 1
+                if can_force_extend
+                else None
+            ),
             "best_epoch": result["best_epoch"],
             "adapter": result["adapter"],
         }
@@ -885,6 +913,7 @@ def run_finetuning(
     resume: bool = True,
     force_restart: bool = False,
     save_every_optimizer_steps: int = SAVE_EVERY_OPTIMIZER_STEPS,
+    force_complete_max_epochs: bool = False,
 ) -> dict:
     frames, audit = (load_frames() if frames is None else (frames, load_frames()[1]))
     extending_completed_run = False
@@ -905,7 +934,7 @@ def run_finetuning(
                     "terminado sin reiniciar."
                 )
             pointer_epoch = int(_json(RESUME_POINTER_PATH)["epoch"])
-            if pointer_epoch > MAX_EPOCHS:
+            if pointer_epoch > MAX_EPOCHS and not force_complete_max_epochs:
                 return result
             extending_completed_run = True
             print(
@@ -968,6 +997,29 @@ def run_finetuning(
         optimizer_state = None
     else:
         model, state, optimizer_state = loaded
+        completed_history = len(state.get("history", []))
+        if (
+            force_complete_max_epochs
+            and completed_history < MAX_EPOCHS
+            and int(state["epoch"]) > MAX_EPOCHS
+        ):
+            # Early stopping marca epoch=MAX_EPOCHS+1. Los pesos, Adam, el
+            # scheduler y el RNG siguen siendo los del último epoch realmente
+            # terminado, por lo que se puede continuar desde el siguiente.
+            state.update(
+                {
+                    "epoch": completed_history + 1,
+                    "completed_batches": 0,
+                    "cumulative_loss": 0.0,
+                    "seen": 0,
+                    "optimizer_steps_in_epoch": 0,
+                    "stale_epochs": 0,
+                }
+            )
+            print(
+                "Early stopping anulado para completar el horizonte: "
+                f"se ejecutará la época {state['epoch']}/{MAX_EPOCHS}."
+            )
         print(
             f"Reanudando época {state['epoch']}, después del lote "
             f"{state['completed_batches']:,}."
@@ -1175,6 +1227,11 @@ def run_finetuning(
                 "damage labels plus masked fine-label and transversal-flag auxiliaries"
             ),
         }
+        _save_adapter_snapshot(
+            MODEL_DIR / "epoch_adapters" / f"epoch_{epoch:02d}",
+            model,
+            snapshot_state,
+        )
         _save_adapter_snapshot(MODEL_DIR / "last_adapter", model, snapshot_state)
         score = float(metrics["damage_pr_auc_macro"])
         if score > state["best_score"] + 1e-6:
@@ -1190,7 +1247,10 @@ def run_finetuning(
             f"{metrics['any_damage_recall']:.4f}"
         )
         _append_log("epoch_completed", **epoch_record)
-        early_stop = state["stale_epochs"] >= tm.EARLY_STOPPING_PATIENCE
+        early_stop = (
+            not force_complete_max_epochs
+            and state["stale_epochs"] >= tm.EARLY_STOPPING_PATIENCE
+        )
         state.update(
             {
                 "epoch": MAX_EPOCHS + 1 if early_stop else epoch + 1,
@@ -1255,6 +1315,7 @@ def run_finetuning(
         "gradient_accumulation": GRADIENT_ACCUMULATION,
         "effective_batch_size": TRAIN_BATCH_SIZE * GRADIENT_ACCUMULATION,
         "max_epochs": MAX_EPOCHS,
+        "force_complete_max_epochs": bool(force_complete_max_epochs),
         "epochs_completed": len(state["history"]),
         "best_epoch": int(state["best_epoch"]),
         "best_validation_damage_pr_auc_macro": float(state["best_score"]),

@@ -67,12 +67,40 @@ def _require_completed_qwen() -> dict:
             f"04_205 corresponde al plan anterior de {result.get('max_epochs')} épocas. "
             f"Complete primero la extensión con máximo {q4.MAX_EPOCHS} épocas."
         )
-    state = q4.MODEL_DIR / "best_adapter" / "training_state.json"
+    if int(result.get("epochs_completed", 0)) < q4.MAX_EPOCHS:
+        raise RuntimeError(
+            f"04_205 sólo completó {result.get('epochs_completed')} épocas. "
+            f"Ejecute la época {q4.MAX_EPOCHS} forzada antes de continuar."
+        )
+    selection_path = q4.METRICS_DIR / "seleccion_operativa_validacion.json"
+    if not selection_path.exists():
+        raise FileNotFoundError(
+            "04_205 aún no calibró ni seleccionó sus dos mejores checkpoints."
+        )
+    selection = json.loads(selection_path.read_text(encoding="utf-8"))
+    if selection.get("test_consulted_for_selection") is not False:
+        raise RuntimeError("La selección operativa no acredita aislamiento de test.")
+    adapter_directory = ROOT / selection["selected_adapter"]
+    state = adapter_directory / "training_state.json"
     if not state.exists():
-        raise FileNotFoundError("04_205 no tiene best_adapter completo.")
+        raise FileNotFoundError("04_205 no tiene completo el adaptador seleccionado.")
+    state_artifact = _artifact(state)
+    selected = next(
+        row
+        for row in selection["candidates"]
+        if int(row["epoch"]) == int(selection["selected_epoch"])
+    )
+    if state_artifact["sha256"] != selected["adapter_training_state_sha256"]:
+        raise RuntimeError("El adaptador seleccionado cambió después de calibrarlo.")
+    weights = adapter_directory / "adapter_model.safetensors"
+    if not weights.exists() or sha256_file(weights) != selected["adapter_weights_sha256"]:
+        raise RuntimeError("Los pesos seleccionados cambiaron después de calibrarlos.")
     return {
         "training": result,
-        "best_adapter_state": _artifact(state),
+        "selection": selection,
+        "adapter_directory": tm.project_relative(adapter_directory),
+        "adapter_state": state_artifact,
+        "best_adapter_state": state_artifact,
     }
 
 
@@ -152,7 +180,7 @@ def _feature_path(split: str) -> tuple[Path, Path]:
 
 
 def extract_features(context: dict, force: bool = False) -> dict[str, np.ndarray]:
-    adapter_sha = context["qwen"]["best_adapter_state"]["sha256"]
+    adapter_sha = context["qwen"]["adapter_state"]["sha256"]
     feature_frames = {
         "train_expanded": context["feature_train_frame"],
         "validation": context["frames"]["validation"],
@@ -182,7 +210,8 @@ def extract_features(context: dict, force: bool = False) -> dict[str, np.ndarray
     if pending:
         device = q4.device()
         tokenizer = q4.tokenizer()
-        model, _ = q4.load_best_model(device)
+        adapter_directory = ROOT / context["qwen"]["adapter_directory"]
+        model = q4.load_adapter(adapter_directory, device)
         for split in pending:
             loader = DataLoader(
                 _TextDataset(feature_frames[split]),
