@@ -14,12 +14,12 @@ Esta carpeta organiza el flujo reproducible del moderador de contenido para vide
    - `04_202_transformers_planos_4_etiquetas.ipynb`: MiniLM y E5 planos.
    - `04_203_transformer_cascada_4_etiquetas.ipynb`: Transformer en dos etapas.
    - `04_204_transformer_jerarquico_multitarea_4_etiquetas.ipynb`: Transformer jerárquico con encoder compartido.
-   - `04_205_finetuning_qwen_acoso_amenaza.ipynb`: Qwen3-0.6B LoRA plano con supervisión auxiliar fina/transversal.
-   - `04_206_qwen_cascada_y_jerarquico_4_etiquetas.ipynb`: cabezas de cascada y multitarea sobre representaciones Qwen congeladas; requiere que termine `04_205`.
-   - `04_207_comparacion_final_modelos_4_etiquetas.ipynb`: comparación sobre el test 4:1 común.
-   - `04_208_auditoria_finas_transversales_modelos_4.ipynb`: auditoría común por etiquetas finas, flags e incertidumbre.
+   - `04_205_finetuning_qwen_acoso_amenaza.ipynb`: Qwen3-0.6B LoRA plano con supervisión auxiliar fina/transversal; completó cuatro épocas y seleccionó la época operativa 3 sólo con validación.
+   - `04_206_qwen_cascada_y_jerarquico_4_etiquetas.ipynb`: cabezas de cascada y multitarea sobre representaciones de la época operativa 3; reutiliza entrenamientos existentes y sincroniza `04_205` desde Drive si hace falta.
+   - `04_207_comparacion_final_modelos_4_etiquetas.ipynb`: comparación sobre validation/test 4:1 comunes; recupera resultados remotos faltantes y evita duplicar la referencia Qwen plana.
+   - `04_208_auditoria_finas_transversales_modelos_4.ipynb`: auditoría común por etiquetas finas, flags e incertidumbre; verifica Drive y registra la procedencia del checkpoint Qwen.
    - `04_old_5etiquetas/`: cuadernos, resultados y modelos históricos de cinco etiquetas, conservados para reproducibilidad y warm start.
-5. `05_frontend_produccion.ipynb`: arma el prototipo de inferencia local y el frontend de produccion.
+5. `05_frontend_produccion.ipynb`: inicia el servidor local con HTML autocontenido. Detecta texto o YouTube, rechaza videos sin subtítulos, permite escoger/ comparar/consensuar los tres mejores tipos de modelo y guarda revisión humana y estadísticas. La guía está en `05_MODO_OPERACION.md`.
 
 ## Directorios de salida
 
@@ -32,4 +32,4 @@ Esta carpeta organiza el flujo reproducible del moderador de contenido para vide
 
 ## Criterio de uso de datos
 
-El proyecto usa contenido publico, respeta terminos de servicio y conserva solo los datos necesarios para investigacion. La lista de canales es una semilla editable; cada fuente debe verificarse manualmente antes de entrar a descarga automatica. No se usan llaves ni APIs externas.
+El proyecto usa contenido público, respeta los términos de servicio y conserva sólo los datos necesarios para investigación. La lista de canales es una semilla editable; cada fuente debe verificarse antes de la descarga. Las credenciales nunca se guardan en los cuadernos. Si se usa un servicio externo autorizado para una fase de etiquetado, su salida, coste y procedencia se registran y la decisión final sigue sujeta a revisión humana.

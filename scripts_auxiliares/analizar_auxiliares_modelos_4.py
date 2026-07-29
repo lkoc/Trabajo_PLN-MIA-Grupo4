@@ -47,20 +47,38 @@ def _json(path: Path) -> dict:
 
 def collect_models() -> tuple[list[dict], list[str]]:
     models, missing = [], []
-    if q4.EVALUATION_PATH.exists():
-        result = _json(q4.EVALUATION_PATH)
+    if q4.OPERATIONAL_SELECTION_PATH.exists() and q4.OPERATIONAL_TEST_PATH.exists():
+        operational = q4.load_operational_evaluation(
+            load_scores=True,
+            require_test=True,
+        )
         models.append(
             {
                 "key": "qwen4_flat",
-                "label": "Qwen 04_205 plano",
+                "label": (
+                    "Qwen 04_205 plano · época operativa "
+                    f"{operational['selected_epoch']}"
+                ),
                 "regime": "coarse + fine/flag auxiliary multitask",
-                "scores": np.load(q4.METRICS_DIR / "scores_calibrated_test.npy"),
-                "thresholds": np.asarray(result["thresholds_selected_on_validation"]),
-                "dataset_sha256": result["dataset_sha256"],
+                "scores": operational["scores"]["test"],
+                "thresholds": np.asarray(
+                    operational["thresholds_selected_on_validation"]
+                ),
+                "dataset_sha256": operational["dataset_sha256"],
+                "checkpoint_provenance": {
+                    "selected_epoch": operational["selected_epoch"],
+                    "selected_adapter": operational["selected_adapter"],
+                    "selection_artifact": operational["artifacts"]["selection"],
+                    "test_used_for_selection": False,
+                },
             }
         )
     else:
-        missing.append(str(q4.EVALUATION_PATH.relative_to(ROOT)))
+        missing.extend(
+            str(path.relative_to(ROOT))
+            for path in (q4.OPERATIONAL_SELECTION_PATH, q4.OPERATIONAL_TEST_PATH)
+            if not path.exists()
+        )
 
     if t4.RESULT_PATH.exists():
         result = _json(t4.RESULT_PATH)
@@ -212,7 +230,12 @@ def run_analysis(review_fractions=(0.10, 0.20)) -> dict:
         "dataset_sha256": audit["dataset_sha256"],
         "test_rows": len(test),
         "models_analyzed": [
-            {"key": model["key"], "label": model["label"], "regime": model["regime"]}
+            {
+                "key": model["key"],
+                "label": model["label"],
+                "regime": model["regime"],
+                "checkpoint_provenance": model.get("checkpoint_provenance"),
+            }
             for model in models
         ],
         "missing_results": missing,
@@ -252,6 +275,17 @@ def _figures(fine: pd.DataFrame, flag: pd.DataFrame) -> None:
 
 
 def _write_report(result: dict, fine: pd.DataFrame, flag: pd.DataFrame) -> None:
+    qwen = next(
+        (model for model in result["models_analyzed"] if model["key"] == "qwen4_flat"),
+        None,
+    )
+    qwen_provenance = (
+        f"La referencia Qwen plana corresponde a la época operativa "
+        f"**{qwen['checkpoint_provenance']['selected_epoch']}**, elegida en validation "
+        "sin consultar test."
+        if qwen and qwen.get("checkpoint_provenance")
+        else "La referencia Qwen plana no estaba disponible."
+    )
     report = f"""# Auditoría de etiquetas finas y transversales
 
 Fecha: {result['completed_at']}
@@ -260,8 +294,14 @@ Se analizaron {len(result['models_analyzed'])} modelos sobre el mismo test de {r
 
 Las etiquetas finas y flags **no se usaron como predictores gold**. Qwen `04_205` sí las usa como supervisión auxiliar multitararea y `04_206` consume sus logits auxiliares; los demás son controles `coarse-only`. Por tanto, una diferencia entre esos regímenes no debe atribuirse exclusivamente a la arquitectura sin una ablación específica.
 
+{qwen_provenance}
+
 - Tabla fina: `resultados/metricas/auditoria_auxiliar_modelos_4/desempeno_por_etiqueta_fina.csv`
 - Tabla de flags: `resultados/metricas/auditoria_auxiliar_modelos_4/captura_flags_por_incertidumbre.csv`
 - Resultados pendientes: {', '.join(result['missing_results']) if result['missing_results'] else 'ninguno'}.
+
+## Conclusión
+
+Esta auditoría sirve para detectar debilidades por fenómeno fino y para estudiar qué casos capturaría una cola de revisión. Sus diferencias son descriptivas: no sustituyen la comparación principal de cuatro daños, no prueban causalmente el beneficio de la supervisión auxiliar y no autorizan despliegue autónomo.
 """
     REPORT_PATH.write_text(report, encoding="utf-8")

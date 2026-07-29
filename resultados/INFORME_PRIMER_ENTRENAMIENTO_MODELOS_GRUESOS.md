@@ -1,5 +1,7 @@
 # Informe del primer intento de entrenamiento con etiquetas gruesas
 
+> **Informe histórico del contrato de cinco etiquetas.** No corresponde a los cuadernos activos `04_201`–`04_208`.
+
 **Fecha de ejecución:** 26 de julio de 2026  
 **Cuaderno:** `Cuadernos/04_entrenamiento_moderador.ipynb`  
 **Estado del experimento:** baseline reproducido de extremo a extremo y congelado antes de aplicar mejoras.
@@ -115,4 +117,3 @@ La afirmación se limita además porque todavía no existe un holdout humano ind
 - Figura comparativa: `resultados/figuras/moderador_grueso/comparacion_modelos_y_f1_categoria.png`.
 - Curva de revisión: `resultados/figuras/moderador_grueso/curva_revision_flags.png`.
 - Modelo exportado: `modelos/moderador_grueso/moderador_cinco_danos_o_seguro.joblib`.
-

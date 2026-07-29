@@ -1,5 +1,7 @@
 # Informe del fine-tuning Transformer para categorías gruesas
 
+> **Informe histórico del contrato de cinco etiquetas.** Se conserva para reproducibilidad y no representa la selección activa de cuatro daños.
+
 Fecha de ejecución: 2026-07-27T15:49:08-05:00  
 Instantánea humana: `datos\etiquetado\humano\snapshots_entrenamiento\revision_humana_final_r3226_db88b85c6d3a.json`  
 SHA-256 de la instantánea: `db88b85c6d3a5c4da1d1e4e6fb32adceeec61b04683c3ac4a80efb6b539a9815`

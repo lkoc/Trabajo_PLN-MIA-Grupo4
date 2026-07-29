@@ -1,5 +1,7 @@
 # Criterios para seleccionar los modelos Transformer del moderador
 
+> **Documento histórico del contrato de cinco etiquetas.** Se conserva como evidencia de las decisiones previas y no describe los experimentos activos `04_201`–`04_208`. Para el dataset, taxonomía y resultados vigentes de cuatro daños, consulte `Cuadernos/04_MATRIZ_ENTRENAMIENTO_4_ETIQUETAS.md` y `resultados/metricas/comparacion_final_4/comparacion_todos_modelos_4.csv`.
+
 Fecha de decisión: 27 de julio de 2026  
 Ámbito: clasificación multietiqueta de cinco categorías gruesas de daño; `SEGURO` se deriva cuando ninguna categoría de daño supera su umbral. Las etiquetas finas y las categorías transversales no son objetivos de entrenamiento.
 

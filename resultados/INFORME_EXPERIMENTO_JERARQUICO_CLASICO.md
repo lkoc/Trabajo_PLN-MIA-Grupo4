@@ -1,5 +1,7 @@
 # Experimento jerárquico clásico con SEGURO ampliado
 
+> **Informe histórico del contrato de cinco etiquetas.** La comparación activa está en `INFORME_EXPERIMENTO_JERARQUICO_CLASICO_4.md` y en la matriz de cuatro daños.
+
 Fecha: 2026-07-27T13:41:32-05:00
 
 ## Diseño y datos

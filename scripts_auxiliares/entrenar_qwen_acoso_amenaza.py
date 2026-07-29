@@ -110,12 +110,15 @@ ALERT_RECALL_TARGET = 0.95
 
 RUN_KEY = "qwen3_06b_lora_acoso_amenaza_4"
 MODEL_DIR = ROOT / "modelos" / RUN_KEY
+BUNDLED_BASE_MODEL_DIR = MODEL_DIR / "base_model"
 METRICS_DIR = ROOT / "resultados" / "metricas" / RUN_KEY
 FIGURES_DIR = ROOT / "resultados" / "figuras" / RUN_KEY
 REPORT_PATH = ROOT / "resultados" / "INFORME_QWEN_ACOSO_AMENAZA_4.md"
 TRAINING_RESULT_PATH = METRICS_DIR / "finetuning.json"
 EVALUATION_PATH = METRICS_DIR / "evaluacion_calibrada.json"
 OPERATION_PATH = METRICS_DIR / "operacion_selectiva.json"
+OPERATIONAL_SELECTION_PATH = METRICS_DIR / "seleccion_operativa_validacion.json"
+OPERATIONAL_TEST_PATH = METRICS_DIR / "evaluacion_test_modelo_seleccionado.json"
 COMPARISON_PATH = METRICS_DIR / "comparacion_referencias.csv"
 PROGRESS_LOG_PATH = METRICS_DIR / "progreso.jsonl"
 RESUME_POINTER_PATH = MODEL_DIR / "resume_pointer.json"
@@ -147,6 +150,126 @@ def _directory_artifacts(directory: Path) -> list[dict]:
     return [
         _artifact(path) for path in sorted(directory.rglob("*")) if path.is_file()
     ]
+
+
+def load_operational_evaluation(
+    *,
+    load_scores: bool = True,
+    require_test: bool = True,
+) -> dict:
+    """Carga el checkpoint elegido por la política operativa, no ``best_adapter``.
+
+    ``best_adapter`` conserva la mejor época por PR-AUC de validación. La selección
+    operativa compara los dos mejores checkpoints al mismo objetivo de recall y puede
+    elegir otra época. Esta función es el punto único para consumidores posteriores.
+    """
+    required = [TRAINING_RESULT_PATH, OPERATIONAL_SELECTION_PATH]
+    if require_test:
+        required.append(OPERATIONAL_TEST_PATH)
+    missing = [_relative(path) for path in required if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(
+            "Faltan artefactos de la selección operativa de 04_205:\n"
+            + "\n".join(missing)
+        )
+
+    training = _json(TRAINING_RESULT_PATH)
+    selection = _json(OPERATIONAL_SELECTION_PATH)
+    if training.get("status") != "completed":
+        raise RuntimeError("04_205 no figura como entrenamiento completado.")
+    if selection.get("test_consulted_for_selection") is not False:
+        raise RuntimeError("La selección operativa no acredita aislamiento de test.")
+
+    selected_epoch = int(selection["selected_epoch"])
+    candidate = next(
+        (
+            row
+            for row in selection.get("candidates", [])
+            if int(row.get("epoch", -1)) == selected_epoch
+        ),
+        None,
+    )
+    if candidate is None:
+        raise RuntimeError("La época seleccionada no aparece entre los candidatos.")
+
+    adapter_directory = ROOT / selection["selected_adapter"]
+    state_path = adapter_directory / "training_state.json"
+    weights_path = adapter_directory / "adapter_model.safetensors"
+    for path in (state_path, weights_path):
+        if not path.is_file():
+            raise FileNotFoundError(f"Adaptador operativo incompleto: {_relative(path)}")
+    if sha256_file(state_path) != candidate["adapter_training_state_sha256"]:
+        raise RuntimeError("Cambió el estado del adaptador después de seleccionarlo.")
+    if sha256_file(weights_path) != candidate["adapter_weights_sha256"]:
+        raise RuntimeError("Cambiaron los pesos del adaptador después de seleccionarlo.")
+
+    score_paths = {
+        "validation": ROOT / candidate["validation_scores"],
+        "test": METRICS_DIR / f"scores_test_selected_epoch_{selected_epoch:02d}.npy",
+    }
+    missing_scores = [_relative(path) for path in score_paths.values() if not path.is_file()]
+    if missing_scores and load_scores:
+        raise FileNotFoundError(
+            "Faltan scores del checkpoint operativo:\n" + "\n".join(missing_scores)
+        )
+
+    test_evaluation = _json(OPERATIONAL_TEST_PATH) if OPERATIONAL_TEST_PATH.is_file() else None
+    if test_evaluation is not None:
+        if int(test_evaluation.get("selected_epoch_fixed_before_test", -1)) != selected_epoch:
+            raise RuntimeError("La evaluación de test no corresponde a la época seleccionada.")
+        if test_evaluation.get("test_used_for_selection") is not False:
+            raise RuntimeError("La evaluación operativa no acredita aislamiento de test.")
+
+    result = {
+        "dataset_sha256": training["dataset_sha256"],
+        "training": training,
+        "selection": selection,
+        "selected_candidate": candidate,
+        "selected_epoch": selected_epoch,
+        "selected_adapter": selection["selected_adapter"],
+        "adapter_directory": adapter_directory,
+        "thresholds_selected_on_validation": candidate[
+            "thresholds_selected_on_validation"
+        ],
+        "metrics": {
+            "validation": candidate["classification_validation"],
+            "test": (
+                test_evaluation["classification_test"]
+                if test_evaluation is not None
+                else None
+            ),
+        },
+        "routing": {
+            "validation": candidate["routing_validation_at_target_recall"],
+            "test": (
+                test_evaluation["routing_test_at_validation_cutoff"]
+                if test_evaluation is not None
+                else None
+            ),
+        },
+        "score_paths": score_paths,
+        "artifacts": {
+            "selection": _artifact(OPERATIONAL_SELECTION_PATH),
+            "adapter_training_state": _artifact(state_path),
+            "adapter_weights": _artifact(weights_path),
+            "validation_scores": (
+                _artifact(score_paths["validation"])
+                if score_paths["validation"].is_file()
+                else None
+            ),
+            "test_scores": (
+                _artifact(score_paths["test"])
+                if score_paths["test"].is_file()
+                else None
+            ),
+        },
+        "test_evaluation": test_evaluation,
+    }
+    if load_scores:
+        result["scores"] = {
+            split: np.load(path) for split, path in score_paths.items()
+        }
+    return result
 
 
 def _append_log(event: str, **values: object) -> None:
@@ -584,12 +707,25 @@ def device() -> torch.device:
 
 
 def _base_model():
+    configured_source = os.getenv("QWEN_BASE_MODEL_PATH", "").strip()
+    if configured_source:
+        configured_path = Path(configured_source).expanduser()
+        if not configured_path.is_absolute():
+            configured_path = ROOT / configured_path
+        source = str(configured_path.resolve())
+        source_kwargs = {"local_files_only": True}
+    elif (BUNDLED_BASE_MODEL_DIR / "config.json").is_file():
+        source = str(BUNDLED_BASE_MODEL_DIR)
+        source_kwargs = {"local_files_only": True}
+    else:
+        source = MODEL_SPEC.model_id
+        source_kwargs = {"revision": MODEL_SPEC.revision}
     model = AutoModelForSequenceClassification.from_pretrained(
-        MODEL_SPEC.model_id,
-        revision=MODEL_SPEC.revision,
+        source,
         num_labels=len(OUTPUT_LABELS),
         problem_type="multi_label_classification",
         torch_dtype=torch.float32,
+        **source_kwargs,
     )
     model.config.pad_token_id = model.config.eos_token_id
     model.config.use_cache = False
@@ -1669,6 +1805,80 @@ Ruder, S. (2017). An overview of multi-task learning in deep neural networks. *a
         FIGURES_DIR / "comparacion_y_calibracion.png", dpi=180, bbox_inches="tight"
     )
     plt.close(figure)
+
+
+def write_operational_report() -> dict:
+    """Regenera el informe final desde la selección operativa ya congelada."""
+    operational = load_operational_evaluation(load_scores=False, require_test=True)
+    training = operational["training"]
+    selection = operational["selection"]
+    selected = operational["selected_candidate"]
+    ordinary = operational["metrics"]["test"]
+    selective = operational["routing"]["test"]
+    gate = operational["test_evaluation"]["human_review_gate"]
+    candidate_rows = "\n".join(
+        f"| {row['epoch']} | {row['classification_validation']['damage_pr_auc_macro']:.4f} | "
+        f"{row['routing_validation_at_target_recall']['recall']:.4f} | "
+        f"{row['routing_validation_at_target_recall']['precision']:.4f} | "
+        f"{row['routing_validation_at_target_recall']['review_rate']:.2%} | "
+        f"{row['routing_validation_at_target_recall']['false_negatives']} |"
+        for row in selection["candidates"]
+    )
+    category_rows = "\n".join(
+        f"| {label} | {value:.4f} |"
+        for label, value in ordinary["category_recall"].items()
+    )
+    failed_checks = [name for name, passed in gate["checks"].items() if not passed]
+    report = f"""# Qwen3-0.6B LoRA con cuatro daños
+
+Fecha: {tm.now_iso()}
+
+## Diseño y selección
+
+Se entrenó `Qwen/Qwen3-0.6B-Base` con LoRA durante {training['epochs_completed']} épocas para cuatro daños: {', '.join(TARGET_LABELS)}. `SEGURO` se deriva cuando ninguna categoría supera su umbral. Las 14 etiquetas finas y tres banderas transversales son supervisión auxiliar; no amplían las salidas operativas.
+
+`best_adapter` conserva la época **{training['best_epoch']}**, que maximiza el PR-AUC macro de validación. Para la política de alto recall se compararon los dos mejores checkpoints al mismo objetivo de {selection['recall_target']:.0%}, exclusivamente en validación:
+
+| Época | PR-AUC validación | Recall de revisión | Precisión de revisión | Tasa de revisión | Falsos negativos |
+|---:|---:|---:|---:|---:|---:|
+{candidate_rows}
+
+La regla predefinida seleccionó la época **{operational['selected_epoch']}** porque redujo la tasa de revisión manteniendo el objetivo de recall. La selección quedó fijada antes de consultar test (`test_used_for_selection = false`). El adaptador operativo es `{operational['selected_adapter']}`.
+
+## Resultado final en test
+
+- PR-AUC macro de daño: {ordinary['damage_pr_auc_macro']:.4f}.
+- F1 macro de daño: {ordinary['damage_f1_macro']:.4f}.
+- Precisión de cualquier daño: {ordinary['any_damage_precision']:.4f}.
+- Recall ordinario de cualquier daño: {ordinary['any_damage_recall']:.4f}.
+- Daños clasificados como seguros: {ordinary['missed_damage_as_safe']}.
+
+| Categoría | Recall test |
+|---|---:|
+{category_rows}
+
+## Operación selectiva al objetivo de recall
+
+Con el corte fijado en validación, test alcanza recall {selective['recall']:.4f}, precisión {selective['precision']:.4f}, tasa de revisión {selective['review_rate']:.2%}, VPN {selective['negative_predictive_value']:.4f} y {selective['false_negatives']} falsos negativos automáticos. La puerta operativa resulta **{'aprobada' if gate['passed'] else 'no aprobada'}**; controles incumplidos: {', '.join(failed_checks) if failed_checks else 'ninguno'}.
+
+## Conclusión sobre desempeño y producción
+
+El modelo muestra capacidad útil para priorizar revisión, pero su clasificación ordinaria aún es moderada y la política de alto recall requiere revisar {selective['review_rate']:.2%} de los textos. Por ello, **no está listo para moderación autónoma, bloqueo ni sanción en producción**. Puede usarse en experimentación fuera de línea o en un piloto controlado en modo sombra, con revisión humana y sin afectar usuarios. Antes de desplegarlo se necesita un gold standard humano independiente, prevalencia real, validación prospectiva y controles de capacidad, latencia, coste, deriva y desempeño por subgrupos.
+
+## Referencias (APA 7)
+
+Hu, E. J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., Wang, L., & Chen, W. (2022). LoRA: Low-rank adaptation of large language models. *International Conference on Learning Representations*. https://openreview.net/forum?id=nZeVKeeFYf9
+
+Niculescu-Mizil, A., & Caruana, R. (2005). Predicting good probabilities with supervised learning. In *Proceedings of the 22nd International Conference on Machine Learning* (pp. 625–632). ACM. https://doi.org/10.1145/1102351.1102430
+
+Qwen Team. (2025). Qwen3 technical report. *arXiv*. https://doi.org/10.48550/arXiv.2505.09388
+"""
+    REPORT_PATH.write_text(report, encoding="utf-8")
+    return {
+        "selected_epoch": operational["selected_epoch"],
+        "report_artifact": _artifact(REPORT_PATH),
+        "test_used_for_selection": False,
+    }
 
 
 def finalize(

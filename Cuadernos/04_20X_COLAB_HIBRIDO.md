@@ -52,8 +52,24 @@ Para incluir Qwen, después de cerrar cualquier entrenamiento local que escriba 
 powershell -ExecutionPolicy Bypass -File .\scripts_auxiliares\recuperar_resultados_colab_04_20x.ps1 -IncludeQwen
 ```
 
+También existen alcances precisos para evitar copiar familias no relacionadas:
+
+```powershell
+# Sólo fine-tuning, calibración y adaptadores de 04_205
+powershell -ExecutionPolicy Bypass -File .\scripts_auxiliares\recuperar_resultados_colab_04_20x.ps1 -Qwen04_205Only
+
+# Sólo cabezas, scores e informe de 04_206
+powershell -ExecutionPolicy Bypass -File .\scripts_auxiliares\recuperar_resultados_colab_04_20x.ps1 -Qwen04_206Only
+
+# Conjunto completo 04_205 + 04_206
+powershell -ExecutionPolicy Bypass -File .\scripts_auxiliares\recuperar_resultados_colab_04_20x.ps1 -Qwen04_20XOnly
+
+# Artefactos mínimos que necesita el servidor 05 (E5 ganador + Qwen operativo)
+powershell -ExecutionPolicy Bypass -File .\scripts_auxiliares\recuperar_resultados_colab_04_20x.ps1 -DeploymentOnly
+```
+
 La recuperación compara SHA-256. Si encuentra un archivo local distinto, se detiene para impedir una sobrescritura silenciosa. `-Force` sólo debe usarse después de revisar el conflicto. Cada recuperación genera un registro en `resultados/logs/sincronizacion_colab_04_20x/`.
 
-Una vez recuperado, el mismo código local encuentra los checkpoints en sus rutas habituales. Esto permite continuar entrenamiento, posprocesar o cargar el adaptador elegido para producción. Para producción debe utilizarse el `best_adapter` final y conservar su manifiesto/estado, no un slot transitorio de reanudación.
+Una vez recuperado, el mismo código local encuentra los checkpoints en sus rutas habituales. Esto permite continuar entrenamiento o posprocesar sin repetirlo. `best_adapter` y el adaptador operativo no son necesariamente el mismo: en la ejecución actual, `best_adapter` es la época 2 por PR-AUC de validación y la selección operativa es `epoch_adapters/epoch_03`, elegida a igual objetivo de recall antes de test. Los consumidores deben leer `seleccion_operativa_validacion.json`, verificar hashes y conservar su estado; nunca deben usar un slot transitorio de reanudación.
 
-`04_207` y `04_208` son comparación y auditoría, no fine-tuning. La ruta recomendada es recuperar primero los resultados y ejecutarlos con kernel local; así comparan en `D:` los artefactos de los modelos clásicos, Transformers y Qwen reunidos.
+`04_206` verifica y sincroniza `04_205` al arrancar si la copia local falta o es una extensión consistente. `04_207` y `04_208` son comparación y auditoría, no fine-tuning; también verifican el bundle y recuperan archivos ausentes. Si Drive y `D:` contienen archivos distintos, se conserva la copia local y se exige revisar el conflicto antes de usar `-Force`.

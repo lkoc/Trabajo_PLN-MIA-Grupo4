@@ -31,18 +31,26 @@ Los modelos planos usan el 4:1 para permitir comparación directa. Las puertas b
 | 2 | `04_202_transformers_planos_4_etiquetas.ipynb` | MiniLM y E5 | Plano | Train 4:1 | No | No en entrenamiento; auditoría común en `04_208` |
 | 3 | `04_203_transformer_cascada_4_etiquetas.ipynb` | E5/MiniLM seleccionado | Puerta binaria + segunda etapa | Segunda etapa 4:1 | Puerta: 76.874 seguros sin fuga | No en entrenamiento; auditoría común en `04_208` |
 | 4 | `04_204_transformer_jerarquico_multitarea_4_etiquetas.ipynb` | E5/MiniLM seleccionado | Encoder compartido, puerta + cuatro daños | Pérdida temática 4:1 | Cabeza binaria: 76.874; pérdida temática enmascarada en extras | No en entrenamiento; auditoría común en `04_208` |
-| 5 | `04_205_finetuning_qwen_acoso_amenaza.ipynb` | Qwen3-0.6B LoRA | Plano, cuatro daños | Train 4:1 | No | Supervisión auxiliar multitararea: el modelo las predice |
-| 6 | `04_206_qwen_cascada_y_jerarquico_4_etiquetas.ipynb` | Qwen `04_205` congelado + cabezas | Cascada y multitarea | Cabezas temáticas 4:1 | Cabeza binaria: 76.874; ejecutar después de `04_205` | Usa logits auxiliares predichos por Qwen; no usa anotación gold en inferencia |
+| 5 | `04_205_finetuning_qwen_acoso_amenaza.ipynb` | Qwen3-0.6B LoRA | Plano, cuatro daños; cuatro épocas | Train 4:1 | No | Supervisión auxiliar multitarea: el modelo las predice |
+| 6 | `04_206_qwen_cascada_y_jerarquico_4_etiquetas.ipynb` | Qwen `04_205` época operativa 3 congelada + cabezas | Cascada y multitarea | Cabezas temáticas 4:1 | Cabeza binaria: 76.874; ejecutar después de `04_205` | Usa logits auxiliares predichos por Qwen; no usa anotación gold en inferencia |
 | 7 | `04_207_comparacion_final_modelos_4_etiquetas.ipynb` | Todas | Comparación final sobre test común | Solo lectura de resultados | No aplica | Compara las cuatro etiquetas gruesas |
 | 8 | `04_208_auditoria_finas_transversales_modelos_4.ipynb` | Todas | Auditoría por subgrupos e incertidumbre | Mismo test 4:1 | No aplica | Audita etiquetas finas y flags en todos los modelos terminados |
 
 ## Orden sugerido
 
-El orden completo está en `04_200_ORDEN_EJECUCION.md`. Los cuadernos `04_201`–`04_205` pueden ejecutarse independientemente, aunque conviene respetar el orden pedagógico. `04_206` depende estrictamente de que `04_205` haya terminado y generado `best_adapter` y `finetuning.json`. `04_207` y `04_208` van al final.
+El orden completo está en `04_200_ORDEN_EJECUCION.md`. Los cuadernos `04_201`–`04_205` pueden ejecutarse independientemente, aunque conviene respetar el orden pedagógico. `04_206` depende estrictamente de que `04_205` haya completado cuatro épocas y generado `finetuning.json`, `seleccion_operativa_validacion.json`, `evaluacion_test_modelo_seleccionado.json` y el adaptador de la época seleccionada. `04_207` y `04_208` van al final.
 
 La ejecución Qwen iniciada bajo el nombre anterior `04_7_finetuning_qwen_acoso_amenaza.ipynb` equivale a `04_205`. Se conserva temporalmente para no interrumpir el kernel y no debe ejecutarse una segunda vez desde el nombre nuevo.
 
 Todos los resultados se seleccionan con validation; test queda reservado para evaluación final. Las comparaciones jerárquicas usan bootstrap pareado por `video_id`.
+
+## Estado actual de la selección Qwen
+
+`best_adapter` corresponde a la época 2 porque maximiza PR-AUC de validación. La política operativa fijada antes de test seleccionó la época 3 al comparar los dos mejores checkpoints a 95 % de recall: mantuvo el objetivo con mejor precisión y menor tasa de revisión. Los cuadernos `04_206`–`04_208` deben usar la época 3, no el alias `best_adapter`.
+
+La comparación recalculada indica que Qwen plano sigue siendo superior a sus dos variantes jerárquicas. En test, Qwen plano obtiene PR-AUC 0,5488, F1 0,5247 y recall 0,7003; el ganador entre los jerárquicos obtiene 0,5320, 0,5170 y 0,6398, además de 63 daños adicionales clasificados como seguros. No se reemplaza el modelo plano.
+
+`04_207` publica para `05` un registro desplegable con los ganadores por familia: SVM plano, E5-small plano y Qwen plano época operativa 3. `04_208` verifica sus hashes y mantiene la auditoría de los 13 modelos disponibles; el servidor no escoge modelos usando test.
 
 ## Regla contra fuga de información
 

@@ -1,5 +1,7 @@
 # Informe del segundo intento: mejoras del clasificador grueso
 
+> **Informe histórico del contrato de cinco etiquetas.** No corresponde a los cuadernos activos `04_201`–`04_208`.
+
 **Fecha de ejecución:** 26 de julio de 2026  
 **Cuaderno:** `Cuadernos/04_1_mejoras_entrenamiento_moderador.ipynb`  
 **Baseline de comparación:** `resultados/INFORME_PRIMER_ENTRENAMIENTO_MODELOS_GRUESOS.md`
@@ -100,4 +102,3 @@ Lin, T.-Y., Goyal, P., Girshick, R., He, K., & Dollár, P. (2017). Focal loss fo
 Saito, T., & Rehmsmeier, M. (2015). The precision-recall plot is more informative than the ROC plot when evaluating binary classifiers on imbalanced datasets. *PLOS ONE, 10*(3), e0118432. https://doi.org/10.1371/journal.pone.0118432
 
 Song, X., Petrak, J., & Roberts, A. (2018). A deep neural network sentence level classification method with context information. In *Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing* (pp. 900–904). Association for Computational Linguistics. https://doi.org/10.18653/v1/D18-1107
-

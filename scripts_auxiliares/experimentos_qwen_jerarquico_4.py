@@ -55,11 +55,8 @@ def _ids_sha256(values) -> str:
 
 
 def _require_completed_qwen() -> dict:
-    if not q4.TRAINING_RESULT_PATH.exists():
-        raise RuntimeError(
-            "04_205 todavía está entrenando o no terminó. Espere a que genere finetuning.json."
-        )
-    result = json.loads(q4.TRAINING_RESULT_PATH.read_text(encoding="utf-8"))
+    operational = q4.load_operational_evaluation(load_scores=False, require_test=True)
+    result = operational["training"]
     if result.get("status") != "completed":
         raise RuntimeError("El entrenamiento de 04_205 no figura como completado.")
     if int(result.get("max_epochs", 0)) < q4.MAX_EPOCHS:
@@ -72,33 +69,15 @@ def _require_completed_qwen() -> dict:
             f"04_205 sólo completó {result.get('epochs_completed')} épocas. "
             f"Ejecute la época {q4.MAX_EPOCHS} forzada antes de continuar."
         )
-    selection_path = q4.METRICS_DIR / "seleccion_operativa_validacion.json"
-    if not selection_path.exists():
-        raise FileNotFoundError(
-            "04_205 aún no calibró ni seleccionó sus dos mejores checkpoints."
-        )
-    selection = json.loads(selection_path.read_text(encoding="utf-8"))
-    if selection.get("test_consulted_for_selection") is not False:
-        raise RuntimeError("La selección operativa no acredita aislamiento de test.")
-    adapter_directory = ROOT / selection["selected_adapter"]
-    state = adapter_directory / "training_state.json"
-    if not state.exists():
-        raise FileNotFoundError("04_205 no tiene completo el adaptador seleccionado.")
-    state_artifact = _artifact(state)
-    selected = next(
-        row
-        for row in selection["candidates"]
-        if int(row["epoch"]) == int(selection["selected_epoch"])
-    )
-    if state_artifact["sha256"] != selected["adapter_training_state_sha256"]:
-        raise RuntimeError("El adaptador seleccionado cambió después de calibrarlo.")
-    weights = adapter_directory / "adapter_model.safetensors"
-    if not weights.exists() or sha256_file(weights) != selected["adapter_weights_sha256"]:
-        raise RuntimeError("Los pesos seleccionados cambiaron después de calibrarlos.")
+    selection = operational["selection"]
+    state_artifact = operational["artifacts"]["adapter_training_state"]
     return {
         "training": result,
         "selection": selection,
-        "adapter_directory": tm.project_relative(adapter_directory),
+        "selected_epoch": operational["selected_epoch"],
+        "selection_partition": selection["selection_partition"],
+        "test_used_for_selection": False,
+        "adapter_directory": tm.project_relative(operational["adapter_directory"]),
         "adapter_state": state_artifact,
         "best_adapter_state": state_artifact,
     }
@@ -456,22 +435,16 @@ def _joint(context: dict, features: dict, force: bool = False) -> dict:
     }
 
 
-def run_experiment(
-    force: bool = False,
-    use_expanded_safe: bool = True,
-    bootstrap_replicates: int = tm.BOOTSTRAP_REPLICATES,
+def _finalize_comparison(
+    context: dict,
+    models: list[dict],
+    operational: dict,
+    bootstrap_replicates: int,
 ) -> dict:
-    context = load_context(use_expanded_safe=use_expanded_safe)
-    features = extract_features(context, force=force)
-    qwen_evaluation = q4.evaluate_calibrated(context["frames"], force=False)
-    reference_scores = {
-        split: np.load(q4.METRICS_DIR / f"scores_calibrated_{split}.npy")
-        for split in ("validation", "test")
-    }
+    reference_scores = operational["scores"]
     reference_thresholds = np.asarray(
-        qwen_evaluation["thresholds_selected_on_validation"], dtype=float
+        operational["thresholds_selected_on_validation"], dtype=float
     )
-    models = [_cascade(context, features), _joint(context, features, force=force)]
     rows, decisions = [], {}
     y_test = h4.four_targets(context["frames"]["test"])
     for model in models:
@@ -513,7 +486,10 @@ def run_experiment(
         rows.append(
             {
                 "model_key": "qwen4_flat",
-                "modelo": "Qwen 04_205 plano",
+                "modelo": (
+                    "Qwen 04_205 plano · época operativa "
+                    f"{operational['selected_epoch']}"
+                ),
                 "split": split,
                 **{key: value for key, value in metrics.items() if key != "category_recall"},
             }
@@ -533,6 +509,15 @@ def run_experiment(
             "expanded_safe": context["expansion"],
         },
         "qwen_feature_extractor": context["qwen"],
+        "qwen_flat_reference": {
+            "selected_epoch": operational["selected_epoch"],
+            "selected_adapter": operational["selected_adapter"],
+            "selection_partition": operational["selection"]["selection_partition"],
+            "selection_rule": operational["selection"]["selection_rule"],
+            "test_used_for_selection": False,
+            "thresholds_selected_on_validation": reference_thresholds.tolist(),
+            "artifacts": operational["artifacts"],
+        },
         "feature_outputs": q4.OUTPUT_LABELS,
         "models": {
             model["key"]: {
@@ -561,8 +546,78 @@ def run_experiment(
     return result
 
 
+def run_experiment(
+    force: bool = False,
+    use_expanded_safe: bool = True,
+    bootstrap_replicates: int = tm.BOOTSTRAP_REPLICATES,
+) -> dict:
+    context = load_context(use_expanded_safe=use_expanded_safe)
+    features = extract_features(context, force=force)
+    models = [_cascade(context, features), _joint(context, features, force=force)]
+    operational = q4.load_operational_evaluation(load_scores=True, require_test=True)
+    return _finalize_comparison(
+        context,
+        models,
+        operational,
+        bootstrap_replicates=bootstrap_replicates,
+    )
+
+
+def refresh_comparison_from_existing(
+    *,
+    use_expanded_safe: bool = True,
+    bootstrap_replicates: int = tm.BOOTSTRAP_REPLICATES,
+) -> dict:
+    """Recalcula la comparación con el Qwen operativo sin reentrenar cabezas."""
+    if not RESULT_PATH.is_file():
+        raise FileNotFoundError(
+            "No existe resultado.json de 04_206; ejecute primero el experimento."
+        )
+    previous = json.loads(RESULT_PATH.read_text(encoding="utf-8"))
+    context = load_context(use_expanded_safe=use_expanded_safe)
+    models = []
+    for key, record in previous["models"].items():
+        score_paths = {
+            split: METRICS_DIR / f"scores_{key}_{split}.npy"
+            for split in ("validation", "test")
+        }
+        missing = [tm.project_relative(path) for path in score_paths.values() if not path.is_file()]
+        if missing:
+            raise FileNotFoundError(
+                "Faltan scores jerárquicos para refrescar la comparación:\n"
+                + "\n".join(missing)
+            )
+        models.append(
+            {
+                "key": key,
+                "label": record["label"],
+                "thresholds": np.asarray(record["thresholds"], dtype=float),
+                "training": record["training"],
+                "scores": {
+                    split: np.load(path) for split, path in score_paths.items()
+                },
+            }
+        )
+    operational = q4.load_operational_evaluation(load_scores=True, require_test=True)
+    return _finalize_comparison(
+        context,
+        models,
+        operational,
+        bootstrap_replicates=bootstrap_replicates,
+    )
+
+
 def _write_report_figure(result: dict, comparison: pd.DataFrame) -> None:
     test = comparison.loc[comparison["split"].eq("test")]
+    flat = test.loc[test["model_key"].eq("qwen4_flat")].iloc[0]
+    winner = test.loc[
+        test["model_key"].eq(result["selection"]["winner_key"])
+    ].iloc[0]
+    replace_flat = bool(
+        result["paired_decisions_vs_qwen_flat"]
+        .get(result["selection"]["winner_key"], {})
+        .get("replace_flat_model", False)
+    )
     rows = "\n".join(
         f"| {row.modelo} | {row.damage_pr_auc_macro:.4f} | {row.damage_f1_macro:.4f} | "
         f"{row.any_damage_recall:.4f} | {int(row.missed_damage_as_safe)} |"
@@ -572,13 +627,19 @@ def _write_report_figure(result: dict, comparison: pd.DataFrame) -> None:
 
 Fecha: {tm.now_iso()}
 
-El adaptador terminado por `04_205` permanece congelado y produce 21 logits: cuatro operativos y 17 auxiliares. Sobre esas representaciones se entrenan una cascada logística y una cabeza neuronal multitarea. La supervisión binaria usa {result['dataset']['expanded_safe']['expanded_gate_safe_rows']:,} SEGURO de train; la pérdida temática de la cabeza conjunta se enmascara en los negativos adicionales. Validation/test son exactamente los de `04_205`.
+El adaptador operativo de la época **{result['qwen_flat_reference']['selected_epoch']}**, elegido en validación antes de consultar test, permanece congelado y produce 21 logits: cuatro operativos y 17 auxiliares. Sobre esas mismas representaciones se entrenan una cascada logística y una cabeza neuronal multitarea. La supervisión binaria usa {result['dataset']['expanded_safe']['expanded_gate_safe_rows']:,} SEGURO de train; la pérdida temática de la cabeza conjunta se enmascara en los negativos adicionales. Validation/test son exactamente los de `04_205`, y tanto las cabezas jerárquicas como la referencia plana corresponden al mismo checkpoint operativo.
 
 | Modelo | PR-AUC macro | F1 macro | Recall daño | Daños como seguro |
 |---|---:|---:|---:|---:|
 {rows}
 
-Ganador jerárquico por validation: **{result['selection']['winner_label']}**. Las decisiones pareadas frente a Qwen plano están en `resultado.json`. Esta variante es Qwen congelado más cabezas jerárquicas; no es un segundo fine-tuning end-to-end del LLM. No autoriza autonomía sin validación humana independiente.
+Ganador entre los dos diseños jerárquicos por validation: **{result['selection']['winner_label']}**. Las decisiones pareadas frente a Qwen plano están en `resultado.json`. Esta variante es Qwen congelado más cabezas jerárquicas; no es un segundo fine-tuning end-to-end del LLM.
+
+## Conclusión sobre el esquema jerárquico
+
+El ganador jerárquico obtiene en test PR-AUC macro {winner['damage_pr_auc_macro']:.4f}, F1 macro {winner['damage_f1_macro']:.4f}, recall de daño {winner['any_damage_recall']:.4f} y deja {int(winner['missed_damage_as_safe'])} daños como seguros. La referencia Qwen plana operativa obtiene respectivamente {flat['damage_pr_auc_macro']:.4f}, {flat['damage_f1_macro']:.4f}, {flat['any_damage_recall']:.4f} y {int(flat['missed_damage_as_safe'])}. Las diferencias del ganador jerárquico frente al plano son {winner['damage_pr_auc_macro'] - flat['damage_pr_auc_macro']:+.4f} en PR-AUC, {winner['damage_f1_macro'] - flat['damage_f1_macro']:+.4f} en F1, {winner['any_damage_recall'] - flat['any_damage_recall']:+.4f} en recall y {int(winner['missed_damage_as_safe'] - flat['missed_damage_as_safe']):+d} falsos negativos de daño.
+
+Por tanto, **{'hay evidencia para reemplazar el Qwen plano por el esquema jerárquico' if replace_flat else 'estos esquemas jerárquicos no resultan mejores que Qwen plano y no deben reemplazarlo'}** bajo el criterio pareado predefinido. Este resultado tampoco autoriza autonomía: cualquier uso operativo requiere validación humana independiente y un piloto prospectivo.
 
 ## Referencias (APA 7)
 

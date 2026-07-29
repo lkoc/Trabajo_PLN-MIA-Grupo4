@@ -1,74 +1,41 @@
-# Moderador de Contenido en Videos de YouTube
+# Moderador de contenido en videos de YouTube
 
-Trabajo final del curso de Procesamiento de Lenguaje Natural, Maestria en Inteligencia Artificial, Universidad Nacional de Ingenieria. Grupo 4, semestre 2026-1.
+Trabajo final del curso de Procesamiento de Lenguaje Natural, Maestría en Inteligencia Artificial, Universidad Nacional de Ingeniería. Grupo 4, semestre 2026-1.
 
 ## Objetivo
 
-Construir un flujo local y reproducible para recolectar texto de videos publicos de YouTube, crear fragmentos auditables, etiquetarlos con revision humana, entrenar un clasificador de moderacion de contenido y presentar los resultados en formato de paper IEEE.
+Construir un flujo reproducible para recolectar transcripciones públicas, crear fragmentos auditables, etiquetarlos, entrenar clasificadores multietiqueta y comparar su utilidad para moderación asistida. La taxonomía activa contiene cuatro daños: `RACISMO_DISCRIMINACION`, `ACOSO_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`; `SEGURO` se deriva cuando ninguno se activa.
 
-El proyecto se enfoca en contenido peruano de politica, periodismo, farandula, humor, streaming y viajes. La recoleccion y el procesamiento se realizan sin APIs externas.
+## Flujo activo
 
-## Estructura del repositorio
+1. `Cuadernos/01*`: descubrimiento y recolección de transcripciones públicas.
+2. `Cuadernos/02*`: limpieza, segmentación y deduplicación.
+3. `Cuadernos/03*`: etiquetado, consolidación y revisión humana.
+4. `Cuadernos/04_201`–`04_208`: modelos clásicos, Transformers, Qwen, comparación final y auditoría.
+5. `Cuadernos/05_frontend_produccion.ipynb`: servidor local, texto/YouTube, comparación/consenso, revisión humana y estadísticas reentrenables. Consulte `Cuadernos/05_MODO_OPERACION.md`.
 
-```text
-.
-|-- Cuadernos/
-|   |-- 01_scraping_youtube_politica_farandula.ipynb
-|   |-- 02_limpieza_y_chunks.ipynb
-|   |-- 03_frontend_etiquetado_humano_html.ipynb
-|   |-- 04_entrenamiento_moderador.ipynb
-|   |-- 05_frontend_produccion.ipynb
-|   `-- frontend/
-|-- Presentación_BEAMER/
-|   |-- presentacion_grupo4.tex
-|   `-- presentacion_grupo4.pdf
-|-- Documento_final_paper/
-|   |-- paper_moderador_contenido_youtube_ieee.tex
-|   |-- referencias.bib
-|   |-- figuras/
-|   |-- guia_estructura_paper_ieee.md
-|   `-- guia_redaccion_paper_ieee.md
-|-- bibliografia/
-|-- scripts_auxiliares/
-|-- datos/
-|-- modelos/
-|-- resultados/
-`-- PLN_clases/
-```
+El contrato de entrenamiento vigente está en [Cuadernos/04_MATRIZ_ENTRENAMIENTO_4_ETIQUETAS.md](Cuadernos/04_MATRIZ_ENTRENAMIENTO_4_ETIQUETAS.md) y el orden reproducible en [Cuadernos/04_200_ORDEN_EJECUCION.md](Cuadernos/04_200_ORDEN_EJECUCION.md). Los experimentos históricos de cinco etiquetas se conservan en `Cuadernos/04_old_5etiquetas/` y no deben mezclarse con el flujo activo.
 
-## Flujo de trabajo
+## Estado de Qwen
 
-1. Revisar los canales candidatos en `bibliografia/canales_candidatos.md`.
-2. Ejecutar los cuadernos en orden desde `Cuadernos/`.
-3. Guardar datos crudos en `datos/raw`, intermedios en `datos/interim` y datasets finales en `datos/processed`.
-4. Guardar modelos entrenados en `modelos/`.
-5. Guardar metricas, figuras y reportes en `resultados/`.
-6. Actualizar el paper IEEE en `Documento_final_paper/`.
-7. Actualizar la presentacion Beamer en `Presentación_BEAMER/`.
+`04_205` completó cuatro épocas. La época 2 sigue siendo el `best_adapter` formal por PR-AUC de validación, mientras que la época 3 es el checkpoint operativo: fue elegida entre los dos mejores modelos al mismo objetivo de 95 % de recall, con menor tasa de revisión y sin consultar test. `04_206`, `04_207` y `04_208` consumen explícitamente esa época operativa y verifican sus hashes.
 
-## Compilacion
+La comparación actual conserva Qwen plano como mejor modelo global por validación. Los esquemas Qwen jerárquicos no lo superan y no deben reemplazarlo. Ningún resultado autoriza moderación autónoma; el uso defendible es experimentación o piloto en modo sombra con revisión humana.
 
-Beamer:
+## Directorios
 
-```powershell
-cd "Presentación_BEAMER"
-pdflatex -interaction=nonstopmode -halt-on-error presentacion_grupo4.tex
-```
-
-Paper IEEE:
-
-```powershell
-cd Documento_final_paper
-pdflatex -interaction=nonstopmode -halt-on-error paper_moderador_contenido_youtube_ieee.tex
-bibtex paper_moderador_contenido_youtube_ieee
-pdflatex -interaction=nonstopmode -halt-on-error paper_moderador_contenido_youtube_ieee.tex
-pdflatex -interaction=nonstopmode -halt-on-error paper_moderador_contenido_youtube_ieee.tex
-```
+- `datos/`: insumos, datos intermedios y datasets congelados.
+- `modelos/`: checkpoints, adaptadores, calibradores y cabezas entrenadas.
+- `resultados/`: métricas, figuras, informes y registros de sincronización.
+- `05_frontend_despliegue/`: bundle Docker autocontenido generado por el
+  cuaderno 05; se ignora en Git por su tamaño y contiene su propia guía.
+- `scripts_auxiliares/`: entrenamiento reproducible, evaluación, auditoría y sincronización.
+- `Documento_final_paper/` y `Presentación_BEAMER/`: entregables académicos.
 
 ## Criterios del proyecto
 
-- No usar APIs para recolectar datos, etiquetar contenido ni clasificar texto.
-- Mantener evidencia trazable: video, canal, fragmento, categoria, score y texto activador.
-- Usar revision humana para las etiquetas y para los casos ambiguos.
-- Priorizar un baseline local defendible antes de modelos Transformer.
-- Evitar datos innecesarios, duplicados o no auditables.
+- Mantener evidencia trazable por video, chunk, etiqueta, score y artefacto.
+- Separar entrenamiento, selección/calibración en validación y evaluación final en test.
+- Usar revisión humana para decisiones ambiguas y para cualquier piloto operativo.
+- No almacenar credenciales. Las llamadas opcionales a servicios externos para etiquetado deben estar autorizadas, documentadas y separadas del clasificador de producción.
+- No usar APIs para el clasificador operativo ni para sustituir una evaluación humana independiente.

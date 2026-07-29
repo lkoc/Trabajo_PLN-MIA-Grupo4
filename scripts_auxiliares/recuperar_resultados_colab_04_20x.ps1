@@ -3,6 +3,9 @@ param(
     [string]$DriveBundle = "G:\My Drive\PLN_colab_04_artifacts",
     [switch]$IncludeQwen,
     [switch]$Qwen04_205Only,
+    [switch]$Qwen04_206Only,
+    [switch]$Qwen04_20XOnly,
+    [switch]$DeploymentOnly,
     [switch]$ComparisonOnly,
     [switch]$Force
 )
@@ -17,11 +20,33 @@ if (-not (Test-Path -LiteralPath $driveRoot -PathType Container)) {
     throw "No existe el bundle de Drive: $driveRoot"
 }
 
-$relativeDirectories = if ($Qwen04_205Only) {
+$relativeDirectories = if ($DeploymentOnly) {
+    @(
+        "modelos\transformer_plano_4\e5_small",
+        "resultados\metricas\transformer_plano_4",
+        "modelos\qwen3_06b_lora_acoso_amenaza_4",
+        "resultados\metricas\qwen3_06b_lora_acoso_amenaza_4"
+    )
+} elseif ($Qwen04_20XOnly) {
+    @(
+        "modelos\qwen3_06b_lora_acoso_amenaza_4",
+        "modelos\qwen_jerarquico_4",
+        "resultados\metricas\qwen3_06b_lora_acoso_amenaza_4",
+        "resultados\metricas\qwen_jerarquico_4",
+        "resultados\figuras\qwen3_06b_lora_acoso_amenaza_4",
+        "resultados\figuras\qwen_jerarquico_4"
+    )
+} elseif ($Qwen04_205Only) {
     @(
         "modelos\qwen3_06b_lora_acoso_amenaza_4",
         "resultados\metricas\qwen3_06b_lora_acoso_amenaza_4",
         "resultados\figuras\qwen3_06b_lora_acoso_amenaza_4"
+    )
+} elseif ($Qwen04_206Only) {
+    @(
+        "modelos\qwen_jerarquico_4",
+        "resultados\metricas\qwen_jerarquico_4",
+        "resultados\figuras\qwen_jerarquico_4"
     )
 } elseif ($ComparisonOnly) {
     @(
@@ -38,9 +63,23 @@ $relativeDirectories = if ($Qwen04_205Only) {
         "resultados\figuras\experimentos_jerarquicos_4"
     )
 }
-$relativeReports = if ($Qwen04_205Only) {
+$relativeReports = if ($DeploymentOnly) {
+    @(
+        "resultados\INFORME_TRANSFORMERS_PLANOS_4.md",
+        "resultados\INFORME_QWEN_ACOSO_AMENAZA_4.md"
+    )
+} elseif ($Qwen04_20XOnly) {
+    @(
+        "resultados\INFORME_QWEN_ACOSO_AMENAZA_4.md",
+        "resultados\INFORME_QWEN_JERARQUICO_4.md"
+    )
+} elseif ($Qwen04_205Only) {
     @(
         "resultados\INFORME_QWEN_ACOSO_AMENAZA_4.md"
+    )
+} elseif ($Qwen04_206Only) {
+    @(
+        "resultados\INFORME_QWEN_JERARQUICO_4.md"
     )
 } elseif ($ComparisonOnly) {
     @()
@@ -51,7 +90,7 @@ $relativeReports = if ($Qwen04_205Only) {
         "resultados\INFORME_04_204_JERARQUICO_MULTITAREA_4_ETIQUETAS.md"
     )
 }
-if ($IncludeQwen -and -not $Qwen04_205Only) {
+if ($IncludeQwen -and -not ($Qwen04_205Only -or $Qwen04_206Only -or $Qwen04_20XOnly -or $DeploymentOnly)) {
     if ($ComparisonOnly) {
         $relativeDirectories += @(
             "resultados\metricas\qwen_jerarquico_4"
@@ -120,6 +159,9 @@ $logPath = Join-Path $logDir ("recuperacion_" + [DateTime]::Now.ToString("yyyyMM
     destination = $workspaceRoot
     include_qwen = [bool]$IncludeQwen
     qwen_04_205_only = [bool]$Qwen04_205Only
+    qwen_04_206_only = [bool]$Qwen04_206Only
+    qwen_04_20x_only = [bool]$Qwen04_20XOnly
+    deployment_only = [bool]$DeploymentOnly
     comparison_only = [bool]$ComparisonOnly
     force = [bool]$Force
     copied_files = $records
@@ -130,6 +172,9 @@ $logPath = Join-Path $logDir ("recuperacion_" + [DateTime]::Now.ToString("yyyyMM
     copied_files = $records.Count
     include_qwen = [bool]$IncludeQwen
     qwen_04_205_only = [bool]$Qwen04_205Only
+    qwen_04_206_only = [bool]$Qwen04_206Only
+    qwen_04_20x_only = [bool]$Qwen04_20XOnly
+    deployment_only = [bool]$DeploymentOnly
     comparison_only = [bool]$ComparisonOnly
     log = $logPath
 } | Format-List

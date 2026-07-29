@@ -1,5 +1,7 @@
 # Decisión operativa del moderador de contenido
 
+> **Informe histórico del contrato de cinco etiquetas.** No debe usarse para seleccionar el modelo activo de cuatro daños; consulte `Cuadernos/04_MATRIZ_ENTRENAMIENTO_4_ETIQUETAS.md` y `resultados/metricas/comparacion_final_4/comparacion_todos_modelos_4.csv`.
+
 Fecha: 2026-07-27T15:49:08-05:00
 
 ## Método

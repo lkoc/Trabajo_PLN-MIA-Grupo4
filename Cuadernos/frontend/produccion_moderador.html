@@ -1,105 +1,87 @@
 <!doctype html>
-<html lang='es'>
+<html lang="es">
 <head>
-  <meta charset='utf-8'>
-  <meta name='viewport' content='width=device-width, initial-scale=1'>
-  <title>Moderador de contenido local</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Moderador local</title>
   <style>
-    :root { --bg: #f4f6f8; --panel: #fff; --ink: #17202a; --muted: #627386; --line: #d5dde6; --brand: #9f1d2b; --warn: #b7791f; --bad: #b4232f; --ok: #0f7a45; }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--ink); }
-    header { background: var(--brand); color: white; padding: 14px 22px; }
-    main { max-width: 1180px; margin: 0 auto; padding: 18px; display: grid; grid-template-columns: 420px 1fr; gap: 16px; }
-    section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
-    h1 { margin: 0; font-size: 22px; }
-    h2 { margin: 0 0 12px; font-size: 16px; }
-    textarea { width: 100%; min-height: 270px; border: 1px solid var(--line); border-radius: 6px; padding: 10px; font-family: inherit; line-height: 1.45; }
-    button, input[type=file]::file-selector-button { border: 1px solid var(--line); background: white; border-radius: 6px; padding: 8px 10px; cursor: pointer; }
-    button.primary { background: var(--brand); color: white; border-color: var(--brand); }
-    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-    .muted { color: var(--muted); font-size: 13px; }
-    .result { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 10px; background: #fbfcfd; }
-    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
-    .tag { border-radius: 999px; padding: 4px 8px; font-size: 12px; background: #edf2f7; }
-    .tag.bad { background: #fde2e4; color: var(--bad); }
-    .tag.ok { background: #dcfce7; color: var(--ok); }
-    .score { color: var(--muted); font-size: 12px; }
-    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+    :root{color-scheme:light;--bg:#f7f7f5;--panel:#fff;--ink:#171716;--muted:#6b6b65;--line:#e5e4df;--brand:#222;--soft:#f0efeb;--danger:#b42318;--danger-bg:#fff1ef;--ok:#087443;--ok-bg:#eaf8f0;--warn:#9a6700;--warn-bg:#fff7df;--shadow:0 10px 30px rgba(20,20,15,.06)}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif} button,input,select,textarea{font:inherit}
+    header{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 max(20px,calc((100vw - 980px)/2));border-bottom:1px solid var(--line);background:rgba(247,247,245,.92);position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
+    .brand{font-weight:700;letter-spacing:-.02em}.header-actions{display:flex;gap:8px}.icon-btn{border:0;background:transparent;border-radius:9px;padding:7px 10px;cursor:pointer;color:var(--muted)}.icon-btn:hover{background:var(--soft);color:var(--ink)}
+    main{max-width:980px;margin:0 auto;padding:42px 20px 80px}.hero{text-align:center;margin-bottom:22px}.hero h1{font-size:30px;letter-spacing:-.04em;margin:0 0 7px}.hero p{margin:0;color:var(--muted)}
+    .composer{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:14px}.composer textarea{width:100%;min-height:118px;resize:vertical;border:0;outline:0;padding:7px 8px;background:transparent;color:var(--ink)}
+    .composer-foot{border-top:1px solid var(--line);padding-top:11px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}.select{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:8px 10px;max-width:260px}.grow{flex:1}.type-pill{font-size:12px;color:var(--muted);background:var(--soft);border-radius:999px;padding:5px 9px}.primary{border:0;border-radius:10px;background:var(--brand);color:#fff;padding:9px 17px;cursor:pointer;font-weight:650}.primary:disabled{opacity:.48;cursor:wait}.secondary{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:8px 11px;cursor:pointer}
+    details.settings{max-width:980px;margin:11px auto;color:var(--muted)}details.settings summary{cursor:pointer;font-size:13px;width:max-content}.settings-grid{display:flex;gap:12px;align-items:end;padding:10px 2px}.field{display:grid;gap:4px;font-size:12px}.field input,.field select{border:1px solid var(--line);border-radius:8px;padding:7px;background:var(--panel)}
+    #status{min-height:28px;margin:18px 2px 4px;color:var(--muted)}.error{color:var(--danger)!important}.loader{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:7px}@keyframes spin{to{transform:rotate(360deg)}}
+    .video{display:none;margin:22px 0;background:#000;border-radius:16px;overflow:hidden;aspect-ratio:16/9}.video iframe{width:100%;height:100%;border:0}
+    .summary{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin:18px 0;color:var(--muted)}.summary strong{color:var(--ink)}
+    .chunk{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin:13px 0;overflow:hidden}.chunk-head{display:flex;gap:9px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.chunk-title{font-weight:680}.chunk-time{font-size:12px;color:var(--muted)}.chunk-link{margin-left:auto;color:var(--ink);font-size:13px}.chunk-text{padding:13px 15px;color:#393936}.model-result{border-top:1px solid var(--line);padding:13px 15px}.model-result:first-of-type{border-top:0}.model-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.model-name{font-weight:650}.badge{font-size:11px;border-radius:999px;padding:3px 7px;background:var(--soft);color:var(--muted)}.badge.alert{background:var(--danger-bg);color:var(--danger)}.badge.ok{background:var(--ok-bg);color:var(--ok)}.badge.warn{background:var(--warn-bg);color:var(--warn)}
+    .labels{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}.label{font-size:12px;padding:4px 8px;border-radius:999px;background:var(--danger-bg);color:var(--danger)}.label.safe{background:var(--ok-bg);color:var(--ok)}.review-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.review-actions button{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 9px;cursor:pointer}.review-actions button:hover{background:var(--soft)}.review-form{display:none;margin-top:10px;padding:10px;border-radius:10px;background:var(--soft)}.review-form.open{display:block}.checks{display:flex;gap:10px;flex-wrap:wrap;font-size:12px}.review-form input[type=text]{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px;margin-top:8px}.saved{color:var(--ok);font-size:12px;margin-top:8px}
+    .score-details{margin-top:8px;font-size:12px;color:var(--muted)}.score-details summary{cursor:pointer}.score-row{display:grid;grid-template-columns:minmax(150px,1fr) 2fr 42px;align-items:center;gap:8px;margin:5px 0}.bar{height:6px;background:var(--soft);border-radius:5px;overflow:hidden}.bar i{display:block;height:100%;background:#777;border-radius:5px}
+    dialog{border:1px solid var(--line);border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,.2);max-width:720px;width:calc(100% - 28px);padding:0;color:var(--ink)}dialog::backdrop{background:rgba(0,0,0,.35)}.dialog-head{display:flex;justify-content:space-between;align-items:center;padding:16px 19px;border-bottom:1px solid var(--line)}.dialog-body{padding:17px 20px 22px;max-height:72vh;overflow:auto}.dialog-body h3{margin:19px 0 5px}.dialog-body p,.dialog-body li{color:#4c4c48}.dialog-body code{background:var(--soft);padding:2px 5px;border-radius:5px}
+    .stats{display:none;margin-top:18px}.stats.open{display:block}.stat-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin:9px 0}.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}.stat-number{font-size:22px;font-weight:700}.muted{color:var(--muted);font-size:12px}
+    @media(max-width:620px){main{padding-top:26px}.hero h1{font-size:25px}.select{max-width:100%;width:100%}.grow{display:none}.primary{margin-left:auto}.score-row{grid-template-columns:1fr 1fr 38px}}
   </style>
 </head>
 <body>
-  <header><h1>Moderador de contenido local</h1></header>
+  <header><div class="brand">Moderador local</div><div class="header-actions"><button class="icon-btn" id="statsBtn">Estadísticas</button><button class="icon-btn" id="helpBtn">Ayuda</button></div></header>
   <main>
-    <section>
-      <h2>Entrada</h2>
-      <div class='toolbar'>
-        <input id='modelFile' type='file' accept='.json'>
-        <button id='runBtn' class='primary'>Analizar</button>
-        <button id='clearBtn'>Limpiar</button>
+    <div class="hero"><h1>¿Qué quieres analizar?</h1><p>Escribe una frase o pega un enlace de YouTube. El tipo se detecta automáticamente.</p></div>
+    <form id="form" class="composer">
+      <textarea id="input" required placeholder="Escribe un texto o pega https://www.youtube.com/watch?v=…"></textarea>
+      <div class="composer-foot">
+        <select id="mode" class="select" aria-label="Modelo">
+          <option value="consensus">Consenso de los tres</option>
+          <option value="compare">Comparar las tres respuestas</option>
+          <option value="classical">Mejor ML clásico</option>
+          <option value="transformer">Mejor MiniLM Transformer</option>
+          <option value="qwen">Qwen fine-tuned</option>
+        </select>
+        <span id="typePill" class="type-pill">Texto · automático</span><span class="grow"></span>
+        <button id="run" class="primary" type="submit">Analizar</button>
       </div>
-      <p class='muted'>Cargar primero el archivo models/modelo_ligero_palabras.json.</p>
-      <textarea id='textInput' placeholder='Pegar aqui una transcripcion o fragmento de video.'></textarea>
-    </section>
-    <section>
-      <h2>Resultado</h2>
-      <div id='summary' class='muted'>Sin analisis.</div>
-      <div id='results'></div>
-    </section>
+    </form>
+    <details class="settings"><summary>Ajustes</summary><div class="settings-grid"><label class="field">Forzar tipo<select id="inputType"><option value="auto">Automático</option><option value="text">Texto</option><option value="youtube">YouTube</option></select></label><label class="field">Máximo de chunks<input id="maxChunks" type="number" min="1" max="1000" value="300"></label><label class="field">Revisor<input id="reviewer" type="text" maxlength="200" placeholder="Iniciales opcionales"></label></div></details>
+    <div id="status"></div>
+    <div id="video" class="video"><iframe id="player" title="Video de YouTube" allowfullscreen></iframe></div>
+    <div id="summary" class="summary"></div>
+    <section id="stats" class="stats"></section>
+    <div id="results"></div>
   </main>
+
+  <dialog id="help">
+    <div class="dialog-head"><strong>Ayuda del modo de operación</strong><button class="icon-btn" id="closeHelp">Cerrar</button></div>
+    <div class="dialog-body">
+      <h3>Entrada automática</h3><p>La caja única reconoce enlaces <code>youtube.com</code> y <code>youtu.be</code>. Cualquier otra entrada se procesa como texto. Un video sin subtítulos manuales ni automáticos se rechaza; el sistema no transcribe audio.</p>
+      <h3>Modelos</h3><ul><li><b>ML clásico:</b> mejor SVM/logística por validation.</li><li><b>MiniLM Transformer:</b> ganador de <code>04_202</code>.</li><li><b>Qwen:</b> checkpoint operativo elegido en validation, no el alias <code>best_adapter</code>.</li><li><b>Comparar:</b> muestra las tres respuestas.</li><li><b>Consenso 2 de 3:</b> activa una categoría con al menos dos votos; no exige unanimidad y solicita revisión si existe desacuerdo.</li></ul>
+      <h3>Seguridad y revisión</h3><p>“Confianza alta” significa que el score está lejos de los umbrales de validation; no garantiza que la etiqueta sea correcta. “Revisión necesaria” se activa por la ruta calibrada a alto recall, cercanía al umbral o desacuerdo. Usa Aceptar, Rechazar o Modificar para registrar la decisión humana.</p>
+      <h3>YouTube</h3><p>Los subtítulos se agrupan igual que en preentrenamiento: ventanas cercanas a 30 segundos o 600 caracteres. Cada alerta incluye un enlace al segundo inicial. El reproductor es el único recurso externo de la página.</p>
+      <h3>Datos y reentrenamiento</h3><p>Inferencias y revisiones se guardan localmente por modelo y categoría. Sólo las decisiones humanas se exportan a JSONL para un futuro reentrenamiento. No compartas el servidor en red ni ingreses información sensible.</p>
+    </div>
+  </dialog>
+
   <script>
-    let model = null;
-    const modelFile = document.getElementById('modelFile');
-    const textInput = document.getElementById('textInput');
-    const results = document.getElementById('results');
-    const summary = document.getElementById('summary');
-
-    modelFile.addEventListener('change', async event => {
-      const file = event.target.files[0];
-      if (!file) return;
-      model = JSON.parse(await file.text());
-      summary.textContent = `Modelo cargado con ${model.labels.length} etiquetas.`;
-    });
-
-    function chunkText(text, maxWords=120) {
-      const words = text.trim().split(/\s+/).filter(Boolean);
-      const chunks = [];
-      for (let i = 0; i < words.length; i += maxWords) chunks.push(words.slice(i, i + maxWords).join(' '));
-      return chunks.filter(Boolean);
-    }
-
-    function scoreChunk(text) {
-      const clean = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const scores = {};
-      for (const label of model.labels) {
-        scores[label] = 0;
-        for (const item of (model.terms[label] || [])) {
-          const term = item.term.toLowerCase();
-          if (clean.includes(term)) scores[label] += item.weight;
-        }
-      }
-      return Object.entries(scores).sort((a, b) => b[1] - a[1]);
-    }
-
-    function renderResult(chunk, idx) {
-      const scores = scoreChunk(chunk).filter(x => x[1] > 0).slice(0, 3);
-      const labels = scores.length ? scores : [['sin_alerta', 0]];
-      const tags = labels.map(([label, score]) => `<span class='tag ${label === 'sin_alerta' || label === 'limpio' ? 'ok' : 'bad'}'>${label.replaceAll('_', ' ')}</span>`).join('');
-      const scoreText = scores.map(([label, score]) => `${label}: ${score.toFixed(2)}`).join(' | ');
-      return `<div class='result'><b>Chunk ${idx + 1}</b><div class='tags'>${tags}</div><div class='score'>${scoreText || 'Sin coincidencias del modelo ligero.'}</div><p>${chunk}</p></div>`;
-    }
-
-    document.getElementById('runBtn').addEventListener('click', () => {
-      if (!model) { alert('Cargar primero el modelo ligero JSON.'); return; }
-      const chunks = chunkText(textInput.value);
-      results.innerHTML = chunks.map(renderResult).join('');
-      summary.textContent = `${chunks.length} chunks analizados localmente.`;
-    });
-
-    document.getElementById('clearBtn').addEventListener('click', () => {
-      textInput.value = '';
-      results.innerHTML = '';
-      summary.textContent = model ? `Modelo cargado con ${model.labels.length} etiquetas.` : 'Sin analisis.';
-    });
+    const $=s=>document.querySelector(s), input=$('#input'), form=$('#form'), statusBox=$('#status'), results=$('#results'), summary=$('#summary'), run=$('#run');
+    const labels=['RACISMO_DISCRIMINACION','ACOSO_GENERO_IDENTIDAD','ACOSO_AMENAZA','CONTENIDO_SEXUAL'];
+    const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    const pretty=v=>String(v).replaceAll('_',' ').toLowerCase().replace(/^./,c=>c.toUpperCase());
+    const isYoutube=v=>/^https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?|shorts\/|embed\/)|youtu\.be\/)/i.test(v.trim());
+    function detect(){const forced=$('#inputType').value;const type=forced==='auto'?(isYoutube(input.value)?'youtube':'text'):forced;$('#typePill').textContent=(type==='youtube'?'YouTube + subtítulos':'Texto')+(forced==='auto'?' · automático':' · forzado');return type}
+    input.addEventListener('input',detect);$('#inputType').addEventListener('change',detect);
+    $('#helpBtn').onclick=()=>$('#help').showModal();$('#closeHelp').onclick=()=>$('#help').close();
+    $('#statsBtn').onclick=async()=>{const box=$('#stats');box.classList.toggle('open');if(box.classList.contains('open'))await loadStats()};
+    async function api(path,options={}){const response=await fetch(path,{headers:{'Content-Type':'application/json'},...options});const body=await response.json().catch(()=>({error:'Respuesta inválida del servidor.'}));if(!response.ok)throw new Error(body.error||`Error ${response.status}`);return body}
+    form.addEventListener('submit',async event=>{event.preventDefault();run.disabled=true;statusBox.className='';statusBox.innerHTML='<span class="loader"></span>Preparando entrada y cargando el modelo la primera vez…';results.innerHTML='';summary.style.display='none';$('#video').style.display='none';try{const data=await api('/api/analyze',{method:'POST',body:JSON.stringify({input:input.value,mode:$('#mode').value,input_type:$('#inputType').value,max_chunks:Number($('#maxChunks').value)})});render(data);statusBox.textContent='Análisis terminado y estadísticas guardadas localmente.'}catch(error){statusBox.className='error';statusBox.textContent=error.message}finally{run.disabled=false}});
+    function render(data){if(data.embed_url){$('#player').src=data.embed_url;$('#video').style.display='block'}else{$('#player').src=''}summary.style.display='block';summary.innerHTML=`<strong>${data.summary.alert_chunks}</strong> de <strong>${data.summary.chunks}</strong> chunks con alguna alerta · ${esc(data.mode)}${data.subtitle_language?` · subtítulos ${esc(data.subtitle_language)} (${esc(data.subtitle_kind)})`:''}`;results.innerHTML=data.chunks.map(renderChunk).join('')}
+    function renderChunk(chunk){const alerts=chunk.results.some(r=>!(r.predicted_labels.length===1&&r.predicted_labels[0]==='SEGURO'));return `<article class="chunk"><div class="chunk-head"><span class="badge ${alerts?'alert':'ok'}">${alerts?'Alerta':'Sin alerta'}</span><span class="chunk-title">${esc(chunk.chunk_id)}</span>${chunk.start_seconds!=null?`<span class="chunk-time">${time(chunk.start_seconds)}–${time(chunk.end_seconds)}</span>`:''}${chunk.watch_url&&alerts?`<a class="chunk-link" href="${esc(chunk.watch_url)}" target="_blank" rel="noopener">Abrir fragmento ↗</a>`:''}</div><div class="chunk-text">${esc(chunk.text)}</div>${chunk.results.map(renderModel).join('')}</article>`}
+    function time(seconds){seconds=Math.max(0,Math.floor(seconds||0));return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`}
+    function renderModel(r){const safe=r.predicted_labels.length===1&&r.predicted_labels[0]==='SEGURO';const tags=r.predicted_labels.map(l=>`<span class="label ${l==='SEGURO'?'safe':''}">${pretty(esc(l))}</span>`).join('');const scores=Object.entries(r.scores||{}).map(([l,v])=>`<div class="score-row"><span>${pretty(esc(l))}</span><span class="bar"><i style="width:${Math.max(0,Math.min(100,v*100))}%"></i></span><span>${Number(v).toFixed(2)}</span></div>`).join('');const reasons=(r.review_reasons||[]).map(pretty).join(', ');return `<div class="model-result" data-event="${esc(r.event_id||'')}"><div class="model-top"><span class="model-name">${esc(r.model_label)}</span><span class="badge ${r.confidence==='alta'?'ok':'warn'}">Confianza ${esc(r.confidence)}</span><span class="badge ${r.requires_review?'alert':'ok'}">${r.requires_review?'Revisión necesaria':'Respuesta muy segura'}</span></div><div class="labels">${tags}</div>${reasons?`<div class="muted">Motivo: ${esc(reasons)}</div>`:''}<details class="score-details"><summary>Scores por categoría</summary>${scores}</details>${r.event_id?reviewControls(r):''}</div>`}
+    function reviewControls(r){const checks=labels.map(l=>`<label><input type="checkbox" value="${l}" ${r.predicted_labels.includes(l)?'checked':''}> ${pretty(l)}</label>`).join('');return `<div class="review-actions"><button onclick="review(this,'accept')">Aceptar</button><button onclick="review(this,'reject')">Rechazar</button><button onclick="toggleModify(this)">Modificar</button></div><div class="review-form"><div class="checks">${checks}</div><input class="notes" type="text" maxlength="4000" placeholder="Nota opcional"><button class="secondary" onclick="review(this,'modify')">Guardar modificación</button></div><div class="review-state"></div>`}
+    window.toggleModify=button=>button.closest('.model-result').querySelector('.review-form').classList.toggle('open');
+    window.review=async(button,action)=>{const card=button.closest('.model-result'),eventId=card.dataset.event,form=card.querySelector('.review-form');const finalLabels=action==='modify'?[...form.querySelectorAll('input:checked')].map(x=>x.value):[];button.disabled=true;try{const saved=await api('/api/review',{method:'POST',body:JSON.stringify({event_id:eventId,action,final_labels:finalLabels,reviewer:$('#reviewer').value,notes:form.querySelector('.notes').value})});card.querySelector('.review-actions').remove();form.remove();card.querySelector('.review-state').innerHTML=`<div class="saved">Revisión guardada: ${pretty(saved.action)} · ${saved.final_labels.map(pretty).join(', ')}</div>`}catch(error){button.disabled=false;alert(error.message)}};
+    async function loadStats(){const data=await api('/api/stats'),ready=data.retraining_readiness;const cards=Object.entries(data.by_model).map(([slot,m])=>`<div class="stat-card"><strong>${esc(m.model_label)}</strong><div class="stat-grid"><div><div class="stat-number">${m.inference_chunks}</div><div class="muted">chunks</div></div><div><div class="stat-number">${m.requires_review}</div><div class="muted">requieren revisión</div></div><div><div class="stat-number">${m.reviews_completed}</div><div class="muted">revisiones guardadas</div></div></div><details class="score-details"><summary>Por categoría</summary>${Object.entries(m.categories).map(([l,v])=>`<div>${pretty(esc(l))}: ${v.predicted} predichas · ${v.human_final} finales humanas</div>`).join('')}</details></div>`).join('');$('#stats').innerHTML=`<h2>Estadísticas locales</h2><p class="muted">${data.total_events} eventos · ${data.total_human_reviews} revisiones. Exportación: ${esc(data.retraining_export)}</p><div class="stat-card"><strong>Preparación para reentrenamiento</strong><div class="stat-grid"><div><div class="stat-number">${ready.unique_adjudicated_chunks}</div><div class="muted">chunks humanos únicos</div></div><div><div class="stat-number">${ready.conflicting_chunks_excluded}</div><div class="muted">conflictos excluidos</div></div><div><div class="stat-number">${ready.ready_for_retraining_review?'Sí':'Aún no'}</div><div class="muted">umbral orientativo alcanzado</div></div></div></div>${cards||'<p>Sin inferencias todavía.</p>'}`}
+    detect();
   </script>
 </body>
 </html>
