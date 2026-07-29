@@ -62,6 +62,11 @@ def _require_completed_qwen() -> dict:
     result = json.loads(q4.TRAINING_RESULT_PATH.read_text(encoding="utf-8"))
     if result.get("status") != "completed":
         raise RuntimeError("El entrenamiento de 04_205 no figura como completado.")
+    if int(result.get("max_epochs", 0)) < q4.MAX_EPOCHS:
+        raise RuntimeError(
+            f"04_205 corresponde al plan anterior de {result.get('max_epochs')} épocas. "
+            f"Complete primero la extensión con máximo {q4.MAX_EPOCHS} épocas."
+        )
     state = q4.MODEL_DIR / "best_adapter" / "training_state.json"
     if not state.exists():
         raise FileNotFoundError("04_205 no tiene best_adapter completo.")

@@ -2,6 +2,7 @@ param(
     [string]$Workspace = "D:\trabajo_PLN\Trabajo_PLN-MIA-Grupo4",
     [string]$DriveBundle = "G:\My Drive\PLN_colab_04_artifacts",
     [switch]$IncludeQwen,
+    [switch]$ComparisonOnly,
     [switch]$Force
 )
 
@@ -15,32 +16,49 @@ if (-not (Test-Path -LiteralPath $driveRoot -PathType Container)) {
     throw "No existe el bundle de Drive: $driveRoot"
 }
 
-$relativeDirectories = @(
-    "modelos\transformer_plano_4",
-    "modelos\experimentos_jerarquicos_4",
-    "resultados\metricas\transformer_plano_4",
-    "resultados\metricas\experimentos_jerarquicos_4",
-    "resultados\figuras\transformer_plano_4",
-    "resultados\figuras\experimentos_jerarquicos_4"
-)
-$relativeReports = @(
-    "resultados\INFORME_TRANSFORMERS_PLANOS_4.md",
-    "resultados\INFORME_04_203_CASCADA_4_ETIQUETAS.md",
-    "resultados\INFORME_04_204_JERARQUICO_MULTITAREA_4_ETIQUETAS.md"
-)
+$relativeDirectories = if ($ComparisonOnly) {
+    @(
+        "resultados\metricas\transformer_plano_4",
+        "resultados\metricas\experimentos_jerarquicos_4"
+    )
+} else {
+    @(
+        "modelos\transformer_plano_4",
+        "modelos\experimentos_jerarquicos_4",
+        "resultados\metricas\transformer_plano_4",
+        "resultados\metricas\experimentos_jerarquicos_4",
+        "resultados\figuras\transformer_plano_4",
+        "resultados\figuras\experimentos_jerarquicos_4"
+    )
+}
+$relativeReports = if ($ComparisonOnly) {
+    @()
+} else {
+    @(
+        "resultados\INFORME_TRANSFORMERS_PLANOS_4.md",
+        "resultados\INFORME_04_203_CASCADA_4_ETIQUETAS.md",
+        "resultados\INFORME_04_204_JERARQUICO_MULTITAREA_4_ETIQUETAS.md"
+    )
+}
 if ($IncludeQwen) {
-    $relativeDirectories += @(
-        "modelos\qwen3_06b_lora_acoso_amenaza_4",
-        "modelos\qwen_jerarquico_4",
-        "resultados\metricas\qwen3_06b_lora_acoso_amenaza_4",
-        "resultados\metricas\qwen_jerarquico_4",
-        "resultados\figuras\qwen3_06b_lora_acoso_amenaza_4",
-        "resultados\figuras\qwen_jerarquico_4"
-    )
-    $relativeReports += @(
-        "resultados\INFORME_QWEN_ACOSO_AMENAZA_4.md",
-        "resultados\INFORME_QWEN_JERARQUICO_4.md"
-    )
+    if ($ComparisonOnly) {
+        $relativeDirectories += @(
+            "resultados\metricas\qwen_jerarquico_4"
+        )
+    } else {
+        $relativeDirectories += @(
+            "modelos\qwen3_06b_lora_acoso_amenaza_4",
+            "modelos\qwen_jerarquico_4",
+            "resultados\metricas\qwen3_06b_lora_acoso_amenaza_4",
+            "resultados\metricas\qwen_jerarquico_4",
+            "resultados\figuras\qwen3_06b_lora_acoso_amenaza_4",
+            "resultados\figuras\qwen_jerarquico_4"
+        )
+        $relativeReports += @(
+            "resultados\INFORME_QWEN_ACOSO_AMENAZA_4.md",
+            "resultados\INFORME_QWEN_JERARQUICO_4.md"
+        )
+    }
 }
 
 function Copy-BackVerifiedFile {
@@ -90,6 +108,7 @@ $logPath = Join-Path $logDir ("recuperacion_" + [DateTime]::Now.ToString("yyyyMM
     source = $driveRoot
     destination = $workspaceRoot
     include_qwen = [bool]$IncludeQwen
+    comparison_only = [bool]$ComparisonOnly
     force = [bool]$Force
     copied_files = $records
 } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $logPath -Encoding utf8
@@ -98,5 +117,6 @@ $logPath = Join-Path $logDir ("recuperacion_" + [DateTime]::Now.ToString("yyyyMM
     status = "complete"
     copied_files = $records.Count
     include_qwen = [bool]$IncludeQwen
+    comparison_only = [bool]$ComparisonOnly
     log = $logPath
 } | Format-List

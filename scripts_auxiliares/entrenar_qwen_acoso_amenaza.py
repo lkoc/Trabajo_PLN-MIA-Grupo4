@@ -99,6 +99,7 @@ TRAIN_BATCH_SIZE = tm.QWEN_TRAIN_BATCH_SIZE
 EVAL_BATCH_SIZE = tm.QWEN_EVAL_BATCH_SIZE
 GRADIENT_ACCUMULATION = tm.QWEN_GRADIENT_ACCUMULATION
 MAX_EPOCHS = tm.QWEN_MAX_EPOCHS
+SUPPORTS_COMPLETED_EXTENSION = True
 LEARNING_RATE = tm.QWEN_LEARNING_RATE
 WEIGHT_DECAY = tm.WEIGHT_DECAY
 LORA_RANK = tm.QWEN_LORA_RANK
@@ -844,9 +845,22 @@ def _load_resume_checkpoint(
 def resume_status() -> dict:
     if TRAINING_RESULT_PATH.exists():
         result = _json(TRAINING_RESULT_PATH)
+        epochs_completed = int(result["epochs_completed"])
+        pointer_epoch = (
+            int(_json(RESUME_POINTER_PATH)["epoch"])
+            if RESUME_POINTER_PATH.exists()
+            else None
+        )
+        can_extend = (
+            epochs_completed < MAX_EPOCHS
+            and pointer_epoch is not None
+            and pointer_epoch <= MAX_EPOCHS
+        )
         return {
-            "status": "completed",
-            "epochs_completed": result["epochs_completed"],
+            "status": "extendable" if can_extend else "completed",
+            "epochs_completed": epochs_completed,
+            "configured_max_epochs": MAX_EPOCHS,
+            "next_epoch": pointer_epoch if can_extend else None,
             "best_epoch": result["best_epoch"],
             "adapter": result["adapter"],
         }
@@ -873,10 +887,31 @@ def run_finetuning(
     save_every_optimizer_steps: int = SAVE_EVERY_OPTIMIZER_STEPS,
 ) -> dict:
     frames, audit = (load_frames() if frames is None else (frames, load_frames()[1]))
+    extending_completed_run = False
     if TRAINING_RESULT_PATH.exists() and not force_restart:
         result = _json(TRAINING_RESULT_PATH)
         if _completed_result_is_usable(result, audit):
-            return result
+            epochs_completed = int(result.get("epochs_completed", 0))
+            if epochs_completed >= MAX_EPOCHS:
+                return result
+            if not resume:
+                raise ValueError(
+                    "El entrenamiento terminado tiene menos épocas que el máximo "
+                    "actual. Use resume=True para continuarlo sin reiniciar."
+                )
+            if not RESUME_POINTER_PATH.exists():
+                raise FileNotFoundError(
+                    "Falta resume_pointer.json; no se puede extender el entrenamiento "
+                    "terminado sin reiniciar."
+                )
+            pointer_epoch = int(_json(RESUME_POINTER_PATH)["epoch"])
+            if pointer_epoch > MAX_EPOCHS:
+                return result
+            extending_completed_run = True
+            print(
+                f"Extendiendo el entrenamiento terminado: {epochs_completed} → "
+                f"máximo {MAX_EPOCHS} épocas."
+            )
     archive = _archive_for_restart() if force_restart else None
     tm.set_reproducibility()
     target_device = device()
@@ -948,12 +983,28 @@ def run_finetuning(
     if optimizer_state is not None:
         optimizer.load_state_dict(optimizer_state["optimizer"])
         scheduler.load_state_dict(optimizer_state["scheduler"])
+        # El plan original terminaba en dos épocas y su LR guardado es cero.
+        # Al ampliar el horizonte, recalculamos el LR en el mismo paso global
+        # usando la nueva curva de cuatro épocas, sin perder Adam ni su RNG.
+        resumed_lrs = [
+            base_lr * lr_lambda(scheduler.last_epoch)
+            for base_lr, lr_lambda in zip(
+                scheduler.base_lrs, scheduler.lr_lambdas, strict=True
+            )
+        ]
+        for parameter_group, resumed_lr in zip(
+            optimizer.param_groups, resumed_lrs, strict=True
+        ):
+            parameter_group["lr"] = resumed_lr
+        scheduler._last_lr = resumed_lrs
         _restore_rng_state(optimizer_state["rng"])
 
     session_start = perf_counter()
     _append_log(
         "training_session_started",
         resumed=loaded is not None,
+        extending_completed_run=extending_completed_run,
+        configured_max_epochs=MAX_EPOCHS,
         epoch=state["epoch"],
         completed_batches=state["completed_batches"],
         device=str(target_device),
@@ -1517,6 +1568,12 @@ Las probabilidades finales se calibraron por etiqueta mediante regresión sigmoi
 La alerta calibrada para {ALERT_RECALL_TARGET:.0%} de recall en validación obtuvo en test recall {operation['test']['recall']:.4f}, tasa de revisión {operation['test']['review_rate']:.4f}, VPN {operation['test']['negative_predictive_value']:.4f} y {operation['test']['false_negatives']} falsos negativos automáticos. Alerta respaldada por la puerta declarada: **{'sí' if operation['supported_for_human_review_alert'] else 'no'}**.
 
 No se autoriza autonomía sin gold standard humano independiente, prevalencia natural y piloto prospectivo.
+
+## Conclusión sobre desempeño y uso en producción
+
+Qwen3-0.6B LoRA mejora al SVM de referencia en el mismo test, pero su desempeño absoluto todavía es moderado: alcanza PR-AUC macro {test['damage_pr_auc_macro']:.4f}, F1 macro {test['damage_f1_macro']:.4f} y recall de cualquier daño {test['any_damage_recall']:.4f}. Con los umbrales ordinarios deja {test['missed_damage_as_safe']} ejemplos con daño clasificados como seguros, y el recall por categoría se sitúa entre {test['minimum_category_recall']:.4f} y {max(test['category_recall'].values()):.4f}. Por tanto, la exactitud global no debe interpretarse como evidencia de seguridad operativa, pues está influida por la abundancia de ejemplos seguros.
+
+La política selectiva de alto recall reduce los falsos negativos a {operation['test']['false_negatives']} y alcanza recall {operation['test']['recall']:.4f} y VPN {operation['test']['negative_predictive_value']:.4f}; sin embargo, envía {operation['test']['review_rate']:.2%} de los textos a revisión humana y no supera la puerta operativa predefinida. En consecuencia, **el modelo no está listo para moderación autónoma ni para decisiones de bloqueo o sanción en producción**. Su uso razonable se limita por ahora a experimentación fuera de línea o a un piloto controlado en modo sombra, siempre con revisión humana y sin afectar usuarios. Antes de desplegarlo se requiere validación prospectiva con un gold standard humano independiente y prevalencia real, además de comprobar capacidad de revisión, latencia, coste, deriva y desempeño por subgrupos.
 
 ## Referencias (APA 7)
 
