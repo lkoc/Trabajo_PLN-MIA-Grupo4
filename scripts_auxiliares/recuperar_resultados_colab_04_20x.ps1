@@ -2,6 +2,7 @@ param(
     [string]$Workspace = "D:\trabajo_PLN\Trabajo_PLN-MIA-Grupo4",
     [string]$DriveBundle = "G:\My Drive\PLN_colab_04_artifacts",
     [switch]$IncludeQwen,
+    [switch]$Qwen04_205Only,
     [switch]$ComparisonOnly,
     [switch]$Force
 )
@@ -16,7 +17,13 @@ if (-not (Test-Path -LiteralPath $driveRoot -PathType Container)) {
     throw "No existe el bundle de Drive: $driveRoot"
 }
 
-$relativeDirectories = if ($ComparisonOnly) {
+$relativeDirectories = if ($Qwen04_205Only) {
+    @(
+        "modelos\qwen3_06b_lora_acoso_amenaza_4",
+        "resultados\metricas\qwen3_06b_lora_acoso_amenaza_4",
+        "resultados\figuras\qwen3_06b_lora_acoso_amenaza_4"
+    )
+} elseif ($ComparisonOnly) {
     @(
         "resultados\metricas\transformer_plano_4",
         "resultados\metricas\experimentos_jerarquicos_4"
@@ -31,7 +38,11 @@ $relativeDirectories = if ($ComparisonOnly) {
         "resultados\figuras\experimentos_jerarquicos_4"
     )
 }
-$relativeReports = if ($ComparisonOnly) {
+$relativeReports = if ($Qwen04_205Only) {
+    @(
+        "resultados\INFORME_QWEN_ACOSO_AMENAZA_4.md"
+    )
+} elseif ($ComparisonOnly) {
     @()
 } else {
     @(
@@ -40,7 +51,7 @@ $relativeReports = if ($ComparisonOnly) {
         "resultados\INFORME_04_204_JERARQUICO_MULTITAREA_4_ETIQUETAS.md"
     )
 }
-if ($IncludeQwen) {
+if ($IncludeQwen -and -not $Qwen04_205Only) {
     if ($ComparisonOnly) {
         $relativeDirectories += @(
             "resultados\metricas\qwen_jerarquico_4"
@@ -108,6 +119,7 @@ $logPath = Join-Path $logDir ("recuperacion_" + [DateTime]::Now.ToString("yyyyMM
     source = $driveRoot
     destination = $workspaceRoot
     include_qwen = [bool]$IncludeQwen
+    qwen_04_205_only = [bool]$Qwen04_205Only
     comparison_only = [bool]$ComparisonOnly
     force = [bool]$Force
     copied_files = $records
@@ -117,6 +129,7 @@ $logPath = Join-Path $logDir ("recuperacion_" + [DateTime]::Now.ToString("yyyyMM
     status = "complete"
     copied_files = $records.Count
     include_qwen = [bool]$IncludeQwen
+    qwen_04_205_only = [bool]$Qwen04_205Only
     comparison_only = [bool]$ComparisonOnly
     log = $logPath
 } | Format-List

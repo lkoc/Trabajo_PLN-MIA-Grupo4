@@ -1,6 +1,6 @@
 # Qwen3-0.6B LoRA con ACOSO_AMENAZA
 
-Fecha: 2026-07-28T23:29:19-05:00
+Fecha: 2026-07-29T14:34:58+00:00
 
 ## Diseño
 
@@ -41,12 +41,6 @@ Las probabilidades finales se calibraron por etiqueta mediante regresión sigmoi
 La alerta calibrada para 95% de recall en validación obtuvo en test recall 0.9721, tasa de revisión 0.6336, VPN 0.9850 y 29 falsos negativos automáticos. Alerta respaldada por la puerta declarada: **no**.
 
 No se autoriza autonomía sin gold standard humano independiente, prevalencia natural y piloto prospectivo.
-
-## Conclusión sobre desempeño y uso en producción
-
-Qwen3-0.6B LoRA mejora al SVM de referencia en el mismo test, pero su desempeño absoluto todavía es moderado: alcanza PR-AUC macro 0.5520, F1 macro 0.5346 y recall de cualquier daño 0.6849. Con los umbrales ordinarios deja 328 ejemplos con daño clasificados como seguros, y el recall por categoría se sitúa entre 0.5054 y 0.6160. Por tanto, la exactitud global de 0.7962 no debe interpretarse como evidencia de seguridad operativa, pues está influida por la abundancia de ejemplos seguros.
-
-La política selectiva de alto recall reduce los falsos negativos a 29 y alcanza recall 0.9721 y VPN 0.9850; sin embargo, envía 63.36% de los textos a revisión humana y no supera la puerta operativa predefinida. En consecuencia, **el modelo no está listo para moderación autónoma ni para decisiones de bloqueo o sanción en producción**. Su uso razonable se limita por ahora a experimentación fuera de línea o a un piloto controlado en modo sombra, siempre con revisión humana y sin afectar usuarios. Antes de desplegarlo se requiere validación prospectiva con un gold standard humano independiente y prevalencia real, además de comprobar capacidad de revisión, latencia, coste, deriva y desempeño por subgrupos.
 
 ## Referencias (APA 7)
 
