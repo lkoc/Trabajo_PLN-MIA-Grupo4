@@ -58,14 +58,30 @@ La limpieza aplica normalización Unicode NFKC \cite{unicode2025normalization}, 
 
 La carpeta \path{para_equiquetado_LLM} conserva el paquete de anotación manual o asistida: guía v1.3, taxonomía, instrucciones, entrada y ejemplos de salida. El vocabulario fino y los criterios operativos coinciden con las copias auditadas del proyecto. Para los lotes anotados por API, el sistema combina el prompt compacto v1.1, la taxonomía completa y las reglas técnicas de salida. Sus manifiestos conservan la versión del prompt. El Anexo~\ref{app:prompt_operativo} reproduce el texto compacto, documenta el ensamblaje y delimita las corridas que acredita. Los artefactos de ejecución documentan el mapeo fino$\rightarrow$5 y la fusión 5$\rightarrow$4; la categoría general de acoso en la taxonomía no representa por sí sola ninguno de esos dos contratos. La auditoría muestra 14 etiquetas finas: 12 fenómenos de daño y dos estados seguros, además de tres flags transversales. La separación entre blanco individual/grupal y daño explícito/implícito sigue el marco de Waseem \emph{et al.} \cite{waseem2017abuse}; las definiciones generales de ataque por identidad, doxeo, insulto, agresión sexual y amenaza se contrastan con Banko \emph{et al.} \cite{banko2020taxonomy}. La Tabla~\ref{tab:taxonomia} documenta la adaptación y sus límites. No se atribuye a esos autores la lista exacta del proyecto.
 
+La Fig.~\ref{fig:datos} sintetiza la relación entre categorías operativas, fenómenos finos, estados seguros y señales de revisión. La Fig.~\ref{fig:pipeline} enlaza esa taxonomía con la adquisición, la preanotación, la adjudicación y la evaluación; ambas se sitúan aquí para acompañar la primera explicación del método.
+
+\begin{figure*}[!t]
+\centering
+\resizebox{.96\textwidth}{!}{\input{figuras/datos_taxonomia.tex}}
+\caption{Taxonomía multietiqueta del proyecto: 12 fenómenos de daño, dos estados seguros y tres flags de revisión. Los mapeos y la fusión 5$\rightarrow$4 son decisiones operativas, no equivalencias legales. Elaboración propia informada por tipologías de abuso y contenido dañino \cite{waseem2017abuse,banko2020taxonomy} y por fuentes peruanas citadas en la Tabla~\ref{tab:taxonomia}.}
+\label{fig:datos}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\resizebox{\textwidth}{!}{\input{figuras/pipeline_moderacion.tex}}
+\caption{Flujo de adquisición, preanotación, adjudicación y evaluación. La evaluación no retorna al corpus evaluado; la revisión operativa solo puede originar una versión futura y separada. Elaboración propia.}
+\label{fig:pipeline}
+\end{figure*}
+
 El contrato preliminar contiene cinco categorías de moderación: \Rac, \Gen, acoso personal, amenaza directa y \Sex. La rama activa fusiona las dos últimas salidas en \Ame{} mediante OR/máximo. La amenaza directa tiene menor soporte (688 incidencias frente a 2\,854 de acoso personal); la unión aumenta el soporte de la salida operativa, pero es una decisión estadística del equipo, no una equivalencia semántica o legal. \texttt{SEGURO} se deriva cuando ninguna de las cuatro salidas cruza su umbral; significa ``sin daño cubierto detectado'', no ausencia universal de daño.
 
 \begin{table*}[t]
 \centering
 \caption{Definición y sustento de la taxonomía operativa multietiqueta}
 \label{tab:taxonomia}
-\footnotesize
-\begin{tabularx}{\textwidth}{p{27mm}p{45mm}X p{38mm}}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{27mm}>{\raggedright\arraybackslash}p{45mm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{38mm}}
 \toprule
 \textbf{Salida / señal} & \textbf{Etiquetas finas} & \textbf{Inclusión operacional y exclusiones} & \textbf{Antecedentes que orientan la decisión} \\
 \midrule
@@ -83,29 +99,13 @@ La carpeta de diseño contiene la entrada, el esquema de salida y 60 casos de ve
 
 En modelos clásicos y Transformers compactos, las finas y flags se reservaron para derivación o auditoría. En Qwen fueron objetivos auxiliares predichos desde texto, nunca variables \emph{gold} entregadas como entrada. Las reglas que limitan confianza a 0,65 ante ironía/contexto y activan revisión por debajo de 0,70 también pertenecen al protocolo local; no son umbrales tomados de la literatura.
 
-La Fig.~\ref{fig:datos} sintetiza la jerarquía entre categorías operativas, fenómenos finos, estados seguros y señales de revisión; complementa las definiciones y fuentes de la Tabla~\ref{tab:taxonomia} sin repetirlas.
-
-\begin{figure*}[t]
-\centering
-\resizebox{.96\textwidth}{!}{\input{figuras/datos_taxonomia.tex}}
-\caption{Taxonomía multietiqueta del proyecto: 12 fenómenos de daño, dos estados seguros y tres flags de revisión. Los mapeos y la fusión 5$\rightarrow$4 son decisiones operativas, no equivalencias legales. Elaboración propia informada por tipologías de abuso y contenido dañino \cite{waseem2017abuse,banko2020taxonomy} y por fuentes peruanas citadas en la Tabla~\ref{tab:taxonomia}.}
-\label{fig:datos}
-\end{figure*}
-
 \subsection{Preanotación y adjudicación}
 
-El flujo completo se resume en la Fig.~\ref{fig:pipeline}. DeepSeek Flash realiza la preanotación amplia y DeepSeek Pro revisa de forma selectiva las propuestas con daño, baja confianza o flags, además de un control reproducible de seguros y negativos difíciles. Buscar rótulos posiblemente erróneos responde a un riesgo conocido \cite{brodley1999mislabeled}, pero la minería concreta de este proyecto es una auditoría heurística propia. Los casos todavía inciertos pasan a revisión final asistida.
+El flujo completo combina preanotación, revisión dirigida y adjudicación. DeepSeek Flash realiza la preanotación amplia y DeepSeek Pro revisa de forma selectiva las propuestas con daño, baja confianza o flags, además de un control reproducible de seguros y negativos difíciles. Buscar rótulos posiblemente erróneos responde a un riesgo conocido \cite{brodley1999mislabeled}, pero la minería concreta de este proyecto es una auditoría heurística propia. Los casos todavía inciertos pasan a revisión final asistida.
 
 La cola final presenta la propuesta de Pro durante la revisión y conserva la decisión resultante. La procedencia del corpus es 93\,636 chunks Flash (80\%), 20\,516 Pro o minería Pro (18\%) y 3\,092 revisiones humanas asistidas (2,6\%); los porcentajes se redondean de forma independiente. La precedencia es revisión humana final \(>\) Pro de minería \(>\) Pro \(>\) Flash.
 
 El Apéndice~\ref{app:interfaces} muestra la vista final usada para contrastar el texto, su intervalo y la propuesta del LLM antes de aceptar, rechazar o modificar la decisión.
-
-\begin{figure*}[t]
-\centering
-\resizebox{\textwidth}{!}{\input{figuras/pipeline_moderacion.tex}}
-\caption{Flujo de adquisición, preanotación, adjudicación y evaluación. La evaluación no retorna al corpus evaluado; la revisión operativa solo puede originar una versión futura y separada. Elaboración propia.}
-\label{fig:pipeline}
-\end{figure*}
 
 \subsection{Particiones y control contra fuga}
 

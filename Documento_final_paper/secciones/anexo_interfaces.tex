@@ -1,7 +1,7 @@
 \section{Interfaces de anotación y operación}
 \label{app:interfaces}
 
-La Fig.~\ref{fig:interfaz_etiquetado} muestra la versión final del entorno de revisión humana con un chunk real del corpus. La propuesta de DeepSeek Pro aparece antes de decidir y deja tres acciones explícitas: aceptarla, rechazar el caso o modificar las categorías y señales antes de guardar la versión humana. El contador corresponde a la campaña integrada que alimenta esta interfaz.
+La Fig.~\ref{fig:interfaz_etiquetado} muestra la versión final del entorno de revisión humana con un chunk real del corpus. La propuesta de DeepSeek Pro aparece antes de decidir y deja tres acciones explícitas: aceptarla, rechazar el caso o modificar las categorías y señales antes de guardar la versión humana. El contador corresponde a la campaña integrada que alimenta esta interfaz. La Fig.~\ref{fig:interfaz_operacion} compara cuatro ejecuciones reales del servidor con texto y video, mediante Qwen3--LoRA y consenso 2 de 3.
 
 \begin{figure}[H]
 \centering
@@ -12,11 +12,32 @@ La Fig.~\ref{fig:interfaz_etiquetado} muestra la versión final del entorno de r
 
 \clearpage
 
-La Fig.~\ref{fig:interfaz_operacion} presenta el demostrador después de enviar por su formulario un chunk real de validación al servidor del paquete desplegable. Qwen3--LoRA asigna 0,94 a contenido sexual; la política operativa conserva el caso como alerta de confianza baja y solicita revisión por su cercanía al umbral. La pantalla muestra la entrada enviada, la respuesta del servidor, los puntajes por categoría y los controles humanos. Cuando la entrada es un video de YouTube, la misma interfaz añade el reproductor y los enlaces temporales a los fragmentos señalados.
-
 \begin{figure}[H]
 \centering
-\includegraphics[width=.98\linewidth,height=.78\textheight,keepaspectratio]{figuras/captura_entorno_operacion.png}
-\caption{Ejecución real del servidor del paquete desplegable: el formulario envía un chunk de validación, registra una inferencia nueva y muestra la alerta, los puntajes de Qwen3--LoRA y las acciones de revisión humana.}
+\setlength{\fboxsep}{1pt}
+\setlength{\fboxrule}{0.35pt}
+\begin{minipage}[t]{.498\linewidth}
+\centering
+\fbox{\includegraphics[width=\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax,height=.38\textheight,keepaspectratio]{figuras/captura_operacion_texto_qwen.png}}\\[-.2ex]
+{\footnotesize (a) Texto con Qwen3--LoRA}
+\end{minipage}\hfill
+\begin{minipage}[t]{.498\linewidth}
+\centering
+\fbox{\includegraphics[width=\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax,height=.38\textheight,keepaspectratio]{figuras/captura_operacion_texto_consenso.png}}\\[-.2ex]
+{\footnotesize (b) Texto con consenso 2 de 3}
+\end{minipage}
+
+\vspace{.5ex}
+\begin{minipage}[t]{.498\linewidth}
+\centering
+\fbox{\includegraphics[width=\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax,height=.38\textheight,keepaspectratio]{figuras/captura_operacion_youtube_qwen.png}}\\[-.2ex]
+{\footnotesize (c) Video real con Qwen3--LoRA}
+\end{minipage}\hfill
+\begin{minipage}[t]{.498\linewidth}
+\centering
+\fbox{\includegraphics[width=\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax,height=.38\textheight,keepaspectratio]{figuras/captura_operacion_youtube_consenso.png}}\\[-.2ex]
+{\footnotesize (d) El mismo video con consenso 2 de 3}
+\end{minipage}
+\caption{Panel de ejecuciones reales del servidor del paquete desplegable: (a) chunk de validación al que Qwen3--LoRA asigna 0,94 en contenido sexual; (b) el mismo texto con consenso 2 de 3; (c) URL del video \emph{Alias ``El Wichi'': extorsionaba a sus víctimas bajo amenaza de muerte}, del canal Panorama, procesada en 25 chunks de subtítulos automáticos con Qwen3--LoRA; y (d) la misma URL con consenso 2 de 3. Los recortes conservan entrada, resumen, fragmento, categorías y puntajes; omiten el reproductor y controles secundarios.}
 \label{fig:interfaz_operacion}
 \end{figure}

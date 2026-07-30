@@ -100,26 +100,40 @@ def prepare_textual_capture(driver: webdriver.Chrome, *, consensus: bool) -> Non
     driver.execute_script(
         """
         const chunks = [...document.querySelectorAll('.chunk')];
-        const target = chunks.find(c => c.querySelector('.badge.alert')) || chunks[0];
-        chunks.forEach(c => { if (c !== target) c.style.display = 'none'; });
+        const consensusMode = arguments[0];
+        const target = (consensusMode
+          ? chunks.find(c => {
+              const cards = [...c.querySelectorAll('.model-result')];
+              const finalCard = cards[cards.length - 1];
+              return finalCard && finalCard.querySelector('.labels .label:not(.safe)');
+            })
+          : chunks.find(c => c.querySelector('.chunk-head > .badge.alert'))) || chunks[0];
+        chunks.forEach(c => { if (c !== target) c.classList.add('capture-hidden'); });
         document.querySelectorAll('.score-details').forEach(d => d.open = true);
-        document.body.classList.toggle('capture-consensus', arguments[0]);
+        document.body.classList.toggle('capture-consensus', consensusMode);
         const style = document.createElement('style');
         style.id = 'capture-style';
         style.textContent = `
           nav, .hero, details.settings, #video, #help, #stats, footer,
           .review-actions, .review-form, .review-state { display:none !important; }
           body { background:#fff !important; }
-          main { max-width:1180px !important; padding:12px 18px 18px !important; }
+          main { max-width:1180px !important; padding:12px 18px 18px !important;
+                 font-size:18px !important; }
           .composer { margin-top:0 !important; box-shadow:none !important; }
-          .composer textarea { min-height:58px !important; max-height:78px !important;
-                               font-size:15px !important; line-height:1.28 !important; }
-          #status { margin:8px 2px 0 !important; font-size:13px !important; }
+          .composer textarea { min-height:54px !important; max-height:66px !important;
+                               font-size:18px !important; line-height:1.2 !important; }
+          .select, .primary { font-size:16px !important; }
+          #status { margin:8px 2px 0 !important; font-size:15px !important; }
           .summary { margin:8px 0 !important; padding:9px 12px !important;
-                     font-size:14px !important; }
+                     font-size:17px !important; }
           .chunk { margin:8px 0 0 !important; border-radius:11px !important; }
           .chunk-head, .chunk-text, .model-result { padding:9px 11px !important; }
-          .chunk-text { font-size:13px !important; line-height:1.3 !important; }
+          .chunk-head { font-size:16px !important; }
+          .chunk-text { font-size:17px !important; line-height:1.25 !important;
+                        max-height:52px !important; overflow:hidden !important; }
+          .model-name { font-size:18px !important; }
+          .badge, .label { font-size:14px !important; }
+          .muted, .score-details { font-size:15px !important; }
           .score-details { margin-top:5px !important; }
           .score-row { margin:3px 0 !important; }
           body.capture-consensus .chunk { display:grid !important;
@@ -130,6 +144,18 @@ def prepare_textual_capture(driver: webdriver.Chrome, *, consensus: bool) -> Non
           body.capture-consensus .model-result:nth-of-type(even) {
             border-left:1px solid var(--line) !important;
           }
+          body.capture-consensus .model-result:not(:last-child) .score-details,
+          body.capture-consensus .model-result:not(:last-child) .muted {
+            display:none !important;
+          }
+          body.capture-consensus .composer,
+          body.capture-consensus #status { display:none !important; }
+          body.capture-consensus .chunk-text {
+            max-height:34px !important;
+            white-space:nowrap !important;
+            text-overflow:ellipsis !important;
+          }
+          body .chunk.capture-hidden { display:none !important; }
         `;
         document.head.appendChild(style);
         window.scrollTo(0, 0);
@@ -182,7 +208,7 @@ def execute_run(driver: webdriver.Chrome, config: dict) -> dict:
     output_path = FIGURES / config["output"]
     capture_main(driver, output_path)
 
-    cards = driver.find_elements(By.CSS_SELECTOR, ".chunk:not([style*='display: none']) .model-result")
+    cards = driver.find_elements(By.CSS_SELECTOR, ".chunk:not(.capture-hidden) .model-result")
     return {
         "key": config["key"],
         "captured_at_utc": datetime.now(timezone.utc).isoformat(),

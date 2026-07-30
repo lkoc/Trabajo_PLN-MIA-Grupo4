@@ -1,9 +1,9 @@
 {
-  "captured_at_utc": "2026-07-30T05:03:29.080990+00:00",
+  "captured_at_utc": "2026-07-30T05:17:00.360658+00:00",
   "server_url": "http://127.0.0.1:8765",
   "server_health": {
     "status": "ok",
-    "time": "2026-07-30T00:02:53-05:00"
+    "time": "2026-07-30T00:16:20-05:00"
   },
   "interaction": "cuatro formularios enviados mediante Selenium; predicciones reales del servidor",
   "text_source": {
@@ -16,12 +16,17 @@
     "title": "Alias ‘El Wichi’: extorsionaba a sus víctimas bajo amenaza de muerte",
     "channel": "Panorama"
   },
-  "events_before": 5,
-  "events_after": 135,
+  "events_before": 0,
+  "events_after": 130,
+  "database_cleanup": {
+    "performed_at_utc": "2026-07-30T05:17:13.0744635Z",
+    "events_after_cleanup": 0,
+    "human_reviews_after_cleanup": 0
+  },
   "captures": [
     {
       "key": "texto_qwen",
-      "captured_at_utc": "2026-07-30T05:02:56.256303+00:00",
+      "captured_at_utc": "2026-07-30T05:16:25.955557+00:00",
       "mode": "qwen",
       "input_type": "text",
       "max_chunks": 1,
@@ -36,12 +41,12 @@
       "screenshot": "Documento_final_paper\\figuras\\captura_operacion_texto_qwen.png",
       "screenshot_pixels": {
         "width": 1180,
-        "height": 595
+        "height": 623
       }
     },
     {
       "key": "texto_consenso",
-      "captured_at_utc": "2026-07-30T05:02:57.625173+00:00",
+      "captured_at_utc": "2026-07-30T05:16:30.336409+00:00",
       "mode": "consensus",
       "input_type": "text",
       "max_chunks": 1,
@@ -51,20 +56,20 @@
       "status_visible": "Análisis terminado y estadísticas guardadas localmente.",
       "summary_visible": "1 de 1 chunks con alguna alerta · consensus",
       "results_visible": [
-        "SVM lineal calibrado palabra+carácter · Plano\nConfianza baja\nRevisión necesaria\nGénero\nContenido sexual\nMotivo: Ruta alto recall, Cerca del umbral\nScores por categoría\nRacismo discriminacion\n0.00\nGénero\n0.47\nAcoso amenaza\n0.09\nContenido sexual\n0.96",
-        "Multilingual E5-small (linaje MiniLM)\nConfianza baja\nRevisión necesaria\nGénero\nContenido sexual\nMotivo: Ruta alto recall, Cerca del umbral\nScores por categoría\nRacismo discriminacion\n0.16\nGénero\n0.65\nAcoso amenaza\n0.16\nContenido sexual\n0.95",
-        "Qwen3-0.6B LoRA · época operativa 3\nConfianza baja\nRevisión necesaria\nContenido sexual\nMotivo: Ruta alto recall, Cerca del umbral\nScores por categoría\nRacismo discriminacion\n0.01\nGénero\n0.19\nAcoso amenaza\n0.04\nContenido sexual\n0.94",
+        "SVM lineal calibrado palabra+carácter · Plano\nConfianza baja\nRevisión necesaria\nGénero\nContenido sexual",
+        "Multilingual E5-small (linaje MiniLM)\nConfianza baja\nRevisión necesaria\nGénero\nContenido sexual",
+        "Qwen3-0.6B LoRA · época operativa 3\nConfianza baja\nRevisión necesaria\nContenido sexual",
         "Consenso mayoritario de los tres modelos\nConfianza baja\nRevisión necesaria\nGénero\nContenido sexual\nMotivo: Desacuerdo entre modelos, Algún modelo activa revisión\nScores por categoría\nRacismo discriminacion\n0.06\nGénero\n0.44\nAcoso amenaza\n0.09\nContenido sexual\n0.95"
       ],
       "screenshot": "Documento_final_paper\\figuras\\captura_operacion_texto_consenso.png",
       "screenshot_pixels": {
         "width": 1180,
-        "height": 808
+        "height": 585
       }
     },
     {
       "key": "youtube_qwen",
-      "captured_at_utc": "2026-07-30T05:03:11.102530+00:00",
+      "captured_at_utc": "2026-07-30T05:16:43.802463+00:00",
       "mode": "qwen",
       "input_type": "youtube",
       "max_chunks": 30,
@@ -74,17 +79,17 @@
       "status_visible": "Análisis terminado y estadísticas guardadas localmente.",
       "summary_visible": "10 de 25 chunks con alguna alerta · qwen · subtítulos es-orig (automatic)",
       "results_visible": [
-        "Qwen3-0.6B LoRA · época operativa 3\nConfianza baja\nRevisión necesaria\nSeguro\nMotivo: Ruta alto recall, Cerca del umbral\nScores por categoría\nRacismo discriminacion\n0.00\nGénero\n0.01\nAcoso amenaza\n0.19\nContenido sexual\n0.01"
+        "Qwen3-0.6B LoRA · época operativa 3\nConfianza alta\nRevisión necesaria\nAcoso amenaza\nMotivo: Ruta alto recall\nScores por categoría\nRacismo discriminacion\n0.00\nGénero\n0.04\nAcoso amenaza\n0.70\nContenido sexual\n0.01"
       ],
       "screenshot": "Documento_final_paper\\figuras\\captura_operacion_youtube_qwen.png",
       "screenshot_pixels": {
         "width": 1180,
-        "height": 578
+        "height": 623
       }
     },
     {
       "key": "youtube_consenso",
-      "captured_at_utc": "2026-07-30T05:03:26.933618+00:00",
+      "captured_at_utc": "2026-07-30T05:16:58.234786+00:00",
       "mode": "consensus",
       "input_type": "youtube",
       "max_chunks": 30,
@@ -94,15 +99,15 @@
       "status_visible": "Análisis terminado y estadísticas guardadas localmente.",
       "summary_visible": "16 de 25 chunks con alguna alerta · consensus · subtítulos es-orig (automatic)",
       "results_visible": [
-        "SVM lineal calibrado palabra+carácter · Plano\nConfianza baja\nRevisión necesaria\nAcoso amenaza\nMotivo: Ruta alto recall, Cerca del umbral\nScores por categoría\nRacismo discriminacion\n0.00\nGénero\n0.00\nAcoso amenaza\n0.15\nContenido sexual\n0.01",
-        "Multilingual E5-small (linaje MiniLM)\nConfianza alta\nRevisión necesaria\nSeguro\nMotivo: Ruta alto recall\nScores por categoría\nRacismo discriminacion\n0.02\nGénero\n0.02\nAcoso amenaza\n0.10\nContenido sexual\n0.02",
-        "Qwen3-0.6B LoRA · época operativa 3\nConfianza baja\nRevisión necesaria\nSeguro\nMotivo: Ruta alto recall, Cerca del umbral\nScores por categoría\nRacismo discriminacion\n0.00\nGénero\n0.01\nAcoso amenaza\n0.19\nContenido sexual\n0.01",
-        "Consenso mayoritario de los tres modelos\nConfianza baja\nRevisión necesaria\nSeguro\nMotivo: Desacuerdo entre modelos, Algún modelo activa revisión\nScores por categoría\nRacismo discriminacion\n0.01\nGénero\n0.01\nAcoso amenaza\n0.15\nContenido sexual\n0.01"
+        "SVM lineal calibrado palabra+carácter · Plano\nConfianza baja\nRevisión necesaria\nSeguro",
+        "Multilingual E5-small (linaje MiniLM)\nConfianza baja\nRevisión necesaria\nAcoso amenaza",
+        "Qwen3-0.6B LoRA · época operativa 3\nConfianza alta\nRevisión necesaria\nAcoso amenaza",
+        "Consenso mayoritario de los tres modelos\nConfianza baja\nRevisión necesaria\nAcoso amenaza\nMotivo: Desacuerdo entre modelos, Algún modelo activa revisión\nScores por categoría\nRacismo discriminacion\n0.05\nGénero\n0.14\nAcoso amenaza\n0.57\nContenido sexual\n0.06"
       ],
       "screenshot": "Documento_final_paper\\figuras\\captura_operacion_youtube_consenso.png",
       "screenshot_pixels": {
         "width": 1180,
-        "height": 13495
+        "height": 585
       }
     }
   ]
