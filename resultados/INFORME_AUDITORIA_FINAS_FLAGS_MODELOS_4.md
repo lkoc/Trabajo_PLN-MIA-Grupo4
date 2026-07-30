@@ -1,6 +1,6 @@
 # Auditoría de etiquetas finas y transversales
 
-Fecha: 2026-07-29T13:34:15-05:00
+Fecha: 2026-07-29T14:26:39-05:00
 
 Se analizaron 13 modelos sobre el mismo test de 5,290 chunks. Las etiquetas finas se usaron para desagregar recall o especificidad de `SEGURO`; los flags transversales midieron cuánto captura una revisión ordenada por cercanía a los umbrales.
 

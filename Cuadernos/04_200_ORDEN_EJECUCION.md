@@ -21,6 +21,6 @@ La sesión Qwen iniciada con el nombre anterior `04_7_finetuning_qwen_acoso_amen
 
 ## Kernel local o Colab
 
-`04_202`–`04_206` incluyen arranque híbrido para kernel local y Colab con persistencia mínima en Google Drive. Antes de usarlos en Colab, ejecute `scripts_auxiliares/sincronizar_04_20x_google_drive.ps1`. `04_206`, `04_207` y `04_208` verifican los resultados locales frente al bundle de Drive y recuperan sólo los archivos ausentes; los conflictos no se sobrescriben silenciosamente. La preparación, persistencia y recuperación se describen en [`04_20X_COLAB_HIBRIDO.md`](04_20X_COLAB_HIBRIDO.md).
+`04_202`–`04_206` incluyen arranque híbrido para kernel local y Colab con persistencia mínima en Google Drive. Antes de usarlos en Colab, ejecute `scripts_auxiliares/sincronizar_04_20x_google_drive.ps1`. `04_206`, `04_207` y `04_208` verifican los resultados locales frente al bundle de Drive. En `04_208`, un conflicto se resuelve conservando el artefacto más reciente, que puede provenir de Drive o del workspace; la decisión y las fechas quedan visibles. La preparación, persistencia y recuperación se describen en [`04_20X_COLAB_HIBRIDO.md`](04_20X_COLAB_HIBRIDO.md).
 
 Después de `04_207`/`04_208`, `05_frontend_produccion.ipynb` consume `resultados/metricas/comparacion_final_4/registro_modelos_desplegables.json`. Ese paso no reentrena: carga los tres ganadores por familia y abre el flujo de operación documentado en `05_MODO_OPERACION.md`.

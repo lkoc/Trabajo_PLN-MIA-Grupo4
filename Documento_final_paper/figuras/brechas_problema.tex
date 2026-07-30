@@ -1,0 +1,17 @@
+\begin{tikzpicture}[
+  font=\footnotesize,
+  gap/.style={draw,rounded corners=2pt,minimum height=12mm,text width=.265\textwidth,align=left,inner sep=5pt},
+  now/.style={gap,fill=red!8},
+  cause/.style={gap,fill=orange!10},
+  tech/.style={gap,fill=blue!8},
+  goal/.style={draw,rounded corners=2pt,fill=green!12,text width=.15\textwidth,align=center,minimum height=15mm},
+  arr/.style={-{Stealth[length=2.2mm]},thick}
+]
+\node[now] (real) {\textbf{Situación actual}\\Miles de fragmentos y pocos revisores.\\Meta: localizar pronto el daño sin perder su evidencia.};
+\node[cause,right=5mm of real] (under) {\textbf{Factores que la sostienen}\\Lenguaje local, ironía, ruido y clases raras.\\Meta: decisiones consistentes y trazables.};
+\node[tech,right=5mm of under] (tec) {\textbf{Capacidad requerida}\\Falta una solución local validada de extremo a extremo.\\Meta: alerta, abstención y trazabilidad.};
+\node[goal,right=6mm of tec] (goal) {\textbf{Artefacto}\\Prioriza;\\una persona decide};
+\draw[arr] (real)--(under);
+\draw[arr] (under)--(tec);
+\draw[arr] (tec)--(goal);
+\end{tikzpicture}

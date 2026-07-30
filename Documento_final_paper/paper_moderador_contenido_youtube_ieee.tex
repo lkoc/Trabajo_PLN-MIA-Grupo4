@@ -1,149 +1,86 @@
-\documentclass[conference]{IEEEtran}
-
+\documentclass[conference,a4paper]{IEEEtran}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage[spanish,es-tabla]{babel}
 \usepackage{cite}
-\usepackage{url}
+\usepackage{amsmath}
 \usepackage{booktabs}
 \usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
 \usepackage{graphicx}
+\usepackage{pdflscape}
+\usepackage{float}
+\usepackage{placeins}
 \usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{balance}
+\usepackage{xurl}
 \usepackage{tikz}
-\usetikzlibrary{positioning,arrows.meta}
+\usepackage{pgfplots}
+\usetikzlibrary{positioning,arrows.meta,calc,fit}
+\pgfplotsset{compat=1.18}
+\usepackage[hidelinks]{hyperref}
 
-\title{Moderacion Textual Local de Contenido en Videos Peruanos de YouTube}
+% IEEEtran conserva en modo conference una caja vertical de 9.25 in tanto
+% para Letter como para A4. En esta edición A4 se mantiene el margen superior
+% de 19 mm y se aprovecha la altura adicional con 25 mm en el borde inferior.
+% La cuantización conserva un número entero de renglones por columna.
+\IEEEsettextheight{19mm}{25mm}
+\IEEEsettopmargin{t}{19mm}
+\IEEEquantizetextheight{c}
+\IEEEsettopmargin{q}{0sp}
 
+\renewcommand{\arraystretch}{1.08}
+\setlength{\tabcolsep}{4pt}
+\setlength{\emergencystretch}{2em}
+\Urlmuskip=0mu plus 2mu
+
+\newcommand{\AP}{\operatorname{AP}}
+\newcommand{\Rac}{\textsc{Racismo}}
+\newcommand{\Gen}{\textsc{Género}}
+\newcommand{\Ame}{\textsc{Acoso-Amenaza}}
+\newcommand{\Sex}{\textsc{Sexual}}
+
+\title{Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural}
 \author{
-\IEEEauthorblockN{Grupo 4}
-\IEEEauthorblockA{
-Curso de Procesamiento de Lenguaje Natural\\
-Maestria en Inteligencia Artificial, Universidad Nacional de Ingenieria\\
-Koc Gongora, Luis Enrique; Mancilla Antay, Alex Felipe; Melendez Garcia, Herbert Antonio; Paitan Cano, Dennis Jack
+\IEEEauthorblockN{Luis Enrique Koc Góngora, Alex Felipe Mancilla Antay,\\
+Herbert Antonio Meléndez García y Dennis Jack Paitán Cano}
+\IEEEauthorblockA{\vspace{0.25ex}
+Maestría en Inteligencia Artificial, Universidad Nacional de Ingeniería\\[0.25ex]
+Curso de Procesamiento de Lenguaje Natural, Grupo 4, semestre académico 2026--1\\[0.25ex]
+Lima, Perú\\[0.35ex]
+\href{mailto:luis.koc@gmail.com}{luis.koc@gmail.com}\quad
+\href{mailto:amancillaa@uni.pe}{amancillaa@uni.pe}\\
+\href{mailto:hamg.94@gmail.com}{hamg.94@gmail.com}\quad
+\href{mailto:dennis.paitan.c@uni.pe}{dennis.paitan.c@uni.pe}}
 }
+
+\hypersetup{
+  pdftitle={Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural},
+  pdfauthor={Luis Enrique Koc Góngora; Alex Felipe Mancilla Antay; Herbert Antonio Meléndez García; Dennis Jack Paitán Cano}
 }
 
 \begin{document}
 \maketitle
-
-\begin{abstract}
-La revision manual de videos publicos en plataformas sociales requiere procesar gran volumen de texto, lenguaje local y expresiones ambiguas. Este trabajo propone un flujo local para moderacion textual de videos peruanos de YouTube basado en recoleccion sin APIs, limpieza, segmentacion en fragmentos, etiquetado humano y entrenamiento de un clasificador reproducible. El artefacto prioriza evidencia textual revisable y no reemplaza la decision humana. La propuesta se orienta a construir un corpus peruano inicial y un baseline local que permita evaluar categorias como contenido seguro, acoso, contenido sexual, racismo y riesgos contextuales.
-\end{abstract}
-
-\begin{IEEEkeywords}
-Procesamiento de lenguaje natural, moderacion de contenido, clasificacion de texto, YouTube, corpus peruano.
-\end{IEEEkeywords}
-
-\section{Introduccion}
-
-Los videos de YouTube concentran opinion politica, periodismo, entretenimiento, farandula y conversaciones informales. En el contexto peruano, la interpretacion automatica del texto puede ser dificil por modismos, ironia, apodos, referencias culturales y cambios de registro entre canales. Un clasificador generico puede identificar patrones de toxicidad, pero no necesariamente entrega evidencia suficiente para revisar casos locales.
-
-Este trabajo aborda la construccion de un moderador textual local para videos publicos de YouTube. El sistema procesa titulos, descripciones, subtitulos o transcripciones, genera fragmentos auditables y sugiere categorias de moderacion. La salida debe apoyar revision humana mediante el fragmento activador, la categoria sugerida y un score interpretable.
-
-Las contribuciones iniciales son: (i) un flujo reproducible sin APIs para preparar texto de videos publicos; (ii) una estructura de etiquetado humano para moderacion textual; (iii) un baseline local de clasificacion; y (iv) una regla de agregacion de riesgo por video basada en evidencia textual.
-
-\section{Trabajo Relacionado}
-
-Los modelos Transformer han mejorado la representacion de lenguaje mediante preentrenamiento bidireccional, como BERT \cite{devlin2019bert}. Para espanol, BETO ofrece una alternativa preentrenada sobre corpus en espanol \cite{canete2020beto}. En tareas de transcripcion, Whisper permite reconocimiento automatico de voz con un enfoque robusto de supervision debil \cite{radford2022whisper}.
-
-La evaluacion de modelos de lenguaje no debe limitarse a exactitud global. CheckList propone pruebas de comportamiento para analizar capacidades, invariancias y casos limite \cite{ribeiro2020checklist}. En moderacion textual, los datasets de ataques personales y lenguaje abusivo muestran que el etiquetado humano, la definicion de categorias y el sesgo del corpus son factores criticos \cite{wulczyn2017exmachina}, \cite{vidgen2020directions}.
-
-\section{Corpus y Recoleccion}
-
-El corpus se construye a partir de canales peruanos candidatos en politica, periodismo, humor, farandula y viajes. La diversidad de registros es necesaria para que el clasificador no aprenda solo lenguaje agresivo o solo lenguaje formal. La recoleccion se realiza con herramientas locales como \texttt{yt-dlp}, Selenium o parsers HTML cuando corresponda, sin usar APIs externas.
-
-Cada registro debe conservar, como minimo, identificador de video, canal, URL, titulo, fecha, duracion, fuente del texto, estado de descarga y observaciones de descarte. Los canales sin URL oficial verificada se mantienen como candidatos y no entran a descarga automatica hasta documentar su fuente.
-
-\section{Metodo}
-
-La Fig.~\ref{fig:pipeline} resume el flujo propuesto. El texto se obtiene desde subtitulos disponibles o transcripcion local. Luego se normaliza, se segmenta en chunks y se entrega a un frontend HTML para etiquetado humano. La data etiquetada alimenta un baseline local con TF-IDF y un clasificador lineal. Si el corpus crece, se evalua una extension con BETO o RoBERTa.
-
-\begin{figure*}[t]
-\centering
-\input{figuras/pipeline_moderacion.tex}
-\caption{Pipeline local para construir un corpus etiquetado y un clasificador de moderacion textual con evidencia revisable.}
-\label{fig:pipeline}
-\end{figure*}
-
-\subsection{Categorias de Moderacion con Fundamento en Literatura Peruana}
-
-El diseno de categorias parte de la especificidad del contexto peruano documentada en la literatura academica local. Portocarrero \cite{portocarrero2009racismo} identifico tres mecanismos estructurales del racismo peruano: el fundamento invisible (el racismo es omnipresente pero se niega socialmente), el fantasma del patron (reproduccion inconsciente de jerarquias coloniales) y la utopia del blanqueamiento (aspiracion a ascender racialmente mediante apariencia y habla). Zavala y Zariquiey \cite{zavala2007discurso} mostraron como ciertos sectores justifican practicas racistas bajo apariencia de criterios educativos o culturales, y Zavala y Back \cite{zavala2017racismo} extendieron ese marco al espacio virtual peruano. Almeida y Zavala \cite{almeida2022motoso} documentaron el \emph{racismo linguistico} sobre el espanol andino en redes sociales: el ``motoseo'' y otras marcas del habla quechua-castellano se usan para racializar y deslegitimar voces politicas. En acoso digital, Monge-Olivarria y Guerra-Corrales \cite{monge2023violencia} identificaron la feminizacion como forma de insulto en Twitter peruano.
-
-Tres rasgos del corpus hacen que la taxonomia no sea transferible directamente de datasets en ingles: (i)~el racismo cultural opera mediante lenguaje y no solo mediante insultos fenotipicos \cite{branez2012amixer}; (ii)~el humor se usa como cobertura plausible del dano, lo que Branez Medina \cite{branez2012amixer} llama ``racismo negado en la vida cotidiana''; (iii)~los sistemas de moderacion automatica fallan sistematicamente con el espanol andino, quechua mezclado y modismos regionales \cite{thakur2025quechua}. El esquema incluye \emph{flags transversales} (Tabla~\ref{tab:flags}) que no son categorias de dano sino indicadores de ambiguedad que el moderador humano debe resolver. Las categorias principales no son mutuamente excluyentes.
-
-\begin{table}[h]
-\centering
-\caption{Taxonomia de moderacion textual con subcategorias para el contexto peruano}
-\label{tab:categorias}
-\small
-\begin{tabular}{p{0.40\linewidth}p{0.50\linewidth}}
-\toprule
-\textbf{Etiqueta} & \textbf{Criterio / senal textual} \\
-\midrule
-\textit{SEGURO} & \\
-\quad seguro & Texto informativo, descriptivo o humor sin ataque. \\
-\quad seguro\_ironia\_marcada & Parodia cuyo blanco no es un grupo humano. \\
-\midrule
-\textit{RACISMO / DISCRIMINACION} & \\
-\quad racismo\_etnico\_explicito & Uso derogatorio de ``serrano'', ``cholo'', ``negro'', ``indio'' \cite{callirgos1993racismo}. \\
-\quad racismo\_linguistico & Burla del acento andino, el motoseo o la ortografia \cite{almeida2022motoso}. \\
-\quad clasismo\_racial & Inferioriza por clase social con connotacion etnica \cite{callirgos1993racismo}. \\
-\quad discriminacion\_regional & Ataque por ser provinciano o de fuera de Lima. \\
-\quad racismo\_encubierto & Discriminacion disfrazada de criterio de ``cultura'' \cite{zavala2007discurso}. \\
-\midrule
-\textit{ACOSO} & \\
-\quad misoginia\_acoso\_genero & Insultos sexualizados o degradacion por ser mujer \cite{monge2023violencia}. \\
-\quad homofobia\_transfobia & Insultos o amenazas contra personas LGBTQ+. \\
-\quad acoso\_personal & Ataque a persona identificable, doxeo. \\
-\quad amenaza\_directa & Expresion de intencion de dano fisico o legal. \\
-\midrule
-\textit{CONTENIDO SEXUAL} & \\
-\quad sexual\_explicito & Descripcion grafica de actos sexuales. \\
-\quad sexual\_cosificacion & Sexualizacion de personas sin contexto editorial. \\
-\quad sexual\_no\_consensual & Referencia a contenido no consensual. \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[h]
-\centering
-\caption{Flags transversales de ambiguedad para el corpus peruano}
-\label{tab:flags}
-\small
-\begin{tabular}{p{0.32\linewidth}p{0.58\linewidth}}
-\toprule
-\textbf{Flag} & \textbf{Criterio} \\
-\midrule
-ironia\_ambigua & No se determina si el dano es intencional o es parodia critica del racismo \cite{vich2018dinamicas}. \\
-humor\_encubridor & El hablante usa humor para negar el dano (``es solo una broma'') \cite{branez2012amixer}. \\
-contexto\_necesario & El chunk aislado no permite clasificar sin ver el video \cite{thakur2025quechua}. \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Una guia de anotacion detallada con un proceso de decision de siete pasos y trece ejemplos anotados por categoria se encuentra en el documento companion \texttt{modelos/skills/clasificacion\_moderacion\_peru.md} incluido en el repositorio del proyecto.
-
-\subsection{Agregacion por Video}
-
-La unidad minima de etiqueta es el chunk textual. El video se marca con riesgo si varios fragmentos superan el umbral de una categoria o si un fragmento critico supera una probabilidad alta. La salida final debe incluir categoria, score, fragmentos activadores y evidencia textual.
-
-\section{Evaluacion}
-
-La evaluacion se organiza en tres niveles. Primero, se mide acuerdo entre anotadores con Cohen's kappa sobre una muestra del corpus. Segundo, se entrena un baseline con division de entrenamiento, validacion y prueba. Tercero, se analizan errores por categoria, canal y tipo de lenguaje.
-
-Las metricas principales son F1 macro, precision y recall por categoria. Debido al desbalance esperado, la exactitud global no debe ser la metrica central. La revision manual de top-fragmentos permite verificar si la evidencia presentada por el sistema es util para el moderador humano.
-
-\section{Discusion}
-
-El artefacto tiene limites importantes. La moderacion propuesta es textual, por lo que no evalua imagenes, gestos o contexto visual. Tambien puede fallar con ironia, sarcasmo, citas y referencias locales ambiguas. Por ello, la salida debe tratarse como alerta de priorizacion y no como sancion automatica.
-
-El sesgo por fuente es otro riesgo. Un corpus concentrado en pocos canales puede hacer que el clasificador confunda estilo de comunicacion con categoria de riesgo. Para reducir este problema, la seleccion de fuentes debe mezclar registros formales, informales, humoristicos y descriptivos.
-
-\section{Conclusiones}
-
-Este trabajo propone una estructura inicial para construir un moderador textual local de videos peruanos de YouTube. La contribucion principal es integrar recoleccion sin APIs, chunks auditables, etiquetado humano, entrenamiento local y evidencia revisable. Como trabajo futuro se plantea ampliar el corpus, mejorar la guia de anotacion, calibrar umbrales y comparar el baseline con modelos Transformer en espanol.
-
+\pagestyle{plain}
+\thispagestyle{plain}
+\bstctlcite{BSTcontrol}
+\input{secciones/00_resumen}
+\input{secciones/01_introduccion}
+\input{secciones/02_bases}
+\input{secciones/03_problemas_objetivos}
+\input{secciones/04_metodologia_datos}
+\input{secciones/05_metodologia_modelos}
+\input{secciones/06_resultados}
+\input{secciones/07_discusion}
+\input{secciones/08_limitaciones_conclusiones}
+\input{secciones/09_anexos}
+\FloatBarrier
+% La bibliografía ocupa varias páginas; este salto equilibra solo la última.
+\IEEEtriggeratref{106}
 \bibliographystyle{IEEEtran}
 \bibliography{referencias}
-
 \end{document}

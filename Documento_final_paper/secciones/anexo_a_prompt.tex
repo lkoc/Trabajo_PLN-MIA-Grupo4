@@ -1,0 +1,74 @@
+\section{Prompt operativo de etiquetado por API}
+\label{app:prompt_operativo}
+
+El texto siguiente es una transcripción estructurada y completa del archivo \path{03_2_etiquetado_llm_api/prompt_operacional_compacto.md}, versión 1.1. Una copia idéntica reside en \path{03_1_etiquetado_llm/}. El prompt declara que compila la guía, las instrucciones de transporte y la taxonomía; debe revisarse cuando cambie una de ellas.
+
+\subsection*{Rol}
+
+Clasificar chunks de subtítulos de YouTube peruano para priorizar revisión humana, sin actuar como moderador final. Evaluar el efecto del mensaje sobre el blanco aunque el hablante niegue intención o lo presente como humor. La clasificación es multietiqueta e indica todas las categorías aplicables. No usar políticas genéricas de toxicidad, conocimiento previo como taxonomía alternativa ni coincidencias simples de palabras; no inventar etiquetas. Si un modismo o el chunk aislado no se entiende, conservar un daño plausible solo cuando haya evidencia y añadir \texttt{contexto\_necesario}.
+
+\subsection*{Etiquetas permitidas}
+
+\textbf{Seguro.} \texttt{seguro}: información, descripción, narración u opinión sin inferiorización, ataque o amenaza a una persona o grupo. \texttt{seguro\_ironia\_marcada}: ironía o parodia cuyo blanco es una institución, política o situación abstracta y que no daña a un grupo humano. Una etiqueta segura no coexiste con daño ni con la otra etiqueta segura. Una cita dañina solo puede considerarse segura cuando el hablante se opone claramente a ella.
+
+\textbf{Racismo y discriminación.}
+\begin{itemize}
+\item \texttt{racismo\_etnico\_explicito}: término étnico usado para degradar o inferiorizar, como ``serrano'', ``cholo'', ``negro'', ``indio'', ``chino'', ``cholito'', ``camba'' o ``motoso'' usados como insulto.
+\item \texttt{racismo\_linguistico}: burla del acento andino, motoseo, español influido por quechua u ortografía de migrantes o provincianos; esas variedades no son daño por sí mismas.
+\item \texttt{clasismo\_racial}: inferiorización por clase con carga étnica, consumo, apariencia o conducta asociada a migrantes o clase baja; incluye, según contexto, ``amixer'', ``huachafa'', ``chusma'', ``cholería'' o ``gente de barrio''.
+\item \texttt{discriminacion\_regional}: ataque o inferiorización por ser provinciano, serrano, del interior o de fuera de Lima; incluye centralismo que presenta a Lima como superior.
+\item \texttt{racismo\_encubierto}: discriminación étnica o regional presentada como diferencia de educación, cultura, civismo o mérito.
+\end{itemize}
+Estas etiquetas pueden coexistir. Las fuentes que el prompt nombra para estos criterios son Callirgos, Zavala y Back, Almeida y Zavala, Brañez Medina, Zavala y Zariquiey, y Portocarrero; sus aportes y referencias se desarrollan en la Sec.~II-B.
+
+\textbf{Acoso.}
+\begin{itemize}
+\item \texttt{misoginia\_acoso\_genero}: ataque por ser mujer, insulto sexualizado, exclusión por género o feminización usada para degradar a un hombre.
+\item \texttt{homofobia\_transfobia}: insulto, amenaza, patologización o deslegitimación por orientación sexual o identidad de género.
+\item \texttt{acoso\_personal}: ataque dirigido a una persona identificable por nombre, cargo, rol o datos; incluye doxeo, campaña o llamado a terceros. Una crítica política o profesional argumentada no es automáticamente acoso.
+\item \texttt{amenaza\_directa}: intención explícita o implícita, pero clara, de daño físico, legal o económico; suele coexistir con acoso personal.
+\end{itemize}
+
+\textbf{Contenido sexual.}
+\begin{itemize}
+\item \texttt{sexual\_explicito}: descripción gráfica de actos sexuales sin necesidad informativa o periodística.
+\item \texttt{sexual\_cosificacion}: reducción del valor de una persona a su cuerpo, apariencia o utilidad sexual.
+\item \texttt{sexual\_no\_consensual}: material íntimo, grabación, filtración o distribución sin consentimiento.
+\end{itemize}
+
+\subsection*{Flags permitidos}
+
+Los flags acompañan un daño, nunca lo reemplazan y siempre activan \texttt{needs\_review=true}. \texttt{ironia\_ambigua} indica que no puede decidirse si el texto critica el daño o lo reproduce con distancia; \texttt{humor\_encubridor}, que el tono jocoso minimiza un daño que permanece al retirar el humor; y \texttt{contexto\_necesario}, que falta antecedente, referente, final de frase, modismo o contexto cultural o audiovisual. Ironía ambigua y contexto necesario limitan la confianza a 0,65. Los tres valores aparecen solo en \texttt{flags}; si no hay daño sustentable, se eliminan y se usa \texttt{labels=["seguro"]}.
+
+\subsection*{Decisión obligatoria en siete pasos}
+
+\begin{enumerate}
+\item Identificar el blanco, el hablante o tono y el posible humor, ironía o exageración; el humor no descarta daño.
+\item Comprobar si el texto es seguro; una opinión negativa sin inferiorización o ataque puede serlo, y la ironía solo es segura cuando su blanco no es un grupo humano ni produce daño colateral.
+\item Revisar por separado los cinco subtipos de racismo y discriminación y asignar todos los aplicables.
+\item Revisar misoginia, homofobia o transfobia, ataque a una persona identificable y amenaza.
+\item Revisar contenido sexual explícito, cosificación y ausencia de consentimiento, considerando el contexto periodístico.
+\item Añadir los flags aplicables; humor e ironía no eliminan un daño sustentado.
+\item Verificar que \texttt{labels} no esté vacío; que seguro no coexista con daño; que se hayan incluido todas las etiquetas aplicables; que cualquier flag o score menor que 0,70 active revisión; que ironía o contexto limiten el score a 0,65; y que la justificación sea concreta y breve.
+\end{enumerate}
+
+\subsection*{Español peruano y términos sensibles}
+
+\begin{itemize}
+\item ``cholo/a'' puede funcionar como identidad, reapropiación o insulto y se decide por contexto; si no es concluyente, se conserva el daño plausible con el flag correspondiente.
+\item ``causa'' y ``pata'' suelen ser jerga amistosa, no acoso.
+\item ``terruco'' suele ser derogatorio: activa acoso personal si identifica a alguien y puede sumar racismo étnico cuando racializa a una persona o grupo andino.
+\item ``amixer'' usado de forma despectiva hacia migrantes andinos activa clasismo racial.
+\item ``motoso/a'' como burla activa racismo lingüístico y puede sumar racismo étnico o regional según el blanco.
+\item Los canales irónicos requieren revisar el blanco y el género humorístico no concede inmunidad.
+\end{itemize}
+
+\subsection*{Salida y ejemplos mínimos}
+
+Para cada fragmento, devolver su identificador, las etiquetas y señales aplicables, la necesidad de revisión, una puntuación de confianza y una justificación breve. Conservar el orden, usar solo el vocabulario permitido y limitar la puntuación al intervalo \([0,1]\). Cualquier señal, puntuación menor que 0,70 o duda justificada activa la revisión. La salida omite texto repetido, metadatos innecesarios y razonamiento interno.
+
+El prompt incluye ocho casos mínimos: una votación como segura; ironía sobre una política como segura marcada; burla al habla andina como racismo lingüístico, étnico y regional con humor encubridor; inferiorización cultural de personas de la sierra como racismo encubierto y regional; mandato de volver a cocinar como misoginia; advertencia de conocer el domicilio como acoso y amenaza; atribución de empleo al cuerpo como cosificación y posible misoginia; y circulación de fotos íntimas como contenido no consensual y posible acoso personal.
+
+\subsection*{Ensamblaje y alcance acreditado}
+
+El proceso antepone la identidad del clasificador, inserta este prompt y la taxonomía completa, y añade reglas para lotes, salida estructurada, orden de identificadores, vocabulario literal y límites de longitud. La llamada usa temperatura 0 y razonamiento desactivado. Los manifiestos de los lotes anotados por API registran la versión del prompt. Este prompt guía la anotación y no forma parte de la entrada textual del clasificador Qwen3--LoRA.

@@ -1,0 +1,50 @@
+\begin{tikzpicture}[
+  font=\scriptsize,
+  coarse/.style={draw,rounded corners=2pt,fill=blue!9,text width=34mm,minimum height=11mm,align=center,inner sep=3pt},
+  fine/.style={draw,rounded corners=2pt,fill=orange!9,text width=34mm,minimum height=27mm,align=left,inner sep=3pt},
+  safe/.style={draw,rounded corners=2pt,fill=green!10,align=center,minimum height=12mm,inner sep=3pt},
+  flag/.style={draw,rounded corners=2pt,fill=purple!9,align=center,minimum height=15mm,inner sep=3pt},
+  root/.style={draw,rounded corners=2pt,fill=gray!10,text width=47mm,minimum height=9mm,align=center},
+  arr/.style={-{Stealth[length=1.8mm]},thick},
+  bus/.style={thick}
+]
+% Capa 1: contrato activo. El bus queda en un carril vacío por encima de las cajas.
+\node[root] (contract) at (6,2.05) {\textbf{Contrato activo multietiqueta}\\cuatro salidas de daño};
+\node[coarse] (rac) at (0,0) {\textbf{RACISMO /\\DISCRIMINACIÓN}};
+\node[coarse] (gen) at (4,0) {\textbf{GÉNERO}};
+\node[coarse] (ame) at (8,0) {\textbf{ACOSO / AMENAZA}\\OR de dos salidas preliminares};
+\node[coarse] (sex) at (12,0) {\textbf{CONTENIDO\\SEXUAL}};
+\coordinate (topbus) at (6,1.10);
+\draw[bus] (contract.south) -- (topbus);
+\draw[bus] (0,1.10) -- (12,1.10);
+\foreach \n/\x in {rac/0,gen/4,ame/8,sex/12}{
+  \draw[arr] (\x,1.10) -- (\n.north);
+}
+
+% Capa 2: fenómenos finos, contenidos en la columna de su salida gruesa.
+\node[fine] (rf) at (0,-2.35) {\textbf{5 fenómenos de daño}\\
+  étnico explícito\\lingüístico\\clasismo racial\\regional\\encubierto};
+\node[fine] (gf) at (4,-2.35) {\textbf{2 fenómenos de daño}\\
+  misoginia / acoso de género\\homofobia / transfobia};
+\node[fine] (af) at (8,-2.35) {\textbf{2 fenómenos de daño}\\
+  ataque dirigido / acoso personal\\amenaza directa};
+\node[fine] (sf) at (12,-2.35) {\textbf{3 fenómenos de daño}\\
+  sexual explícito\\cosificación sexual\\material no consensual};
+\foreach \a/\b in {rac/rf,gen/gf,ame/af,sex/sf}{
+  \draw[arr] (\a.south) -- (\b.north);
+}
+
+% Capa 3: estados seguros y señales transversales en carriles separados.
+\node[safe,text width=46mm] (safestates) at (.60,-4.85) {\textbf{2 estados seguros}\\
+  \texttt{seguro}; \texttt{seguro\_ironia\_marcada}\\
+  mutuamente excluyentes con daño};
+\node[safe,text width=24mm] (safeout) at (4.50,-4.85) {\textbf{SEGURO derivado}\\si ninguna de 4\\salidas está activa};
+\draw[arr] (safestates.east) -- (safeout.west);
+
+\node[flag,text width=55mm] (flags) at (8.95,-4.85) {\textbf{3 flags transversales}\\
+  \texttt{ironia\_ambigua}; \texttt{humor\_encubridor};\\
+  \texttt{contexto\_necesario}\\
+  acompañan un daño; no son categorías de moderación};
+\node[flag,text width=28mm,fill=yellow!14] (human) at (13.70,-4.85) {\textbf{Revisión humana}\\obligatoria según\\el protocolo};
+\draw[arr,dashed] (flags.east) -- (human.west);
+\end{tikzpicture}

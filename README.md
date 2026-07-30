@@ -1,4 +1,4 @@
-# Moderador de contenido en videos de YouTube
+# Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural
 
 Trabajo final del curso de Procesamiento de Lenguaje Natural, Maestría en Inteligencia Artificial, Universidad Nacional de Ingeniería. Grupo 4, semestre 2026-1.
 

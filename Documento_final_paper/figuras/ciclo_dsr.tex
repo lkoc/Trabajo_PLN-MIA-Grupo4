@@ -1,0 +1,23 @@
+\begin{tikzpicture}[
+  font=\scriptsize,
+  phase/.style={draw,rounded corners=2pt,minimum width=21mm,minimum height=11mm,align=center,fill=blue!7},
+  evidence/.style={draw,rounded corners=2pt,text width=20mm,minimum height=12mm,align=center,fill=green!9},
+  arr/.style={-{Stealth[length=1.8mm]},thick}
+]
+\node[phase] (p1) {1. Necesidad\\y requisitos};
+\node[phase,right=3mm of p1] (p2) {2. Objetivos\\medibles};
+\node[phase,right=3mm of p2] (p3) {3. Diseño y\\construcción};
+\node[phase,right=3mm of p3] (p4) {4. Demostración\\en videos};
+\node[phase,right=3mm of p4] (p5) {5. Evaluación\\sin fuga};
+\node[phase,right=3mm of p5] (p6) {6. Comunicación\\y despliegue};
+\foreach \a/\b in {p1/p2,p2/p3,p3/p4,p4/p5,p5/p6}{\draw[arr] (\a)--(\b);}
+\node[evidence,below=6mm of p1] (e1) {Corpus\\versionado};
+\node[evidence,right=3mm of e1] (e2) {Clásicos de\\cinco categorías};
+\node[evidence,right=3mm of e2] (e3) {Consolidación y\\adjudicación};
+\node[evidence,right=3mm of e3] (e4) {MiniLM/E5\\cinco categorías};
+\node[evidence,right=3mm of e4] (e5) {14 configuraciones\\comparadas};
+\node[evidence,right=3mm of e5] (e6) {Frontend 05\\y retroalimentación};
+\foreach \a/\b in {e1/e2,e2/e3,e3/e4,e4/e5,e5/e6}{\draw[arr] (\a)--(\b);}
+\draw[arr,dashed] (p5.south) |- ++(0,-2mm) -| (p3.south);
+\node[below=1mm of e3,align=center,text width=.95\textwidth] {\textit{Cada evaluación devolvió evidencia a la siguiente iteración; un resultado no ejecutado se conserva como plan, no como hallazgo.}};
+\end{tikzpicture}

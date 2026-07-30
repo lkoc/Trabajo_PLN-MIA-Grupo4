@@ -7,6 +7,7 @@ param(
     [switch]$Qwen04_20XOnly,
     [switch]$DeploymentOnly,
     [switch]$ComparisonOnly,
+    [switch]$PreferNewest,
     [switch]$Force
 )
 
@@ -111,6 +112,34 @@ if ($IncludeQwen -and -not ($Qwen04_205Only -or $Qwen04_206Only -or $Qwen04_20XO
     }
 }
 
+function Get-ArtifactTimestampUtc {
+    param([string]$Path)
+    $item = Get-Item -LiteralPath $Path
+    if ($item.Extension -ieq ".json") {
+        try {
+            $payload = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+            foreach ($field in @("completed_at", "generated_at", "created_at", "finished_at", "updated_at")) {
+                $property = $payload.PSObject.Properties[$field]
+                if ($null -ne $property -and -not [string]::IsNullOrWhiteSpace([string]$property.Value)) {
+                    $timestampText = [string]$property.Value
+                    # Sólo aceptar timestamps con zona explícita. Una fecha naive
+                    # depende de la zona del host (Colab/UTC frente a Lima).
+                    if ($timestampText -match '(Z|[+-]\d{2}:?\d{2})$') {
+                        return ([DateTimeOffset]::Parse(
+                            $timestampText,
+                            [System.Globalization.CultureInfo]::InvariantCulture,
+                            [System.Globalization.DateTimeStyles]::RoundtripKind
+                        )).UtcDateTime
+                    }
+                }
+            }
+        } catch {
+            # Si el JSON no tiene una fecha interpretable, se usa LastWriteTimeUtc.
+        }
+    }
+    return $item.LastWriteTimeUtc
+}
+
 function Copy-BackVerifiedFile {
     param([string]$Source, [string]$RelativePath)
     $destination = [System.IO.Path]::GetFullPath((Join-Path $workspaceRoot $RelativePath))
@@ -121,8 +150,25 @@ function Copy-BackVerifiedFile {
     if (Test-Path -LiteralPath $destination -PathType Leaf) {
         $destinationHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $destination).Hash.ToLower()
         if ($destinationHash -eq $sourceHash) { return $null }
+        if ($PreferNewest) {
+            $sourceItem = Get-Item -LiteralPath $Source
+            $destinationItem = Get-Item -LiteralPath $destination
+            $sourceTimestamp = Get-ArtifactTimestampUtc -Path $Source
+            $destinationTimestamp = Get-ArtifactTimestampUtc -Path $destination
+            if ($sourceTimestamp -le $destinationTimestamp) {
+                $script:skippedNewerLocal += [ordered]@{
+                    path = $RelativePath.Replace("\", "/")
+                    decision = "local_conservado"
+                    drive_timestamp_utc = $sourceTimestamp.ToString("o")
+                    local_timestamp_utc = $destinationTimestamp.ToString("o")
+                }
+                return $null
+            }
+        }
         if (-not $Force) {
-            throw "Conflicto local en $RelativePath. Revise el archivo o repita con -Force."
+            if (-not $PreferNewest) {
+                throw "Conflicto local en $RelativePath. Revise el archivo o repita con -Force."
+            }
         }
     }
     New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
@@ -133,6 +179,7 @@ function Copy-BackVerifiedFile {
 }
 
 $records = @()
+$skippedNewerLocal = @()
 foreach ($relativeDirectory in $relativeDirectories) {
     $sourceDirectory = Join-Path $driveRoot $relativeDirectory
     if (-not (Test-Path -LiteralPath $sourceDirectory -PathType Container)) { continue }
@@ -163,8 +210,10 @@ $logPath = Join-Path $logDir ("recuperacion_" + [DateTime]::Now.ToString("yyyyMM
     qwen_04_20x_only = [bool]$Qwen04_20XOnly
     deployment_only = [bool]$DeploymentOnly
     comparison_only = [bool]$ComparisonOnly
+    prefer_newest = [bool]$PreferNewest
     force = [bool]$Force
     copied_files = $records
+    skipped_newer_local = $skippedNewerLocal
 } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $logPath -Encoding utf8
 
 [pscustomobject]@{
@@ -176,5 +225,7 @@ $logPath = Join-Path $logDir ("recuperacion_" + [DateTime]::Now.ToString("yyyyMM
     qwen_04_20x_only = [bool]$Qwen04_20XOnly
     deployment_only = [bool]$DeploymentOnly
     comparison_only = [bool]$ComparisonOnly
+    prefer_newest = [bool]$PreferNewest
+    skipped_newer_local = $skippedNewerLocal.Count
     log = $logPath
 } | Format-List

@@ -1,0 +1,65 @@
+\subsection{Iteraciones preliminares de cinco categorías de moderación}
+
+La rama preliminar permite diagnosticar los datos y la arquitectura:
+
+\begin{enumerate}
+\item \textbf{Referencia clásica.} Un clasificador Dummy de scikit-learn \cite{pedregosa2011sklearn}, ComplementNB \cite{rennie2003cnb}, regresión logística \cite{cox1958logistic}, SVM palabra--carácter \cite{cortes1995svm} y \emph{HistGradientBoosting} sobre SVD \cite{deerwester1990lsa,friedman2001gbm} usan 48\,927/10\,633/10\,293 chunks.
+\item \textbf{Mejoras.} Nueve configuraciones probaron contexto concatenado, pesos de pseudoetiqueta, regularización, umbrales de alto recobrado y AEDA, que inserta signos de puntuación \cite{karimi2021aeda}.
+\item \textbf{Ampliación incremental.} Se comparó la misma SVM antes y después de añadir videos, con y sin AEDA.
+\item \textbf{Clásicos optimizados y Transformers.} SVM, logística y fastText \cite{joulin2017fasttext} pasaron una búsqueda agrupada; MiniLM \cite{wang2020minilm} y E5 \cite{wang2022e5,wang2024e5} se ajustaron completamente durante hasta tres épocas con AdamW \cite{loshchilov2019adamw}.
+\item \textbf{Jerarquía clásica.} SVM y logística se evalúan como modelos planos, cascadas y jerarquías probabilísticas compartidas, con fastText como referencia plana. La jerarquía se examina como hipótesis basada en antecedentes de clasificación jerárquica \cite{silla2011hierarchical}.
+\end{enumerate}
+
+Estas iteraciones no forman una única curva de aprendizaje porque cambiaron corpus y test. Sirven para explicar por qué se ampliaron datos, se consolidó la taxonomía y se probaron modelos contextuales.
+
+\subsection{Rama operativa de cuatro categorías de moderación}
+
+La Fig.~\ref{fig:modelos} organiza las familias. Los modelos clásicos combinan TF--IDF de palabras y caracteres con SVM o regresión logística, y se evalúan en forma plana, con puerta en cascada y con jerarquía compartida. Sus scores se calibran con pliegues agrupados por video \cite{sklearn2026groupkfold}, mediante calibración sigmoide \cite{platt1999probabilistic,niculescu2005probabilities}.
+
+\begin{figure*}[t]
+\centering
+\resizebox{.98\textwidth}{!}{\input{figuras/familias_modelo.tex}}
+\caption{Familias y estructuras evaluadas bajo el contrato final. El esquema distingue las rutas planas, en cascada y jerárquicas. Elaboración propia.}
+\label{fig:modelos}
+\end{figure*}
+
+La implementación combina scikit-learn para los modelos clásicos \cite{pedregosa2011sklearn} y PyTorch con Transformers para las redes preentrenadas \cite{paszke2019pytorch,wolf2020transformers}. Los cuadernos y manifiestos conservan las configuraciones completas para reproducción.
+
+MiniLM y E5 se ajustan con AdamW durante un máximo de tres épocas y emplean parada temprana \cite{loshchilov2019adamw,prechelt1998earlystopping}. Los checkpoints son \path{sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2} y \path{intfloat/multilingual-e5-small} \cite{hf2026minilmcard,hf2026e5card}; E5 conserva el prefijo de entrada indicado por su tarjeta. Los cuadernos, manifiestos y resultados conservados permiten reconstruir las configuraciones evaluadas.
+
+Los modelos planos activos parten de checkpoints ajustados en la rama preliminar de cinco categorías. Al pasar al contrato de cuatro categorías, el proceso une acoso personal y amenaza directa y vuelve a estimar los umbrales. Las variantes E5 estructuradas parten del mismo linaje e incorporan una puerta o un objetivo multitarea motivado por antecedentes de aprendizaje compartido y consistencia jerárquica \cite{caruana1997multitask,zhou2020hiagm}. Esta procedencia se considera al comparar las configuraciones.
+
+El estudio selecciona \texttt{Qwen/Qwen3-0.6B-Base} como LLM por cuatro razones: es la escala densa de 0,6 mil millones de parámetros de la familia, Qwen3 declara preentrenamiento en 119 idiomas y dialectos, el checkpoint se publica con licencia Apache~2.0 y puede cargarse con Transformers \cite{qwen2025qwen3,hf2026qwen06bcard}. Su tamaño permite probar ajuste eficiente con el cómputo disponible. La elección responde a esas condiciones de ingeniería y no a una comparación entre familias de LLM.
+
+Qwen3--0.6B se ajusta con LoRA, que modifica una fracción pequeña de los parámetros del modelo \cite{hu2022lora}. Una cabeza multietiqueta aprende las cuatro categorías operativas junto con etiquetas finas y señales de revisión; el entrenamiento completa cuatro épocas con AdamW en CUDA \cite{loshchilov2019adamw}. Las variantes en cascada y multitarea se entrenan sobre las salidas congeladas de Qwen3--LoRA, sin repetir el ajuste completo del LLM. Los hiperparámetros y pesos de la función de pérdida permanecen en los artefactos reproducibles.
+
+Las redes usan entropía cruzada binaria con ponderación de clases calculada en entrenamiento \cite{pytorch2026bce}. Los umbrales por categoría se eligen en validación para maximizar F1 \cite{sokolova2009metrics}. Qwen completa cuatro épocas para comparar checkpoints, mientras los Transformers compactos usan parada temprana \cite{prechelt1998earlystopping}.
+
+\subsection{Indicadores de evaluación}
+
+La evaluación usa precisión, recobrado, F1 y precisión promedio (\(\AP\)) porque describen aspectos distintos de una clasificación con categorías poco frecuentes \cite{sokolova2009metrics,saito2015pr}. Para una categoría, la precisión \(TP/(TP+FP)\) indica qué fracción de las alertas es correcta; una precisión baja aumenta la revisión innecesaria. El recobrado \(TP/(TP+FN)\) indica qué fracción de los casos positivos se detecta; es central cuando omitir un caso dañino tiene mayor costo. F1 es la media armónica de precisión y recobrado, \(2PR/(P+R)\), y resume su equilibrio para un umbral concreto \cite{sokolova2009metrics}.
+
+La precisión promedio resume la curva precisión--recobrado a través de los umbrales: \(\AP=\sum_n(R_n-R_{n-1})P_n\) \cite{sklearn2026averageprecision}. A diferencia de F1, no depende de un único corte y permite valorar el orden de los scores. Las curvas precisión--recobrado son más informativas que ROC cuando la clase positiva es escasa \cite{davis2006pr,saito2015pr}. El promedio macro calcula cada indicador por categoría y luego les asigna el mismo peso; así, una categoría frecuente no oculta el desempeño de otra con menor soporte. Ningún indicador basta por sí solo: \(\AP\) guía la selección en validación, F1 compara decisiones umbralizadas y el recobrado, la precisión, la tasa de revisión y los falsos negativos describen la utilidad del enrutamiento humano.
+
+\subsection{Protocolo de selección y evaluación}
+
+El criterio principal es \(\AP\) macro de las cuatro categorías de moderación en validación; los umbrales por clase también se fijan allí. La regla de selección usa métricas de validación. Una evaluación previa de la época 2 sobre test impide tratar la comparación final como ciega y se considera al interpretar sus resultados. Para las diferencias pareadas preliminares, el análisis remuestrea videos completos como conglomerados en 1\,000 réplicas bootstrap \cite{efron1979bootstrap,field2007clusterbootstrap}. Este análisis mide variación entre videos, no entre semillas.
+
+Para Qwen, cada checkpoint candidato produce cuatro logits. En validación se ajusta una regresión logística univariada por etiqueta como escalamiento de Platt; sobre esos scores se fijan los cuatro umbrales y un corte del margen de riesgo para enrutamiento humano \cite{platt1999probabilistic,niculescu2005probabilities}. La misma validación sirve para calibrar y seleccionar, sin una partición anidada. La evaluación final de la época 3 se ejecuta después de congelar adaptador, calibradores, umbrales y corte. La exposición previa del test en la época 2 se considera al interpretar el resultado.
+
+Para Qwen, la regla automática compara los dos mejores checkpoints usando solo validación y el mismo objetivo de 95\% de recobrado de enrutamiento. Elige el que alcanza el objetivo con menor tasa de revisión y, luego, mayor precisión. La época 2 maximiza \(\AP\), mientras la regla selectiva elige la época 3 para la operación.
+
+\subsection{Artefacto de demostración}
+
+El cuaderno 05 construye una carpeta desplegable con el mejor clásico, el mejor Transformer compacto y el Qwen operativo, además del backend, HTML, ayudas y base de datos. Una sola caja detecta frase o URL. Una URL sin subtítulos se rechaza; si es válida, se generan chunks con tiempos, se incrusta el video y cada alerta enlaza el instante problemático. La pantalla permite un modelo individual, comparación o consenso. Una categoría se activa con al menos dos de tres votos, no por unanimidad. Todo desacuerdo se deriva a revisión. Los conjuntos de clasificadores y el voto mayoritario tienen antecedentes propios \cite{dietterich2000ensemble,lam1997majority}, pero la regla 2 de 3 es una decisión operacional de este prototipo y aún debe evaluarse.
+
+Las decisiones \emph{aceptar}, \emph{rechazar} o \emph{modificar}, junto con modelo, categoría, versión y evidencia, se almacenan en una base SQLite y en registros JSONL versionados. Estos formatos permiten calcular estadísticas y preparar futuros lotes de reentrenamiento. El sistema es un demostrador local o para modo sombra; no una autorización para afectar usuarios.
+
+La Fig.~\ref{fig:deploy} resume la separación entre preparación, inferencia, consenso y decisión humana. El Apéndice~\ref{app:interfaces} muestra el demostrador después de analizar un chunk real de validación con puntuación alta de daño.
+
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{figuras/despliegue.tex}}
+\caption{Arquitectura operacional del demostrador. El consenso es 2 de 3 y la decisión humana queda separada de la predicción. Elaboración propia.}
+\label{fig:deploy}
+\end{figure*}

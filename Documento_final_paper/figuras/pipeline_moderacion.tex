@@ -1,18 +1,34 @@
 \begin{tikzpicture}[
-  node distance=0.55cm,
-  stage/.style={draw, rounded corners, align=center, minimum height=0.72cm, text width=2.05cm, font=\footnotesize},
-  arrow/.style={-Latex, thick}
+  x=1cm,y=1cm,font=\scriptsize,
+  box/.style={draw,rounded corners=2pt,text width=27mm,minimum height=12mm,align=center,inner sep=3pt,fill=blue!7},
+  model/.style={box,fill=orange!10},
+  human/.style={box,fill=green!10},
+  arr/.style={-{Stealth[length=1.8mm]},thick},
+  futurearr/.style={arr,dashed},
+  bus/.style={thick}
 ]
-  \node[stage, fill=blue!8] (a) {Videos publicos\\YouTube};
-  \node[stage, fill=blue!8, right=of a] (b) {Subtitulos o\\ASR local};
-  \node[stage, fill=green!10, right=of b] (c) {Limpieza y\\chunks};
-  \node[stage, fill=yellow!14, right=of c] (d) {Etiquetado\\humano};
-  \node[stage, fill=red!8, right=of d] (e) {Modelo\\local};
-  \node[stage, fill=green!10, right=of e] (f) {Evidencia para\\revision};
+\node[box] (source) at (0,0) {Videos públicos\\con subtítulos};
+\node[box] (download) at (3.15,0) {\texttt{yt-dlp}\\subtítulo manual\\o automático};
+\node[box] (chunk) at (6.30,0) {Limpieza y chunks\\30 s / 600 car.\\depura repetición VTT};
+\node[model] (flash) at (9.45,0) {Preanotación\\DeepSeek Flash};
+\node[model] (pro) at (12.60,0) {Revisión dirigida\\DeepSeek Pro};
+\node[human] (human) at (15.75,0) {Adjudicación final\\asistida};
+\foreach \a/\b in {source/download,download/chunk,chunk/flash,flash/pro,pro/human}{
+  \draw[arr] (\a)--(\b);
+}
 
-  \draw[arrow] (a) -- (b);
-  \draw[arrow] (b) -- (c);
-  \draw[arrow] (c) -- (d);
-  \draw[arrow] (d) -- (e);
-  \draw[arrow] (e) -- (f);
+\node[box] (dataset) at (9.45,-2.30) {Corpus versionado\\117\,244 chunks\\partición por video};
+\node[model] (train) at (12.60,-2.30) {Entrenamiento\\clásicos, MiniLM/E5\\y Qwen3--LoRA};
+\node[human] (audit) at (15.75,-2.30) {Validación y test\\separados;\\auditoría fina};
+\coordinate (databus) at (12.60,-1.22);
+\draw[bus] (flash.south) -- (flash.south |- databus);
+\draw[bus] (flash.south |- databus) -- (human.south |- databus);
+\draw[bus] (pro.south) -- (pro.south |- databus);
+\draw[bus] (human.south) -- (human.south |- databus);
+\draw[arr] (flash.south |- databus) -- (dataset.north);
+\draw[arr] (dataset)--(train);
+\draw[arr] (train)--(audit);
+
+\node[human,text width=39mm] (future) at (15.75,-4.35) {Revisión operativa futura\\nueva cohorte versionada};
+\draw[futurearr] (audit.south)--(future.north);
 \end{tikzpicture}

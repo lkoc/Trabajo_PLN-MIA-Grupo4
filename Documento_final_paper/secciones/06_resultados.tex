@@ -1,0 +1,131 @@
+\section{Resultados}
+
+\subsection{Resultado de construcción del corpus}
+
+La construcción produce el corpus resumido en la Tabla~\ref{tab:fuentes}. La Fig.~\ref{fig:pipeline} integra adquisición, segmentación, supervisión escalonada y separación por video; el Apéndice~\ref{app:fuentes_dataset} desagrega la composición y la procedencia de las etiquetas. En conjunto, estos resultados muestran un corpus trazable y una comparación sin videos compartidos entre particiones. La muestra enriquecida sirve para comparar modelos, no para estimar la prevalencia natural de YouTube.
+
+\subsection{Herramientas y entorno de cómputo}
+
+La Tabla~\ref{tab:hardware} distingue las etapas ejecutadas en una computadora de consumo de las realizadas en Google Colab. La adquisición, la preparación y los modelos clásicos se ejecutan localmente; los Transformers activos y las últimas épocas de Qwen3--LoRA usan CUDA en una GPU NVIDIA L4 según la bitácora del equipo. Las herramientas principales son Jupyter y pandas para el flujo de datos, scikit-learn y fastText para los modelos clásicos, y PyTorch, Transformers y PEFT/LoRA para los neuronales \cite{kluyver2016jupyter,mckinney2010pandas,pedregosa2011sklearn,joulin2017fasttext,paszke2019pytorch,wolf2020transformers,hu2022lora}. La tabla conserva el detalle suficiente para distinguir recursos y alcance sin tratar estas ejecuciones como un benchmark de hardware.
+
+\begin{table*}[t]
+\centering
+\caption{Herramientas y recursos de cómputo acreditados por etapa}
+\label{tab:hardware}
+\scriptsize
+\begin{tabularx}{\textwidth}{p{31mm}p{42mm}p{45mm}X}
+\toprule
+\textbf{Etapa} & \textbf{Herramientas principales} & \textbf{Entorno} & \textbf{Resultado / alcance} \\
+\midrule
+Adquisición y corpus & Python/Jupyter, \texttt{yt-dlp}, YouTube Transcript API y pandas & Equipo local Windows & Corpus integrado final \\
+Etiquetado asistido & DeepSeek Flash/Pro; prueba local LM Studio/\texttt{llama.cpp} & Orquestación local; servicio DeepSeek remoto de hardware desconocido; prueba local en CPU & Tres niveles: Flash $\rightarrow$ Pro $\rightarrow$ revisión final asistida; el modelo local fue exploratorio \\
+Clásicos y rama preliminar & scikit-learn, fastText, joblib; PyTorch 2.6.0+cpu & Ryzen 7 8845HS, 8C/16T, 29~GiB; CPU, sin CUDA & SVM, regresión logística y experimentos preliminares de cinco categorías \\
+Transformers activos & PyTorch, Transformers, NumPy y pandas & Google Colab con CUDA; NVIDIA L4 según bitácora & MiniLM/E5 planos y estructurados \\
+Qwen3--LoRA & Transformers, PEFT/LoRA y PyTorch & Primeras épocas en CPU local; últimas épocas en Colab/CUDA & Adaptador compacto; época 3 seleccionada para operación \\
+Auditoría y paquete & SciPy/scikit-learn, NumPy, SQLite, HTML/JavaScript & Equipo local; inferencia empaquetada compatible con CPU & Comparación, métricas, trazabilidad y frontend con retroalimentación \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+En este artículo, \emph{recursos asequibles} significa que el equipo no necesita poseer una GPU de centro de datos: combina una computadora de consumo con sesiones bajo demanda de Colab y produce un paquete de inferencia compatible con CPU. El estudio no mide el costo monetario total, el consumo energético ni la latencia en el equipo objetivo; por ello esta formulación no implica que Colab sea gratuito, garantizado o la opción más barata.
+
+\subsection{Resultados preliminares y paso a cuatro categorías}
+
+La primera iteración compara cinco categorías de moderación: \Rac, \Gen, acoso personal, amenaza directa y \Sex. Una referencia que siempre predice seguro alcanza 0,95 de coincidencia exacta, pero su recobrado de cualquier daño es cero; este contraste confirma que la coincidencia agregada oculta la clase minoritaria en datos desbalanceados \cite{sokolova2009metrics,saito2015pr}. La SVM inicial obtiene \(\AP=0,23\) y F1 macro de 0,28. En otro corte 4:1, no comparable de forma directa, MiniLM y E5 alcanzan \(\AP\) de 0,46 y 0,44. AEDA y el contexto concatenado no muestran una mejora consistente. Estos resultados preliminares orientan la ampliación del corpus y el uso de modelos contextuales, pero no forman una sola curva de aprendizaje porque cambian los datos y las particiones.
+
+La amenaza directa reúne 688 incidencias frente a 2\,854 de acoso personal. Para aumentar el soporte de la salida menos frecuente y mantener una comparación operativa estable, el contrato activo une ambas salidas mediante OR/máximo en \Ame. Esta fusión reduce de cinco a cuatro categorías de moderación y conserva los subtipos como información fina para auditoría. Es una decisión estadística y operativa del proyecto; no establece equivalencia semántica o legal entre acoso y amenaza.
+
+\subsection{Comparación final de cuatro categorías de moderación}
+
+La Tabla~\ref{tab:final14} contiene las 14 configuraciones sobre el mismo test enriquecido 4:1 de 5\,290 chunks. Qwen3--LoRA plano presenta la mayor estimación puntual de \(\AP\) y F1; E5 plano lidera el recobrado de cualquier daño y deja 42 chunks dañinos menos como \texttt{SEGURO}. Ningún diseño jerárquico supera a su referencia plana en las tres métricas principales, aunque alguna puerta eleva la precisión a costa del recobrado. La auditoría fina cubre 13 modelos porque excluye la referencia E5 \emph{post hoc}; esa es la diferencia entre 13 modelos auditados y 14 filas comparadas. Confirmar una diferencia estadística entre Qwen3--LoRA y E5 requiere varias semillas y una prueba pareada final \cite{dror2018significance}.
+
+\begin{table*}[t]
+\centering
+\caption{Comparación final sobre test común enriquecido 4:1 de cuatro categorías de moderación}
+\label{tab:final14}
+\small
+\renewcommand{\arraystretch}{1.16}
+\begin{tabularx}{.92\textwidth}{>{\raggedright\arraybackslash}X>{\centering\arraybackslash}p{22mm}>{\centering\arraybackslash}p{22mm}>{\centering\arraybackslash}p{27mm}>{\centering\arraybackslash}p{25mm}}
+\toprule
+\textbf{Modelo y estructura} & \shortstack{\textbf{\(\AP\) macro}\\\textbf{de daños}} & \shortstack{\textbf{F1 macro}\\\textbf{de daños}} & \shortstack{\textbf{Recobrado}\\\textbf{de algún daño}} & \shortstack{\textbf{Daños como}\\\textbf{\texttt{SEGURO}}} \\
+\midrule
+\shortstack[l]{Qwen3--0.6B LoRA, época 3\\\emph{Plana}} & \textbf{0,55} & \textbf{0,52} & 0,70 & 312 \\
+\shortstack[l]{Qwen3--LoRA congelado\\\emph{Cascada calibrada}} & 0,54 & 0,52 & 0,63 & 385 \\
+\shortstack[l]{Qwen3--LoRA congelado\\\emph{Cabeza multitarea}} & 0,53 & 0,52 & 0,64 & 375 \\
+\shortstack[l]{E5 preliminar unido 5\(\rightarrow\)4\\\emph{Referencia post hoc}} & 0,49 & 0,52 & 0,64 & 378 \\
+\shortstack[l]{MiniLM multilingüe\\\emph{Plana}} & 0,48 & 0,50 & 0,65 & 362 \\
+\shortstack[l]{E5-small multilingüe\\\emph{Plana}} & 0,48 & 0,52 & \textbf{0,74} & \textbf{270} \\
+\shortstack[l]{SVM palabra + carácter\\\emph{Plana calibrada}} & 0,45 & 0,46 & 0,59 & 428 \\
+\shortstack[l]{SVM calibrada\\\emph{Cascada}} & 0,44 & 0,45 & 0,54 & 481 \\
+\shortstack[l]{Regresión logística calibrada\\\emph{Plana}} & 0,44 & 0,46 & 0,62 & 395 \\
+\shortstack[l]{SVM calibrada\\\emph{Jerarquía compartida}} & 0,43 & 0,42 & 0,43 & 591 \\
+\shortstack[l]{Regresión logística calibrada\\\emph{Cascada}} & 0,43 & 0,43 & 0,59 & 431 \\
+\shortstack[l]{E5\\\emph{Cascada Transformer}} & 0,42 & 0,41 & 0,36 & 666 \\
+\shortstack[l]{E5\\\emph{Jerarquía multitarea}} & 0,41 & 0,42 & 0,40 & 629 \\
+\shortstack[l]{Regresión logística calibrada\\\emph{Jerarquía compartida}} & 0,41 & 0,41 & 0,45 & 575 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+La Tabla~\ref{tab:ganadores_categoria} aplica el mismo criterio por categoría: selecciona el modelo mediante \(\AP\) en validación y consulta el test solo después de congelar esa elección. Qwen3--LoRA plano resulta ganador en \Rac, \Gen y \Ame; la cabeza multitarea entrenada sobre sus salidas congeladas obtiene el mayor \(\AP\) de validación en \Sex. Esta diferencia muestra que el mejor promedio general no tiene que dominar cada categoría.
+
+\begin{table*}[t]
+\centering
+\caption{Ganador por categoría seleccionado mediante \(\AP\) en validación y desempeño congelado en el test común}
+\label{tab:ganadores_categoria}
+\small
+\renewcommand{\arraystretch}{1.14}
+\begin{tabularx}{.98\textwidth}{>{\raggedright\arraybackslash}p{28mm}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}p{17mm}>{\centering\arraybackslash}p{17mm}>{\centering\arraybackslash}p{18mm}>{\centering\arraybackslash}p{19mm}>{\centering\arraybackslash}p{15mm}}
+\toprule
+\textbf{Categoría} & \textbf{Modelo seleccionado} & \shortstack{\textbf{\(\AP\)}\\\textbf{validación}} & \shortstack{\textbf{\(\AP\)}\\\textbf{test}} & \shortstack{\textbf{Precisión}\\\textbf{test}} & \shortstack{\textbf{Recobrado}\\\textbf{test}} & \shortstack{\textbf{F1}\\\textbf{test}} \\
+\midrule
+\Rac & Qwen3--LoRA plano & 0,63 & 0,56 & 0,52 & 0,59 & 0,56 \\
+\Gen & Qwen3--LoRA plano & 0,46 & 0,48 & 0,39 & 0,52 & 0,45 \\
+\Ame & Qwen3--LoRA plano & 0,45 & 0,48 & 0,43 & 0,57 & 0,49 \\
+\Sex & Qwen3--LoRA, cabeza multitarea congelada & 0,63 & 0,66 & 0,62 & 0,62 & 0,62 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\FloatBarrier
+La Fig.~\ref{fig:resultados} concentra los ganadores desplegables por familia y hace visible la compensación principal: Qwen3--LoRA encabeza \(\AP\) y F1, mientras E5 recupera una mayor fracción de chunks con daño.
+
+\begin{figure}[t]
+\centering
+\input{figuras/resultados_finales.tex}
+\caption{Ganador desplegable de cada enfoque. Qwen3--LoRA presenta las mayores estimaciones puntuales de ranking y F1; E5 recupera más daños. Elaboración propia desde la comparación final.}
+\label{fig:resultados}
+\end{figure}
+
+En Qwen3--LoRA, la época 2 presenta el máximo \(\AP\) de validación (0,54). La época 3 queda a 0,00072, mantiene 0,95 de recobrado selectivo y los mismos 53 falsos negativos, pero eleva la precisión de 0,30 a 0,32 y reduce la revisión de 64\% a 61\%. La regla selecciona la época 3 usando únicamente esos valores de validación; aun así, la selección no es ciega porque ya existe la evaluación de test de la época 2.
+
+Con ese corte, la política selectiva cumple el propósito de alto recobrado: obtiene en test 0,97 (IC95\% de Wilson 0,96--0,98 \cite{wilson1927probable}), con 0,32 de precisión, 0,99 de valor predictivo negativo y 28 falsos negativos automáticos. Remite 60\% de los chunks al supervisor y excede en 0,40 puntos porcentuales el control de tasa de revisión \(\leq60\%\), la única puerta no satisfecha. La cifra convierte el resultado en una carga humana explícita para un piloto semiautomático, en lugar de ocultarla detrás del recobrado.
+
+La Tabla~\ref{tab:qwenclase} desagrega el desempeño ordinario de Qwen3--LoRA. Contenido sexual presenta el mayor F1 y Género el menor, lo que impide resumir la utilidad del modelo con una sola métrica macro.
+
+El Anexo~\ref{app:ejemplos_scores} muestra extractos de tres chunks con valoración segura muy alta y tres por cada daño grueso. Son ilustraciones \emph{post hoc} de validación y no casos de prueba ni evidencia adicional de desempeño. En cada daño se informa el score calibrado de su salida; para los casos seguros se informa una medida descriptiva derivada, \(1-\max_k s_k\), porque \texttt{SEGURO} no es una quinta cabeza aprendida.
+
+\begin{table}[t]
+\centering
+\caption{Desempeño ordinario de Qwen3--LoRA plano por categoría}
+\label{tab:qwenclase}
+\normalsize
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrr@{}}
+\toprule
+\textbf{Categoría} & \textbf{Precisión} & \textbf{Recobrado} & \textbf{F1} \\
+\midrule
+\Rac & 0,52 & 0,59 & 0,56 \\
+\Gen & 0,39 & 0,52 & 0,45 \\
+\Ame & 0,43 & 0,57 & 0,49 \\
+\Sex & 0,63 & 0,59 & 0,61 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\subsection{Jerarquía, fenómenos finos y lectura cualitativa}
+
+La mejor variante jerárquica de Qwen3--LoRA es la cabeza conjunta: frente al plano cambia \(\AP\) en \(-0,017\), F1 en \(-0,0077\), recobrado en \(-0,061\) y añade 63 chunks con daño clasificados como \texttt{SEGURO}. En clásicos y E5 aparece el mismo patrón general: una puerta puede elevar precisión al filtrar casos, pero también impide que una categoría hija recupere un positivo rechazado antes. En este corpus, las jerarquías no reemplazan a los modelos planos.
+
+La auditoría por fenómeno revela dónde se pierde información. Qwen3--LoRA obtiene recobrado 0,70 en racismo étnico explícito (\(n=128\)), 0,46 en racismo encubierto (\(n=44\)), 0,33 en racismo lingüístico (\(n=6\)), 0,65 en acoso personal (\(n=326\)), 0,64 en amenaza directa (\(n=103\)) y 0,11 en contenido sexual no consensual (\(n=9\)). En misoginia/acoso de género obtiene 0,47 (\(n=159\)); la especificidad de ironía segura marcada es 0,72 (\(n=36\)). Los soportes pequeños impiden inferencias estables, pero orientan nueva anotación.
+
+Una inspección exploratoria identifica cuatro situaciones recurrentes: 1) una noticia cita una amenaza; 2) el sentido depende del fragmento anterior o de una imagen; 3) la ironía y el humor encubren el blanco; y 4) las expresiones locales raras tienen poco soporte. DeepSeek Pro propone daño en 245 de los 2\,000 seguros más sospechosos (12\%), por lo que la depuración dirigida localiza casos útiles para revisión. Estas observaciones orientan nuevas muestras y una ablación con la misma arquitectura y semilla.

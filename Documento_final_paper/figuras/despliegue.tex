@@ -1,0 +1,38 @@
+\begin{tikzpicture}[
+  font=\footnotesize,
+  node distance=5mm and 6mm,
+  box/.style={draw,rounded corners=2pt,text width=25mm,minimum height=10mm,align=center},
+  input/.style={box,fill=blue!7},
+  model/.style={box,fill=orange!9},
+  human/.style={box,fill=green!10},
+  store/.style={box,fill=purple!8},
+  arr/.style={-{Stealth[length=2mm]},thick}
+]
+\node[input] (entry) {Una caja\\texto o URL};
+\node[input,right=of entry] (detect) {Detección automática\\frase / YouTube};
+\node[input,right=of detect] (prep) {Subtítulos exigidos\\chunks + tiempos};
+\node[model,right=of prep,yshift=14mm] (svm) {SVM plano};
+\node[model,right=of prep] (e5) {E5 plano};
+\node[model,right=of prep,yshift=-14mm] (qwen) {Qwen3--LoRA\\plano};
+\node[model,right=10mm of e5] (rule) {Modelo único,\\comparación o\\consenso 2 de 3};
+\node[human,right=of rule] (decision) {Alerta + evidencia\\aceptar, rechazar\\o modificar};
+\node[store,below=8mm of decision] (store) {Base y registro versionado\\modelo, categoría,\\decisión y versión};
+\draw[arr] (entry)--(detect);
+\draw[arr] (detect)--(prep);
+% Dos buses en carriles vacíos sustituyen las diagonales de entrada y salida.
+\coordinate (inbus) at ([xshift=3mm]prep.east);
+\draw[thick] (prep.east)--(inbus);
+\draw[thick] (inbus |- svm.west)--(inbus |- qwen.west);
+\foreach \m in {svm,e5,qwen}{
+  \draw[arr] (inbus |- \m.west)--(\m.west);
+}
+\coordinate (outbus) at ([xshift=-3mm]rule.west);
+\foreach \m in {svm,e5,qwen}{
+  \draw[thick] (\m.east)--(outbus |- \m.east);
+}
+\draw[thick] (outbus |- svm.east)--(outbus |- qwen.east);
+\draw[arr] (outbus |- rule.west)--(rule.west);
+\draw[arr] (rule)--(decision);
+\draw[arr] (decision)--(store);
+\draw[arr,dashed] (store.south) -- ++(0,-5mm) -| node[pos=.5,below]{futura iteración} (prep.south);
+\end{tikzpicture}

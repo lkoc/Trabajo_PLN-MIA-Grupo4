@@ -1,0 +1,42 @@
+\begin{tikzpicture}[
+  font=\scriptsize,
+  box/.style={draw,rounded corners=2pt,text width=26mm,minimum height=15mm,align=center,inner sep=3pt},
+  arr/.style={-{Stealth[length=1.8mm]},thick},
+  rule/.style={draw,rounded corners=2pt,fill=gray!7,align=left,inner sep=4pt}
+]
+\node[box,fill=blue!7] (sources) at (0,0) {\textbf{Fuentes públicas}\\catálogo + búsquedas dirigidas\\deduplicación por ID/hash};
+\node[box,fill=cyan!8] (captions) at (3.4,0) {\textbf{Subtítulos y chunks}\\NFKC; 30 s o 600 car.\\3\,230 videos};
+\node[box,fill=green!9] (flash) at (6.8,0) {\textbf{Primera pasada Flash}\\cobertura amplia\\sobre las filas};
+
+\node[box,fill=blue!8] (flashkeep) at (10.2,1.0) {\textbf{Retiene Flash}\\93\,636};
+\node[box,fill=orange!11] (pro) at (10.2,-1.0) {\textbf{Escala a Pro}\\23\,630};
+\node[box,fill=orange!8] (prokeep) at (13.6,.45) {\textbf{Retiene Pro/minería}\\20\,516};
+\node[box,fill=yellow!14] (review) at (13.6,-1.65) {\textbf{Revisión final asistida}\\3\,114 decisiones\\3\,092 incluyen; 22 excluyen};
+
+\draw[arr] (sources)--(captions);
+\draw[arr] (captions)--(flash);
+\coordinate (flashbus) at (8.45,0);
+\draw[thick] (flash.east)--(flashbus);
+\draw[thick] (flashbus |- flashkeep.west)--(flashbus |- pro.west);
+\draw[arr] (flashbus |- flashkeep.west)--(flashkeep.west);
+\draw[arr] (flashbus |- pro.west)--(pro.west);
+\coordinate (probus) at (11.95,-1.0);
+\draw[thick] (pro.east)--(probus);
+\draw[thick] (probus |- prokeep.west)--(probus |- review.west);
+\draw[arr] (probus |- prokeep.west)--(prokeep.west);
+\draw[arr] (probus |- review.west)--(review.west);
+
+\node[rule,text width=76mm] (prorule) at (4.2,-2.85) {\textbf{Regla Pro:} daño, \texttt{needs\_review}, confianza $<0{,}90$, flags, control reproducible de seguros y negativos difíciles priorizados por SVM.};
+\draw[arr,dashed] (prorule.east) -- ++(4mm,0) |- (pro.west);
+
+\node[rule,fill=purple!8,text width=62mm,align=center] (corpus) at (11.75,-3.65) {\textbf{Procedencia final y corpus versionado}\\93\,636 Flash (80\%) + 20\,516 Pro/minería (18\%)\\+ 3\,092 revisión final (2,6\%) = \textbf{117\,244 chunks}};
+\coordinate (rightlane) at ([xshift=5mm]corpus.east);
+\draw[thick,dashed] (flashkeep.east)--(rightlane |- flashkeep.east);
+\draw[thick,dashed] (prokeep.east)--(rightlane |- prokeep.east);
+\draw[thick,dashed] (rightlane |- flashkeep.east)--(rightlane |- corpus.east);
+\draw[arr,dashed] (rightlane |- corpus.east)--(corpus.east);
+\draw[arr,dashed] (review.south) -- (corpus.north);
+
+\node[box,fill=teal!9,text width=37mm,below=4mm of corpus] (split) {\textbf{Comparación común 4:1}\\35\,315 chunks; reparto 70/15/15\\sin videos compartidos};
+\draw[arr] (corpus)--(split);
+\end{tikzpicture}

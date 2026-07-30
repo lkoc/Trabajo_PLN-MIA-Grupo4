@@ -64,8 +64,9 @@
   <script>
     const $=s=>document.querySelector(s), input=$('#input'), form=$('#form'), statusBox=$('#status'), results=$('#results'), summary=$('#summary'), run=$('#run');
     const labels=['RACISMO_DISCRIMINACION','ACOSO_GENERO_IDENTIDAD','ACOSO_AMENAZA','CONTENIDO_SEXUAL'];
+    const labelNames={ACOSO_GENERO_IDENTIDAD:'Género'};
     const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-    const pretty=v=>String(v).replaceAll('_',' ').toLowerCase().replace(/^./,c=>c.toUpperCase());
+    const pretty=v=>labelNames[String(v)]??String(v).replaceAll('_',' ').toLowerCase().replace(/^./,c=>c.toUpperCase());
     const isYoutube=v=>/^https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?|shorts\/|embed\/)|youtu\.be\/)/i.test(v.trim());
     function detect(){const forced=$('#inputType').value;const type=forced==='auto'?(isYoutube(input.value)?'youtube':'text'):forced;$('#typePill').textContent=(type==='youtube'?'YouTube + subtítulos':'Texto')+(forced==='auto'?' · automático':' · forzado');return type}
     input.addEventListener('input',detect);$('#inputType').addEventListener('change',detect);

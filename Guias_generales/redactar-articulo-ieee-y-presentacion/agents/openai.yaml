@@ -1,0 +1,4 @@
+interface:
+  display_name: "Redactar artículo IEEE y presentación"
+  short_description: "Crea y audita papers IEEE y presentaciones"
+  default_prompt: "Usa $redactar-articulo-ieee-y-presentacion para planificar, redactar y auditar un artículo IEEE y su presentación con evidencia verificable."

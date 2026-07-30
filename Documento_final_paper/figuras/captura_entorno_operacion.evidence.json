@@ -1,0 +1,19 @@
+{
+  "captured_at_utc": "2026-07-30T04:33:31.487633+00:00",
+  "server_url": "http://127.0.0.1:8765",
+  "server_health": {
+    "status": "ok",
+    "time": "2026-07-29T23:33:28-05:00"
+  },
+  "interaction": "formulario completado y enviado mediante Selenium",
+  "mode": "qwen",
+  "input_type": "text",
+  "source_chunk_id": "jSOLkn7q83Y_0050",
+  "source_split": "validation",
+  "status_visible": "Análisis terminado y estadísticas guardadas localmente.",
+  "summary_visible": "1 de 1 chunks con alguna alerta · qwen",
+  "result_visible": "Qwen3-0.6B LoRA · época operativa 3\nConfianza baja\nRevisión necesaria\nContenido sexual\nMotivo: Ruta alto recall, Cerca del umbral\nScores por categoría\nRacismo discriminacion\n0.01\nGénero\n0.19\nAcoso amenaza\n0.04\nContenido sexual\n0.94\nAceptar\nRechazar\nModificar",
+  "events_before": 2,
+  "events_after": 3,
+  "screenshot": "Documento_final_paper\\figuras\\captura_entorno_operacion.png"
+}

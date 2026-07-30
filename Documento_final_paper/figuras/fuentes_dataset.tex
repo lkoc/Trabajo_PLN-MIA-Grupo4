@@ -1,0 +1,11 @@
+\begin{tikzpicture}[
+  font=\scriptsize,
+  box/.style={draw,rounded corners=2pt,text width=43mm,minimum height=20mm,align=center,inner sep=4pt},
+  arr/.style={-{Stealth[length=1.8mm]},thick}
+]
+\node[box,fill=blue!7] (sources) at (0,0) {\textbf{Fuentes públicas}\\catálogo de canales + búsquedas dirigidas\\política, periodismo, humor, farándula, viajes, deportes y otros contextos};
+\node[box,fill=orange!10,right=7mm of sources] (filter) {\textbf{Criterios comunes}\\subtítulos en español; $\geq 200$ caracteres útiles\\exclusión de fallas y duplicados por ID/hash};
+\node[box,fill=green!10,right=7mm of filter] (result) {\textbf{Corpus integrado final}\\3\,230 videos; 117\,244 chunks\\110\,181 seguros; 7\,063 con algún daño};
+\draw[arr] (sources)--(filter);
+\draw[arr] (filter)--(result);
+\end{tikzpicture}

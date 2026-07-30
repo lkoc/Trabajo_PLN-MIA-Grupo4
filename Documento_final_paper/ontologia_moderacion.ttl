@@ -1,0 +1,198 @@
+@prefix mod:  <https://raw.githubusercontent.com/lkoc/Trabajo_PLN-MIA-Grupo4/main/Documento_final_paper/ontologia_moderacion.ttl#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+mod:ModerationOntology a owl:Ontology ;
+  rdfs:label "Ontología de trazabilidad del moderador textual"@es ;
+  rdfs:comment "Vocabulario liviano que alinea corpus, anotaciones, modelos, predicciones y decisiones de supervisión. No constituye una ontología legal de daño."@es ;
+  dcterms:creator "Grupo 4, Maestría en Inteligencia Artificial, Universidad Nacional de Ingeniería"@es ;
+  dcterms:created "2026-07-29"^^xsd:date ;
+  dcterms:source <https://github.com/lkoc/Trabajo_PLN-MIA-Grupo4/blob/main/datos/model_ready/transformer_grueso/dataset_integrado_todas_pasadas.manifest.json> ;
+  owl:versionInfo "1.0.0" .
+
+mod:Video a owl:Class ;
+  rdfs:label "video público"@es ;
+  skos:definition "Recurso audiovisual público de YouTube aceptado por los criterios de adquisición del proyecto."@es .
+
+mod:SubtitleTrack a owl:Class ;
+  rdfs:label "pista de subtítulos"@es ;
+  skos:definition "Texto manual o automático disponible públicamente y asociado temporalmente a un video."@es .
+
+mod:Chunk a owl:Class ;
+  rdfs:label "chunk de evidencia"@es ;
+  skos:definition "Unidad textual con tiempo de inicio y fin; cierre al alcanzar 30 segundos o 600 caracteres, después de depurar repetición entre segmentos VTT."@es .
+
+mod:Annotation a owl:Class ;
+  rdfs:label "anotación"@es ;
+  skos:definition "Aserción versionada que asigna cero o más conceptos de moderación a un chunk."@es .
+
+mod:LLMPreannotation a owl:Class ;
+  rdfs:subClassOf mod:Annotation ;
+  rdfs:label "preanotación asistida por LLM"@es .
+
+mod:FinalAssistedAdjudication a owl:Class ;
+  rdfs:subClassOf mod:Annotation ;
+  rdfs:label "adjudicación final asistida"@es ;
+  skos:definition "Decisión final tomada con la propuesta Pro visible y un identificador de anotador; los artefactos no documentan la naturaleza de todos los identificadores ni acreditan doble anotación."@es .
+
+mod:ModerationConcept a owl:Class ;
+  rdfs:label "concepto de moderación"@es .
+
+mod:OperationalDamage a owl:Class ;
+  rdfs:subClassOf mod:ModerationConcept ;
+  rdfs:label "daño operativo"@es ;
+  skos:definition "Salida multietiqueta que puede activar una o más de las cuatro categorías operativas."@es .
+
+mod:FinePhenomenon a owl:Class ;
+  rdfs:subClassOf mod:ModerationConcept ;
+  rdfs:label "fenómeno fino"@es .
+
+mod:TransversalFlag a owl:Class ;
+  rdfs:subClassOf mod:ModerationConcept ;
+  rdfs:label "flag transversal"@es ;
+  skos:definition "Indicador de ambigüedad o necesidad de contexto; no es una categoría de daño."@es .
+
+mod:SafeState a owl:Class ;
+  rdfs:label "estado SEGURO derivado"@es ;
+  skos:definition "Estado calculado cuando ninguna categoría de daño operativo supera su umbral."@es .
+
+mod:RacismDiscrimination a owl:Class ;
+  rdfs:subClassOf mod:OperationalDamage ;
+  rdfs:label "RACISMO_DISCRIMINACION"@es .
+
+mod:GenderIdentityHarassment a owl:Class ;
+  rdfs:subClassOf mod:OperationalDamage ;
+  rdfs:label "ACOSO_GENERO_IDENTIDAD"@es .
+
+mod:HarassmentThreat a owl:Class ;
+  rdfs:subClassOf mod:OperationalDamage ;
+  rdfs:label "ACOSO_AMENAZA"@es ;
+  skos:definition "Unión operativa de acoso personal y amenaza directa."@es .
+
+mod:SexualContent a owl:Class ;
+  rdfs:subClassOf mod:OperationalDamage ;
+  rdfs:label "CONTENIDO_SEXUAL"@es .
+
+mod:VersionedArtifact a owl:Class ;
+  rdfs:label "artefacto versionado"@es .
+
+mod:DatasetArtifact a owl:Class ;
+  rdfs:subClassOf mod:VersionedArtifact ;
+  rdfs:label "artefacto de datos versionado"@es .
+
+mod:DataSplit a owl:Class ;
+  rdfs:subClassOf mod:VersionedArtifact ;
+  rdfs:label "partición agrupada por video"@es .
+
+mod:ModelArtifact a owl:Class ;
+  rdfs:subClassOf mod:VersionedArtifact ;
+  rdfs:label "modelo versionado"@es .
+
+mod:Prediction a owl:Class ;
+  rdfs:label "predicción"@es .
+
+mod:HumanReviewDecision a owl:Class ;
+  rdfs:label "decisión humana de revisión"@es .
+
+mod:FeedbackRecord a owl:Class ;
+  rdfs:label "registro de retroalimentación reentrenable"@es .
+
+mod:hasSubtitle a owl:ObjectProperty ;
+  rdfs:domain mod:Video ;
+  rdfs:range mod:SubtitleTrack .
+
+mod:segmentedInto a owl:ObjectProperty ;
+  rdfs:domain mod:SubtitleTrack ;
+  rdfs:range mod:Chunk .
+
+mod:annotatedBy a owl:ObjectProperty ;
+  rdfs:domain mod:Chunk ;
+  rdfs:range mod:Annotation .
+
+mod:assignsConcept a owl:ObjectProperty ;
+  rdfs:domain mod:Annotation ;
+  rdfs:range mod:ModerationConcept .
+
+mod:memberOf a owl:ObjectProperty ;
+  rdfs:domain mod:Chunk ;
+  rdfs:range mod:DatasetArtifact .
+
+mod:trainedOn a owl:ObjectProperty ;
+  rdfs:domain mod:ModelArtifact ;
+  rdfs:range mod:VersionedArtifact .
+
+mod:produces a owl:ObjectProperty ;
+  rdfs:domain mod:ModelArtifact ;
+  rdfs:range mod:Prediction .
+
+mod:hasEvidence a owl:ObjectProperty ;
+  rdfs:domain mod:Prediction ;
+  rdfs:range mod:Chunk .
+
+mod:predictsConcept a owl:ObjectProperty ;
+  rdfs:domain mod:Prediction ;
+  rdfs:range mod:ModerationConcept .
+
+mod:hasSplit a owl:ObjectProperty ;
+  rdfs:domain mod:DatasetArtifact ;
+  rdfs:range mod:DataSplit .
+
+mod:requiresReview a owl:ObjectProperty ;
+  rdfs:domain mod:Prediction ;
+  rdfs:range mod:HumanReviewDecision .
+
+mod:generatesFeedback a owl:ObjectProperty ;
+  rdfs:domain mod:HumanReviewDecision ;
+  rdfs:range mod:FeedbackRecord .
+
+mod:score a owl:DatatypeProperty ;
+  rdfs:domain mod:Prediction ;
+  rdfs:range xsd:decimal .
+
+mod:threshold a owl:DatatypeProperty ;
+  rdfs:domain mod:Prediction ;
+  rdfs:range xsd:decimal .
+
+mod:videoId a owl:DatatypeProperty ;
+  rdfs:domain mod:Video ;
+  rdfs:range xsd:string .
+
+mod:chunkId a owl:DatatypeProperty ;
+  rdfs:domain mod:Chunk ;
+  rdfs:range xsd:string .
+
+mod:artifactHash a owl:DatatypeProperty ;
+  rdfs:domain mod:VersionedArtifact ;
+  rdfs:range xsd:string .
+
+mod:artifactPath a owl:DatatypeProperty ;
+  rdfs:domain mod:VersionedArtifact ;
+  rdfs:range xsd:string .
+
+mod:artifactVersion a owl:DatatypeProperty ;
+  rdfs:domain mod:VersionedArtifact ;
+  rdfs:range xsd:string .
+
+mod:CorpusIntegrado20260727 a mod:DatasetArtifact ;
+  rdfs:label "Corpus integrado de moderación textual G4"@es ;
+  mod:artifactVersion "schema-2.0; corte-2026-07-27" ;
+  mod:artifactPath "datos/model_ready/transformer_grueso/dataset_integrado_todas_pasadas.jsonl" ;
+  mod:artifactHash "3f01b76d285d4cdd2a0922df1d2437a7f01abc4e05e2699c218b1f5faaba2069" ;
+  mod:hasSplit mod:MuestraComun4a1 .
+
+mod:MuestraComun4a1 a mod:DataSplit ;
+  rdfs:label "Muestra común 4:1 agrupada por video"@es ;
+  mod:artifactVersion "semilla-20261273" ;
+  mod:artifactPath "datos/model_ready/transformer_grueso/dataset_balanceado_4a1_particionado.jsonl" ;
+  mod:artifactHash "df2ac01183271e44b6dcfb9cb4850bd6b1ef1cd11d9fc51c881be944670ef20f" .
+
+mod:QwenOperativoEpoca3 a mod:ModelArtifact ;
+  rdfs:label "Qwen3-0.6B LoRA, adaptador operativo de época 3"@es ;
+  mod:artifactVersion "Qwen/Qwen3-0.6B-Base@da87bfb; LoRA-epoch-03" ;
+  mod:artifactPath "modelos/qwen3_06b_lora_acoso_amenaza_4/epoch_adapters/epoch_03/adapter_model.safetensors" ;
+  mod:artifactHash "c88f7061daed34ab62055aafaf2abd198341b5ff7c5c72a728ce7912d93ac334" ;
+  mod:trainedOn mod:MuestraComun4a1 .

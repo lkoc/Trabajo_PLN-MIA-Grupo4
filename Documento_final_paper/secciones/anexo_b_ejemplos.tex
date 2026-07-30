@@ -1,0 +1,48 @@
+\section{Ejemplos de chunks con puntuaciones altas de Qwen3--LoRA}
+\label{app:ejemplos_scores}
+
+\textbf{Advertencia de contenido:} los extractos siguientes reproducen lenguaje discriminatorio, hostil o sexual únicamente para documentar el comportamiento del clasificador; no expresan la posición de los autores. Se seleccionan \emph{post hoc} entre los 5\,324 chunks de validación, sin consultar test. Las puntuaciones proceden del Qwen3--LoRA operacional, en el orden \Rac, \Gen, \Ame{} y \Sex. Los umbrales son 0,225; 0,200; 0,225 y 0,300. Cada ejemplo presenta una sola categoría tanto en la referencia como en la predicción. Los 15 casos priorizan puntuaciones altas y limitan el aporte a un chunk por canal. Se muestran dos cifras significativas; los puntos suspensivos solo acortan el texto.
+
+\subsection*{Valoración segura muy alta}
+
+Como \texttt{SEGURO} se deriva al no activar ningún daño, se exigieron referencia segura y cuatro scores bajo umbral, y se ordenó por el menor margen \(\min_k(\theta_k-s_k)\). El valor mostrado es \(1-\max_k s_k\), no una probabilidad calibrada por una cabeza segura.
+
+\begin{enumerate}
+\item \textbf{Canal:} \emph{Líbero Deportes}; \(>0,99\): ``Este sábado se juega un partidazo en Matute''.
+\item \textbf{Canal:} \emph{Buen Viaje}; \(>0,99\): ``lo que hemos podido aprender de este destino es que [\ldots] tiene unos objetivos en cuidar el medio ambiente''.
+\item \textbf{Canal:} \emph{Misias pero viajeras}; \(>0,99\): ``es un centro de exhibición de diferentes tipos de artesanía [\ldots] aproximadamente 150 familias [\ldots] se soportan en base a las donaciones y a las compras''.
+\end{enumerate}
+
+\subsection*{Racismo y discriminación}
+
+\begin{enumerate}
+\item \textbf{Canal:} \emph{Panamericana Noticias}; 0,96: ``esta es la típica narrativa de que pobrecito el serrano que no piensa, que no sabe nada [\ldots] me molesta esta superioridad''.
+\item \textbf{Canal:} \emph{Juanito y Richard}; 0,95: ``ese indio no [\ldots] habla''.
+\item \textbf{Canal:} \emph{ATV Noticias}; 0,83: ``Es los venezolanos [\ldots] ellos son los que hacen''.
+\end{enumerate}
+
+\subsection*{Género}
+
+\begin{enumerate}
+\item \textbf{Canal:} \emph{Todo Good}; 0,81: ``eso no te hace ser una chica [\ldots] no me sentiría cómoda ni segura que en el baño de niñas entren hombres [\ldots] que [\ldots] se perciban chicas''.
+\item \textbf{Canal:} \emph{Sin Guion con Rosa Maria Palacios}; 0,68: ``O tienes mucho enclosetado ahí adentro [\ldots] están todos son gays, menos yo''.
+\item \textbf{Canal:} \emph{Magaly TV La Firme}; 0,45: ``tiene el vicio de sacar la vuelta y estar con diferentes hombres''.
+\end{enumerate}
+
+\subsection*{Acoso y amenaza}
+
+\begin{enumerate}
+\item \textbf{Canal:} \emph{Arde Troya con Juliana Oxenford}; 0,90: ``Pienso que es un cobarde [\ldots] hoy eres un cobarde''.
+\item \textbf{Canal:} \emph{Perú Actual}; 0,87: ``te voy a matar''.
+\item \textbf{Canal:} \emph{Nunca MAS}; 0,87: ``yo te encuentro con alguien yo te mato [\ldots] pero ya estás muerta''.
+\end{enumerate}
+
+\subsection*{Contenido sexual}
+
+\begin{enumerate}
+\item \textbf{Canal:} \emph{Hablando Huevadas}; 0,94: ``cuando duermo con ella [\ldots] tengo la mano en su poto''.
+\item \textbf{Canal:} \emph{Goblinciano}; 0,38: ``compartieron un audio [\ldots] en pleno polvo [\ldots] pedía a una flaca que diga su nombre mientras cachaban''.
+\item \textbf{Canal:} \emph{Nada Espacial}; 0,37: ``empezó a pasar calato [\ldots] por toda la pichula''.
+\end{enumerate}
+
+Estos ejemplos ilustran señales que el modelo ordenó por encima de los umbrales. Score alto significa salida calibrada alta respecto del corte, no certeza humana ni probabilidad literal de que la referencia sea correcta. Las referencias provienen de supervisión asistida; los ejemplos no estiman desempeño por subtipo, no sustituyen las métricas sobre test y no autorizan decisiones automáticas sobre personas o videos.

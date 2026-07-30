@@ -1,0 +1,16 @@
+\section{Introducción}
+
+La moderación de contenido no consiste solo en asignar una etiqueta. También determina qué se revisa primero, qué evidencia ve la persona moderadora y qué errores pueden pasar inadvertidos. A escala de plataforma, estas decisiones combinan reglas, trabajo humano y sistemas automáticos, con dificultades de contexto, transparencia y responsabilidad \cite{gorwa2020moderation}. Los sistemas semiautomáticos permiten dirigir a revisión casos inciertos y reducir trabajo manual \cite{andersen2021rem}. En un video largo, además, una alerta necesita mostrar el fragmento y el instante que la originan.
+
+Hoy, revisar manualmente miles de fragmentos dificulta localizar a tiempo los que merecen atención; se busca priorizarlos con rapidez sin perder el texto ni el instante que sustentan cada alerta. Esta tarea se complica por el español local, la ironía, las citas, los errores de subtitulado y el desbalance, que impiden decisiones simples y uniformes; estos obstáculos también aparecen en pruebas funcionales, estudios de sesgo lingüístico y análisis de subtítulos automáticos \cite{rottger2021hatecheck,sap2019racialbias,tatman2017captions}. Además, el proyecto requiere una solución local y reproducible que integre datos, modelos, alertas, incertidumbre y corrección humana. La Fig.~\ref{fig:brechas} organiza este problema mediante la condición observable, los factores que la sostienen y la capacidad técnica requerida. Esta organización es un marco analítico de los autores; no se atribuye como taxonomía a la metodología de ciencia del diseño.
+
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{figuras/brechas_problema.tex}}
+\caption{Problema estudiado en tres niveles. El estado deseado no es sancionar automáticamente, sino reducir la búsqueda y conservar una decisión humana informada. Elaboración propia.}
+\label{fig:brechas}
+\end{figure*}
+
+Con este punto de partida, el estudio diseña, evalúa y empaqueta un moderador textual semiautomático para videos peruanos de YouTube. El artefacto compara alternativas de aprendizaje, prioriza daños con evidencia temporal y deriva a un supervisor las decisiones inciertas. Su propósito general es construir y evaluar esa solución mediante investigación de ciencia del diseño, o DSR por sus siglas en inglés \cite{hevner2004dsr,peffers2007dsrm}, y mantener trazabilidad entre la situación descrita, los datos, los experimentos y la operación.
+
+El trabajo aporta cuatro resultados: 1) un corpus versionado de subtítulos públicos, enriquecido para daños minoritarios y separado por video; 2) una comparación común de modelos clásicos, Transformers compactos y el modelo de lenguaje de gran escala Qwen3--0.6B con estructuras planas y jerárquicas; 3) una política selectiva calibrada en validación, con carga de revisión y falsos negativos explícitos; y 4) un demostrador que acepta texto o una URL, conserva evidencia temporal, ofrece comparación o consenso 2 de 3 y registra correcciones para reentrenamiento. El sistema reduce el material que debe inspeccionar el supervisor y muestra dónde aparece el posible daño. La persona a cargo acepta, modifica o rechaza cada alerta. El bloqueo o la sanción sin revisión quedan fuera de la evaluación.
