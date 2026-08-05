@@ -17,8 +17,8 @@ class AnnotationRecord(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: str = "2.0.0"
-    taxonomy_version: str = "2.0.0"
+    schema_version: str = "2.1.0"
+    taxonomy_version: str = "2.1.0"
     chunk_id: str = Field(min_length=1)
     video_id: str | None = None
     text: str = Field(min_length=1)
@@ -88,7 +88,7 @@ class HardwareRecord(BaseModel):
 class RunManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: str = "2.0.0"
+    schema_version: str = "2.1.0"
     run_id: str
     stage: Literal["01_datos", "02_etiquetado", "03_entrenamiento", "04_produccion"]
     taxonomy_contract: str
@@ -106,7 +106,7 @@ class RunManifest(BaseModel):
 class ModelRegistryEntry(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: str = "2.0.0"
+    schema_version: str = "2.1.0"
     model_id: str
     model_family: str
     taxonomy_contract: str
@@ -132,7 +132,7 @@ class ModelRegistryEntry(BaseModel):
 class ReviewEvent(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: str = "2.0.0"
+    schema_version: str = "2.1.0"
     event_id: str
     chunk_id: str
     action: Literal["accept", "modify", "reject", "defer"]
@@ -141,7 +141,7 @@ class ReviewEvent(BaseModel):
     flags: list[str] = Field(default_factory=list)
     reviewer: str = Field(min_length=1)
     model_id: str | None = None
-    taxonomy_version: str = "2.0.0"
+    taxonomy_version: str = "2.1.0"
     notes: str = ""
     created_at: datetime = Field(default_factory=utc_now)
 
@@ -170,4 +170,3 @@ class LLMAnnotationPayload(BaseModel):
     notes: str = Field(default="", max_length=400)
     score_confianza: float = Field(ge=0, le=1)
     justificacion: str = Field(default="", max_length=1200)
-

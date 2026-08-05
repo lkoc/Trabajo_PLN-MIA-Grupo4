@@ -48,7 +48,7 @@ def test_prediction_conflict_requires_review():
     labels = [
         "SEGURO",
         "RACISMO_DISCRIMINACION",
-        "ACOSO_GENERO_IDENTIDAD",
+        "ATAQUE_POR_GENERO_IDENTIDAD",
         "ACOSO_AMENAZA",
         "CONTENIDO_SEXUAL",
     ]
@@ -65,7 +65,7 @@ def test_no_output_is_not_turned_into_safe():
     labels = [
         "SEGURO",
         "RACISMO_DISCRIMINACION",
-        "ACOSO_GENERO_IDENTIDAD",
+        "ATAQUE_POR_GENERO_IDENTIDAD",
         "ACOSO_AMENAZA",
         "CONTENIDO_SEXUAL",
     ]

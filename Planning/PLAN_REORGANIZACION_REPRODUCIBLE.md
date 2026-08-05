@@ -10,7 +10,7 @@ Reorganizar el proyecto en cuatro etapas ejecutables, mantener la evidencia ya p
 
 1. `SEGURO`;
 2. `RACISMO_DISCRIMINACION`;
-3. `ACOSO_GENERO_IDENTIDAD`;
+3. `ATAQUE_POR_GENERO_IDENTIDAD`;
 4. `ACOSO_AMENAZA`;
 5. `CONTENIDO_SEXUAL`.
 

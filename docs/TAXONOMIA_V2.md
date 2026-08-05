@@ -1,6 +1,6 @@
 # Taxonomía operativa v2
 
-Versión: `2.0.0`  
+Versión: `2.1.0`  
 Contrato: `moderacion_peru_5_salidas_v2`
 
 La taxonomía es una decisión de moderación informada por literatura y fuentes institucionales. No constituye una clasificación jurídica ni una taxonomía validada por expertos peruanos.
@@ -11,7 +11,7 @@ La taxonomía es una decisión de moderación informada por literatura y fuentes
 |---|---|---|
 | `SEGURO` | Fragmento evaluable sin ninguno de los cuatro daños cubiertos | `seguro`, `seguro_ironia_marcada` |
 | `RACISMO_DISCRIMINACION` | Ataque o exclusión por racialización, etnia, lengua, origen o clasismo racializado | cinco fenómenos |
-| `ACOSO_GENERO_IDENTIDAD` | Ataque por género, orientación, identidad o expresión | misoginia/acoso de género; homofobia/transfobia |
+| `ATAQUE_POR_GENERO_IDENTIDAD` | Daño dirigido por género, orientación, identidad o expresión | misoginia/acoso de género; homofobia/transfobia |
 | `ACOSO_AMENAZA` | Ataque personal o anuncio plausible de daño | acoso personal; amenaza directa/implícita plausible |
 | `CONTENIDO_SEXUAL` | Sexual explícito, cosificación o sexual no consentido | tres fenómenos |
 
@@ -28,3 +28,8 @@ Los daños son multietiqueta. `SEGURO` es positivo y supervisado, pero excluyent
 
 La especificación ejecutable, inclusiones, exclusiones y contraejemplos están en `config/taxonomia_v2.json`. La guía v1.3 permanece intacta en `archivo/taxonomia_v1_3/`.
 
+## Justificación de `ATAQUE_POR_GENERO_IDENTIDAD`
+
+La categoría se define por el atributo contra el que se dirige el daño —género, orientación sexual, identidad o expresión— y no por una única modalidad de conducta. Incluye misoginia o machismo hostil, degradación, exclusión, acoso por género, homofobia y transfobia. El término `ATAQUE_POR` hace explícito el daño, mientras que `GENERO_IDENTIDAD` por sí solo sería neutral. Tampoco se usa «odio», porque exigiría una intención más estrecha y dejaría fuera ataques degradantes o discriminatorios que el contrato sí cubre.
+
+`ACOSO_AMENAZA` describe otra dimensión: ataque interpersonal, hostigamiento o amenaza. Como los daños son multietiqueta, un ataque misógino dirigido a una persona puede recibir ambas categorías. El nombre heredado se acepta únicamente como alias de entrada para migrar datos; toda salida nueva usa `ATAQUE_POR_GENERO_IDENTIDAD`.

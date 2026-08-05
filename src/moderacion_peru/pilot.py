@@ -92,7 +92,7 @@ def run_ollama_pilot(
     taxonomy = load_taxonomy()
     rows = list(sample)
     report: dict[str, Any] = {
-        "schema_version": "2.0.0",
+        "schema_version": "2.1.0",
         "sample_size": len(rows),
         "taxonomy_contract": taxonomy.contract_id,
         "models": {},

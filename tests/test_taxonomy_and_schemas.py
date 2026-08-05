@@ -26,7 +26,7 @@ def test_contract_has_five_trained_outputs():
     assert taxonomy.target_labels == (
         "SEGURO",
         "RACISMO_DISCRIMINACION",
-        "ACOSO_GENERO_IDENTIDAD",
+        "ATAQUE_POR_GENERO_IDENTIDAD",
         "ACOSO_AMENAZA",
         "CONTENIDO_SEXUAL",
     )
@@ -64,6 +64,18 @@ def test_fine_mapping_merges_harassment_and_threat():
     )
 
 
+def test_gender_identity_attack_is_canonical_and_legacy_name_migrates():
+    taxonomy = load_taxonomy()
+    assert "ATAQUE_POR_GENERO_IDENTIDAD" in taxonomy.target_labels
+    assert "ACOSO_GENERO_IDENTIDAD" not in taxonomy.target_labels
+    assert taxonomy.derive_categories(["misoginia_acoso_genero"]) == (
+        "ATAQUE_POR_GENERO_IDENTIDAD",
+    )
+    assert taxonomy.migrate_legacy_categories(["ACOSO_GENERO_IDENTIDAD"]) == (
+        "ATAQUE_POR_GENERO_IDENTIDAD",
+    )
+
+
 def test_deferred_review_has_no_final_labels():
     event = ReviewEvent(
         event_id="e1",
@@ -72,4 +84,3 @@ def test_deferred_review_has_no_final_labels():
         reviewer="R1",
     )
     assert event.final_labels == []
-

@@ -15,7 +15,7 @@ def migrate_record(
     contract = taxonomy or load_taxonomy()
     legacy = list(record.get("coarse_labels") or record.get("labels") or [])
     migrated = dict(record)
-    migrated["schema_version"] = "2.0.0"
+    migrated["schema_version"] = "2.1.0"
     migrated["taxonomy_version"] = contract.version
     migrated["legacy_coarse_labels"] = legacy
     migrated["label_source_original"] = record.get("label_source")
@@ -66,7 +66,7 @@ def migrate_jsonl(
         for label in row.get("coarse_labels", []):
             counters[f"label:{label}"] += 1
     manifest = {
-        "schema_version": "2.0.0",
+        "schema_version": "2.1.0",
         "operation": "legacy_to_five_trained_outputs",
         "source": str(source_path),
         "source_sha256": sha256_file(source_path),
@@ -78,4 +78,3 @@ def migrate_jsonl(
     }
     write_json_atomic(manifest_path, manifest)
     return manifest
-

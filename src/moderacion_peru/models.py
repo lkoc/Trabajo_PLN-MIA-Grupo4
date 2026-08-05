@@ -80,7 +80,7 @@ def train_classical_suite(
     }
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
-    registry = {"schema_version": "2.0.0", "target_labels": list(load_taxonomy().target_labels), "models": {}}
+    registry = {"schema_version": "2.1.0", "target_labels": list(load_taxonomy().target_labels), "models": {}}
     for name, estimator in candidates.items():
         pipeline = Pipeline(
             [
@@ -140,7 +140,7 @@ def save_training_specification(path: str | Path, spec: TrainingSpecification, d
     write_json_atomic(
         path,
         {
-            "schema_version": "2.0.0",
+            "schema_version": "2.1.0",
             "taxonomy_contract": taxonomy.contract_id,
             "target_labels": list(taxonomy.target_labels),
             "specification": asdict(spec),

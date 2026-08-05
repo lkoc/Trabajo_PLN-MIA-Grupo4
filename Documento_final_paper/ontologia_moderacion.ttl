@@ -67,7 +67,7 @@ mod:RacismDiscrimination a owl:Class ;
 
 mod:GenderIdentityHarassment a owl:Class ;
   rdfs:subClassOf mod:OperationalDamage ;
-  rdfs:label "ACOSO_GENERO_IDENTIDAD"@es .
+  rdfs:label "ATAQUE_POR_GENERO_IDENTIDAD"@es .
 
 mod:HarassmentThreat a owl:Class ;
   rdfs:subClassOf mod:OperationalDamage ;

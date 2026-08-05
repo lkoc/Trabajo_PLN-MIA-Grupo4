@@ -1,11 +1,11 @@
 {
   "contract_id": "moderacion_peru_5_salidas_v2",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "title": "Taxonomía operativa peruana con SEGURO y cuatro daños entrenados",
   "safe_label": "SEGURO",
   "damage_labels": [
     "RACISMO_DISCRIMINACION",
-    "ACOSO_GENERO_IDENTIDAD",
+    "ATAQUE_POR_GENERO_IDENTIDAD",
     "ACOSO_AMENAZA",
     "CONTENIDO_SEXUAL"
   ],
@@ -31,13 +31,13 @@
       "fine_labels": ["racismo_etnico_explicito", "racismo_linguistico", "clasismo_racial", "discriminacion_regional", "racismo_encubierto"],
       "evidence_layers": ["Waseem et al.", "Banko et al.", "Callirgos", "Zavala", "Vich", "evidencia social peruana"]
     },
-    "ACOSO_GENERO_IDENTIDAD": {
-      "definition": "Ataque o degradación por género, orientación sexual, identidad o expresión de género.",
-      "include": ["misoginia", "acoso por género", "homofobia", "transfobia"],
+    "ATAQUE_POR_GENERO_IDENTIDAD": {
+      "definition": "Daño dirigido por género, orientación sexual, identidad o expresión de género, incluida la misoginia, la degradación, la exclusión y el hostigamiento por identidad.",
+      "include": ["misoginia", "degradación o exclusión por género", "acoso por género", "homofobia", "transfobia"],
       "exclude": ["referencia neutral a género u orientación", "desacuerdo sin ataque identitario"],
-      "counterexample": "Una explicación informativa de diversidad sexual no constituye acoso por identidad.",
+      "counterexample": "Una explicación informativa de diversidad sexual no constituye daño por género o identidad.",
       "fine_labels": ["misoginia_acoso_genero", "homofobia_transfobia"],
-      "evidence_layers": ["tipologías de abuso por identidad", "Defensoría del Pueblo", "evidencia peruana de violencia de género en línea"]
+      "evidence_layers": ["tipologías de abuso por identidad", "Defensoría del Pueblo", "evidencia peruana de violencia de género en línea", "decisión nominal v2.1: categoría definida por el blanco identitario, no por una única modalidad de acoso"]
     },
     "ACOSO_AMENAZA": {
       "definition": "Ataque hostil dirigido a una persona o anuncio plausible de daño, incluidos episodios aislados graves y patrones repetidos cuando el fragmento permite observarlos.",
@@ -64,8 +64,8 @@
     "clasismo_racial": "RACISMO_DISCRIMINACION",
     "discriminacion_regional": "RACISMO_DISCRIMINACION",
     "racismo_encubierto": "RACISMO_DISCRIMINACION",
-    "misoginia_acoso_genero": "ACOSO_GENERO_IDENTIDAD",
-    "homofobia_transfobia": "ACOSO_GENERO_IDENTIDAD",
+    "misoginia_acoso_genero": "ATAQUE_POR_GENERO_IDENTIDAD",
+    "homofobia_transfobia": "ATAQUE_POR_GENERO_IDENTIDAD",
     "acoso_personal": "ACOSO_AMENAZA",
     "amenaza_directa": "ACOSO_AMENAZA",
     "sexual_explicito": "CONTENIDO_SEXUAL",
@@ -75,11 +75,11 @@
   "legacy_coarse_mapping": {
     "SEGURO": "SEGURO",
     "RACISMO_DISCRIMINACION": "RACISMO_DISCRIMINACION",
-    "ACOSO_GENERO_IDENTIDAD": "ACOSO_GENERO_IDENTIDAD",
+    "ATAQUE_POR_GENERO_IDENTIDAD": "ATAQUE_POR_GENERO_IDENTIDAD",
+    "ACOSO_GENERO_IDENTIDAD": "ATAQUE_POR_GENERO_IDENTIDAD",
     "ACOSO_PERSONAL": "ACOSO_AMENAZA",
     "AMENAZA_DIRECTA": "ACOSO_AMENAZA",
     "ACOSO_AMENAZA": "ACOSO_AMENAZA",
     "CONTENIDO_SEXUAL": "CONTENIDO_SEXUAL"
   }
 }
-

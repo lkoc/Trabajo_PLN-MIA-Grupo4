@@ -81,7 +81,7 @@ Describa con precision la procedencia:
 
 No afirme que se uso Whisper, transcripcion ASR o comentarios si la version final de datos y sus manifiestos no lo demuestran. El artefacto 05 rechaza enlaces sin subtitulos descargables y no transcribe audio.
 
-Cada etiqueta debe enlazarse con antecedentes pertinentes y con una definición operacional propia que indique inclusión, exclusión y relación con otras categorías. No presente `RACISMO_DISCRIMINACION`, `ACOSO_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` o `CONTENIDO_SEXUAL` como tipos legales. Una taxonomía de moderación sirve al contrato del artefacto; una calificación jurídica exige fuentes normativas o jurídicas y un análisis separado.
+Cada etiqueta debe enlazarse con antecedentes pertinentes y con una definición operacional propia que indique inclusión, exclusión y relación con otras categorías. No presente `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` o `CONTENIDO_SEXUAL` como tipos legales. Una taxonomía de moderación sirve al contrato del artefacto; una calificación jurídica exige fuentes normativas o jurídicas y un análisis separado.
 
 Use siempre el conteo completo: “14 etiquetas finas: 12 fenómenos de daño y dos estados seguros; además, tres flags transversales”. No escriba “14 fenómenos de daño”. En el contrato v2, `SEGURO` es una categoría aprendida, con score, umbral y métricas propios, y mutuamente excluyente con daño. Sigue significando “sin daño cubierto según el contrato” y no prueba ausencia universal de daño, pues no cubre, entre otros, fraude, autolesión, extremismo, desinformación o violencia gráfica.
 

@@ -8,7 +8,7 @@ El contrato `moderacion_peru_5_salidas_v2` entrena cinco salidas:
 
 - `SEGURO`;
 - `RACISMO_DISCRIMINACION`;
-- `ACOSO_GENERO_IDENTIDAD`;
+- `ATAQUE_POR_GENERO_IDENTIDAD`;
 - `ACOSO_AMENAZA`;
 - `CONTENIDO_SEXUAL`.
 
@@ -35,4 +35,3 @@ Los extras `datos`, `etiquetado` y `entrenamiento` se instalan solo cuando se ne
 El flujo identifica videos por `video_id`, transcripciones por SHA-256 y chunks por un ID determinista. Una nueva corrida omite todo lo ya procesado, añade únicamente videos o subtítulos nuevos y reanuda el etiquetado por `chunk_id`. Los modelos neuronales pueden continuar desde un checkpoint anterior usando un snapshot que combina los datos previos y el lote nuevo.
 
 Los resultados ejecutados antes de esta reorganización se conservan en [`archivo`](archivo/README.md). Sus métricas corresponden a contratos anteriores y no se atribuyen al nuevo entrenamiento de cinco salidas.
-
