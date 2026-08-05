@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 import nbformat
@@ -20,6 +21,28 @@ def test_active_notebooks_are_ordered_and_clean():
         assert "LM Studio" not in source
         assert "D:\\" not in source
         assert "G:\\" not in source
+        for cell in notebook.cells:
+            if cell.cell_type == "code":
+                ast.parse(cell.source)
+
+
+def test_colab_notebooks_embed_reproducible_drive_bootstrap():
+    expected = {"02_01", "03_02", "03_03", "03_04", "03_05", "03_06"}
+    observed = set()
+    for path in sorted((ROOT / "flujo").rglob("*.ipynb")):
+        notebook = nbformat.read(path, as_version=4)
+        metadata = notebook.metadata["moderacion_peru"]["colab"]
+        source = "\n".join(cell.source for cell in notebook.cells)
+        if metadata["eligible"]:
+            observed.add(metadata["notebook_id"])
+            assert "drive.mount" in source
+            assert "prepare_colab_context" in source
+            assert "publish_colab_outputs" in source
+            assert "COLAB_REQUIRE_L4 = True" in source
+            assert "pip\", \"install\", \"-q\", \"-r\"" in source
+            assert "git clone" not in source.lower()
+            assert metadata["transport"] == "google_drive_only"
+    assert observed == expected
 
 
 def test_required_frontends_are_small_templates():

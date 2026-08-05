@@ -13,6 +13,7 @@
 | partición sin fuga por video | protocolo experimental | `datasets.stable_video_split` | etapa 03 | implementado |
 | Ollama es la ruta local oficial | documentación de JSON Schema de Ollama | `providers/OllamaProvider` | etapa 02 | implementado |
 | CUDA/ROCm/XPU/CPU | documentación PyTorch | `device.resolve_device` | entrenamiento/manifiestos | implementado |
+| Colab L4 desde VS Code sin duplicar el repositorio | extensión oficial Google Colab y FAQ de Drive/Colab | `config/colab_l4.json`, bundle SHA-256 y `colab.prepare_colab_context` | `02_01`, `03_02`–`03_06` | implementado; Drive-only, sin GitHub |
 | métricas actuales no pertenecen a v2 | resultados históricos | `archivo/contrato_4_danos_seguro_derivado` | paper/resultados | preservado |
 
 Las cifras editoriales deben añadir artefacto, campo, split y fecha/hash antes de incorporarse al paper.

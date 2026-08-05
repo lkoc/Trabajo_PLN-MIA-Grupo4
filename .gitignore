@@ -19,12 +19,17 @@ resultados/operacion_05/*
 artefactos/*
 datos/model_ready/v2/*
 resultados/pilotos/*
+resultados/colab_bundle/*.zip
+resultados/colab_bundle/*.gz
 
 !datos/**/README.md
 !modelos/README.md
 !resultados/**/README.md
 !datos/model_ready/v2/README.md
 !resultados/pilotos/README.md
+!resultados/colab_bundle/README.md
+!resultados/colab_bundle/bundle_manifest.json
+!resultados/colab_bundle/drive_upload.json
 !.gitkeep
 
 # LaTeX

@@ -7,3 +7,5 @@ La selección de familia, checkpoint, época y umbrales utiliza validation. Test
 Los encoders o backbones anteriores pueden servir de inicialización, pero la cabeza principal de cinco salidas se entrena de nuevo. En incrementos posteriores, Transformers y Qwen reanudan desde el checkpoint v2; el baseline SGD admite actualización incremental.
 
 Consulte [`docs/HARDWARE.md`](../../docs/HARDWARE.md) antes de instalar PyTorch: una rueda CUDA no sustituye una rueda ROCm o XPU.
+
+`03_02`–`03_06` incluyen un backend Colab L4 reproducible desde VS Code. El snapshot se transfiere comprimido y verificado, se copia a `/content` y los checkpoints se publican de forma atómica. `03_01`, `03_07` y `03_08` permanecen locales salvo que sea necesario regenerar inferencias. Véase [`docs/COLAB_L4.md`](../../docs/COLAB_L4.md).

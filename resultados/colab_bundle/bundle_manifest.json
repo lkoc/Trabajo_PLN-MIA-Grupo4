@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-08-05T23:25:20.189430+00:00",
+  "taxonomy_contract": "moderacion_peru_5_salidas_v2",
+  "taxonomy_version": "2.1.0",
+  "core": {
+    "name": "project_core.zip",
+    "sha256": "685f305bf6e6c96e8bbdabf25c7cacdbb8ada2ecbfba14290e427edbb5a7a7e7",
+    "bytes": 41372,
+    "files": [
+      "config/colab_l4.json",
+      "config/taxonomia_v2.json",
+      "pyproject.toml",
+      "requirements/colab-l4.txt",
+      "src/moderacion_peru/__init__.py",
+      "src/moderacion_peru/acquisition.py",
+      "src/moderacion_peru/artifacts.py",
+      "src/moderacion_peru/cli.py",
+      "src/moderacion_peru/colab.py",
+      "src/moderacion_peru/consolidation.py",
+      "src/moderacion_peru/datasets.py",
+      "src/moderacion_peru/device.py",
+      "src/moderacion_peru/incremental.py",
+      "src/moderacion_peru/io.py",
+      "src/moderacion_peru/labeling.py",
+      "src/moderacion_peru/manifests.py",
+      "src/moderacion_peru/migration.py",
+      "src/moderacion_peru/models.py",
+      "src/moderacion_peru/paths.py",
+      "src/moderacion_peru/pilot.py",
+      "src/moderacion_peru/providers/__init__.py",
+      "src/moderacion_peru/providers/base.py",
+      "src/moderacion_peru/providers/deepseek.py",
+      "src/moderacion_peru/providers/huggingface.py",
+      "src/moderacion_peru/providers/ollama.py",
+      "src/moderacion_peru/schemas.py",
+      "src/moderacion_peru/servers.py",
+      "src/moderacion_peru/taxonomy.py",
+      "src/moderacion_peru/training.py"
+    ]
+  },
+  "inputs": {
+    "chunks_v2": {
+      "source": "datos/processed/chunks_v2.jsonl",
+      "archive": "chunks_v2.jsonl.gz",
+      "required_by": [
+        "02_01"
+      ],
+      "source_sha256": "bbf20426e65f6e231dd8b337d71cade121c6a936d5a1bcc999698983bf8c92d0",
+      "source_bytes": 37914379,
+      "archive_sha256": "2fdedd6ef73799620a1c0436c0849b00389d353cbe09ccfe0a9ac3d3f0ea8d10",
+      "archive_bytes": 11549973
+    },
+    "dataset_5_salidas": {
+      "source": "datos/model_ready/v2/dataset_5_salidas.jsonl",
+      "archive": "dataset_5_salidas.jsonl.gz",
+      "required_by": [
+        "03_02",
+        "03_03",
+        "03_04",
+        "03_05",
+        "03_06"
+      ],
+      "source_sha256": "daea22bcf5fb0bdff080db0ecabc5d69ad4c097b57b5d5bab3ea92dc40af1b2e",
+      "source_bytes": 109299843,
+      "archive_sha256": "d6cb00b2658bb8f40f762e5581c949d213d0b1fb49d190825c1a0f8447f0ea07",
+      "archive_bytes": 21275598
+    }
+  },
+  "excluded_from_drive": [
+    "videos y audio",
+    "datos/raw/transcripts_raw.jsonl",
+    "bibliografía y PDFs",
+    "archivo histórico",
+    "caché de Hugging Face",
+    "modelos Ollama",
+    "paper, presentación y frontends"
+  ]
+}

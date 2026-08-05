@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "uploaded_at": "2026-08-05T23:25:36.836Z",
+  "verification": "google_drive_list_folder_readback",
+  "root_folder": {
+    "id": "1o4qLzd6BoPRhaI4W22Vyw0wcMmPD3B_5",
+    "url": "https://drive.google.com/drive/folders/1o4qLzd6BoPRhaI4W22Vyw0wcMmPD3B_5"
+  },
+  "bundle_folder": {
+    "id": "1OfCnbYvIQehsZthv6YBEYEtIUoIJhklB",
+    "url": "https://drive.google.com/drive/folders/1OfCnbYvIQehsZthv6YBEYEtIUoIJhklB"
+  },
+  "runs_folder": {
+    "id": "1TVeresh8PRIfsS3eZrvCpr4e2gOq2g2_",
+    "url": "https://drive.google.com/drive/folders/1TVeresh8PRIfsS3eZrvCpr4e2gOq2g2_"
+  },
+  "files": [
+    {
+      "name": "project_core.zip",
+      "id": "12Z72esnIWoxhrUJiAKQ_x49uoh_hakTw",
+      "bytes": 41372,
+      "sha256": "685f305bf6e6c96e8bbdabf25c7cacdbb8ada2ecbfba14290e427edbb5a7a7e7"
+    },
+    {
+      "name": "chunks_v2.jsonl.gz",
+      "id": "1XN2kGkJiReqyQfGRDPzGtuy_eINzmsay",
+      "bytes": 11549973,
+      "sha256": "2fdedd6ef73799620a1c0436c0849b00389d353cbe09ccfe0a9ac3d3f0ea8d10"
+    },
+    {
+      "name": "dataset_5_salidas.jsonl.gz",
+      "id": "1JxPPRyqPmd7br5A8_muJeB8yZzeQqxc2",
+      "bytes": 21275598,
+      "sha256": "d6cb00b2658bb8f40f762e5581c949d213d0b1fb49d190825c1a0f8447f0ea07"
+    },
+    {
+      "name": "bundle_manifest.json",
+      "id": "1bgZBSL2S6EDfO0nzB3Tw_BOqVcWYEnEB",
+      "bytes": 2781
+    }
+  ]
+}

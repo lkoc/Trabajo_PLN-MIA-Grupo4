@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from moderacion_peru.providers.base import ProviderError, normalize_payload
+from moderacion_peru.providers.huggingface import HuggingFaceProvider
+from moderacion_peru.providers.ollama import OllamaProvider
 from moderacion_peru.pilot import multilabel_metrics
 from moderacion_peru.training import resolve_prediction
 
@@ -83,3 +87,55 @@ def test_pilot_reports_macro_f1_for_harms():
     assert metrics["per_label"]["ACOSO_AMENAZA"]["f1"] == 1.0
     assert metrics["per_label"]["RACISMO_DISCRIMINACION"]["f1"] == 0.0
     assert metrics["f1_macro"] == 0.5
+
+
+def test_ollama_disables_thinking_and_limits_structured_output(monkeypatch):
+    captured = {}
+
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"message": {"content": json.dumps(payload())}}
+
+    def fake_post(url, *, json, timeout):
+        captured.update({"url": url, "body": json, "timeout": timeout})
+        return Response()
+
+    monkeypatch.setattr("moderacion_peru.providers.ollama.requests.post", fake_post)
+    provider = OllamaProvider(model="fixture", retries=0)
+    result = provider.annotate({"chunk_id": "c1", "text": "contenido neutral"})
+
+    assert result.coarse_labels == ["SEGURO"]
+    assert captured["body"]["think"] is False
+    assert captured["body"]["options"]["num_predict"] == 512
+
+
+def test_huggingface_uses_chat_template_without_thinking_and_retries():
+    class Tokenizer:
+        calls = []
+
+        def apply_chat_template(self, messages, **kwargs):
+            self.calls.append(kwargs)
+            return "\n".join(message["content"] for message in messages)
+
+    class Generator:
+        def __init__(self):
+            self.tokenizer = Tokenizer()
+            self.calls = 0
+
+        def __call__(self, prompt, **kwargs):
+            self.calls += 1
+            if self.calls == 1:
+                return [{"generated_text": "sin JSON"}]
+            return [{"generated_text": json.dumps(payload())}]
+
+    generator = Generator()
+    provider = HuggingFaceProvider(model="fixture", retries=1)
+    provider._pipeline = generator
+    result = provider.annotate({"chunk_id": "c1", "text": "contenido neutral"})
+
+    assert result.coarse_labels == ["SEGURO"]
+    assert generator.calls == 2
+    assert generator.tokenizer.calls[0]["enable_thinking"] is False

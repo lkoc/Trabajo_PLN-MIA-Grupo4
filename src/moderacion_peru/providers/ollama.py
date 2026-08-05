@@ -78,7 +78,13 @@ class OllamaProvider(AnnotationProvider):
             "stream": False,
             "think": self.think,
             "format": LLMAnnotationPayload.model_json_schema(),
-            "options": {"temperature": 0, "seed": 20260805},
+            "options": {
+                "temperature": 0,
+                "seed": 20260805,
+                # El JSON esperado es corto. El límite evita que una respuesta
+                # inválida siga generándose después del timeout del cliente.
+                "num_predict": 512,
+            },
             "keep_alive": "10m",
         }
         last_error: Exception | None = None

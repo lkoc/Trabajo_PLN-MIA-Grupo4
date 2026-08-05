@@ -11,7 +11,7 @@ class ProviderError(RuntimeError):
     pass
 
 
-SYSTEM_PROMPT = """Eres un anotador de fragmentos de subtítulos peruanos. Aplica exclusivamente el contrato entregado. SEGURO es una categoría explícita y nunca puede coexistir con daño. Los cuatro daños pueden coexistir. Si falta contexto para decidir, devuelve coarse_labels vacío, needs_review=true y contexto_necesario; no fuerces SEGURO. Distingue discurso citado, condenado, informativo o ficticio del ataque respaldado por el hablante. Devuelve únicamente JSON conforme al esquema."""
+SYSTEM_PROMPT = """Eres un anotador de fragmentos de subtítulos peruanos. Aplica exclusivamente el contrato entregado. SEGURO es una categoría explícita y nunca puede coexistir con daño. Los cuatro daños pueden coexistir. Las etiquetas gruesas deben coincidir exactamente con las derivadas de las etiquetas finas. SEGURO exige `seguro` o `seguro_ironia_marcada` como estado fino. `score_confianza` debe ser un número decimal entre 0.0 y 1.0. Si falta contexto para decidir, devuelve coarse_labels vacío, needs_review=true y contexto_necesario; no fuerces SEGURO. Distingue discurso citado, condenado, informativo o ficticio del ataque respaldado por el hablante. Conserva exactamente el chunk_id recibido y devuelve únicamente JSON conforme al esquema, sin razonamiento ni texto adicional."""
 
 
 def taxonomy_prompt(taxonomy: TaxonomyContract) -> str:
@@ -83,4 +83,3 @@ class AnnotationProvider(ABC):
     @abstractmethod
     def annotate(self, chunk: dict[str, Any]) -> AnnotationRecord:
         raise NotImplementedError
-

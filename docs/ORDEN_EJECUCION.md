@@ -19,4 +19,5 @@ Reglas globales:
 - los nuevos datos se añaden por ID y hash;
 - los manifiestos registran contrato, entradas, salidas, código y hardware;
 - validation selecciona y calibra; test informa después de congelar.
-
+- `02_01` y `03_02`–`03_06` admiten Colab L4 desde VS Code; Drive contiene solo el bundle mínimo y runs empaquetados;
+- la celda Colab puede instalar únicamente las versiones fijadas en `requirements/colab-l4.txt`; el backend local no instala paquetes.

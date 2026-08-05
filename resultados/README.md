@@ -4,3 +4,4 @@ Este directorio recibirá únicamente métricas, figuras e informes producidos c
 
 Los resultados ejecutados anteriormente están en `archivo/contrato_4_danos_seguro_derivado/resultados` y no son comparables directamente con el nuevo contrato.
 
+`colab_bundle/` contiene la copia local verificable de los cuatro archivos sincronizados a la carpeta privada `ModeracionPeru_Colab/bundle` de Google Drive. No contiene modelos ni resultados de entrenamiento.

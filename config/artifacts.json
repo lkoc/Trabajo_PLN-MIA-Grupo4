@@ -27,6 +27,12 @@
       "recovery": "Ejecutar modperu migrate sobre el dataset histórico; nunca modificar la fuente ni inferir SEGURO desde una lista vacía."
     },
     {
+      "path": "resultados/colab_bundle/bundle_manifest.json",
+      "role": "manifiesto del bundle mínimo Drive-only para Colab L4",
+      "required_by": ["02_01", "03_02", "03_03", "03_04", "03_05", "03_06"],
+      "recovery": "Ejecutar tools/prepare_colab_bundle.py y reemplazar en Drive los cuatro archivos del bundle, sin crear duplicados."
+    },
+    {
       "path": "modelos/registro_modelos_5_salidas.json",
       "role": "registro activo v2",
       "required_by": ["04_01_frontend_produccion"],

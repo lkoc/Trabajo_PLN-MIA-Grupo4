@@ -30,7 +30,7 @@ python -m pip install -e ".[dev]"
 modperu preflight
 ```
 
-Los extras `datos`, `etiquetado` y `entrenamiento` se instalan solo cuando se necesitan. Las instrucciones de CUDA, ROCm, XPU y CPU están en [`docs/HARDWARE.md`](docs/HARDWARE.md).
+Los extras `datos`, `etiquetado` y `entrenamiento` se instalan solo cuando se necesitan. Las instrucciones de CUDA, ROCm, XPU y CPU están en [`docs/HARDWARE.md`](docs/HARDWARE.md). Los cuadernos con carga neuronal pueden usar una GPU L4 de Colab directamente desde VS Code mediante el flujo Drive-only descrito en [`docs/COLAB_L4.md`](docs/COLAB_L4.md).
 
 ## Incrementos futuros
 

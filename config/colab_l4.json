@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_contract": "moderacion_peru_5_salidas_v2",
+  "taxonomy_version": "2.1.0",
+  "drive_folder": "ModeracionPeru_Colab",
+  "bundle_folder": "bundle",
+  "runs_folder": "runs",
+  "core_archive": "project_core.zip",
+  "manifest": "bundle_manifest.json",
+  "runtime_root": "/content/moderacion_peru",
+  "requirements": "requirements/colab-l4.txt",
+  "inputs": {
+    "chunks_v2": {
+      "source": "datos/processed/chunks_v2.jsonl",
+      "archive": "chunks_v2.jsonl.gz",
+      "required_by": ["02_01"]
+    },
+    "dataset_5_salidas": {
+      "source": "datos/model_ready/v2/dataset_5_salidas.jsonl",
+      "archive": "dataset_5_salidas.jsonl.gz",
+      "required_by": ["03_02", "03_03", "03_04", "03_05", "03_06"]
+    }
+  },
+  "notebooks": {
+    "02_01": {
+      "colab_mode": "optional_huggingface",
+      "requires_cuda": true,
+      "expected_gpu": "NVIDIA L4",
+      "input_keys": ["chunks_v2"],
+      "reason": "Alternativa al etiquetado Ollama que en esta máquina ejecutó 100 % CPU."
+    },
+    "03_02": {
+      "colab_mode": "recommended",
+      "requires_cuda": true,
+      "expected_gpu": "NVIDIA L4",
+      "input_keys": ["dataset_5_salidas"],
+      "reason": "Tokenización, entrenamiento e inferencia de encoders Transformer."
+    },
+    "03_03": {
+      "colab_mode": "recommended",
+      "requires_cuda": true,
+      "expected_gpu": "NVIDIA L4",
+      "input_keys": ["dataset_5_salidas"],
+      "reason": "Dos etapas Transformer y regeneración de scores de la cascada."
+    },
+    "03_04": {
+      "colab_mode": "recommended",
+      "requires_cuda": true,
+      "expected_gpu": "NVIDIA L4",
+      "input_keys": ["dataset_5_salidas"],
+      "reason": "Entrenamiento multitarea con mayor presión de memoria."
+    },
+    "03_05": {
+      "colab_mode": "recommended",
+      "requires_cuda": true,
+      "expected_gpu": "NVIDIA L4",
+      "input_keys": ["dataset_5_salidas"],
+      "reason": "Fine-tuning Qwen-LoRA y checkpoints reanudables."
+    },
+    "03_06": {
+      "colab_mode": "recommended",
+      "requires_cuda": true,
+      "expected_gpu": "NVIDIA L4",
+      "input_keys": ["dataset_5_salidas"],
+      "reason": "Entrenamiento e inferencia estructurada sobre el backbone Qwen."
+    }
+  },
+  "excluded_from_drive": [
+    "videos y audio",
+    "datos/raw/transcripts_raw.jsonl",
+    "bibliografía y PDFs",
+    "archivo histórico",
+    "caché de Hugging Face",
+    "modelos Ollama",
+    "paper, presentación y frontends"
+  ]
+}

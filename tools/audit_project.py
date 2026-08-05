@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 import sys
@@ -60,6 +61,19 @@ def notebook_issues() -> list[str]:
         if notebook.metadata.get("moderacion_peru", {}).get("taxonomy_version") != "2.1.0":
             issues.append(f"wrong_taxonomy_version:{path.relative_to(ROOT)}")
         source = "\n".join(cell.source for cell in notebook.cells)
+        for index, cell in enumerate(notebook.cells):
+            if cell.cell_type == "code":
+                try:
+                    ast.parse(cell.source)
+                except SyntaxError as exc:
+                    issues.append(f"invalid_code_cell:{path.relative_to(ROOT)}:{index}:{exc}")
+        colab = notebook.metadata.get("moderacion_peru", {}).get("colab", {})
+        if colab.get("eligible"):
+            for required in ("drive.mount", "prepare_colab_context", "publish_colab_outputs", "COLAB_REQUIRE_L4"):
+                if required not in source:
+                    issues.append(f"missing_colab_bootstrap:{path.relative_to(ROOT)}:{required}")
+            if "git clone" in source.lower():
+                issues.append(f"colab_uses_git:{path.relative_to(ROOT)}")
         for forbidden in ("LM Studio", "D:\\", "G:\\"):
             if forbidden in source:
                 issues.append(f"forbidden:{path.relative_to(ROOT)}:{forbidden}")
