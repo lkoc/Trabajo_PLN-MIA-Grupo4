@@ -57,8 +57,9 @@ mod:TransversalFlag a owl:Class ;
   skos:definition "Indicador de ambigüedad o necesidad de contexto; no es una categoría de daño."@es .
 
 mod:SafeState a owl:Class ;
-  rdfs:label "estado SEGURO derivado"@es ;
-  skos:definition "Estado calculado cuando ninguna categoría de daño operativo supera su umbral."@es .
+  rdfs:subClassOf mod:ModerationConcept ;
+  rdfs:label "categoría SEGURO aprendida"@es ;
+  skos:definition "Salida entrenada, con score y umbral propios, mutuamente excluyente con las cuatro categorías de daño."@es .
 
 mod:RacismDiscrimination a owl:Class ;
   rdfs:subClassOf mod:OperationalDamage ;

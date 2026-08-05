@@ -1,7 +1,9 @@
 # Auditoría final de citas, redacción y gráficos
 
+> **Enmienda 2026-08-05.** El cierre descrito abajo acredita la versión publicada del baseline de cuatro daños con `SEGURO` derivado. El contrato activo v2 entrena cinco salidas y conserva ese baseline en `archivo/`; la compilación, la inspección visual y los conteos posteriores a esta enmienda se registran al final de este documento.
+
 Fecha de cierre: 2026-07-29
-Alcance: artículo IEEE, Beamer, bibliografía, figuras, guías editoriales y paquete `para_equiquetado_LLM/`.
+Alcance: artículo IEEE, Beamer, bibliografía, figuras, guías editoriales, contrato v2 y paquete histórico `archivo/taxonomia_v1_3/para_equiquetado_LLM/`.
 
 ## Resultado verificable
 
@@ -60,9 +62,9 @@ Se considera crítico inventar una fuente, dejar una afirmación central sin res
 
 ## Taxonomía y paquete de etiquetado
 
-La revisión completa está en `../para_equiquetado_LLM/AUDITORIA_ACADEMICA_TAXONOMIA.md`. La formulación defendible es **taxonomía operativa multietiqueta informada por literatura y fuentes institucionales pertinentes al Perú**, no taxonomía legal ni validada por un panel experto.
+La revisión histórica completa está en `../archivo/taxonomia_v1_3/para_equiquetado_LLM/AUDITORIA_ACADEMICA_TAXONOMIA.md`; el contrato activo está en `../docs/TAXONOMIA_V2.md`. La formulación defendible es **taxonomía operativa multietiqueta informada por literatura y fuentes institucionales pertinentes al Perú**, no taxonomía legal ni validada por un panel experto.
 
-El contrato contiene 14 etiquetas finas: 12 fenómenos de daño y dos estados seguros; además, tres flags transversales. La rama preliminar produce cinco categorías y la activa une ataque personal y amenaza directa mediante OR/máximo. Esa unión aumenta el soporte estadístico sin tratarlas como equivalentes semántica o jurídicamente.
+El contrato conserva 14 etiquetas finas: 12 fenómenos de daño y dos estados seguros; además, tres flags transversales. La implementación v2 aprende `SEGURO` y cuatro daños como cinco salidas; `ACOSO_AMENAZA` une ataque personal y amenaza directa para aumentar soporte sin tratarlas como equivalentes semántica o jurídicamente.
 
 La auditoría también documenta diferencias entre versiones sobre amenaza explícita o implícita, ataque aislado o acoso repetido, humor encubridor, citas de discurso dañino y el caso indeterminado con `contexto_necesario`. El artículo conserva esas reglas como procedencia y las separa de las definiciones académicas.
 
@@ -84,6 +86,6 @@ Las versiones finales usan rutas horizontales/verticales y carriles externos. No
 - Las 60 salidas CGT de la carpeta de etiquetado son una prueba consecutiva de formato, no una muestra aleatoria ni un conjunto gold.
 - El test enriquecido 4:1 no estima prevalencia de producción y ya se consulta en iteraciones preliminares.
 - Deben cerrarse licencia del corpus, revisión ética, versiones exactas de adquisición y evaluación prospectiva antes de una publicación externa de datos.
-- La celda de empaquetado de `Cuadernos/03_frontend_etiquetado_humano_html.ipynb` puede borrar la carpeta auditada y restaurar un prompt antiguo; no debe reejecutarse sin corregirla y versionar el paquete.
+- La celda destructiva del cuaderno histórico quedó aislada en `archivo/`; el frontend activo carga campañas versionadas y no borra el paquete de etiquetado.
 
 Esta fue una auditoría estructural, bibliográfica y visual. No se usó un detector externo de plagio ni de texto generado por IA; por tanto, no se promete el resultado de esos detectores. La protección aplicable es la trazabilidad de afirmaciones, la paráfrasis propia, la atribución explícita y la declaración de límites.

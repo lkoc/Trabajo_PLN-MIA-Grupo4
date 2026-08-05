@@ -1,5 +1,13 @@
 # Datos
 
+> **Contrato activo:** `moderacion_peru_5_salidas_v2`. El texto histórico se mantiene debajo para reconstruir los artefactos anteriores; sus rutas pueden apuntar a `archivo/`.
+
+Las nuevas corridas usan `raw/` para candidatos, caché por video y transcripciones; `processed/` para chunks deterministas; `etiquetado/` para salidas append-only; y `model_ready/v2/` para snapshots inmutables agrupados por `video_id`.
+
+El scraping reutiliza primero los `video_id` ya canónicos y luego el caché local. Solo consulta subtítulos para candidatos nuevos. La migración v2 materializa `SEGURO` únicamente desde una decisión segura explícita; una lista histórica vacía se deriva a revisión.
+
+## Documentación de la estructura anterior
+
 Carpeta de trabajo para insumos y datasets generados por los cuadernos.
 
 ## Subcarpetas

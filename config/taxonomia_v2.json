@@ -1,0 +1,85 @@
+{
+  "contract_id": "moderacion_peru_5_salidas_v2",
+  "version": "2.0.0",
+  "title": "Taxonomía operativa peruana con SEGURO y cuatro daños entrenados",
+  "safe_label": "SEGURO",
+  "damage_labels": [
+    "RACISMO_DISCRIMINACION",
+    "ACOSO_GENERO_IDENTIDAD",
+    "ACOSO_AMENAZA",
+    "CONTENIDO_SEXUAL"
+  ],
+  "flags": [
+    "ironia_ambigua",
+    "humor_encubridor",
+    "contexto_necesario"
+  ],
+  "categories": {
+    "SEGURO": {
+      "definition": "Fragmento evaluable que no expresa, promueve ni dirige ninguno de los cuatro daños cubiertos por el contrato.",
+      "include": ["contenido neutral", "mención informativa o condenatoria claramente atribuida", "ironía marcada sin ataque a persona o grupo"],
+      "exclude": ["ausencia de contexto suficiente", "lista vacía por error", "cualquier fenómeno de daño aplicable"],
+      "counterexample": "Una noticia que reproduce una amenaza sin atribución clara no se fuerza a SEGURO: requiere revisión contextual.",
+      "fine_labels": ["seguro", "seguro_ironia_marcada"],
+      "evidence_layers": ["guía de anotación del proyecto", "literatura sobre uso/mención y contexto", "decisión operacional v2"]
+    },
+    "RACISMO_DISCRIMINACION": {
+      "definition": "Ataque, inferiorización o exclusión por racialización, etnia, lengua, origen regional o nacional, o asociación clasista racializada.",
+      "include": ["insulto étnico", "discriminación lingüística", "clasismo racializado", "discriminación regional", "racismo encubierto con blanco identificable"],
+      "exclude": ["crítica política sin atributo protegido", "mención descriptiva sin ataque"],
+      "counterexample": "Nombrar una región o una lengua sin inferiorizar a sus hablantes no activa la categoría.",
+      "fine_labels": ["racismo_etnico_explicito", "racismo_linguistico", "clasismo_racial", "discriminacion_regional", "racismo_encubierto"],
+      "evidence_layers": ["Waseem et al.", "Banko et al.", "Callirgos", "Zavala", "Vich", "evidencia social peruana"]
+    },
+    "ACOSO_GENERO_IDENTIDAD": {
+      "definition": "Ataque o degradación por género, orientación sexual, identidad o expresión de género.",
+      "include": ["misoginia", "acoso por género", "homofobia", "transfobia"],
+      "exclude": ["referencia neutral a género u orientación", "desacuerdo sin ataque identitario"],
+      "counterexample": "Una explicación informativa de diversidad sexual no constituye acoso por identidad.",
+      "fine_labels": ["misoginia_acoso_genero", "homofobia_transfobia"],
+      "evidence_layers": ["tipologías de abuso por identidad", "Defensoría del Pueblo", "evidencia peruana de violencia de género en línea"]
+    },
+    "ACOSO_AMENAZA": {
+      "definition": "Ataque hostil dirigido a una persona o anuncio plausible de daño, incluidos episodios aislados graves y patrones repetidos cuando el fragmento permite observarlos.",
+      "include": ["insulto o humillación personal", "hostigamiento", "amenaza explícita", "amenaza implícita con blanco y daño plausibles"],
+      "exclude": ["crítica de ideas sin ataque personal", "lenguaje figurado sin blanco o daño plausible"],
+      "counterexample": "La frase 'ese argumento está muerto' no es amenaza si se refiere inequívocamente a una idea.",
+      "fine_labels": ["acoso_personal", "amenaza_directa"],
+      "evidence_layers": ["Banko et al.", "literatura sobre abuso dirigido", "fusión operacional por soporte; no equivalencia semántica ni jurídica"]
+    },
+    "CONTENIDO_SEXUAL": {
+      "definition": "Descripción sexual explícita, cosificación sexual dirigida o contenido sexual no consentido cubierto por el contrato.",
+      "include": ["sexual explícito", "cosificación", "difusión o amenaza sexual no consentida"],
+      "exclude": ["educación sexual clínica", "mención informativa no gráfica", "afecto no sexual"],
+      "counterexample": "Una noticia sobre una política de salud sexual no activa la categoría por el solo uso de vocabulario sexual.",
+      "fine_labels": ["sexual_explicito", "sexual_cosificacion", "sexual_no_consensual"],
+      "evidence_layers": ["Banko et al.", "Defensoría del Pueblo", "fuentes peruanas de violencia en línea", "política de plataforma"]
+    }
+  },
+  "fine_label_mapping": {
+    "seguro": "SEGURO",
+    "seguro_ironia_marcada": "SEGURO",
+    "racismo_etnico_explicito": "RACISMO_DISCRIMINACION",
+    "racismo_linguistico": "RACISMO_DISCRIMINACION",
+    "clasismo_racial": "RACISMO_DISCRIMINACION",
+    "discriminacion_regional": "RACISMO_DISCRIMINACION",
+    "racismo_encubierto": "RACISMO_DISCRIMINACION",
+    "misoginia_acoso_genero": "ACOSO_GENERO_IDENTIDAD",
+    "homofobia_transfobia": "ACOSO_GENERO_IDENTIDAD",
+    "acoso_personal": "ACOSO_AMENAZA",
+    "amenaza_directa": "ACOSO_AMENAZA",
+    "sexual_explicito": "CONTENIDO_SEXUAL",
+    "sexual_cosificacion": "CONTENIDO_SEXUAL",
+    "sexual_no_consensual": "CONTENIDO_SEXUAL"
+  },
+  "legacy_coarse_mapping": {
+    "SEGURO": "SEGURO",
+    "RACISMO_DISCRIMINACION": "RACISMO_DISCRIMINACION",
+    "ACOSO_GENERO_IDENTIDAD": "ACOSO_GENERO_IDENTIDAD",
+    "ACOSO_PERSONAL": "ACOSO_AMENAZA",
+    "AMENAZA_DIRECTA": "ACOSO_AMENAZA",
+    "ACOSO_AMENAZA": "ACOSO_AMENAZA",
+    "CONTENIDO_SEXUAL": "CONTENIDO_SEXUAL"
+  }
+}
+

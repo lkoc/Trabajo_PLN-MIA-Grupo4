@@ -308,48 +308,44 @@
 \end{frame}
 
 % 7
-\begin{frame}{La taxonomía pasa de cinco a cuatro categorías}
+\begin{frame}{El contrato v2 aprende SEGURO como quinta salida}
   \centering
   \begin{tikzpicture}[
     old/.style={draw=Gold!50,fill=Gold!8,rounded corners=2pt,text width=43mm,
-      minimum height=7mm,align=center,inner sep=1.5mm,font=\scriptsize},
+      minimum height=6mm,align=center,inner sep=1.2mm,font=\scriptsize},
     active/.style={draw=Teal!45,fill=Teal!7,rounded corners=2pt,text width=47mm,
-      minimum height=7mm,align=center,inner sep=1.5mm,font=\scriptsize},
+      minimum height=6mm,align=center,inner sep=1.2mm,font=\scriptsize},
     arr/.style={-{Stealth[length=1.7mm]},thick,draw=Muted}]
-    \node[font=\small\bfseries,text=Gold!75!black] at (0,1.0) {Contrato preliminar · 5 categorías};
-    \node[font=\small\bfseries,text=Teal!75!black] at (8.8,1.0) {Contrato operativo · 4 categorías};
-    \node[old] (r5) at (0,0) {Racismo / discriminación};
-    \node[old] (g5) at (0,-.9) {Género};
-    \node[old] (p5) at (0,-1.8) {Acoso personal · 2,854 incidencias};
-    \node[old] (a5) at (0,-2.7) {Amenaza directa · 688 incidencias};
-    \node[old] (s5) at (0,-3.6) {Contenido sexual};
-    \node[active] (r4) at (8.8,0) {Racismo / discriminación};
-    \node[active] (g4) at (8.8,-.9) {Género};
-    \node[active,minimum height=14mm] (a4) at (8.8,-2.25) {Acoso o amenaza};
-    \node[active] (s4) at (8.8,-3.6) {Contenido sexual};
-    \draw[arr] (r5)--(r4); \draw[arr] (g5)--(g4);
-    \coordinate (merge) at (4.7,-2.25);
-    \draw[arr] (p5.east) -- ++(.65,0) |- (merge);
-    \draw[arr] (a5.east) -- ++(.65,0) |- (merge);
-    \draw[arr] (merge) -- (a4.west);
-    \draw[arr] (s5)--(s4);
-    \node[text=Coral,font=\tiny\bfseries,align=center] at (4.7,-1.43)
-      {fusión operativa\\por soporte};
+    \node[font=\small\bfseries,text=Gold!75!black] at (0,.9) {Baseline ejecutado};
+    \node[font=\small\bfseries,text=Teal!75!black] at (8.8,.9) {Contrato reproducible v2};
+    \node[old] (r4) at (0,0) {Racismo / discriminación};
+    \node[old] (g4) at (0,-.75) {Acoso, género e identidad};
+    \node[old] (a4) at (0,-1.5) {Acoso o amenaza};
+    \node[old] (s4) at (0,-2.25) {Contenido sexual};
+    \node[old,dashed] (safe4) at (0,-3.0) {SEGURO derivado de cuatro scores};
+    \node[active] (r5) at (8.8,0) {Racismo / discriminación};
+    \node[active] (g5) at (8.8,-.75) {Acoso, género e identidad};
+    \node[active] (a5) at (8.8,-1.5) {Acoso o amenaza};
+    \node[active] (s5) at (8.8,-2.25) {Contenido sexual};
+    \node[active,draw=Teal!80,very thick] (safe5) at (8.8,-3.0) {SEGURO aprendido, exclusivo};
+    \foreach \a/\b in {r4/r5,g4/g5,a4/a5,s4/s5,safe4/safe5}{\draw[arr] (\a)--(\b);}
+    \node[text=Coral,font=\tiny\bfseries,align=center] at (4.4,-2.65)
+      {nueva cabeza, umbral\\y métricas propias};
   \end{tikzpicture}
-  \vspace{0mm}
+  \vspace{1mm}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{.49\textwidth}
       \begin{beamercolorbox}[sep=1.5mm,rounded=true]{block body}
-        \scriptsize\textbf{Por qué se fusiona.} La amenaza directa reúne 688 incidencias frente a 2\,854 de acoso personal; la unión aumenta el soporte de la salida operativa.
+        \scriptsize\textbf{Regla.} SEGURO es mutuamente excluyente con cualquier daño. Conflicto, abstención o proximidad a un umbral deriva a revisión.
       \end{beamercolorbox}
     \end{column}
     \begin{column}{.49\textwidth}
       \begin{beamercolorbox}[sep=1.5mm,rounded=true]{block body}
-        \scriptsize\textbf{Qué no significa.} Es una decisión de ingeniería, no una equivalencia semántica, conceptual ni jurídica.
+        \scriptsize\textbf{Evidencia.} Las métricas publicadas siguen siendo del baseline. El rendimiento v2 queda pendiente de reentrenamiento y recalibración.
       \end{beamercolorbox}
     \end{column}
   \end{columns}
-  \sourceNote{paper, Sec. IV-C. La fusión 5$\rightarrow$4 pertenece al contrato operativo.}
+  \sourceNote{paper, Secs. IV-C y V. La transición de contrato no cambia métricas retrospectivamente.}
 \end{frame}
 
 % 8

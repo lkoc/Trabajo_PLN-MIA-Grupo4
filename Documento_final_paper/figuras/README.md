@@ -7,7 +7,7 @@ artefactos funcionales y se conservan junto con sus fuentes reproducibles.
 - pipeline_moderacion.tex: adquisición, preanotación, adjudicación y entrenamiento.
 - brechas_problema.tex: brecha real, subyacente y tecnológica.
 - ciclo_dsr.tex: fases DSR y cronología de iteraciones.
-- datos_taxonomia.tex: cuatro salidas activas, 12 fenómenos de daño, dos estados seguros y tres flags transversales en carriles separados.
+- datos_taxonomia.tex: cinco salidas activas (SEGURO y cuatro daños), 12 fenómenos de daño, dos estados seguros finos y tres flags transversales en carriles separados.
 - fuentes_dataset.tex: criterios de adquisición y volumen total del corpus integrado.
 - familias_modelo.tex: familias y estructuras comparadas.
 - resultados_finales.tex: métricas de los ganadores por familia.
@@ -19,7 +19,7 @@ artefactos funcionales y se conservan junto con sus fuentes reproducibles.
 - captura_operacion_youtube_qwen.png: URL de un video público con subtítulos procesada con Qwen3--LoRA.
 - captura_operacion_youtube_consenso.png: la misma URL procesada con consenso 2 de 3.
 - captura_panel_operacion.evidence.json: registro conjunto de las cuatro corridas, con estado del servidor, fuentes, modos, respuestas visibles y conteos antes/después.
-- ../../scripts_auxiliares/capturar_panel_operacion_ejecuciones_reales.py: automatización que abre la interfaz, envía los cuatro formularios, espera las inferencias y genera recortes textuales sin inyectar resultados en el HTML.
+- ../../archivo/implementacion_anterior/scripts_auxiliares/capturar_panel_operacion_ejecuciones_reales.py: automatización histórica que abre la interfaz, envía los cuatro formularios, espera las inferencias y genera recortes textuales sin inyectar resultados en el HTML.
 
 Las inferencias temporales empleadas para estas capturas se eliminan de la base
 del paquete después de conservar la evidencia; así, el despliegue reproducible

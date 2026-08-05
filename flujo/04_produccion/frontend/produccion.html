@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Moderación Perú · Modo sombra</title>
+  <style>
+    :root{font-family:Inter,system-ui,sans-serif;color:#172033;background:#f3f6fa;--blue:#165f95;--ok:#176b47;--warn:#9a6412}*{box-sizing:border-box}body{margin:0}.shell{max-width:1000px;margin:auto;padding:24px}.panel{background:#fff;border:1px solid #d9e1eb;border-radius:14px;padding:20px;margin-bottom:16px}.badge{display:inline-block;border-radius:999px;padding:5px 9px;background:#eef3f8;color:#405169}.badge.ok{background:#e5f4ec;color:var(--ok)}.badge.warn{background:#fff1d6;color:var(--warn)}textarea{width:100%;min-height:130px;border:1px solid #bcc9d8;border-radius:10px;padding:12px;font:inherit}button{border:0;border-radius:9px;background:var(--blue);color:white;padding:10px 15px;font-weight:650;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.score{border:1px solid #dce4ed;border-radius:10px;padding:12px}.bar{height:8px;background:#e8edf3;border-radius:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue)}.muted{color:#647287}.notice{border-left:4px solid var(--warn);background:#fff8e8;padding:12px}.safe{color:var(--ok)}
+  </style>
+</head>
+<body><main class="shell">
+  <section class="panel"><span class="badge warn">Modo sombra</span><h1>Moderación semiautomática</h1><p>El supervisor conserva la decisión final. Este frontend no bloquea, elimina ni sanciona contenido.</p></section>
+  <section class="panel"><label for="text"><b>Texto o fragmento</b></label><textarea id="text" placeholder="Ingrese un fragmento cuando exista un registro v2 validado..."></textarea><p><button id="analyze">Analizar</button></p><div id="notice" class="notice"></div></section>
+  <section class="panel"><h2>Contrato activo</h2><div id="contract" class="grid"></div><p class="muted">SEGURO es una salida entrenada y no puede coexistir con daño. Un conflicto o ninguna salida sobre umbral exige revisión.</p></section>
+  <section class="panel"><h2>Resultado</h2><div id="result"><p class="muted">Sin inferencia.</p></div></section>
+</main><script>
+const $=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),pretty=x=>x.replaceAll('_',' ').toLowerCase().replace(/^./,c=>c.toUpperCase());let config;
+async function api(u,o={}){const r=await fetch(u,{headers:{'Content-Type':'application/json'},...o});const x=await r.json();if(!r.ok)throw Error(x.error||r.statusText);return x}
+(async()=>{config=await api('/api/config');const t=config.taxonomy;$('#contract').innerHTML=[t.safe_label,...t.damage_labels].map(l=>`<div class="score"><b class="${l===t.safe_label?'safe':''}">${pretty(l)}</b><p class="muted">${esc(t.categories[l].definition)}</p></div>`).join('');$('#notice').innerHTML=config.campaign_available?'Registro disponible.':'No existe todavía un registro de modelos v2; la interfaz se valida sin atribuir métricas ni predicciones al contrato nuevo.'})().catch(e=>$('#notice').textContent=e.message);
+$('#analyze').onclick=()=>{$('#result').innerHTML='<div class="notice"><b>Inferencia no habilitada.</b> Entrene y registre primero un modelo con las cinco salidas en <code>modelos/registro_modelos_5_salidas.json</code>. No se sustituye por la línea base histórica.</div>'};
+</script></body></html>
+

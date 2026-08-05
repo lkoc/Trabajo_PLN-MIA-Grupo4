@@ -8,16 +8,17 @@
   arr/.style={-{Stealth[length=1.8mm]},thick},
   bus/.style={thick}
 ]
-% Capa 1: contrato activo. El bus queda en un carril vacío por encima de las cajas.
-\node[root] (contract) at (6,2.05) {\textbf{Contrato activo multietiqueta}\\cuatro salidas de daño};
+% Capa 1: contrato activo v2. El bus queda en un carril vacío por encima de las cajas.
+\node[root] (contract) at (8,2.05) {\textbf{Contrato activo multietiqueta v2}\\cinco salidas entrenadas};
 \node[coarse] (rac) at (0,0) {\textbf{RACISMO /\\DISCRIMINACIÓN}};
-\node[coarse] (gen) at (4,0) {\textbf{GÉNERO}};
+\node[coarse] (gen) at (4,0) {\textbf{ACOSO, GÉNERO\\E IDENTIDAD}};
 \node[coarse] (ame) at (8,0) {\textbf{ACOSO / AMENAZA}\\OR de dos salidas preliminares};
 \node[coarse] (sex) at (12,0) {\textbf{CONTENIDO\\SEXUAL}};
-\coordinate (topbus) at (6,1.10);
+\node[safe,text width=34mm] (safeout) at (16,0) {\textbf{SEGURO}\\salida aprendida y exclusiva};
+\coordinate (topbus) at (8,1.10);
 \draw[bus] (contract.south) -- (topbus);
-\draw[bus] (0,1.10) -- (12,1.10);
-\foreach \n/\x in {rac/0,gen/4,ame/8,sex/12}{
+\draw[bus] (0,1.10) -- (16,1.10);
+\foreach \n/\x in {rac/0,gen/4,ame/8,sex/12,safeout/16}{
   \draw[arr] (\x,1.10) -- (\n.north);
 }
 
@@ -34,17 +35,16 @@
   \draw[arr] (\a.south) -- (\b.north);
 }
 
-% Capa 3: estados seguros y señales transversales en carriles separados.
-\node[safe,text width=46mm] (safestates) at (.60,-4.85) {\textbf{2 estados seguros}\\
+\node[safe,text width=42mm] (safestates) at (16,-2.35) {\textbf{2 estados seguros}\\
   \texttt{seguro}; \texttt{seguro\_ironia\_marcada}\\
   mutuamente excluyentes con daño};
-\node[safe,text width=24mm] (safeout) at (4.50,-4.85) {\textbf{SEGURO derivado}\\si ninguna de 4\\salidas está activa};
-\draw[arr] (safestates.east) -- (safeout.west);
+\draw[arr] (safeout.south) -- (safestates.north);
 
-\node[flag,text width=55mm] (flags) at (8.95,-4.85) {\textbf{3 flags transversales}\\
+% Capa 3: señales transversales y revisión en un carril independiente.
+\node[flag,text width=68mm] (flags) at (5.0,-4.85) {\textbf{3 flags transversales}\\
   \texttt{ironia\_ambigua}; \texttt{humor\_encubridor};\\
   \texttt{contexto\_necesario}\\
-  acompañan un daño; no son categorías de moderación};
-\node[flag,text width=28mm,fill=yellow!14] (human) at (13.70,-4.85) {\textbf{Revisión humana}\\obligatoria según\\el protocolo};
+  acompañan una decisión; no son categorías de moderación};
+\node[flag,text width=34mm,fill=yellow!14] (human) at (11.8,-4.85) {\textbf{Revisión humana}\\conflicto, abstención o\\proximidad al umbral};
 \draw[arr,dashed] (flags.east) -- (human.west);
 \end{tikzpicture}

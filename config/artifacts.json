@@ -1,0 +1,31 @@
+{
+  "schema_version": "2.0.0",
+  "description": "Disponibilidad esperada de artefactos que no se reconstruyen ni se falsifican durante la reorganización.",
+  "artifacts": [
+    {
+      "path": "datos/raw/transcripts_raw.jsonl",
+      "role": "transcripciones canónicas para nuevas corridas",
+      "required_by": ["01_02_limpieza_troceado_incremental"],
+      "recovery": "Regenerar incrementalmente desde los videos ya registrados o recuperar la instantánea externa verificada."
+    },
+    {
+      "path": "datos/processed/chunks_para_etiquetar.jsonl",
+      "role": "chunks canónicos",
+      "required_by": ["02_01_etiquetado_local_ollama"],
+      "recovery": "Migrar una vez archivo/taxonomia_v1_3/para_equiquetado_LLM/chunks_para_etiquetar.json, que contiene NDJSON, y verificar su hash."
+    },
+    {
+      "path": "datos/etiquetado/humano/revision_humana_combinada_1918.jsonl",
+      "role": "eventos humanos originales",
+      "required_by": ["02_04_consolidacion_validacion_humana"],
+      "recovery": "Recuperar desde almacenamiento externo usando los hashes del informe histórico."
+    },
+    {
+      "path": "modelos/registro_modelos_5_salidas.json",
+      "role": "registro activo v2",
+      "required_by": ["04_01_frontend_produccion"],
+      "recovery": "Se crea únicamente después de entrenar y validar modelos con las cinco salidas."
+    }
+  ]
+}
+

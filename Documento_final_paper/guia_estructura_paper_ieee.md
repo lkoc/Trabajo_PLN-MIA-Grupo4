@@ -1,5 +1,7 @@
 # Estructura del paper IEEE con metodologia DSR
 
+> **Enmienda de contrato v2 (2026-08-05).** El paper debe distinguir el baseline ejecutado de cuatro daños con `SEGURO` derivado del flujo activo de cinco salidas aprendidas. Las métricas v2 permanecen pendientes hasta reentrenar y recalibrar.
+
 Esta guia define la arquitectura narrativa del articulo final. Debe conservar el formato `IEEEtran` en hoja A4 mediante la opción de clase `a4paper` y presentar evidencia del artefacto construido, sus iteraciones y sus limites. La extension final depende de las reglas de la convocatoria o del curso; nunca debe reducirse la tipografia para forzar el numero de paginas. La auditoría final debe comprobar que el PDF mide físicamente 210 × 297 mm; no basta con que el documento declare A4 en el fuente.
 
 ## Hilo conductor
@@ -83,9 +85,9 @@ Describa las iteraciones de construccion y evaluacion, no solo el pipeline final
 3. pseudoetiquetado Flash/Pro y revisión final asistida con procedencia documentada;
 4. baselines historicos de cinco daños y consolidacion del corpus;
 5. Transformer y diseños jerarquicos de cinco daños;
-6. transicion reproducible a cuatro daños mediante `ACOSO_AMENAZA`;
-7. modelos activos `04_201`–`04_206` y comparacion/auditoria `04_207`–`04_208`;
-8. demostracion en el artefacto 05 y ciclo de retroalimentacion humana.
+6. baseline reproducible de cuatro daños mediante `ACOSO_AMENAZA`;
+7. transición al contrato v2 de cinco salidas, con `SEGURO` aprendido y exclusivo;
+8. modelos en `flujo/03_entrenamiento/` y demostración en `flujo/04_produccion/` con retroalimentación humana.
 
 Para cada iteracion indique entrada, intervencion, artefacto, criterio de evaluacion, resultado y aprendizaje que motivo la siguiente iteracion.
 
@@ -105,7 +107,7 @@ No presente el test como gold standard humano ni la muestra 4:1 como prevalencia
 
 Explique para cada categoría su definición operacional, inclusión, exclusión, relación con las demás etiquetas y antecedente bibliográfico. Mantenga separados el vocabulario descriptivo, la política de moderación y las categorías legales. Documente también quién o qué produjo cada rótulo, qué sugerencia era visible durante la revisión y qué limitaciones impiden tratarlo como anotación humana independiente.
 
-La reconstrucción de la taxonomía debe comenzar en `para_equiquetado_LLM/`, sin tomar un solo archivo como explicación suficiente. Revise y relacione:
+La reconstrucción histórica de la taxonomía debe comenzar en `archivo/taxonomia_v1_3/para_equiquetado_LLM/`, sin tomar un solo archivo como explicación suficiente. El contrato vigente se reconstruye desde `config/taxonomia_v2.json` y `docs/TAXONOMIA_V2.md`. Revise y relacione:
 
 - `taxonomia_moderacion.csv`: vocabulario fino y agrupación didáctica; su columna `categoria=ACOSO` no define por sí sola el contrato preliminar de cinco salidas ni el activo de cuatro;
 - `clasificacion_moderacion_peru.md` v1.3: criterios, ejemplos y bibliografía que vio el etiquetador;
@@ -114,13 +116,13 @@ La reconstrucción de la taxonomía debe comenzar en `para_equiquetado_LLM/`, si
 - `cgt_labeled_chunks_parte_0001`–`0003.jsonl`: prueba consecutiva de 60 filas, no muestra representativa ni referencia `gold`;
 - regla de derivación: el mapeo fino→cinco categorías y la fusión mediante OR/máximo producen el contrato activo de cuatro categorías; los nombres de scripts pertenecen a la guía técnica, no al cuerpo del artículo.
 
-Las copias actuales de CSV y skill dentro de `para_equiquetado_LLM/` coinciden por hash con `datos/processed/taxonomia_moderacion.csv` y `modelos/skills/clasificacion_moderacion_peru.md`, pero son snapshots sin manifiesto propio. Para describir lo ejecutado, dé prioridad al código y a esas rutas canónicas; use la carpeta de transferencia para reconstruir qué instrucciones recibió el anotador.
+Las copias archivadas de CSV y guía dentro de `archivo/taxonomia_v1_3/para_equiquetado_LLM/` son snapshots históricos. Para describir el contrato v2, dé prioridad a `config/taxonomia_v2.json`, `src/moderacion_peru/` y sus manifiestos; use el archivo solo para reconstruir qué instrucciones recibió el anotador original.
 
 Reporte la estructura exacta como **12 fenómenos finos de daño + 2 estados seguros + 3 flags transversales**. Los doce fenómenos se agrupan 5/2/2/3 en `RACISMO_DISCRIMINACION`, `ACOSO_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es un estado derivado; los flags activan revisión y no son daños. La unión de acoso personal y amenaza, los umbrales 0,65/0,70 y la exigencia de acompañar cada flag con daño son reglas locales.
 
 Construya una matriz `salida activa → etiqueta fina → definición académica → inclusión → exclusión → fuente general → fuente peruana/institucional → decisión local`. Use “taxonomía operativa informada por literatura y fuentes institucionales”; no use “taxonomía validada por expertos” mientras no exista adjudicación experta peruana documentada. Exponga las contradicciones históricas de la guía —amenaza explícita/implícita, ataque aislado/acoso repetido, flag sin daño y uso/mención de discurso reportado— en la auditoría o limitaciones; no las convierta en definiciones académicas.
 
-Conserve la guía v1.3 como evidencia histórica. Una corrección futura debe crear una versión nueva y guardar su hash, no sobrescribir silenciosamente el prompt que originó anotaciones. Antes de reejecutar la celda de empaquetado del cuaderno 03, verifique que no borre `para_equiquetado_LLM/` ni restaure copias antiguas: la versión actual de esa celda no reproduce fielmente el estado auditado de la carpeta.
+Conserve la guía v1.3 como evidencia histórica. La versión v2 y su hash viven aparte; no se sobrescribe el prompt que originó anotaciones. El flujo activo crea campañas inmutables y no contiene la celda destructiva del cuaderno histórico 03.
 
 #### Experimentos y arquitecturas
 
@@ -130,7 +132,7 @@ Una matriz debe inventariar al menos:
 - Paraphrase Multilingual MiniLM y Multilingual E5-small;
 - Qwen3-0.6B con LoRA y supervision auxiliar;
 - modelos planos, cascadas binarias, jerarquias compartidas y cabezas multitarea;
-- warm start de cinco a cuatro daños y recalibracion de umbrales.
+- reutilización de encoders compatibles, cabeza nueva de cinco salidas y recalibración de todos los umbrales.
 
 Explique por que se probo cada familia y que hipotesis o necesidad de ingenieria atendia.
 
@@ -157,7 +159,8 @@ Organice los resultados por preguntas, no por orden de ejecucion de celdas:
 5. efecto de cascadas y jerarquías frente a sus planos;
 6. selección de la época Qwen y política de recall objetivo;
 7. auditoría por etiquetas finas y flags;
-8. prototipo operativo y trazabilidad de la revisión.
+8. prototipo operativo y trazabilidad de la revisión;
+9. estado pendiente del reentrenamiento y evaluación del contrato v2.
 
 La tabla principal debe derivarse de `comparacion_todos_modelos_4.csv`. Reporte nombres completos de metricas, tamaño y split; no mezcle resultados de test ampliado, test historico y test comun 4:1.
 
@@ -196,7 +199,7 @@ Documente por separado la licencia del código, de cada modelo base, de los adap
 - Brecha en los tres niveles y problemas/objetivos.
 - Ciclo DSR con las iteraciones ejecutadas.
 - Pipeline de datos y embudo Flash → Pro → revisión final asistida.
-- Evolucion de cinco a cuatro daños.
+- Evolución del baseline de cuatro daños al contrato v2 de cinco salidas aprendidas.
 - Matriz de familias y estructuras experimentales.
 - Separacion train/validation/test y regla contra fuga.
 - Comparacion cuantitativa final y calibracion Qwen.

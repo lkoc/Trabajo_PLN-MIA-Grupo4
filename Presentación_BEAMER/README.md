@@ -1,5 +1,7 @@
 # Presentacion Beamer final
 
+> **Estado de contrato (2026-08-05).** Los resultados presentados corresponden al baseline ejecutado de cuatro daños y `SEGURO` derivado. El flujo activo incorpora `SEGURO` como quinta salida aprendida; sus métricas quedan pendientes de reentrenamiento y no se infieren de las tablas históricas.
+
 Esta carpeta contiene la presentación académica del Grupo 4 para el artículo **Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural**. El Beamer resume visualmente el paper IEEE/DSR y su aporte: moderación semiautomática con modelos compactos, alertas temporales y decisión de un supervisor. No debe conservar lenguaje de propuesta, plan de trabajo o MVP futuro.
 
 ## Archivos
@@ -13,11 +15,11 @@ Esta carpeta contiene la presentación académica del Grupo 4 para el artículo 
 La presentacion debe concordar con:
 
 1. `../Documento_final_paper/paper_moderador_contenido_youtube_ieee.tex` y `../Documento_final_paper/referencias.bib`;
-2. `../Cuadernos/04_MATRIZ_ENTRENAMIENTO_4_ETIQUETAS.md`;
-3. `../resultados/metricas/comparacion_final_4/comparacion_todos_modelos_4.csv`;
-4. `../resultados/INFORME_QWEN_ACOSO_AMENAZA_4.md` y `../resultados/INFORME_QWEN_JERARQUICO_4.md`;
-5. `../resultados/INFORME_AUDITORIA_FINAS_FLAGS_MODELOS_4.md`;
-6. `../Cuadernos/05_MODO_OPERACION.md`.
+2. `../config/taxonomia_v2.json`, `../docs/TAXONOMIA_V2.md` y `../flujo/` para el contrato activo;
+3. `../archivo/estructura_anterior/Cuadernos/04_MATRIZ_ENTRENAMIENTO_4_ETIQUETAS.md` para el baseline;
+4. `../archivo/contrato_4_danos_seguro_derivado/resultados/metricas/comparacion_final_4/comparacion_todos_modelos_4.csv`;
+5. los informes en `../archivo/contrato_4_danos_seguro_derivado/resultados/`;
+6. `../docs/MATRIZ_TRAZABILIDAD.md` para separar evidencia ejecutada de trabajo pendiente.
 
 No use el PPTX antiguo, salidas aisladas de notebooks ni resultados preliminares de cinco categorías como fuente de la conclusión final.
 
@@ -47,7 +49,7 @@ La presentacion debe dedicar una idea principal a cada diapositiva y priorizar d
 4. iteraciones DSR y pipeline de datos;
 5. corpus, embudo Flash--Pro--revisión final y fuentes de etiqueta;
 6. herramientas y hardware: CPU local, Colab/CUDA y alcance del registro L4;
-7. evolución preliminar de cinco a cuatro categorías de moderación;
+7. evolución del baseline de cuatro daños al contrato activo de cinco salidas, con `SEGURO` aprendido;
 8. taxonomía: 12 fenómenos de daño, dos estados seguros y tres flags;
 9. matriz de modelos y arquitecturas;
 10. protocolo train/validation/test y selección sin fuga;

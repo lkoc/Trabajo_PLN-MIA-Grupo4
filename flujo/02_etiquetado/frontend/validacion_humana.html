@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Validación humana · Moderación Perú</title>
+  <style>
+    :root{font-family:Inter,system-ui,sans-serif;color:#172033;background:#f4f7fb;--blue:#1261a0;--danger:#a62929;--ok:#176b47}
+    *{box-sizing:border-box}body{margin:0}.shell{max-width:1050px;margin:auto;padding:24px}.top,.card{background:white;border:1px solid #dce3ec;border-radius:14px;padding:20px;margin-bottom:16px}.top{display:flex;justify-content:space-between;gap:18px;align-items:start}.muted{color:#627087}.labels,.flags,.actions{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}.choice{border:1px solid #bdc9d8;border-radius:999px;padding:8px 12px;cursor:pointer}.choice:has(input:checked){border-color:var(--blue);background:#e9f3fb}.choice.safe:has(input:checked){border-color:var(--ok);background:#e7f5ee}.text{font-size:1.08rem;line-height:1.55;background:#f8fafc;padding:16px;border-radius:10px}.proposal{display:none;border-left:4px solid #d29a20;padding:10px 14px;background:#fff8e7}.proposal.open{display:block}button{border:0;border-radius:9px;padding:10px 15px;font-weight:650;cursor:pointer;background:var(--blue);color:white}button.secondary{background:#59677a}button.danger{background:var(--danger)}button:disabled{opacity:.5}.status{min-height:24px;color:var(--ok)}details{margin-top:12px}code{background:#eef2f7;padding:2px 5px;border-radius:4px}@media(max-width:700px){.top{display:block}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <section class="top">
+    <div><h1>Validación humana</h1><p class="muted">Cinco salidas entrenadas · decisión humana opcional y trazable</p></div>
+    <div><label>Revisor <input id="reviewer" value="ANON" maxlength="32"></label><p id="counter" class="muted"></p></div>
+  </section>
+  <section id="empty" class="card" hidden><h2>Campaña no cargada</h2><p>Inicie el servidor con <code>modperu serve-labeling --campaign ruta.jsonl</code>.</p></section>
+  <section id="card" class="card" hidden>
+    <div class="muted" id="chunkId"></div><p class="text" id="text"></p>
+    <h3>Categorías principales</h3><div id="labels" class="labels"></div>
+    <h3>Señales transversales</h3><div id="flags" class="flags"></div>
+    <details><summary>Definiciones operativas</summary><div id="definitions"></div></details>
+    <p><button id="reveal" class="secondary">Mostrar sugerencia LLM</button></p><div id="proposal" class="proposal"></div>
+    <label>Nota <input id="notes" maxlength="1000" style="width:100%"></label>
+    <div class="actions"><button data-action="modify">Guardar decisión</button><button data-action="defer" class="secondary">Diferir</button><button data-action="reject" class="danger">Excluir</button></div>
+    <div id="status" class="status"></div>
+  </section>
+</main>
+<script>
+const $=s=>document.querySelector(s), state={rows:[],index:0,config:null};
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url,options={}){const r=await fetch(url,{headers:{'Content-Type':'application/json'},...options});const x=await r.json();if(!r.ok)throw Error(x.error||r.statusText);return x}
+function pretty(x){return x.replaceAll('_',' ').toLowerCase().replace(/^./,c=>c.toUpperCase())}
+function renderDefinitions(){const t=state.config.taxonomy;$('#definitions').innerHTML=t.target_labels?.map?.(()=> '')||'';$('#definitions').innerHTML=Object.entries(t.categories).map(([k,v])=>`<p><b>${pretty(k)}.</b> ${esc(v.definition)}<br><span class="muted">Excluye: ${esc(v.exclude.join('; '))}</span></p>`).join('')}
+function setupChoices(){const t=state.config.taxonomy;$('#labels').innerHTML=[t.safe_label,...t.damage_labels].map(l=>`<label class="choice ${l===t.safe_label?'safe':''}"><input type="checkbox" value="${l}"> ${pretty(l)}</label>`).join('');$('#flags').innerHTML=t.flags.map(l=>`<label class="choice"><input type="checkbox" value="${l}"> ${pretty(l)}</label>`).join('');$('#labels').addEventListener('change',e=>{const safe=e.target.value===t.safe_label&&e.target.checked;const boxes=[...$('#labels').querySelectorAll('input')];if(safe)boxes.filter(x=>x.value!==t.safe_label).forEach(x=>x.checked=false);else if(e.target.checked)boxes.find(x=>x.value===t.safe_label).checked=false})}
+function render(){if(!state.rows.length){$('#empty').hidden=false;return}const r=state.rows[state.index];$('#card').hidden=false;$('#chunkId').textContent=r.chunk_id;$('#text').textContent=r.text;$('#counter').textContent=`${state.index+1} / ${state.rows.length}`;$('#labels').querySelectorAll('input').forEach(x=>x.checked=(r.coarse_labels||[]).includes(x.value));$('#flags').querySelectorAll('input').forEach(x=>x.checked=(r.flags||r.flags_reference_only||[]).includes(x.value));$('#proposal').classList.remove('open');$('#proposal').innerHTML=`<b>Sugerencia:</b> ${esc((r.coarse_labels||[]).map(pretty).join(', ')||'Sin categoría')}<br>${esc(r.justification||r.justificacion||'')}`;$('#status').textContent='';$('#notes').value=''}
+async function save(action){const r=state.rows[state.index],labels=[...$('#labels').querySelectorAll('input:checked')].map(x=>x.value),flags=[...$('#flags').querySelectorAll('input:checked')].map(x=>x.value);if(action==='modify'&&!labels.length){$('#status').textContent='Seleccione una categoría o use Diferir.';return}const payload={chunk_id:r.chunk_id,action,proposed_labels:r.coarse_labels||[],final_labels:action==='modify'?labels:[],flags,reviewer:$('#reviewer').value||'ANON',model_id:r.annotator_model,notes:$('#notes').value};await api('/api/review',{method:'POST',body:JSON.stringify(payload)});$('#status').textContent='Decisión guardada.';state.index++;if(state.index>=state.rows.length){$('#card').innerHTML='<h2>Campaña visible completada</h2><p>Los eventos quedaron guardados de forma append-only.</p>';return}render()}
+(async()=>{state.config=await api('/api/config');setupChoices();renderDefinitions();try{const campaign=await api('/api/campaign?limit=200');state.rows=campaign.rows}catch(e){state.rows=[]}render();$('#reveal').onclick=()=>$('#proposal').classList.toggle('open');document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>save(b.dataset.action))})().catch(e=>{$('#empty').hidden=false;$('#empty').innerHTML=`<h2>Error</h2><p>${esc(e.message)}</p>`});
+</script>
+</body>
+</html>
+

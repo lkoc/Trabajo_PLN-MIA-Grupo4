@@ -43,7 +43,7 @@ Chunk & Unidad textual cerrada al alcanzar 30 s o 600 caracteres, con mínimo 90
 Anotación & Asignación versionada de conceptos a un chunk. & Distinguir Flash, Pro y revisión final asistida; documentar población y procedencia \cite{bender2018datastatements}. \\
 Daño operativo & Una o más de cuatro categorías activables. & Es multietiqueta \cite{tsoumakas2007multilabel}; no equivale a infracción legal. \\
 Fenómeno fino / flag & Subtipo descriptivo o indicador transversal de ambigüedad. & Un flag no es daño; gold fino no entra como predictor. \\
-SEGURO & Estado derivado si ningún daño supera su umbral. & No es una quinta etiqueta independiente ni prueba de ausencia real de daño. \\
+SEGURO & En el baseline fue un estado derivado; en el contrato v2 es una quinta salida aprendida y exclusiva. & La migración histórica solo la asigna si existe una decisión segura explícita; no prueba ausencia universal de daño. \\
 Score / umbral & Salida continua y corte fijado en validación. & No llamar probabilidad sin calibración \cite{niculescu2005probabilities}. \\
 \(\AP\) & \(\sum_n(R_n-R_{n-1})P_n\), macro entre daños. & Precisión promedio no interpolada; los archivos dicen PR-AUC \cite{sklearn2026averageprecision}. \\
 Alerta / revisión & Enrutamiento selectivo de una predicción incierta o dañina. & No es sanción; el supervisor acepta, rechaza o modifica \cite{chow1970reject,geifman2017selective,andersen2021rem,mozannar2020defer}. \\

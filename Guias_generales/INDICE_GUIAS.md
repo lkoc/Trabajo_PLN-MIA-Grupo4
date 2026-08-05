@@ -70,7 +70,7 @@ Las reglas se abstrajeron principalmente de:
 - [Auditoría final de citas, redacción y gráficos](../Documento_final_paper/AUDITORIA_CITAS_Y_ESTILO.md).
 - [Guía de la presentación Beamer](../Presentación_BEAMER/README.md).
 - [Guía de figuras reproducibles](../Documento_final_paper/figuras/README.md).
-- [Auditoría académica de una taxonomía de dominio](../para_equiquetado_LLM/AUDITORIA_ACADEMICA_TAXONOMIA.md), usada solo para generalizar el método de trazabilidad conceptual.
+- [Auditoría académica histórica de la taxonomía v1.3](../archivo/taxonomia_v1_3/para_equiquetado_LLM/AUDITORIA_ACADEMICA_TAXONOMIA.md), usada solo para generalizar el método de trazabilidad conceptual. El contrato activo está documentado en [`docs/TAXONOMIA_V2.md`](../docs/TAXONOMIA_V2.md).
 
 Consulte [PROCEDENCIA_GUIAS_PROYECTO.md](PROCEDENCIA_GUIAS_PROYECTO.md) para ver qué se conservó, qué se generalizó y qué se excluyó por ser específico del caso. Este archivo queda fuera de la skill para que el paquete pueda copiarse a otro proyecto sin enlaces externos ni ejemplos que condicionen al LLM.
 

@@ -12,14 +12,14 @@ La rama preliminar permite diagnosticar los datos y la arquitectura:
 
 Estas iteraciones no forman una única curva de aprendizaje porque cambiaron corpus y test. Sirven para explicar por qué se ampliaron datos, se consolidó la taxonomía y se probaron modelos contextuales.
 
-\subsection{Rama operativa de cuatro categorías de moderación}
+\subsection{Baseline ejecutado de cuatro daños y contrato reproducible v2}
 
 La Fig.~\ref{fig:modelos} organiza las familias. Los modelos clásicos combinan TF--IDF de palabras y caracteres con SVM o regresión logística, y se evalúan en forma plana, con puerta en cascada y con jerarquía compartida. Sus scores se calibran con pliegues agrupados por video \cite{sklearn2026groupkfold}, mediante calibración sigmoide \cite{platt1999probabilistic,niculescu2005probabilities}.
 
 \begin{figure*}[t]
 \centering
 \resizebox{.98\textwidth}{!}{\input{figuras/familias_modelo.tex}}
-\caption{Familias y estructuras evaluadas bajo el contrato final. El esquema distingue las rutas planas, en cascada y jerárquicas. Elaboración propia.}
+\caption{Familias y estructuras evaluadas en el baseline de cuatro daños. El contrato v2 conserva las familias y sustituye la cabeza principal por cinco salidas. Elaboración propia.}
 \label{fig:modelos}
 \end{figure*}
 
@@ -27,11 +27,11 @@ La implementación combina scikit-learn para los modelos clásicos \cite{pedrego
 
 MiniLM y E5 se ajustan con AdamW durante un máximo de tres épocas y emplean parada temprana \cite{loshchilov2019adamw,prechelt1998earlystopping}. Los checkpoints son \path{sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2} y \path{intfloat/multilingual-e5-small} \cite{hf2026minilmcard,hf2026e5card}; E5 conserva el prefijo de entrada indicado por su tarjeta. Los cuadernos, manifiestos y resultados conservados permiten reconstruir las configuraciones evaluadas.
 
-Los modelos planos activos parten de checkpoints ajustados en la rama preliminar de cinco categorías. Al pasar al contrato de cuatro categorías, el proceso une acoso personal y amenaza directa y vuelve a estimar los umbrales. Las variantes E5 estructuradas parten del mismo linaje e incorporan una puerta o un objetivo multitarea motivado por antecedentes de aprendizaje compartido y consistencia jerárquica \cite{caruana1997multitask,zhou2020hiagm}. Esta procedencia se considera al comparar las configuraciones.
+Los modelos planos reportados parten de checkpoints ajustados en la rama preliminar de cinco categorías de daño. Para el baseline de cuatro daños, el proceso une acoso personal y amenaza directa y vuelve a estimar los umbrales. Las variantes E5 estructuradas parten del mismo linaje e incorporan una puerta o un objetivo multitarea motivado por antecedentes de aprendizaje compartido y consistencia jerárquica \cite{caruana1997multitask,zhou2020hiagm}. Esta procedencia se considera al comparar las configuraciones. El contrato v2 reutiliza encoders compatibles, pero crea una cabeza principal nueva de cinco salidas y recalibra sus cinco umbrales; no considera \texttt{SEGURO} como descarte.
 
 El estudio selecciona \texttt{Qwen/Qwen3-0.6B-Base} como LLM por cuatro razones: es la escala densa de 0,6 mil millones de parámetros de la familia, Qwen3 declara preentrenamiento en 119 idiomas y dialectos, el checkpoint se publica con licencia Apache~2.0 y puede cargarse con Transformers \cite{qwen2025qwen3,hf2026qwen06bcard}. Su tamaño permite probar ajuste eficiente con el cómputo disponible. La elección responde a esas condiciones de ingeniería y no a una comparación entre familias de LLM.
 
-Qwen3--0.6B se ajusta con LoRA, que modifica una fracción pequeña de los parámetros del modelo \cite{hu2022lora}. Una cabeza multietiqueta aprende las cuatro categorías operativas junto con etiquetas finas y señales de revisión; el entrenamiento completa cuatro épocas con AdamW en CUDA \cite{loshchilov2019adamw}. Las variantes en cascada y multitarea se entrenan sobre las salidas congeladas de Qwen3--LoRA, sin repetir el ajuste completo del LLM. Los hiperparámetros y pesos de la función de pérdida permanecen en los artefactos reproducibles.
+Qwen3--0.6B se ajusta con LoRA, que modifica una fracción pequeña de los parámetros del modelo \cite{hu2022lora}. En el baseline ejecutado, una cabeza multietiqueta aprende cuatro daños junto con etiquetas finas y señales de revisión; el entrenamiento completa cuatro épocas con AdamW en CUDA \cite{loshchilov2019adamw}. Las variantes en cascada y multitarea se entrenan sobre las salidas congeladas de Qwen3--LoRA, sin repetir el ajuste completo del LLM. La implementación v2 define una cabeza de cinco salidas y entrenamiento reanudable en CPU, CUDA, ROCm o XPU; sus métricas no se reportan hasta ejecutar el nuevo protocolo.
 
 Las redes usan entropía cruzada binaria con ponderación de clases calculada en entrenamiento \cite{pytorch2026bce}. Los umbrales por categoría se eligen en validación para maximizar F1 \cite{sokolova2009metrics}. Qwen completa cuatro épocas para comparar checkpoints, mientras los Transformers compactos usan parada temprana \cite{prechelt1998earlystopping}.
 

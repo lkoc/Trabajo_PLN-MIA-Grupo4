@@ -16,10 +16,15 @@ resultados/figuras/*
 resultados/logs/*
 resultados/operacion_05/*
 05_frontend_despliegue/*
+artefactos/*
+datos/model_ready/v2/*
+resultados/pilotos/*
 
 !datos/**/README.md
 !modelos/README.md
 !resultados/**/README.md
+!datos/model_ready/v2/README.md
+!resultados/pilotos/README.md
 !.gitkeep
 
 # LaTeX

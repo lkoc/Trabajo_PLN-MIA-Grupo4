@@ -1,5 +1,7 @@
 \section{Resultados}
 
+Todos los valores de esta sección corresponden al corte ejecutado de cuatro salidas de daño con \texttt{SEGURO} derivado. El contrato v2 de cinco salidas aprendidas se documenta como implementación posterior y no hereda estas métricas.
+
 \subsection{Resultado de construcción del corpus}
 
 La construcción produce el corpus resumido en la Tabla~\ref{tab:fuentes}. La Fig.~\ref{fig:pipeline} integra adquisición, segmentación, supervisión escalonada y separación por video; el Apéndice~\ref{app:fuentes_dataset} desagrega la composición y la procedencia de las etiquetas. En conjunto, estos resultados muestran un corpus trazable y una comparación sin videos compartidos entre particiones. La muestra enriquecida sirve para comparar modelos, no para estimar la prevalencia natural de YouTube.
@@ -29,11 +31,11 @@ Auditoría y paquete & SciPy/scikit-learn, NumPy, SQLite, HTML/JavaScript & Equi
 
 En este artículo, \emph{recursos asequibles} significa que el equipo no necesita poseer una GPU de centro de datos: combina una computadora de consumo con sesiones bajo demanda de Colab y produce un paquete de inferencia compatible con CPU. El estudio no mide el costo monetario total, el consumo energético ni la latencia en el equipo objetivo; por ello esta formulación no implica que Colab sea gratuito, garantizado o la opción más barata.
 
-\subsection{Resultados preliminares y paso a cuatro categorías}
+\subsection{Resultados preliminares y baseline de cuatro daños}
 
 La primera iteración compara cinco categorías de moderación: \Rac, \Gen, acoso personal, amenaza directa y \Sex. Una referencia que siempre predice seguro alcanza 0,95 de coincidencia exacta, pero su recobrado de cualquier daño es cero; este contraste confirma que la coincidencia agregada oculta la clase minoritaria en datos desbalanceados \cite{sokolova2009metrics,saito2015pr}. La SVM inicial obtiene \(\AP=0,23\) y F1 macro de 0,28. En otro corte 4:1, no comparable de forma directa, MiniLM y E5 alcanzan \(\AP\) de 0,46 y 0,44. AEDA y el contexto concatenado no muestran una mejora consistente. Estos resultados preliminares orientan la ampliación del corpus y el uso de modelos contextuales, pero no forman una sola curva de aprendizaje porque cambian los datos y las particiones.
 
-La amenaza directa reúne 688 incidencias frente a 2\,854 de acoso personal. Para aumentar el soporte de la salida menos frecuente y mantener una comparación operativa estable, el contrato activo une ambas salidas mediante OR/máximo en \Ame. Esta fusión reduce de cinco a cuatro categorías de moderación y conserva los subtipos como información fina para auditoría. Es una decisión estadística y operativa del proyecto; no establece equivalencia semántica o legal entre acoso y amenaza.
+La amenaza directa reúne 688 incidencias frente a 2\,854 de acoso personal. Para aumentar el soporte de la salida menos frecuente y mantener una comparación operativa estable, el contrato ejecutado unió ambas salidas mediante OR/máximo en \Ame. Esta fusión redujo de cinco a cuatro daños y conservó los subtipos para auditoría. Es una decisión estadística y operativa del proyecto; no establece equivalencia semántica o legal entre acoso y amenaza. El contrato v2 mantiene la unión, añade \texttt{SEGURO} como salida aprendida y queda pendiente de evaluación.
 
 \subsection{Comparación final de cuatro categorías de moderación}
 

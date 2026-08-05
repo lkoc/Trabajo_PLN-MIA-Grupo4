@@ -1,5 +1,7 @@
 # Documento final IEEE
 
+> **Estado de contrato (2026-08-05).** Las métricas y tablas del manuscrito son la línea base ejecutada de cuatro salidas de daño, con `SEGURO` derivado. La implementación reproducible activa usa cinco salidas aprendidas (`SEGURO` y cuatro daños); su reentrenamiento y evaluación integral están pendientes y no se sustituyen por las métricas históricas. El PDF anterior está preservado por SHA-256 en `Planning/inventario_pre_reorganizacion.json`.
+
 Esta carpeta contiene el artículo final del proyecto **Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural**. El manuscrito presenta el artefacto ya construido y evaluado mediante Design Science Research (DSR): modelos compactos priorizan y diagnostican preliminarmente fragmentos problemáticos, y un supervisor humano conserva la decisión.
 
 ## Archivos
@@ -12,7 +14,8 @@ Esta carpeta contiene el artículo final del proyecto **Moderación semiautomát
 - `guia_estructura_paper_ieee.md`: contenido obligatorio y relacion entre problemas, objetivos, metodo y resultados.
 - `guia_redaccion_paper_ieee.md`: reglas de evidencia, citas y revision editorial.
 - `AUDITORIA_CITAS_Y_ESTILO.md`: cierre comprobable de citas, compilación y revisión visual.
-- `../para_equiquetado_LLM/AUDITORIA_ACADEMICA_TAXONOMIA.md`: inventario, definiciones, sustento y contradicciones del paquete de etiquetado.
+- `../archivo/taxonomia_v1_3/para_equiquetado_LLM/AUDITORIA_ACADEMICA_TAXONOMIA.md`: inventario histórico, definiciones, sustento y contradicciones del paquete v1.3.
+- `../docs/TAXONOMIA_V2.md` y `../docs/MATRIZ_TRAZABILIDAD.md`: contrato activo y trazabilidad de afirmaciones.
 
 ## Datos de autoría
 
@@ -30,14 +33,14 @@ El detalle visual del corpus aparece en la metodología, los resultados y los an
 
 No se deben reconstruir cifras desde la memoria ni desde salidas antiguas incrustadas en cuadernos. Use, en este orden:
 
-1. `README.md`, `Cuadernos/README.md` y `datos/README.md` para el alcance y el contrato activo.
-2. `Cuadernos/04_MATRIZ_ENTRENAMIENTO_4_ETIQUETAS.md` y `Cuadernos/04_200_ORDEN_EJECUCION.md` para taxonomia, dependencias y separacion entre experimentos historicos y activos.
-3. `resultados/metricas/comparacion_final_4/comparacion_todos_modelos_4.csv` para la comparacion comun final.
-4. `resultados/metricas/comparacion_final_4/registro_modelos_desplegables.json` para los modelos publicados por familia y sus hashes.
-5. Los informes `resultados/INFORME_*.md` y sus JSON/CSV asociados para configuracion, resultados por experimento y limitaciones.
-6. `Cuadernos/05_MODO_OPERACION.md` para el artefacto desplegable, consenso 2 de 3, revision humana y persistencia.
+1. `../README.md`, `../docs/` y `../flujo/*/README.md` para el contrato activo y su orden de ejecución.
+2. `../config/taxonomia_v2.json` para las cinco salidas entrenadas, etiquetas finas y reglas de exclusividad.
+3. `../archivo/estructura_anterior/Cuadernos/04_MATRIZ_ENTRENAMIENTO_4_ETIQUETAS.md` y `04_200_ORDEN_EJECUCION.md` para el contrato del baseline ejecutado.
+4. `../archivo/contrato_4_danos_seguro_derivado/resultados/metricas/comparacion_final_4/comparacion_todos_modelos_4.csv` para la comparación común histórica.
+5. `../archivo/contrato_4_danos_seguro_derivado/resultados/metricas/comparacion_final_4/registro_modelos_desplegables.json` para los modelos publicados por familia y sus hashes.
+6. Los informes en `../archivo/contrato_4_danos_seguro_derivado/resultados/` para configuración, resultados y limitaciones de esa línea base.
 
-Los documentos historicos de cinco daños deben identificarse como iteraciones anteriores. No pueden usarse para cambiar la seleccion activa de cuatro daños ni compararse como si hubieran usado el mismo conjunto de prueba.
+Los experimentos archivados de cinco daños y el baseline de cuatro daños deben identificarse por su contrato. No pueden compararse como si hubieran usado el mismo conjunto de prueba. El nuevo contrato de cinco salidas incluye `SEGURO` como objetivo aprendido y no hereda métricas hasta completar entrenamiento y recalibración.
 
 ## Compilacion reproducible
 

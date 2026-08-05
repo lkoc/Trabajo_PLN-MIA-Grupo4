@@ -1,5 +1,7 @@
 # Guia de redaccion y control de evidencia
 
+> **Enmienda de contrato v2 (2026-08-05).** Las métricas existentes describen cuatro daños con `SEGURO` derivado. La implementación activa entrena `SEGURO` y los cuatro daños como cinco salidas; hasta completar el nuevo entrenamiento debe escribirse siempre como resultado pendiente, no como rendimiento demostrado.
+
 El articulo debe leerse como investigacion aplicada terminada: directo, humano, verificable y prudente. Esta guia complementa la estructura IEEE/DSR y evita que resultados historicos, propuestas o supuestos aparezcan como hechos. La meta editorial es una prosa propia y natural; no se debe prometer que el texto superará detectores de IA ni usar esos detectores como prueba de autoría o ausencia de plagio.
 
 ## Principios de redaccion
@@ -36,7 +38,7 @@ No es obligatorio incluir literalmente todos los componentes. Para este trabajo,
 La introduccion puede cerrar con contribuciones como las siguientes, siempre ajustadas a la evidencia final:
 
 1. un corpus trazable de subtítulos públicos de YouTube peruano con pseudoetiquetado escalonado y revisión final asistida;
-2. una taxonomia multietiqueta que evoluciono de cinco a cuatro daños y conserva señales finas/transversales para supervision o auditoria;
+2. una taxonomía multietiqueta con cuatro daños, señales finas/transversales y una implementación v2 que aprende `SEGURO` como quinta salida exclusiva;
 3. una comparacion comun de modelos clasicos, Transformers compactos y Qwen con alternativas planas y jerarquicas;
 4. una politica de seleccion/calibracion basada en validation y una evaluacion final separada en test;
 5. un artefacto reproducible para texto o videos con subtitulos, comparacion/consenso, revision humana y estadisticas reutilizables.
@@ -55,7 +57,7 @@ El campo `tipo` distingue al menos `idea externa`, `definición`, `método publi
 
 Reglas:
 
-- La comparacion principal de cuatro daños procede de `resultados/metricas/comparacion_final_4/comparacion_todos_modelos_4.csv`.
+- La comparación principal histórica de cuatro daños procede de `archivo/contrato_4_danos_seguro_derivado/resultados/metricas/comparacion_final_4/comparacion_todos_modelos_4.csv`.
 - La seleccion del modelo o checkpoint debe atribuirse a validation; test solo describe el desempeño congelado.
 - Indique siempre si la cifra pertenece al test historico, ampliado o comun 4:1.
 - No denomine “accuracy” a `exact_match`, ni “recall” sin aclarar si es por etiqueta, micro o binario de cualquier daño.
@@ -81,18 +83,18 @@ No afirme que se uso Whisper, transcripcion ASR o comentarios si la version fina
 
 Cada etiqueta debe enlazarse con antecedentes pertinentes y con una definición operacional propia que indique inclusión, exclusión y relación con otras categorías. No presente `RACISMO_DISCRIMINACION`, `ACOSO_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` o `CONTENIDO_SEXUAL` como tipos legales. Una taxonomía de moderación sirve al contrato del artefacto; una calificación jurídica exige fuentes normativas o jurídicas y un análisis separado.
 
-Use siempre el conteo completo: “14 etiquetas finas: 12 fenómenos de daño y dos estados seguros; además, tres flags transversales”. No escriba “14 fenómenos de daño”. Explique que `SEGURO` significa que ninguna salida cubierta se activó; no prueba ausencia universal de daño, pues el contrato no cubre, entre otros, fraude, autolesión, extremismo, desinformación o violencia gráfica.
+Use siempre el conteo completo: “14 etiquetas finas: 12 fenómenos de daño y dos estados seguros; además, tres flags transversales”. No escriba “14 fenómenos de daño”. En el contrato v2, `SEGURO` es una categoría aprendida, con score, umbral y métricas propios, y mutuamente excluyente con daño. Sigue significando “sin daño cubierto según el contrato” y no prueba ausencia universal de daño, pues no cubre, entre otros, fraude, autolesión, extremismo, desinformación o violencia gráfica.
 
 Al describir la elección de categorías, separe cuatro capas:
 
 1. **Tipología académica general:** blanco individual frente a grupo, daño explícito frente a implícito, identidad, insulto, doxeo, amenaza y agresión sexual.
 2. **Evidencia peruana o institucional:** racialización por lengua, origen, clase y criterios culturales; violencia de género en línea; prejuicio hacia personas homosexuales y transgénero en Lima.
 3. **Política de plataforma:** límites sobre contenido sexual explícito, sexualización no consentida y excepciones informativas/documentales.
-4. **Decisión local:** nombres exactos, fusión 5→4, OR/máximo, umbrales, flags y ruta de revisión.
+4. **Decisión local:** nombres exactos, unión de acoso personal y amenaza en `ACOSO_AMENAZA`, entrenamiento de `SEGURO`, umbrales, flags y ruta de revisión.
 
 No llame “expertos peruanos” a todas las fuentes. Por ejemplo, el estudio de Monge-Olivarría y coautores procede de la Universidad Autónoma de Sinaloa y no acredita específicamente Twitter peruano. Una fuente sobre moderación en quechua respalda carencias de datos/contexto para esa lengua, no cada regla del español peruano. Una política de YouTube es autoridad de plataforma, no literatura académica.
 
-Las tres salidas CGT de `para_equiquetado_LLM/` cubren solo 60 filas consecutivas, 51 seguras y una fracción de las etiquetas; no son una muestra aleatoria, una validación de la taxonomía ni un `gold standard`. El nombre `GPT-5 (Codex)` tampoco identifica por sí solo un checkpoint/API reproducible. Presente estos archivos como prueba de formato y flujo, no como evidencia de calidad de anotación.
+Las tres salidas CGT archivadas en `archivo/taxonomia_v1_3/para_equiquetado_LLM/` cubren solo 60 filas consecutivas, 51 seguras y una fracción de las etiquetas; no son una muestra aleatoria, una validación de la taxonomía ni un `gold standard`. El nombre `GPT-5 (Codex)` tampoco identifica por sí solo un checkpoint/API reproducible. Presente estos archivos como prueba de formato y flujo, no como evidencia de calidad de anotación.
 
 No copie como hechos las expectativas por canal de `clasificacion_moderacion_peru.md`: son priors heurísticos sin validación documentada y pueden anclar al anotador. Tampoco repita una justificación académica generada por el LLM como si fuera una cita comprobada. La fuente debe verificarse en la bibliografía primaria y la definición final debe redactarse de nuevo.
 

@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "moderacion-peru"
+version = "2.0.0"
+description = "Flujo reproducible de moderación semiautomática de subtítulos peruanos de YouTube"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "pydantic>=2.10,<3",
+  "requests>=2.32,<3",
+]
+
+[project.optional-dependencies]
+datos = [
+  "pandas>=2.2,<3",
+  "tqdm>=4.66,<5",
+  "yt-dlp>=2025.1",
+]
+etiquetado = [
+  "jsonschema>=4.23,<5",
+  "python-dotenv>=1.0,<2",
+]
+entrenamiento = [
+  "joblib>=1.4,<2",
+  "matplotlib>=3.9,<4",
+  "numpy>=1.26,<3",
+  "scikit-learn>=1.5,<2",
+  "scipy>=1.13,<2",
+  "transformers>=4.51,<6",
+  "peft>=0.15,<1",
+]
+dev = [
+  "nbformat>=5.10,<6",
+  "pytest>=8.3,<9",
+]
+
+[project.scripts]
+modperu = "moderacion_peru.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+

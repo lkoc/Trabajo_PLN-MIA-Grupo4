@@ -1,6 +1,8 @@
 # Fuentes base y trazabilidad bibliográfica
 
-Última verificación: **2026-07-29**.
+Última verificación bibliográfica: **2026-07-29**. Revisión de contrato y rutas: **2026-08-05**.
+
+Las fuentes de esta matriz orientan definiciones y límites; no “validan” por sí solas la taxonomía. El contrato v2 aprende `SEGURO` y cuatro daños, conserva 14 etiquetas finas y tres flags, y mantiene separadas la evidencia académica general, la evidencia peruana/institucional, la política de plataforma y las decisiones locales. Sus métricas permanecen pendientes; las cifras publicadas pertenecen al baseline archivado.
 
 La base BibTeX canónica del artículo es
 [`Documento_final_paper/referencias.bib`](../Documento_final_paper/referencias.bib).
@@ -84,7 +86,7 @@ en la bibliografía científica del paper.
 
 | Clave BibTeX | Qué respalda | Límite de la cita | Fuente primaria |
 |---|---|---|---|
-| `waseem2017abuse` | Dos ejes generales: blanco individual/entidad frente a grupo, y abuso explícito frente a implícito. | No propone las 14 etiquetas finas ni la fusión local 5→4. | [ACL Anthology](https://aclanthology.org/W17-3012/) |
+| `waseem2017abuse` | Dos ejes generales: blanco individual/entidad frente a grupo, y abuso explícito frente a implícito. | No propone las 14 etiquetas finas, la unión local de acoso/amenaza ni `SEGURO` como salida aprendida. | [ACL Anthology](https://aclanthology.org/W17-3012/) |
 | `banko2020taxonomy` | Criterios y excepciones para ataque por identidad, insulto, doxeo, agresión sexual y amenaza de violencia. | La extensión local de amenaza a daño legal/económico no procede de esta fuente. | [ACL Anthology](https://aclanthology.org/2020.alw-1.16/) |
 | `elsherief2021implicit` | Odio implícito expresado mediante lenguaje codificado o indirecto. | Corpus en inglés; no valida el flag local ni su umbral. | [ACL Anthology](https://aclanthology.org/2021.emnlp-main.29/) |
 | `ilic2018irony` | Sarcasmo e ironía como tarea de interpretación automática. | No define `ironia_ambigua` ni prueba intención del hablante. | [ACL Anthology](https://aclanthology.org/W18-6202/) |
