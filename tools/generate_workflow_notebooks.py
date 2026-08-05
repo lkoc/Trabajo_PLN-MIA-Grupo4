@@ -31,12 +31,17 @@ def create(path: str, title: str, purpose: str, code_cells: list[tuple[str, str]
     notebook.metadata = {
         "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
         "language_info": {"name": "python", "version": "3.12"},
-        "moderacion_peru": {"contract": "moderacion_peru_5_salidas_v2", "orchestrator": True},
+        "moderacion_peru": {
+            "contract": "moderacion_peru_5_salidas_v2",
+            "taxonomy_version": "2.1.0",
+            "orchestrator": True,
+        },
     }
     notebook.cells = [
         nbf.v4.new_markdown_cell(
             f"# {title}\n\n{purpose}\n\n"
-            "**Contrato:** `SEGURO` + cuatro daños entrenados. `SEGURO` es excluyente; los daños son multietiqueta. "
+            "**Contrato v2.1:** `SEGURO` + cuatro daños entrenados, incluida "
+            "`ATAQUE_POR_GENERO_IDENTIDAD`. `SEGURO` es excluyente; los daños son multietiqueta. "
             "Los casos indeterminados se difieren y no entran al entrenamiento."
         ),
         nbf.v4.new_markdown_cell(
@@ -134,13 +139,13 @@ def main() -> None:
         create(
             f"flujo/03_entrenamiento/{filename}",
             f"03 · {subtitle}",
-            "Entrena o audita el contrato v2 sin consultar test para seleccionar modelos, épocas o umbrales.",
+            "Entrena o audita el contrato v2.1 sin consultar test para seleccionar modelos, épocas o umbrales.",
             [("Configuración y ejecución", source)],
         )
     create(
         "flujo/04_produccion/04_01_frontend_produccion.ipynb",
         "04.01 · Frontend de producción supervisada",
-        "Comprueba el registro v2 e inicia el demostrador local en modo sombra; nunca carga modelos históricos como sustitutos.",
+        "Comprueba el registro v2.1 e inicia el demostrador local en modo sombra; nunca carga modelos históricos como sustitutos.",
         [
             ("Disponibilidad", "from moderacion_peru.artifacts import artifact_status\nartifact_status(ROOT)"),
             ("Inicio", "print('modperu serve-production --host 127.0.0.1 --port 8765')"),

@@ -28,12 +28,16 @@ class OllamaProvider(AnnotationProvider):
         base_url: str | None = None,
         timeout: float = 240.0,
         retries: int = 1,
+        think: bool = False,
         taxonomy=None,
     ) -> None:
         super().__init__(model, taxonomy)
         self.base_url = (base_url or os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")).rstrip("/")
         self.timeout = timeout
         self.retries = retries
+        # La clasificación estructurada no necesita una cadena de razonamiento
+        # extensa. Desactivarla reduce latencia y evita agotar el timeout en CPU.
+        self.think = think
 
     def probe(self) -> dict[str, Any]:
         try:
@@ -72,6 +76,7 @@ class OllamaProvider(AnnotationProvider):
                 {"role": "user", "content": prompt},
             ],
             "stream": False,
+            "think": self.think,
             "format": LLMAnnotationPayload.model_json_schema(),
             "options": {"temperature": 0, "seed": 20260805},
             "keep_alive": "10m",
@@ -100,4 +105,3 @@ class OllamaProvider(AnnotationProvider):
                 if attempt < self.retries:
                     time.sleep(min(2**attempt, 4))
         raise ProviderError(f"Ollama falló después de {self.retries + 1} intentos: {last_error}")
-

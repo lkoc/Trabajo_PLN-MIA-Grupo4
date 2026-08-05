@@ -103,7 +103,7 @@ En Qwen3--LoRA, la época 2 presenta el máximo \(\AP\) de validación (0,54). L
 
 Con ese corte, la política selectiva cumple el propósito de alto recobrado: obtiene en test 0,97 (IC95\% de Wilson 0,96--0,98 \cite{wilson1927probable}), con 0,32 de precisión, 0,99 de valor predictivo negativo y 28 falsos negativos automáticos. Remite 60\% de los chunks al supervisor y excede en 0,40 puntos porcentuales el control de tasa de revisión \(\leq60\%\), la única puerta no satisfecha. La cifra convierte el resultado en una carga humana explícita para un piloto semiautomático, en lugar de ocultarla detrás del recobrado.
 
-La Tabla~\ref{tab:qwenclase} desagrega el desempeño ordinario de Qwen3--LoRA. Contenido sexual presenta el mayor F1 y Género el menor, lo que impide resumir la utilidad del modelo con una sola métrica macro.
+La Tabla~\ref{tab:qwenclase} desagrega el desempeño ordinario de Qwen3--LoRA. Contenido sexual presenta el mayor F1 y ataque por género/identidad el menor, lo que impide resumir la utilidad del modelo con una sola métrica macro.
 
 El Anexo~\ref{app:ejemplos_scores} muestra extractos de tres chunks con valoración segura muy alta y tres por cada daño grueso. Son ilustraciones \emph{post hoc} de validación y no casos de prueba ni evidencia adicional de desempeño. En cada daño se informa el score calibrado de su salida; para los casos seguros se informa una medida descriptiva derivada, \(1-\max_k s_k\), porque \texttt{SEGURO} no es una quinta cabeza aprendida.
 

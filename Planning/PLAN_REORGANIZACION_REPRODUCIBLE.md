@@ -1,6 +1,6 @@
 # Plan de reorganización reproducible
 
-Estado: aprobado para implementación  
+Estado: implementado y verificado mediante pruebas de estructura y smoke tests
 Fecha: 2026-08-05  
 Proyecto: moderación semiautomática de contenido peruano de YouTube
 
@@ -106,3 +106,9 @@ Guias_generales/
 - Compilación limpia de paper y Beamer y revisión de citas.
 
 No se realizarán llamadas comerciales, etiquetado completo ni reentrenamiento integral durante esta implementación. El piloto local de Ollama se ejecutará solo si los modelos requeridos están disponibles o pueden descargarse de forma razonable; de otro modo quedará un diagnóstico reproducible y una orden explícita de ejecución.
+
+## Cierre de implementación
+
+La reorganización quedó aplicada con el contrato `moderacion_peru_5_salidas_v2`, taxonomía `2.1.0` y el nombre canónico `ATAQUE_POR_GENERO_IDENTIDAD`. Se conservaron como evidencia las fuentes históricas, mientras que los artefactos activos usan el contrato nuevo y manifiestos SHA-256.
+
+La aceptación ejecutada comprende pruebas unitarias, auditoría de Markdown y cuadernos, validación integral del snapshot entrenable y compilación de paper y Beamer. Permanecen deliberadamente pendientes el etiquetado completo, el reentrenamiento integral, la comparación local de los tres modelos Ollama y las métricas del contrato nuevo; no se sustituyeron con cifras de la línea base anterior.

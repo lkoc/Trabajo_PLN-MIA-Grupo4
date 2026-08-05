@@ -62,6 +62,49 @@ class AnnotationRecord(BaseModel):
         return self
 
 
+class ModelReadyRecord(BaseModel):
+    """Fila entrenable: conserva procedencia sin fingir que es un evento nuevo."""
+
+    model_config = ConfigDict(extra="allow")
+
+    schema_version: str = "2.1.0"
+    taxonomy_version: str = "2.1.0"
+    chunk_id: str = Field(min_length=1)
+    video_id: str = Field(min_length=1)
+    text: str = Field(min_length=1)
+    coarse_labels: list[str]
+    fine_labels: list[str] = Field(default_factory=list)
+    flags_reference_only: list[str] = Field(default_factory=list)
+    label_source: str = Field(min_length=1)
+    sample_weight: float = Field(default=1.0, ge=0)
+    campaign: str | None = None
+    split: Literal["train", "validation", "test"]
+    needs_review: bool = False
+    training_eligible: bool = True
+    decision_status: Literal["resolved", "needs_review", "excluded"] = "resolved"
+    legacy_coarse_labels: list[str] = Field(default_factory=list)
+    label_source_original: str | None = None
+    migration_warning: str | None = None
+
+    @model_validator(mode="after")
+    def validate_training_row(self) -> "ModelReadyRecord":
+        taxonomy = load_taxonomy()
+        self.coarse_labels = list(taxonomy.normalize_categories(self.coarse_labels))
+        unknown_fine = set(self.fine_labels) - set(taxonomy.fine_labels)
+        unknown_flags = set(self.flags_reference_only) - set(taxonomy.flags)
+        if unknown_fine:
+            raise ValueError(f"Etiquetas finas desconocidas: {sorted(unknown_fine)}")
+        if unknown_flags:
+            raise ValueError(f"Flags desconocidos: {sorted(unknown_flags)}")
+        if self.training_eligible and (not self.coarse_labels or self.needs_review):
+            raise ValueError("Una fila entrenable requiere categoría resuelta")
+        if self.legacy_coarse_labels:
+            migrated = taxonomy.migrate_legacy_categories(self.legacy_coarse_labels)
+            if migrated != tuple(self.coarse_labels):
+                raise ValueError("La salida canónica no coincide con la procedencia histórica")
+        return self
+
+
 class ArtifactReference(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

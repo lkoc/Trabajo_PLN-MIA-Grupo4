@@ -12,6 +12,7 @@ from .paths import find_project_root
 class CategoryDefinition(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    display_name: str
     definition: str
     include: tuple[str, ...]
     exclude: tuple[str, ...]
@@ -82,4 +83,3 @@ def load_taxonomy(path: str | Path | None = None) -> TaxonomyContract:
     taxonomy_path = Path(path) if path else find_project_root() / "config" / "taxonomia_v2.json"
     payload = json.loads(taxonomy_path.read_text(encoding="utf-8-sig"))
     return TaxonomyContract.model_validate(payload)
-

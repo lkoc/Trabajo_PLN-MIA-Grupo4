@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .io import read_jsonl, sha256_file, write_json_atomic, write_jsonl_atomic
+from .datasets import assert_no_video_leakage, stable_video_split
 from .taxonomy import TaxonomyContract, load_taxonomy
 
 
@@ -57,12 +58,18 @@ def migrate_jsonl(
     if source_path.resolve() == destination_path.resolve():
         raise ValueError("La migración nunca sobrescribe el archivo fuente")
     rows = [migrate_record(row) for row in read_jsonl(source_path)]
+    for row in rows:
+        video_id = str(row.get("video_id") or str(row["chunk_id"]).split("_", 1)[0])
+        row["video_id"] = video_id
+        row["split"] = row.get("split") or stable_video_split(video_id)
+    assert_no_video_leakage(rows)
     write_jsonl_atomic(destination_path, rows)
     counters = Counter()
     for row in rows:
         counters["rows"] += 1
         counters["training_eligible"] += bool(row.get("training_eligible"))
         counters["needs_review"] += bool(row.get("needs_review"))
+        counters[f"split:{row['split']}"] += 1
         for label in row.get("coarse_labels", []):
             counters[f"label:{label}"] += 1
     manifest = {
@@ -74,6 +81,7 @@ def migrate_jsonl(
         "destination_sha256": sha256_file(destination_path),
         "counters": dict(counters),
         "safe_policy": "only_explicit_legacy_SEGURO",
+        "split_policy": "sha256(video_id, seed=20260805), grouped 70/15/15",
         "damage_merge": ["ACOSO_PERSONAL", "AMENAZA_DIRECTA", "ACOSO_AMENAZA"],
     }
     write_json_atomic(manifest_path, manifest)

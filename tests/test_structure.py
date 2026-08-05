@@ -14,6 +14,7 @@ def test_active_notebooks_are_ordered_and_clean():
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
         assert notebook.metadata["moderacion_peru"]["contract"] == "moderacion_peru_5_salidas_v2"
+        assert notebook.metadata["moderacion_peru"]["taxonomy_version"] == "2.1.0"
         assert all(not cell.get("outputs") for cell in notebook.cells if cell.cell_type == "code")
         source = "\n".join(cell.source for cell in notebook.cells)
         assert "LM Studio" not in source
@@ -29,6 +30,8 @@ def test_required_frontends_are_small_templates():
     human_source = human.read_text(encoding="utf-8")
     assert "t.safe_label" in human_source
     assert "x.value!==t.safe_label" in human_source
+    assert "display_name" in human_source
+    assert "display_name" in production.read_text(encoding="utf-8")
     assert "Modo sombra" in production.read_text(encoding="utf-8")
 
 

@@ -10,6 +10,37 @@ from .io import append_jsonl_once, read_jsonl, sha256_text
 
 
 TranscriptFetcher = Callable[[dict[str, Any]], dict[str, Any]]
+LEGACY_CATEGORY_ALIASES = {
+    "ACOSO_GENERO_IDENTIDAD": "ATAQUE_POR_GENERO_IDENTIDAD",
+}
+
+
+def _normalize_category_value(value: Any) -> Any:
+    if isinstance(value, str):
+        return "|".join(
+            LEGACY_CATEGORY_ALIASES.get(token.strip(), token.strip())
+            for token in value.split("|")
+        )
+    if isinstance(value, list):
+        return [LEGACY_CATEGORY_ALIASES.get(str(token), token) for token in value]
+    return value
+
+
+def normalize_category_metadata(value: Any) -> Any:
+    """Normaliza aliases solo en metadatos de adquisición; no toca el texto."""
+
+    if isinstance(value, dict):
+        return {
+            key: (
+                _normalize_category_value(item)
+                if key in {"target_category", "target_categories", "categoria_objetivo"}
+                else normalize_category_metadata(item)
+            )
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [normalize_category_metadata(item) for item in value]
+    return value
 
 
 def _json_safe(value: Any) -> Any:
@@ -69,7 +100,7 @@ def bootstrap_canonical_from_existing(
         source = Path(raw_source).resolve()
         count = 0
         for historical in read_jsonl(source):
-            record = _json_safe(historical)
+            record = normalize_category_metadata(_json_safe(historical))
             video_id = str(record.get("video_id", "")).strip()
             if not video_id:
                 continue
@@ -195,7 +226,8 @@ def ingest_incremental(
         else:
             counters["unavailable"] += 1
             continue
-        record["source_candidate"] = candidate
+        record = normalize_category_metadata(record)
+        record["source_candidate"] = normalize_category_metadata(candidate)
         record["transcript_sha256"] = sha256_text(
             json.dumps(record.get("segments", []), ensure_ascii=False, sort_keys=True)
         )

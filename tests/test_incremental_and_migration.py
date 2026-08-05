@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 
 from moderacion_peru.datasets import assert_no_video_leakage, stable_video_split
-from moderacion_peru.acquisition import bootstrap_canonical_from_existing, load_candidates
+from moderacion_peru.acquisition import (
+    bootstrap_canonical_from_existing,
+    load_candidates,
+    normalize_category_metadata,
+)
 from moderacion_peru.incremental import (
     TranscriptSegment,
     chunk_records_incrementally,
@@ -13,7 +17,8 @@ from moderacion_peru.incremental import (
     remove_vtt_overlap,
 )
 from moderacion_peru.io import append_jsonl_once, read_jsonl
-from moderacion_peru.migration import migrate_record
+from moderacion_peru.migration import migrate_jsonl, migrate_record
+from moderacion_peru.schemas import ModelReadyRecord
 
 
 def test_video_reuse_keeps_only_new_ids():
@@ -84,6 +89,26 @@ def test_candidates_accept_csv_and_jsonl(tmp_path):
     assert load_candidates(csv_path)[0]["video_id"] == "v1"
 
 
+def test_acquisition_metadata_uses_canonical_gender_attack_name():
+    normalized = normalize_category_metadata(
+        {
+            "target_category": "CONTENIDO_SEXUAL|ACOSO_GENERO_IDENTIDAD",
+            "source_candidate": {
+                "target_categories": ["ACOSO_GENERO_IDENTIDAD", "ACOSO_AMENAZA"]
+            },
+            "text": "ACOSO_GENERO_IDENTIDAD se conserva si forma parte del subtítulo",
+        }
+    )
+    assert normalized["target_category"] == (
+        "CONTENIDO_SEXUAL|ATAQUE_POR_GENERO_IDENTIDAD"
+    )
+    assert normalized["source_candidate"]["target_categories"] == [
+        "ATAQUE_POR_GENERO_IDENTIDAD",
+        "ACOSO_AMENAZA",
+    ]
+    assert "ACOSO_GENERO_IDENTIDAD" in normalized["text"]
+
+
 def test_migration_never_infers_safe_from_empty():
     migrated = migrate_record({"chunk_id": "c1", "text": "x", "coarse_labels": []})
     assert migrated["coarse_labels"] == []
@@ -102,6 +127,36 @@ def test_migration_merges_legacy_damage_and_preserves_source():
     )
     assert migrated["coarse_labels"] == ["ACOSO_AMENAZA"]
     assert migrated["legacy_coarse_labels"] == ["ACOSO_PERSONAL", "AMENAZA_DIRECTA"]
+
+
+def test_migration_materializes_grouped_model_ready_rows(tmp_path):
+    source = tmp_path / "legacy.jsonl"
+    source.write_text(
+        json.dumps(
+            {
+                "chunk_id": "v1_0001",
+                "video_id": "v1",
+                "text": "ataque por género",
+                "coarse_labels": ["ACOSO_GENERO_IDENTIDAD"],
+                "flags_reference_only": [],
+                "label_source": "humano_modified",
+                "sample_weight": 1.0,
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    destination = tmp_path / "v2.jsonl"
+    manifest = tmp_path / "manifest.json"
+    migrate_jsonl(source, destination, manifest)
+    row = next(read_jsonl(destination))
+    validated = ModelReadyRecord.model_validate(row)
+    assert validated.coarse_labels == ["ATAQUE_POR_GENERO_IDENTIDAD"]
+    assert validated.split in {"train", "validation", "test"}
+    assert json.loads(manifest.read_text(encoding="utf-8"))["counters"][
+        f"split:{validated.split}"
+    ] == 1
 
 
 def test_video_split_is_stable_and_no_leakage():

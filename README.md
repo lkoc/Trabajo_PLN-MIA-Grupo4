@@ -4,7 +4,7 @@ Este proyecto reúne subtítulos públicos de YouTube peruano, los limpia y segm
 
 ## Categorías
 
-El contrato `moderacion_peru_5_salidas_v2` entrena cinco salidas:
+El contrato `moderacion_peru_5_salidas_v2`, taxonomía `2.1.0`, entrena cinco salidas:
 
 - `SEGURO`;
 - `RACISMO_DISCRIMINACION`;
@@ -13,6 +13,8 @@ El contrato `moderacion_peru_5_salidas_v2` entrena cinco salidas:
 - `CONTENIDO_SEXUAL`.
 
 `SEGURO` es una categoría aprendida y no puede coexistir con daño. Los cuatro daños sí pueden coexistir. Los casos sin contexto suficiente se difieren y no entran al entrenamiento.
+
+La definición, justificación bibliográfica y límites de cada daño están en [`docs/MATRIZ_EVIDENCIA_TAXONOMIA.md`](docs/MATRIZ_EVIDENCIA_TAXONOMIA.md). La evidencia peruana contextualiza el contrato, pero no se presenta como validación jurídica, experta ni de prevalencia nacional.
 
 ## Flujo
 

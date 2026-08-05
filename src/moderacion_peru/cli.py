@@ -14,7 +14,7 @@ from .migration import migrate_jsonl
 from .paths import find_project_root
 from .pilot import build_human_pilot, run_ollama_pilot
 from .providers import OllamaProvider, ProviderError
-from .schemas import AnnotationRecord
+from .schemas import AnnotationRecord, ModelReadyRecord
 from .servers import serve
 from .taxonomy import load_taxonomy
 
@@ -43,12 +43,21 @@ def command_preflight(args: argparse.Namespace) -> int:
 
 def command_validate(args: argparse.Namespace) -> int:
     taxonomy = load_taxonomy()
-    counters = {"valid": 0, "invalid": 0, "errors": []}
+    counters = {"valid": 0, "invalid": 0, "schema_counts": {}, "errors": []}
     if args.path:
         for row in read_jsonl(args.path):
             try:
-                AnnotationRecord.model_validate(row)
+                kind = args.kind
+                if kind == "auto":
+                    kind = (
+                        "model-ready"
+                        if "split" in row or "sample_weight" in row or "legacy_coarse_labels" in row
+                        else "annotation"
+                    )
+                schema = ModelReadyRecord if kind == "model-ready" else AnnotationRecord
+                schema.model_validate(row)
                 counters["valid"] += 1
+                counters["schema_counts"][kind] = counters["schema_counts"].get(kind, 0) + 1
             except ValidationError as exc:
                 counters["invalid"] += 1
                 if len(counters["errors"]) < 20:
@@ -97,6 +106,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     validate = subparsers.add_parser("validate", help="Valida el contrato y un JSONL opcional")
     validate.add_argument("path", nargs="?")
+    validate.add_argument(
+        "--kind",
+        choices=["auto", "annotation", "model-ready"],
+        default="auto",
+        help="Esquema esperado; auto distingue eventos de filas de entrenamiento",
+    )
     validate.set_defaults(func=command_validate)
 
     artifacts = subparsers.add_parser("artifacts", help="Informa artefactos disponibles y faltantes")
@@ -147,4 +162,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

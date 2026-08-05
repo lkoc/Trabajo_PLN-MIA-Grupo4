@@ -89,3 +89,9 @@ Las versiones finales usan rutas horizontales/verticales y carriles externos. No
 - La celda destructiva del cuaderno histórico quedó aislada en `archivo/`; el frontend activo carga campañas versionadas y no borra el paquete de etiquetado.
 
 Esta fue una auditoría estructural, bibliográfica y visual. No se usó un detector externo de plagio ni de texto generado por IA; por tanto, no se promete el resultado de esos detectores. La protección aplicable es la trazabilidad de afirmaciones, la paráfrasis propia, la atribución explícita y la declaración de límites.
+
+## Adenda de contrato v2.1 — 2026-08-05
+
+Se auditó el nombre y el sustento de las cuatro categorías de daño contra los PDF locales. La salida de género e identidad pasa a denominarse `ATAQUE_POR_GENERO_IDENTIDAD`: el prefijo expresa daño sin reducir el fenómeno a acoso ni exigir intención de odio. Se verificaron como base peruana los trabajos adjuntos de Albornoz y Flores, la Defensoría del Pueblo, Lovón-Cueva y Lovón-Cueva y Rottenbacher; para racismo y lenguaje se contrastaron Zavala y Almeida, Brañez, Salem y Vich. `ACOSO_AMENAZA` conserva la fusión únicamente como decisión de soporte y `CONTENIDO_SEXUAL` distingue evidencia peruana de no consentimiento/cosificación frente a la frontera de contenido explícito tomada de política de plataforma. La matriz ampliada está en `../docs/MATRIZ_EVIDENCIA_TAXONOMIA.md`.
+
+Tras el cambio se recompilaron desde cero el paper A4 (28 páginas) y el Beamer (24 diapositivas). Los logs no contienen citas o referencias indefinidas ni cajas desbordadas; se revisaron visualmente la figura taxonómica y la transición de contrato.

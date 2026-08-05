@@ -10,10 +10,13 @@ modperu migrate origen.jsonl datos/model_ready/v2/dataset_5_salidas.jsonl datos/
 
 Reglas:
 
+- `ACOSO_GENERO_IDENTIDAD` se acepta solo como nombre histórico de entrada y se proyecta a la salida canónica `ATAQUE_POR_GENERO_IDENTIDAD`;
 - `ACOSO_PERSONAL` y `AMENAZA_DIRECTA` se proyectan a `ACOSO_AMENAZA`;
 - `SEGURO` solo procede de `SEGURO` histórico explícito;
 - vacío, desconocido o conflicto se envía a revisión y se excluye del entrenamiento;
 - se preserva `legacy_coarse_labels` y la fuente original.
+
+El alias histórico nunca aparece en predicciones, campañas, modelos o exportaciones nuevas. El cambio de nombre no altera automáticamente los rótulos fuente: la migración crea un snapshot nuevo y conserva el original para auditoría.
 
 ## Modelos
 
@@ -22,4 +25,3 @@ Los modelos anteriores pueden proporcionar encoder o backbone. No se reutilizan 
 ## Frontend y eventos
 
 Los eventos históricos permanecen en su formato original. Los nuevos eventos usan `ReviewEvent` v2. Una migración posterior debe conservar el evento original y escribir otro registro normalizado; nunca editar la bitácora append-only.
-

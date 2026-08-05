@@ -12,6 +12,7 @@ import nbformat
 
 ROOT = Path(__file__).resolve().parents[1]
 MARKDOWN_LINK = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
+DEPRECATED_GENDER_LABEL = "ACOSO_GENERO_IDENTIDAD"
 
 
 def markdown_issues() -> list[str]:
@@ -56,10 +57,40 @@ def notebook_issues() -> list[str]:
             continue
         if notebook.metadata.get("moderacion_peru", {}).get("contract") != "moderacion_peru_5_salidas_v2":
             issues.append(f"missing_contract_metadata:{path.relative_to(ROOT)}")
+        if notebook.metadata.get("moderacion_peru", {}).get("taxonomy_version") != "2.1.0":
+            issues.append(f"wrong_taxonomy_version:{path.relative_to(ROOT)}")
         source = "\n".join(cell.source for cell in notebook.cells)
         for forbidden in ("LM Studio", "D:\\", "G:\\"):
             if forbidden in source:
                 issues.append(f"forbidden:{path.relative_to(ROOT)}:{forbidden}")
+    return issues
+
+
+def taxonomy_name_issues() -> list[str]:
+    """Impide que el alias histórico vuelva a convertirse en salida activa."""
+    issues = []
+    active_roots = (
+        ROOT / "README.md",
+        ROOT / "Planning",
+        ROOT / "docs",
+        ROOT / "flujo",
+        ROOT / "Documento_final_paper",
+        ROOT / "Presentación_BEAMER",
+    )
+    for root in active_roots:
+        paths = [root] if root.is_file() else root.rglob("*")
+        for path in paths:
+            if not path.is_file() or path.suffix.lower() in {".pdf", ".png", ".jpg"}:
+                continue
+            try:
+                text = path.read_text(encoding="utf-8-sig")
+            except UnicodeDecodeError:
+                continue
+            if (
+                DEPRECATED_GENDER_LABEL in text
+                and path != ROOT / "docs" / "MIGRACION_Y_COMPATIBILIDAD.md"
+            ):
+                issues.append(f"deprecated_gender_label:{path.relative_to(ROOT)}")
     return issues
 
 
@@ -68,7 +99,7 @@ def main() -> int:
     from moderacion_peru.taxonomy import load_taxonomy
 
     taxonomy = load_taxonomy()
-    issues = markdown_issues() + notebook_issues()
+    issues = markdown_issues() + notebook_issues() + taxonomy_name_issues()
     result = {
         "taxonomy": taxonomy.contract_id,
         "markdown_files": len(list(ROOT.rglob("*.md"))),

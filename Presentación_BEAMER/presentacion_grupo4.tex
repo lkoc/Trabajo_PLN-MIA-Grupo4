@@ -308,7 +308,7 @@
 \end{frame}
 
 % 7
-\begin{frame}{El contrato v2 aprende SEGURO como quinta salida}
+\begin{frame}{El contrato v2.1 aprende SEGURO como quinta salida}
   \centering
   \begin{tikzpicture}[
     old/.style={draw=Gold!50,fill=Gold!8,rounded corners=2pt,text width=43mm,
@@ -317,7 +317,7 @@
       minimum height=6mm,align=center,inner sep=1.2mm,font=\scriptsize},
     arr/.style={-{Stealth[length=1.7mm]},thick,draw=Muted}]
     \node[font=\small\bfseries,text=Gold!75!black] at (0,.9) {Baseline ejecutado};
-    \node[font=\small\bfseries,text=Teal!75!black] at (8.8,.9) {Contrato reproducible v2};
+    \node[font=\small\bfseries,text=Teal!75!black] at (8.8,.9) {Contrato reproducible v2.1};
     \node[old] (r4) at (0,0) {Racismo / discriminación};
     \node[old] (g4) at (0,-.75) {Ataque por género e identidad};
     \node[old] (a4) at (0,-1.5) {Acoso o amenaza};
@@ -357,7 +357,7 @@
       \pill{Blue}{Racismo y lengua}\par\scriptsize Zavala, Almeida, Brañez y Salem: racialización y variación local.
     \end{column}
     \begin{column}{.32\textwidth}
-      \pill{Coral}{Género en línea}\par\scriptsize Albornoz y Flores; Defensoría: violencia digital en el Perú.
+      \pill{Coral}{Ataques por género}\par\scriptsize Albornoz y Flores; Defensoría: violencia digital en el Perú.
     \end{column}
     \begin{column}{.32\textwidth}
       \pill{Purple}{Orientación e identidad}\par\scriptsize Rottenbacher y Lovón-Cueva: prejuicio y léxico peruano.
@@ -469,7 +469,7 @@
     Categoría & Modelo elegido con validación & AP validación & AP test \\
     \midrule
     Racismo & Qwen3--LoRA plano & 0.63 & 0.56 \\
-    Género & Qwen3--LoRA plano & 0.46 & 0.48 \\
+    Ataque género/identidad & Qwen3--LoRA plano & 0.46 & 0.48 \\
     Acoso--Amenaza & Qwen3--LoRA plano & 0.45 & 0.48 \\
     Contenido sexual & Qwen3--LoRA, cabeza multitarea congelada & 0.63 & \textbf{0.66} \\
     \bottomrule

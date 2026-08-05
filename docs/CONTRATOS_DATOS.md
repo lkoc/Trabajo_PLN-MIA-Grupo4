@@ -1,4 +1,4 @@
-# Contratos de datos v2
+# Contratos de datos v2.1
 
 ## Video y transcripción
 
@@ -19,9 +19,10 @@ Campos mínimos: `chunk_id`, `text`, `coarse_labels`, `fine_labels`, `flags`, `n
 
 ## Snapshot de entrenamiento
 
-Solo contiene decisiones resueltas y entrenables. La partición es estable por `video_id`; un video nunca cruza train, validation y test. Un incremento materializa otro snapshot y conserva el anterior.
+`ModelReadyRecord` conserva `chunk_id`, `video_id`, texto, categorías canónicas, señales de referencia, fuente, peso, campaña, procedencia histórica y `split`. Solo contiene decisiones resueltas y entrenables. La partición es estable por `video_id`; un video nunca cruza train, validation y test. Un incremento materializa otro snapshot y conserva el anterior.
+
+El snapshot v2.1 usa `ATAQUE_POR_GENERO_IDENTIDAD` como objetivo. El identificador anterior solo puede aparecer en `legacy_coarse_labels`, nunca en `coarse_labels`. `modperu validate ruta.jsonl --kind model-ready` comprueba las categorías, la exclusividad de `SEGURO`, la procedencia migrada, los flags y el split.
 
 ## Registro de modelos
 
 Un modelo activo debe declarar cinco scores y cinco umbrales, el contrato exacto, checkpoint/hash, métrica, split de selección, hardware y linaje. La falta de cualquiera de estas piezas impide registrarlo para producción.
-

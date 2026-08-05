@@ -16,6 +16,7 @@
   ],
   "categories": {
     "SEGURO": {
+      "display_name": "Seguro",
       "definition": "Fragmento evaluable que no expresa, promueve ni dirige ninguno de los cuatro daños cubiertos por el contrato.",
       "include": ["contenido neutral", "mención informativa o condenatoria claramente atribuida", "ironía marcada sin ataque a persona o grupo"],
       "exclude": ["ausencia de contexto suficiente", "lista vacía por error", "cualquier fenómeno de daño aplicable"],
@@ -24,6 +25,7 @@
       "evidence_layers": ["guía de anotación del proyecto", "literatura sobre uso/mención y contexto", "decisión operacional v2"]
     },
     "RACISMO_DISCRIMINACION": {
+      "display_name": "Racismo y discriminación",
       "definition": "Ataque, inferiorización o exclusión por racialización, etnia, lengua, origen regional o nacional, o asociación clasista racializada.",
       "include": ["insulto étnico", "discriminación lingüística", "clasismo racializado", "discriminación regional", "racismo encubierto con blanco identificable"],
       "exclude": ["crítica política sin atributo protegido", "mención descriptiva sin ataque"],
@@ -32,6 +34,7 @@
       "evidence_layers": ["Waseem et al.", "Banko et al.", "Callirgos", "Zavala", "Vich", "evidencia social peruana"]
     },
     "ATAQUE_POR_GENERO_IDENTIDAD": {
+      "display_name": "Ataque por género e identidad",
       "definition": "Daño dirigido por género, orientación sexual, identidad o expresión de género, incluida la misoginia, la degradación, la exclusión y el hostigamiento por identidad.",
       "include": ["misoginia", "degradación o exclusión por género", "acoso por género", "homofobia", "transfobia"],
       "exclude": ["referencia neutral a género u orientación", "desacuerdo sin ataque identitario"],
@@ -40,6 +43,7 @@
       "evidence_layers": ["tipologías de abuso por identidad", "Defensoría del Pueblo", "evidencia peruana de violencia de género en línea", "decisión nominal v2.1: categoría definida por el blanco identitario, no por una única modalidad de acoso"]
     },
     "ACOSO_AMENAZA": {
+      "display_name": "Acoso y amenaza",
       "definition": "Ataque hostil dirigido a una persona o anuncio plausible de daño, incluidos episodios aislados graves y patrones repetidos cuando el fragmento permite observarlos.",
       "include": ["insulto o humillación personal", "hostigamiento", "amenaza explícita", "amenaza implícita con blanco y daño plausibles"],
       "exclude": ["crítica de ideas sin ataque personal", "lenguaje figurado sin blanco o daño plausible"],
@@ -48,6 +52,7 @@
       "evidence_layers": ["Banko et al.", "literatura sobre abuso dirigido", "fusión operacional por soporte; no equivalencia semántica ni jurídica"]
     },
     "CONTENIDO_SEXUAL": {
+      "display_name": "Contenido sexual",
       "definition": "Descripción sexual explícita, cosificación sexual dirigida o contenido sexual no consentido cubierto por el contrato.",
       "include": ["sexual explícito", "cosificación", "difusión o amenaza sexual no consentida"],
       "exclude": ["educación sexual clínica", "mención informativa no gráfica", "afecto no sexual"],

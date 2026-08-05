@@ -38,7 +38,7 @@ def serve(
     review_path = Path(reviews).resolve() if reviews else root / "datos" / "etiquetado" / "humano" / f"{mode}_events_v2.jsonl"
 
     class Handler(BaseHTTPRequestHandler):
-        server_version = "ModeracionPeru/2.0"
+        server_version = "ModeracionPeru/2.1"
 
         def send_json(self, payload: Any, status: int = 200) -> None:
             body = _json_bytes(payload)
@@ -123,4 +123,3 @@ def serve(
         pass
     finally:
         server.server_close()
-

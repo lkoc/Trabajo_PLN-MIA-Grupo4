@@ -32,6 +32,9 @@ def test_contract_has_five_trained_outputs():
     )
     assert len(taxonomy.fine_labels) == 14
     assert len(taxonomy.flags) == 3
+    assert taxonomy.categories["ATAQUE_POR_GENERO_IDENTIDAD"].display_name == (
+        "Ataque por género e identidad"
+    )
 
 
 def test_safe_is_explicit_and_exclusive():

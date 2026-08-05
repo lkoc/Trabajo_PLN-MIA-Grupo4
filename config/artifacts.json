@@ -1,5 +1,5 @@
 {
-  "schema_version": "2.0.0",
+  "schema_version": "2.1.0",
   "description": "Disponibilidad esperada de artefactos que no se reconstruyen ni se falsifican durante la reorganización.",
   "artifacts": [
     {
@@ -19,6 +19,12 @@
       "role": "eventos humanos originales",
       "required_by": ["02_04_consolidacion_validacion_humana"],
       "recovery": "Recuperar desde almacenamiento externo usando los hashes del informe histórico."
+    },
+    {
+      "path": "datos/model_ready/v2/dataset_5_salidas.jsonl",
+      "role": "snapshot entrenable de taxonomía 2.1 con cinco salidas canónicas",
+      "required_by": ["03_01_modelos_clasicos", "03_02_transformers_planos", "03_05_qwen_lora"],
+      "recovery": "Ejecutar modperu migrate sobre el dataset histórico; nunca modificar la fuente ni inferir SEGURO desde una lista vacía."
     },
     {
       "path": "modelos/registro_modelos_5_salidas.json",
