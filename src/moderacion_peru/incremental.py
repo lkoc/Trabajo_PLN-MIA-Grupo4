@@ -9,7 +9,7 @@ from typing import Any
 from .io import sha256_text
 
 
-CHUNKER_VERSION = "2.0.0"
+CHUNKER_VERSION = "2.1.0"
 
 
 @dataclass(frozen=True)
@@ -26,6 +26,7 @@ class ChunkRecord:
     start_seconds: float
     end_seconds: float
     text: str
+    text_sha256: str
     transcript_sha256: str
     chunker_version: str = CHUNKER_VERSION
 
@@ -34,9 +35,31 @@ class ChunkRecord:
 
 
 def normalize_text(text: str) -> str:
-    normalized = unicodedata.normalize("NFKC", text)
+    normalized = unicodedata.normalize("NFKC", text or "").replace("\n", " ")
+    normalized = re.sub(
+        r"\[(musica|música|aplausos|risas|music|applause|laughter)\]",
+        " ",
+        normalized,
+        flags=re.IGNORECASE,
+    )
+    normalized = re.sub(r"https?://\S+", " ", normalized)
     normalized = re.sub(r"\s+", " ", normalized).strip()
     return normalized
+
+
+def remove_vtt_overlap(previous: str, following: str, *, max_words: int = 12) -> str:
+    """Elimina el mayor prefijo repetido por subtítulos rodantes VTT."""
+
+    if not previous or not following:
+        return following
+    previous_words = previous.casefold().split()
+    following_folded = following.casefold().split()
+    following_original = following.split()
+    window = min(max_words, len(previous_words), len(following_folded))
+    for overlap in range(window, 0, -1):
+        if previous_words[-overlap:] == following_folded[:overlap]:
+            return " ".join(following_original[overlap:])
+    return following
 
 
 def transcript_hash(segments: Iterable[TranscriptSegment]) -> str:
@@ -67,6 +90,8 @@ def chunk_transcript(
     *,
     max_seconds: float = 30.0,
     max_characters: int = 600,
+    min_characters: int = 90,
+    overlap_words: int = 12,
 ) -> list[ChunkRecord]:
     materialized = list(segments)
     source_hash = transcript_hash(materialized)
@@ -77,7 +102,7 @@ def chunk_transcript(
         if not current:
             return
         text = normalize_text(" ".join(segment.text for segment in current))
-        if not text:
+        if len(text) < min_characters:
             current.clear()
             return
         start = current[0].start
@@ -89,20 +114,117 @@ def chunk_transcript(
                 start_seconds=round(start, 3),
                 end_seconds=round(end, 3),
                 text=text,
+                text_sha256=sha256_text(text.casefold()),
                 transcript_sha256=source_hash,
             )
         )
         current.clear()
 
     for segment in materialized:
-        candidate = [*current, segment]
-        candidate_text = normalize_text(" ".join(item.text for item in candidate))
-        candidate_duration = (segment.start + segment.duration) - candidate[0].start
-        if current and (candidate_duration > max_seconds or len(candidate_text) > max_characters):
+        cleaned = normalize_text(segment.text)
+        if not cleaned:
+            continue
+        if current:
+            cleaned = remove_vtt_overlap(current[-1].text, cleaned, max_words=overlap_words)
+            if not cleaned:
+                continue
+        current.append(TranscriptSegment(segment.start, segment.duration, cleaned))
+        candidate_text = normalize_text(" ".join(item.text for item in current))
+        candidate_duration = (segment.start + segment.duration) - current[0].start
+        if candidate_duration >= max_seconds or len(candidate_text) >= max_characters:
             flush()
-        current.append(segment)
     flush()
     return chunks
+
+
+def deduplicate_chunks(
+    rows: Iterable[dict[str, Any]],
+    existing_rows: Iterable[dict[str, Any]] = (),
+) -> list[dict[str, Any]]:
+    """Conserva el primer chunk por ID y texto normalizado, incluso entre lotes."""
+
+    existing = list(existing_rows)
+    seen_ids = {str(row.get("chunk_id")) for row in existing if row.get("chunk_id")}
+    seen_text = {
+        str(row.get("text_sha256") or sha256_text(normalize_text(str(row.get("text", ""))).casefold()))
+        for row in existing
+        if row.get("text") or row.get("text_sha256")
+    }
+    result: list[dict[str, Any]] = []
+    for row in rows:
+        chunk_id = str(row.get("chunk_id", ""))
+        text_hash = str(
+            row.get("text_sha256")
+            or sha256_text(normalize_text(str(row.get("text", ""))).casefold())
+        )
+        if not chunk_id:
+            raise ValueError("Registro sin chunk_id")
+        if chunk_id in seen_ids or text_hash in seen_text:
+            continue
+        seen_ids.add(chunk_id)
+        seen_text.add(text_hash)
+        result.append(row)
+    return result
+
+
+def chunk_records_incrementally(
+    transcripts: Iterable[dict[str, Any]],
+    existing_rows: Iterable[dict[str, Any]] = (),
+    processed_versions: Iterable[dict[str, Any]] = (),
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, int]]:
+    """Trocea solo versiones de video que no aparecen ya en la salida."""
+
+    existing = list(existing_rows)
+    known_versions = {
+        (str(row.get("video_id")), str(row.get("transcript_sha256")))
+        for row in existing
+        if row.get("video_id") and row.get("transcript_sha256")
+    }
+    known_versions.update(
+        (str(row.get("video_id")), str(row.get("transcript_sha256")))
+        for row in processed_versions
+        if row.get("video_id") and row.get("transcript_sha256")
+    )
+    generated: list[dict[str, Any]] = []
+    version_rows: list[dict[str, Any]] = []
+    stats = {
+        "transcripts_seen": 0,
+        "unchanged_videos": 0,
+        "new_or_changed_videos": 0,
+        "generated_chunks": 0,
+        "new_unique_chunks": 0,
+    }
+    for video in transcripts:
+        stats["transcripts_seen"] += 1
+        segments = [
+            TranscriptSegment(
+                float(segment.get("start", 0)),
+                float(segment.get("duration", 0)),
+                str(segment.get("text", "")),
+            )
+            for segment in video.get("segments", [])
+        ]
+        source_hash = transcript_hash(segments)
+        version = (str(video["video_id"]), source_hash)
+        if version in known_versions:
+            stats["unchanged_videos"] += 1
+            continue
+        stats["new_or_changed_videos"] += 1
+        video_chunks = [chunk.to_dict() for chunk in chunk_transcript(version[0], segments)]
+        generated.extend(video_chunks)
+        version_rows.append(
+            {
+                "version_id": sha256_text(f"{version[0]}|{source_hash}|{CHUNKER_VERSION}"),
+                "video_id": version[0],
+                "transcript_sha256": source_hash,
+                "chunker_version": CHUNKER_VERSION,
+                "chunk_count": len(video_chunks),
+            }
+        )
+    stats["generated_chunks"] = len(generated)
+    new_rows = deduplicate_chunks(generated, existing)
+    stats["new_unique_chunks"] = len(new_rows)
+    return new_rows, version_rows, stats
 
 
 def pending_video_ids(candidate_ids: Iterable[str], processed_ids: Iterable[str]) -> list[str]:
@@ -128,4 +250,3 @@ def pending_records(
         seen.add(identifier)
         result.append(record)
     return result
-

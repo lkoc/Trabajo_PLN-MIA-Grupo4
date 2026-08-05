@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import csv
 import json
+import math
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
@@ -8,6 +10,87 @@ from .io import append_jsonl_once, read_jsonl, sha256_text
 
 
 TranscriptFetcher = Callable[[dict[str, Any]], dict[str, Any]]
+
+
+def _json_safe(value: Any) -> Any:
+    """Normaliza NaN históricos para producir JSON estricto sin alterar fuentes."""
+
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value]
+    return value
+
+
+def load_candidates(path: str | Path) -> list[dict[str, Any]]:
+    """Lee candidatos JSONL o CSV conservando `video_id` como clave."""
+
+    source = Path(path)
+    if not source.is_file():
+        return []
+    if source.suffix.lower() == ".jsonl":
+        rows = list(read_jsonl(source))
+    elif source.suffix.lower() == ".csv":
+        with source.open("r", encoding="utf-8-sig", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+    else:
+        raise ValueError(f"Formato de candidatos no compatible: {source.suffix}")
+    return [row for row in rows if str(row.get("video_id", "")).strip()]
+
+
+def discover_existing_transcript_sources(
+    project_root: str | Path,
+    *,
+    canonical_path: str | Path | None = None,
+) -> list[Path]:
+    """Descubre snapshots JSONL existentes sin incluir el destino canónico."""
+
+    root = Path(project_root).resolve()
+    canonical = Path(canonical_path).resolve() if canonical_path else None
+    return [
+        path
+        for path in sorted((root / "datos").rglob("transcripts_raw.jsonl"))
+        if path.is_file() and (canonical is None or path.resolve() != canonical)
+    ]
+
+
+def bootstrap_canonical_from_existing(
+    sources: Iterable[str | Path],
+    canonical_path: str | Path,
+) -> dict[str, Any]:
+    """Materializa una vista canónica reutilizando snapshots; nunca los modifica."""
+
+    destination = Path(canonical_path)
+    rows: list[dict[str, Any]] = []
+    source_stats: list[dict[str, Any]] = []
+    for raw_source in sources:
+        source = Path(raw_source).resolve()
+        count = 0
+        for historical in read_jsonl(source):
+            record = _json_safe(historical)
+            video_id = str(record.get("video_id", "")).strip()
+            if not video_id:
+                continue
+            record["video_id"] = video_id
+            record.setdefault("acquisition_status", "reused_existing_snapshot")
+            record.setdefault("source_snapshot", source.as_posix())
+            record.setdefault(
+                "transcript_sha256",
+                sha256_text(json.dumps(record.get("segments", []), ensure_ascii=False, sort_keys=True)),
+            )
+            rows.append(record)
+            count += 1
+        source_stats.append({"path": source.as_posix(), "rows": count})
+    added, skipped = append_jsonl_once(destination, rows, id_field="video_id")
+    return {
+        "sources": source_stats,
+        "candidate_rows": len(rows),
+        "added": added,
+        "already_canonical": skipped,
+        "canonical_path": destination.resolve().as_posix(),
+    }
 
 
 def fetch_youtube_subtitles(candidate: dict[str, Any]) -> dict[str, Any]:

@@ -16,6 +16,29 @@ def _rank(seed: int, chunk_id: str) -> str:
     return hashlib.sha256(f"{seed}|{chunk_id}".encode()).hexdigest()
 
 
+def multilabel_metrics(
+    references: list[list[str]],
+    predictions: list[list[str]],
+    labels: Iterable[str],
+) -> dict[str, Any]:
+    per_label: dict[str, dict[str, float | int]] = {}
+    for label in labels:
+        tp = sum(label in ref and label in pred for ref, pred in zip(references, predictions))
+        fp = sum(label not in ref and label in pred for ref, pred in zip(references, predictions))
+        fn = sum(label in ref and label not in pred for ref, pred in zip(references, predictions))
+        precision = tp / (tp + fp) if tp + fp else 0.0
+        recall = tp / (tp + fn) if tp + fn else 0.0
+        f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+        per_label[label] = {
+            "support": tp + fn,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+        }
+    f1_macro = sum(float(row["f1"]) for row in per_label.values()) / len(per_label) if per_label else 0.0
+    return {"per_label": per_label, "f1_macro": f1_macro}
+
+
 def build_human_pilot(
     source: str | Path,
     *,
@@ -73,8 +96,13 @@ def run_ollama_pilot(
         "sample_size": len(rows),
         "taxonomy_contract": taxonomy.contract_id,
         "models": {},
-        "selection_evaluable": len(rows) >= 200,
+        "sample_meets_minimum": len(rows) >= 200,
+        "execution_complete": False,
+        "selection_evaluable": False,
         "selection": None,
+        "reference_counts": dict(
+            Counter(label for row in rows for label in row.get("coarse_labels", []))
+        ),
         "limitations": [
             "Las decisiones humanas históricas fueron asistidas y no son un gold standard ciego.",
             "La selección sustantiva solo se considera evaluable con 200 casos."
@@ -82,6 +110,25 @@ def run_ollama_pilot(
     }
     for model in models:
         provider = OllamaProvider(model=model, retries=1)
+        try:
+            probe = provider.probe()
+            if not probe["model_available"]:
+                raise ProviderError(f"El modelo {model} no está instalado en Ollama")
+        except ProviderError as exc:
+            report["models"][model] = {
+                "preflight": {"available": False, "error": str(exc)},
+                "technical_validity": 0.0,
+                "passes_99_percent_gate": False,
+                "exact_match": 0.0,
+                "f1_macro_harms": 0.0,
+                "harm_as_safe_count": 0,
+                "seconds": 0.0,
+                "chunks_per_second": 0.0,
+                "prediction_counts": {},
+                "errors": [{"chunk_id": "__preflight__", "error": str(exc)}],
+                "predictions": [],
+            }
+            continue
         started = time.perf_counter()
         errors: list[dict[str, str]] = []
         predictions = []
@@ -112,10 +159,16 @@ def run_ollama_pilot(
             )
         elapsed = time.perf_counter() - started
         valid = len(predictions)
+        references = [item["reference"] for item in predictions]
+        predicted_labels = [item["prediction"]["coarse_labels"] for item in predictions]
+        harm_metrics = multilabel_metrics(references, predicted_labels, taxonomy.damage_labels)
         report["models"][model] = {
+            "preflight": probe,
             "technical_validity": valid / len(rows) if rows else 0,
             "passes_99_percent_gate": bool(rows) and valid / len(rows) >= 0.99,
             "exact_match": exact / valid if valid else 0,
+            "f1_macro_harms": harm_metrics["f1_macro"],
+            "per_label_harms": harm_metrics["per_label"],
             "harm_as_safe_count": false_safe,
             "seconds": elapsed,
             "chunks_per_second": valid / elapsed if elapsed else 0,
@@ -123,6 +176,13 @@ def run_ollama_pilot(
             "errors": errors,
             "predictions": predictions,
         }
+    report["execution_complete"] = all(
+        result.get("preflight", {}).get("available", True)
+        for result in report["models"].values()
+    )
+    report["selection_evaluable"] = bool(
+        report["sample_meets_minimum"] and report["execution_complete"]
+    )
     if report["selection_evaluable"]:
         eligible = [
             (name, result)
@@ -133,7 +193,7 @@ def run_ollama_pilot(
             eligible.sort(
                 key=lambda item: (
                     item[1]["harm_as_safe_count"],
-                    -item[1]["exact_match"],
+                    -item[1]["f1_macro_harms"],
                     -item[1]["chunks_per_second"],
                     item[0],
                 )
@@ -141,4 +201,3 @@ def run_ollama_pilot(
             report["selection"] = eligible[0][0]
     write_json_atomic(destination, report)
     return report
-

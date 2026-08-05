@@ -60,7 +60,8 @@ def main() -> None:
         "Reutiliza transcripciones canónicas y cachés por `video_id`; solo consulta YouTube para candidatos nuevos y nunca descarga audio o video.",
         [
             ("Preflight", "from moderacion_peru.artifacts import artifact_status\nartifact_status(ROOT)"),
-            ("Candidatos y caché", "from moderacion_peru.io import read_jsonl\nfrom moderacion_peru.acquisition import ingest_incremental, fetch_youtube_subtitles\nCANDIDATES = ROOT/'datos/raw/video_candidates.jsonl'\nCANONICAL = ROOT/'datos/raw/transcripts_raw.jsonl'\nCACHE = ROOT/'datos/raw/transcripts_cache'\ncandidates = list(read_jsonl(CANDIDATES)) if CANDIDATES.exists() else []\nprint('Candidatos:', len(candidates), '· ya existentes se omitirán')"),
+            ("Reutilización de snapshots existentes", "from moderacion_peru.acquisition import (bootstrap_canonical_from_existing, discover_existing_transcript_sources, fetch_youtube_subtitles, ingest_incremental, load_candidates)\nCANONICAL = ROOT/'datos/raw/transcripts_raw.jsonl'\nCACHE = ROOT/'datos/raw/transcripts_cache'\nsources = discover_existing_transcript_sources(ROOT, canonical_path=CANONICAL)\nreuse_stats = bootstrap_canonical_from_existing(sources, CANONICAL)\nprint(reuse_stats)"),
+            ("Candidatos y caché", "CANDIDATE_FILES = [ROOT/'datos/raw/video_candidates.jsonl', ROOT/'datos/raw/videos_candidatos.csv']\ncandidates_by_id = {}\nfor source in CANDIDATE_FILES:\n    for row in load_candidates(source):\n        candidates_by_id.setdefault(str(row['video_id']), row)\ncandidates = list(candidates_by_id.values())\nprint('Candidatos:', len(candidates), '· los ya existentes se omitirán')"),
             ("Ejecución controlada", "FETCH_NEW = False  # Cambie a True solo para consultar candidatos no vistos\nif candidates:\n    stats = ingest_incremental(candidates, CANONICAL, CACHE, fetcher=fetch_youtube_subtitles if FETCH_NEW else None)\n    print(stats)\nelse:\n    print('Agregue candidatos con video_id y url; el corpus existente no se vuelve a descargar.')"),
         ],
     )
@@ -69,8 +70,8 @@ def main() -> None:
         "01.02 · Limpieza y troceado incremental",
         "Crea chunks deterministas únicamente para transcripciones nuevas o modificadas y conserva la versión del troceador.",
         [
-            ("Configuración", "from moderacion_peru.incremental import TranscriptSegment, chunk_transcript\nfrom moderacion_peru.io import append_jsonl_once, read_jsonl\nSOURCE=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/processed/chunks_v2.jsonl'"),
-            ("Materialización", "rows=[]\nfor video in read_jsonl(SOURCE) if SOURCE.exists() else []:\n    segments=[TranscriptSegment(float(s['start']),float(s['duration']),s['text']) for s in video.get('segments',[])]\n    rows.extend(chunk.to_dict() for chunk in chunk_transcript(video['video_id'],segments))\nadded,skipped=append_jsonl_once(OUTPUT,rows,id_field='chunk_id')\nprint({'generated':len(rows),'added':added,'already_present':skipped})"),
+            ("Configuración", "from moderacion_peru.incremental import chunk_records_incrementally\nfrom moderacion_peru.io import append_jsonl_once, read_jsonl\nSOURCE=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/processed/chunks_v2.jsonl'\nVERSION_INDEX=ROOT/'datos/processed/chunking_v2_versions.jsonl'"),
+            ("Materialización", "existing=list(read_jsonl(OUTPUT)) if OUTPUT.exists() else []\nversions=list(read_jsonl(VERSION_INDEX)) if VERSION_INDEX.exists() else []\nnew_rows,new_versions,stats=chunk_records_incrementally(read_jsonl(SOURCE) if SOURCE.exists() else [],existing,versions)\nadded,skipped=append_jsonl_once(OUTPUT,new_rows,id_field='chunk_id')\nversions_added,_=append_jsonl_once(VERSION_INDEX,new_versions,id_field='version_id')\nstats.update({'added':added,'duplicate_ids':skipped,'versions_registered':versions_added})\nprint(stats)"),
         ],
     )
     create(

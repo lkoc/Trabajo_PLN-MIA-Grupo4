@@ -1,0 +1,17 @@
+{
+  "captured_at": "2026-08-05T16:00:00-05:00",
+  "status": "baseline previo a recompilar la narrativa del contrato v2",
+  "artifacts": [
+    {
+      "path": "Documento_final_paper/paper_moderador_contenido_youtube_ieee.pdf",
+      "bytes": 1098109,
+      "sha256": "d4dde82d1ea621b525079eb3aa7e7eb40400fbc8c05059e7de1ac36a8ab49101"
+    },
+    {
+      "path": "Presentación_BEAMER/presentacion_grupo4.pdf",
+      "bytes": 410813,
+      "sha256": "096bea467ec26029076857f3a4924a9b714b5918cc8658d12e77f3c09261a5d7"
+    }
+  ],
+  "inventory": "Planning/inventario_pre_reorganizacion.json"
+}

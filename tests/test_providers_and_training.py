@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from moderacion_peru.providers.base import ProviderError, normalize_payload
+from moderacion_peru.pilot import multilabel_metrics
 from moderacion_peru.training import resolve_prediction
 
 
@@ -72,3 +73,13 @@ def test_no_output_is_not_turned_into_safe():
     assert result.labels == ()
     assert "sin_categoria_sobre_umbral" in result.review_reasons
 
+
+def test_pilot_reports_macro_f1_for_harms():
+    metrics = multilabel_metrics(
+        [["ACOSO_AMENAZA"], ["RACISMO_DISCRIMINACION"]],
+        [["ACOSO_AMENAZA"], []],
+        ["RACISMO_DISCRIMINACION", "ACOSO_AMENAZA"],
+    )
+    assert metrics["per_label"]["ACOSO_AMENAZA"]["f1"] == 1.0
+    assert metrics["per_label"]["RACISMO_DISCRIMINACION"]["f1"] == 0.0
+    assert metrics["f1_macro"] == 0.5

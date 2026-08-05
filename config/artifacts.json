@@ -9,10 +9,10 @@
       "recovery": "Regenerar incrementalmente desde los videos ya registrados o recuperar la instantánea externa verificada."
     },
     {
-      "path": "datos/processed/chunks_para_etiquetar.jsonl",
+      "path": "datos/processed/chunks_v2.jsonl",
       "role": "chunks canónicos",
       "required_by": ["02_01_etiquetado_local_ollama"],
-      "recovery": "Migrar una vez archivo/taxonomia_v1_3/para_equiquetado_LLM/chunks_para_etiquetar.json, que contiene NDJSON, y verificar su hash."
+      "recovery": "Ejecutar 01_02 sobre la vista canónica reutilizada; los chunks históricos permanecen sin cambios en archivo/ y datos/ampliacion/."
     },
     {
       "path": "datos/etiquetado/humano/revision_humana_combinada_1918.jsonl",
@@ -28,4 +28,3 @@
     }
   ]
 }
-

@@ -6,9 +6,8 @@
 2. `01_02_limpieza_troceado_incremental.ipynb`
 3. `01_03_ampliacion_dirigida.ipynb`, solo cuando se incorporen nuevas fuentes.
 
-Entrada: candidatos con `video_id` y URL, transcripciones canónicas y caché local.  
+Entrada: candidatos con `video_id` y URL, snapshots históricos, transcripciones canónicas y caché local.  
 Salida: transcripciones JSONL y chunks v2 con tiempos, hash de transcripción y versión del troceador.  
-Control: nunca se descarga audio o video; un `video_id` canónico se omite y un caché válido se reutiliza antes de consultar la red.
+Control: nunca se descarga audio o video; primero se consolidan sin modificarlos los `transcripts_raw.jsonl` ya existentes, después se reutiliza el caché y solo al final se consulta la red para un `video_id` nuevo. La limpieza conserva la eliminación de hasta 12 palabras solapadas en subtítulos rodantes, el cierre a 30 segundos/600 caracteres y el mínimo de 90 caracteres.
 
-Para ampliar la muestra, agregue filas a `datos/raw/video_candidates.jsonl` y vuelva a ejecutar `01_01`. El corpus previo permanece intacto.
-
+Para ampliar la muestra, agregue filas a `datos/raw/video_candidates.jsonl` o `datos/raw/videos_candidatos.csv` y vuelva a ejecutar `01_01`. El corpus previo permanece intacto; `FETCH_NEW=False` permite comprobar la reutilización sin usar red.
