@@ -98,7 +98,7 @@ Documente videos y chunks, deduplicación, procedencia de etiquetas, precedencia
 - corpus integrado completo;
 - muestra comparativa 4:1;
 - train, validation y test;
-- historico de cinco daños y contrato activo de cuatro;
+- historial de contratos de daño y contrato activo v2 de cinco salidas, incluida `SEGURO`;
 - etiquetas operativas, etiquetas finas auxiliares y flags transversales.
 
 En el cuerpo y en las tablas principales, reporte el tamaño del corpus utilizado como un único total integrado. Describa cualitativamente las estrategias de adquisición y depuración necesarias para la reproducibilidad, pero no divida el tamaño por campañas o rondas salvo que comparar esas rondas sea una pregunta explícita del estudio. Aplique la misma regla a los conteos por categoría.
@@ -114,7 +114,7 @@ La reconstrucción histórica de la taxonomía debe comenzar en `archivo/taxonom
 - `PROMPT_ETIQUETADO_LLM.md`: esquema de salida e invariantes de labels, flags, confianza y revisión;
 - `chunks_para_etiquetar.json`: objetos NDJSON pese a la extensión `.json`;
 - `cgt_labeled_chunks_parte_0001`–`0003.jsonl`: prueba consecutiva de 60 filas, no muestra representativa ni referencia `gold`;
-- regla de derivación: el mapeo fino→cinco categorías y la fusión mediante OR/máximo producen el contrato activo de cuatro categorías; los nombres de scripts pertenecen a la guía técnica, no al cuerpo del artículo.
+- regla de derivación: el mapeo fino produce cuatro daños y estados seguros explícitos; acoso personal y amenaza se unen mediante OR/máximo, y `SEGURO` constituye la quinta salida exclusiva. Los nombres de scripts pertenecen a la guía técnica, no al cuerpo del artículo.
 
 Las copias archivadas de CSV y guía dentro de `archivo/taxonomia_v1_3/para_equiquetado_LLM/` son snapshots históricos. Para describir el contrato v2, dé prioridad a `config/taxonomia_v2.json`, `src/moderacion_peru/` y sus manifiestos; use el archivo solo para reconstruir qué instrucciones recibió el anotador original.
 

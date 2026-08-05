@@ -1,0 +1,65 @@
+Metadata-Version: 2.4
+Name: moderacion-peru
+Version: 2.0.0
+Summary: Flujo reproducible de moderación semiautomática de subtítulos peruanos de YouTube
+Requires-Python: <3.14,>=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: pydantic<3,>=2.10
+Requires-Dist: requests<3,>=2.32
+Provides-Extra: datos
+Requires-Dist: pandas<3,>=2.2; extra == "datos"
+Requires-Dist: tqdm<5,>=4.66; extra == "datos"
+Requires-Dist: yt-dlp>=2025.1; extra == "datos"
+Provides-Extra: etiquetado
+Requires-Dist: jsonschema<5,>=4.23; extra == "etiquetado"
+Requires-Dist: python-dotenv<2,>=1.0; extra == "etiquetado"
+Provides-Extra: entrenamiento
+Requires-Dist: joblib<2,>=1.4; extra == "entrenamiento"
+Requires-Dist: matplotlib<4,>=3.9; extra == "entrenamiento"
+Requires-Dist: numpy<3,>=1.26; extra == "entrenamiento"
+Requires-Dist: scikit-learn<2,>=1.5; extra == "entrenamiento"
+Requires-Dist: scipy<2,>=1.13; extra == "entrenamiento"
+Requires-Dist: transformers<6,>=4.51; extra == "entrenamiento"
+Requires-Dist: peft<1,>=0.15; extra == "entrenamiento"
+Provides-Extra: dev
+Requires-Dist: nbformat<6,>=5.10; extra == "dev"
+Requires-Dist: pytest<9,>=8.3; extra == "dev"
+
+# Moderación semiautomática de contenido peruano
+
+Este proyecto reúne subtítulos públicos de YouTube peruano, los limpia y segmenta, los etiqueta con modelos locales o remotos y permite revisar las decisiones antes de entrenar clasificadores. Su finalidad es priorizar revisión humana; no elimina contenido ni sanciona usuarios.
+
+## Categorías
+
+El contrato `moderacion_peru_5_salidas_v2` entrena cinco salidas:
+
+- `SEGURO`;
+- `RACISMO_DISCRIMINACION`;
+- `ACOSO_GENERO_IDENTIDAD`;
+- `ACOSO_AMENAZA`;
+- `CONTENIDO_SEXUAL`.
+
+`SEGURO` es una categoría aprendida y no puede coexistir con daño. Los cuatro daños sí pueden coexistir. Los casos sin contexto suficiente se difieren y no entran al entrenamiento.
+
+## Flujo
+
+1. [`flujo/01_datos`](flujo/01_datos/README.md): reutiliza videos/subtítulos ya procesados y agrega solo material nuevo.
+2. [`flujo/02_etiquetado`](flujo/02_etiquetado/README.md): Ollama local, proveedor remoto opcional y validación humana.
+3. [`flujo/03_entrenamiento`](flujo/03_entrenamiento/README.md): modelos clásicos, Transformers, Qwen y comparación común.
+4. [`flujo/04_produccion`](flujo/04_produccion/README.md): demostrador local en modo sombra.
+
+Instalación mínima:
+
+```powershell
+python -m pip install -e ".[dev]"
+modperu preflight
+```
+
+Los extras `datos`, `etiquetado` y `entrenamiento` se instalan solo cuando se necesitan. Las instrucciones de CUDA, ROCm, XPU y CPU están en [`docs/HARDWARE.md`](docs/HARDWARE.md).
+
+## Incrementos futuros
+
+El flujo identifica videos por `video_id`, transcripciones por SHA-256 y chunks por un ID determinista. Una nueva corrida omite todo lo ya procesado, añade únicamente videos o subtítulos nuevos y reanuda el etiquetado por `chunk_id`. Los modelos neuronales pueden continuar desde un checkpoint anterior usando un snapshot que combina los datos previos y el lote nuevo.
+
+Los resultados ejecutados antes de esta reorganización se conservan en [`archivo`](archivo/README.md). Sus métricas corresponden a contratos anteriores y no se atribuyen al nuevo entrenamiento de cinco salidas.
+

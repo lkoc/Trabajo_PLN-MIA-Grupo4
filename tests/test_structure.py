@@ -26,7 +26,9 @@ def test_required_frontends_are_small_templates():
     production = ROOT / "flujo/04_produccion/frontend/produccion.html"
     assert human.stat().st_size < 100_000
     assert production.stat().st_size < 100_000
-    assert "SEGURO" in human.read_text(encoding="utf-8")
+    human_source = human.read_text(encoding="utf-8")
+    assert "t.safe_label" in human_source
+    assert "x.value!==t.safe_label" in human_source
     assert "Modo sombra" in production.read_text(encoding="utf-8")
 
 
