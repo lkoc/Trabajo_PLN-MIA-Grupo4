@@ -131,6 +131,8 @@ flujo/04_produccion/            demostrador supervisado
 datos/                          fuentes, snapshots y vistas canónicas
 modelos/                        candidatos, checkpoints y registro activo
 resultados/                     comparaciones, manifiestos y bundle Colab
+tools/                          scripts de generación, auditoría y preparación de Colab
+tests/                          pruebas automáticas del contrato y del flujo
 archivo/                        evidencia histórica, no usada como flujo activo
 Documento_final_paper/          artículo, bibliografía y figuras reproducibles
 Presentación_BEAMER/            presentación derivada del artículo
@@ -159,6 +161,10 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -e ".[datos,etiquetado,cuadernos,dev]"
 ```
+
+La ruta `.venv\Scripts` **no es una carpeta versionada del proyecto**. El comando `py -3.12 -m venv .venv` la crea automáticamente en Windows dentro del repositorio clonado. Si todavía no aparece, la creación del entorno no se ejecutó o terminó con error. Los scripts mantenidos por el proyecto se encuentran en [`tools/`](tools/).
+
+La instalación editable crea el comando de consola declarado en `pyproject.toml`. En Windows se genera como `.venv\Scripts\modperu.exe`; en Linux y macOS se genera como `.venv/bin/modperu`, sin extensión `.exe`. De forma general, `.venv/bin` es el equivalente de `.venv\Scripts` en esos sistemas.
 
 En Linux o macOS:
 
