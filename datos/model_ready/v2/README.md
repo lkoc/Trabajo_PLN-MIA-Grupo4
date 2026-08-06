@@ -11,3 +11,5 @@ modperu validate datos/model_ready/v2/dataset_5_salidas.jsonl --kind model-ready
 ```
 
 El hash y los conteos exactos están en `migracion_v2_1.manifest.json`.
+
+Ese archivo es el snapshot migrado de arranque. Los incrementos creados por `02_05` se conservan en `snapshots/<snapshot_id>/dataset_5_salidas.jsonl` con `snapshot_manifest.json`; la ruta estable `dataset_5_salidas.jsonl` apunta por copia verificada al contenido activo. Las asignaciones existentes por `video_id` se heredan y no se deduce el video partiendo `chunk_id`.

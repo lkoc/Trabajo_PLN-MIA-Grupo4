@@ -32,8 +32,21 @@ modperu preflight
 
 Los extras `datos`, `etiquetado` y `entrenamiento` se instalan solo cuando se necesitan. Las instrucciones de CUDA, ROCm, XPU y CPU están en [`docs/HARDWARE.md`](docs/HARDWARE.md). Los cuadernos con carga neuronal pueden usar una GPU L4 de Colab directamente desde VS Code mediante el flujo Drive-only descrito en [`docs/COLAB_L4.md`](docs/COLAB_L4.md).
 
+Cada cuaderno activo cita en estilo IEEE las fuentes metodológicas, el software y los checkpoints que realmente usa, y termina con su propia celda `Referencias`. La cobertura y los controles automáticos se documentan en [`docs/AUDITORIA_CITAS_CUADERNOS.md`](docs/AUDITORIA_CITAS_CUADERNOS.md).
+
+El orden íntegro de los 17 cuadernos, sus interruptores y los bucles incrementales está en [`docs/ORDEN_EJECUCION.md`](docs/ORDEN_EJECUCION.md). El puente `02_05` reincorpora eventos humanos y crea snapshots; `03_01`–`03_06` generan candidatos completos y `03_07` publica el registro que consume producción.
+
+Comandos equivalentes para los puentes principales:
+
+```powershell
+modperu prepare-training
+modperu train classical
+modperu train flat --device auto
+modperu publish-model
+```
+
 ## Incrementos futuros
 
-El flujo identifica videos por `video_id`, transcripciones por SHA-256 y chunks por un ID determinista. Una nueva corrida omite todo lo ya procesado, añade únicamente videos o subtítulos nuevos y reanuda el etiquetado por `chunk_id`. Los modelos neuronales pueden continuar desde un checkpoint anterior usando un snapshot que combina los datos previos y el lote nuevo.
+El flujo identifica videos por `video_id`, transcripciones por SHA-256 y chunks por un ID determinista. Una nueva corrida omite todo lo ya procesado, añade únicamente videos o subtítulos nuevos y reanuda el etiquetado por `chunk_id`. Los modelos neuronales pueden continuar una interrupción o inicializarse desde un checkpoint compatible anterior usando un snapshot que combina los datos previos y el lote nuevo. Datos y configuración idénticos producen un no-op verificable, no una reescritura silenciosa.
 
 Los resultados ejecutados antes de esta reorganización se conservan en [`archivo`](archivo/README.md). Sus métricas corresponden a contratos anteriores y no se atribuyen al nuevo entrenamiento de cinco salidas.

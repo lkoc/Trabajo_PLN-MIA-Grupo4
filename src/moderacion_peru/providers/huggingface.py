@@ -16,12 +16,14 @@ class HuggingFaceProvider(AnnotationProvider):
         self,
         model: str = "Qwen/Qwen3-4B",
         *,
+        revision: str = "1cfa9a7208912126459214e8b04321603b3df60c",
         device: str = "auto",
         max_new_tokens: int = 512,
         retries: int = 1,
         taxonomy=None,
     ) -> None:
         super().__init__(model, taxonomy)
+        self.revision = revision
         self.hardware = resolve_device(device)
         self.max_new_tokens = max_new_tokens
         self.retries = retries
@@ -35,6 +37,7 @@ class HuggingFaceProvider(AnnotationProvider):
         return {
             "provider": "huggingface_local",
             "model": self.model,
+            "revision": self.revision,
             "transformers_installed": transformers is not None,
             "hardware": self.hardware.model_dump(),
             "model_loaded": self._pipeline is not None,
@@ -48,7 +51,11 @@ class HuggingFaceProvider(AnnotationProvider):
         except ImportError as exc:
             raise ProviderError("Instale el extra de entrenamiento para usar Hugging Face") from exc
         device = torch_device_name(self.hardware)
-        kwargs: dict[str, Any] = {"model": self.model, "dtype": "auto"}
+        kwargs: dict[str, Any] = {
+            "model": self.model,
+            "revision": self.revision,
+            "dtype": "auto",
+        }
         if self.hardware.backend in {"cuda", "rocm"}:
             kwargs["device"] = 0
             kwargs["model_kwargs"] = {"attn_implementation": "sdpa"}
@@ -108,6 +115,9 @@ class HuggingFaceProvider(AnnotationProvider):
                     source="huggingface_local",
                     annotator_type="llm_local",
                     model=self.model,
+                    video_id=str(chunk["video_id"]) if chunk.get("video_id") else None,
+                    chunk_metadata=chunk,
+                    source_record_sha256=str(chunk.get("text_sha256") or chunk.get("transcript_sha256") or "") or None,
                     prompt_sha256=sha256_text(prompt),
                     taxonomy=self.taxonomy,
                 )

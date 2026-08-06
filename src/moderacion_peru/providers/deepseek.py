@@ -79,6 +79,9 @@ class DeepSeekProvider(AnnotationProvider):
                     source="deepseek_remote",
                     annotator_type="llm_remote",
                     model=self.model,
+                    video_id=str(chunk["video_id"]) if chunk.get("video_id") else None,
+                    chunk_metadata=chunk,
+                    source_record_sha256=str(chunk.get("text_sha256") or chunk.get("transcript_sha256") or "") or None,
                     prompt_sha256=sha256_text(SYSTEM_PROMPT + "\n" + prompt),
                     taxonomy=self.taxonomy,
                 )
@@ -87,4 +90,3 @@ class DeepSeekProvider(AnnotationProvider):
                 if attempt < self.retries:
                     time.sleep(min(2**attempt, 4))
         raise ProviderError(f"DeepSeek falló después de {self.retries + 1} intentos: {last_error}")
-

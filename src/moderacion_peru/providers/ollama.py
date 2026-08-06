@@ -47,13 +47,24 @@ class OllamaProvider(AnnotationProvider):
         except (requests.RequestException, ValueError) as exc:
             raise ProviderError(f"Ollama no responde en {self.base_url}: {exc}") from exc
         tags = tags_response.json()
-        models = [item.get("name") or item.get("model") for item in tags.get("models", [])]
+        model_rows = tags.get("models", [])
+        models = [item.get("name") or item.get("model") for item in model_rows]
+        selected = next(
+            (
+                item
+                for item in model_rows
+                if (item.get("name") or item.get("model")) == self.model
+            ),
+            None,
+        )
         return {
             "provider": "ollama_http",
             "base_url": self.base_url,
             "version": version.get("version"),
             "model": self.model,
             "model_available": self.model in models,
+            "model_digest": selected.get("digest") if selected else None,
+            "model_details": selected.get("details") if selected else None,
             "models": models,
         }
 
@@ -103,6 +114,9 @@ class OllamaProvider(AnnotationProvider):
                     source="ollama_local",
                     annotator_type="llm_local",
                     model=self.model,
+                    video_id=str(chunk["video_id"]) if chunk.get("video_id") else None,
+                    chunk_metadata=chunk,
+                    source_record_sha256=str(chunk.get("text_sha256") or chunk.get("transcript_sha256") or "") or None,
                     prompt_sha256=sha256_text(SYSTEM_PROMPT + "\n" + prompt),
                     taxonomy=self.taxonomy,
                 )

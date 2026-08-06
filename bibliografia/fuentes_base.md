@@ -114,6 +114,7 @@ en la bibliografía científica del paper.
 | `cox1958logistic` | Regresión logística. | Fundamento del modelo binario; la extensión multietiqueta es parte de la implementación. | [JRSS B](https://academic.oup.com/jrsssb/article/20/2/215/7027376) |
 | `cortes1995svm` | SVM lineal. | Fundamento de máquinas de soporte vectorial. | [Springer](https://doi.org/10.1007/BF00994018) |
 | `rennie2003cnb` | `ComplementNB`. | Variante de Naive Bayes diseñada para corregir supuestos pobres en clasificación textual. | [MIT CSAIL](https://people.csail.mit.edu/jrennie/papers/icml03-nb.pdf) |
+| `bottou2010sgd` | `SGDClassifier`. | Fundamento del aprendizaje a gran escala con descenso de gradiente estocástico; no fija la pérdida ni los hiperparámetros locales. | [Springer](https://doi.org/10.1007/978-3-7908-2604-3_16) |
 | `deerwester1990lsa` | `TruncatedSVD` previo al modelo tabular. | Fundamento de análisis semántico latente; no prueba que una dimensión local sea óptima. | [Wiley](https://doi.org/10.1002/(SICI)1097-4571(199009)41:6%3C391::AID-ASI1%3E3.0.CO;2-9) |
 | `friedman2001gbm` | Gradient boosting sobre características reducidas. | Familia de boosting; la implementación concreta es `HistGradientBoostingClassifier`. | [Project Euclid](https://doi.org/10.1214/aos/1013203451) |
 | `joulin2017fasttext` | fastText supervisado OVA. | Clasificación textual eficiente con representaciones promediadas. | [ACL Anthology](https://aclanthology.org/E17-2068/) |
@@ -232,6 +233,11 @@ usarse como sustituto de evidencia científica revisada por pares.
 | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` | [Tarjeta del modelo](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2) | Identificador, revisión resuelta, licencia y fecha de descarga. |
 | `intfloat/multilingual-e5-small` | [Tarjeta del modelo](https://huggingface.co/intfloat/multilingual-e5-small) | Identificador, revisión resuelta y adaptación a clasificación. |
 | `Qwen/Qwen3-0.6B-Base` | [Tarjeta del modelo](https://huggingface.co/Qwen/Qwen3-0.6B-Base) | Checkpoint base, revisión, licencia, configuración LoRA y cabeza de clasificación. |
+| `Qwen/Qwen3-4B` | [Tarjeta del modelo](https://huggingface.co/Qwen/Qwen3-4B) | Revisión `1cfa9a7208912126459214e8b04321603b3df60c`, licencia y rol de preanotación local en Colab. |
+| `qwen3.5:4b` en Ollama | [Tarjeta del modelo](https://ollama.com/library/qwen3.5:4b) | Nombre, digest resuelto por `/api/tags`, cuantización y fecha de ejecución; la tarjeta no valida etiquetas. |
+| Salida estructurada de Ollama | [Documentación oficial](https://docs.ollama.com/capabilities/structured-outputs) | JSON Schema enviado, validación Pydantic, temperatura y reintentos del adaptador local. |
+| PEFT 0.18.0 | [Referencia LoRA](https://huggingface.co/docs/peft/v0.18.0/package_reference/lora) | Versión, rango, `target_modules`, `lora_alpha` y dropout; los valores concretos son locales. |
+| Google Colab para VS Code | [Wiki oficial](https://github.com/googlecolab/colab-vscode/wiki/Known-Issues-and-Workarounds) | Versión de la extensión, soporte de `drive.mount`, hardware observado y SHA-256 del bundle. |
 | DeepSeek V4 Flash/Pro | [Lanzamiento](https://api-docs.deepseek.com/news/news260424/) y [modelos](https://api-docs.deepseek.com/quick_start/pricing/) | IDs exactos, fecha de acceso, rol de preanotación/revisión y protocolo humano posterior. |
 | yt-dlp | [Repositorio oficial](https://github.com/yt-dlp/yt-dlp) | Versión usada, opciones de subtítulos e idiomas solicitados. |
 | youtube-transcript-api | [Repositorio oficial](https://github.com/jdepoix/youtube-transcript-api) | Versión usada y condición de fallback. |

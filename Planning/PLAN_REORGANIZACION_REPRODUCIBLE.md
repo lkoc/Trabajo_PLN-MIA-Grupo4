@@ -46,7 +46,7 @@ Guias_generales/
 | Etapa | Cuadernos activos |
 |---|---|
 | Datos | `01_01_scraping_incremental`, `01_02_limpieza_troceado_incremental`, `01_03_ampliacion_dirigida` |
-| Etiquetado | `02_01_etiquetado_local_ollama`, `02_02_etiquetado_remoto`, `02_03_revision_llm_dirigida`, `02_04_consolidacion_validacion_humana` |
+| Etiquetado | `02_01_etiquetado_local_ollama`, `02_02_etiquetado_remoto`, `02_03_revision_llm_dirigida`, `02_04_consolidacion_validacion_humana`, `02_05_cierre_humano_snapshot` |
 | Entrenamiento | `03_01` clásicos, `03_02` Transformers planos, `03_03` cascada, `03_04` multitarea, `03_05` Qwen-LoRA, `03_06` Qwen estructurado, `03_07` comparación y `03_08` auditoría |
 | Producción | `04_01_frontend_produccion` |
 
@@ -116,3 +116,7 @@ La aceptación ejecutada comprende pruebas unitarias, auditoría de Markdown y c
 ### Extensión Colab L4
 
 Se habilitó la extensión oficial de Colab para VS Code en `02_01` y `03_02`–`03_06`. El transporte es exclusivamente Google Drive: un bundle privado de 32,9 MB contiene código/configuración, chunks y el snapshot entrenable comprimidos con SHA-256. Los datos se copian al SSD efímero, los modelos se descargan al caché temporal y los runs se publican como TAR.GZ atómico con manifiesto; no se usa GitHub ni se sincronizan videos, transcripciones crudas, bibliografía o cachés. La ejecución real en L4 sigue requiriendo seleccionar el kernel y autorizar el montaje de Drive desde la cuenta del usuario.
+
+### Cierre de puentes end-to-end
+
+Se añadió `02_05` para aplicar eventos humanos al consolidado, recuperar `video_id` desde el chunk y materializar snapshots inmutables con particiones heredadas. `03_01`–`03_06` ejecutan ahora el ciclo completo fit, calibración, test, checkpoint y candidato; `03_07` selecciona solo con validation y publica el registro. Cada operación tiene firma/no-op, y los modelos neuronales admiten reanudación del run y warm start al crecer el snapshot. Los frontends reincorporan las funciones útiles históricas y las conectan al contrato v2.1. La implementación se comprobó con smoke tests reales de scikit-learn y rutas neuronales simuladas; el entrenamiento neuronal integral y sus métricas siguen pendientes de ejecución en L4, como exige la restricción del plan.

@@ -16,6 +16,7 @@ from .training import encode_targets
 class TrainingSpecification:
     family: str
     model_id: str
+    revision: str | None = None
     max_length: int = 128
     learning_rate: float = 2e-5
     epochs: int = 3
@@ -28,14 +29,17 @@ TRANSFORMER_SPECS = {
     "minilm": TrainingSpecification(
         family="transformer_encoder",
         model_id="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        revision="e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
     ),
     "e5": TrainingSpecification(
         family="transformer_encoder",
         model_id="intfloat/multilingual-e5-small",
+        revision="614241f622f53c4eeff9890bdc4f31cfecc418b3",
     ),
     "qwen_lora": TrainingSpecification(
         family="qwen_lora",
         model_id="Qwen/Qwen3-0.6B-Base",
+        revision="da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
         learning_rate=1e-4,
         epochs=4,
         batch_size=2,
@@ -105,9 +109,10 @@ def build_transformer_classifier(spec: TrainingSpecification, device: str = "aut
     hardware = resolve_device(device)
     id2label = {index: label for index, label in enumerate(taxonomy.target_labels)}
     label2id = {label: index for index, label in id2label.items()}
-    tokenizer = AutoTokenizer.from_pretrained(spec.model_id)
+    tokenizer = AutoTokenizer.from_pretrained(spec.model_id, revision=spec.revision)
     model = AutoModelForSequenceClassification.from_pretrained(
         spec.model_id,
+        revision=spec.revision,
         num_labels=len(taxonomy.target_labels),
         id2label=id2label,
         label2id=label2id,

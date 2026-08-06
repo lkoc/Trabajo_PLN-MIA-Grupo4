@@ -20,6 +20,35 @@ def sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def canonical_json_sha256(payload: Any) -> str:
+    """Huella estable de un objeto JSON, independiente de espacios y orden de claves."""
+
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    )
+    return sha256_text(encoded)
+
+
+def input_signature(paths: Iterable[str | Path], configuration: Any | None = None) -> str:
+    """Firma archivos existentes y configuración para detectar una ejecución no-op."""
+
+    records = []
+    for raw in sorted((Path(path).resolve() for path in paths), key=str):
+        records.append(
+            {
+                "path": str(raw),
+                "exists": raw.is_file(),
+                "sha256": sha256_file(raw) if raw.is_file() else None,
+                "bytes": raw.stat().st_size if raw.is_file() else None,
+            }
+        )
+    return canonical_json_sha256({"inputs": records, "configuration": configuration or {}})
+
+
 def read_jsonl(path: str | Path) -> Iterator[dict[str, Any]]:
     source = Path(path)
     if not source.exists():
@@ -95,4 +124,3 @@ def append_jsonl_once(
         handle.flush()
         os.fsync(handle.fileno())
     return added, skipped
-

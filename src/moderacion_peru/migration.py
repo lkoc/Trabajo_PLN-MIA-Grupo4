@@ -59,7 +59,12 @@ def migrate_jsonl(
         raise ValueError("La migración nunca sobrescribe el archivo fuente")
     rows = [migrate_record(row) for row in read_jsonl(source_path)]
     for row in rows:
-        video_id = str(row.get("video_id") or str(row["chunk_id"]).split("_", 1)[0])
+        if not row.get("video_id"):
+            raise ValueError(
+                f"La migración requiere video_id explícito en {row.get('chunk_id')}; "
+                "recupérelo de la tabla de chunks, no lo deduzca del ID"
+            )
+        video_id = str(row["video_id"])
         row["video_id"] = video_id
         row["split"] = row.get("split") or stable_video_split(video_id)
     assert_no_video_leakage(rows)

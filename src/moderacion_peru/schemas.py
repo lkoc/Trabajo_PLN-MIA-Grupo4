@@ -21,6 +21,12 @@ class AnnotationRecord(BaseModel):
     taxonomy_version: str = "2.1.0"
     chunk_id: str = Field(min_length=1)
     video_id: str | None = None
+    start_seconds: float | None = Field(default=None, ge=0)
+    end_seconds: float | None = Field(default=None, ge=0)
+    video_title: str | None = None
+    channel_title: str | None = None
+    source_url: str | None = None
+    cohort: str | None = None
     text: str = Field(min_length=1)
     coarse_labels: list[str] = Field(default_factory=list)
     fine_labels: list[str] = Field(default_factory=list)
@@ -36,6 +42,11 @@ class AnnotationRecord(BaseModel):
     annotator_model: str | None = None
     prompt_sha256: str | None = None
     source_record_sha256: str | None = None
+    consolidated_sources: list[str] = Field(default_factory=list)
+    consolidation_warning: str | None = None
+    review_event_id: str | None = None
+    review_action: Literal["accept", "modify", "reject", "defer"] | None = None
+    reviewer_pseudonym: str | None = None
     created_at: datetime = Field(default_factory=utc_now)
 
     @model_validator(mode="after")
@@ -49,7 +60,9 @@ class AnnotationRecord(BaseModel):
         if unknown_flags:
             raise ValueError(f"Flags desconocidos: {sorted(unknown_flags)}")
         if not self.coarse_labels:
-            if not self.needs_review or self.training_eligible:
+            if self.decision_status == "excluded" and not self.training_eligible:
+                pass
+            elif not self.needs_review or self.training_eligible:
                 raise ValueError(
                     "Una anotación sin categoría debe requerir revisión y no ser entrenable"
                 )
@@ -59,6 +72,8 @@ class AnnotationRecord(BaseModel):
             raise ValueError("decision_status=needs_review exige needs_review=true")
         if self.decision_status == "excluded" and self.training_eligible:
             raise ValueError("Una anotación excluida no puede ser entrenable")
+        if self.start_seconds is not None and self.end_seconds is not None and self.end_seconds < self.start_seconds:
+            raise ValueError("end_seconds no puede preceder a start_seconds")
         return self
 
 
@@ -160,6 +175,10 @@ class ModelRegistryEntry(BaseModel):
     metrics_path: str | None = None
     parent_model_id: str | None = None
     hardware: HardwareRecord | None = None
+    dataset_sha256: str | None = None
+    run_signature: str | None = None
+    inference: dict[str, Any] = Field(default_factory=dict)
+    selection_metrics: dict[str, float] = Field(default_factory=dict)
     status: Literal["candidate", "validated", "shadow_only", "archived"] = "candidate"
 
     @model_validator(mode="after")
@@ -197,6 +216,9 @@ class ReviewEvent(BaseModel):
             raise ValueError("Una decisión diferida no puede tener categorías finales")
         if self.action in {"accept", "modify"} and not self.final_labels:
             raise ValueError("Aceptar o modificar requiere una categoría final explícita")
+        unknown_flags = set(self.flags) - set(taxonomy.flags)
+        if unknown_flags:
+            raise ValueError(f"Flags desconocidos: {sorted(unknown_flags)}")
         return self
 
 

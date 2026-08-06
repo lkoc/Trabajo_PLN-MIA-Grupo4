@@ -10,19 +10,25 @@ Una transcripción canónica contiene `video_id`, URL, canal, fuente de subtítu
 
 ## Anotación
 
-Campos mínimos: `chunk_id`, `text`, `coarse_labels`, `fine_labels`, `flags`, `needs_review`, `training_eligible`, fuente, modelo, prompt y versiones. Invariantes:
+Campos mínimos: `chunk_id`, `video_id`, `text`, `coarse_labels`, `fine_labels`, `flags`, `needs_review`, `training_eligible`, fuente, modelo, prompt y versiones. `video_id` puede faltar en propuestas históricas, pero `02_05` debe recuperarlo del chunk fuente antes de crear datos entrenables; nunca se parte `chunk_id` para deducirlo. Invariantes:
 
 - `SEGURO` o uno/más daños, nunca ambos;
 - una lista vacía solo es válida con revisión y exclusión temporal del entrenamiento;
 - los flags no son categorías principales;
 - toda salida conserva procedencia.
 
+## Evento y reconciliación humana
+
+`ReviewEvent` es append-only y registra propuesta, decisión, acción, flags, modelo y revisor pseudonimizado. Para cada chunk se aplica el evento más reciente por `(created_at, event_id)`. `accept` y `modify` producen una decisión humana resuelta; `defer` queda fuera de entrenamiento y no crea una sexta clase; `reject` queda explícitamente excluido. El consolidado LLM y los eventos originales nunca se sobrescriben.
+
 ## Snapshot de entrenamiento
 
 `ModelReadyRecord` conserva `chunk_id`, `video_id`, texto, categorías canónicas, señales de referencia, fuente, peso, campaña, procedencia histórica y `split`. Solo contiene decisiones resueltas y entrenables. La partición es estable por `video_id`; un video nunca cruza train, validation y test. Un incremento materializa otro snapshot y conserva el anterior.
 
-El snapshot v2.1 usa `ATAQUE_POR_GENERO_IDENTIDAD` como objetivo. El identificador anterior solo puede aparecer en `legacy_coarse_labels`, nunca en `coarse_labels`. `modperu validate ruta.jsonl --kind model-ready` comprueba las categorías, la exclusividad de `SEGURO`, la procedencia migrada, los flags y el split.
+El snapshot v2.1 usa `ATAQUE_POR_GENERO_IDENTIDAD` como objetivo. El identificador anterior solo puede aparecer en `legacy_coarse_labels`, nunca en `coarse_labels`. `modperu validate ruta.jsonl --kind model-ready` comprueba las categorías, la exclusividad de `SEGURO`, la procedencia migrada, los flags y el split. Cada snapshot vive en `datos/model_ready/v2/snapshots/<snapshot_id>/`; `dataset_5_salidas.jsonl` es una vista de conveniencia al último snapshot y solo cambia si cambia su contenido.
 
 ## Registro de modelos
 
-Un modelo activo debe declarar cinco scores y cinco umbrales, el contrato exacto, checkpoint/hash, métrica, split de selección, hardware y linaje. La falta de cualquiera de estas piezas impide registrarlo para producción.
+Cada experimento completo escribe `candidate.json`, `metrics.json`, predicciones de validation/test, cinco umbrales, un bundle de inferencia y `checkpoint_manifest.json` con SHA-256 de todos los archivos requeridos. La firma combina dataset, configuración, taxonomía y versión del motor; repetirla es no-op.
+
+Un modelo activo debe declarar cinco scores y cinco umbrales, el contrato exacto, checkpoint/hash, métrica, split de selección, hardware y linaje. `03_07` acepta únicamente candidatos del SHA-256 activo, ordena con métricas de validation y publica test solo como informe. La falta de cualquiera de estas piezas impide registrarlo para producción.

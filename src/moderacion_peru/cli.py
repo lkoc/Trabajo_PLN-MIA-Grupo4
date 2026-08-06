@@ -8,12 +8,16 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from .artifacts import artifact_status
+from .consolidation import reconcile_human_reviews
+from .datasets import materialize_versioned_training_snapshot
 from .device import resolve_device
+from .experiments import train_classical_experiments, train_flat_transformers, train_neural_experiment
 from .io import read_jsonl
 from .migration import migrate_jsonl
 from .paths import find_project_root
 from .pilot import build_human_pilot, run_ollama_pilot
 from .providers import OllamaProvider, ProviderError
+from .registry import compare_and_publish_registry
 from .schemas import AnnotationRecord, ModelReadyRecord
 from .servers import serve
 from .taxonomy import load_taxonomy
@@ -95,6 +99,56 @@ def command_run_stage(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_prepare_training(args: argparse.Namespace) -> int:
+    root = find_project_root()
+    consolidated = Path(args.consolidated or root / "datos/etiquetado/consolidado/anotaciones_v2.jsonl")
+    chunks = Path(args.chunks or root / "datos/processed/chunks_v2.jsonl")
+    reviews = [Path(path) for path in (args.reviews or [root / "datos/etiquetado/humano/labeling_events_v2.jsonl"])]
+    reviewed = Path(args.reviewed or root / "datos/etiquetado/consolidado/anotaciones_revisadas_v2.jsonl")
+    dataset = Path(args.dataset or root / "datos/model_ready/v2/dataset_5_salidas.jsonl")
+    reconciliation = reconcile_human_reviews(
+        consolidated,
+        reviews,
+        reviewed,
+        chunks_source=chunks,
+    )
+    snapshot = materialize_versioned_training_snapshot(reviewed, dataset)
+    print_json({"reconciliation": reconciliation, "snapshot": snapshot})
+    return 0
+
+
+def command_train(args: argparse.Namespace) -> int:
+    root = find_project_root()
+    dataset = Path(args.dataset or root / "datos/model_ready/v2/dataset_5_salidas.jsonl")
+    output = Path(args.output or root / "modelos/v2" / args.family)
+    if args.family == "classical":
+        result = train_classical_experiments(dataset, output, force=args.force)
+    elif args.family == "flat":
+        result = train_flat_transformers(dataset, output, device=args.device, force=args.force)
+    else:
+        result = train_neural_experiment(
+            dataset,
+            output,
+            experiment=args.family,
+            device=args.device,
+            force=args.force,
+        )
+    print_json(result)
+    return 0
+
+
+def command_publish(args: argparse.Namespace) -> int:
+    root = find_project_root()
+    result = compare_and_publish_registry(
+        args.dataset or root / "datos/model_ready/v2/dataset_5_salidas.jsonl",
+        args.candidate_roots or [root / "modelos/v2"],
+        args.registry or root / "modelos/registro_modelos_5_salidas.json",
+        comparison_path=args.comparison,
+    )
+    print_json(result)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="modperu")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -135,6 +189,29 @@ def build_parser() -> argparse.ArgumentParser:
     run_stage.add_argument("stage", choices=["01_datos", "02_etiquetado", "03_entrenamiento", "04_produccion"])
     run_stage.set_defaults(func=command_run_stage)
 
+    prepare = subparsers.add_parser("prepare-training", help="Reincorpora revisión humana y congela el snapshot entrenable")
+    prepare.add_argument("--consolidated")
+    prepare.add_argument("--chunks")
+    prepare.add_argument("--reviews", nargs="+")
+    prepare.add_argument("--reviewed")
+    prepare.add_argument("--dataset")
+    prepare.set_defaults(func=command_prepare_training)
+
+    train = subparsers.add_parser("train", help="Ejecuta fit, calibración, test y candidato idempotente")
+    train.add_argument("family", choices=["classical", "flat", "cascade", "multitask", "qwen_lora", "qwen_structured"])
+    train.add_argument("--dataset")
+    train.add_argument("--output")
+    train.add_argument("--device", default="auto")
+    train.add_argument("--force", action="store_true")
+    train.set_defaults(func=command_train)
+
+    publish = subparsers.add_parser("publish-model", help="Compara en validation y publica el registro productivo")
+    publish.add_argument("--dataset")
+    publish.add_argument("--candidate-roots", nargs="+")
+    publish.add_argument("--registry")
+    publish.add_argument("--comparison")
+    publish.set_defaults(func=command_publish)
+
     labeling = subparsers.add_parser("serve-labeling", help="Inicia la validación humana local")
     labeling.add_argument("--host", default="127.0.0.1")
     labeling.add_argument("--port", type=int, default=8765)
@@ -146,7 +223,8 @@ def build_parser() -> argparse.ArgumentParser:
     production.add_argument("--host", default="127.0.0.1")
     production.add_argument("--port", type=int, default=8765)
     production.add_argument("--reviews")
-    production.set_defaults(func=lambda args: serve(mode="production", host=args.host, port=args.port, reviews=args.reviews) or 0)
+    production.add_argument("--registry")
+    production.set_defaults(func=lambda args: serve(mode="production", host=args.host, port=args.port, reviews=args.reviews, registry=args.registry) or 0)
     return parser
 
 

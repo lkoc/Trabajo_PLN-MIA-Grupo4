@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import pytest
 
 from moderacion_peru.datasets import assert_no_video_leakage, stable_video_split
 from moderacion_peru.acquisition import (
@@ -157,6 +158,23 @@ def test_migration_materializes_grouped_model_ready_rows(tmp_path):
     assert json.loads(manifest.read_text(encoding="utf-8"))["counters"][
         f"split:{validated.split}"
     ] == 1
+
+
+def test_migration_never_guesses_video_id_from_chunk_id(tmp_path):
+    source = tmp_path / "legacy.jsonl"
+    source.write_text(
+        json.dumps(
+            {
+                "chunk_id": "youtube_id_with_underscore_0001",
+                "text": "texto",
+                "coarse_labels": ["SEGURO"],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="video_id explícito"):
+        migrate_jsonl(source, tmp_path / "out.jsonl", tmp_path / "manifest.json")
 
 
 def test_video_split_is_stable_and_no_leakage():

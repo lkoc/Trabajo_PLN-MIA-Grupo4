@@ -6,6 +6,8 @@ El registro activo esperado es `registro_modelos_5_salidas.json`. Debe declarar 
 
 No se copiará un clasificador de cuatro daños al registro v2. Los encoders o backbones pueden reutilizarse como inicialización, pero la nueva cabeza y sus umbrales requieren entrenamiento y validación. Los artefactos históricos permanecen en `archivo/`.
 
+Cada ejecución activa vive bajo `v2/<familia>/runs/<experimento-firma>/` y contiene `candidate.json`, métricas, predicciones, bundle de inferencia y `checkpoint_manifest.json`. Las rutas internas son portables para recuperar runs de Colab. `03_07` rechaza candidatos incompletos o entrenados con otro SHA-256 del snapshot y no reescribe el registro cuando la selección permanece igual.
+
 ## Documentación de los modelos anteriores
 
 Carpeta de checkpoints, adaptadores, calibradores, vectorizadores y cabezas entrenadas por los cuadernos `04_201`–`04_206`.

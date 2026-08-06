@@ -13,6 +13,9 @@ import nbformat
 
 ROOT = Path(__file__).resolve().parents[1]
 MARKDOWN_LINK = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
+BODY_CITATION = re.compile(r"\[(\d+)\]")
+REFERENCE_ENTRY = re.compile(r"^\[(\d+)\]\s", re.MULTILINE)
+MASTER_BIB_ENTRY = re.compile(r"^@[A-Za-z]+\{([^,]+),", re.MULTILINE)
 DEPRECATED_GENDER_LABEL = "ACOSO_GENERO_IDENTIDAD"
 
 
@@ -37,9 +40,11 @@ def markdown_issues() -> list[str]:
 def notebook_issues() -> list[str]:
     issues = []
     notebooks = sorted((ROOT / "flujo").rglob("*.ipynb"))
+    master_bib = (ROOT / "Documento_final_paper" / "referencias.bib").read_text(encoding="utf-8")
+    master_keys = set(MASTER_BIB_ENTRY.findall(master_bib))
     expected_prefixes = {
         "01_datos": ("01_01", "01_02", "01_03"),
-        "02_etiquetado": ("02_01", "02_02", "02_03", "02_04"),
+        "02_etiquetado": ("02_01", "02_02", "02_03", "02_04", "02_05"),
         "03_entrenamiento": tuple(f"03_{i:02d}" for i in range(1, 9)),
         "04_produccion": ("04_01",),
     }
@@ -60,6 +65,34 @@ def notebook_issues() -> list[str]:
             issues.append(f"missing_contract_metadata:{path.relative_to(ROOT)}")
         if notebook.metadata.get("moderacion_peru", {}).get("taxonomy_version") != "2.1.0":
             issues.append(f"wrong_taxonomy_version:{path.relative_to(ROOT)}")
+        citation_metadata = notebook.metadata.get("moderacion_peru", {})
+        citation_keys = list(citation_metadata.get("citation_keys", []))
+        if citation_metadata.get("citation_style") != "IEEE_numeric":
+            issues.append(f"wrong_citation_style:{path.relative_to(ROOT)}")
+        if not citation_keys or len(citation_keys) != len(set(citation_keys)):
+            issues.append(f"invalid_citation_keys:{path.relative_to(ROOT)}")
+        if citation_metadata.get("reference_count") != len(citation_keys):
+            issues.append(f"wrong_reference_count:{path.relative_to(ROOT)}")
+        for missing_key in sorted(set(citation_keys) - master_keys):
+            issues.append(f"citation_missing_master_bib:{path.relative_to(ROOT)}:{missing_key}")
+        if not notebook.cells or notebook.cells[-1].cell_type != "markdown":
+            issues.append(f"missing_final_references:{path.relative_to(ROOT)}")
+        else:
+            final = notebook.cells[-1]
+            if not final.source.startswith("## Referencias\n\n[1] "):
+                issues.append(f"invalid_final_references:{path.relative_to(ROOT)}")
+            if "references" not in final.metadata.get("tags", []):
+                issues.append(f"missing_references_tag:{path.relative_to(ROOT)}")
+            body = "\n".join(
+                cell.source for cell in notebook.cells[:-1] if cell.cell_type == "markdown"
+            )
+            expected = set(range(1, len(citation_keys) + 1))
+            observed_citations = set(map(int, BODY_CITATION.findall(body)))
+            observed_entries = list(map(int, REFERENCE_ENTRY.findall(final.source)))
+            if observed_citations != expected:
+                issues.append(f"citation_number_mismatch:{path.relative_to(ROOT)}")
+            if observed_entries != list(range(1, len(citation_keys) + 1)):
+                issues.append(f"reference_number_mismatch:{path.relative_to(ROOT)}")
         source = "\n".join(cell.source for cell in notebook.cells)
         for index, cell in enumerate(notebook.cells):
             if cell.cell_type == "code":
@@ -114,10 +147,21 @@ def main() -> int:
 
     taxonomy = load_taxonomy()
     issues = markdown_issues() + notebook_issues() + taxonomy_name_issues()
+    notebooks = [nbformat.read(path, as_version=4) for path in sorted((ROOT / "flujo").rglob("*.ipynb"))]
     result = {
         "taxonomy": taxonomy.contract_id,
         "markdown_files": len(list(ROOT.rglob("*.md"))),
         "active_notebooks": len(list((ROOT / "flujo").rglob("*.ipynb"))),
+        "notebook_citations": sum(
+            int(notebook.metadata.get("moderacion_peru", {}).get("reference_count", 0))
+            for notebook in notebooks
+        ),
+        "notebooks_with_final_references": sum(
+            bool(notebook.cells)
+            and notebook.cells[-1].cell_type == "markdown"
+            and notebook.cells[-1].source.startswith("## Referencias")
+            for notebook in notebooks
+        ),
         "issues": issues,
     }
     print(json.dumps(result, ensure_ascii=False, indent=2))

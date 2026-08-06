@@ -112,6 +112,67 @@ def test_ollama_disables_thinking_and_limits_structured_output(monkeypatch):
     assert captured["body"]["options"]["num_predict"] == 512
 
 
+def test_provider_preserves_video_group_and_temporal_metadata(monkeypatch):
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"message": {"content": json.dumps(payload())}}
+
+    monkeypatch.setattr(
+        "moderacion_peru.providers.ollama.requests.post",
+        lambda *args, **kwargs: Response(),
+    )
+    result = OllamaProvider(model="fixture", retries=0).annotate(
+        {
+            "chunk_id": "c1",
+            "video_id": "video_with_underscore",
+            "text": "contenido neutral",
+            "start_seconds": 3.0,
+            "end_seconds": 9.0,
+            "video_title": "Título",
+        }
+    )
+    assert result.video_id == "video_with_underscore"
+    assert result.start_seconds == 3.0
+    assert result.end_seconds == 9.0
+    assert result.video_title == "Título"
+
+
+def test_ollama_probe_records_exact_model_digest(monkeypatch):
+    class Response:
+        def __init__(self, body):
+            self.body = body
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return self.body
+
+    responses = {
+        "/api/version": {"version": "fixture"},
+        "/api/tags": {
+            "models": [
+                {
+                    "name": "qwen3.5:4b",
+                    "digest": "2a654d98e6fb",
+                    "details": {"quantization_level": "Q4_K_M"},
+                }
+            ]
+        },
+    }
+
+    def fake_get(url, *, timeout):
+        return Response(responses[next(path for path in responses if url.endswith(path))])
+
+    monkeypatch.setattr("moderacion_peru.providers.ollama.requests.get", fake_get)
+    result = OllamaProvider().probe()
+    assert result["model_digest"] == "2a654d98e6fb"
+    assert result["model_details"]["quantization_level"] == "Q4_K_M"
+
+
 def test_huggingface_uses_chat_template_without_thinking_and_retries():
     class Tokenizer:
         calls = []
@@ -139,3 +200,4 @@ def test_huggingface_uses_chat_template_without_thinking_and_retries():
     assert result.coarse_labels == ["SEGURO"]
     assert generator.calls == 2
     assert generator.tokenizer.calls[0]["enable_thinking"] is False
+    assert provider.probe()["revision"] == "1cfa9a7208912126459214e8b04321603b3df60c"

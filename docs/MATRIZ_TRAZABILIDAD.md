@@ -11,6 +11,12 @@
 | acoso personal y amenaza se fusionan por soporte | informes ejecutados y auditoría taxonómica | migrador v2 | snapshot v2 | implementado; no equivalencia jurídica |
 | videos previos no se descargan | requisito incremental | `acquisition.ingest_incremental` | etapa 01 | implementado |
 | partición sin fuga por video | protocolo experimental | `datasets.stable_video_split` | etapa 03 | implementado |
+| eventos humanos vuelven al consolidado sin sobrescribir propuestas | requisito de precedencia y trazabilidad | `consolidation.reconcile_human_reviews`, `ReviewEvent` | `02_05` | implementado; último evento por fecha+ID |
+| `video_id` no se infiere desde un `chunk_id` ambiguo | requisito de integridad de grupos | `materialize_versioned_training_snapshot` | `02_05` y split | implementado; ausencia explícita detiene la etapa |
+| aumentar muestra crea snapshot nuevo y ejecución sin cambios es no-op | requisito incremental | firma de insumos, snapshot por contenido y run signature | `02_05`, `03_01`–`03_08` | implementado y probado |
+| todas las ramas completan fit, calibración, test y candidato | protocolo experimental | `experiments.py` | `03_01`–`03_06` | implementado; smoke real clásico y neuronal simulado |
+| selección productiva no consulta test | control de sesgo de selección | `registry.compare_and_publish_registry` | `03_07` | implementado; ranking solo validation |
+| frontend histórico recuperado bajo contrato v2.1 | requisito funcional | `servers.py` y ambos HTML activos | etapas 02 y 04 | implementado: contexto, YouTube, revisión, estadísticas y exportación |
 | Ollama es la ruta local oficial | documentación de JSON Schema de Ollama | `providers/OllamaProvider` | etapa 02 | implementado |
 | CUDA/ROCm/XPU/CPU | documentación PyTorch | `device.resolve_device` | entrenamiento/manifiestos | implementado |
 | Colab L4 desde VS Code sin duplicar el repositorio | extensión oficial Google Colab y FAQ de Drive/Colab | `config/colab_l4.json`, bundle SHA-256 y `colab.prepare_colab_context` | `02_01`, `03_02`–`03_06` | implementado; Drive-only, sin GitHub |

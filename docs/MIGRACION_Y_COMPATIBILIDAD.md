@@ -15,12 +15,13 @@ Reglas:
 - `SEGURO` solo procede de `SEGURO` histórico explícito;
 - vacío, desconocido o conflicto se envía a revisión y se excluye del entrenamiento;
 - se preserva `legacy_coarse_labels` y la fuente original.
+- cada fila requiere `video_id` explícito; si el histórico no lo contiene, primero se cruza con la tabla de chunks. Nunca se deduce partiendo `chunk_id`, porque un ID de YouTube puede contener `_`.
 
 El alias histórico nunca aparece en predicciones, campañas, modelos o exportaciones nuevas. El cambio de nombre no altera automáticamente los rótulos fuente: la migración crea un snapshot nuevo y conserva el original para auditoría.
 
 ## Modelos
 
-Los modelos anteriores pueden proporcionar encoder o backbone. No se reutilizan sus umbrales ni se presentan como modelos v2. La primera cabeza de cinco salidas se entrena desde una inicialización nueva; después, las ampliaciones pueden reanudar desde el checkpoint v2 y mezclar el lote nuevo con datos anteriores.
+Los modelos anteriores pueden proporcionar encoder o backbone. No se reutilizan sus umbrales ni se presentan como modelos v2. La primera cabeza de cinco salidas se entrena desde una inicialización nueva; después, las ampliaciones reanudan una interrupción o usan *warm start* desde un candidato v2 compatible y entrenan con el snapshot completo anterior+nuevo.
 
 ## Frontend y eventos
 

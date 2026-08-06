@@ -34,6 +34,9 @@ def normalize_payload(
     source: str,
     annotator_type: str,
     model: str,
+    video_id: str | None = None,
+    chunk_metadata: dict[str, Any] | None = None,
+    source_record_sha256: str | None = None,
     prompt_sha256: str | None = None,
     taxonomy: TaxonomyContract | None = None,
 ) -> AnnotationRecord:
@@ -52,8 +55,16 @@ def normalize_payload(
     ):
         raise ProviderError("SEGURO requiere un estado fino seguro explícito")
     needs_review = parsed.needs_review or not coarse
+    metadata = chunk_metadata or {}
     return AnnotationRecord(
         chunk_id=parsed.chunk_id,
+        video_id=video_id,
+        start_seconds=metadata.get("start_seconds"),
+        end_seconds=metadata.get("end_seconds"),
+        video_title=metadata.get("video_title") or metadata.get("title"),
+        channel_title=metadata.get("channel_title") or metadata.get("channel"),
+        source_url=metadata.get("source_url") or metadata.get("url"),
+        cohort=metadata.get("cohort"),
         text=text,
         coarse_labels=list(coarse),
         fine_labels=list(fine),
@@ -68,6 +79,7 @@ def normalize_payload(
         annotator_type=annotator_type,  # type: ignore[arg-type]
         annotator_model=model,
         prompt_sha256=prompt_sha256,
+        source_record_sha256=source_record_sha256,
     )
 
 

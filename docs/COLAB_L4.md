@@ -20,11 +20,11 @@ Referencias: [extensión oficial en VS Code Marketplace](https://marketplace.vis
 | `03_03` cascada | dos etapas y regeneración repetida de scores | Colab L4 recomendado; publicar scores/checkpoints consistentes |
 | `03_04` multitarea | mayor memoria de activaciones y varias cabezas | L4, AMP/BF16 si el modelo lo admite y acumulación de gradiente |
 | `03_05` Qwen-LoRA | principal presión de VRAM y checkpoints | L4 recomendado; guardar en `/content` y publicar por checkpoint |
-| `03_06` Qwen estructurado | entrenamiento/inferencia generativa | L4 recomendado |
+| `03_06` Qwen estructurado | entrenamiento discriminativo con penalización `SEGURO+daño` | L4 recomendado |
 | `03_07`–`03_08` | métricas y auditoría sobre predicciones ya materializadas | CPU local; usar L4 solo si es necesario regenerar inferencias |
 | escritura de checkpoints | muchos archivos pequeños directamente en Drive son lentos y vulnerables a interrupciones | empaquetar el run en un TAR.GZ local, copiarlo como `.partial`, verificar y renombrar antes del manifiesto |
 
-Los cuadernos continúan con `RUN=False`: habilitar Colab no inventa una corrida ni métricas. Primero se ejecuta un smoke test y después se activa el entrenamiento correspondiente.
+Los cuadernos continúan con `RUN_TRAINING=False`: habilitar Colab no inventa una corrida ni métricas. Primero se ejecuta un smoke test y después se activa el entrenamiento correspondiente. Al activarlo, cada rama completa fit, calibración, test, checkpoint y candidato; una firma ya terminada devuelve no-op.
 
 ## Contenido sincronizado
 
@@ -32,7 +32,7 @@ La carpeta privada ya creada es [ModeracionPeru_Colab](https://drive.google.com/
 
 | Archivo | Tamaño | Consumidores |
 |---|---:|---|
-| `project_core.zip` | 41 372 B | todos los cuadernos Colab |
+| `project_core.zip` | 41 671 B | todos los cuadernos Colab |
 | `chunks_v2.jsonl.gz` | 11 549 973 B | `02_01` |
 | `dataset_5_salidas.jsonl.gz` | 21 275 598 B | `03_02`–`03_06` |
 | `bundle_manifest.json` | 2 781 B | verificación de todo el bundle |
@@ -62,7 +62,7 @@ El manifiesto se escribe al final. En la interfaz web o mediante el conector de 
 3. Seleccione `Select Kernel > Colab > Auto Connect`, autentíquese y elija GPU L4.
 4. Ejecute la celda “Backend opcional Google Colab L4”. Si el montaje no se abre, use `Colab: Mount Google Drive to Server...` en la paleta de comandos.
 5. Confirme `backend=cuda` y `device_name=NVIDIA L4`. El cuaderno se detiene explícitamente ante CPU, T4 u otra GPU mientras `COLAB_REQUIRE_L4=True`.
-6. Mantenga `RUN=False` para el preflight; después active un límite pequeño. Use un `COLAB_RUN_ID` nuevo para otro experimento o deje vacío para reanudar `<cuaderno>_working_v2_1`.
+6. Mantenga `RUN_TRAINING=False` para el preflight; después actívelo. Use un `COLAB_RUN_ID` nuevo para otro experimento o deje vacío para reanudar `<cuaderno>_working_v2_1`.
 7. Tras un checkpoint consistente, cambie `PUBLISH_TO_DRIVE=True`. La siguiente sesión restaurará el TAR.GZ verificado antes de continuar.
 
 Los secretos no se guardan en Drive ni en los cuadernos. Los modelos públicos actuales no requieren token; si en el futuro se usa un repositorio restringido, el token debe configurarse en los secretos de Colab.
@@ -77,4 +77,14 @@ MyDrive/ModeracionPeru_Colab/runs/<notebook_id>/<run_id>/
 └── run_manifest.json
 ```
 
-El manifiesto registra contrato, hardware, fecha, tamaño y SHA-256. No se registra un modelo para producción hasta recuperar sus artefactos, validar las cinco salidas y completar las métricas con el protocolo de validation/test.
+El manifiesto registra contrato, hardware, fecha, tamaño y SHA-256. Los candidatos usan rutas relativas al directorio del run, de modo que el TAR.GZ puede extraerse bajo `modelos/v2/<familia>/` sin conservar rutas `/content/...`.
+
+Para comparar localmente:
+
+1. descargue o restaure `run_outputs.tar.gz`;
+2. verifique el SHA-256 de `run_manifest.json`;
+3. extraiga su contenido bajo una carpeta propia de `modelos/v2`;
+4. compruebe que `candidate.json` y `checkpoint_manifest.json` quedan juntos;
+5. ejecute `03_07` o `modperu publish-model`.
+
+No se registra un modelo para producción hasta recuperar sus artefactos, validar las cinco salidas y completar el protocolo de validation/test. `03_07` rechaza automáticamente candidatos de otro SHA-256 de dataset.

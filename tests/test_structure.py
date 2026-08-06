@@ -1,17 +1,20 @@
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
 
 import nbformat
 
 
 ROOT = Path(__file__).resolve().parents[1]
+BODY_CITATION = re.compile(r"\[(\d+)\]")
+REFERENCE_ENTRY = re.compile(r"^\[(\d+)\]\s", re.MULTILINE)
 
 
 def test_active_notebooks_are_ordered_and_clean():
     notebooks = sorted((ROOT / "flujo").rglob("*.ipynb"))
-    assert len(notebooks) == 16
+    assert len(notebooks) == 17
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
         assert notebook.metadata["moderacion_peru"]["contract"] == "moderacion_peru_5_salidas_v2"
@@ -24,6 +27,31 @@ def test_active_notebooks_are_ordered_and_clean():
         for cell in notebook.cells:
             if cell.cell_type == "code":
                 ast.parse(cell.source)
+
+
+def test_each_notebook_has_consistent_ieee_references_as_final_cell():
+    master_bib = (ROOT / "Documento_final_paper" / "referencias.bib").read_text(encoding="utf-8")
+    master_keys = set(re.findall(r"^@[A-Za-z]+\{([^,]+),", master_bib, re.MULTILINE))
+    for path in sorted((ROOT / "flujo").rglob("*.ipynb")):
+        notebook = nbformat.read(path, as_version=4)
+        metadata = notebook.metadata["moderacion_peru"]
+        keys = list(metadata["citation_keys"])
+        assert metadata["citation_style"] == "IEEE_numeric"
+        assert metadata["reference_count"] == len(keys)
+        assert keys
+        assert len(keys) == len(set(keys))
+        assert set(keys) <= master_keys
+        final_cell = notebook.cells[-1]
+        assert final_cell.cell_type == "markdown"
+        assert "references" in final_cell.metadata.get("tags", [])
+        assert final_cell.source.startswith("## Referencias\n\n[1] ")
+        expected = set(range(1, len(keys) + 1))
+        body = "\n".join(
+            cell.source for cell in notebook.cells[:-1] if cell.cell_type == "markdown"
+        )
+        assert set(map(int, BODY_CITATION.findall(body))) == expected
+        assert list(map(int, REFERENCE_ENTRY.findall(final_cell.source))) == list(range(1, len(keys) + 1))
+        assert "[@" not in "\n".join(cell.source for cell in notebook.cells)
 
 
 def test_colab_notebooks_embed_reproducible_drive_bootstrap():
@@ -52,10 +80,23 @@ def test_required_frontends_are_small_templates():
     assert production.stat().st_size < 100_000
     human_source = human.read_text(encoding="utf-8")
     assert "t.safe_label" in human_source
-    assert "x.value!==t.safe_label" in human_source
+    assert "event.target.value===t.safe_label" in human_source
+    assert "/api/reviews" in human_source
+    assert "previous_text" in human_source
+    assert "localStorage" in human_source
     assert "display_name" in human_source
     assert "display_name" in production.read_text(encoding="utf-8")
     assert "Modo sombra" in production.read_text(encoding="utf-8")
+    production_source = production.read_text(encoding="utf-8")
+    assert "/api/analyze" in production_source
+    assert "/api/stats" in production_source
+    assert "youtube.com" in production_source
+
+
+def test_neural_model_revisions_are_pinned():
+    from moderacion_peru.models import TRANSFORMER_SPECS
+
+    assert all(spec.revision and len(spec.revision) == 40 for spec in TRANSFORMER_SPECS.values())
 
 
 def test_lm_studio_only_exists_in_archive():
