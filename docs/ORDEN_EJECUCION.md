@@ -4,7 +4,7 @@
 
 | Paso | Cuaderno | Entrada principal | Salida principal | Reanudación/no-op |
 |---:|---|---|---|---|
-| 1 | `01_01_scraping_incremental` | canales/consultas + candidatos + corpus/caché existente | candidatos, canónico local y transcripciones sincronizables por canal | filtra `video_id`, reutiliza caché y recorre todos los pendientes en lotes reanudables |
+| 1 | `01_01_scraping_incremental` | canales/consultas + candidatos + corpus/caché/derivados históricos | canónico consolidado, inventario global, candidatos y transcripciones por canal | restaura raw disponible y excluye todo `video_id` con texto antes de recorrer pendientes |
 | 2 | `01_02_optimizacion_longitud_chunks` | transcripciones + chunks etiquetados + snapshot | comparación opcional 15–35 s | reanuda modelos por firma; no cambia datos sin activación explícita |
 | 3 | `01_03_limpieza_troceado_incremental` | transcripciones + configuración activa | chunks v2 | hash de transcripción + firma de configuración + `chunk_id` |
 | 4 | `02_01_etiquetado_local_ollama` | chunks pendientes | anotaciones locales | `chunk_id` |

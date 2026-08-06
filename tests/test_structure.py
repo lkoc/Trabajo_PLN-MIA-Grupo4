@@ -190,7 +190,11 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
         "fallos_adquisicion.jsonl",
     ):
         assert control in source
-    assert "processed_ids = processed_video_ids(CANONICAL)" in source
+    assert "canonical_ids = processed_video_ids(CANONICAL)" in source
+    assert "consolidate_available_transcripts" in source
+    assert "collect_project_video_inventory" in source
+    assert "KNOWN_VIDEO_IDS" in source
+    assert "videos_conocidos_globales" in source
     assert "pending_candidates = [" in source
     assert "total=len(pending_candidates)" in source
     assert "ingest_incremental(\n            pending_candidates," in source

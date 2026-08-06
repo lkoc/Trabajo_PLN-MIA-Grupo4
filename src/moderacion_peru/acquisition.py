@@ -663,6 +663,48 @@ def bootstrap_canonical_from_existing(
     }
 
 
+def bootstrap_canonical_from_cache(
+    cache_dir: str | Path,
+    canonical_path: str | Path,
+) -> dict[str, Any]:
+    """Incorpora al canónico los JSON individuales válidos que aún falten."""
+
+    source = Path(cache_dir)
+    cache_files = sorted(source.glob("*.json")) if source.is_dir() else []
+    stats = {"cache_files": len(cache_files), "valid_records": 0}
+
+    def records() -> Iterable[dict[str, Any]]:
+        for path in cache_files:
+            payload = json.loads(path.read_text(encoding="utf-8-sig"))
+            if not isinstance(payload, dict):
+                raise ValueError(f"El caché no contiene un objeto JSON: {path}")
+            record = normalize_category_metadata(_json_safe(payload))
+            video_id = str(record.get("video_id") or "").strip()
+            if not video_id:
+                raise ValueError(f"Falta video_id en el caché {path}")
+            if path.stem != video_id:
+                raise ValueError(f"El caché {path} no corresponde a {video_id}")
+            record["video_id"] = video_id
+            record.setdefault("acquisition_status", "reused_existing_cache")
+            record.setdefault("source_cache", path.resolve().as_posix())
+            record.setdefault(
+                "transcript_sha256",
+                sha256_text(
+                    json.dumps(record.get("segments", []), ensure_ascii=False, sort_keys=True)
+                ),
+            )
+            stats["valid_records"] += 1
+            yield record
+
+    added, skipped = append_jsonl_once(canonical_path, records(), id_field="video_id")
+    return {
+        **stats,
+        "added": added,
+        "already_canonical": skipped,
+        "canonical_path": Path(canonical_path).resolve().as_posix(),
+    }
+
+
 CHANNEL_TRANSCRIPT_INDEX = "index.json"
 DEFAULT_MAX_CHANNEL_SHARD_BYTES = 25 * 1024 * 1024
 
@@ -1033,6 +1075,155 @@ def restore_canonical_from_channel_transcripts(
         "canonical_path": canonical.as_posix(),
         "verified": verify_hashes,
     }
+
+
+def discover_derived_transcript_sources(project_root: str | Path) -> list[Path]:
+    """Localiza datasets/chunks con texto, excluyendo candidatos y fallos."""
+
+    root = Path(project_root).resolve()
+    sources: set[Path] = set()
+    for relative in (Path("datos/model_ready"), Path("datos/processed")):
+        base = root / relative
+        if base.is_dir():
+            sources.update(path.resolve() for path in base.rglob("*.jsonl") if path.is_file())
+    expansion_root = root / "datos" / "ampliacion"
+    if expansion_root.is_dir():
+        sources.update(
+            path.resolve()
+            for path in expansion_root.rglob("*.jsonl")
+            if path.is_file() and "processed" in path.relative_to(expansion_root).parts
+        )
+    return sorted(sources, key=str)
+
+
+def consolidate_available_transcripts(
+    project_root: str | Path,
+    canonical_path: str | Path,
+    *,
+    cache_dir: str | Path,
+    channel_dir: str | Path,
+    include_historical_snapshots: bool = True,
+    verify_partition_hashes: bool = True,
+) -> dict[str, Any]:
+    """Consolida toda transcripción completa disponible sin sobrescribir fuentes.
+
+    El orden permite reconstruir el canónico en otra máquina: snapshots
+    históricos, particiones sincronizadas por canal y, finalmente, cachés
+    individuales locales. Todos los anexos son idempotentes por ``video_id``.
+    """
+
+    root = Path(project_root).resolve()
+    canonical = Path(canonical_path)
+    historical_sources = (
+        discover_existing_transcript_sources(root, canonical_path=canonical)
+        if include_historical_snapshots
+        else []
+    )
+    historical = bootstrap_canonical_from_existing(historical_sources, canonical)
+
+    partitions_path = Path(channel_dir)
+    if (partitions_path / CHANNEL_TRANSCRIPT_INDEX).is_file():
+        partitions = restore_canonical_from_channel_transcripts(
+            partitions_path,
+            canonical,
+            verify_hashes=verify_partition_hashes,
+        )
+    else:
+        partitions = {
+            "added": 0,
+            "already_canonical": 0,
+            "canonical_videos": len(processed_video_ids(canonical)),
+            "canonical_path": canonical.as_posix(),
+            "verified": False,
+            "status": "partition_index_missing",
+        }
+
+    cache = bootstrap_canonical_from_cache(cache_dir, canonical)
+    canonical_ids = processed_video_ids(canonical)
+    return {
+        "historical_sources": len(historical_sources),
+        "historical_candidate_rows": historical["candidate_rows"],
+        "historical_added": historical["added"],
+        "partitions_added": partitions["added"],
+        "partitions_verified": partitions["verified"],
+        "cache_files": cache["cache_files"],
+        "cache_added": cache["added"],
+        "canonical_videos": len(canonical_ids),
+        "canonical_path": canonical.resolve().as_posix(),
+    }
+
+
+def collect_project_video_inventory(
+    project_root: str | Path,
+    *,
+    canonical_path: str | Path,
+    cache_dir: str | Path,
+    include_historical_sources: bool = True,
+    include_derived_sources: bool = True,
+) -> tuple[set[str], dict[str, Any]]:
+    """Une videos con transcripción completa o texto derivado disponible.
+
+    Los candidatos y registros de fallo se excluyen deliberadamente: conocer un
+    ID por descubrimiento no demuestra que su texto haya sido adquirido.
+    """
+
+    root = Path(project_root).resolve()
+    canonical_ids = processed_video_ids(canonical_path)
+    cache_ids = {
+        path.stem for path in Path(cache_dir).glob("*.json") if path.is_file()
+    }
+    historical_ids: set[str] = set()
+    historical_sources = (
+        discover_existing_transcript_sources(root, canonical_path=canonical_path)
+        if include_historical_sources
+        else []
+    )
+    for source in historical_sources:
+        historical_ids.update(
+            str(row.get("video_id") or "").strip()
+            for row in read_jsonl(source)
+            if str(row.get("video_id") or "").strip()
+        )
+
+    derived_ids: set[str] = set()
+    derived_source_stats: list[dict[str, Any]] = []
+    derived_sources = (
+        discover_derived_transcript_sources(root) if include_derived_sources else []
+    )
+    for source in derived_sources:
+        source_ids: set[str] = set()
+        text_rows = 0
+        for row in read_jsonl(source):
+            video_id = str(row.get("video_id") or "").strip()
+            text_value = str(row.get("text") or "").strip()
+            if video_id and text_value:
+                source_ids.add(video_id)
+                text_rows += 1
+        if source_ids:
+            derived_ids.update(source_ids)
+            derived_source_stats.append(
+                {
+                    "path": source.relative_to(root).as_posix(),
+                    "text_rows": text_rows,
+                    "unique_videos": len(source_ids),
+                }
+            )
+
+    full_transcript_ids = canonical_ids | cache_ids | historical_ids
+    known_ids = full_transcript_ids | derived_ids
+    summary = {
+        "canonical_transcripts": len(canonical_ids),
+        "cache_transcripts": len(cache_ids),
+        "historical_snapshot_transcripts": len(historical_ids),
+        "full_transcripts_union": len(full_transcript_ids),
+        "derived_text_videos": len(derived_ids),
+        "derived_only_videos": len(derived_ids - full_transcript_ids),
+        "known_videos_union": len(known_ids),
+        "historical_source_files": len(historical_sources),
+        "derived_source_files": len(derived_source_stats),
+        "derived_sources": derived_source_stats,
+    }
+    return known_ids, summary
 
 
 def _youtube_options(

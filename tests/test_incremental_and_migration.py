@@ -12,6 +12,8 @@ from moderacion_peru.datasets import assert_no_video_leakage, stable_video_split
 from moderacion_peru.acquisition import (
     append_transcripts_by_channel,
     bootstrap_canonical_from_existing,
+    collect_project_video_inventory,
+    consolidate_available_transcripts,
     build_directed_sampling_plan,
     classify_acquisition_error,
     discover_youtube_candidates,
@@ -262,6 +264,70 @@ def test_existing_transcripts_are_reused_without_touching_source(tmp_path):
     assert second["added"] == 0
     assert source.read_bytes() == original
     assert list(read_jsonl(canonical))[0]["view_count"] is None
+
+
+def test_all_available_transcripts_and_derived_video_ids_are_consolidated(tmp_path):
+    root = tmp_path / "project"
+    canonical = root / "datos/raw/transcripts_raw.jsonl"
+    cache = root / "datos/raw/transcripts_cache"
+    partitions = root / "datos/raw/transcripts_by_channel"
+    historical = root / "datos/ampliacion/lote/raw/transcripts_raw.jsonl"
+    derived = root / "datos/model_ready/v2/dataset_5_salidas.jsonl"
+    canonical.parent.mkdir(parents=True)
+    cache.mkdir(parents=True)
+    historical.parent.mkdir(parents=True)
+    derived.parent.mkdir(parents=True)
+    canonical.write_text(
+        '{"video_id":"v1","segments":[{"text":"uno"}]}\n', encoding="utf-8"
+    )
+    historical.write_text(
+        '{"video_id":"v2","segments":[{"text":"dos"}]}\n', encoding="utf-8"
+    )
+    (cache / "v3.json").write_text(
+        '{"video_id":"v3","segments":[{"text":"tres"}]}\n', encoding="utf-8"
+    )
+    partition_seed = root / "partition_seed.jsonl"
+    partition_seed.write_text(
+        '{"video_id":"v4","channel_id":"c4","segments":[{"text":"cuatro"}]}\n',
+        encoding="utf-8",
+    )
+    materialize_transcripts_by_channel(partition_seed, partitions)
+    derived.write_text(
+        '{"video_id":"v2","text":"dos derivado"}\n'
+        '{"video_id":"v5","text":"cinco derivado"}\n',
+        encoding="utf-8",
+    )
+
+    first = consolidate_available_transcripts(
+        root,
+        canonical,
+        cache_dir=cache,
+        channel_dir=partitions,
+    )
+    second = consolidate_available_transcripts(
+        root,
+        canonical,
+        cache_dir=cache,
+        channel_dir=partitions,
+    )
+    known_ids, inventory = collect_project_video_inventory(
+        root,
+        canonical_path=canonical,
+        cache_dir=cache,
+    )
+
+    assert first["historical_added"] == 1
+    assert first["partitions_added"] == 1
+    assert first["cache_added"] == 1
+    assert second["historical_added"] == 0
+    assert second["partitions_added"] == 0
+    assert second["cache_added"] == 0
+    assert {row["video_id"] for row in read_jsonl(canonical)} == {"v1", "v2", "v3", "v4"}
+    assert known_ids == {"v1", "v2", "v3", "v4", "v5"}
+    assert inventory["full_transcripts_union"] == 4
+    assert inventory["derived_text_videos"] == 2
+    assert inventory["derived_only_videos"] == 1
+    assert inventory["known_videos_union"] == 5
 
 
 def test_channel_partitions_preserve_canonical_and_restore_idempotently(tmp_path):

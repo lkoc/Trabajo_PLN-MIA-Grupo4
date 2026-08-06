@@ -68,17 +68,28 @@ subtítulos nuevos.
 Antes de cualquier descarga, el cuaderno:
 
 1. define `datos/raw/transcripts_raw.jsonl` como vista canónica;
-2. incorpora snapshots históricos solo cuando no está activo el marcador de
-   reconstrucción desde cero;
-3. carga y deduplica candidatos por `video_id`;
-4. calcula `processed_ids` desde el canónico;
-5. elimina esos identificadores de la cohorte activa; y
-6. identifica cuáles de los pendientes ya tienen un JSON válido en
-   `datos/raw/transcripts_cache/`.
+2. incorpora idempotentemente los snapshots históricos, restaura las
+   particiones sincronizadas por canal y anexa los JSON válidos de caché que
+   todavía falten, salvo que esté activo el reinicio desde cero;
+3. vuelve a materializar las particiones por canal desde el canónico ya
+   consolidado;
+4. inventaría todo `video_id` con texto disponible en el canónico, la caché,
+   los snapshots, los datasets model-ready y los chunks históricos;
+5. carga y deduplica candidatos por `video_id`; y
+6. elimina de la cohorte activa la unión global de videos conocidos, no solo
+   los presentes en el canónico.
 
-La barra `Procesando pendientes` representa la cohorte posterior al filtro, no
-la suma histórica de candidatos. `ingest_incremental` repite internamente la
-verificación del canónico y de la caché como segunda defensa.
+Los datasets y chunks históricos no se convierten artificialmente en una
+transcripción raw: pueden haber perdido segmentos o tiempos. Sus `video_id` sí
+se usan para evitar volver a solicitar a YouTube un texto que ya está disponible
+como derivado. El resumen separa `transcripciones_canónicas_completas`,
+`transcripciones_completas_disponibles`, `videos_solo_en_derivados` y
+`videos_conocidos_globales`. Así, un cero en `ya_canónicos_omitidos` describe
+solo el solapamiento de la cohorte actual y nunca el tamaño total del corpus.
+
+La barra `Procesando pendientes` representa la cohorte posterior al inventario
+global, no la suma histórica de candidatos. `ingest_incremental` repite
+internamente la verificación del canónico y de la caché como segunda defensa.
 
 Con `RANDOMIZE_DOWNLOAD_QUEUE=True`, los pendientes se ordenan mediante una
 prioridad pseudoaleatoria derivada de `DOWNLOAD_RANDOM_SEED` y `video_id`. La

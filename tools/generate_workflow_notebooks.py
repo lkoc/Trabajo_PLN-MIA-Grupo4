@@ -328,9 +328,9 @@ importlib.reload(acquisition_module)
 
 from moderacion_peru.acquisition import (
     VIDEO_DATASET_RESET_MARKER,
-    bootstrap_canonical_from_existing,
     build_directed_sampling_plan,
-    discover_existing_transcript_sources,
+    collect_project_video_inventory,
+    consolidate_available_transcripts,
     load_candidates,
     materialize_transcripts_by_channel,
     merge_candidates,
@@ -345,10 +345,19 @@ CACHE = ROOT/'datos/raw/transcripts_cache'
 TRANSCRIPTS_BY_CHANNEL = ROOT/'datos/raw/transcripts_by_channel'
 DIRECTED_DATASET = ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'
 rebuild_from_zero = (ROOT/VIDEO_DATASET_RESET_MARKER).exists()
-sources = [] if rebuild_from_zero else discover_existing_transcript_sources(ROOT, canonical_path=CANONICAL)
-reuse_stats = bootstrap_canonical_from_existing(sources, CANONICAL)
-reuse_stats['historical_bootstrap_disabled'] = rebuild_from_zero
-show_result('Reutilización de snapshots', reuse_stats, tone='warning' if rebuild_from_zero else 'success')
+consolidation_stats = consolidate_available_transcripts(
+    ROOT,
+    CANONICAL,
+    cache_dir=CACHE,
+    channel_dir=TRANSCRIPTS_BY_CHANNEL,
+    include_historical_snapshots=not rebuild_from_zero,
+)
+consolidation_stats['historical_bootstrap_disabled'] = rebuild_from_zero
+show_result(
+    'Consolidación de todas las transcripciones disponibles',
+    consolidation_stats,
+    tone='warning' if rebuild_from_zero else 'success',
+)
 if SYNC_TRANSCRIPTS_BY_CHANNEL:
     channel_partition_stats = materialize_transcripts_by_channel(CANONICAL, TRANSCRIPTS_BY_CHANNEL)
     show_summary('Checkpoint de transcripciones por canal', {
@@ -359,6 +368,23 @@ if SYNC_TRANSCRIPTS_BY_CHANNEL:
         'carpeta': TRANSCRIPTS_BY_CHANNEL,
         'canonico_preservado': CANONICAL.exists(),
     }, tone='success')
+
+KNOWN_VIDEO_IDS, VIDEO_INVENTORY = collect_project_video_inventory(
+    ROOT,
+    canonical_path=CANONICAL,
+    cache_dir=CACHE,
+    include_historical_sources=not rebuild_from_zero,
+    include_derived_sources=not rebuild_from_zero,
+)
+show_summary('Inventario global para evitar duplicaciones', {
+    'transcripciones_canónicas_completas': VIDEO_INVENTORY['canonical_transcripts'],
+    'transcripciones_completas_disponibles': VIDEO_INVENTORY['full_transcripts_union'],
+    'videos_con_texto_derivado': VIDEO_INVENTORY['derived_text_videos'],
+    'videos_solo_en_derivados': VIDEO_INVENTORY['derived_only_videos'],
+    'videos_conocidos_globales': VIDEO_INVENTORY['known_videos_union'],
+    'fuentes_raw_históricas': VIDEO_INVENTORY['historical_source_files'],
+    'fuentes_derivadas': VIDEO_INVENTORY['derived_source_files'],
+}, tone='warning' if VIDEO_INVENTORY['derived_only_videos'] else 'success')
 
 taxonomy = load_taxonomy(ROOT/'config/taxonomia_v2.json')
 directed_plan = None
@@ -502,9 +528,13 @@ if DISCOVER_NEW:
                 candidate for candidate in discovered
                 if candidate.get('sampling_mode') == 'directed'
             ]
+            directed_known_excluded = len({
+                str(candidate.get('video_id') or '').strip()
+                for candidate in directed_pool
+            } & KNOWN_VIDEO_IDS)
             directed_selection = select_directed_candidates(
                 directed_pool,
-                processed_video_ids(CANONICAL),
+                KNOWN_VIDEO_IDS,
                 directed_plan,
                 max_candidates=(
                     len(directed_pool)
@@ -519,6 +549,7 @@ if DISCOVER_NEW:
                 'planned_queries': DIRECTED_SEARCH_QUERIES,
                 'expanded_channels': expanded_channels,
                 'directed_candidates_discovered': len(directed_pool),
+                'directed_known_videos_excluded': directed_known_excluded,
                 'directed_candidates_selected': len(directed_selection),
                 'selection_path': DIRECTED_SELECTION_PATH,
             })
@@ -536,6 +567,9 @@ if DISCOVER_NEW:
         "candidates_existing": existing,
         "expanded_channels": len(expanded_channels),
         "directed_cohort": len(directed_selection),
+        "directed_known_videos_excluded": (
+            directed_known_excluded if directed_plan is not None else 0
+        ),
         "checkpoint": DISCOVERY_CHECKPOINT_PATH if RESUME_DISCOVERY else None,
     }, tone='success' if not discovery_failures else 'warning')
     if discovery_failures:
@@ -571,11 +605,14 @@ else:
     candidates = merge_candidates(*(load_candidates(source) for source in candidate_files))
     candidate_origin = 'archivo_acumulado_general'
 
-processed_ids = processed_video_ids(CANONICAL)
-existing_candidate_ids = {str(candidate['video_id']).strip() for candidate in candidates} & processed_ids
+canonical_ids = processed_video_ids(CANONICAL)
+candidate_ids = {str(candidate['video_id']).strip() for candidate in candidates}
+existing_canonical_ids = candidate_ids & canonical_ids
+existing_derived_ids = candidate_ids & (KNOWN_VIDEO_IDS - canonical_ids)
+existing_known_ids = candidate_ids & KNOWN_VIDEO_IDS
 pending_candidates = [
     candidate for candidate in candidates
-    if str(candidate['video_id']).strip() not in processed_ids
+    if str(candidate['video_id']).strip() not in KNOWN_VIDEO_IDS
 ]
 if RANDOMIZE_DOWNLOAD_QUEUE:
     pending_candidates = order_candidates_for_acquisition(
@@ -589,7 +626,11 @@ pending_cached = sum(
 show_summary('Candidatos filtrados antes de la adquisición', {
     'origen': candidate_origin,
     'únicos': len(candidates),
-    'ya_canónicos_omitidos': len(existing_candidate_ids),
+    'transcripciones_canónicas_totales': len(canonical_ids),
+    'videos_conocidos_globales': len(KNOWN_VIDEO_IDS),
+    'ya_canónicos_omitidos': len(existing_canonical_ids),
+    'ya_derivados_históricos_omitidos': len(existing_derived_ids),
+    'ya_conocidos_omitidos_total': len(existing_known_ids),
     'pendientes_totales': len(pending_candidates),
     'pendientes_reutilizables_desde_caché': pending_cached,
     'pendientes_que_requieren_red': len(pending_candidates) - pending_cached,
@@ -660,7 +701,7 @@ if pending_candidates:
         video_progress.close()
     stats = {
         'candidates_total': len(candidates),
-        'filtered_existing_before_run': len(existing_candidate_ids),
+        'filtered_existing_before_run': len(existing_known_ids),
         'pending_before_run': len(pending_candidates),
         **stats,
     }
