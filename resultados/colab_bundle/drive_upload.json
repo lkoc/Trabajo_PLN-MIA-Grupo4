@@ -1,7 +1,11 @@
 {
   "schema_version": "1.0.0",
+  "status": "remote_bundle_outdated",
+  "requires_upload": true,
+  "local_bundle_manifest_sha256": "1f5fb779dbf79a5dacc6155295a24a4e6fb58cd330903bc1f0358abed1d71742",
+  "note": "Los IDs siguientes describen la carga anterior. Reemplace los cuatro archivos en Drive y verifique su lectura antes de marcar el bundle remoto como vigente.",
   "uploaded_at": "2026-08-06T05:53:08.889Z",
-  "verification": "google_drive_list_folder_and_manifest_readback",
+  "verification": "previous_google_drive_list_folder_and_manifest_readback",
   "root_folder": {
     "id": "1o4qLzd6BoPRhaI4W22Vyw0wcMmPD3B_5",
     "url": "https://drive.google.com/drive/folders/1o4qLzd6BoPRhaI4W22Vyw0wcMmPD3B_5"

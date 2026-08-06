@@ -107,9 +107,17 @@ def prepare(destination: str | Path) -> dict[str, object]:
         "excluded_from_drive": config["excluded_from_drive"],
     }
     manifest_path = target / config["manifest"]
-    temporary = manifest_path.with_name(f".{manifest_path.name}.partial")
-    temporary.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    os.replace(temporary, manifest_path)
+    fd, temporary_name = tempfile.mkstemp(prefix=f".{manifest_path.name}.", dir=manifest_path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+            json.dump(manifest, handle, ensure_ascii=False, indent=2)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary_name, manifest_path)
+    finally:
+        if os.path.exists(temporary_name):
+            os.unlink(temporary_name)
     return {"destination": str(target), "manifest": str(manifest_path), **manifest}
 
 

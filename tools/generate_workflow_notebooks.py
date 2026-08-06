@@ -165,9 +165,9 @@ show_result('Dataset descomprimido y verificado', dataset_checkpoint, tone='succ
 SCRAPING_PARAMETERS = """# ══════════════════════════════════════════════════════════════════════════════
 # CONTROLES DEL SCRAPING: edite únicamente este bloque
 # ══════════════════════════════════════════════════════════════════════════════
-DISCOVER_NEW = True           # True: consulta canales/búsquedas y guarda candidatos
+DISCOVER_NEW = False          # True: consulta canales/búsquedas y guarda candidatos
 FETCH_NEW = True              # True: obtiene subtítulos solo de videos aún no procesados
-DISCOVERY_MODE = "seed"       # "seed", "directed" o "both"
+DISCOVERY_MODE = "directed"   # "seed", "directed" o "both"
 
 MAX_NEW_VIDEOS = None         # None: incluye todos los pendientes; use un entero para un piloto
 NETWORK_BATCH_SIZE = 10       # llamadas nuevas por lote antes de una pausa larga

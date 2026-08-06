@@ -14,4 +14,6 @@ El dataset se comprime con gzip reproducible nivel 9. Su tamaño actual permite 
 
 Después de clonar, `python tools/restore_synced_checkpoints.py` verifica el manifiesto y descomprime atómicamente las entradas a sus rutas de trabajo. Los cuadernos `03_01`–`03_08` vuelven a verificar el dataset y no reemplazan silenciosamente una copia local divergente.
 
+`drive_upload.json` solo puede declararse vigente después de reemplazar los archivos remotos y comprobarlos mediante lectura posterior. El estado `remote_bundle_outdated` significa que el bundle local/Git es más reciente que la carga de Drive registrada.
+
 No añada modelos, cachés de Hugging Face, videos ni checkpoints sueltos. Consulte [`docs/COLAB_L4.md`](../../docs/COLAB_L4.md).
