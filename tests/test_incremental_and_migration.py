@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+from collections import Counter
 from types import SimpleNamespace
 
 import pytest
@@ -9,11 +10,17 @@ import pytest
 from moderacion_peru.datasets import assert_no_video_leakage, stable_video_split
 from moderacion_peru.acquisition import (
     bootstrap_canonical_from_existing,
+    build_directed_sampling_plan,
     classify_acquisition_error,
     discover_youtube_candidates,
+    expand_directed_channel_sources,
     ingest_incremental,
     load_candidates,
     normalize_category_metadata,
+    reset_active_video_dataset,
+    select_directed_candidates,
+    select_directed_search_queries,
+    VIDEO_DATASET_RESET_CONFIRMATION,
 )
 from moderacion_peru.incremental import (
     TranscriptSegment,
@@ -30,6 +37,137 @@ from moderacion_peru.schemas import ModelReadyRecord
 
 def test_video_reuse_keeps_only_new_ids():
     assert pending_video_ids(["a", "b", "a", "c"], ["a"]) == ["b", "c"]
+
+
+def test_directed_plan_falls_back_to_equal_damage_weights_without_prior_data():
+    plan = build_directed_sampling_plan([], [])
+
+    assert plan["strategy"] == "fallback_equal"
+    assert set(plan["weights"].values()) == {0.25}
+    assert set(plan["deficit_videos"].values()) == {1}
+    cohort = select_directed_candidates(
+        [
+            {
+                "video_id": f"v{index}",
+                "target_category": label,
+                "discovery_source": label,
+            }
+            for index, label in enumerate(plan["damage_labels"])
+        ],
+        (),
+        plan,
+        max_candidates=4,
+    )
+    assert Counter(row["directed_priority_label"] for row in cohort) == Counter(
+        {label: 1 for label in plan["damage_labels"]}
+    )
+
+
+def test_directed_plan_uses_development_video_deficits_and_excludes_test():
+    dataset = [
+        {"video_id": "v1", "split": "train", "coarse_labels": ["RACISMO_DISCRIMINACION"]},
+        {"video_id": "v2", "split": "train", "coarse_labels": ["ACOSO_AMENAZA"]},
+        {"video_id": "v3", "split": "validation", "coarse_labels": ["ACOSO_AMENAZA"]},
+        {"video_id": "v4", "split": "validation", "coarse_labels": ["CONTENIDO_SEXUAL"]},
+        {
+            "video_id": "test-only",
+            "split": "test",
+            "coarse_labels": ["ATAQUE_POR_GENERO_IDENTIDAD"],
+        },
+    ]
+    transcripts = [
+        {"video_id": "v1", "channel_id": "c1", "channel_title": "Canal uno"},
+        {"video_id": "v2", "channel_id": "c1", "channel_title": "Canal uno"},
+        {"video_id": "v3", "channel_id": "c1", "channel_title": "Canal uno"},
+        {"video_id": "v4", "channel_id": "c2", "channel_title": "Canal dos"},
+        {"video_id": "test-only", "channel_id": "c3", "channel_title": "Canal test"},
+    ]
+
+    plan = build_directed_sampling_plan(dataset, transcripts)
+
+    assert plan["strategy"] == "deficit_weighted"
+    assert plan["support_videos"] == {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 2,
+        "CONTENIDO_SEXUAL": 1,
+    }
+    assert plan["weights"] == {
+        "RACISMO_DISCRIMINACION": 0.25,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.5,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.25,
+    }
+    assert {row["channel_id"] for row in plan["channel_profiles"]} == {"c1", "c2"}
+
+
+def test_directed_queries_expansion_and_selection_follow_deficit_weights():
+    plan = build_directed_sampling_plan([], [])
+    queries = select_directed_search_queries(
+        plan,
+        [
+            {"query": "racismo", "target_category": "RACISMO_DISCRIMINACION"},
+            {"query": "género", "target_category": "ATAQUE_POR_GENERO_IDENTIDAD"},
+            {"query": "amenaza", "target_category": "ACOSO_AMENAZA"},
+            {"query": "sexual", "target_category": "CONTENIDO_SEXUAL"},
+        ],
+        max_queries=4,
+    )
+    assert {row["query"] for row in queries} == {"racismo", "género", "amenaza", "sexual"}
+
+    search_candidates = [
+        {
+            "video_id": "s1",
+            "channel_id": "new-channel",
+            "channel_title": "Canal nuevo",
+            "discovery_type": "search",
+            "discovery_rank": 1,
+            "target_category": "CONTENIDO_SEXUAL",
+        }
+    ]
+    expanded = expand_directed_channel_sources(search_candidates, plan, max_channels=1)
+    assert expanded[0]["url"] == "https://www.youtube.com/channel/new-channel"
+    assert expanded[0]["target_category"] == "CONTENIDO_SEXUAL"
+
+    cohort = select_directed_candidates(
+        [
+            {"video_id": "old", "target_category": "CONTENIDO_SEXUAL"},
+            {"video_id": "v1", "target_category": "CONTENIDO_SEXUAL", "discovery_source": "a"},
+            {"video_id": "v2", "target_category": "RACISMO_DISCRIMINACION", "discovery_source": "b"},
+            {"video_id": "general"},
+        ],
+        {"old"},
+        plan,
+        max_candidates=10,
+    )
+    assert {row["video_id"] for row in cohort} == {"v1", "v2"}
+    assert all(row.get("directed_priority_label") for row in cohort)
+
+
+def test_video_dataset_reset_is_confirmed_scoped_and_recoverable(tmp_path):
+    root = tmp_path / "project"
+    (root / "src/moderacion_peru").mkdir(parents=True)
+    (root / "datos/raw/transcripts_cache").mkdir(parents=True)
+    (root / "datos/ampliacion/historico").mkdir(parents=True)
+    (root / "datos/raw/transcripts_raw.jsonl").write_text("{}\n", encoding="utf-8")
+    (root / "datos/raw/transcripts_cache/v1.json").write_text("{}", encoding="utf-8")
+    historical = root / "datos/ampliacion/historico/transcripts_raw.jsonl"
+    historical.write_text("{}\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Confirmación inválida"):
+        reset_active_video_dataset(root, "NO")
+    result = reset_active_video_dataset(root, VIDEO_DATASET_RESET_CONFIRMATION)
+
+    assert not (root / "datos/raw/transcripts_raw.jsonl").exists()
+    assert historical.exists()
+    assert result["archive_path"]
+    assert (root / result["archive_path"] / "datos/raw/transcripts_raw.jsonl").exists()
+    assert (root / "datos/raw/manifests/rebuild_from_zero.json").exists()
+    sentinel = root / "datos/raw/new_run.json"
+    sentinel.write_text("{}", encoding="utf-8")
+    repeated = reset_active_video_dataset(root, VIDEO_DATASET_RESET_CONFIRMATION)
+    assert repeated["status"] == "already_active_noop"
+    assert sentinel.exists()
 
 
 def test_chunk_ids_are_deterministic():
@@ -168,12 +306,37 @@ def test_new_video_limit_counts_network_attempts_and_defers_remainder(tmp_path):
     assert stats["deferred_by_limit"] == 1
 
 
+def test_rate_limit_opens_circuit_and_defers_remaining_network_calls(tmp_path):
+    candidates = [{"video_id": value} for value in ("v1", "v2", "v3")]
+    attempted = []
+
+    def fetcher(candidate):
+        attempted.append(candidate["video_id"])
+        raise RuntimeError("HTTP 429 Too Many Requests")
+
+    stats = ingest_incremental(
+        candidates,
+        tmp_path / "transcripts.jsonl",
+        tmp_path / "cache",
+        fetcher=fetcher,
+    )
+
+    assert attempted == ["v1"]
+    assert stats["failed"] == 1
+    assert stats["failure_rate_limited"] == 1
+    assert stats["rate_limit_circuit_open"] == 1
+    assert stats["deferred_rate_limit"] == 2
+
+
 def test_acquisition_error_categories_cover_expected_youtube_failures():
     assert classify_acquisition_error(RuntimeError("members-only content")) == "members_only"
     assert classify_acquisition_error(RuntimeError("video unavailable")) == "unavailable_or_private"
     assert classify_acquisition_error(RuntimeError("no tiene subtítulos")) == "no_spanish_subtitles"
     assert classify_acquisition_error(RuntimeError("HTTP Error 404: Not Found")) == (
         "stale_channel_or_no_videos_tab"
+    )
+    assert classify_acquisition_error(RuntimeError("Premieres in 15 minutes")) == (
+        "scheduled_or_upcoming"
     )
 
 

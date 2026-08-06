@@ -26,7 +26,15 @@ def test_active_notebooks_are_ordered_and_clean():
         assert "G:\\" not in source
         for cell in notebook.cells:
             if cell.cell_type == "code":
-                ast.parse(cell.source)
+                tree = ast.parse(cell.source)
+                print_calls = [
+                    node
+                    for node in ast.walk(tree)
+                    if isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Name)
+                    and node.func.id == "print"
+                ]
+                assert not print_calls, f"Use notebook_ui en lugar de print(): {path}"
 
 
 def test_each_notebook_has_consistent_ieee_references_as_final_cell():
@@ -166,12 +174,24 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
         "MAX_NEW_VIDEOS",
         "MAX_VIDEOS_PER_CHANNEL",
         "MAX_RESULTS_PER_QUERY",
+        "MAX_DIRECTED_CANDIDATES",
+        "MAX_EXPANDED_CHANNELS",
         "CHANNEL_SOURCES",
         "SEARCH_QUERIES",
         "STOP_ON_VIDEO_ERROR",
+        "RESET_VIDEO_DATASET",
         "fallos_adquisicion.jsonl",
     ):
         assert control in source
+    assert "processed_ids = processed_video_ids(CANONICAL)" in source
+    assert "pending_candidates = [" in source
+    assert "total=len(pending_candidates)" in source
+    assert "ingest_incremental(\n            pending_candidates," in source
+    assert "build_directed_sampling_plan" in source
+    assert "expand_directed_channel_sources" in source
+    assert "select_directed_candidates" in source
+    assert "cohorte_dirigida_vigente" in source
+    assert '# RESET_VIDEO_DATASET = "ARCHIVAR_Y_REINICIAR_DATASET_VIDEOS"' in source
     assert not (ROOT / "flujo" / "01_datos" / "01_03_ampliacion_dirigida.ipynb").exists()
     assert (
         ROOT

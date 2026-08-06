@@ -32,10 +32,10 @@ La carpeta privada ya creada es [ModeracionPeru_Colab](https://drive.google.com/
 
 | Archivo | Tamaño | Consumidores |
 |---|---:|---|
-| `project_core.zip` | 65 042 B | todos los cuadernos Colab |
+| `project_core.zip` | 67 505 B | todos los cuadernos Colab |
 | `chunks_v2.jsonl.gz` | 11 549 973 B | `02_01` |
 | `dataset_5_salidas.jsonl.gz` | 21 275 598 B | `03_02`–`03_06` |
-| `bundle_manifest.json` | 2 868 B | verificación de todo el bundle |
+| `bundle_manifest.json` | 2 913 B | verificación de todo el bundle |
 
 Total: aproximadamente 32,9 MB en lugar de 147,2 MB sin comprimir. No se sincronizan videos, audio, transcripciones crudas, PDFs, archivo histórico, modelos Ollama, caché de Hugging Face, paper, presentación ni frontends. La carpeta no está compartida públicamente.
 

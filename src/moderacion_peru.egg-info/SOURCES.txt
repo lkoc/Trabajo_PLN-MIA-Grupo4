@@ -15,6 +15,7 @@ src/moderacion_peru/labeling.py
 src/moderacion_peru/manifests.py
 src/moderacion_peru/migration.py
 src/moderacion_peru/models.py
+src/moderacion_peru/notebook_ui.py
 src/moderacion_peru/paths.py
 src/moderacion_peru/pilot.py
 src/moderacion_peru/registry.py

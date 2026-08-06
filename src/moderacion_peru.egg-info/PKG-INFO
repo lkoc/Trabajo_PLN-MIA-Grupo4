@@ -172,6 +172,8 @@ Presentación_BEAMER/            presentación derivada del artículo
 Planning/                       plan de reorganización ejecutado
 ```
 
+Los resultados preliminares de los cuadernos se muestran mediante el componente común `src/moderacion_peru/notebook_ui.py`: tarjetas de estado, tablas clave–valor, vistas tabulares limitadas y bloques de comandos. Los 16 cuadernos activos evitan `print()` para mantener una salida legible y homogénea; los artefactos completos permanecen en JSON, JSONL o manifiestos y no dependen de la representación visual.
+
 ## Reproducción local desde una clonación nueva
 
 ### 1. Requisitos

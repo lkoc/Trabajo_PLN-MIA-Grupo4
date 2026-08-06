@@ -66,6 +66,7 @@ Decisión de implementación del 2026-08-05: la ampliación dirigida se integró
 - Crear el paquete `moderacion_peru` con rutas, contratos Pydantic, taxonomía, manifiestos, E/S incremental, selección de dispositivo y proveedores de LLM.
 - Exponer el CLI `modperu`: `preflight`, `run-stage`, `validate`, `serve-labeling`, `serve-production` y `artifacts`.
 - Admitir `auto`, NVIDIA/CUDA, AMD/ROCm, Intel/XPU y CPU, con registro explícito del backend y fallback advertido.
+- Centralizar la presentación preliminar de los cuadernos en `notebook_ui.py`, con tarjetas y tablas homogéneas; impedir mediante pruebas el uso directo de `print()` en celdas activas.
 
 ### Etiquetado y taxonomía
 

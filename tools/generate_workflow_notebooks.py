@@ -43,7 +43,8 @@ def find_root(start=Path.cwd()):
 ROOT = find_root()
 if str(ROOT / 'src') not in sys.path:
     sys.path.insert(0, str(ROOT / 'src'))
-print('Proyecto:', ROOT)
+from moderacion_peru.notebook_ui import show_callout, show_command, show_result, show_summary, show_table
+show_summary('Entorno del proyecto', {'raíz': ROOT, 'backend': 'local'}, tone='success')
 """
 
 
@@ -129,13 +130,15 @@ if IN_COLAB:
         require_l4=COLAB_REQUIRE_L4,
         resume=True,
     )
-    print(colab_runtime_diagnostics())
-    print(COLAB_CONTEXT.as_dict())
+    from moderacion_peru.notebook_ui import show_callout, show_command, show_result, show_summary, show_table
+    show_result('Diagnóstico de Colab', colab_runtime_diagnostics(), tone='success')
+    show_result('Contexto reproducible', COLAB_CONTEXT.as_dict(), tone='success')
 else:
     ROOT = _find_local_root()
     if str(ROOT / "src") not in sys.path:
         sys.path.insert(0, str(ROOT / "src"))
-    print("Backend local:", ROOT)
+    from moderacion_peru.notebook_ui import show_callout, show_command, show_result, show_summary, show_table
+    show_summary('Entorno del proyecto', {'raíz': ROOT, 'backend': 'local'}, tone='success')
 """
 
 
@@ -153,6 +156,10 @@ DISCOVERY_MODE = "seed"       # "seed", "directed" o "both"
 MAX_NEW_VIDEOS = 50           # máximo de llamadas nuevas para obtener subtítulos
 MAX_VIDEOS_PER_CHANNEL = 75   # candidatos recientes inspeccionados por canal
 MAX_RESULTS_PER_QUERY = 20    # candidatos inspeccionados por consulta dirigida
+MAX_DIRECTED_CANDIDATES = 500 # tamaño máximo de la cohorte dirigida vigente
+MAX_DIRECTED_SEED_CHANNELS = 12
+MAX_EXPANDED_CHANNELS = 12    # canales nuevos inferidos desde búsquedas temáticas
+MAX_VIDEOS_PER_EXPANDED_CHANNEL = 20
 
 SUBTITLE_LANGUAGES = ("es-PE", "es-419", "es")
 YT_RETRIES = 3
@@ -160,22 +167,38 @@ YT_SLEEP_MIN_SECONDS = 1.0
 YT_SLEEP_MAX_SECONDS = 3.0
 STOP_ON_VIDEO_ERROR = False   # False: registra el fallo y continúa con el siguiente
 
+# Reinicio destructivo recuperable: deje vacío normalmente. Para archivar los
+# artefactos activos y reconstruir el dataset de videos desde cero, descomente:
+RESET_VIDEO_DATASET = ""
+# RESET_VIDEO_DATASET = "ARCHIVAR_Y_REINICIAR_DATASET_VIDEOS"
+
 if DISCOVERY_MODE not in {"seed", "directed", "both"}:
     raise ValueError("DISCOVERY_MODE debe ser seed, directed o both")
-if MAX_NEW_VIDEOS < 0 or MAX_VIDEOS_PER_CHANNEL < 1 or MAX_RESULTS_PER_QUERY < 1:
+if (MAX_NEW_VIDEOS < 0 or MAX_VIDEOS_PER_CHANNEL < 1 or MAX_RESULTS_PER_QUERY < 1
+        or MAX_DIRECTED_CANDIDATES < 1 or MAX_DIRECTED_SEED_CHANNELS < 1
+        or MAX_EXPANDED_CHANNELS < 0 or MAX_VIDEOS_PER_EXPANDED_CHANNEL < 1):
     raise ValueError("Los límites de videos deben ser válidos")
 if YT_SLEEP_MIN_SECONDS < 0 or YT_SLEEP_MAX_SECONDS < YT_SLEEP_MIN_SECONDS:
     raise ValueError("El intervalo de espera de yt-dlp no es válido")
 
-print({
+show_summary('Configuración del scraping', {
     "discover_new": DISCOVER_NEW,
     "fetch_new": FETCH_NEW,
     "discovery_mode": DISCOVERY_MODE,
     "max_new_videos": MAX_NEW_VIDEOS,
     "max_videos_per_channel": MAX_VIDEOS_PER_CHANNEL,
     "max_results_per_query": MAX_RESULTS_PER_QUERY,
+    "max_directed_candidates": MAX_DIRECTED_CANDIDATES,
+    "max_directed_seed_channels": MAX_DIRECTED_SEED_CHANNELS,
+    "max_expanded_channels": MAX_EXPANDED_CHANNELS,
     "subtitle_languages": SUBTITLE_LANGUAGES,
-})
+    "reset_video_dataset_armed": bool(RESET_VIDEO_DATASET),
+}, tone='neutral')
+
+if RESET_VIDEO_DATASET:
+    from moderacion_peru.acquisition import reset_active_video_dataset
+    reset_result = reset_active_video_dataset(ROOT, RESET_VIDEO_DATASET)
+    show_result('Dataset activo archivado; reconstrucción desde cero habilitada', reset_result, tone='warning')
 """
 
 
@@ -220,12 +243,12 @@ _SEED_ROWS = [
     ("Tío Lenguado y Descocaos", "viajes_gastronomia", "https://www.youtube.com/@tiolenguado"),
 ]
 SEED_CHANNELS = [
-    {"name": name, "categoria_fuente": category, "url": url}
+    {"name": name, "categoria_fuente": category, "url": url, "sampling_mode": "seed"}
     for name, category, url in _SEED_ROWS
 ]
 
 # Ampliación dirigida: las cuotas son máximos por canal, nunca prevalencias esperadas.
-DIRECTED_CHANNELS = [
+DIRECTED_CHANNEL_CATALOG = [
     {"name": "Hablando Huevadas", "url": "https://www.youtube.com/@HablandoHuevadasOficial", "quota": 70, "target_category": "CONTENIDO_SEXUAL|ATAQUE_POR_GENERO_IDENTIDAD|ACOSO_AMENAZA"},
     {"name": "Goblinciano", "url": "https://www.youtube.com/@Goblinciano", "quota": 85, "target_category": "RACISMO_DISCRIMINACION|ACOSO_AMENAZA"},
     {"name": "Juanito y Richard", "url": "https://www.youtube.com/@JuanitoyRichard", "quota": 85, "target_category": "RACISMO_DISCRIMINACION|ACOSO_AMENAZA"},
@@ -241,37 +264,106 @@ SEED_SEARCH_QUERIES = [
     "farándula espectáculos Perú",
     "deportes peruanos comentarios YouTube",
 ]
-DIRECTED_SEARCH_QUERIES = [
+DIRECTED_QUERY_CATALOG = [
     {"query": "insultos racistas discriminación Perú denuncia", "target_category": "RACISMO_DISCRIMINACION"},
+    {"query": "discriminación regional clasismo racial Perú", "target_category": "RACISMO_DISCRIMINACION"},
     {"query": "ataque machista misoginia Perú denuncia", "target_category": "ATAQUE_POR_GENERO_IDENTIDAD"},
     {"query": "ataque homofóbico transfóbico Perú denuncia", "target_category": "ATAQUE_POR_GENERO_IDENTIDAD"},
     {"query": "amenaza de muerte denuncia Perú", "target_category": "ACOSO_AMENAZA"},
     {"query": "extorsionadores amenazan audio Perú", "target_category": "ACOSO_AMENAZA"},
     {"query": "acoso sexual denuncia televisión peruana", "target_category": "CONTENIDO_SEXUAL|ACOSO_AMENAZA"},
+    {"query": "cosificación contenido sexual explícito televisión Perú", "target_category": "CONTENIDO_SEXUAL"},
 ]
+"""
+
+
+SCRAPING_REUSE_AND_PLAN = """from moderacion_peru.acquisition import (
+    VIDEO_DATASET_RESET_MARKER,
+    bootstrap_canonical_from_existing,
+    build_directed_sampling_plan,
+    discover_existing_transcript_sources,
+    load_candidates,
+    merge_candidates,
+    select_directed_search_queries,
+    select_directed_seed_channels,
+)
+from moderacion_peru.io import read_jsonl
+from moderacion_peru.taxonomy import load_taxonomy
+
+CANONICAL = ROOT/'datos/raw/transcripts_raw.jsonl'
+CACHE = ROOT/'datos/raw/transcripts_cache'
+DIRECTED_DATASET = ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'
+rebuild_from_zero = (ROOT/VIDEO_DATASET_RESET_MARKER).exists()
+sources = [] if rebuild_from_zero else discover_existing_transcript_sources(ROOT, canonical_path=CANONICAL)
+reuse_stats = bootstrap_canonical_from_existing(sources, CANONICAL)
+reuse_stats['historical_bootstrap_disabled'] = rebuild_from_zero
+show_result('Reutilización de snapshots', reuse_stats, tone='warning' if rebuild_from_zero else 'success')
+
+taxonomy = load_taxonomy(ROOT/'config/taxonomia_v2.json')
+directed_plan = None
+DIRECTED_CHANNELS = []
+DIRECTED_SEARCH_QUERIES = []
+if DISCOVERY_MODE in {'directed', 'both'}:
+    directed_plan = build_directed_sampling_plan(
+        read_jsonl(DIRECTED_DATASET) if DIRECTED_DATASET.exists() else [],
+        read_jsonl(CANONICAL) if CANONICAL.exists() else [],
+        damage_labels=taxonomy.damage_labels,
+    )
+    DIRECTED_CHANNELS = select_directed_seed_channels(
+        directed_plan,
+        DIRECTED_CHANNEL_CATALOG,
+        max_channels=MAX_DIRECTED_SEED_CHANNELS,
+    )
+    DIRECTED_SEARCH_QUERIES = select_directed_search_queries(
+        directed_plan,
+        DIRECTED_QUERY_CATALOG,
+        max_queries=len(DIRECTED_QUERY_CATALOG),
+        max_results_per_query=MAX_RESULTS_PER_QUERY,
+    )
+    show_summary('Plan de ampliación dirigida', {
+        'estrategia': directed_plan['strategy'],
+        'soporte_videos_train_validation': directed_plan['support_videos'],
+        'déficit_videos': directed_plan['deficit_videos'],
+        'pesos': {key: round(value, 4) for key, value in directed_plan['weights'].items()},
+        'canales_semilla': len(DIRECTED_CHANNELS),
+        'consultas_temáticas': len(DIRECTED_SEARCH_QUERIES),
+    }, tone='warning' if directed_plan['strategy'] == 'fallback_equal' else 'success')
 
 CHANNEL_SOURCES = (
-    SEED_CHANNELS if DISCOVERY_MODE == "seed"
-    else DIRECTED_CHANNELS if DISCOVERY_MODE == "directed"
+    SEED_CHANNELS if DISCOVERY_MODE == 'seed'
+    else DIRECTED_CHANNELS if DISCOVERY_MODE == 'directed'
     else SEED_CHANNELS + DIRECTED_CHANNELS
 )
 SEARCH_QUERIES = (
-    SEED_SEARCH_QUERIES if DISCOVERY_MODE == "seed"
-    else DIRECTED_SEARCH_QUERIES if DISCOVERY_MODE == "directed"
+    SEED_SEARCH_QUERIES if DISCOVERY_MODE == 'seed'
+    else DIRECTED_SEARCH_QUERIES if DISCOVERY_MODE == 'directed'
     else SEED_SEARCH_QUERIES + DIRECTED_SEARCH_QUERIES
 )
-print("Canales configurados:", len(CHANNEL_SOURCES), "· consultas:", len(SEARCH_QUERIES))
+show_summary('Fuentes seleccionadas', {
+    'modo': DISCOVERY_MODE,
+    'canales': len(CHANNEL_SOURCES),
+    'consultas': len(SEARCH_QUERIES),
+}, tone='neutral')
 """
 
 
 SCRAPING_DISCOVERY = """from collections import Counter
 from tqdm.auto import tqdm
-from moderacion_peru.acquisition import discover_youtube_candidates
-from moderacion_peru.io import append_jsonl_once, write_json_atomic
+from moderacion_peru.acquisition import (
+    discover_youtube_candidates,
+    expand_directed_channel_sources,
+    processed_video_ids,
+    select_directed_candidates,
+)
+from moderacion_peru.io import append_jsonl_once, write_json_atomic, write_jsonl_atomic
 
 DISCOVERED_PATH = ROOT/'datos/raw/video_candidates.jsonl'
 DISCOVERY_FAILURES_PATH = ROOT/'datos/raw/fallos_descubrimiento_ultima_ejecucion.json'
+DIRECTED_SELECTION_PATH = ROOT/'datos/raw/directed_candidates_latest.jsonl'
+DIRECTED_PLAN_PATH = ROOT/'datos/raw/manifests/directed_plan_latest.json'
 discovered = []
+directed_selection = []
+expanded_channels = []
 if DISCOVER_NEW:
     source_outcomes = Counter()
     source_total = len(CHANNEL_SOURCES) + len(SEARCH_QUERIES)
@@ -297,24 +389,111 @@ if DISCOVER_NEW:
             sleep_max_seconds=YT_SLEEP_MAX_SECONDS,
             progress_callback=report_discovery,
         )
+        if directed_plan is not None:
+            expanded_channels = expand_directed_channel_sources(
+                discovered,
+                directed_plan,
+                known_channel_ids=[source.get('channel_id') for source in DIRECTED_CHANNELS],
+                max_channels=MAX_EXPANDED_CHANNELS,
+                videos_per_channel=MAX_VIDEOS_PER_EXPANDED_CHANNEL,
+            )
+            if expanded_channels:
+                source_total += len(expanded_channels)
+                source_progress.total = source_total
+                source_progress.refresh()
+                expanded_candidates, expanded_failures = discover_youtube_candidates(
+                    expanded_channels,
+                    (),
+                    max_videos_per_channel=MAX_VIDEOS_PER_EXPANDED_CHANNEL,
+                    max_results_per_query=MAX_RESULTS_PER_QUERY,
+                    retries=YT_RETRIES,
+                    sleep_min_seconds=YT_SLEEP_MIN_SECONDS,
+                    sleep_max_seconds=YT_SLEEP_MAX_SECONDS,
+                    progress_callback=report_discovery,
+                )
+                discovered = merge_candidates(discovered, expanded_candidates)
+                discovery_failures.extend(expanded_failures)
+            directed_pool = [
+                candidate for candidate in discovered
+                if candidate.get('sampling_mode') == 'directed'
+            ]
+            directed_selection = select_directed_candidates(
+                directed_pool,
+                processed_video_ids(CANONICAL),
+                directed_plan,
+                max_candidates=MAX_DIRECTED_CANDIDATES,
+            )
+            write_jsonl_atomic(DIRECTED_SELECTION_PATH, directed_selection)
+            write_json_atomic(DIRECTED_PLAN_PATH, {
+                **directed_plan,
+                'planned_channels': DIRECTED_CHANNELS,
+                'planned_queries': DIRECTED_SEARCH_QUERIES,
+                'expanded_channels': expanded_channels,
+                'directed_candidates_discovered': len(directed_pool),
+                'directed_candidates_selected': len(directed_selection),
+                'selection_path': DIRECTED_SELECTION_PATH,
+            })
     finally:
         source_progress.close()
     added, existing = append_jsonl_once(DISCOVERED_PATH, discovered, id_field='video_id')
     write_json_atomic(DISCOVERY_FAILURES_PATH, discovery_failures)
-    print('Resumen del descubrimiento:', {
+    show_summary('Resumen del descubrimiento', {
         "sources_total": source_total,
         "sources_ok": source_outcomes['ok'],
         "sources_failed": source_outcomes['failed'],
         "candidates_unique": len(discovered),
         "candidates_added": added,
         "candidates_existing": existing,
-    })
+        "expanded_channels": len(expanded_channels),
+        "directed_cohort": len(directed_selection),
+    }, tone='success' if not discovery_failures else 'warning')
     if discovery_failures:
         failure_counts = Counter(row['failure_kind'] for row in discovery_failures)
-        print('Fallos por motivo:', dict(sorted(failure_counts.items())))
-        print('Detalle auditable:', DISCOVERY_FAILURES_PATH)
+        show_summary('Fallos de fuentes por motivo', dict(sorted(failure_counts.items())), tone='warning')
+        show_summary('Artefacto de auditoría', {'ruta': DISCOVERY_FAILURES_PATH}, tone='neutral')
 else:
-    print("Descubrimiento desactivado: se reutilizan candidatos y transcripciones locales.")
+    show_callout('Descubrimiento desactivado', 'Se reutilizan candidatos y transcripciones locales.', tone='neutral')
+"""
+
+
+SCRAPING_CANDIDATES = """from moderacion_peru.acquisition import processed_video_ids
+
+if DISCOVERY_MODE == 'directed':
+    candidates = load_candidates(DIRECTED_SELECTION_PATH)
+    candidate_origin = 'cohorte_dirigida_vigente'
+elif DISCOVERY_MODE == 'both' and DISCOVER_NEW:
+    seed_candidates_current = [
+        candidate for candidate in discovered
+        if candidate.get('sampling_mode') == 'seed'
+    ]
+    candidates = merge_candidates(seed_candidates_current, directed_selection)
+    candidate_origin = 'descubrimiento_actual_seed_más_cohorte_dirigida'
+else:
+    candidate_files = [
+        ROOT/'datos/raw/video_candidates.jsonl',
+        ROOT/'datos/raw/videos_candidatos.csv',
+    ]
+    candidates = merge_candidates(*(load_candidates(source) for source in candidate_files))
+    candidate_origin = 'archivo_acumulado_general'
+
+processed_ids = processed_video_ids(CANONICAL)
+existing_candidate_ids = {str(candidate['video_id']).strip() for candidate in candidates} & processed_ids
+pending_candidates = [
+    candidate for candidate in candidates
+    if str(candidate['video_id']).strip() not in processed_ids
+]
+cached_ids = {path.stem for path in CACHE.glob('*.json')}
+pending_cached = sum(
+    str(candidate['video_id']).strip() in cached_ids for candidate in pending_candidates
+)
+show_summary('Candidatos filtrados antes de la adquisición', {
+    'origen': candidate_origin,
+    'únicos': len(candidates),
+    'ya_canónicos_omitidos': len(existing_candidate_ids),
+    'pendientes_totales': len(pending_candidates),
+    'pendientes_reutilizables_desde_caché': pending_cached,
+    'pendientes_que_requieren_red': len(pending_candidates) - pending_cached,
+}, tone='neutral')
 """
 
 
@@ -330,8 +509,8 @@ fetcher = partial(
     sleep_min_seconds=YT_SLEEP_MIN_SECONDS,
     sleep_max_seconds=YT_SLEEP_MAX_SECONDS,
 )
-if candidates:
-    video_progress = tqdm(total=len(candidates), desc='Procesando candidatos', unit='video')
+if pending_candidates:
+    video_progress = tqdm(total=len(pending_candidates), desc='Procesando pendientes', unit='video')
 
     def report_acquisition(event):
         counters = event['counters']
@@ -342,11 +521,12 @@ if candidates:
             nuevos=counters['fetched'],
             fallidos=counters['failed'],
             diferidos=counters['deferred_by_limit'],
+            pausa_429=counters['deferred_rate_limit'],
         )
 
     try:
         stats = ingest_incremental(
-            candidates,
+            pending_candidates,
             CANONICAL,
             CACHE,
             fetcher=fetcher if FETCH_NEW else None,
@@ -357,16 +537,35 @@ if candidates:
         )
     finally:
         video_progress.close()
-    print('Resumen de adquisición:', stats)
+    stats = {
+        'candidates_total': len(candidates),
+        'filtered_existing_before_run': len(existing_candidate_ids),
+        'pending_before_run': len(pending_candidates),
+        **stats,
+    }
+    show_summary('Resumen de adquisición', stats, tone='success' if not stats['failed'] else 'warning')
     if stats['failed']:
-        print('Fallos por motivo:', {
+        show_summary('Fallos de adquisición por motivo', {
             key.removeprefix('failure_'): value
             for key, value in stats.items()
             if key.startswith('failure_') and not key.startswith('failure_records_') and value
-        })
-        print(f"Se omitieron {stats['failed']} videos inaccesibles; revise {FAILURES}.")
+        }, tone='warning')
+        show_summary('Videos omitidos sin detener el lote', {
+            'cantidad': stats['failed'],
+            'detalle': FAILURES,
+        }, tone='warning')
+elif candidates:
+    show_callout(
+        'Sin videos pendientes',
+        'Todos los candidatos ya tienen una transcripción canónica; no se iniciaron descargas.',
+        tone='success',
+    )
 else:
-    print("No hay candidatos. Active DISCOVER_NEW o añada un CSV/JSONL; no se descarga de nuevo el corpus.")
+    show_callout(
+        'No hay candidatos',
+        'Active DISCOVER_NEW o añada un CSV/JSONL. El corpus existente no se vuelve a descargar.',
+        tone='warning',
+    )
 """
 
 
@@ -447,11 +646,11 @@ def create(
                 "PUBLISH_TO_DRIVE = False\n"
                 "if COLAB_CONTEXT is not None and PUBLISH_TO_DRIVE:\n"
                 "    from moderacion_peru.colab import publish_colab_outputs\n"
-                "    print(publish_colab_outputs(COLAB_CONTEXT))\n"
+                "    show_result('Publicación en Drive', publish_colab_outputs(COLAB_CONTEXT), tone='success')\n"
                 "elif COLAB_CONTEXT is not None:\n"
-                "    print('Publicación desactivada; cambie PUBLISH_TO_DRIVE=True tras guardar un checkpoint consistente.')\n"
+                "    show_callout('Publicación desactivada', 'Cambie PUBLISH_TO_DRIVE=True tras guardar un checkpoint consistente.', tone='neutral')\n"
                 "else:\n"
-                "    print('Backend local: los artefactos ya permanecen en el workspace.')"
+                "    show_callout('Backend local', 'Los artefactos ya permanecen en el workspace.', tone='success')"
             )
         )
     references = apply_citations(notebook.cells, notebook.metadata["moderacion_peru"])
@@ -482,12 +681,12 @@ def main() -> None:
         "[@fairstein2024balancing] [@huang2021balancing], pero no permite estimar prevalencias "
         "en YouTube ni en el Perú.",
         [
-            ("Preflight", "from moderacion_peru.artifacts import artifact_status\nartifact_status(ROOT)"),
+            ("Preflight", "from moderacion_peru.artifacts import artifact_status\nshow_result('Disponibilidad de artefactos', artifact_status(ROOT), tone='neutral')"),
             ("Parámetros editables", SCRAPING_PARAMETERS),
             ("Canales y consultas", SCRAPING_SOURCES),
-            ("Reutilización de snapshots existentes", "from moderacion_peru.acquisition import (bootstrap_canonical_from_existing, discover_existing_transcript_sources, load_candidates, merge_candidates)\nCANONICAL = ROOT/'datos/raw/transcripts_raw.jsonl'\nCACHE = ROOT/'datos/raw/transcripts_cache'\nsources = discover_existing_transcript_sources(ROOT, canonical_path=CANONICAL)\nreuse_stats = bootstrap_canonical_from_existing(sources, CANONICAL)\nprint(reuse_stats)"),
+            ("Reutilización y plan dirigido", SCRAPING_REUSE_AND_PLAN),
             ("Descubrimiento general o ampliación dirigida", SCRAPING_DISCOVERY),
-            ("Candidatos y caché", "CANDIDATE_FILES = [ROOT/'datos/raw/video_candidates.jsonl', ROOT/'datos/raw/videos_candidatos.csv']\nloaded_groups = [load_candidates(source) for source in CANDIDATE_FILES]\ncandidates = merge_candidates(*loaded_groups)\nprint('Candidatos únicos:', len(candidates), '· los ya existentes se omitirán')"),
+            ("Cohorte activa y caché", SCRAPING_CANDIDATES),
             ("Ejecución controlada y tolerante a fallos", SCRAPING_EXECUTION),
         ],
     )
@@ -502,7 +701,7 @@ def main() -> None:
         "demuestran que esos valores sean óptimos.",
         [
             ("Configuración", "from moderacion_peru.incremental import chunk_records_incrementally\nfrom moderacion_peru.io import append_jsonl_once, read_jsonl\nSOURCE=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/processed/chunks_v2.jsonl'\nVERSION_INDEX=ROOT/'datos/processed/chunking_v2_versions.jsonl'"),
-            ("Materialización", "existing=list(read_jsonl(OUTPUT)) if OUTPUT.exists() else []\nversions=list(read_jsonl(VERSION_INDEX)) if VERSION_INDEX.exists() else []\nnew_rows,new_versions,stats=chunk_records_incrementally(read_jsonl(SOURCE) if SOURCE.exists() else [],existing,versions)\nadded,skipped=append_jsonl_once(OUTPUT,new_rows,id_field='chunk_id')\nversions_added,_=append_jsonl_once(VERSION_INDEX,new_versions,id_field='version_id')\nstats.update({'added':added,'duplicate_ids':skipped,'versions_registered':versions_added})\nprint(stats)"),
+            ("Materialización", "existing=list(read_jsonl(OUTPUT)) if OUTPUT.exists() else []\nversions=list(read_jsonl(VERSION_INDEX)) if VERSION_INDEX.exists() else []\nnew_rows,new_versions,stats=chunk_records_incrementally(read_jsonl(SOURCE) if SOURCE.exists() else [],existing,versions)\nadded,skipped=append_jsonl_once(OUTPUT,new_rows,id_field='chunk_id')\nversions_added,_=append_jsonl_once(VERSION_INDEX,new_versions,id_field='version_id')\nstats.update({'added':added,'duplicate_ids':skipped,'versions_registered':versions_added})\nshow_result('Resultado de limpieza y troceado', stats, tone='success')"),
         ],
     )
     create(
@@ -531,7 +730,7 @@ def main() -> None:
                 "    SOURCE=ROOT/'datos/processed/chunks_v2.jsonl'\n"
                 "    OUTPUT=ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl'\n"
                 "    ERRORS=ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.errors.jsonl'\n"
-                "print(provider.probe())\nprint({'source':str(SOURCE),'output':str(OUTPUT)})",
+                "show_result('Estado del proveedor', provider.probe(), tone='success')\nshow_summary('Rutas de la campaña', {'entrada': SOURCE, 'salida': OUTPUT, 'errores': ERRORS}, tone='neutral')",
             ),
             (
                 "Etiquetado incremental",
@@ -539,9 +738,9 @@ def main() -> None:
                 "from moderacion_peru.labeling import annotate_incremental\n"
                 "RUN=False\nLIMIT=20  # Quite el límite solo después del smoke test\n"
                 "if RUN:\n"
-                "    print(annotate_incremental(read_jsonl(SOURCE),provider,OUTPUT,error_path=ERRORS,limit=LIMIT))\n"
+                "    show_result('Resultado del etiquetado incremental', annotate_incremental(read_jsonl(SOURCE),provider,OUTPUT,error_path=ERRORS,limit=LIMIT), tone='success')\n"
                 "else:\n"
-                "    print('Preflight completo; cambie RUN=True. La salida reanuda por chunk_id.')",
+                "    show_callout('Preflight completo', 'Cambie RUN=True. La salida reanuda por chunk_id.', tone='neutral')",
             ),
         ],
         colab_notebook_id="02_01",
@@ -556,8 +755,8 @@ def main() -> None:
         "propuesta automática y la decisión humana [@schroeder2025llmassisted]. La activación explícita, "
         "los límites de gasto y la precedencia de fuentes son reglas locales.",
         [
-            ("Preflight sin red", "from moderacion_peru.providers import DeepSeekProvider\nprovider=DeepSeekProvider()\nprovider.probe()"),
-            ("Ejecución explícita", "from moderacion_peru.io import read_jsonl\nfrom moderacion_peru.labeling import annotate_incremental\nSOURCE=ROOT/'datos/processed/chunks_v2.jsonl'\nOUTPUT=ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'\nRUN_REMOTE=False\nif RUN_REMOTE:\n    print(annotate_incremental(read_jsonl(SOURCE),provider,OUTPUT))\nelse:\n    print('No se realizó ninguna llamada comercial.')"),
+            ("Preflight sin red", "from moderacion_peru.providers import DeepSeekProvider\nprovider=DeepSeekProvider()\nshow_result('Estado del proveedor remoto', provider.probe(), tone='neutral')"),
+            ("Ejecución explícita", "from moderacion_peru.io import read_jsonl\nfrom moderacion_peru.labeling import annotate_incremental\nSOURCE=ROOT/'datos/processed/chunks_v2.jsonl'\nOUTPUT=ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'\nRUN_REMOTE=False\nif RUN_REMOTE:\n    show_result('Resultado del etiquetado remoto', annotate_incremental(read_jsonl(SOURCE),provider,OUTPUT), tone='success')\nelse:\n    show_callout('API remota desactivada', 'No se realizó ninguna llamada comercial.', tone='neutral')"),
         ],
     )
     create(
@@ -571,8 +770,8 @@ def main() -> None:
         "la decisión humana [@choi2024llmeffect], el ordenamiento, el umbral 0.8 y la posibilidad de ocultar "
         "la sugerencia se tratan como decisiones locales que deben auditarse.",
         [
-            ("Selección reproducible", "from moderacion_peru.io import read_jsonl\nSOURCE=ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl'\nrows=list(read_jsonl(SOURCE)) if SOURCE.exists() else []\nreview=[r for r in rows if r.get('needs_review') or r.get('score_confianza',1)<0.8]\nreview.sort(key=lambda r:r['chunk_id'])\nprint({'labeled':len(rows),'directed_review':len(review)})"),
-            ("Siguiente paso", "print('La revisión puede usar otro modelo/familia o pasar directamente a 02_04 para validación humana.')"),
+            ("Selección reproducible", "from moderacion_peru.io import read_jsonl\nSOURCE=ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl'\nrows=list(read_jsonl(SOURCE)) if SOURCE.exists() else []\nreview=[r for r in rows if r.get('needs_review') or r.get('score_confianza',1)<0.8]\nreview.sort(key=lambda r:r['chunk_id'])\nshow_summary('Cola de revisión dirigida', {'etiquetados': len(rows), 'requieren_revisión': len(review), 'umbral_confianza': 0.8}, tone='warning' if review else 'success')"),
+            ("Siguiente paso", "show_callout('Siguiente paso', 'La revisión puede usar otro modelo o pasar directamente a 02_04 para validación humana.', tone='neutral')"),
         ],
     )
     create(
@@ -585,8 +784,8 @@ def main() -> None:
         "sugerencia puede producir influencia o anclaje [@choi2024llmeffect]. La precedencia humana, la "
         "adjudicación y el guardado *append-only* son reglas operativas locales.",
         [
-            ("Consolidación", "from moderacion_peru.consolidation import consolidate_annotations\nSOURCES=[p for p in [ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl',ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'] if p.exists()]\nCHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\nTRANSCRIPTS=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/etiquetado/consolidado/anotaciones_v2.jsonl'\nprint(consolidate_annotations(SOURCES,OUTPUT,chunks_source=CHUNKS,transcripts_source=TRANSCRIPTS) if SOURCES else 'No hay campañas para consolidar')"),
-            ("Frontend", "print(f'modperu serve-labeling --campaign {OUTPUT}')"),
+            ("Consolidación", "from moderacion_peru.consolidation import consolidate_annotations\nSOURCES=[p for p in [ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl',ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'] if p.exists()]\nCHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\nTRANSCRIPTS=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/etiquetado/consolidado/anotaciones_v2.jsonl'\nif SOURCES:\n    show_result('Consolidación de campañas', consolidate_annotations(SOURCES,OUTPUT,chunks_source=CHUNKS,transcripts_source=TRANSCRIPTS), tone='success')\nelse:\n    show_callout('Sin campañas', 'No hay propuestas para consolidar todavía.', tone='warning')"),
+            ("Frontend", "show_command('Iniciar validación humana', f'modperu serve-labeling --campaign {OUTPUT}', description='Ejecute este comando en una terminal del entorno virtual.')"),
         ],
     )
     create(
@@ -606,15 +805,15 @@ def main() -> None:
                 "CHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\n"
                 "REVIEWS=[ROOT/'datos/etiquetado/humano/labeling_events_v2.jsonl']\n"
                 "REVIEWED=ROOT/'datos/etiquetado/consolidado/anotaciones_revisadas_v2.jsonl'\n"
-                "print(reconcile_human_reviews(CONSOLIDATED,REVIEWS,REVIEWED,chunks_source=CHUNKS))",
+                "show_result('Reconciliación humana', reconcile_human_reviews(CONSOLIDATED,REVIEWS,REVIEWED,chunks_source=CHUNKS), tone='success')",
             ),
             (
                 "Snapshot versionado",
                 "from moderacion_peru.datasets import materialize_versioned_training_snapshot\n"
                 "DATASET=ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\n"
                 "snapshot=materialize_versioned_training_snapshot(REVIEWED,DATASET)\n"
-                "print(snapshot)\n"
-                "print('Sin cambios de entrada, ambas operaciones devuelven status=noop y no reescriben archivos.')",
+                "show_result('Snapshot entrenable', snapshot, tone='success')\n"
+                "show_callout('Idempotencia', 'Sin cambios de entrada, ambas operaciones devuelven status=noop y no reescriben archivos.', tone='neutral')",
             ),
         ],
     )
@@ -623,7 +822,7 @@ def main() -> None:
         (
             "03_01_modelos_clasicos.ipynb",
             "Modelos clásicos",
-            "from moderacion_peru.experiments import train_classical_experiments\nDATA=ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    print(train_classical_experiments(DATA,ROOT/'modelos/v2/clasicos'))\nelse: print('Cambie RUN_TRAINING=True: ejecutará fit, calibración en validation, test y candidatos. Si el snapshot no cambió, devuelve noop.')",
+            "from moderacion_peru.experiments import train_classical_experiments\nDATA=ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    show_result('Entrenamiento de modelos clásicos', train_classical_experiments(DATA,ROOT/'modelos/v2/clasicos'), tone='success')\nelse:\n    show_callout('Entrenamiento desactivado', 'Cambie RUN_TRAINING=True: ejecutará fit, calibración en validation, test y candidatos. Si el snapshot no cambió, devuelve noop.', tone='neutral')",
             None,
             "La suite representa texto mediante TF–IDF [@salton1988tfidf] y compara regresión "
             "logística [@cox1958logistic], SVM lineal [@cortes1995svm], Complement Naive Bayes "
@@ -635,7 +834,7 @@ def main() -> None:
         (
             "03_02_transformers_planos.ipynb",
             "Transformers planos",
-            "from moderacion_peru.experiments import train_flat_transformers\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/transformers_planos'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    print(train_flat_transformers(DATA,OUTPUT_ROOT,device=DEVICE))\nelse: print({'data':str(DATA),'output':str(OUTPUT_ROOT),'action':'Cambie RUN_TRAINING=True; MiniLM y E5 completarán fit→calibración→test→candidato o noop.'})",
+            "from moderacion_peru.experiments import train_flat_transformers\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/transformers_planos'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    show_result('Entrenamiento de Transformers planos', train_flat_transformers(DATA,OUTPUT_ROOT,device=DEVICE), tone='success')\nelse:\n    show_summary('Configuración preliminar', {'datos': DATA, 'salida': OUTPUT_ROOT, 'dispositivo': DEVICE, 'acción': 'Cambie RUN_TRAINING=True; MiniLM y E5 completarán fit→calibración→test→candidato o noop.'}, tone='neutral')",
             "03_02",
             "La arquitectura Transformer procede de [@vaswani2017attention]. MiniLM se basa en "
             "destilación de autoatención [@wang2020minilm] y su extensión multilingüe en destilación "
@@ -647,7 +846,7 @@ def main() -> None:
         (
             "03_03_transformer_cascada.ipynb",
             "Transformer en cascada",
-            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/cascada'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    print(train_neural_experiment(DATA,OUTPUT_ROOT,experiment='cascade',device=DEVICE))\nelse: print({'data':str(DATA),'gate':'cualquier daño','children':4,'action':'RUN_TRAINING=True completa el ciclo o devuelve noop.'})",
+            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/cascada'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    show_result('Entrenamiento de la cascada', train_neural_experiment(DATA,OUTPUT_ROOT,experiment='cascade',device=DEVICE), tone='success')\nelse:\n    show_summary('Configuración preliminar', {'datos': DATA, 'salida': OUTPUT_ROOT, 'dispositivo': DEVICE, 'compuerta': 'cualquier daño', 'salidas_daño': 4, 'acción': 'RUN_TRAINING=True completa el ciclo o devuelve noop.'}, tone='neutral')",
             "03_03",
             "La clasificación jerárquica dispone de taxonomías y estrategias generales "
             "[@silla2011hierarchical], y existen modelos de texto sensibles a jerarquía como HiAGM "
@@ -658,7 +857,7 @@ def main() -> None:
         (
             "03_04_transformer_multitarea.ipynb",
             "Transformer jerárquico multitarea",
-            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/multitarea'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    print(train_neural_experiment(DATA,OUTPUT_ROOT,experiment='multitask',device=DEVICE))\nelse: print({'data':str(DATA),'primary':5,'auxiliary':'14 finas + 3 flags','action':'RUN_TRAINING=True completa el ciclo o devuelve noop.'})",
+            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/multitarea'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    show_result('Entrenamiento multitarea', train_neural_experiment(DATA,OUTPUT_ROOT,experiment='multitask',device=DEVICE), tone='success')\nelse:\n    show_summary('Configuración preliminar', {'datos': DATA, 'salida': OUTPUT_ROOT, 'dispositivo': DEVICE, 'salidas_principales': 5, 'auxiliares': '14 finas + 3 flags', 'acción': 'RUN_TRAINING=True completa el ciclo o devuelve noop.'}, tone='neutral')",
             "03_04",
             "El aprendizaje multitarea comparte representaciones entre objetivos relacionados "
             "[@caruana1997multitask], mientras la clasificación jerárquica [@silla2011hierarchical] y "
@@ -669,7 +868,7 @@ def main() -> None:
         (
             "03_05_qwen_lora.ipynb",
             "Qwen-LoRA",
-            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_lora'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    print(train_neural_experiment(DATA,OUTPUT_ROOT,experiment='qwen_lora',device=DEVICE))\nelse: print({'data':str(DATA),'resume_colab':bool(COLAB_CONTEXT and COLAB_CONTEXT.resumed),'action':'RUN_TRAINING=True completa fit→calibración→test→candidato o noop.'})",
+            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_lora'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    show_result('Entrenamiento Qwen-LoRA', train_neural_experiment(DATA,OUTPUT_ROOT,experiment='qwen_lora',device=DEVICE), tone='success')\nelse:\n    show_summary('Configuración preliminar', {'datos': DATA, 'salida': OUTPUT_ROOT, 'dispositivo': DEVICE, 'reanuda_colab': bool(COLAB_CONTEXT and COLAB_CONTEXT.resumed), 'acción': 'RUN_TRAINING=True completa fit→calibración→test→candidato o noop.'}, tone='neutral')",
             "03_05",
             "LoRA introduce actualizaciones entrenables de bajo rango sobre un modelo preentrenado "
             "[@hu2022lora]. El backbone pertenece a la familia Qwen3 [@qwen2025qwen3] y se fija en el "
@@ -680,7 +879,7 @@ def main() -> None:
         (
             "03_06_qwen_estructurado.ipynb",
             "Qwen estructurado",
-            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_estructurado'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    print(train_neural_experiment(DATA,OUTPUT_ROOT,experiment='qwen_structured',device=DEVICE))\nelse: print({'data':str(DATA),'structure':'penaliza conflicto SEGURO+daño durante fit','action':'RUN_TRAINING=True completa el ciclo o devuelve noop.'})",
+            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_estructurado'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    show_result('Entrenamiento Qwen estructurado', train_neural_experiment(DATA,OUTPUT_ROOT,experiment='qwen_structured',device=DEVICE), tone='success')\nelse:\n    show_summary('Configuración preliminar', {'datos': DATA, 'salida': OUTPUT_ROOT, 'dispositivo': DEVICE, 'estructura': 'penaliza conflicto SEGURO+daño durante fit', 'acción': 'RUN_TRAINING=True completa el ciclo o devuelve noop.'}, tone='neutral')",
             "03_06",
             "El backbone se documenta mediante el informe Qwen3 [@qwen2025qwen3] y la tarjeta exacta de "
             "`Qwen/Qwen3-0.6B-Base` [@hf2026qwen06bcard]. La separación entre compuerta y daños toma "
@@ -690,7 +889,7 @@ def main() -> None:
         (
             "03_07_comparacion_final.ipynb",
             "Comparación final",
-            "from moderacion_peru.registry import compare_and_publish_registry\nDATA=ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nCANDIDATE_ROOTS=[ROOT/'modelos/v2']\nREGISTRY=ROOT/'modelos/registro_modelos_5_salidas.json'\nRUN_PUBLISH=False\nif RUN_PUBLISH:\n    print(compare_and_publish_registry(DATA,CANDIDATE_ROOTS,REGISTRY,comparison_path=ROOT/'resultados/modelos/comparacion_modelos_5_salidas.json'))\nelse: print('Cambie RUN_PUBLISH=True después de importar a modelos/v2 los runs de Colab. Solo validation selecciona; test se reporta después.')",
+            "from moderacion_peru.registry import compare_and_publish_registry\nDATA=ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nCANDIDATE_ROOTS=[ROOT/'modelos/v2']\nREGISTRY=ROOT/'modelos/registro_modelos_5_salidas.json'\nRUN_PUBLISH=False\nif RUN_PUBLISH:\n    show_result('Comparación y registro productivo', compare_and_publish_registry(DATA,CANDIDATE_ROOTS,REGISTRY,comparison_path=ROOT/'resultados/modelos/comparacion_modelos_5_salidas.json'), tone='success')\nelse:\n    show_callout('Publicación desactivada', 'Cambie RUN_PUBLISH=True después de importar los runs de Colab. Solo validation selecciona; test se reporta después.', tone='neutral')",
             None,
             "Las curvas precisión–recall son especialmente informativas con clases desbalanceadas "
             "[@saito2015pr], y el AP del proyecto sigue la definición exacta de `average_precision_score` "
@@ -702,7 +901,7 @@ def main() -> None:
         (
             "03_08_auditoria_finas_flags.ipynb",
             "Auditoría fina y transversal",
-            "from moderacion_peru.datasets import audit_training_snapshot\nDATA=ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT=ROOT/'resultados/auditorias/auditoria_finas_flags_v2.json'\nprint(audit_training_snapshot(DATA,OUTPUT))",
+            "from moderacion_peru.datasets import audit_training_snapshot\nDATA=ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT=ROOT/'resultados/auditorias/auditoria_finas_flags_v2.json'\nshow_result('Auditoría de etiquetas finas y flags', audit_training_snapshot(DATA,OUTPUT), tone='success')",
             None,
             "La auditoría parte de tipologías generales de contenido dañino [@banko2020taxonomy] y de "
             "abuso dirigido o generalizado [@waseem2017abuse], pero separa fenómenos implícitos "
@@ -736,8 +935,8 @@ def main() -> None:
         "deferencia a una persona experta [@mozannar2020defer]. El modo sombra, los umbrales y los motivos "
         "de revisión son decisiones locales y no constituyen una garantía de seguridad.",
         [
-            ("Disponibilidad", "from moderacion_peru.artifacts import artifact_status\nartifact_status(ROOT)"),
-            ("Inicio", "print('modperu serve-production --host 127.0.0.1 --port 8765')\nprint('La interfaz reutiliza caché de subtítulos, no descarga audio/video, registra inferencias y permite revisión append-only.')"),
+            ("Disponibilidad", "from moderacion_peru.artifacts import artifact_status\nshow_result('Disponibilidad de producción', artifact_status(ROOT), tone='neutral')"),
+            ("Inicio", "show_command('Iniciar frontend de producción', 'modperu serve-production --host 127.0.0.1 --port 8765', description='Ejecute este comando en una terminal del entorno virtual.')\nshow_callout('Modo de operación', 'La interfaz reutiliza caché de subtítulos, no descarga audio/video, registra inferencias y permite revisión append-only.', tone='info')"),
         ],
     )
 

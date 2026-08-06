@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-06T02:28:15.007092+00:00",
+  "generated_at": "2026-08-06T05:52:27.952693+00:00",
   "taxonomy_contract": "moderacion_peru_5_salidas_v2",
   "taxonomy_version": "2.1.0",
   "core": {
     "name": "project_core.zip",
-    "sha256": "5aa72d11e32e372c1a9e7c36ee8f7845210d5945e8dfb70eb0e6e7bd17989d33",
-    "bytes": 65042,
+    "sha256": "bf4ce43edea387be1c72bf7cc62f77ee38becf64eb11ec63be5ef5a2ae864c43",
+    "bytes": 67505,
     "files": [
       "config/colab_l4.json",
       "config/taxonomia_v2.json",
@@ -27,6 +27,7 @@
       "src/moderacion_peru/manifests.py",
       "src/moderacion_peru/migration.py",
       "src/moderacion_peru/models.py",
+      "src/moderacion_peru/notebook_ui.py",
       "src/moderacion_peru/paths.py",
       "src/moderacion_peru/pilot.py",
       "src/moderacion_peru/providers/__init__.py",
