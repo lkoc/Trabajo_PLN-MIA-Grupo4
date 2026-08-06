@@ -153,15 +153,19 @@ DISCOVER_NEW = False          # True: consulta canales/búsquedas y guarda candi
 FETCH_NEW = False             # True: obtiene subtítulos solo de videos aún no procesados
 DISCOVERY_MODE = "seed"       # "seed", "directed" o "both"
 
-MAX_NEW_VIDEOS = 50           # máximo de llamadas nuevas para obtener subtítulos
+MAX_NEW_VIDEOS = None         # None: incluye todos los pendientes; use un entero para un piloto
+NETWORK_BATCH_SIZE = 50       # llamadas nuevas por lote antes de una pausa larga
+NETWORK_BATCH_PAUSE_SECONDS = 60.0
 MAX_VIDEOS_PER_CHANNEL = 75   # candidatos recientes inspeccionados por canal
-MAX_RESULTS_PER_QUERY = 20    # candidatos inspeccionados por consulta dirigida
-MAX_DIRECTED_CANDIDATES = 500 # tamaño máximo de la cohorte dirigida vigente
-MAX_DIRECTED_SEED_CHANNELS = 12
-MAX_EXPANDED_CHANNELS = 12    # canales nuevos inferidos desde búsquedas temáticas
-MAX_VIDEOS_PER_EXPANDED_CHANNEL = 20
+MAX_RESULTS_PER_QUERY = 30    # candidatos inspeccionados por consulta dirigida
+MAX_DIRECTED_CANDIDATES = None # None: conserva toda la cohorte dirigida inédita
+MAX_DIRECTED_SEED_CHANNELS = 16
+MAX_EXPANDED_CHANNELS = 20    # canales nuevos inferidos desde búsquedas temáticas
+MAX_VIDEOS_PER_EXPANDED_CHANNEL = 30
 
 SUBTITLE_LANGUAGES = ("es-PE", "es-419", "es")
+MIN_TRANSCRIPT_CHARACTERS = 200
+USE_TRANSCRIPT_API_FALLBACK = True
 YT_RETRIES = 3
 YT_SLEEP_MIN_SECONDS = 1.0
 YT_SLEEP_MAX_SECONDS = 3.0
@@ -174,10 +178,15 @@ RESET_VIDEO_DATASET = ""
 
 if DISCOVERY_MODE not in {"seed", "directed", "both"}:
     raise ValueError("DISCOVERY_MODE debe ser seed, directed o both")
-if (MAX_NEW_VIDEOS < 0 or MAX_VIDEOS_PER_CHANNEL < 1 or MAX_RESULTS_PER_QUERY < 1
-        or MAX_DIRECTED_CANDIDATES < 1 or MAX_DIRECTED_SEED_CHANNELS < 1
+if ((MAX_NEW_VIDEOS is not None and MAX_NEW_VIDEOS < 0)
+        or NETWORK_BATCH_SIZE < 1 or NETWORK_BATCH_PAUSE_SECONDS < 0
+        or MAX_VIDEOS_PER_CHANNEL < 1 or MAX_RESULTS_PER_QUERY < 1
+        or (MAX_DIRECTED_CANDIDATES is not None and MAX_DIRECTED_CANDIDATES < 1)
+        or MAX_DIRECTED_SEED_CHANNELS < 1
         or MAX_EXPANDED_CHANNELS < 0 or MAX_VIDEOS_PER_EXPANDED_CHANNEL < 1):
     raise ValueError("Los límites de videos deben ser válidos")
+if MIN_TRANSCRIPT_CHARACTERS < 1:
+    raise ValueError("MIN_TRANSCRIPT_CHARACTERS debe ser positivo")
 if YT_SLEEP_MIN_SECONDS < 0 or YT_SLEEP_MAX_SECONDS < YT_SLEEP_MIN_SECONDS:
     raise ValueError("El intervalo de espera de yt-dlp no es válido")
 
@@ -186,12 +195,16 @@ show_summary('Configuración del scraping', {
     "fetch_new": FETCH_NEW,
     "discovery_mode": DISCOVERY_MODE,
     "max_new_videos": MAX_NEW_VIDEOS,
+    "network_batch_size": NETWORK_BATCH_SIZE,
+    "network_batch_pause_seconds": NETWORK_BATCH_PAUSE_SECONDS,
     "max_videos_per_channel": MAX_VIDEOS_PER_CHANNEL,
     "max_results_per_query": MAX_RESULTS_PER_QUERY,
     "max_directed_candidates": MAX_DIRECTED_CANDIDATES,
     "max_directed_seed_channels": MAX_DIRECTED_SEED_CHANNELS,
     "max_expanded_channels": MAX_EXPANDED_CHANNELS,
     "subtitle_languages": SUBTITLE_LANGUAGES,
+    "min_transcript_characters": MIN_TRANSCRIPT_CHARACTERS,
+    "transcript_api_fallback": USE_TRANSCRIPT_API_FALLBACK,
     "reset_video_dataset_armed": bool(RESET_VIDEO_DATASET),
 }, tone='neutral')
 
@@ -508,13 +521,18 @@ fetcher = partial(
     retries=YT_RETRIES,
     sleep_min_seconds=YT_SLEEP_MIN_SECONDS,
     sleep_max_seconds=YT_SLEEP_MAX_SECONDS,
+    minimum_transcript_characters=MIN_TRANSCRIPT_CHARACTERS,
+    use_transcript_api_fallback=USE_TRANSCRIPT_API_FALLBACK,
 )
 if pending_candidates:
     video_progress = tqdm(total=len(pending_candidates), desc='Procesando pendientes', unit='video')
 
     def report_acquisition(event):
         counters = event['counters']
-        video_progress.update(1)
+        video_progress.update(event.get('advance', 1))
+        video_progress.set_description(
+            'Pausa entre lotes' if event['status'] == 'batch_pause' else 'Procesando pendientes'
+        )
         video_progress.set_postfix(
             existentes=counters['already_canonical'],
             cache=counters['reused_cache'],
@@ -522,6 +540,7 @@ if pending_candidates:
             fallidos=counters['failed'],
             diferidos=counters['deferred_by_limit'],
             pausa_429=counters['deferred_rate_limit'],
+            lotes=counters['batch_pauses'],
         )
 
     try:
@@ -532,6 +551,8 @@ if pending_candidates:
             fetcher=fetcher if FETCH_NEW else None,
             failure_path=FAILURES,
             max_new_videos=MAX_NEW_VIDEOS,
+            network_batch_size=NETWORK_BATCH_SIZE,
+            batch_pause_seconds=NETWORK_BATCH_PAUSE_SECONDS,
             stop_on_error=STOP_ON_VIDEO_ERROR,
             progress_callback=report_acquisition,
         )
