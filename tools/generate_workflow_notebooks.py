@@ -156,6 +156,9 @@ DISCOVERY_MODE = "seed"       # "seed", "directed" o "both"
 MAX_NEW_VIDEOS = None         # None: incluye todos los pendientes; use un entero para un piloto
 NETWORK_BATCH_SIZE = 50       # llamadas nuevas por lote antes de una pausa larga
 NETWORK_BATCH_PAUSE_SECONDS = 20.0
+RATE_LIMIT_HITS_PER_COOLDOWN = 10 # espera después de cada grupo de 10 respuestas 429
+RATE_LIMIT_COOLDOWNS_TO_OPEN = 3  # corta al tercer grupo sin ningún éxito intermedio
+RATE_LIMIT_COOLDOWN_SECONDS = 30.0
 MAX_VIDEOS_PER_CHANNEL = 75   # candidatos recientes inspeccionados por canal
 MAX_RESULTS_PER_QUERY = 30    # candidatos inspeccionados por consulta dirigida
 MAX_DIRECTED_CANDIDATES = None # None: conserva toda la cohorte dirigida inédita
@@ -180,6 +183,8 @@ if DISCOVERY_MODE not in {"seed", "directed", "both"}:
     raise ValueError("DISCOVERY_MODE debe ser seed, directed o both")
 if ((MAX_NEW_VIDEOS is not None and MAX_NEW_VIDEOS < 0)
         or NETWORK_BATCH_SIZE < 1 or NETWORK_BATCH_PAUSE_SECONDS < 0
+        or RATE_LIMIT_HITS_PER_COOLDOWN < 1 or RATE_LIMIT_COOLDOWNS_TO_OPEN < 1
+        or RATE_LIMIT_COOLDOWN_SECONDS < 0
         or MAX_VIDEOS_PER_CHANNEL < 1 or MAX_RESULTS_PER_QUERY < 1
         or (MAX_DIRECTED_CANDIDATES is not None and MAX_DIRECTED_CANDIDATES < 1)
         or MAX_DIRECTED_SEED_CHANNELS < 1
@@ -197,6 +202,9 @@ show_summary('Configuración del scraping', {
     "max_new_videos": MAX_NEW_VIDEOS,
     "network_batch_size": NETWORK_BATCH_SIZE,
     "network_batch_pause_seconds": NETWORK_BATCH_PAUSE_SECONDS,
+    "rate_limit_hits_per_cooldown": RATE_LIMIT_HITS_PER_COOLDOWN,
+    "rate_limit_cooldowns_to_open": RATE_LIMIT_COOLDOWNS_TO_OPEN,
+    "rate_limit_cooldown_seconds": RATE_LIMIT_COOLDOWN_SECONDS,
     "max_videos_per_channel": MAX_VIDEOS_PER_CHANNEL,
     "max_results_per_query": MAX_RESULTS_PER_QUERY,
     "max_directed_candidates": MAX_DIRECTED_CANDIDATES,
@@ -550,9 +558,13 @@ if pending_candidates:
     def report_acquisition(event):
         counters = event['counters']
         video_progress.update(event.get('advance', 1))
-        video_progress.set_description(
-            'Pausa entre lotes' if event['status'] == 'batch_pause' else 'Procesando pendientes'
-        )
+        if event['status'] == 'batch_pause':
+            description = 'Pausa entre lotes'
+        elif event['status'] == 'rate_limit_cooldown':
+            description = 'Enfriamiento 429'
+        else:
+            description = 'Procesando pendientes'
+        video_progress.set_description(description)
         video_progress.set_postfix(
             existentes=counters['already_canonical'],
             cache=counters['reused_cache'],
@@ -560,6 +572,10 @@ if pending_candidates:
             fallidos=counters['failed'],
             diferidos=counters['deferred_by_limit'],
             pausa_429=counters['deferred_rate_limit'],
+            intentos_429=counters.get('failure_rate_limited', 0),
+            racha_429=f"{counters['rate_limit_hits']}/{RATE_LIMIT_HITS_PER_COOLDOWN}",
+            grupos_429=f"{counters['rate_limit_sequences']}/{RATE_LIMIT_COOLDOWNS_TO_OPEN}",
+            enfriamientos_429=counters['rate_limit_cooldowns'],
             lotes=counters['batch_pauses'],
         )
 
@@ -573,6 +589,9 @@ if pending_candidates:
             max_new_videos=MAX_NEW_VIDEOS,
             network_batch_size=NETWORK_BATCH_SIZE,
             batch_pause_seconds=NETWORK_BATCH_PAUSE_SECONDS,
+            rate_limit_hits_per_cooldown=RATE_LIMIT_HITS_PER_COOLDOWN,
+            rate_limit_cooldowns_to_open=RATE_LIMIT_COOLDOWNS_TO_OPEN,
+            rate_limit_cooldown_seconds=RATE_LIMIT_COOLDOWN_SECONDS,
             stop_on_error=STOP_ON_VIDEO_ERROR,
             progress_callback=report_acquisition,
         )

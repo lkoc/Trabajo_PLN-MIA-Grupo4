@@ -396,7 +396,7 @@ def test_subtitle_fetch_restores_historical_ytdlp_vtt_route(monkeypatch):
 
 
 def test_rate_limit_opens_circuit_and_defers_remaining_network_calls(tmp_path):
-    candidates = [{"video_id": value} for value in ("v1", "v2", "v3")]
+    candidates = [{"video_id": f"v{index}"} for index in range(32)]
     attempted = []
 
     def fetcher(candidate):
@@ -408,13 +408,46 @@ def test_rate_limit_opens_circuit_and_defers_remaining_network_calls(tmp_path):
         tmp_path / "transcripts.jsonl",
         tmp_path / "cache",
         fetcher=fetcher,
+        rate_limit_cooldown_seconds=0,
     )
 
-    assert attempted == ["v1"]
-    assert stats["failed"] == 1
-    assert stats["failure_rate_limited"] == 1
+    assert attempted == [f"v{index}" for index in range(30)]
+    assert stats["failed"] == 30
+    assert stats["failure_rate_limited"] == 30
     assert stats["rate_limit_circuit_open"] == 1
+    assert stats["rate_limit_cooldowns"] == 2
+    assert stats["rate_limit_hits_peak"] == 10
+    assert stats["rate_limit_sequences_peak"] == 3
     assert stats["deferred_rate_limit"] == 2
+
+
+def test_success_resets_consecutive_rate_limit_strikes(tmp_path):
+    candidates = [{"video_id": value} for value in ("v1", "v2", "v3", "v4")]
+
+    def fetcher(candidate):
+        if candidate["video_id"] in {"v1", "v3"}:
+            raise RuntimeError("HTTP 429 Too Many Requests")
+        return {
+            "video_id": candidate["video_id"],
+            "segments": [{"start": 0.0, "duration": 1.0, "text": "texto"}],
+        }
+
+    stats = ingest_incremental(
+        candidates,
+        tmp_path / "transcripts.jsonl",
+        tmp_path / "cache",
+        fetcher=fetcher,
+        rate_limit_hits_per_cooldown=1,
+        rate_limit_cooldowns_to_open=2,
+        rate_limit_cooldown_seconds=0,
+    )
+
+    assert stats["failed"] == 2
+    assert stats["fetched"] == 2
+    assert stats["rate_limit_hits_peak"] == 1
+    assert stats["rate_limit_sequences_peak"] == 1
+    assert stats["rate_limit_circuit_open"] == 0
+    assert stats["deferred_rate_limit"] == 0
 
 
 def test_acquisition_error_categories_cover_expected_youtube_failures():

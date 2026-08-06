@@ -282,17 +282,24 @@ Antes de cada pausa, las filas completas acumuladas se anexan al canónico y se
 sincronizan a disco; la lista en memoria se vacía. Esto acota el uso de memoria y
 convierte cada lote en otro punto de reanudación.
 
-Si, después de los reintentos, una pista devuelve HTTP 429:
+Un solo HTTP 429 ya no abre el circuito. El control adaptativo funciona así:
 
-1. el video actual se registra como `rate_limited`;
-2. se abre `rate_limit_circuit_open`;
-3. no se hacen más llamadas de red en esa ejecución; y
-4. los candidatos restantes se cuentan como `deferred_rate_limit`, no como
-   fallidos.
+1. cada video afectado se registra como `rate_limited`;
+2. `RATE_LIMIT_HITS_PER_COOLDOWN=10` acumula un primer grupo de diez respuestas
+   429 antes de pausar;
+3. al completar el grupo espera `RATE_LIMIT_COOLDOWN_SECONDS=30`, pone en cero
+   el contador del grupo y continúa;
+4. `RATE_LIMIT_COOLDOWNS_TO_OPEN=3` exige tres grupos completos sin ningún éxito,
+   equivalentes a 30 respuestas 429 desde la última adquisición correcta;
+5. cualquier adquisición correcta reinicia tanto el grupo parcial como el
+   número de grupos acumulados; y
+6. al tercer grupo se abre `rate_limit_circuit_open` y los candidatos restantes
+   se cuentan como `deferred_rate_limit`, no como fallidos.
 
 Los elementos diferidos permanecen fuera del canónico y se reintentan en una
-ejecución futura. La barra muestra `pausa_429` para distinguir esta situación de
-los fallos permanentes.
+ejecución futura. La barra separa `intentos_429`, `racha_429`, `grupos_429`,
+`enfriamientos_429` y `pausa_429`: este último es el número diferido, no el
+número de respuestas 429.
 
 ## 12. Taxonomía de fallos
 

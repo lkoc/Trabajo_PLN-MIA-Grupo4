@@ -1180,6 +1180,9 @@ def ingest_incremental(
     batch_pause_seconds: float = 0.0,
     stop_on_error: bool = False,
     halt_on_rate_limit: bool = True,
+    rate_limit_hits_per_cooldown: int = 10,
+    rate_limit_cooldowns_to_open: int = 3,
+    rate_limit_cooldown_seconds: float = 30.0,
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, int]:
     """Reutiliza corpus/caché y aísla los fallos de cada video nuevo.
@@ -1196,6 +1199,12 @@ def ingest_incremental(
         raise ValueError("network_batch_size debe ser positivo o None")
     if batch_pause_seconds < 0:
         raise ValueError("batch_pause_seconds no puede ser negativo")
+    if rate_limit_hits_per_cooldown < 1:
+        raise ValueError("rate_limit_hits_per_cooldown debe ser positivo")
+    if rate_limit_cooldowns_to_open < 1:
+        raise ValueError("rate_limit_cooldowns_to_open debe ser positivo")
+    if rate_limit_cooldown_seconds < 0:
+        raise ValueError("rate_limit_cooldown_seconds no puede ser negativo")
     canonical = Path(canonical_path)
     cache = Path(cache_dir)
     cache.mkdir(parents=True, exist_ok=True)
@@ -1217,6 +1226,11 @@ def ingest_incremental(
         "deferred_by_limit": 0,
         "deferred_rate_limit": 0,
         "rate_limit_circuit_open": 0,
+        "rate_limit_hits": 0,
+        "rate_limit_hits_peak": 0,
+        "rate_limit_sequences": 0,
+        "rate_limit_sequences_peak": 0,
+        "rate_limit_cooldowns": 0,
         "batch_pauses": 0,
         "unavailable": 0,
         "added": 0,
@@ -1225,6 +1239,8 @@ def ingest_incremental(
         "failure_records_existing": 0,
     }
     rate_limit_open = False
+    rate_limit_hits = 0
+    rate_limit_sequences = 0
 
     def flush_output() -> None:
         if not output:
@@ -1292,12 +1308,37 @@ def ingest_incremental(
                 failure_counter = f"failure_{failure['failure_kind']}"
                 counters[failure_counter] = counters.get(failure_counter, 0) + 1
                 if halt_on_rate_limit and failure["failure_kind"] == "rate_limited":
-                    rate_limit_open = True
-                    counters["rate_limit_circuit_open"] = 1
+                    rate_limit_hits += 1
+                    counters["rate_limit_hits"] = rate_limit_hits
+                    counters["rate_limit_hits_peak"] = max(
+                        counters["rate_limit_hits_peak"], rate_limit_hits
+                    )
+                    if rate_limit_hits >= rate_limit_hits_per_cooldown:
+                        rate_limit_hits = 0
+                        counters["rate_limit_hits"] = 0
+                        rate_limit_sequences += 1
+                        counters["rate_limit_sequences"] = rate_limit_sequences
+                        counters["rate_limit_sequences_peak"] = max(
+                            counters["rate_limit_sequences_peak"], rate_limit_sequences
+                        )
+                        if rate_limit_sequences >= rate_limit_cooldowns_to_open:
+                            rate_limit_open = True
+                            counters["rate_limit_circuit_open"] = 1
+                        elif not stop_on_error:
+                            flush_output()
+                            counters["rate_limit_cooldowns"] += 1
+                            notify(video_id, "rate_limit_cooldown")
+                            if rate_limit_cooldown_seconds:
+                                time.sleep(rate_limit_cooldown_seconds)
+                            continue
                 if stop_on_error:
                     raise
                 notify(video_id, "failed")
                 continue
+            rate_limit_hits = 0
+            rate_limit_sequences = 0
+            counters["rate_limit_hits"] = 0
+            counters["rate_limit_sequences"] = 0
             record["video_id"] = video_id
             record["acquisition_status"] = "fetched_new"
             write_json_atomic(cache / f"{video_id}.json", record)
