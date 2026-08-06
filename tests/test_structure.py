@@ -183,6 +183,9 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
         "SEARCH_QUERIES",
         "STOP_ON_VIDEO_ERROR",
         "SYNC_TRANSCRIPTS_BY_CHANNEL",
+        "YT_SOCKET_TIMEOUT_SECONDS",
+        "RESUME_DISCOVERY",
+        "DISCOVERY_CHECKPOINT_PATH",
         "RESET_VIDEO_DATASET",
         "fallos_adquisicion.jsonl",
     ):
@@ -198,6 +201,8 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
     assert "len(directed_pool)" in source
     assert "importlib.reload(acquisition_module)" in source
     assert "materialize_transcripts_by_channel" in source
+    assert "fuente=source_name" in source
+    assert "checkpoint_path=DISCOVERY_CHECKPOINT_PATH" in source
     assert "channel_transcript_dir=TRANSCRIPTS_BY_CHANNEL" in source
     assert "cohorte_dirigida_vigente" in source
     assert '# RESET_VIDEO_DATASET = "ARCHIVAR_Y_REINICIAR_DATASET_VIDEOS"' in source

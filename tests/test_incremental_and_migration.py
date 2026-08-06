@@ -650,8 +650,104 @@ def test_discovery_reports_progress_and_captures_channel_errors(monkeypatch):
 
     assert [candidate["video_id"] for candidate in candidates] == ["v1"]
     assert failures[0]["failure_kind"] == "stale_channel_or_no_videos_tab"
-    assert [event["status"] for event in progress] == ["ok", "failed"]
+    assert [event["status"] for event in progress] == [
+        "started",
+        "ok",
+        "started",
+        "failed",
+    ]
+    assert progress[0]["source"] == "Canal correcto"
     assert progress[-1]["candidates_unique"] == 1
+
+
+def test_discovery_checkpoints_each_source_and_resumes_without_network(
+    monkeypatch, tmp_path
+):
+    calls = []
+
+    class FakeYoutubeDL:
+        def __init__(self, options):
+            self.options = options
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def extract_info(self, url, download=False):
+            calls.append(url)
+            assert self.options["socket_timeout"] == 17
+            return {"entries": [{"id": f"v{len(calls)}", "title": "Video"}]}
+
+    monkeypatch.setitem(sys.modules, "yt_dlp", SimpleNamespace(YoutubeDL=FakeYoutubeDL))
+    checkpoint = tmp_path / "discovery.json"
+    sources = [
+        {"name": "Canal uno", "url": "https://youtube.invalid/uno"},
+        {"name": "Canal dos", "url": "https://youtube.invalid/dos"},
+    ]
+    first, failures = discover_youtube_candidates(
+        sources,
+        socket_timeout_seconds=17,
+        checkpoint_path=checkpoint,
+    )
+    assert [row["video_id"] for row in first] == ["v1", "v2"]
+    assert failures == []
+    assert checkpoint.is_file()
+    assert len(json.loads(checkpoint.read_text(encoding="utf-8"))["sources"]) == 2
+
+    progress = []
+    second, failures = discover_youtube_candidates(
+        sources,
+        socket_timeout_seconds=17,
+        checkpoint_path=checkpoint,
+        progress_callback=progress.append,
+    )
+    assert [row["video_id"] for row in second] == ["v1", "v2"]
+    assert failures == []
+    assert len(calls) == 2
+    assert [event["resumed"] for event in progress if event["status"] != "started"] == [
+        True,
+        True,
+    ]
+
+
+def test_discovery_resumes_completed_source_after_interruption(monkeypatch, tmp_path):
+    calls = Counter()
+    interrupted = True
+
+    class FakeYoutubeDL:
+        def __init__(self, options):
+            self.options = options
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def extract_info(self, url, download=False):
+            nonlocal interrupted
+            calls[url] += 1
+            if url.endswith("/dos/videos") and interrupted:
+                interrupted = False
+                raise KeyboardInterrupt
+            return {"entries": [{"id": url.split("/")[-2], "title": "Video"}]}
+
+    monkeypatch.setitem(sys.modules, "yt_dlp", SimpleNamespace(YoutubeDL=FakeYoutubeDL))
+    checkpoint = tmp_path / "discovery.json"
+    sources = [
+        {"name": "Canal uno", "url": "https://youtube.invalid/uno"},
+        {"name": "Canal dos", "url": "https://youtube.invalid/dos"},
+    ]
+    with pytest.raises(KeyboardInterrupt):
+        discover_youtube_candidates(sources, checkpoint_path=checkpoint)
+
+    resumed, failures = discover_youtube_candidates(sources, checkpoint_path=checkpoint)
+    assert [row["video_id"] for row in resumed] == ["uno", "dos"]
+    assert failures == []
+    assert calls["https://youtube.invalid/uno/videos"] == 1
+    assert calls["https://youtube.invalid/dos/videos"] == 2
 
 
 def test_acquisition_metadata_uses_canonical_gender_attack_name():

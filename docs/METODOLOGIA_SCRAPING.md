@@ -239,6 +239,22 @@ y se combinan las categorías objetivo. El archivo acumulado
 `video_candidates.jsonl` conserva trazabilidad, pero el modo `directed` no lo usa
 como cola indiscriminada.
 
+La barra anuncia `started` antes de abrir cada fuente y muestra su nombre en
+`fuente`; el contador avanza únicamente al terminar ese canal o consulta. Cada
+resultado se escribe atómicamente en
+`datos/raw/manifests/discovery_<modo>_checkpoint.json`. La identidad del
+checkpoint incorpora URL o consulta, tipo, cuota y metadatos de selección: una
+fuente sin cambios se reanuda sin red, mientras que un cambio relevante obliga a
+descubrirla nuevamente. Los fallos también quedan registrados en el checkpoint,
+pero se reintentan en una ejecución posterior; las fuentes exitosas anteriores
+no se repiten.
+
+`YT_SOCKET_TIMEOUT_SECONDS=45` limita cada operación HTTP de `yt-dlp`. Al
+agotarse, se aplican los reintentos configurados y, si no hay recuperación, la
+fuente se registra como `timeout`, se guarda su estado y el recorrido continúa
+con la siguiente. El timeout no es un límite de duración total del canal: un
+canal puede requerir varias operaciones HTTP válidas y pausas entre ellas.
+
 ## 10. Adquisición de subtítulos
 
 La implementación activa recupera la técnica que funcionaba en el cuaderno
@@ -288,9 +304,10 @@ La regulación ocurre en dos niveles:
 
 - `yt-dlp` recibe `sleep_interval=5`, `max_sleep_interval=10`,
   `sleep_interval_requests=5` y `sleep_interval_subtitles=5`, además de tres
-  reintentos para extracción y descarga;
+  reintentos para extracción y descarga y un timeout de socket de 45 segundos
+  por operación HTTP;
 - `ingest_incremental` procesa toda la cola en lotes de
-  `NETWORK_BATCH_SIZE=10` y espera `NETWORK_BATCH_PAUSE_SECONDS=60` antes del
+  `NETWORK_BATCH_SIZE=10` y espera `NETWORK_BATCH_PAUSE_SECONDS=20` antes del
   lote siguiente.
 
 El lote cuenta solo llamadas nuevas: reutilizar caché o filtrar un `video_id`
@@ -340,8 +357,10 @@ Los fallos de fuentes de la última corrida se escriben en JSON. Cada fallo de
 video se deduplica mediante un `failure_id` derivado de `video_id` y motivo y se
 persiste inmediatamente, sin esperar el cierre de una corrida larga. Cada
 transcripción exitosa también se escribe de inmediato en su caché individual.
-Si hay una interrupción, la próxima ejecución reutiliza esos checkpoints y solo
-vuelve a recorrer lo que continúa pendiente.
+Si hay una interrupción, la próxima ejecución reutiliza los checkpoints de
+fuentes exitosas, transcripciones y fallos por video, y solo vuelve a recorrer
+lo que continúa pendiente. Las fuentes que terminaron con error se reintentan
+sin repetir los canales o consultas exitosos.
 
 ## 13. Artefactos y trazabilidad
 
@@ -350,6 +369,7 @@ vuelve a recorrer lo que continúa pendiente.
 | `datos/raw/video_candidates.jsonl` | Archivo acumulado y append-only de candidatos descubiertos |
 | `datos/raw/directed_candidates_latest.jsonl` | Cohorte dirigida vigente y ordenada |
 | `datos/raw/manifests/directed_plan_latest.json` | Soportes, déficits, pesos, fuentes, expansión y tamaño de cohorte |
+| `datos/raw/manifests/discovery_<modo>_checkpoint.json` | Resultado atómico y reanudable por canal o consulta |
 | `datos/raw/fallos_descubrimiento_ultima_ejecucion.json` | Fallos de canales y consultas de la corrida |
 | `datos/raw/fallos_adquisicion.jsonl` | Fallos deduplicados por video y motivo |
 | `datos/raw/transcripts_cache/*.json` | Checkpoints atómicos por video |

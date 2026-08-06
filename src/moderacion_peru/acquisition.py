@@ -1040,11 +1040,14 @@ def _youtube_options(
     retries: int = 3,
     sleep_min_seconds: float = 1.0,
     sleep_max_seconds: float = 3.0,
+    socket_timeout_seconds: float = 45.0,
 ) -> dict[str, Any]:
     if retries < 0:
         raise ValueError("retries no puede ser negativo")
     if sleep_min_seconds < 0 or sleep_max_seconds < sleep_min_seconds:
         raise ValueError("El intervalo de espera de yt-dlp no es válido")
+    if socket_timeout_seconds <= 0:
+        raise ValueError("socket_timeout_seconds debe ser positivo")
     return {
         "quiet": True,
         "skip_download": True,
@@ -1056,6 +1059,7 @@ def _youtube_options(
         "max_sleep_interval": sleep_max_seconds,
         "sleep_interval_requests": sleep_min_seconds,
         "sleep_interval_subtitles": sleep_min_seconds,
+        "socket_timeout": socket_timeout_seconds,
         "http_headers": {
             "User-Agent": (
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -1128,12 +1132,15 @@ def discover_youtube_candidates(
     retries: int = 3,
     sleep_min_seconds: float = 1.0,
     sleep_max_seconds: float = 3.0,
+    socket_timeout_seconds: float = 45.0,
+    checkpoint_path: str | Path | None = None,
     progress_callback: ProgressCallback | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Descubre metadatos planos sin descargar audio, video ni subtítulos.
+    """Descubre metadatos planos con timeout y reanudación por fuente.
 
-    Devuelve ``(candidatos, fallos_de_fuente)``. Los candidatos se deduplican
-    por ``video_id`` conservando la primera fuente.
+    Devuelve ``(candidatos, fallos_de_fuente)``. ``checkpoint_path`` guarda
+    atómicamente cada canal o consulta terminada; una ejecución posterior
+    reutiliza solo las fuentes cuya identidad y cuota siguen coincidiendo.
     """
 
     if max_videos_per_channel < 1 or max_results_per_query < 1:
@@ -1147,12 +1154,26 @@ def discover_youtube_candidates(
         retries=retries,
         sleep_min_seconds=sleep_min_seconds,
         sleep_max_seconds=sleep_max_seconds,
+        socket_timeout_seconds=socket_timeout_seconds,
     )
     base_options.update({"extract_flat": "in_playlist", "ignoreerrors": True})
     candidates_by_id: dict[str, dict[str, Any]] = {}
     failures: list[dict[str, Any]] = []
+    checkpoint_target = Path(checkpoint_path) if checkpoint_path is not None else None
+    checkpoint: dict[str, Any] = {"schema_version": 1, "sources": {}}
+    if checkpoint_target is not None and checkpoint_target.is_file():
+        loaded = json.loads(checkpoint_target.read_text(encoding="utf-8-sig"))
+        if not isinstance(loaded, dict) or not isinstance(loaded.get("sources"), dict):
+            raise ValueError(f"Checkpoint de descubrimiento inválido: {checkpoint_target}")
+        checkpoint = loaded
 
-    def notify(source: dict[str, Any], *, status: str, found: int) -> None:
+    def notify(
+        source: dict[str, Any],
+        *,
+        status: str,
+        found: int,
+        resumed: bool = False,
+    ) -> None:
         if progress_callback is not None:
             progress_callback(
                 {
@@ -1163,8 +1184,71 @@ def discover_youtube_candidates(
                     "found": found,
                     "candidates_unique": len(candidates_by_id),
                     "failures": len(failures),
+                    "resumed": resumed,
                 }
             )
+
+    def source_key(source_url: str, source: dict[str, Any], limit: int) -> str:
+        identity = {
+            "url": source_url,
+            "source_type": source.get("discovery_type"),
+            "limit": limit,
+            "name": source.get("name"),
+            "query": source.get("query"),
+            "categoria_fuente": source.get("categoria_fuente"),
+            "target_category": source.get("target_category"),
+            "sampling_mode": source.get("sampling_mode"),
+            "priority_weight": source.get("priority_weight"),
+        }
+        return sha256_text(
+            json.dumps(identity, ensure_ascii=False, sort_keys=True, default=str)
+        )
+
+    def persist_source(
+        key: str,
+        source_url: str,
+        source: dict[str, Any],
+        limit: int,
+        status: str,
+        source_candidates: list[dict[str, Any]],
+        failure: dict[str, Any] | None,
+    ) -> None:
+        if checkpoint_target is None:
+            return
+        checkpoint["schema_version"] = 1
+        checkpoint["updated_at"] = datetime.now(timezone.utc).isoformat()
+        checkpoint.setdefault("sources", {})[key] = {
+            "source": source.get("name") or source.get("query") or source_url,
+            "source_type": source.get("discovery_type"),
+            "url": source_url,
+            "limit": limit,
+            "status": status,
+            "candidates": source_candidates,
+            "failure": failure,
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+        }
+        write_json_atomic(checkpoint_target, checkpoint)
+
+    def add_candidate(candidate: dict[str, Any]) -> None:
+        video_id = str(candidate.get("video_id") or "").strip()
+        if not video_id:
+            return
+        existing = candidates_by_id.get(video_id)
+        if existing is None:
+            candidates_by_id[video_id] = candidate
+            return
+        combined_targets = tuple(
+            dict.fromkeys(
+                (
+                    *_category_tokens(existing.get("target_category")),
+                    *_category_tokens(candidate.get("target_category")),
+                )
+            )
+        )
+        if combined_targets:
+            existing["target_category"] = "|".join(combined_targets)
+        if candidate.get("sampling_mode") == "directed":
+            existing["sampling_mode"] = "directed"
 
     def fail_source(
         source_url: str,
@@ -1173,19 +1257,55 @@ def discover_youtube_candidates(
         failure_kind: str,
         error_type: str,
         message: str,
-    ) -> None:
-        failures.append(
-            {
-                "source": source.get("name") or source.get("query") or source_url,
-                "url": source_url,
-                "failure_kind": failure_kind,
-                "error_type": error_type,
-                "message": message[:2000],
-            }
-        )
-        notify(source, status="failed", found=0)
+    ) -> dict[str, Any]:
+        failure = {
+            "source": source.get("name") or source.get("query") or source_url,
+            "url": source_url,
+            "failure_kind": failure_kind,
+            "error_type": error_type,
+            "message": message[:2000],
+        }
+        failures.append(failure)
+        return failure
 
     def collect(source_url: str, source: dict[str, Any], limit: int) -> None:
+        key = source_key(source_url, source, limit)
+        notify(source, status="started", found=0)
+        cached = checkpoint.get("sources", {}).get(key)
+        if isinstance(cached, dict) and cached.get("status") == "ok":
+            source_candidates = [
+                row for row in cached.get("candidates", []) if isinstance(row, dict)
+            ]
+            for candidate in source_candidates:
+                add_candidate(candidate)
+            failure = cached.get("failure")
+            if isinstance(failure, dict):
+                failures.append(failure)
+            notify(
+                source,
+                status=str(cached["status"]),
+                found=len(source_candidates),
+                resumed=True,
+            )
+            return
+
+        if not source_url:
+            message = (
+                "El canal no tiene URL"
+                if source.get("discovery_type") == "channel"
+                else "La consulta está vacía"
+            )
+            failure = fail_source(
+                source_url,
+                source,
+                failure_kind="invalid_source",
+                error_type="ValueError",
+                message=message,
+            )
+            persist_source(key, source_url, source, limit, "failed", [], failure)
+            notify(source, status="failed", found=0)
+            return
+
         logger = _QuietYtDlpLogger()
         options = {**base_options, "playlist_items": f"1:{limit}", "logger": logger}
         try:
@@ -1193,13 +1313,15 @@ def discover_youtube_candidates(
                 info = downloader.extract_info(source_url, download=False)
         except Exception as exc:
             message = logger.last_error or str(exc)
-            fail_source(
+            failure = fail_source(
                 source_url,
                 source,
                 failure_kind=classify_acquisition_error(RuntimeError(message)),
                 error_type=type(exc).__name__,
                 message=message,
             )
+            persist_source(key, source_url, source, limit, "failed", [], failure)
+            notify(source, status="failed", found=0)
             return
         if not info:
             message = logger.last_error or "yt-dlp no devolvió entradas"
@@ -1208,19 +1330,20 @@ def discover_youtube_candidates(
                 if logger.last_error
                 else "empty_discovery"
             )
-            fail_source(
+            failure = fail_source(
                 source_url,
                 source,
                 failure_kind=failure_kind,
                 error_type="EmptyDiscovery",
                 message=message,
             )
+            persist_source(key, source_url, source, limit, "failed", [], failure)
+            notify(source, status="failed", found=0)
             return
-        found = 0
+        source_candidates: list[dict[str, Any]] = []
         for rank, item in enumerate(info.get("entries", []) or [], start=1):
             if not item or not item.get("id"):
                 continue
-            found += 1
             video_id = str(item["id"]).strip()
             candidate = {
                 "video_id": video_id,
@@ -1232,72 +1355,46 @@ def discover_youtube_candidates(
                 "discovery_source": source.get("name") or source.get("query"),
                 "discovery_rank": rank,
             }
-            for key in (
+            for metadata_key in (
                 "categoria_fuente",
                 "target_category",
                 "reason",
                 "sampling_mode",
                 "priority_weight",
             ):
-                if source.get(key) is not None:
-                    candidate[key] = source[key]
-            existing = candidates_by_id.get(video_id)
-            if existing is None:
-                candidates_by_id[video_id] = candidate
-            else:
-                combined_targets = tuple(
-                    dict.fromkeys(
-                        (*_category_tokens(existing.get("target_category")), *_category_tokens(candidate.get("target_category")))
-                    )
-                )
-                if combined_targets:
-                    existing["target_category"] = "|".join(combined_targets)
-                if candidate.get("sampling_mode") == "directed":
-                    existing["sampling_mode"] = "directed"
-        if found:
-            notify(source, status="ok", found=found)
+                if source.get(metadata_key) is not None:
+                    candidate[metadata_key] = source[metadata_key]
+            source_candidates.append(candidate)
+            add_candidate(candidate)
+        if source_candidates:
+            persist_source(
+                key, source_url, source, limit, "ok", source_candidates, None
+            )
+            notify(source, status="ok", found=len(source_candidates))
         else:
-            fail_source(
+            failure = fail_source(
                 source_url,
                 source,
                 failure_kind="empty_discovery",
                 error_type="EmptyDiscovery",
                 message="La fuente no devolvió videos identificables",
             )
+            persist_source(key, source_url, source, limit, "failed", [], failure)
+            notify(source, status="failed", found=0)
 
     for raw_source in channel_sources:
         source = dict(raw_source)
-        url = str(source.get("url", "")).strip()
-        if not url:
-            source["discovery_type"] = "channel"
-            fail_source(
-                "",
-                source,
-                failure_kind="invalid_source",
-                error_type="ValueError",
-                message="El canal no tiene URL",
-            )
-            continue
         source["discovery_type"] = "channel"
+        url = str(source.get("url", "")).strip()
         quota = min(max_videos_per_channel, int(source.get("quota", max_videos_per_channel)))
-        collect(_normalise_channel_videos_url(url), source, quota)
+        collect(_normalise_channel_videos_url(url) if url else "", source, quota)
 
     for raw_query in search_queries:
         source = {"query": raw_query} if isinstance(raw_query, str) else dict(raw_query)
-        query = str(source.get("query", "")).strip()
-        if not query:
-            source["discovery_type"] = "search"
-            fail_source(
-                "",
-                source,
-                failure_kind="invalid_source",
-                error_type="ValueError",
-                message="La consulta está vacía",
-            )
-            continue
         source["discovery_type"] = "search"
+        query = str(source.get("query", "")).strip()
         quota = min(max_results_per_query, int(source.get("quota", max_results_per_query)))
-        collect(f"ytsearch{quota}:{query}", source, quota)
+        collect(f"ytsearch{quota}:{query}" if query else "", source, quota)
 
     return list(candidates_by_id.values()), failures
 
@@ -1389,6 +1486,7 @@ def fetch_youtube_subtitles(
     retries: int = 3,
     sleep_min_seconds: float = 1.0,
     sleep_max_seconds: float = 3.0,
+    socket_timeout_seconds: float = 45.0,
     minimum_transcript_characters: int = DEFAULT_MIN_TRANSCRIPT_CHARACTERS,
     use_transcript_api_fallback: bool = True,
 ) -> dict[str, Any]:
@@ -1416,6 +1514,7 @@ def fetch_youtube_subtitles(
             retries=retries,
             sleep_min_seconds=sleep_min_seconds,
             sleep_max_seconds=sleep_max_seconds,
+            socket_timeout_seconds=socket_timeout_seconds,
         )
         options.update(
             {

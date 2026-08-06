@@ -171,7 +171,7 @@ DISCOVERY_MODE = "directed"   # "seed", "directed" o "both"
 
 MAX_NEW_VIDEOS = None         # None: incluye todos los pendientes; use un entero para un piloto
 NETWORK_BATCH_SIZE = 10       # llamadas nuevas por lote antes de una pausa larga
-NETWORK_BATCH_PAUSE_SECONDS = 60.0
+NETWORK_BATCH_PAUSE_SECONDS = 20.0
 EXCLUDE_CHANNEL_ON_429 = True # difiere solo el canal afectado; continúa con los demás
 RANDOMIZE_DOWNLOAD_QUEUE = True
 DOWNLOAD_RANDOM_SEED = 20260806 # orden reproducible e intercalado por canal
@@ -188,6 +188,8 @@ USE_TRANSCRIPT_API_FALLBACK = True
 YT_RETRIES = 3
 YT_SLEEP_MIN_SECONDS = 5.0
 YT_SLEEP_MAX_SECONDS = 10.0
+YT_SOCKET_TIMEOUT_SECONDS = 45.0 # máximo por operación HTTP antes de reintentar/omitir
+RESUME_DISCOVERY = True       # checkpoint atómico después de cada canal o consulta
 STOP_ON_VIDEO_ERROR = False   # False: registra el fallo y continúa con el siguiente
 SYNC_TRANSCRIPTS_BY_CHANNEL = True # checkpoint pequeño y sincronizable por canal
 
@@ -211,6 +213,8 @@ if RANDOMIZE_DOWNLOAD_QUEUE and not str(DOWNLOAD_RANDOM_SEED).strip():
     raise ValueError("DOWNLOAD_RANDOM_SEED no puede estar vacío")
 if YT_SLEEP_MIN_SECONDS < 0 or YT_SLEEP_MAX_SECONDS < YT_SLEEP_MIN_SECONDS:
     raise ValueError("El intervalo de espera de yt-dlp no es válido")
+if YT_SOCKET_TIMEOUT_SECONDS <= 0:
+    raise ValueError("YT_SOCKET_TIMEOUT_SECONDS debe ser positivo")
 
 show_summary('Configuración del scraping', {
     "discover_new": DISCOVER_NEW,
@@ -230,6 +234,8 @@ show_summary('Configuración del scraping', {
     "subtitle_languages": SUBTITLE_LANGUAGES,
     "min_transcript_characters": MIN_TRANSCRIPT_CHARACTERS,
     "transcript_api_fallback": USE_TRANSCRIPT_API_FALLBACK,
+    "yt_socket_timeout_seconds": YT_SOCKET_TIMEOUT_SECONDS,
+    "resume_discovery": RESUME_DISCOVERY,
     "sync_transcripts_by_channel": SYNC_TRANSCRIPTS_BY_CHANNEL,
     "reset_video_dataset_armed": bool(RESET_VIDEO_DATASET),
 }, tone='neutral')
@@ -420,6 +426,7 @@ DISCOVERED_PATH = ROOT/'datos/raw/video_candidates.jsonl'
 DISCOVERY_FAILURES_PATH = ROOT/'datos/raw/fallos_descubrimiento_ultima_ejecucion.json'
 DIRECTED_SELECTION_PATH = ROOT/'datos/raw/directed_candidates_latest.jsonl'
 DIRECTED_PLAN_PATH = ROOT/'datos/raw/manifests/directed_plan_latest.json'
+DISCOVERY_CHECKPOINT_PATH = ROOT/f'datos/raw/manifests/discovery_{DISCOVERY_MODE}_checkpoint.json'
 discovered = []
 directed_selection = []
 expanded_channels = []
@@ -429,11 +436,26 @@ if DISCOVER_NEW:
     source_progress = tqdm(total=source_total, desc='Descubriendo fuentes', unit='fuente')
 
     def report_discovery(event):
+        source_name = str(event.get('source') or '(fuente sin nombre)')
+        if event['status'] == 'started':
+            source_progress.set_description(f'Descubriendo · {source_name[:42]}')
+            source_progress.set_postfix(
+                fuente=source_name[:42],
+                correctas=source_outcomes['ok'],
+                fallidas=source_outcomes['failed'],
+                reanudadas=source_outcomes['resumed'],
+                candidatos=event['candidates_unique'],
+            )
+            return
         source_outcomes[event['status']] += 1
+        if event.get('resumed'):
+            source_outcomes['resumed'] += 1
         source_progress.update(1)
         source_progress.set_postfix(
+            fuente=source_name[:42],
             correctas=source_outcomes['ok'],
             fallidas=source_outcomes['failed'],
+            reanudadas=source_outcomes['resumed'],
             candidatos=event['candidates_unique'],
         )
 
@@ -446,6 +468,8 @@ if DISCOVER_NEW:
             retries=YT_RETRIES,
             sleep_min_seconds=YT_SLEEP_MIN_SECONDS,
             sleep_max_seconds=YT_SLEEP_MAX_SECONDS,
+            socket_timeout_seconds=YT_SOCKET_TIMEOUT_SECONDS,
+            checkpoint_path=DISCOVERY_CHECKPOINT_PATH if RESUME_DISCOVERY else None,
             progress_callback=report_discovery,
         )
         if directed_plan is not None:
@@ -468,6 +492,8 @@ if DISCOVER_NEW:
                     retries=YT_RETRIES,
                     sleep_min_seconds=YT_SLEEP_MIN_SECONDS,
                     sleep_max_seconds=YT_SLEEP_MAX_SECONDS,
+                    socket_timeout_seconds=YT_SOCKET_TIMEOUT_SECONDS,
+                    checkpoint_path=DISCOVERY_CHECKPOINT_PATH if RESUME_DISCOVERY else None,
                     progress_callback=report_discovery,
                 )
                 discovered = merge_candidates(discovered, expanded_candidates)
@@ -504,11 +530,13 @@ if DISCOVER_NEW:
         "sources_total": source_total,
         "sources_ok": source_outcomes['ok'],
         "sources_failed": source_outcomes['failed'],
+        "sources_resumed": source_outcomes['resumed'],
         "candidates_unique": len(discovered),
         "candidates_added": added,
         "candidates_existing": existing,
         "expanded_channels": len(expanded_channels),
         "directed_cohort": len(directed_selection),
+        "checkpoint": DISCOVERY_CHECKPOINT_PATH if RESUME_DISCOVERY else None,
     }, tone='success' if not discovery_failures else 'warning')
     if discovery_failures:
         failure_counts = Counter(row['failure_kind'] for row in discovery_failures)
@@ -586,6 +614,7 @@ fetcher = partial(
     retries=YT_RETRIES,
     sleep_min_seconds=YT_SLEEP_MIN_SECONDS,
     sleep_max_seconds=YT_SLEEP_MAX_SECONDS,
+    socket_timeout_seconds=YT_SOCKET_TIMEOUT_SECONDS,
     minimum_transcript_characters=MIN_TRANSCRIPT_CHARACTERS,
     use_transcript_api_fallback=USE_TRANSCRIPT_API_FALLBACK,
 )
