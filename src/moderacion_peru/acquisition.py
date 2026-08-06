@@ -11,6 +11,7 @@ from .io import append_jsonl_once, read_jsonl, sha256_text, write_json_atomic
 
 
 TranscriptFetcher = Callable[[dict[str, Any]], dict[str, Any]]
+ProgressCallback = Callable[[dict[str, Any]], None]
 DEFAULT_SUBTITLE_LANGUAGES = ("es-PE", "es-419", "es")
 LEGACY_CATEGORY_ALIASES = {
     "ACOSO_GENERO_IDENTIDAD": "ATAQUE_POR_GENERO_IDENTIDAD",
@@ -169,10 +170,32 @@ def _normalise_channel_videos_url(url: str) -> str:
     return f"{base}/videos"
 
 
+class _QuietYtDlpLogger:
+    """Conserva errores de yt-dlp sin inundar la salida interactiva."""
+
+    def __init__(self) -> None:
+        self.errors: list[str] = []
+
+    def debug(self, message: str) -> None:
+        return None
+
+    def warning(self, message: str) -> None:
+        return None
+
+    def error(self, message: str) -> None:
+        self.errors.append(str(message))
+
+    @property
+    def last_error(self) -> str | None:
+        return self.errors[-1] if self.errors else None
+
+
 def classify_acquisition_error(error: BaseException) -> str:
     """Reduce errores heterogéneos de yt-dlp a motivos auditables y estables."""
 
     message = str(error).casefold()
+    if "http error 404" in message or "does not have a videos tab" in message:
+        return "stale_channel_or_no_videos_tab"
     if "members-only" in message or "join this channel" in message or "miembros" in message:
         return "members_only"
     if "private video" in message or "video unavailable" in message or "not available" in message:
@@ -197,6 +220,7 @@ def discover_youtube_candidates(
     retries: int = 3,
     sleep_min_seconds: float = 1.0,
     sleep_max_seconds: float = 3.0,
+    progress_callback: ProgressCallback | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Descubre metadatos planos sin descargar audio, video ni subtítulos.
 
@@ -220,36 +244,75 @@ def discover_youtube_candidates(
     candidates_by_id: dict[str, dict[str, Any]] = {}
     failures: list[dict[str, Any]] = []
 
+    def notify(source: dict[str, Any], *, status: str, found: int) -> None:
+        if progress_callback is not None:
+            progress_callback(
+                {
+                    "phase": "discovery",
+                    "source": source.get("name") or source.get("query"),
+                    "source_type": source.get("discovery_type"),
+                    "status": status,
+                    "found": found,
+                    "candidates_unique": len(candidates_by_id),
+                    "failures": len(failures),
+                }
+            )
+
+    def fail_source(
+        source_url: str,
+        source: dict[str, Any],
+        *,
+        failure_kind: str,
+        error_type: str,
+        message: str,
+    ) -> None:
+        failures.append(
+            {
+                "source": source.get("name") or source.get("query") or source_url,
+                "url": source_url,
+                "failure_kind": failure_kind,
+                "error_type": error_type,
+                "message": message[:2000],
+            }
+        )
+        notify(source, status="failed", found=0)
+
     def collect(source_url: str, source: dict[str, Any], limit: int) -> None:
-        options = {**base_options, "playlist_items": f"1:{limit}"}
+        logger = _QuietYtDlpLogger()
+        options = {**base_options, "playlist_items": f"1:{limit}", "logger": logger}
         try:
             with yt_dlp.YoutubeDL(options) as downloader:
                 info = downloader.extract_info(source_url, download=False)
         except Exception as exc:
-            failures.append(
-                {
-                    "source": source.get("name") or source.get("query") or source_url,
-                    "url": source_url,
-                    "failure_kind": classify_acquisition_error(exc),
-                    "error_type": type(exc).__name__,
-                    "message": str(exc)[:2000],
-                }
+            message = logger.last_error or str(exc)
+            fail_source(
+                source_url,
+                source,
+                failure_kind=classify_acquisition_error(RuntimeError(message)),
+                error_type=type(exc).__name__,
+                message=message,
             )
             return
         if not info:
-            failures.append(
-                {
-                    "source": source.get("name") or source.get("query") or source_url,
-                    "url": source_url,
-                    "failure_kind": "empty_discovery",
-                    "error_type": "EmptyDiscovery",
-                    "message": "yt-dlp no devolvió entradas",
-                }
+            message = logger.last_error or "yt-dlp no devolvió entradas"
+            failure_kind = (
+                classify_acquisition_error(RuntimeError(message))
+                if logger.last_error
+                else "empty_discovery"
+            )
+            fail_source(
+                source_url,
+                source,
+                failure_kind=failure_kind,
+                error_type="EmptyDiscovery",
+                message=message,
             )
             return
+        found = 0
         for rank, item in enumerate(info.get("entries", []) or [], start=1):
             if not item or not item.get("id"):
                 continue
+            found += 1
             video_id = str(item["id"]).strip()
             candidate = {
                 "video_id": video_id,
@@ -265,19 +328,28 @@ def discover_youtube_candidates(
                 if source.get(key) is not None:
                     candidate[key] = source[key]
             candidates_by_id.setdefault(video_id, candidate)
+        if found:
+            notify(source, status="ok", found=found)
+        else:
+            fail_source(
+                source_url,
+                source,
+                failure_kind="empty_discovery",
+                error_type="EmptyDiscovery",
+                message="La fuente no devolvió videos identificables",
+            )
 
     for raw_source in channel_sources:
         source = dict(raw_source)
         url = str(source.get("url", "")).strip()
         if not url:
-            failures.append(
-                {
-                    "source": source.get("name", "canal_sin_url"),
-                    "url": None,
-                    "failure_kind": "invalid_source",
-                    "error_type": "ValueError",
-                    "message": "El canal no tiene URL",
-                }
+            source["discovery_type"] = "channel"
+            fail_source(
+                "",
+                source,
+                failure_kind="invalid_source",
+                error_type="ValueError",
+                message="El canal no tiene URL",
             )
             continue
         source["discovery_type"] = "channel"
@@ -288,6 +360,14 @@ def discover_youtube_candidates(
         source = {"query": raw_query} if isinstance(raw_query, str) else dict(raw_query)
         query = str(source.get("query", "")).strip()
         if not query:
+            source["discovery_type"] = "search"
+            fail_source(
+                "",
+                source,
+                failure_kind="invalid_source",
+                error_type="ValueError",
+                message="La consulta está vacía",
+            )
             continue
         source["discovery_type"] = "search"
         collect(f"ytsearch{max_results_per_query}:{query}", source, max_results_per_query)
@@ -321,6 +401,7 @@ def fetch_youtube_subtitles(
         sleep_max_seconds=sleep_max_seconds,
     )
     options["noplaylist"] = True
+    options["logger"] = _QuietYtDlpLogger()
     with yt_dlp.YoutubeDL(options) as downloader:
         info = downloader.extract_info(url, download=False)
     tracks = info.get("subtitles", {}) or {}
@@ -411,6 +492,7 @@ def ingest_incremental(
     failure_path: str | Path | None = None,
     max_new_videos: int | None = None,
     stop_on_error: bool = False,
+    progress_callback: ProgressCallback | None = None,
 ) -> dict[str, int]:
     """Reutiliza corpus/caché y aísla los fallos de cada video nuevo.
 
@@ -437,19 +519,34 @@ def ingest_incremental(
         "deferred_by_limit": 0,
         "unavailable": 0,
     }
+
+    def notify(video_id: str, status: str) -> None:
+        if progress_callback is not None:
+            progress_callback(
+                {
+                    "phase": "acquisition",
+                    "video_id": video_id,
+                    "status": status,
+                    "counters": dict(counters),
+                }
+            )
+
     for candidate in candidates:
         video_id = str(candidate.get("video_id", "")).strip()
         if not video_id:
             raise ValueError("Cada candidato requiere video_id")
         if video_id in processed:
             counters["already_canonical"] += 1
+            notify(video_id, "already_canonical")
             continue
         record = cached_transcript(cache, video_id)
         if record is not None:
             counters["reused_cache"] += 1
+            completion_status = "reused_cache"
         elif fetcher is not None:
             if max_new_videos is not None and fetch_attempts >= max_new_videos:
                 counters["deferred_by_limit"] += 1
+                notify(video_id, "deferred_by_limit")
                 continue
             fetch_attempts += 1
             counters["fetch_attempted"] += 1
@@ -457,16 +554,22 @@ def ingest_incremental(
                 record = fetcher(candidate)
             except Exception as exc:
                 counters["failed"] += 1
-                failures.append(_failure_record(candidate, exc))
+                failure = _failure_record(candidate, exc)
+                failures.append(failure)
+                failure_counter = f"failure_{failure['failure_kind']}"
+                counters[failure_counter] = counters.get(failure_counter, 0) + 1
                 if stop_on_error:
                     raise
+                notify(video_id, "failed")
                 continue
             record["video_id"] = video_id
             record["acquisition_status"] = "fetched_new"
             write_json_atomic(cache / f"{video_id}.json", record)
             counters["fetched"] += 1
+            completion_status = "fetched"
         else:
             counters["unavailable"] += 1
+            notify(video_id, "network_disabled")
             continue
         record = normalize_category_metadata(record)
         record["source_candidate"] = normalize_category_metadata(candidate)
@@ -474,6 +577,7 @@ def ingest_incremental(
             json.dumps(record.get("segments", []), ensure_ascii=False, sort_keys=True)
         )
         output.append(record)
+        notify(video_id, completion_status)
     added, skipped = append_jsonl_once(canonical, output, id_field="video_id")
     counters["added"] = added
     counters["skipped_duplicate"] = skipped

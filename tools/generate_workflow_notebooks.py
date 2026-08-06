@@ -264,32 +264,62 @@ print("Canales configurados:", len(CHANNEL_SOURCES), "· consultas:", len(SEARCH
 """
 
 
-SCRAPING_DISCOVERY = """from moderacion_peru.acquisition import discover_youtube_candidates
+SCRAPING_DISCOVERY = """from collections import Counter
+from tqdm.auto import tqdm
+from moderacion_peru.acquisition import discover_youtube_candidates
 from moderacion_peru.io import append_jsonl_once, write_json_atomic
 
 DISCOVERED_PATH = ROOT/'datos/raw/video_candidates.jsonl'
 DISCOVERY_FAILURES_PATH = ROOT/'datos/raw/fallos_descubrimiento_ultima_ejecucion.json'
 discovered = []
 if DISCOVER_NEW:
-    discovered, discovery_failures = discover_youtube_candidates(
-        CHANNEL_SOURCES,
-        SEARCH_QUERIES,
-        max_videos_per_channel=MAX_VIDEOS_PER_CHANNEL,
-        max_results_per_query=MAX_RESULTS_PER_QUERY,
-        retries=YT_RETRIES,
-        sleep_min_seconds=YT_SLEEP_MIN_SECONDS,
-        sleep_max_seconds=YT_SLEEP_MAX_SECONDS,
-    )
+    source_outcomes = Counter()
+    source_total = len(CHANNEL_SOURCES) + len(SEARCH_QUERIES)
+    source_progress = tqdm(total=source_total, desc='Descubriendo fuentes', unit='fuente')
+
+    def report_discovery(event):
+        source_outcomes[event['status']] += 1
+        source_progress.update(1)
+        source_progress.set_postfix(
+            correctas=source_outcomes['ok'],
+            fallidas=source_outcomes['failed'],
+            candidatos=event['candidates_unique'],
+        )
+
+    try:
+        discovered, discovery_failures = discover_youtube_candidates(
+            CHANNEL_SOURCES,
+            SEARCH_QUERIES,
+            max_videos_per_channel=MAX_VIDEOS_PER_CHANNEL,
+            max_results_per_query=MAX_RESULTS_PER_QUERY,
+            retries=YT_RETRIES,
+            sleep_min_seconds=YT_SLEEP_MIN_SECONDS,
+            sleep_max_seconds=YT_SLEEP_MAX_SECONDS,
+            progress_callback=report_discovery,
+        )
+    finally:
+        source_progress.close()
     added, existing = append_jsonl_once(DISCOVERED_PATH, discovered, id_field='video_id')
     write_json_atomic(DISCOVERY_FAILURES_PATH, discovery_failures)
-    print({"discovered": len(discovered), "added": added, "existing": existing,
-           "source_failures": len(discovery_failures)})
+    print('Resumen del descubrimiento:', {
+        "sources_total": source_total,
+        "sources_ok": source_outcomes['ok'],
+        "sources_failed": source_outcomes['failed'],
+        "candidates_unique": len(discovered),
+        "candidates_added": added,
+        "candidates_existing": existing,
+    })
+    if discovery_failures:
+        failure_counts = Counter(row['failure_kind'] for row in discovery_failures)
+        print('Fallos por motivo:', dict(sorted(failure_counts.items())))
+        print('Detalle auditable:', DISCOVERY_FAILURES_PATH)
 else:
     print("Descubrimiento desactivado: se reutilizan candidatos y transcripciones locales.")
 """
 
 
 SCRAPING_EXECUTION = """from functools import partial
+from tqdm.auto import tqdm
 from moderacion_peru.acquisition import fetch_youtube_subtitles, ingest_incremental
 
 FAILURES = ROOT/'datos/raw/fallos_adquisicion.jsonl'
@@ -301,17 +331,39 @@ fetcher = partial(
     sleep_max_seconds=YT_SLEEP_MAX_SECONDS,
 )
 if candidates:
-    stats = ingest_incremental(
-        candidates,
-        CANONICAL,
-        CACHE,
-        fetcher=fetcher if FETCH_NEW else None,
-        failure_path=FAILURES,
-        max_new_videos=MAX_NEW_VIDEOS,
-        stop_on_error=STOP_ON_VIDEO_ERROR,
-    )
-    print(stats)
+    video_progress = tqdm(total=len(candidates), desc='Procesando candidatos', unit='video')
+
+    def report_acquisition(event):
+        counters = event['counters']
+        video_progress.update(1)
+        video_progress.set_postfix(
+            existentes=counters['already_canonical'],
+            cache=counters['reused_cache'],
+            nuevos=counters['fetched'],
+            fallidos=counters['failed'],
+            diferidos=counters['deferred_by_limit'],
+        )
+
+    try:
+        stats = ingest_incremental(
+            candidates,
+            CANONICAL,
+            CACHE,
+            fetcher=fetcher if FETCH_NEW else None,
+            failure_path=FAILURES,
+            max_new_videos=MAX_NEW_VIDEOS,
+            stop_on_error=STOP_ON_VIDEO_ERROR,
+            progress_callback=report_acquisition,
+        )
+    finally:
+        video_progress.close()
+    print('Resumen de adquisición:', stats)
     if stats['failed']:
+        print('Fallos por motivo:', {
+            key.removeprefix('failure_'): value
+            for key, value in stats.items()
+            if key.startswith('failure_') and not key.startswith('failure_records_') and value
+        })
         print(f"Se omitieron {stats['failed']} videos inaccesibles; revise {FAILURES}.")
 else:
     print("No hay candidatos. Active DISCOVER_NEW o añada un CSV/JSONL; no se descarga de nuevo el corpus.")

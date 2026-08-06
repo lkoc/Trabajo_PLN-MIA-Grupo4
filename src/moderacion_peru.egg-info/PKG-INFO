@@ -116,6 +116,8 @@ Las definiciones, inclusiones, exclusiones, contraejemplos y fuentes se encuentr
 
 La adquisición descarga únicamente subtítulos disponibles. No descarga video ni audio y no afirma usar reconocimiento automático del habla. El identificador de video, el hash de la transcripción y la versión del troceador impiden repetir trabajo ya materializado.
 
+Durante `01_01`, una barra informa el avance por fuente y otra el avance por candidato. El cierre separa fuentes correctas y fallidas, candidatos nuevos y existentes, reutilización del caché, subtítulos obtenidos, videos diferidos por cupo y fallos agrupados. Los errores repetitivos de `yt-dlp` no saturan la celda: el detalle completo queda en `datos/raw/fallos_descubrimiento_ultima_ejecucion.json` y `datos/raw/fallos_adquisicion.jsonl`.
+
 ### 02 · Etiquetado semiautomático
 
 | Cuaderno | Función | Control principal |

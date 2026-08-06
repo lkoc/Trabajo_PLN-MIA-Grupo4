@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
+import sys
+from types import SimpleNamespace
+
 import pytest
 
 from moderacion_peru.datasets import assert_no_video_leakage, stable_video_split
 from moderacion_peru.acquisition import (
     bootstrap_canonical_from_existing,
     classify_acquisition_error,
+    discover_youtube_candidates,
     ingest_incremental,
     load_candidates,
     normalize_category_metadata,
@@ -109,6 +113,7 @@ def test_members_only_video_is_logged_and_does_not_stop_batch(tmp_path):
             "segments": [{"start": 0.0, "duration": 1.0, "text": "texto público"}],
         }
 
+    progress = []
     first = ingest_incremental(
         candidates,
         canonical,
@@ -116,6 +121,7 @@ def test_members_only_video_is_logged_and_does_not_stop_batch(tmp_path):
         fetcher=fetcher,
         failure_path=failures,
         stop_on_error=False,
+        progress_callback=progress.append,
     )
     second = ingest_incremental(
         candidates,
@@ -128,6 +134,8 @@ def test_members_only_video_is_logged_and_does_not_stop_batch(tmp_path):
 
     assert first["failed"] == 1
     assert first["fetched"] == 1
+    assert first["failure_members_only"] == 1
+    assert [event["status"] for event in progress] == ["failed", "fetched"]
     assert [row["video_id"] for row in read_jsonl(canonical)] == ["public"]
     failure_rows = list(read_jsonl(failures))
     assert len(failure_rows) == 1
@@ -164,6 +172,43 @@ def test_acquisition_error_categories_cover_expected_youtube_failures():
     assert classify_acquisition_error(RuntimeError("members-only content")) == "members_only"
     assert classify_acquisition_error(RuntimeError("video unavailable")) == "unavailable_or_private"
     assert classify_acquisition_error(RuntimeError("no tiene subtítulos")) == "no_spanish_subtitles"
+    assert classify_acquisition_error(RuntimeError("HTTP Error 404: Not Found")) == (
+        "stale_channel_or_no_videos_tab"
+    )
+
+
+def test_discovery_reports_progress_and_captures_channel_errors(monkeypatch):
+    class FakeYoutubeDL:
+        def __init__(self, options):
+            self.options = options
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def extract_info(self, url, download=False):
+            assert download is False
+            if "bad-channel" in url:
+                self.options["logger"].error("HTTP Error 404: Not Found")
+                return None
+            return {"entries": [{"id": "v1", "title": "Video uno"}]}
+
+    monkeypatch.setitem(sys.modules, "yt_dlp", SimpleNamespace(YoutubeDL=FakeYoutubeDL))
+    progress = []
+    candidates, failures = discover_youtube_candidates(
+        [
+            {"name": "Canal correcto", "url": "https://youtube.invalid/good-channel"},
+            {"name": "Canal obsoleto", "url": "https://youtube.invalid/bad-channel"},
+        ],
+        progress_callback=progress.append,
+    )
+
+    assert [candidate["video_id"] for candidate in candidates] == ["v1"]
+    assert failures[0]["failure_kind"] == "stale_channel_or_no_videos_tab"
+    assert [event["status"] for event in progress] == ["ok", "failed"]
+    assert progress[-1]["candidates_unique"] == 1
 
 
 def test_acquisition_metadata_uses_canonical_gender_attack_name():
