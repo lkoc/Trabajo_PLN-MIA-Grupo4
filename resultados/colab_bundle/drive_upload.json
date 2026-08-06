@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "uploaded_at": "2026-08-06T01:09:17.136Z",
+  "uploaded_at": "2026-08-06T01:47:17.893Z",
   "verification": "google_drive_list_folder_and_manifest_readback",
   "root_folder": {
     "id": "1o4qLzd6BoPRhaI4W22Vyw0wcMmPD3B_5",
@@ -18,8 +18,8 @@
     {
       "name": "project_core.zip",
       "id": "12Z72esnIWoxhrUJiAKQ_x49uoh_hakTw",
-      "bytes": 62067,
-      "sha256": "6635080b8c7146707d94d91e4876fac00965ad00bda0d97a4c43ec03201906df"
+      "bytes": 62099,
+      "sha256": "b4226a5dd4777aded7b4a9ee16e55bad2f2ef04241211aea56aa10c2717f03e1"
     },
     {
       "name": "chunks_v2.jsonl.gz",
@@ -37,7 +37,7 @@
       "name": "bundle_manifest.json",
       "id": "1bgZBSL2S6EDfO0nzB3Tw_BOqVcWYEnEB",
       "bytes": 2868,
-      "sha256": "aa2b59127f2cb46a510a28aa920ceb4d6ee0f7f60ca8233f460df7a09ab3f7e3"
+      "sha256": "495dc9c63d4643e836e27e4e03df47ba8657e50a7b421588a466a3a3dc590617"
     }
   ]
 }

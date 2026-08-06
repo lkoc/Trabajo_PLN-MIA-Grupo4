@@ -125,6 +125,36 @@ def test_academic_cover_is_present_in_notebooks_frontends_and_readmes():
         assert notebook.metadata["moderacion_peru"]["group"] == "Grupo 4"
 
 
+def test_root_readme_summarizes_and_reproduces_the_active_workflow():
+    source = (ROOT / "README.md").read_text(encoding="utf-8")
+    required_sections = (
+        "## Resumen",
+        "## Arquitectura del flujo",
+        "## Taxonomía operativa",
+        "## Qué realiza cada etapa",
+        "## Reproducción local desde una clonación nueva",
+        "## Incrementar la muestra sin reiniciar",
+        "## Google Colab L4 desde VS Code",
+        "## Alcance ético y operativo",
+    )
+    assert all(section in source for section in required_sections)
+    assert source.count("```mermaid") >= 2
+    assert "git clone https://github.com/lkoc/Trabajo_PLN-MIA-Grupo4.git" in source
+    assert ".[datos,etiquetado,cuadernos,dev]" in source
+    assert ".[entrenamiento]" in source
+    assert "modperu.exe preflight" in source
+    assert "python.exe -m pytest" in source
+    for folder, expected_count in {
+        "01_datos": 3,
+        "02_etiquetado": 5,
+        "03_entrenamiento": 8,
+        "04_produccion": 1,
+    }.items():
+        notebooks = sorted((ROOT / "flujo" / folder).glob("*.ipynb"))
+        assert len(notebooks) == expected_count
+        assert all(path.stem in source for path in notebooks)
+
+
 def test_neural_model_revisions_are_pinned():
     from moderacion_peru.models import TRANSFORMER_SPECS
 

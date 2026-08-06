@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-06T01:07:02.689343+00:00",
+  "generated_at": "2026-08-06T01:46:42.380624+00:00",
   "taxonomy_contract": "moderacion_peru_5_salidas_v2",
   "taxonomy_version": "2.1.0",
   "core": {
     "name": "project_core.zip",
-    "sha256": "6635080b8c7146707d94d91e4876fac00965ad00bda0d97a4c43ec03201906df",
-    "bytes": 62067,
+    "sha256": "b4226a5dd4777aded7b4a9ee16e55bad2f2ef04241211aea56aa10c2717f03e1",
+    "bytes": 62099,
     "files": [
       "config/colab_l4.json",
       "config/taxonomia_v2.json",

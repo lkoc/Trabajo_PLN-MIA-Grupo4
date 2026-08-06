@@ -1,6 +1,10 @@
 pydantic<3,>=2.10
 requests<3,>=2.32
 
+[cuadernos]
+ipykernel<7,>=6.29
+jupyterlab<5,>=4.3
+
 [datos]
 pandas<3,>=2.2
 tqdm<5,>=4.66
@@ -11,6 +15,7 @@ nbformat<6,>=5.10
 pytest<9,>=8.3
 
 [entrenamiento]
+accelerate<2,>=1.2
 joblib<2,>=1.4
 matplotlib<4,>=3.9
 numpy<3,>=1.26
