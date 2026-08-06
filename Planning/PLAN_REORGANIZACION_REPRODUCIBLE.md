@@ -45,10 +45,12 @@ Guias_generales/
 
 | Etapa | Cuadernos activos |
 |---|---|
-| Datos | `01_01_scraping_incremental`, `01_02_limpieza_troceado_incremental`, `01_03_ampliacion_dirigida` |
+| Datos | `01_01_scraping_incremental` (incluye adquisición general y ampliación dirigida), `01_02_limpieza_troceado_incremental` |
 | Etiquetado | `02_01_etiquetado_local_ollama`, `02_02_etiquetado_remoto`, `02_03_revision_llm_dirigida`, `02_04_consolidacion_validacion_humana`, `02_05_cierre_humano_snapshot` |
 | Entrenamiento | `03_01` clásicos, `03_02` Transformers planos, `03_03` cascada, `03_04` multitarea, `03_05` Qwen-LoRA, `03_06` Qwen estructurado, `03_07` comparación y `03_08` auditoría |
 | Producción | `04_01_frontend_produccion` |
+
+Decisión de implementación del 2026-08-05: la ampliación dirigida se integró en `01_01` porque producía candidatos y obligaba a volver al mismo cuaderno. El control `DISCOVERY_MODE=seed|directed|both` conserva ambos usos sin un bucle artificial. El antiguo `01_03` permanece archivado con SHA-256; `01_02` se mantiene separado porque sí define otra transformación y otro contrato de salida.
 
 ## Implementación
 

@@ -8,6 +8,6 @@ Este directorio conserva evidencia anterior a la reorganización v2. Los archivo
 - `lm_studio/`: implementación e informes de LM Studio retirados del flujo activo.
 - `implementacion_anterior/`: scripts originales.
 - `material_curso/`: clases y recursos docentes.
+- `flujo_reorganizado_v2/`: orquestadores v2 reemplazados después de simplificar el flujo activo.
 
 El inventario [`Planning/inventario_pre_reorganizacion.json`](../Planning/inventario_pre_reorganizacion.json) registra tamaño y SHA-256 de 2.168 archivos previos. Una discrepancia documental no autoriza a reescribir los artefactos históricos: se corrige mediante una nueva versión y un enlace de reemplazo.
-

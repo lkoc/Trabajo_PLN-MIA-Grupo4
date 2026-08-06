@@ -80,9 +80,8 @@ Las definiciones, inclusiones, exclusiones, contraejemplos y fuentes se encuentr
 
 | Cuaderno | Entrada | Proceso y salida | Repetición |
 |---|---|---|---|
-| `01_01_scraping_incremental` | snapshots, caché y candidatos con `video_id` | consolida subtítulos existentes y consulta solo candidatos nuevos | reutiliza primero corpus y caché; `FETCH_NEW=False` no usa la red |
+| `01_01_scraping_incremental` | snapshots, caché, canales, consultas y candidatos con `video_id` | descubre fuentes en modo semilla, dirigido o combinado; consolida subtítulos y consulta solo videos nuevos | `DISCOVER_NEW=False` y `FETCH_NEW=False` no usan la red; los fallos por video no detienen el lote |
 | `01_02_limpieza_troceado_incremental` | transcripciones canónicas | normaliza texto y crea chunks temporales deterministas | compara el hash de la transcripción y conserva versiones anteriores |
-| `01_03_ampliacion_dirigida` | déficit de cobertura observado | prepara candidatos para categorías o fuentes insuficientes | es opcional; si añade candidatos, se repiten `01_01` y `01_02` |
 
 La adquisición descarga únicamente subtítulos disponibles. No descarga video ni audio y no afirma usar reconocimiento automático del habla. El identificador de video, el hash de la transcripción y la versión del troceador impiden repetir trabajo ya materializado.
 
@@ -225,10 +224,10 @@ Desde VS Code, abra la carpeta clonada, seleccione como kernel el Python de `.ve
 .\.venv\Scripts\jupyter-lab.exe
 ```
 
-El recorrido completo contiene 17 cuadernos:
+El recorrido completo contiene 16 cuadernos:
 
 ```text
-01_01 → 01_02 → 01_03 opcional
+01_01 → 01_02
 → 02_01 → 02_02 opcional → 02_03 → 02_04 → 02_05
 → 03_01 ... 03_06 en ramas comparables
 → 03_07 → 03_08 → 04_01
@@ -238,7 +237,7 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 
 | Cuaderno | Interruptor inicial | Acción para ejecutar |
 |---|---|---|
-| `01_01` | `FETCH_NEW=False` | manténgalo para reconstruir desde fuentes existentes; use `True` solo al añadir candidatos |
+| `01_01` | `DISCOVER_NEW=False`, `FETCH_NEW=False` | elija `DISCOVERY_MODE`, canales y cupos; active descubrimiento y adquisición únicamente para incorporar videos nuevos |
 | `02_01` | `RUN=False`, `LIMIT=20` | active `RUN=True`, valide el piloto y luego amplíe o retire el límite |
 | `02_02` | `RUN_REMOTE=False` | active solo con autorización para usar la API remota |
 | `03_01`–`03_06` | `RUN_TRAINING=False` | active la familia que se desea entrenar |
@@ -289,7 +288,7 @@ Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guarda
 .\.venv\Scripts\python.exe tools/generate_workflow_notebooks.py
 ```
 
-Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 17 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
+Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 16 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
 
 El artículo y la presentación se recompilan de forma independiente:
 

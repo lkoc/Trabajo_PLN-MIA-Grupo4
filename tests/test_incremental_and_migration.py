@@ -6,6 +6,8 @@ import pytest
 from moderacion_peru.datasets import assert_no_video_leakage, stable_video_split
 from moderacion_peru.acquisition import (
     bootstrap_canonical_from_existing,
+    classify_acquisition_error,
+    ingest_incremental,
     load_candidates,
     normalize_category_metadata,
 )
@@ -88,6 +90,80 @@ def test_candidates_accept_csv_and_jsonl(tmp_path):
     csv_path = tmp_path / "candidates.csv"
     csv_path.write_text("video_id,url\nv1,https://example.invalid/v1\n", encoding="utf-8")
     assert load_candidates(csv_path)[0]["video_id"] == "v1"
+
+
+def test_members_only_video_is_logged_and_does_not_stop_batch(tmp_path):
+    canonical = tmp_path / "raw" / "transcripts_raw.jsonl"
+    cache = tmp_path / "raw" / "cache"
+    failures = tmp_path / "raw" / "fallos_adquisicion.jsonl"
+    candidates = [
+        {"video_id": "members", "url": "https://youtube.invalid/members"},
+        {"video_id": "public", "url": "https://youtube.invalid/public"},
+    ]
+
+    def fetcher(candidate):
+        if candidate["video_id"] == "members":
+            raise RuntimeError("Join this channel to get access to members-only content")
+        return {
+            "video_id": candidate["video_id"],
+            "segments": [{"start": 0.0, "duration": 1.0, "text": "texto público"}],
+        }
+
+    first = ingest_incremental(
+        candidates,
+        canonical,
+        cache,
+        fetcher=fetcher,
+        failure_path=failures,
+        stop_on_error=False,
+    )
+    second = ingest_incremental(
+        candidates,
+        canonical,
+        cache,
+        fetcher=fetcher,
+        failure_path=failures,
+        stop_on_error=False,
+    )
+
+    assert first["failed"] == 1
+    assert first["fetched"] == 1
+    assert [row["video_id"] for row in read_jsonl(canonical)] == ["public"]
+    failure_rows = list(read_jsonl(failures))
+    assert len(failure_rows) == 1
+    assert failure_rows[0]["failure_kind"] == "members_only"
+    assert second["failure_records_added"] == 0
+    assert second["failure_records_existing"] == 1
+
+
+def test_new_video_limit_counts_network_attempts_and_defers_remainder(tmp_path):
+    candidates = [{"video_id": value} for value in ("v1", "v2", "v3")]
+    fetched = []
+
+    def fetcher(candidate):
+        fetched.append(candidate["video_id"])
+        return {
+            "video_id": candidate["video_id"],
+            "segments": [{"start": 0.0, "duration": 1.0, "text": "texto"}],
+        }
+
+    stats = ingest_incremental(
+        candidates,
+        tmp_path / "transcripts.jsonl",
+        tmp_path / "cache",
+        fetcher=fetcher,
+        max_new_videos=2,
+    )
+
+    assert fetched == ["v1", "v2"]
+    assert stats["fetch_attempted"] == 2
+    assert stats["deferred_by_limit"] == 1
+
+
+def test_acquisition_error_categories_cover_expected_youtube_failures():
+    assert classify_acquisition_error(RuntimeError("members-only content")) == "members_only"
+    assert classify_acquisition_error(RuntimeError("video unavailable")) == "unavailable_or_private"
+    assert classify_acquisition_error(RuntimeError("no tiene subtítulos")) == "no_spanish_subtitles"
 
 
 def test_acquisition_metadata_uses_canonical_gender_attack_name():

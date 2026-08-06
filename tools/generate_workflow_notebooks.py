@@ -143,6 +143,181 @@ def colab_setup(notebook_id: str) -> str:
     return COLAB_SETUP.replace("__NOTEBOOK_ID__", notebook_id)
 
 
+SCRAPING_PARAMETERS = """# ══════════════════════════════════════════════════════════════════════════════
+# CONTROLES DEL SCRAPING: edite únicamente este bloque
+# ══════════════════════════════════════════════════════════════════════════════
+DISCOVER_NEW = False          # True: consulta canales/búsquedas y guarda candidatos
+FETCH_NEW = False             # True: obtiene subtítulos solo de videos aún no procesados
+DISCOVERY_MODE = "seed"       # "seed", "directed" o "both"
+
+MAX_NEW_VIDEOS = 50           # máximo de llamadas nuevas para obtener subtítulos
+MAX_VIDEOS_PER_CHANNEL = 75   # candidatos recientes inspeccionados por canal
+MAX_RESULTS_PER_QUERY = 20    # candidatos inspeccionados por consulta dirigida
+
+SUBTITLE_LANGUAGES = ("es-PE", "es-419", "es")
+YT_RETRIES = 3
+YT_SLEEP_MIN_SECONDS = 1.0
+YT_SLEEP_MAX_SECONDS = 3.0
+STOP_ON_VIDEO_ERROR = False   # False: registra el fallo y continúa con el siguiente
+
+if DISCOVERY_MODE not in {"seed", "directed", "both"}:
+    raise ValueError("DISCOVERY_MODE debe ser seed, directed o both")
+if MAX_NEW_VIDEOS < 0 or MAX_VIDEOS_PER_CHANNEL < 1 or MAX_RESULTS_PER_QUERY < 1:
+    raise ValueError("Los límites de videos deben ser válidos")
+if YT_SLEEP_MIN_SECONDS < 0 or YT_SLEEP_MAX_SECONDS < YT_SLEEP_MIN_SECONDS:
+    raise ValueError("El intervalo de espera de yt-dlp no es válido")
+
+print({
+    "discover_new": DISCOVER_NEW,
+    "fetch_new": FETCH_NEW,
+    "discovery_mode": DISCOVERY_MODE,
+    "max_new_videos": MAX_NEW_VIDEOS,
+    "max_videos_per_channel": MAX_VIDEOS_PER_CHANNEL,
+    "max_results_per_query": MAX_RESULTS_PER_QUERY,
+    "subtitle_languages": SUBTITLE_LANGUAGES,
+})
+"""
+
+
+SCRAPING_SOURCES = """# Canales semilla recuperados del cuaderno histórico; puede añadir, quitar o editar filas.
+# `categoria_fuente` describe el dominio/registro del canal, no una etiqueta de daño.
+_SEED_ROWS = [
+    ("Marco Sifuentes / Ocram", "politica_analisis", "https://www.youtube.com/@canalYAAAAA"),
+    ("El diario de Curwen", "politica_opinion", "https://www.youtube.com/@curwen"),
+    ("Sin Guion con Rosa María Palacios", "politica_periodismo", "https://www.youtube.com/@singuionlr"),
+    ("RPP Noticias", "politica_actualidad", "https://www.youtube.com/@RPPNoticias"),
+    ("Exitosa Noticias", "politica_actualidad", "https://www.youtube.com/@exitosape"),
+    ("Willax Television", "politica_opinion", "https://www.youtube.com/@WillaxTV"),
+    ("Canal N", "politica_actualidad", "https://www.youtube.com/@canaln"),
+    ("ATV Noticias", "politica_actualidad", "https://www.youtube.com/@ATVNoticias"),
+    ("Latina Noticias", "politica_actualidad", "https://www.youtube.com/@latinanoticias"),
+    ("Panamericana Noticias", "politica_actualidad", "https://www.youtube.com/@Panamericana-Noticias"),
+    ("Hablando Huevadas", "humor_streaming", "https://www.youtube.com/@HablandoHuevadasOficial"),
+    ("Todo Good", "streaming_opinion", "https://www.youtube.com/@todogoodpe"),
+    ("Goblinciano", "streaming_opinion", "https://www.youtube.com/@Goblinciano"),
+    ("El Cacas", "humor_streaming", "https://www.youtube.com/@ElCacas"),
+    ("Negro Fuertes", "humor_comedia", "https://www.youtube.com/@NegroFuertes"),
+    ("Jason Qqq", "humor_streaming", "https://www.youtube.com/@JasonQqqOficial"),
+    ("La Cotorrisa Perú", "humor_podcast", "https://www.youtube.com/@LaCotorrisaPeru"),
+    ("Magaly TV La Firme", "farandula", "https://www.youtube.com/@MagalyTVLaFirmeATV"),
+    ("Amor y Fuego", "farandula", "https://www.youtube.com/@AmoryFuego"),
+    ("América Hoy", "farandula", "https://www.youtube.com/@americahoytv"),
+    ("Instarándula", "farandula_digital", "https://www.youtube.com/@Instarandula"),
+    ("El Popular", "farandula_digital", "https://www.youtube.com/@ElPopularPeru"),
+    ("Nico Moschella", "deportes_informal", "https://www.youtube.com/@NicoMoschella"),
+    ("Líbero Deportes", "deportes", "https://www.youtube.com/@DiarioLiberoOficial"),
+    ("Depor", "deportes", "https://www.youtube.com/@DeporPeru"),
+    ("Misias pero viajeras", "viajes", "https://www.youtube.com/c/Misiasperoviajeras"),
+    ("Buen Viaje", "viajes", "https://www.youtube.com/c/BuenViajePe"),
+    ("Viaja y Prueba", "viajes_gastronomia", "https://www.youtube.com/@ViajayPrueba"),
+    ("Cocinando con la Patty", "gastronomia", "https://www.youtube.com/@CocinandoConLaPatty"),
+    ("Arde Troya con Juliana Oxenford", "politica_analisis", "https://www.youtube.com/@ardetroyalr"),
+    ("Panorama", "politica_periodismo", "https://www.youtube.com/@PanoramaPTV"),
+    ("Juanito y Richard", "humor_comedia", "https://www.youtube.com/@JuanitoyRichard"),
+    ("Nada Espacial", "humor_podcast", "https://www.youtube.com/@nadaespacialpodcast"),
+    ("L1MAX", "deportes_informal", "https://www.youtube.com/@L1MAX_"),
+    ("Cocina Cajamarquina", "gastronomia", "https://www.youtube.com/@cocinacajamarquina"),
+    ("Tío Lenguado y Descocaos", "viajes_gastronomia", "https://www.youtube.com/@tiolenguado"),
+]
+SEED_CHANNELS = [
+    {"name": name, "categoria_fuente": category, "url": url}
+    for name, category, url in _SEED_ROWS
+]
+
+# Ampliación dirigida: las cuotas son máximos por canal, nunca prevalencias esperadas.
+DIRECTED_CHANNELS = [
+    {"name": "Hablando Huevadas", "url": "https://www.youtube.com/@HablandoHuevadasOficial", "quota": 70, "target_category": "CONTENIDO_SEXUAL|ATAQUE_POR_GENERO_IDENTIDAD|ACOSO_AMENAZA"},
+    {"name": "Goblinciano", "url": "https://www.youtube.com/@Goblinciano", "quota": 85, "target_category": "RACISMO_DISCRIMINACION|ACOSO_AMENAZA"},
+    {"name": "Juanito y Richard", "url": "https://www.youtube.com/@JuanitoyRichard", "quota": 85, "target_category": "RACISMO_DISCRIMINACION|ACOSO_AMENAZA"},
+    {"name": "Arde Troya con Juliana Oxenford", "url": "https://www.youtube.com/@ardetroyalr", "quota": 55, "target_category": "ACOSO_AMENAZA"},
+    {"name": "Todo Good", "url": "https://www.youtube.com/@todogoodpe", "quota": 40, "target_category": "ACOSO_AMENAZA"},
+    {"name": "Magaly TV La Firme", "url": "https://www.youtube.com/@MagalyTVLaFirmeATV", "quota": 35, "target_category": "ACOSO_AMENAZA|CONTENIDO_SEXUAL"},
+]
+
+SEED_SEARCH_QUERIES = [
+    "noticias política Perú canal YouTube",
+    "periodismo opinión Perú YouTube",
+    "humor streaming Perú lenguaje coloquial",
+    "farándula espectáculos Perú",
+    "deportes peruanos comentarios YouTube",
+]
+DIRECTED_SEARCH_QUERIES = [
+    {"query": "insultos racistas discriminación Perú denuncia", "target_category": "RACISMO_DISCRIMINACION"},
+    {"query": "ataque machista misoginia Perú denuncia", "target_category": "ATAQUE_POR_GENERO_IDENTIDAD"},
+    {"query": "ataque homofóbico transfóbico Perú denuncia", "target_category": "ATAQUE_POR_GENERO_IDENTIDAD"},
+    {"query": "amenaza de muerte denuncia Perú", "target_category": "ACOSO_AMENAZA"},
+    {"query": "extorsionadores amenazan audio Perú", "target_category": "ACOSO_AMENAZA"},
+    {"query": "acoso sexual denuncia televisión peruana", "target_category": "CONTENIDO_SEXUAL|ACOSO_AMENAZA"},
+]
+
+CHANNEL_SOURCES = (
+    SEED_CHANNELS if DISCOVERY_MODE == "seed"
+    else DIRECTED_CHANNELS if DISCOVERY_MODE == "directed"
+    else SEED_CHANNELS + DIRECTED_CHANNELS
+)
+SEARCH_QUERIES = (
+    SEED_SEARCH_QUERIES if DISCOVERY_MODE == "seed"
+    else DIRECTED_SEARCH_QUERIES if DISCOVERY_MODE == "directed"
+    else SEED_SEARCH_QUERIES + DIRECTED_SEARCH_QUERIES
+)
+print("Canales configurados:", len(CHANNEL_SOURCES), "· consultas:", len(SEARCH_QUERIES))
+"""
+
+
+SCRAPING_DISCOVERY = """from moderacion_peru.acquisition import discover_youtube_candidates
+from moderacion_peru.io import append_jsonl_once, write_json_atomic
+
+DISCOVERED_PATH = ROOT/'datos/raw/video_candidates.jsonl'
+DISCOVERY_FAILURES_PATH = ROOT/'datos/raw/fallos_descubrimiento_ultima_ejecucion.json'
+discovered = []
+if DISCOVER_NEW:
+    discovered, discovery_failures = discover_youtube_candidates(
+        CHANNEL_SOURCES,
+        SEARCH_QUERIES,
+        max_videos_per_channel=MAX_VIDEOS_PER_CHANNEL,
+        max_results_per_query=MAX_RESULTS_PER_QUERY,
+        retries=YT_RETRIES,
+        sleep_min_seconds=YT_SLEEP_MIN_SECONDS,
+        sleep_max_seconds=YT_SLEEP_MAX_SECONDS,
+    )
+    added, existing = append_jsonl_once(DISCOVERED_PATH, discovered, id_field='video_id')
+    write_json_atomic(DISCOVERY_FAILURES_PATH, discovery_failures)
+    print({"discovered": len(discovered), "added": added, "existing": existing,
+           "source_failures": len(discovery_failures)})
+else:
+    print("Descubrimiento desactivado: se reutilizan candidatos y transcripciones locales.")
+"""
+
+
+SCRAPING_EXECUTION = """from functools import partial
+from moderacion_peru.acquisition import fetch_youtube_subtitles, ingest_incremental
+
+FAILURES = ROOT/'datos/raw/fallos_adquisicion.jsonl'
+fetcher = partial(
+    fetch_youtube_subtitles,
+    languages=SUBTITLE_LANGUAGES,
+    retries=YT_RETRIES,
+    sleep_min_seconds=YT_SLEEP_MIN_SECONDS,
+    sleep_max_seconds=YT_SLEEP_MAX_SECONDS,
+)
+if candidates:
+    stats = ingest_incremental(
+        candidates,
+        CANONICAL,
+        CACHE,
+        fetcher=fetcher if FETCH_NEW else None,
+        failure_path=FAILURES,
+        max_new_videos=MAX_NEW_VIDEOS,
+        stop_on_error=STOP_ON_VIDEO_ERROR,
+    )
+    print(stats)
+    if stats['failed']:
+        print(f"Se omitieron {stats['failed']} videos inaccesibles; revise {FAILURES}.")
+else:
+    print("No hay candidatos. Active DISCOVER_NEW o añada un CSV/JSONL; no se descarga de nuevo el corpus.")
+"""
+
+
 def create(
     path: str,
     title: str,
@@ -250,12 +425,18 @@ def main() -> None:
         "[@tatman2017captions]. Toda ampliación debe respetar los términos de la plataforma "
         "[@youtube2023terms] y la evaluación ética contextual recomendada para investigación en "
         "Internet [@aoir2020ethics]. La reutilización de cachés y la selección de candidatos son "
-        "decisiones locales registradas en manifiestos.",
+        "decisiones locales registradas en manifiestos. El modo dirigido prioriza cobertura insuficiente "
+        "siguiendo criterios de aprendizaje activo y desbalance multietiqueta "
+        "[@fairstein2024balancing] [@huang2021balancing], pero no permite estimar prevalencias "
+        "en YouTube ni en el Perú.",
         [
             ("Preflight", "from moderacion_peru.artifacts import artifact_status\nartifact_status(ROOT)"),
-            ("Reutilización de snapshots existentes", "from moderacion_peru.acquisition import (bootstrap_canonical_from_existing, discover_existing_transcript_sources, fetch_youtube_subtitles, ingest_incremental, load_candidates)\nCANONICAL = ROOT/'datos/raw/transcripts_raw.jsonl'\nCACHE = ROOT/'datos/raw/transcripts_cache'\nsources = discover_existing_transcript_sources(ROOT, canonical_path=CANONICAL)\nreuse_stats = bootstrap_canonical_from_existing(sources, CANONICAL)\nprint(reuse_stats)"),
-            ("Candidatos y caché", "CANDIDATE_FILES = [ROOT/'datos/raw/video_candidates.jsonl', ROOT/'datos/raw/videos_candidatos.csv']\ncandidates_by_id = {}\nfor source in CANDIDATE_FILES:\n    for row in load_candidates(source):\n        candidates_by_id.setdefault(str(row['video_id']), row)\ncandidates = list(candidates_by_id.values())\nprint('Candidatos:', len(candidates), '· los ya existentes se omitirán')"),
-            ("Ejecución controlada", "FETCH_NEW = False  # Cambie a True solo para consultar candidatos no vistos\nif candidates:\n    stats = ingest_incremental(candidates, CANONICAL, CACHE, fetcher=fetch_youtube_subtitles if FETCH_NEW else None)\n    print(stats)\nelse:\n    print('Agregue candidatos con video_id y url; el corpus existente no se vuelve a descargar.')"),
+            ("Parámetros editables", SCRAPING_PARAMETERS),
+            ("Canales y consultas", SCRAPING_SOURCES),
+            ("Reutilización de snapshots existentes", "from moderacion_peru.acquisition import (bootstrap_canonical_from_existing, discover_existing_transcript_sources, load_candidates, merge_candidates)\nCANONICAL = ROOT/'datos/raw/transcripts_raw.jsonl'\nCACHE = ROOT/'datos/raw/transcripts_cache'\nsources = discover_existing_transcript_sources(ROOT, canonical_path=CANONICAL)\nreuse_stats = bootstrap_canonical_from_existing(sources, CANONICAL)\nprint(reuse_stats)"),
+            ("Descubrimiento general o ampliación dirigida", SCRAPING_DISCOVERY),
+            ("Candidatos y caché", "CANDIDATE_FILES = [ROOT/'datos/raw/video_candidates.jsonl', ROOT/'datos/raw/videos_candidatos.csv']\nloaded_groups = [load_candidates(source) for source in CANDIDATE_FILES]\ncandidates = merge_candidates(*loaded_groups)\nprint('Candidatos únicos:', len(candidates), '· los ya existentes se omitirán')"),
+            ("Ejecución controlada y tolerante a fallos", SCRAPING_EXECUTION),
         ],
     )
     create(
@@ -270,19 +451,6 @@ def main() -> None:
         [
             ("Configuración", "from moderacion_peru.incremental import chunk_records_incrementally\nfrom moderacion_peru.io import append_jsonl_once, read_jsonl\nSOURCE=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/processed/chunks_v2.jsonl'\nVERSION_INDEX=ROOT/'datos/processed/chunking_v2_versions.jsonl'"),
             ("Materialización", "existing=list(read_jsonl(OUTPUT)) if OUTPUT.exists() else []\nversions=list(read_jsonl(VERSION_INDEX)) if VERSION_INDEX.exists() else []\nnew_rows,new_versions,stats=chunk_records_incrementally(read_jsonl(SOURCE) if SOURCE.exists() else [],existing,versions)\nadded,skipped=append_jsonl_once(OUTPUT,new_rows,id_field='chunk_id')\nversions_added,_=append_jsonl_once(VERSION_INDEX,new_versions,id_field='version_id')\nstats.update({'added':added,'duplicate_ids':skipped,'versions_registered':versions_added})\nprint(stats)"),
-        ],
-    )
-    create(
-        "flujo/01_datos/01_03_ampliacion_dirigida.ipynb",
-        "01.03 · Ampliación dirigida",
-        "Añade candidatos para daños minoritarios sin mezclar adquisición, etiquetado y entrenamiento en una sola celda.",
-        "La priorización de clases con menor soporte se inspira en estrategias de aprendizaje activo "
-        "con balance de clases [@fairstein2024balancing] y en tratamientos del desbalance de cola larga "
-        "en clasificación multietiqueta [@huang2021balancing]. El muestreo dirigido de este cuaderno es "
-        "una decisión local para ampliar cobertura y no permite estimar prevalencias en YouTube ni en el Perú.",
-        [
-            ("Estado incremental", "from moderacion_peru.acquisition import processed_video_ids\nCANONICAL=ROOT/'datos/raw/transcripts_raw.jsonl'\nprocessed=processed_video_ids(CANONICAL)\nprint('Videos ya aprovechados:',len(processed))"),
-            ("Handoff", "print('Guarde nuevos candidatos en datos/raw/video_candidates.jsonl y vuelva a 01_01. Los IDs existentes serán omitidos.')"),
         ],
     )
     create(

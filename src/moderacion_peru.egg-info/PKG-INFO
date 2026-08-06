@@ -111,9 +111,8 @@ Las definiciones, inclusiones, exclusiones, contraejemplos y fuentes se encuentr
 
 | Cuaderno | Entrada | Proceso y salida | Repetición |
 |---|---|---|---|
-| `01_01_scraping_incremental` | snapshots, caché y candidatos con `video_id` | consolida subtítulos existentes y consulta solo candidatos nuevos | reutiliza primero corpus y caché; `FETCH_NEW=False` no usa la red |
+| `01_01_scraping_incremental` | snapshots, caché, canales, consultas y candidatos con `video_id` | descubre fuentes en modo semilla, dirigido o combinado; consolida subtítulos y consulta solo videos nuevos | `DISCOVER_NEW=False` y `FETCH_NEW=False` no usan la red; los fallos por video no detienen el lote |
 | `01_02_limpieza_troceado_incremental` | transcripciones canónicas | normaliza texto y crea chunks temporales deterministas | compara el hash de la transcripción y conserva versiones anteriores |
-| `01_03_ampliacion_dirigida` | déficit de cobertura observado | prepara candidatos para categorías o fuentes insuficientes | es opcional; si añade candidatos, se repiten `01_01` y `01_02` |
 
 La adquisición descarga únicamente subtítulos disponibles. No descarga video ni audio y no afirma usar reconocimiento automático del habla. El identificador de video, el hash de la transcripción y la versión del troceador impiden repetir trabajo ya materializado.
 
@@ -189,7 +188,7 @@ git clone https://github.com/lkoc/Trabajo_PLN-MIA-Grupo4.git
 Set-Location Trabajo_PLN-MIA-Grupo4
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install -e ".[datos,etiquetado,entrenamiento,cuadernos,dev]"
+.\.venv\Scripts\python.exe -m pip install -e ".[datos,etiquetado,cuadernos,dev]"
 ```
 
 En Linux o macOS:
@@ -199,12 +198,21 @@ git clone https://github.com/lkoc/Trabajo_PLN-MIA-Grupo4.git
 cd Trabajo_PLN-MIA-Grupo4
 python3.12 -m venv .venv
 ./.venv/bin/python -m pip install --upgrade pip
-./.venv/bin/python -m pip install -e '.[datos,etiquetado,entrenamiento,cuadernos,dev]'
+./.venv/bin/python -m pip install -e '.[datos,etiquetado,cuadernos,dev]'
 ```
 
-PyTorch no se fija como dependencia universal porque CUDA, ROCm, XPU y CPU requieren distribuciones distintas. Instálelo en el mismo entorno según el hardware y compruebe después la detección con `preflight`. Los modelos clásicos y las auditorías pueden ejecutarse sin acelerador neuronal.
+### 3. Instalar PyTorch y el extra de entrenamiento
 
-### 3. Configurar Ollama
+PyTorch no se fija como dependencia universal porque CUDA, ROCm, XPU y CPU requieren distribuciones distintas. Instale primero en `.venv` la distribución correspondiente a su sistema siguiendo [`docs/HARDWARE.md`](docs/HARDWARE.md) y el selector oficial enlazado allí. Después complete el entorno:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[entrenamiento]"
+.\.venv\Scripts\python.exe -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
+```
+
+La segunda línea solo comprueba la interfaz CUDA de PyTorch. En AMD/ROCm, `torch.version.hip` distingue el backend; en Intel, `torch.xpu.is_available()` informa XPU. `modperu preflight` realiza la detección completa y registra el motivo de cualquier fallback. Los modelos clásicos y las auditorías pueden ejecutarse sin acelerador neuronal.
+
+### 4. Configurar Ollama
 
 Ollama expone la API local en `http://127.0.0.1:11434`. Los tres modelos del piloto se preparan con:
 
@@ -219,7 +227,7 @@ El adaptador llama a la API HTTP de Ollama y exige JSON conforme al esquema de a
 
 La ruta remota es opcional. Solo si se decide usarla, configure `DEEPSEEK_API_KEY` fuera del repositorio y cambie `RUN_REMOTE=True` en `02_02`. Nunca guarde credenciales en un cuaderno, `.env` versionado o manifiesto.
 
-### 4. Verificar entorno, contrato y artefactos
+### 5. Verificar entorno, contrato y artefactos
 
 ```powershell
 .\.venv\Scripts\modperu.exe preflight
@@ -239,7 +247,7 @@ $env:MODPERU_ROOT = (Get-Location).Path
 
 `MODPERU_ROOT` es opcional cuando el proceso comienza dentro del repositorio. `MODPERU_ARTIFACT_ROOT` está reservado para consumidores que usan el helper `artifact_root`; no reubica por sí solo los datasets, modelos o rutas canónicas declaradas por los cuadernos.
 
-### 5. Abrir y ejecutar los cuadernos
+### 6. Abrir y ejecutar los cuadernos
 
 Desde VS Code, abra la carpeta clonada, seleccione como kernel el Python de `.venv` y ejecute los cuadernos en el orden de [`docs/ORDEN_EJECUCION.md`](docs/ORDEN_EJECUCION.md). También puede iniciar JupyterLab:
 
@@ -247,10 +255,10 @@ Desde VS Code, abra la carpeta clonada, seleccione como kernel el Python de `.ve
 .\.venv\Scripts\jupyter-lab.exe
 ```
 
-El recorrido completo contiene 17 cuadernos:
+El recorrido completo contiene 16 cuadernos:
 
 ```text
-01_01 → 01_02 → 01_03 opcional
+01_01 → 01_02
 → 02_01 → 02_02 opcional → 02_03 → 02_04 → 02_05
 → 03_01 ... 03_06 en ramas comparables
 → 03_07 → 03_08 → 04_01
@@ -260,7 +268,7 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 
 | Cuaderno | Interruptor inicial | Acción para ejecutar |
 |---|---|---|
-| `01_01` | `FETCH_NEW=False` | manténgalo para reconstruir desde fuentes existentes; use `True` solo al añadir candidatos |
+| `01_01` | `DISCOVER_NEW=False`, `FETCH_NEW=False` | elija `DISCOVERY_MODE`, canales y cupos; active descubrimiento y adquisición únicamente para incorporar videos nuevos |
 | `02_01` | `RUN=False`, `LIMIT=20` | active `RUN=True`, valide el piloto y luego amplíe o retire el límite |
 | `02_02` | `RUN_REMOTE=False` | active solo con autorización para usar la API remota |
 | `03_01`–`03_06` | `RUN_TRAINING=False` | active la familia que se desea entrenar |
@@ -268,7 +276,7 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 
 `03_01`–`03_06` no forman una cadena: son alternativas comparables y pueden ejecutarse en paralelo o por separado. `03_07` requiere al menos un candidato completo y no compara candidatos creados con snapshots distintos.
 
-### 6. Reconciliar, entrenar y publicar mediante la CLI
+### 7. Reconciliar, entrenar y publicar mediante la CLI
 
 Los puentes principales también tienen comandos reproducibles. Los cuadernos siguen siendo la narración ejecutable recomendada, mientras la CLI facilita automatización y pruebas:
 
@@ -285,7 +293,7 @@ Los puentes principales también tienen comandos reproducibles. Los cuadernos si
 
 Cada experimento registra la firma del dataset y la configuración. Si el candidato y su manifiesto ya están completos, una segunda ejecución devuelve `status="noop"`. `--force` debe reservarse para una repetición deliberada de la misma firma.
 
-### 7. Ejecutar los frontends
+### 8. Ejecutar los frontends
 
 Después de `02_04`, el frontend humano puede iniciarse con la campaña consolidada:
 
@@ -303,7 +311,7 @@ Después de entrenar y publicar con `03_07`, el frontend productivo se inicia co
 
 Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guardan en JSONL append-only. El frontend productivo rechaza la inferencia si no existe un registro v2.1 cuyo checkpoint y hashes puedan verificarse.
 
-### 8. Comprobar la reproducción
+### 9. Comprobar la reproducción
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
@@ -311,7 +319,7 @@ Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guarda
 .\.venv\Scripts\python.exe tools/generate_workflow_notebooks.py
 ```
 
-Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 17 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
+Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 16 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
 
 El artículo y la presentación se recompilan de forma independiente:
 

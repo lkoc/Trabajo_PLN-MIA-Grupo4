@@ -5,7 +5,7 @@ Fecha: 2026-08-05
 
 ## Alcance y criterio
 
-Se revisaron los 17 cuadernos activos de `flujo/`. Se aplicó la guía local
+Se revisaron los 16 cuadernos activos de `flujo/`. Se aplicó la guía local
 [`evidencia-citas-y-bibliografia.md`](../Guias_generales/redactar-articulo-ieee-y-presentacion/references/evidencia-citas-y-bibliografia.md):
 
 - cita IEEE numérica junto a la afirmación que respalda;
@@ -24,9 +24,8 @@ cuaderno materializa una lista independiente numerada por primera aparición.
 
 | Cuaderno | Entradas en la celda final |
 |---|---:|
-| `01_01_scraping_incremental.ipynb` | 4 |
+| `01_01_scraping_incremental.ipynb` | 6 |
 | `01_02_limpieza_troceado_incremental.ipynb` | 2 |
-| `01_03_ampliacion_dirigida.ipynb` | 2 |
 | `02_01_etiquetado_local_ollama.ipynb` | 7 |
 | `02_02_etiquetado_remoto.ipynb` | 2 |
 | `02_03_revision_llm_dirigida.ipynb` | 4 |
@@ -43,7 +42,7 @@ cuaderno materializa una lista independiente numerada por primera aparición.
 | `04_01_frontend_produccion.ipynb` | 5 |
 | **Total materializado** | **85** |
 
-El total corresponde a 85 entradas materializadas en 17 bibliografías y 58
+El total corresponde a 85 entradas materializadas en 16 bibliografías y 58
 claves únicas de la bibliografía maestra. Una misma fuente puede reaparecer en
 cuadernos distintos cuando sustenta componentes distintos del flujo.
 
@@ -74,7 +73,7 @@ python -m pytest
 python tools/audit_project.py
 ```
 
-Resultado: 45 pruebas aprobadas; 17/17 cuadernos con celda final; 85/85
+Resultado: 49 pruebas aprobadas; 16/16 cuadernos con celda final; 85/85
 entradas numeradas y citadas; cero claves ausentes en `referencias.bib`, cero
 entradas finales sin uso, cero números discontinuos y cero incidencias del
 auditor del proyecto.

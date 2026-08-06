@@ -14,7 +14,7 @@ REFERENCE_ENTRY = re.compile(r"^\[(\d+)\]\s", re.MULTILINE)
 
 def test_active_notebooks_are_ordered_and_clean():
     notebooks = sorted((ROOT / "flujo").rglob("*.ipynb"))
-    assert len(notebooks) == 17
+    assert len(notebooks) == 16
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
         assert notebook.metadata["moderacion_peru"]["contract"] == "moderacion_peru_5_salidas_v2"
@@ -145,7 +145,7 @@ def test_root_readme_summarizes_and_reproduces_the_active_workflow():
     assert "modperu.exe preflight" in source
     assert "python.exe -m pytest" in source
     for folder, expected_count in {
-        "01_datos": 3,
+        "01_datos": 2,
         "02_etiquetado": 5,
         "03_entrenamiento": 8,
         "04_produccion": 1,
@@ -153,6 +153,32 @@ def test_root_readme_summarizes_and_reproduces_the_active_workflow():
         notebooks = sorted((ROOT / "flujo" / folder).glob("*.ipynb"))
         assert len(notebooks) == expected_count
         assert all(path.stem in source for path in notebooks)
+
+
+def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
+    path = ROOT / "flujo" / "01_datos" / "01_01_scraping_incremental.ipynb"
+    notebook = nbformat.read(path, as_version=4)
+    source = "\n".join(cell.source for cell in notebook.cells)
+    for control in (
+        "DISCOVER_NEW",
+        "FETCH_NEW",
+        "DISCOVERY_MODE",
+        "MAX_NEW_VIDEOS",
+        "MAX_VIDEOS_PER_CHANNEL",
+        "MAX_RESULTS_PER_QUERY",
+        "CHANNEL_SOURCES",
+        "SEARCH_QUERIES",
+        "STOP_ON_VIDEO_ERROR",
+        "fallos_adquisicion.jsonl",
+    ):
+        assert control in source
+    assert not (ROOT / "flujo" / "01_datos" / "01_03_ampliacion_dirigida.ipynb").exists()
+    assert (
+        ROOT
+        / "archivo"
+        / "flujo_reorganizado_v2"
+        / "01_03_ampliacion_dirigida_reemplazado.ipynb"
+    ).is_file()
 
 
 def test_neural_model_revisions_are_pinned():
