@@ -1,7 +1,7 @@
 # Auditoría de citas de los cuadernos activos
 
 Versión auditada: `2.1.0`  
-Fecha: 2026-08-05
+Fecha: 2026-08-06
 
 ## Alcance y criterio
 
@@ -24,7 +24,7 @@ cuaderno materializa una lista independiente numerada por primera aparición.
 
 | Cuaderno | Entradas en la celda final |
 |---|---:|
-| `01_01_scraping_incremental.ipynb` | 6 |
+| `01_01_scraping_incremental.ipynb` | 7 |
 | `01_02_limpieza_troceado_incremental.ipynb` | 2 |
 | `02_01_etiquetado_local_ollama.ipynb` | 7 |
 | `02_02_etiquetado_remoto.ipynb` | 2 |
@@ -40,16 +40,16 @@ cuaderno materializa una lista independiente numerada por primera aparición.
 | `03_07_comparacion_final.ipynb` | 5 |
 | `03_08_auditoria_finas_flags.ipynb` | 10 |
 | `04_01_frontend_produccion.ipynb` | 5 |
-| **Total materializado** | **85** |
+| **Total materializado** | **86** |
 
-El total corresponde a 85 entradas materializadas en 16 bibliografías y 58
+El total corresponde a 86 entradas materializadas en 16 bibliografías y 59
 claves únicas de la bibliografía maestra. Una misma fuente puede reaparecer en
 cuadernos distintos cuando sustenta componentes distintos del flujo.
 
 ## Correspondencia revisada
 
-- Adquisición: herramienta, términos de plataforma, ética y sesgo del
-  subtitulado automático.
+- Adquisición: `yt-dlp`, fallback de transcripciones, términos de plataforma,
+  ética y sesgo del subtitulado automático.
 - Preparación: Unicode NFKC y SHA-256; ventanas y deduplicación declaradas
   como configuración local.
 - Etiquetado: documentación oficial de Ollama, DeepSeek, Qwen y Colab, junto

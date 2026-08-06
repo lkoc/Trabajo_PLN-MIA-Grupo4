@@ -80,14 +80,14 @@ Las definiciones, inclusiones, exclusiones, contraejemplos y fuentes se encuentr
 
 | Cuaderno | Entrada | Proceso y salida | Repetición |
 |---|---|---|---|
-| `01_01_scraping_incremental` | snapshots, caché, canales, consultas y candidatos con `video_id` | descubre fuentes en modo semilla, dirigido o combinado; consolida subtítulos y consulta solo videos nuevos | `DISCOVER_NEW=False` y `FETCH_NEW=False` no usan la red; los fallos por video no detienen el lote |
+| `01_01_scraping_incremental` | snapshots, caché, canales, consultas y candidatos con `video_id` | descubre fuentes en modo semilla, dirigido o combinado; adquiere VTT con `yt-dlp` y consolida solo videos nuevos | toda la cola se procesa en lotes reanudables; `DISCOVER_NEW=False` y `FETCH_NEW=False` no usan la red |
 | `01_02_limpieza_troceado_incremental` | transcripciones canónicas | normaliza texto y crea chunks temporales deterministas | compara el hash de la transcripción y conserva versiones anteriores |
 
-La adquisición descarga únicamente subtítulos disponibles. No descarga video ni audio y no afirma usar reconocimiento automático del habla. El identificador de video, el hash de la transcripción y la versión del troceador impiden repetir trabajo ya materializado.
+La adquisición restaura la técnica estable del cuaderno histórico: `yt-dlp` escribe únicamente VTT manuales o automáticos en almacenamiento temporal, se elige la pista más completa y se exige un mínimo de 200 caracteres. `youtube-transcript-api` se usa solo como respaldo. No se descarga video ni audio ni se ejecuta reconocimiento automático del habla. El identificador de video, el hash de la transcripción y la versión del troceador impiden repetir trabajo ya materializado.
 
-Durante `01_01`, una barra informa el avance por fuente y otra el avance por candidato. El modo `directed` calcula déficits por videos etiquetados de `train+validation`, estima rendimiento histórico por canal, expande canales desde búsquedas temáticas y materializa una cohorte vigente con *round-robin* ponderado; si no hay datos previos, reparte la adquisición por igual entre los cuatro daños. El cierre separa fuentes correctas y fallidas, candidatos nuevos y existentes, reutilización del caché, subtítulos obtenidos, videos diferidos por cupo o por el cortacircuito HTTP 429 y fallos agrupados. El detalle completo queda en `datos/raw/fallos_descubrimiento_ultima_ejecucion.json` y `datos/raw/fallos_adquisicion.jsonl`.
+Durante `01_01`, una barra informa el avance por fuente y otra el avance por candidato. El modo `directed` calcula déficits por videos etiquetados de `train+validation`, estima rendimiento histórico por canal, expande canales desde búsquedas temáticas y materializa una cohorte vigente con *round-robin* ponderado; si no hay datos previos, reparte la adquisición por igual entre los cuatro daños. Con `MAX_DIRECTED_CANDIDATES=None` y `MAX_NEW_VIDEOS=None` se conservan y recorren todos los candidatos dirigidos inéditos. La red se regula en lotes de 50, con una pausa adicional de 20 segundos entre lotes y pausas internas de 1–3 segundos en `yt-dlp`. El detalle queda en `datos/raw/fallos_descubrimiento_ultima_ejecucion.json` y `datos/raw/fallos_adquisicion.jsonl`.
 
-El cortacircuito HTTP 429 aplica reintentos con *backoff* y, si YouTube mantiene el límite, detiene nuevas solicitudes durante esa ejecución: conserva un solo fallo `rate_limited` y deja el resto como diferido para una corrida posterior. No intenta eludir controles de la plataforma. La selección, sus fórmulas, los artefactos, el reinicio recuperable y las limitaciones del muestreo se documentan en [Metodología de scraping y adquisición de subtítulos](docs/METODOLOGIA_SCRAPING.md).
+`yt-dlp` gestiona cabeceras, sesión HTTP, pausas y reintentos. Si aun así aparece un 429 persistente, el cortacircuito detiene nuevas solicitudes durante esa ejecución, conserva un solo fallo `rate_limited` y deja el resto como diferido para una corrida posterior; no intenta eludir controles de la plataforma. Éxitos y fallos tienen checkpoints inmediatos, por lo que la siguiente corrida reanuda la cola. La selección, sus fórmulas, los artefactos, el reinicio recuperable y las limitaciones del muestreo se documentan en [Metodología de scraping y adquisición de subtítulos](docs/METODOLOGIA_SCRAPING.md).
 
 ### 02 · Etiquetado semiautomático
 
@@ -249,7 +249,7 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 
 | Cuaderno | Interruptor inicial | Acción para ejecutar |
 |---|---|---|
-| `01_01` | `DISCOVER_NEW=False`, `FETCH_NEW=False` | elija `DISCOVERY_MODE`, canales y cupos; active descubrimiento y adquisición únicamente para incorporar videos nuevos |
+| `01_01` | plantilla segura: `DISCOVER_NEW=False`, `FETCH_NEW=False` | elija `DISCOVERY_MODE`; use `MAX_NEW_VIDEOS=None` para toda la cola y regule la red con lotes de 50 y pausas de 20 s |
 | `02_01` | `RUN=False`, `LIMIT=20` | active `RUN=True`, valide el piloto y luego amplíe o retire el límite |
 | `02_02` | `RUN_REMOTE=False` | active solo con autorización para usar la API remota |
 | `03_01`–`03_06` | `RUN_TRAINING=False` | active la familia que se desea entrenar |
@@ -323,7 +323,7 @@ Para incorporar videos o subtítulos adicionales:
 4. active las familias de `03` que desea actualizar;
 5. publique de nuevo solo cuando `03_07` encuentre candidatos completos del snapshot nuevo.
 
-El flujo omite videos conocidos, reutiliza subtítulos y cachés, conserva las asignaciones de split por `video_id` y reanuda anotaciones por `chunk_id`. Un incremento crea otro snapshot inmutable que combina datos anteriores y nuevos. Los modelos neuronales pueden reanudar una interrupción o inicializar el run nuevo desde un candidato compatible anterior; nunca se entrena únicamente con el lote nuevo olvidando el corpus previo.
+El flujo omite videos conocidos, reutiliza subtítulos y cachés, y recorre todos los candidatos pendientes por lotes. Cada VTT válido se convierte en un checkpoint JSON antes de continuar y cada fallo se registra inmediatamente; una interrupción no obliga a repetir los éxitos anteriores. Después conserva las asignaciones de split por `video_id` y reanuda anotaciones por `chunk_id`. Un incremento crea otro snapshot inmutable que combina datos anteriores y nuevos. Los modelos neuronales pueden reanudar una interrupción o inicializar el run nuevo desde un candidato compatible anterior; nunca se entrena únicamente con el lote nuevo olvidando el corpus previo.
 
 ## Google Colab L4 desde VS Code
 

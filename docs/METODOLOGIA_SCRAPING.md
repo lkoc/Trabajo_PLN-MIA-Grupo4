@@ -30,8 +30,8 @@ El diseño aplica los siguientes principios:
 - **Incrementalidad:** un `video_id` canónico no vuelve a entrar a la cola de red.
 - **Reanudación:** una transcripción presente en caché se reutiliza antes de
   intentar una solicitud nueva.
-- **Cohorte explícita:** el modo dirigido trabaja sobre una selección vigente,
-  no sobre todo el backlog acumulado de candidatos generales.
+- **Cohorte explícita:** el modo dirigido trabaja sobre todos los candidatos
+  inéditos de su selección vigente, no sobre el backlog general sin procedencia.
 - **Separación entre selección y verdad:** `target_category` explica por qué se
   seleccionó un candidato; no es una etiqueta observada ni se copia al dataset
   entrenable.
@@ -207,9 +207,12 @@ una sola vez. Cada fila seleccionada recibe:
 - `target_category` como procedencia de selección; y
 - metadatos de canal, consulta y rango de descubrimiento.
 
-`MAX_DIRECTED_CANDIDATES` limita la cohorte vigente. Este límite es independiente
-de `MAX_NEW_VIDEOS`: el primero controla el diseño muestral y el segundo controla
-las llamadas nuevas permitidas al adquirente.
+Con `MAX_DIRECTED_CANDIDATES=None`, la cohorte vigente conserva todos los
+candidatos dirigidos inéditos. Un entero permite hacer un piloto deliberado sin
+alterar el archivo acumulado. De forma análoga, `MAX_NEW_VIDEOS=None` incluye
+toda la cola pendiente en la adquisición; un entero es solo un límite opcional
+de prueba. El control ordinario de carga se realiza por lotes, no descartando
+candidatos.
 
 ## 9. Descubrimiento técnico con `yt-dlp`
 
@@ -231,18 +234,30 @@ como cola indiscriminada.
 
 ## 10. Adquisición de subtítulos
 
-Para cada video realmente pendiente:
+La implementación activa recupera la técnica que funcionaba en el cuaderno
+histórico. Para cada video realmente pendiente:
 
-1. `yt-dlp` obtiene los metadatos sin descargar contenido audiovisual;
-2. se inspeccionan subtítulos manuales y automáticos;
-3. se priorizan los idiomas `es-PE`, `es-419` y `es`;
-4. se prefiere el formato `json3`;
-5. la pista textual se solicita con timeout;
-6. se eliminan eventos vacíos y se materializan segmentos con inicio,
-   duración y texto;
-7. la respuesta se guarda atómicamente en caché; y
-8. al terminar el lote, las respuestas utilizables se incorporan una sola vez
-   al canónico mediante `video_id`.
+1. se crea un directorio temporal aislado;
+2. `yt-dlp` se ejecuta con `skip_download=True`, `writesubtitles=True` y
+   `writeautomaticsub=True`;
+3. se solicitan `es-PE`, `es-419` y `es` en formato WebVTT;
+4. `yt-dlp` gestiona la sesión HTTP, cabeceras, extracción, pausas y reintentos,
+   y escribe únicamente las pistas VTT; no se descarga audio ni video;
+5. el parser histórico materializa inicio, duración y texto, elimina marcas HTML
+   y eventos vacíos, y selecciona el VTT con mayor texto útil;
+6. si ningún VTT alcanza el umbral, `youtube-transcript-api` hace un último
+   intento en memoria, primero manual y luego automático [7];
+7. solo se acepta una transcripción con al menos
+   `MIN_TRANSCRIPT_CHARACTERS=200`; y
+8. el resultado se guarda atómicamente en la caché individual y después se
+   incorpora una sola vez al canónico mediante `video_id`.
+
+La versión anterior del flujo activo abría con `requests` la URL firmada de
+`youtube.com/api/timedtext` que había localizado `yt-dlp`. Esa separación no
+existía en el cuaderno histórico y podía perder parte del contexto HTTP que
+administra `yt-dlp`; además generaba una secuencia de solicitudes directas. Esa
+ruta fue retirada. Restaurar VTT reduce la regresión observada, aunque ninguna
+técnica puede garantizar que YouTube nunca responda 429.
 
 Cada registro canónico conserva `source_candidate`, `acquisition_status` y
 `transcript_sha256`. El hash se calcula sobre los segmentos serializados de
@@ -250,10 +265,22 @@ forma estable y permite detectar cambios posteriores.
 
 ## 11. Pausas, reintentos y cortacircuito HTTP 429
 
-Los controles `YT_SLEEP_MIN_SECONDS` y `YT_SLEEP_MAX_SECONDS` delimitan una pausa
-aleatoria antes de solicitar la pista textual. Los estados HTTP 429 y 5xx se
-reintentan con backoff exponencial acotado y se respeta `Retry-After` cuando está
-presente.
+La regulación ocurre en dos niveles:
+
+- `yt-dlp` recibe `sleep_interval=1`, `max_sleep_interval=3`,
+  `sleep_interval_requests=1` y `sleep_interval_subtitles=1`, además de tres
+  reintentos para extracción y descarga;
+- `ingest_incremental` procesa toda la cola en lotes de
+  `NETWORK_BATCH_SIZE=50` y espera `NETWORK_BATCH_PAUSE_SECONDS=20` antes del
+  lote siguiente.
+
+El lote cuenta solo llamadas nuevas: reutilizar caché o filtrar un `video_id`
+canónico no consume cupo ni provoca una pausa. La barra informa `lotes` y cambia
+temporalmente a `Pausa entre lotes`. Con `MAX_NEW_VIDEOS=None`, terminado el
+enfriamiento continúa con el siguiente lote hasta recorrer todos los candidatos.
+Antes de cada pausa, las filas completas acumuladas se anexan al canónico y se
+sincronizan a disco; la lista en memoria se vacía. Esto acota el uso de memoria y
+convierte cada lote en otro punto de reanudación.
 
 Si, después de los reintentos, una pista devuelve HTTP 429:
 
@@ -277,17 +304,19 @@ Los errores heterogéneos se reducen a motivos auditables:
 | `members_only` | Contenido exclusivo para miembros |
 | `unavailable_or_private` | Video privado, retirado o no disponible |
 | `no_spanish_subtitles` | No existe pista en los idiomas configurados |
+| `subtitle_too_short` | Existe texto, pero no alcanza los 200 caracteres exigidos |
 | `access_challenge` | YouTube solicita autenticación o verificación anti-bot |
 | `rate_limited` | HTTP 429 o límite de solicitudes |
 | `timeout` | Tiempo de espera agotado |
 | `scheduled_or_upcoming` | Estreno o video todavía no disponible |
 | `fetch_error` | Error no clasificado |
 
-Los fallos de fuentes de la última corrida se escriben en JSON. Los fallos de
-videos se deduplican mediante un `failure_id` derivado de `video_id` y motivo y
-se escriben al cierre del lote acotado. Una interrupción abrupta puede impedir
-el cierre del archivo de fallos, pero las transcripciones exitosas ya escritas
-en caché permanecen recuperables.
+Los fallos de fuentes de la última corrida se escriben en JSON. Cada fallo de
+video se deduplica mediante un `failure_id` derivado de `video_id` y motivo y se
+persiste inmediatamente, sin esperar el cierre de una corrida larga. Cada
+transcripción exitosa también se escribe de inmediato en su caché individual.
+Si hay una interrupción, la próxima ejecución reutiliza esos checkpoints y solo
+vuelve a recorrer lo que continúa pendiente.
 
 ## 13. Artefactos y trazabilidad
 
@@ -359,6 +388,8 @@ Las pruebas cubren:
 - selección de consultas y expansión de canales;
 - exclusión de videos ya procesados;
 - round-robin de la cohorte dirigida;
+- cobertura completa con pausas entre lotes;
+- descarga VTT por la ruta integrada de `yt-dlp` y umbral mínimo de integridad;
 - reinicio confirmado, acotado, recuperable e idempotente;
 - cortacircuito ante HTTP 429; y
 - presencia de los controles y llamadas relevantes en el cuaderno activo.
@@ -380,3 +411,5 @@ referencias coherente.
 [5] Y. Fairstein, O. Kalinsky, Z. Karnin, et al., "Class Balancing for Efficient Active Learning in Imbalanced Datasets," in *Proc. 18th Linguistic Annotation Workshop*, 2024, pp. 77–86, doi: 10.18653/v1/2024.law-1.8.
 
 [6] Y. Huang, B. Giledereli, A. Köksal, et al., "Balancing Methods for Multi-label Text Classification with Long-Tailed Class Distribution," in *Proc. EMNLP*, 2021, pp. 8153–8161, doi: 10.18653/v1/2021.emnlp-main.643.
+
+[7] J. Depoix and contributors, "YouTube Transcript API: Python API for Retrieving YouTube Transcripts and Subtitles," GitHub repository, 2026. [Online]. Available: https://github.com/jdepoix/youtube-transcript-api. Accessed: Aug. 6, 2026.

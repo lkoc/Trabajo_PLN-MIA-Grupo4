@@ -4,6 +4,7 @@ import csv
 import html
 import json
 import math
+import os
 import re
 import shutil
 import tempfile
@@ -1151,6 +1152,22 @@ def _failure_record(candidate: dict[str, Any], error: BaseException) -> dict[str
     }
 
 
+def _append_jsonl_checkpoint(path: str | Path, rows: Iterable[dict[str, Any]]) -> int:
+    """Anexa filas ya deduplicadas y fuerza su persistencia antes de continuar."""
+
+    materialized = list(rows)
+    if not materialized:
+        return 0
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("a", encoding="utf-8", newline="\n") as handle:
+        for row in materialized:
+            handle.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+    return len(materialized)
+
+
 def ingest_incremental(
     candidates: Iterable[dict[str, Any]],
     canonical_path: str | Path,
@@ -1184,6 +1201,12 @@ def ingest_incremental(
     cache.mkdir(parents=True, exist_ok=True)
     processed = processed_video_ids(canonical)
     output: list[dict[str, Any]] = []
+    checkpoint_size = network_batch_size or 50
+    failure_ids = (
+        {str(row.get("failure_id")) for row in read_jsonl(failure_path)}
+        if failure_path is not None and Path(failure_path).exists()
+        else set()
+    )
     fetch_attempts = 0
     counters = {
         "already_canonical": 0,
@@ -1196,10 +1219,18 @@ def ingest_incremental(
         "rate_limit_circuit_open": 0,
         "batch_pauses": 0,
         "unavailable": 0,
+        "added": 0,
+        "skipped_duplicate": 0,
         "failure_records_added": 0,
         "failure_records_existing": 0,
     }
     rate_limit_open = False
+
+    def flush_output() -> None:
+        if not output:
+            return
+        counters["added"] += _append_jsonl_checkpoint(canonical, output)
+        output.clear()
 
     def notify(video_id: str, status: str, *, advance: int = 1) -> None:
         if progress_callback is not None:
@@ -1239,6 +1270,7 @@ def ingest_incremental(
                 and fetch_attempts
                 and fetch_attempts % network_batch_size == 0
             ):
+                flush_output()
                 counters["batch_pauses"] += 1
                 notify(video_id, "batch_pause", advance=0)
                 if batch_pause_seconds:
@@ -1251,11 +1283,12 @@ def ingest_incremental(
                 counters["failed"] += 1
                 failure = _failure_record(candidate, exc)
                 if failure_path is not None:
-                    failure_added, failure_skipped = append_jsonl_once(
-                        failure_path, [failure], id_field="failure_id"
-                    )
-                    counters["failure_records_added"] += failure_added
-                    counters["failure_records_existing"] += failure_skipped
+                    if failure["failure_id"] in failure_ids:
+                        counters["failure_records_existing"] += 1
+                    else:
+                        _append_jsonl_checkpoint(failure_path, [failure])
+                        failure_ids.add(failure["failure_id"])
+                        counters["failure_records_added"] += 1
                 failure_counter = f"failure_{failure['failure_kind']}"
                 counters[failure_counter] = counters.get(failure_counter, 0) + 1
                 if halt_on_rate_limit and failure["failure_kind"] == "rate_limited":
@@ -1280,8 +1313,9 @@ def ingest_incremental(
             json.dumps(record.get("segments", []), ensure_ascii=False, sort_keys=True)
         )
         output.append(record)
+        processed.add(video_id)
+        if len(output) >= checkpoint_size:
+            flush_output()
         notify(video_id, completion_status)
-    added, skipped = append_jsonl_once(canonical, output, id_field="video_id")
-    counters["added"] = added
-    counters["skipped_duplicate"] = skipped
+    flush_output()
     return counters

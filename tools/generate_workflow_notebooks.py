@@ -155,7 +155,7 @@ DISCOVERY_MODE = "seed"       # "seed", "directed" o "both"
 
 MAX_NEW_VIDEOS = None         # None: incluye todos los pendientes; use un entero para un piloto
 NETWORK_BATCH_SIZE = 50       # llamadas nuevas por lote antes de una pausa larga
-NETWORK_BATCH_PAUSE_SECONDS = 60.0
+NETWORK_BATCH_PAUSE_SECONDS = 20.0
 MAX_VIDEOS_PER_CHANNEL = 75   # candidatos recientes inspeccionados por canal
 MAX_RESULTS_PER_QUERY = 30    # candidatos inspeccionados por consulta dirigida
 MAX_DIRECTED_CANDIDATES = None # None: conserva toda la cohorte dirigida inédita
@@ -691,7 +691,9 @@ def main() -> None:
         "flujo/01_datos/01_01_scraping_incremental.ipynb",
         "01.01 · Adquisición incremental de subtítulos",
         "Reutiliza transcripciones canónicas y cachés por `video_id`; solo consulta YouTube para candidatos nuevos y nunca descarga audio o video.",
-        "La adquisición nueva usa `yt-dlp` para localizar pistas de subtítulos [@ytdlp2026]. "
+        "La adquisición nueva usa `yt-dlp` para escribir pistas VTT sin descargar audio ni video "
+        "[@ytdlp2026], y conserva `youtube-transcript-api` únicamente como respaldo cuando la vía "
+        "principal no produce una transcripción íntegra [@depoix2026transcript]. "
         "Las transcripciones automáticas se conservan como insumo imperfecto, no como verdad textual, "
         "porque se han documentado sesgos de dialecto y género en el subtitulado automático de YouTube "
         "[@tatman2017captions]. Toda ampliación debe respetar los términos de la plataforma "

@@ -20,6 +20,11 @@ REFERENCE_LIBRARY = {
         "GitHub repository, 2026. [Online]. Available: https://github.com/yt-dlp/yt-dlp. "
         "Accessed: Aug. 5, 2026."
     ),
+    "depoix2026transcript": (
+        "J. Depoix and contributors, \"YouTube Transcript API: Python API for Retrieving "
+        "YouTube Transcripts and Subtitles,\" GitHub repository, 2026. [Online]. Available: "
+        "https://github.com/jdepoix/youtube-transcript-api. Accessed: Aug. 6, 2026."
+    ),
     "youtube2023terms": (
         "YouTube, \"Terms of Service,\" Nov. 2023. [Online]. Available: "
         "https://www.youtube.com/t/terms. Accessed: Aug. 5, 2026."

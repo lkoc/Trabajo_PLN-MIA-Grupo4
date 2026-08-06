@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sys
 from collections import Counter
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -14,6 +15,7 @@ from moderacion_peru.acquisition import (
     classify_acquisition_error,
     discover_youtube_candidates,
     expand_directed_channel_sources,
+    fetch_youtube_subtitles,
     ingest_incremental,
     load_candidates,
     normalize_category_metadata,
@@ -306,6 +308,93 @@ def test_new_video_limit_counts_network_attempts_and_defers_remainder(tmp_path):
     assert stats["deferred_by_limit"] == 1
 
 
+def test_network_batches_cover_all_candidates_and_pause_between_batches(tmp_path, monkeypatch):
+    candidates = [{"video_id": f"v{index}"} for index in range(5)]
+    fetched = []
+    pauses = []
+    progress = []
+    checkpoint_sizes = []
+    canonical = tmp_path / "transcripts.jsonl"
+
+    def fetcher(candidate):
+        fetched.append(candidate["video_id"])
+        return {
+            "video_id": candidate["video_id"],
+            "segments": [{"start": 0.0, "duration": 1.0, "text": "texto"}],
+        }
+
+    monkeypatch.setattr("moderacion_peru.acquisition.time.sleep", pauses.append)
+
+    def report(event):
+        progress.append(event)
+        if event["status"] == "batch_pause":
+            checkpoint_sizes.append(len(list(read_jsonl(canonical))))
+
+    stats = ingest_incremental(
+        candidates,
+        canonical,
+        tmp_path / "cache",
+        fetcher=fetcher,
+        max_new_videos=None,
+        network_batch_size=2,
+        batch_pause_seconds=30,
+        progress_callback=report,
+    )
+
+    assert fetched == ["v0", "v1", "v2", "v3", "v4"]
+    assert pauses == [30, 30]
+    assert stats["fetched"] == 5
+    assert stats["batch_pauses"] == 2
+    assert stats["deferred_by_limit"] == 0
+    assert checkpoint_sizes == [2, 4]
+    assert [event["advance"] for event in progress if event["status"] == "batch_pause"] == [0, 0]
+
+
+def test_subtitle_fetch_restores_historical_ytdlp_vtt_route(monkeypatch):
+    captured = {}
+
+    class FakeYoutubeDL:
+        def __init__(self, options):
+            captured.update(options)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def extract_info(self, url, download=False):
+            assert download is True
+            path = Path(captured["outtmpl"].replace("%(ext)s", "es.vtt"))
+            path.write_text(
+                "WEBVTT\n\n00:00:00.000 --> 00:00:03.000\n"
+                "Esta es una transcripción suficientemente extensa para la prueba.\n",
+                encoding="utf-8",
+            )
+            return {
+                "title": "Video uno",
+                "channel_id": "canal-1",
+                "subtitles": {"es": [{"ext": "vtt"}]},
+            }
+
+    monkeypatch.setitem(sys.modules, "yt_dlp", SimpleNamespace(YoutubeDL=FakeYoutubeDL))
+    record = fetch_youtube_subtitles(
+        {"video_id": "v1", "url": "https://youtube.invalid/v1"},
+        sleep_min_seconds=0,
+        sleep_max_seconds=0,
+        minimum_transcript_characters=20,
+        use_transcript_api_fallback=False,
+    )
+
+    assert captured["skip_download"] is True
+    assert captured["writesubtitles"] is True
+    assert captured["writeautomaticsub"] is True
+    assert captured["subtitlesformat"] == "vtt"
+    assert captured["sleep_interval_requests"] == 0
+    assert record["subtitle_source"] == "manual-yt-dlp-vtt"
+    assert record["segments"][0]["text"].startswith("Esta es una transcripción")
+
+
 def test_rate_limit_opens_circuit_and_defers_remaining_network_calls(tmp_path):
     candidates = [{"video_id": value} for value in ("v1", "v2", "v3")]
     attempted = []
@@ -332,6 +421,9 @@ def test_acquisition_error_categories_cover_expected_youtube_failures():
     assert classify_acquisition_error(RuntimeError("members-only content")) == "members_only"
     assert classify_acquisition_error(RuntimeError("video unavailable")) == "unavailable_or_private"
     assert classify_acquisition_error(RuntimeError("no tiene subtítulos")) == "no_spanish_subtitles"
+    assert classify_acquisition_error(RuntimeError("subtítulos insuficientes")) == (
+        "subtitle_too_short"
+    )
     assert classify_acquisition_error(RuntimeError("HTTP Error 404: Not Found")) == (
         "stale_channel_or_no_videos_tab"
     )

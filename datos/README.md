@@ -12,7 +12,7 @@
 
 Las nuevas corridas usan `raw/` para candidatos, caché por video y transcripciones; `processed/` para chunks deterministas; `etiquetado/` para salidas append-only; y `model_ready/v2/` para snapshots inmutables agrupados por `video_id`.
 
-El scraping reutiliza primero los `video_id` ya canónicos y luego el caché local. Solo consulta subtítulos para candidatos nuevos. La migración v2 materializa `SEGURO` únicamente desde una decisión segura explícita; una lista histórica vacía se deriva a revisión.
+El scraping reutiliza primero los `video_id` ya canónicos y luego el caché local. Solo consulta subtítulos para candidatos nuevos: `yt-dlp` escribe VTT sin audio/video, se exige un mínimo de 200 caracteres y toda la cola se recorre en lotes de 50 con una pausa de 20 segundos. Los JSON de caché y el registro inmediato de fallos permiten reanudar. La migración v2 materializa `SEGURO` únicamente desde una decisión segura explícita; una lista histórica vacía se deriva a revisión.
 
 ## Documentación de la estructura anterior
 
