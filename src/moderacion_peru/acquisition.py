@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import csv
+import html
 import json
 import math
-import random
+import re
 import shutil
+import tempfile
 import time
 from collections import defaultdict, deque
 from datetime import datetime, timezone
@@ -17,6 +19,7 @@ from .io import append_jsonl_once, read_jsonl, sha256_text, write_json_atomic
 TranscriptFetcher = Callable[[dict[str, Any]], dict[str, Any]]
 ProgressCallback = Callable[[dict[str, Any]], None]
 DEFAULT_SUBTITLE_LANGUAGES = ("es-PE", "es-419", "es")
+DEFAULT_MIN_TRANSCRIPT_CHARACTERS = 200
 DEFAULT_DAMAGE_LABELS = (
     "RACISMO_DISCRIMINACION",
     "ATAQUE_POR_GENERO_IDENTIDAD",
@@ -450,11 +453,11 @@ def select_directed_candidates(
     processed_ids: Iterable[str],
     plan: dict[str, Any],
     *,
-    max_candidates: int = 500,
+    max_candidates: int | None = 500,
 ) -> list[dict[str, Any]]:
     """Crea una cohorte inédita con round-robin ponderado por déficit."""
 
-    if max_candidates < 0:
+    if max_candidates is not None and max_candidates < 0:
         raise ValueError("max_candidates no puede ser negativo")
     if max_candidates == 0:
         return []
@@ -495,7 +498,7 @@ def select_directed_candidates(
     credits = {label: 0.0 for label in active}
     selected: list[dict[str, Any]] = []
     selected_ids: set[str] = set()
-    while active and len(selected) < max_candidates:
+    while active and (max_candidates is None or len(selected) < max_candidates):
         for label in active:
             credits[label] += weights[label]
         label = max(active, key=lambda item: (credits[item], -labels.index(item)))
@@ -666,8 +669,18 @@ def _youtube_options(
         "no_warnings": True,
         "retries": retries,
         "extractor_retries": retries,
+        "fragment_retries": retries,
         "sleep_interval": sleep_min_seconds,
         "max_sleep_interval": sleep_max_seconds,
+        "sleep_interval_requests": sleep_min_seconds,
+        "sleep_interval_subtitles": sleep_min_seconds,
+        "http_headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            )
+        },
     }
 
 
@@ -709,6 +722,8 @@ def classify_acquisition_error(error: BaseException) -> str:
         return "members_only"
     if "private video" in message or "video unavailable" in message or "not available" in message:
         return "unavailable_or_private"
+    if "subtítulos insuficientes" in message or "subtitulos insuficientes" in message:
+        return "subtitle_too_short"
     if "no tiene subt" in message or "no subtitles" in message:
         return "no_spanish_subtitles"
     if "sign in to confirm" in message or "not a bot" in message:
@@ -905,6 +920,86 @@ def discover_youtube_candidates(
     return list(candidates_by_id.values()), failures
 
 
+_VTT_TIMING = re.compile(
+    r"(?P<start>(?:\d{2,}:)?\d{2}:\d{2}[.,]\d{3})\s+-->\s+"
+    r"(?P<end>(?:\d{2,}:)?\d{2}:\d{2}[.,]\d{3})"
+)
+
+
+def _vtt_seconds(value: str) -> float:
+    parts = [float(part) for part in value.replace(",", ".").split(":")]
+    if len(parts) == 3:
+        hours, minutes, seconds = parts
+    else:
+        hours, minutes, seconds = 0.0, parts[0], parts[1]
+    return hours * 3600 + minutes * 60 + seconds
+
+
+def _read_vtt_segments(path: Path) -> list[dict[str, Any]]:
+    """Lee el VTT producido por yt-dlp con el contrato del cuaderno histórico."""
+
+    content = path.read_text(encoding="utf-8", errors="ignore").replace("\r\n", "\n")
+    segments: list[dict[str, Any]] = []
+    seen: set[tuple[float, str]] = set()
+    for block in re.split(r"\n\s*\n", content):
+        lines = [line.strip() for line in block.splitlines() if line.strip()]
+        timing_index = next(
+            (index for index, line in enumerate(lines) if _VTT_TIMING.search(line)),
+            None,
+        )
+        if timing_index is None:
+            continue
+        timing = _VTT_TIMING.search(lines[timing_index])
+        if timing is None:
+            continue
+        start = _vtt_seconds(timing.group("start"))
+        end = _vtt_seconds(timing.group("end"))
+        text = " ".join(lines[timing_index + 1 :])
+        text = html.unescape(re.sub(r"<[^>]+>", "", text))
+        text = re.sub(r"\s+", " ", text).strip()
+        key = (round(start, 1), text.casefold())
+        if text and key not in seen:
+            seen.add(key)
+            segments.append(
+                {"start": start, "duration": max(end - start, 0.1), "text": text}
+            )
+    return segments
+
+
+def _transcript_characters(segments: Iterable[dict[str, Any]]) -> int:
+    text = " ".join(str(segment.get("text") or "").strip() for segment in segments)
+    return len(text.strip())
+
+
+def _transcript_api_fallback(
+    video_id: str,
+    languages: tuple[str, ...],
+) -> tuple[list[dict[str, Any]], str | None, str]:
+    """Último respaldo histórico; no usa API key ni descarga audio/video."""
+
+    from requests import Session
+    from youtube_transcript_api import NoTranscriptFound, YouTubeTranscriptApi
+
+    session = Session()
+    session.headers.update(_youtube_options()["http_headers"])
+    transcript_list = YouTubeTranscriptApi(http_client=session).list(video_id)
+    try:
+        transcript = transcript_list.find_manually_created_transcript(list(languages))
+    except NoTranscriptFound:
+        transcript = transcript_list.find_generated_transcript(list(languages))
+    segments = [
+        {
+            "start": float(row.get("start", 0.0)),
+            "duration": max(float(row.get("duration", 0.0)), 0.0),
+            "text": str(row.get("text") or "").strip(),
+        }
+        for row in transcript.fetch().to_raw_data()
+        if str(row.get("text") or "").strip()
+    ]
+    source = "automatic-transcript-api" if transcript.is_generated else "manual-transcript-api"
+    return segments, transcript.language_code, source
+
+
 def fetch_youtube_subtitles(
     candidate: dict[str, Any],
     *,
@@ -912,11 +1007,12 @@ def fetch_youtube_subtitles(
     retries: int = 3,
     sleep_min_seconds: float = 1.0,
     sleep_max_seconds: float = 3.0,
+    minimum_transcript_characters: int = DEFAULT_MIN_TRANSCRIPT_CHARACTERS,
+    use_transcript_api_fallback: bool = True,
 ) -> dict[str, Any]:
-    """Descarga únicamente subtítulos; nunca descarga el video ni el audio."""
+    """Descarga solo VTT mediante yt-dlp, como el cuaderno histórico."""
 
     try:
-        import requests
         import yt_dlp
     except ImportError as exc:
         raise RuntimeError("Instale moderacion-peru[datos] para adquirir subtítulos nuevos") from exc
@@ -925,72 +1021,99 @@ def fetch_youtube_subtitles(
     language_priority = tuple(dict.fromkeys(str(value) for value in languages if str(value).strip()))
     if not language_priority:
         raise ValueError("Se requiere al menos un idioma de subtítulos")
-    options = _youtube_options(
-        retries=retries,
-        sleep_min_seconds=sleep_min_seconds,
-        sleep_max_seconds=sleep_max_seconds,
-    )
-    options["noplaylist"] = True
-    options["logger"] = _QuietYtDlpLogger()
-    with yt_dlp.YoutubeDL(options) as downloader:
-        info = downloader.extract_info(url, download=False)
-    tracks = info.get("subtitles", {}) or {}
-    automatic = info.get("automatic_captions", {}) or {}
-    manual_language = next((language for language in language_priority if tracks.get(language)), None)
-    automatic_language = next(
-        (language for language in language_priority if automatic.get(language)), None
-    )
-    selected_language = manual_language or automatic_language
-    variants = tracks.get(selected_language) if manual_language else automatic.get(selected_language)
-    if not variants:
-        raise RuntimeError(f"{video_id} no tiene subtítulos en los idiomas {language_priority}")
-    selected = next((item for item in variants if item.get("ext") == "json3"), variants[0])
-    response = None
-    for attempt in range(retries + 1):
-        if sleep_max_seconds:
-            time.sleep(random.uniform(sleep_min_seconds, sleep_max_seconds))
-        response = requests.get(selected["url"], timeout=60)
-        retryable = response.status_code == 429 or 500 <= response.status_code < 600
-        if not retryable or attempt >= retries:
-            response.raise_for_status()
-            break
-        retry_after = response.headers.get("Retry-After")
-        try:
-            backoff = float(retry_after) if retry_after else max(sleep_min_seconds, 1.0) * (2**attempt)
-        except ValueError:
-            backoff = max(sleep_min_seconds, 1.0) * (2**attempt)
-        time.sleep(min(backoff, 60.0))
-    if response is None:
-        raise RuntimeError(f"No se obtuvo la pista de subtítulos para {video_id}")
-    if selected.get("ext") != "json3":
-        raise RuntimeError(
-            f"Formato de subtítulo no compatible para {video_id}: {selected.get('ext')}"
+    if minimum_transcript_characters < 1:
+        raise ValueError("minimum_transcript_characters debe ser positivo")
+
+    info: dict[str, Any] = {}
+    primary_error: BaseException | None = None
+    best_segments: list[dict[str, Any]] = []
+    selected_language: str | None = None
+    subtitle_source = "yt-dlp-vtt"
+    with tempfile.TemporaryDirectory(prefix="moderacion_peru_subtitles_") as temp_dir:
+        options = _youtube_options(
+            retries=retries,
+            sleep_min_seconds=sleep_min_seconds,
+            sleep_max_seconds=sleep_max_seconds,
         )
-    payload = response.json()
-    segments = []
-    for event in payload.get("events", []):
-        text = "".join(segment.get("utf8", "") for segment in event.get("segs", []))
-        text = text.replace("\n", " ").strip()
-        if not text:
-            continue
-        segments.append(
+        options.update(
             {
-                "start": float(event.get("tStartMs", 0)) / 1000,
-                "duration": float(event.get("dDurationMs", 0)) / 1000,
-                "text": text,
+                "noplaylist": True,
+                "logger": _QuietYtDlpLogger(),
+                "writesubtitles": True,
+                "writeautomaticsub": True,
+                "subtitleslangs": list(language_priority),
+                "subtitlesformat": "vtt",
+                "outtmpl": str(Path(temp_dir) / f"{video_id}.%(ext)s"),
             }
         )
-    if not segments:
-        raise RuntimeError(f"{video_id} devolvió subtítulos vacíos")
+        try:
+            with yt_dlp.YoutubeDL(options) as downloader:
+                info = downloader.extract_info(url, download=True) or {}
+        except Exception as exc:
+            if classify_acquisition_error(exc) == "rate_limited":
+                raise
+            primary_error = exc
+
+        scored_tracks: list[tuple[int, list[dict[str, Any]], Path]] = []
+        for path in Path(temp_dir).glob("*.vtt"):
+            segments = _read_vtt_segments(path)
+            scored_tracks.append((_transcript_characters(segments), segments, path))
+        if scored_tracks:
+            _, best_segments, best_path = max(scored_tracks, key=lambda item: item[0])
+            selected_language = next(
+                (
+                    language
+                    for language in language_priority
+                    if f".{language}." in best_path.name
+                ),
+                None,
+            )
+            manual_tracks = info.get("subtitles", {}) or {}
+            automatic_tracks = info.get("automatic_captions", {}) or {}
+            if selected_language and manual_tracks.get(selected_language):
+                subtitle_source = "manual-yt-dlp-vtt"
+            elif selected_language and automatic_tracks.get(selected_language):
+                subtitle_source = "automatic-yt-dlp-vtt"
+
+    fallback_error: BaseException | None = None
+    if (
+        use_transcript_api_fallback
+        and _transcript_characters(best_segments) < minimum_transcript_characters
+    ):
+        try:
+            fallback_segments, fallback_language, fallback_source = _transcript_api_fallback(
+                video_id, language_priority
+            )
+            if _transcript_characters(fallback_segments) > _transcript_characters(best_segments):
+                best_segments = fallback_segments
+                selected_language = fallback_language
+                subtitle_source = fallback_source
+        except Exception as exc:
+            if classify_acquisition_error(exc) == "rate_limited":
+                raise
+            fallback_error = exc
+
+    character_count = _transcript_characters(best_segments)
+    if character_count < minimum_transcript_characters:
+        if primary_error is not None:
+            detail = f"; fallback: {fallback_error}" if fallback_error is not None else ""
+            raise RuntimeError(f"yt-dlp no pudo obtener subtítulos de {video_id}: {primary_error}{detail}")
+        if character_count:
+            raise RuntimeError(
+                f"{video_id} devolvió subtítulos insuficientes: "
+                f"{character_count} < {minimum_transcript_characters} caracteres"
+            )
+        raise RuntimeError(f"{video_id} no tiene subtítulos en los idiomas {language_priority}")
+
     return {
         "video_id": video_id,
         "url": url,
-        "title": info.get("title"),
-        "channel_id": info.get("channel_id"),
-        "channel": info.get("channel"),
+        "title": info.get("title") or candidate.get("title"),
+        "channel_id": info.get("channel_id") or candidate.get("channel_id"),
+        "channel": info.get("channel") or candidate.get("channel_title"),
         "language": selected_language,
-        "subtitle_source": "manual" if manual_language else "automatic",
-        "segments": segments,
+        "subtitle_source": subtitle_source,
+        "segments": best_segments,
     }
 
 
@@ -1036,25 +1159,31 @@ def ingest_incremental(
     fetcher: TranscriptFetcher | None = None,
     failure_path: str | Path | None = None,
     max_new_videos: int | None = None,
+    network_batch_size: int | None = None,
+    batch_pause_seconds: float = 0.0,
     stop_on_error: bool = False,
     halt_on_rate_limit: bool = True,
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, int]:
     """Reutiliza corpus/caché y aísla los fallos de cada video nuevo.
 
-    ``max_new_videos`` limita las llamadas de red al ``fetcher``; no limita la
-    reutilización de caché. Con ``stop_on_error=False`` (predeterminado), un
-    video inaccesible se registra y no detiene los candidatos posteriores.
+    ``max_new_videos=None`` incluye toda la cola. ``network_batch_size`` agrega
+    una pausa entre lotes de llamadas nuevas sin afectar la reutilización de
+    caché. Con ``stop_on_error=False`` (predeterminado), un video inaccesible se
+    registra y no detiene los candidatos posteriores.
     """
 
     if max_new_videos is not None and max_new_videos < 0:
         raise ValueError("max_new_videos no puede ser negativo")
+    if network_batch_size is not None and network_batch_size < 1:
+        raise ValueError("network_batch_size debe ser positivo o None")
+    if batch_pause_seconds < 0:
+        raise ValueError("batch_pause_seconds no puede ser negativo")
     canonical = Path(canonical_path)
     cache = Path(cache_dir)
     cache.mkdir(parents=True, exist_ok=True)
     processed = processed_video_ids(canonical)
     output: list[dict[str, Any]] = []
-    failures: list[dict[str, Any]] = []
     fetch_attempts = 0
     counters = {
         "already_canonical": 0,
@@ -1065,17 +1194,21 @@ def ingest_incremental(
         "deferred_by_limit": 0,
         "deferred_rate_limit": 0,
         "rate_limit_circuit_open": 0,
+        "batch_pauses": 0,
         "unavailable": 0,
+        "failure_records_added": 0,
+        "failure_records_existing": 0,
     }
     rate_limit_open = False
 
-    def notify(video_id: str, status: str) -> None:
+    def notify(video_id: str, status: str, *, advance: int = 1) -> None:
         if progress_callback is not None:
             progress_callback(
                 {
                     "phase": "acquisition",
                     "video_id": video_id,
                     "status": status,
+                    "advance": advance,
                     "counters": dict(counters),
                 }
             )
@@ -1101,6 +1234,15 @@ def ingest_incremental(
                 counters["deferred_by_limit"] += 1
                 notify(video_id, "deferred_by_limit")
                 continue
+            if (
+                network_batch_size is not None
+                and fetch_attempts
+                and fetch_attempts % network_batch_size == 0
+            ):
+                counters["batch_pauses"] += 1
+                notify(video_id, "batch_pause", advance=0)
+                if batch_pause_seconds:
+                    time.sleep(batch_pause_seconds)
             fetch_attempts += 1
             counters["fetch_attempted"] += 1
             try:
@@ -1108,7 +1250,12 @@ def ingest_incremental(
             except Exception as exc:
                 counters["failed"] += 1
                 failure = _failure_record(candidate, exc)
-                failures.append(failure)
+                if failure_path is not None:
+                    failure_added, failure_skipped = append_jsonl_once(
+                        failure_path, [failure], id_field="failure_id"
+                    )
+                    counters["failure_records_added"] += failure_added
+                    counters["failure_records_existing"] += failure_skipped
                 failure_counter = f"failure_{failure['failure_kind']}"
                 counters[failure_counter] = counters.get(failure_counter, 0) + 1
                 if halt_on_rate_limit and failure["failure_kind"] == "rate_limited":
@@ -1137,13 +1284,4 @@ def ingest_incremental(
     added, skipped = append_jsonl_once(canonical, output, id_field="video_id")
     counters["added"] = added
     counters["skipped_duplicate"] = skipped
-    if failure_path is not None and failures:
-        failure_added, failure_skipped = append_jsonl_once(
-            failure_path, failures, id_field="failure_id"
-        )
-        counters["failure_records_added"] = failure_added
-        counters["failure_records_existing"] = failure_skipped
-    else:
-        counters["failure_records_added"] = 0
-        counters["failure_records_existing"] = 0
     return counters
