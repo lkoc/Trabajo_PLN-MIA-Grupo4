@@ -21,11 +21,16 @@ fallos y manifiestos también se sincronizan; `raw/transcripts_cache/` no. Tras 
 `python tools/restore_synced_checkpoints.py` recompone el canónico y restaura
 las entradas comprimidas del bundle sin repetir descargas.
 
-`processed/chunks_v2.jsonl` es determinista y barato de regenerar con `01_02`;
+`processed/chunks_v2.jsonl` es determinista y barato de regenerar con `01_03`;
 solo se conserva comprimido dentro del bundle para Colab. El dataset final no
 es barato de recrear porque contiene decisiones humanas y pseudoetiquetado con
 procedencia: se sincroniza como `resultados/colab_bundle/dataset_5_salidas.jsonl.gz`
 y los cuadernos de entrenamiento verifican su SHA-256 antes de usarlo.
+
+La longitud activa está declarada en `config/chunking.json`. El identificador
+del chunk incorpora la firma completa de esa configuración. Si se cambia desde
+`01_02`, los derivados de la firma anterior se archivan localmente sin borrarse;
+al volver a una longitud ya usada se restauran con verificación SHA-256.
 
 ## Documentación de la estructura anterior
 

@@ -5,7 +5,7 @@ Fecha: 2026-08-06
 
 ## Alcance y criterio
 
-Se revisaron los 16 cuadernos activos de `flujo/`. Se aplicó la guía local
+Se revisaron los 17 cuadernos activos de `flujo/`. Se aplicó la guía local
 [`evidencia-citas-y-bibliografia.md`](../Guias_generales/redactar-articulo-ieee-y-presentacion/references/evidencia-citas-y-bibliografia.md):
 
 - cita IEEE numérica junto a la afirmación que respalda;
@@ -25,7 +25,8 @@ cuaderno materializa una lista independiente numerada por primera aparición.
 | Cuaderno | Entradas en la celda final |
 |---|---:|
 | `01_01_scraping_incremental.ipynb` | 7 |
-| `01_02_limpieza_troceado_incremental.ipynb` | 2 |
+| `01_02_optimizacion_longitud_chunks.ipynb` | 3 |
+| `01_03_limpieza_troceado_incremental.ipynb` | 2 |
 | `02_01_etiquetado_local_ollama.ipynb` | 7 |
 | `02_02_etiquetado_remoto.ipynb` | 2 |
 | `02_03_revision_llm_dirigida.ipynb` | 4 |
@@ -40,9 +41,9 @@ cuaderno materializa una lista independiente numerada por primera aparición.
 | `03_07_comparacion_final.ipynb` | 5 |
 | `03_08_auditoria_finas_flags.ipynb` | 10 |
 | `04_01_frontend_produccion.ipynb` | 5 |
-| **Total materializado** | **86** |
+| **Total materializado** | **89** |
 
-El total corresponde a 86 entradas materializadas en 16 bibliografías y 59
+El total corresponde a 89 entradas materializadas en 17 bibliografías y 59
 claves únicas de la bibliografía maestra. Una misma fuente puede reaparecer en
 cuadernos distintos cuando sustenta componentes distintos del flujo.
 
@@ -51,7 +52,8 @@ cuadernos distintos cuando sustenta componentes distintos del flujo.
 - Adquisición: `yt-dlp`, fallback de transcripciones, términos de plataforma,
   ética y sesgo del subtitulado automático.
 - Preparación: Unicode NFKC y SHA-256; ventanas y deduplicación declaradas
-  como configuración local.
+  como configuración local. La elección de longitud separa validation de test,
+  cita AP para desbalance y reutiliza la implementación clásica documentada.
 - Etiquetado: documentación oficial de Ollama, DeepSeek, Qwen y Colab, junto
   con evidencia sobre anotación asistida, anclaje, contexto y acuerdo.
 - Entrenamiento: fuente fundacional de cada familia realmente nombrada,
@@ -73,7 +75,7 @@ python -m pytest
 python tools/audit_project.py
 ```
 
-Resultado: 50 pruebas aprobadas; 16/16 cuadernos con celda final; 85/85
+Resultado: 70 pruebas aprobadas; 17/17 cuadernos con celda final; 89/89
 entradas numeradas y citadas; cero claves ausentes en `referencias.bib`, cero
 entradas finales sin uso, cero números discontinuos y cero incidencias del
 auditor del proyecto.

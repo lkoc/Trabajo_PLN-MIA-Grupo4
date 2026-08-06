@@ -799,17 +799,104 @@ def main() -> None:
         ],
     )
     create(
-        "flujo/01_datos/01_02_limpieza_troceado_incremental.ipynb",
-        "01.02 · Limpieza y troceado incremental",
-        "Crea chunks deterministas únicamente para transcripciones nuevas o modificadas y conserva la versión del troceador.",
+        "flujo/01_datos/01_02_optimizacion_longitud_chunks.ipynb",
+        "01.02 · Piloto opcional de longitud de chunks",
+        "Compara localmente ventanas de 15, 20, 25, 30 y 35 segundos con dos baselines CPU y permite elegir la longitud manualmente o aceptar una recomendación no productiva.",
+        "La selección de hiperparámetros usa exclusivamente `validation`; consultar `test` para elegir "
+        "introduciría sesgo de selección [@cawley2010selection]. Se promedia *average precision* de los "
+        "cuatro daños por ser una medida informativa ante desbalance [@saito2015pr]. ComplementNB y SGD "
+        "con TF-IDF reutilizan el mismo entrenador de los cuadernos posteriores y la implementación de "
+        "scikit-learn [@pedregosa2011sklearn]. La transferencia de etiquetas por mayor solapamiento "
+        "temporal, la muestra enriquecida, la tolerancia absoluta de 0.02 AP y el proxy de costo "
+        "`filas_train × modelos` son decisiones metodológicas locales. El resultado es orientativo, no "
+        "una estimación productiva; `test` se muestra solo después y nunca participa en la recomendación.",
+        [
+            (
+                "Controles opcionales y elección manual",
+                "RUN_CHUNK_LENGTH_SMOKE_TEST=False\n"
+                "RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=False\n"
+                "CANDIDATE_SECONDS=(15,20,25,30,35)\n"
+                "TOY_MODELS=('complement_nb','sgd_incremental')\n"
+                "TOY_VIDEO_LIMITS={'train':40,'validation':16,'test':16}\n"
+                "TOY_MAX_FEATURES=12000\n"
+                "CONFIRMATORY_MODELS=('complement_nb','logistic_regression','sgd_incremental')\n"
+                "CONFIRMATORY_VIDEO_LIMITS={'train':200,'validation':80,'test':80}\n"
+                "CONFIRMATORY_SEEDS=(20260805,20260817,20260829)\n"
+                "CONFIRMATORY_MAX_FEATURES=20000\n"
+                "MAX_VALIDATION_AP_DROP=0.02\n"
+                "MANUAL_CHUNK_SECONDS=30.0  # Puede elegirse cualquier valor positivo\n"
+                "USE_SMOKE_RECOMMENDATION=False\n"
+                "USE_CONFIRMATORY_RECOMMENDATION=False\n"
+                "APPLY_CHUNK_SELECTION=False  # Si es False, no mueve ningún dataset\n"
+                "from moderacion_peru.colab import prepare_local_bundle_input\n"
+                "from moderacion_peru.chunk_optimization import activate_chunking_configuration, run_chunk_length_confirmatory_test, run_chunk_length_smoke_test\n"
+                "from moderacion_peru.incremental import DEFAULT_CHUNKING_CONFIGURATION\n"
+                "import json\n"
+                "TRANSCRIPTS=ROOT/'datos/raw/transcripts_raw.jsonl'\n"
+                "CHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\n"
+                "DATASET_CHECKPOINT=prepare_local_bundle_input('dataset_5_salidas',project_root=ROOT)\n"
+                "DATASET=Path(DATASET_CHECKPOINT['path'])\n"
+                "PILOT_ROOT=ROOT/'resultados/pilotos/chunk_length'\n"
+                "RECOMMENDATION=PILOT_ROOT/'recommendation.json'\n"
+                "CONFIRMATORY_RECOMMENDATION=PILOT_ROOT/'confirmatory_recommendation.json'\n"
+                "show_summary('Configuración de pruebas', {'humo_rápido':RUN_CHUNK_LENGTH_SMOKE_TEST,'confirmatoria_corta':RUN_CHUNK_LENGTH_CONFIRMATORY_TEST,'longitudes':CANDIDATE_SECONDS,'dataset':DATASET,'aplicar_selección':APPLY_CHUNK_SELECTION}, tone='neutral')",
+            ),
+            (
+                "Prueba de humo local de extremo a extremo",
+                "if RUN_CHUNK_LENGTH_SMOKE_TEST:\n"
+                "    smoke_result=run_chunk_length_smoke_test(TRANSCRIPTS,CHUNKS,DATASET,PILOT_ROOT,candidate_seconds=CANDIDATE_SECONDS,model_names=TOY_MODELS,video_limits=TOY_VIDEO_LIMITS,max_features=TOY_MAX_FEATURES,max_validation_ap_drop=MAX_VALIDATION_AP_DROP)\n"
+                "    show_result('Recomendación del piloto',smoke_result['recommendation'],tone='success')\n"
+                "    show_table('Comparación por longitud',smoke_result['comparisons'],limit=len(CANDIDATE_SECONDS))\n"
+                "else:\n"
+                "    show_callout('Piloto desactivado','Cambie RUN_CHUNK_LENGTH_SMOKE_TEST=True para entrenar diez baselines CPU pequeños. Los resultados se reanudan por firma.',tone='neutral')",
+            ),
+            (
+                "Confirmación corta pareada",
+                "if RUN_CHUNK_LENGTH_CONFIRMATORY_TEST:\n"
+                "    confirmatory_result=run_chunk_length_confirmatory_test(TRANSCRIPTS,CHUNKS,DATASET,PILOT_ROOT,candidate_seconds=CANDIDATE_SECONDS,model_names=CONFIRMATORY_MODELS,video_limits=CONFIRMATORY_VIDEO_LIMITS,seeds=CONFIRMATORY_SEEDS,max_features=CONFIRMATORY_MAX_FEATURES)\n"
+                "    show_result('Recomendación confirmatoria',confirmatory_result['recommendation'],tone='success')\n"
+                "    show_table('Media y dispersión entre cohortes pareadas',confirmatory_result['aggregated_comparisons'],limit=len(CANDIDATE_SECONDS))\n"
+                "else:\n"
+                "    show_callout('Confirmación desactivada','Active RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=True solo después del piloto rápido. Reentrena e infiere 45 baselines CPU: 5 longitudes × 3 modelos × 3 cohortes.',tone='neutral')",
+            ),
+            (
+                "Previsualización o activación reversible",
+                "if USE_CONFIRMATORY_RECOMMENDATION:\n"
+                "    if not CONFIRMATORY_RECOMMENDATION.is_file():\n"
+                "        raise FileNotFoundError('Ejecute primero la confirmación corta o seleccione MANUAL_CHUNK_SECONDS')\n"
+                "    selected_seconds=float(json.loads(CONFIRMATORY_RECOMMENDATION.read_text(encoding='utf-8-sig'))['recommended_seconds'])\n"
+                "    selection_source='01_02_confirmatory_recommendation'\n"
+                "elif USE_SMOKE_RECOMMENDATION:\n"
+                "    if not RECOMMENDATION.is_file():\n"
+                "        raise FileNotFoundError('Ejecute primero el piloto o seleccione MANUAL_CHUNK_SECONDS')\n"
+                "    selected_seconds=float(json.loads(RECOMMENDATION.read_text(encoding='utf-8-sig'))['recommended_seconds'])\n"
+                "    selection_source='01_02_smoke_recommendation'\n"
+                "else:\n"
+                "    selected_seconds=float(MANUAL_CHUNK_SECONDS)\n"
+                "    selection_source='01_02_manual'\n"
+                "if selected_seconds <= 0:\n"
+                "    raise ValueError('MANUAL_CHUNK_SECONDS debe ser positivo')\n"
+                "selected_config={**DEFAULT_CHUNKING_CONFIGURATION,'max_seconds':selected_seconds}\n"
+                "if APPLY_CHUNK_SELECTION:\n"
+                "    activation=activate_chunking_configuration(ROOT,selected_config,source=selection_source)\n"
+                "    show_result('Configuración activada sin borrar derivados',activation,tone='success')\n"
+                "else:\n"
+                "    show_summary('Selección previsualizada',{'segundos':selected_seconds,'origen':selection_source,'acción':'Active APPLY_CHUNK_SELECTION=True; 01_03 materializará o restaurará esta firma.'},tone='neutral')",
+            ),
+        ],
+    )
+    create(
+        "flujo/01_datos/01_03_limpieza_troceado_incremental.ipynb",
+        "01.03 · Limpieza y troceado incremental",
+        "Activa de forma reversible la configuración elegida y crea chunks deterministas únicamente para transcripciones nuevas o modificadas.",
         "La normalización NFKC aplicada al texto sigue las formas de normalización Unicode "
         "[@unicode2025normalization], y las huellas de transcripción, texto e identificadores estables "
-        "usan SHA-256 [@nist2015sha]. Las ventanas de 30 s, los límites de caracteres, el solapamiento y "
-        "las reglas de deduplicación son parámetros locales versionados: las fuentes anteriores no "
-        "demuestran que esos valores sean óptimos.",
+        "usan SHA-256 [@nist2015sha]. La longitud, los límites de caracteres, el solapamiento y las reglas "
+        "de deduplicación son parámetros locales versionados. Cada firma tiene un archivo recuperable: "
+        "cambiarla mueve los derivados vigentes y volver a una firma restaura sus bytes verificados.",
         [
-            ("Configuración", "from moderacion_peru.incremental import chunk_records_incrementally\nfrom moderacion_peru.io import append_jsonl_once, read_jsonl\nSOURCE=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/processed/chunks_v2.jsonl'\nVERSION_INDEX=ROOT/'datos/processed/chunking_v2_versions.jsonl'"),
-            ("Materialización", "existing=list(read_jsonl(OUTPUT)) if OUTPUT.exists() else []\nversions=list(read_jsonl(VERSION_INDEX)) if VERSION_INDEX.exists() else []\nnew_rows,new_versions,stats=chunk_records_incrementally(read_jsonl(SOURCE) if SOURCE.exists() else [],existing,versions)\nadded,skipped=append_jsonl_once(OUTPUT,new_rows,id_field='chunk_id')\nversions_added,_=append_jsonl_once(VERSION_INDEX,new_versions,id_field='version_id')\nstats.update({'added':added,'duplicate_ids':skipped,'versions_registered':versions_added})\nshow_result('Resultado de limpieza y troceado', stats, tone='success')"),
+            ("Configuración activa y archivo reversible", "from moderacion_peru.chunk_optimization import activate_chunking_configuration, load_chunking_configuration\nfrom moderacion_peru.incremental import chunk_records_incrementally\nfrom moderacion_peru.io import append_jsonl_once, read_jsonl\nSOURCE=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/processed/chunks_v2.jsonl'\nVERSION_INDEX=ROOT/'datos/processed/chunking_v2_versions.jsonl'\nCHUNK_CONFIG_PATH=ROOT/'config/chunking.json'\nCHUNK_CONFIG=load_chunking_configuration(CHUNK_CONFIG_PATH)\nactivation=activate_chunking_configuration(ROOT,CHUNK_CONFIG,source='01_03_materialization')\nshow_result('Estado de la configuración de chunks',activation,tone='success')"),
+            ("Materialización", "existing=list(read_jsonl(OUTPUT)) if OUTPUT.exists() else []\nversions=list(read_jsonl(VERSION_INDEX)) if VERSION_INDEX.exists() else []\nnew_rows,new_versions,stats=chunk_records_incrementally(read_jsonl(SOURCE) if SOURCE.exists() else [],existing,versions,**CHUNK_CONFIG)\nadded,skipped=append_jsonl_once(OUTPUT,new_rows,id_field='chunk_id')\nversions_added,_=append_jsonl_once(VERSION_INDEX,new_versions,id_field='version_id')\nstats.update({'added':added,'duplicate_ids':skipped,'versions_registered':versions_added,'chunk_configuration':CHUNK_CONFIG})\nshow_result('Resultado de limpieza y troceado', stats, tone='success')"),
         ],
     )
     create(

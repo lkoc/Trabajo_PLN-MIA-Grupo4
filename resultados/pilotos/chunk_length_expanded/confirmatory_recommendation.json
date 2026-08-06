@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "selection_version": "1.1.0",
+  "recommended_seconds": 30.0,
+  "validation_ap_macro_damage": 0.11422993525653903,
+  "best_validation_ap_macro_damage": 0.11422993525653903,
+  "validation_ap_drop": 0.0,
+  "max_validation_ap_drop": 0.01,
+  "compute_proxy": 30181,
+  "selection_rule": "menor train_rows×modelos dentro de la tolerancia AP de validación",
+  "test_used_for_selection": false,
+  "warning": "Confirmación corta y más estable, pero aún usa etiquetas temporales proxy; la activación final sigue siendo manual.",
+  "profile": "confirmatory_short",
+  "paired_repetitions": 3,
+  "seeds": [
+    20260805,
+    20260817,
+    20260829
+  ],
+  "transfer_policy": "agreement"
+}

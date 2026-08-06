@@ -162,6 +162,7 @@ identifica una ejecución reproducible concreta.
 | `davis2006pr` | Relación matemática entre curvas ROC y PR. | No convierte AP en área trapezoidal. | [ACM](https://doi.org/10.1145/1143844.1143874) |
 | `efron1979bootstrap` | Fundamento del bootstrap. | El remuestreo agrupado por video es una adaptación local que debe explicarse. | [Project Euclid](https://doi.org/10.1214/aos/1176344552) |
 | `cawley2010selection` | Sesgo por selección y necesidad de separar ajuste de evaluación final. | No sustituye la descripción concreta de la partición por video. | [JMLR](https://www.jmlr.org/papers/v11/cawley10a.html) |
+| `nadeau2003inference` | La varianza de comparaciones repetidas depende tanto de las muestras de entrenamiento como de evaluación. | No convierte tres cohortes solapadas en repeticiones independientes ni valida por sí solo un test t ingenuo. | [DOI](https://doi.org/10.1023/A:1024068626366) |
 | `chow1970reject` | Fundamento de la opción de rechazo/abstención. | No fija el umbral ni el objetivo de recall local. | [IEEE](https://doi.org/10.1109/TIT.1970.1054406) |
 | `geifman2017selective` | Relación riesgo--cobertura en clasificación selectiva. | El artículo no garantiza el riesgo del despliegue local. | [NeurIPS](https://proceedings.neurips.cc/paper/2017/hash/4a8423d5e91fda00bb7e46540e2b0cf1-Abstract.html) |
 | `dietterich2000ensemble` | Contexto general para combinar clasificadores. | La mayoría 2-de-3 debe evaluarse con los resultados del proyecto. | [Springer](https://doi.org/10.1007/3-540-45014-9_1) |
@@ -189,6 +190,8 @@ usar luego AP.
 | Clave BibTeX | Uso | Fuente primaria |
 |---|---|---|
 | `pedregosa2011sklearn` | Modelos clásicos, métricas, calibración y utilidades de selección. | [JMLR](https://www.jmlr.org/papers/v12/pedregosa11a.html) |
+| `sculley2015technicaldebt` | Riesgos sistémicos de dependencias de datos y configuración en pipelines de ML. | Motiva probar el flujo completo; no define la longitud ni el diseño experimental local. | [NeurIPS](https://papers.nips.cc/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html) |
+| `breck2017mltestscore` | Pruebas de datos, infraestructura, modelos y monitoreo para madurez de sistemas ML. | Sustenta controles ligeros de integración; el nombre y alcance exacto del smoke test son decisiones locales. | [Google Research](https://research.google/pubs/the-ml-test-score-a-rubric-for-ml-production-readiness-and-technical-debt-reduction/) |
 | `wolf2020transformers` | Carga y entrenamiento de Transformers y Qwen. | [ACL Anthology](https://aclanthology.org/2020.emnlp-demos.6/) |
 | `paszke2019pytorch` | Entrenamiento e inferencia acelerados, incluida GPU. | [NeurIPS](https://proceedings.neurips.cc/paper/2019/hash/bdbca288fee7f92f2bfa9f7012727740-Abstract.html) |
 | `ytdlp2026` | Recuperación de metadatos y pistas VTT sin descargar el video. | La revisión exacta instalada no quedó persistida en los cuadernos del corpus. | [Repositorio oficial](https://github.com/yt-dlp/yt-dlp) |

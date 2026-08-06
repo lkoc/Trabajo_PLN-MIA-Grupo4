@@ -21,7 +21,9 @@ El siguiente diagrama resume la relación entre los cuatro bloques implementados
 ```mermaid
 flowchart TD
     A[Subtítulos históricos y candidatos nuevos] --> B[01 · Scraping incremental]
-    B --> C[01 · Limpieza y troceado]
+    B -. piloto opcional .-> O[01.02 · Comparación de longitudes]
+    O -. configuración elegida .-> C[01.03 · Limpieza y troceado]
+    B --> C
     C --> D[(Transcripciones y chunks con video_id)]
     D --> E[02 · Propuestas LLM locales o remotas]
     E --> F[02 · Consolidación y revisión humana]
@@ -81,9 +83,12 @@ Las definiciones, inclusiones, exclusiones, contraejemplos y fuentes se encuentr
 | Cuaderno | Entrada | Proceso y salida | Repetición |
 |---|---|---|---|
 | `01_01_scraping_incremental` | snapshots, caché, canales, consultas y candidatos con `video_id` | descubre fuentes en modo semilla, dirigido o combinado; adquiere VTT con `yt-dlp` y consolida solo videos nuevos | toda la cola se procesa en lotes reanudables; `DISCOVER_NEW=False` y `FETCH_NEW=False` no usan la red |
-| `01_02_limpieza_troceado_incremental` | transcripciones canónicas | normaliza texto y crea chunks temporales deterministas | compara el hash de la transcripción y conserva versiones anteriores |
+| `01_02_optimizacion_longitud_chunks` | chunks etiquetados, transcripciones y snapshot entrenable | piloto rápido o confirmación corta para 15/20/25/30/35 s; reentrena, calibra e infiere por cada longitud | opcional; nunca selecciona con `test` ni cambia datos si `APPLY_CHUNK_SELECTION=False` |
+| `01_03_limpieza_troceado_incremental` | transcripciones canónicas + `config/chunking.json` | normaliza texto y crea chunks temporales deterministas | compara transcripción y firma completa; archiva/restaura derivados al cambiar longitud |
 
-La adquisición restaura la técnica estable del cuaderno histórico: `yt-dlp` escribe únicamente VTT manuales o automáticos en almacenamiento temporal, se elige la pista más completa y se exige un mínimo de 200 caracteres. `youtube-transcript-api` se usa solo como respaldo. No se descarga video ni audio ni se ejecuta reconocimiento automático del habla. El identificador de video, el hash de la transcripción y la versión del troceador impiden repetir trabajo ya materializado.
+La adquisición restaura la técnica estable del cuaderno histórico: `yt-dlp` escribe únicamente VTT manuales o automáticos en almacenamiento temporal, se elige la pista más completa y se exige un mínimo de 200 caracteres. `youtube-transcript-api` se usa solo como respaldo. No se descarga video ni audio ni se ejecuta reconocimiento automático del habla. El identificador de video, el hash de la transcripción, la versión y la firma de configuración del troceador impiden repetir trabajo ya materializado.
+
+`01_02` está separado de la materialización porque elegir longitud es selección de hiperparámetros. El smoke test rápido entrena dos baselines CPU una vez por longitud; el modo confirmatorio entrena ComplementNB, regresión logística y SGD en tres cohortes pareadas. En ambos casos, entrenamiento, calibración e inferencia usan chunks de la misma longitud. La confirmación ampliada del 6 de agosto de 2026 usó 200/80/80 videos por cohorte y eligió conservar **30 s**: ganó las tres repeticiones de validación con AP macro de daño `0.1142 ± 0.0050`; 35 s redujo costo, pero su AP cayó a `0.0554 ± 0.0057`. Son métricas proxy, no productivas. La metodología, los resultados por modelo y la trazabilidad están en [Informe de selección de longitud de chunks](docs/OPTIMIZACION_LONGITUD_CHUNKS.md).
 
 Durante `01_01`, una barra informa el avance por fuente y otra el avance por candidato. El modo `directed` calcula déficits por videos etiquetados de `train+validation`, estima rendimiento histórico por canal, expande canales desde búsquedas temáticas y materializa una cohorte vigente con *round-robin* ponderado; si no hay datos previos, reparte la adquisición por igual entre los cuatro daños. Con `MAX_DIRECTED_CANDIDATES=None` y `MAX_NEW_VIDEOS=None` se conservan y recorren todos los candidatos dirigidos inéditos. La cola de descarga usa una prioridad pseudoaleatoria reproducible e intercala un video por canal. La red se regula en lotes de 10, con una pausa adicional de 60 segundos entre lotes y pausas internas de 5–10 segundos en `yt-dlp`. El detalle queda en `datos/raw/fallos_descubrimiento_ultima_ejecucion.json` y `datos/raw/fallos_adquisicion.jsonl`.
 
@@ -143,7 +148,7 @@ Presentación_BEAMER/            presentación derivada del artículo
 Planning/                       plan de reorganización ejecutado
 ```
 
-Los resultados preliminares de los cuadernos se muestran mediante el componente común `src/moderacion_peru/notebook_ui.py`: tarjetas de estado, tablas clave–valor, vistas tabulares limitadas y bloques de comandos. Los 16 cuadernos activos evitan `print()` para mantener una salida legible y homogénea; los artefactos completos permanecen en JSON, JSONL o manifiestos y no dependen de la representación visual.
+Los resultados preliminares de los cuadernos se muestran mediante el componente común `src/moderacion_peru/notebook_ui.py`: tarjetas de estado, tablas clave–valor, vistas tabulares limitadas y bloques de comandos. Los 17 cuadernos activos evitan `print()` para mantener una salida legible y homogénea; los artefactos completos permanecen en JSON, JSONL o manifiestos y no dependen de la representación visual.
 
 ## Reproducción local desde una clonación nueva
 
@@ -236,10 +241,10 @@ Desde VS Code, abra la carpeta clonada, seleccione como kernel el Python de `.ve
 .\.venv\Scripts\jupyter-lab.exe
 ```
 
-El recorrido completo contiene 16 cuadernos:
+El recorrido completo contiene 17 cuadernos:
 
 ```text
-01_01 → 01_02
+01_01 → 01_02 opcional → 01_03
 → 02_01 → 02_02 opcional → 02_03 → 02_04 → 02_05
 → 03_01 ... 03_06 en ramas comparables
 → 03_07 → 03_08 → 04_01
@@ -250,6 +255,7 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 | Cuaderno | Interruptor inicial | Acción para ejecutar |
 |---|---|---|
 | `01_01` | plantilla segura: `DISCOVER_NEW=False`, `FETCH_NEW=False` | elija `DISCOVERY_MODE`; use `MAX_NEW_VIDEOS=None` para toda la cola y regule la red con lotes de 10, pausas internas de 5–10 s y 60 s entre lotes |
+| `01_02` | ambas pruebas y la aplicación están en `False`; elección manual 30 s | active primero el smoke rápido o la confirmación corta; solo `APPLY_CHUNK_SELECTION=True` archiva/restaura derivados y escribe la elección |
 | `02_01` | `RUN=False`, `LIMIT=20` | active `RUN=True`, valide el piloto y luego amplíe o retire el límite |
 | `02_02` | `RUN_REMOTE=False` | active solo con autorización para usar la API remota |
 | `03_01`–`03_06` | `RUN_TRAINING=False` | active la familia que se desea entrenar |
@@ -300,7 +306,7 @@ Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guarda
 .\.venv\Scripts\python.exe tools/generate_workflow_notebooks.py
 ```
 
-Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 16 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
+Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, archivado reversible por longitud, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 17 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
 
 El artículo y la presentación se recompilan de forma independiente:
 
@@ -318,7 +324,7 @@ Una compilación correcta no sustituye la revisión visual del PDF A4 ni de las 
 Para incorporar videos o subtítulos adicionales:
 
 1. añada candidatos con `video_id` y URL a `datos/raw/videos_candidatos.csv` o al JSONL de candidatos;
-2. ejecute nuevamente `01_01` y `01_02`;
+2. ejecute nuevamente `01_01` y `01_03`; `01_02` solo se repite si desea reevaluar o cambiar la longitud;
 3. ejecute `02_01`–`02_05` para los chunks pendientes;
 4. active las familias de `03` que desea actualizar;
 5. publique de nuevo solo cuando `03_07` encuentre candidatos completos del snapshot nuevo.

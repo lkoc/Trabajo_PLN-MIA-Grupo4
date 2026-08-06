@@ -6,7 +6,14 @@ Una transcripción canónica contiene `video_id`, URL, canal, fuente de subtítu
 
 ## Chunk
 
-`chunk_id` se deriva de versión del troceador, `video_id`, tiempos y texto normalizado. Cambiar la regla de troceado crea nuevos IDs y una nueva versión; no modifica los chunks anteriores.
+`chunk_id` se deriva de versión del troceador, firma de configuración, `video_id`, tiempos y texto normalizado. La firma cubre `max_seconds`, límites de caracteres y solapamiento. Cambiar una regla crea nuevos IDs y una nueva versión; no modifica los chunks anteriores. Las filas 2.1 sin firma equivalen explícitamente al contrato histórico de 30 s.
+
+`config/chunking.json` declara la configuración deseada y
+`datos/processed/chunking_active.json` registra la firma local activa. Una
+transición mueve todos los derivados gestionados a
+`archivo/chunking_configurations/<firma>/state/`, junto con un manifiesto de
+hashes. La restauración rechaza un archivo alterado o una colisión; nunca mueve
+transcripciones raw ni candidatos.
 
 ## Anotación
 

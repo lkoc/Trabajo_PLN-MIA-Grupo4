@@ -5,14 +5,14 @@
     {
       "path": "datos/raw/transcripts_raw.jsonl",
       "role": "transcripciones canónicas para nuevas corridas",
-      "required_by": ["01_02_limpieza_troceado_incremental"],
+      "required_by": ["01_02_optimizacion_longitud_chunks", "01_03_limpieza_troceado_incremental"],
       "recovery": "Regenerar incrementalmente desde los videos ya registrados o recuperar la instantánea externa verificada."
     },
     {
       "path": "datos/processed/chunks_v2.jsonl",
       "role": "chunks canónicos",
       "required_by": ["02_01_etiquetado_local_ollama"],
-      "recovery": "Ejecutar 01_02 sobre la vista canónica reutilizada; los chunks históricos permanecen sin cambios en archivo/ y datos/ampliacion/."
+      "recovery": "Ejecutar 01_03 sobre la vista canónica reutilizada. Si la firma ya fue usada, 01_03 restaura sus bytes desde archivo/chunking_configurations; 01_02 solo elige la configuración."
     },
     {
       "path": "datos/etiquetado/humano/revision_humana_combinada_1918.jsonl",

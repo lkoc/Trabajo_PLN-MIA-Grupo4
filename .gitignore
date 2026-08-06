@@ -19,6 +19,11 @@ resultados/operacion_05/*
 artefactos/*
 datos/model_ready/v2/*
 resultados/pilotos/*
+!resultados/pilotos/chunk_length_expanded/
+resultados/pilotos/chunk_length_expanded/*
+!resultados/pilotos/chunk_length_expanded/confirmatory_comparison.json
+!resultados/pilotos/chunk_length_expanded/confirmatory_recommendation.json
+archivo/chunking_configurations/*/state/**
 resultados/colab_bundle/*.zip
 resultados/colab_bundle/*.gz
 
@@ -27,6 +32,7 @@ resultados/colab_bundle/*.gz
 !resultados/**/README.md
 !datos/model_ready/v2/README.md
 !resultados/pilotos/README.md
+!archivo/chunking_configurations/*/manifest.json
 !resultados/colab_bundle/README.md
 !resultados/colab_bundle/bundle_manifest.json
 !resultados/colab_bundle/drive_upload.json

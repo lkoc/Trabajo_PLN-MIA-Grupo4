@@ -157,6 +157,22 @@ def test_classical_fit_calibration_test_registry_and_inference_are_end_to_end(tm
     assert all(0 <= score <= 1 for score in scores.values())
 
 
+def test_classical_smoke_subset_reuses_complete_training_path(tmp_path):
+    dataset = tmp_path / "dataset.jsonl"
+    _fixture_dataset(dataset)
+    result = train_classical_experiments(
+        dataset,
+        tmp_path / "smoke_models",
+        model_names=("complement_nb", "sgd_incremental"),
+        max_features=500,
+    )
+    assert result["status"] == "trained"
+    assert {candidate["experiment"] for candidate in result["candidates"]} == {
+        "complement_nb",
+        "sgd_incremental",
+    }
+
+
 def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(tmp_path, monkeypatch):
     dataset = tmp_path / "dataset.jsonl"
     _fixture_dataset(dataset)

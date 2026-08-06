@@ -6,10 +6,47 @@ from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from typing import Any
 
-from .io import sha256_text
+from .io import canonical_json_sha256, sha256_text
 
 
-CHUNKER_VERSION = "2.1.0"
+CHUNKER_VERSION = "2.2.0"
+DEFAULT_CHUNKING_CONFIGURATION = {
+    "max_seconds": 30.0,
+    "max_characters": 600,
+    "min_characters": 90,
+    "overlap_words": 12,
+}
+
+
+def normalize_chunking_configuration(configuration: dict[str, Any] | None = None) -> dict[str, Any]:
+    merged = {**DEFAULT_CHUNKING_CONFIGURATION, **(configuration or {})}
+    normalized = {
+        "max_seconds": float(merged["max_seconds"]),
+        "max_characters": int(merged["max_characters"]),
+        "min_characters": int(merged["min_characters"]),
+        "overlap_words": int(merged["overlap_words"]),
+    }
+    if normalized["max_seconds"] <= 0:
+        raise ValueError("max_seconds debe ser positivo")
+    if normalized["max_characters"] < 1 or normalized["min_characters"] < 1:
+        raise ValueError("Los límites de caracteres deben ser positivos")
+    if normalized["min_characters"] > normalized["max_characters"]:
+        raise ValueError("min_characters no puede exceder max_characters")
+    if normalized["overlap_words"] < 0:
+        raise ValueError("overlap_words no puede ser negativo")
+    return normalized
+
+
+def chunking_signature(configuration: dict[str, Any] | None = None) -> str:
+    return canonical_json_sha256(
+        {
+            "chunker_version": CHUNKER_VERSION,
+            "configuration": normalize_chunking_configuration(configuration),
+        }
+    )
+
+
+DEFAULT_CHUNKING_SIGNATURE = chunking_signature(DEFAULT_CHUNKING_CONFIGURATION)
 
 
 @dataclass(frozen=True)
@@ -29,6 +66,7 @@ class ChunkRecord:
     text_sha256: str
     transcript_sha256: str
     chunker_version: str = CHUNKER_VERSION
+    chunking_signature: str = DEFAULT_CHUNKING_SIGNATURE
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -77,9 +115,11 @@ def stable_chunk_id(
     text: str,
     *,
     chunker_version: str = CHUNKER_VERSION,
+    configuration_signature: str = DEFAULT_CHUNKING_SIGNATURE,
 ) -> str:
     digest = sha256_text(
-        f"{chunker_version}|{video_id}|{start_seconds:.3f}|{end_seconds:.3f}|{normalize_text(text)}"
+        f"{chunker_version}|{configuration_signature}|{video_id}|"
+        f"{start_seconds:.3f}|{end_seconds:.3f}|{normalize_text(text)}"
     )[:20]
     return f"{video_id}_{digest}"
 
@@ -95,6 +135,14 @@ def chunk_transcript(
 ) -> list[ChunkRecord]:
     materialized = list(segments)
     source_hash = transcript_hash(materialized)
+    configuration_signature = chunking_signature(
+        {
+            "max_seconds": max_seconds,
+            "max_characters": max_characters,
+            "min_characters": min_characters,
+            "overlap_words": overlap_words,
+        }
+    )
     chunks: list[ChunkRecord] = []
     current: list[TranscriptSegment] = []
 
@@ -109,13 +157,20 @@ def chunk_transcript(
         end = max(segment.start + segment.duration for segment in current)
         chunks.append(
             ChunkRecord(
-                chunk_id=stable_chunk_id(video_id, start, end, text),
+                chunk_id=stable_chunk_id(
+                    video_id,
+                    start,
+                    end,
+                    text,
+                    configuration_signature=configuration_signature,
+                ),
                 video_id=video_id,
                 start_seconds=round(start, 3),
                 end_seconds=round(end, 3),
                 text=text,
                 text_sha256=sha256_text(text.casefold()),
                 transcript_sha256=source_hash,
+                chunking_signature=configuration_signature,
             )
         )
         current.clear()
@@ -171,17 +226,36 @@ def chunk_records_incrementally(
     transcripts: Iterable[dict[str, Any]],
     existing_rows: Iterable[dict[str, Any]] = (),
     processed_versions: Iterable[dict[str, Any]] = (),
+    *,
+    max_seconds: float = 30.0,
+    max_characters: int = 600,
+    min_characters: int = 90,
+    overlap_words: int = 12,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, int]]:
     """Trocea solo versiones de video que no aparecen ya en la salida."""
 
     existing = list(existing_rows)
+    configuration = normalize_chunking_configuration(
+        {
+            "max_seconds": max_seconds,
+            "max_characters": max_characters,
+            "min_characters": min_characters,
+            "overlap_words": overlap_words,
+        }
+    )
+    configuration_signature = chunking_signature(configuration)
+
+    def row_signature(row: dict[str, Any]) -> str:
+        # Las filas 2.1 no registraban configuración y equivalen al contrato de 30 s.
+        return str(row.get("chunking_signature") or DEFAULT_CHUNKING_SIGNATURE)
+
     known_versions = {
-        (str(row.get("video_id")), str(row.get("transcript_sha256")))
+        (str(row.get("video_id")), str(row.get("transcript_sha256")), row_signature(row))
         for row in existing
         if row.get("video_id") and row.get("transcript_sha256")
     }
     known_versions.update(
-        (str(row.get("video_id")), str(row.get("transcript_sha256")))
+        (str(row.get("video_id")), str(row.get("transcript_sha256")), row_signature(row))
         for row in processed_versions
         if row.get("video_id") and row.get("transcript_sha256")
     )
@@ -205,12 +279,15 @@ def chunk_records_incrementally(
             for segment in video.get("segments", [])
         ]
         source_hash = transcript_hash(segments)
-        version = (str(video["video_id"]), source_hash)
+        version = (str(video["video_id"]), source_hash, configuration_signature)
         if version in known_versions:
             stats["unchanged_videos"] += 1
             continue
         stats["new_or_changed_videos"] += 1
-        video_chunks = [chunk.to_dict() for chunk in chunk_transcript(version[0], segments)]
+        video_chunks = [
+            chunk.to_dict()
+            for chunk in chunk_transcript(version[0], segments, **configuration)
+        ]
         for row in video_chunks:
             row.update(
                 {
@@ -222,10 +299,14 @@ def chunk_records_incrementally(
         generated.extend(video_chunks)
         version_rows.append(
             {
-                "version_id": sha256_text(f"{version[0]}|{source_hash}|{CHUNKER_VERSION}"),
+                "version_id": sha256_text(
+                    f"{version[0]}|{source_hash}|{CHUNKER_VERSION}|{configuration_signature}"
+                ),
                 "video_id": version[0],
                 "transcript_sha256": source_hash,
                 "chunker_version": CHUNKER_VERSION,
+                "chunking_signature": configuration_signature,
+                "configuration": configuration,
                 "chunk_count": len(video_chunks),
             }
         )

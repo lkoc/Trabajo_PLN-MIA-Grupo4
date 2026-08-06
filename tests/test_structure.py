@@ -14,7 +14,7 @@ REFERENCE_ENTRY = re.compile(r"^\[(\d+)\]\s", re.MULTILINE)
 
 def test_active_notebooks_are_ordered_and_clean():
     notebooks = sorted((ROOT / "flujo").rglob("*.ipynb"))
-    assert len(notebooks) == 16
+    assert len(notebooks) == 17
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
         assert notebook.metadata["moderacion_peru"]["contract"] == "moderacion_peru_5_salidas_v2"
@@ -153,7 +153,7 @@ def test_root_readme_summarizes_and_reproduces_the_active_workflow():
     assert "modperu.exe preflight" in source
     assert "python.exe -m pytest" in source
     for folder, expected_count in {
-        "01_datos": 2,
+        "01_datos": 3,
         "02_etiquetado": 5,
         "03_entrenamiento": 8,
         "04_produccion": 1,
@@ -208,6 +208,36 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
         / "flujo_reorganizado_v2"
         / "01_03_ampliacion_dirigida_reemplazado.ipynb"
     ).is_file()
+
+
+def test_chunk_length_pilot_is_optional_and_materialization_is_separate():
+    pilot_path = ROOT / "flujo" / "01_datos" / "01_02_optimizacion_longitud_chunks.ipynb"
+    materialization_path = ROOT / "flujo" / "01_datos" / "01_03_limpieza_troceado_incremental.ipynb"
+    assert pilot_path.is_file()
+    assert materialization_path.is_file()
+    assert not (ROOT / "flujo" / "01_datos" / "01_02_limpieza_troceado_incremental.ipynb").exists()
+    pilot = nbformat.read(pilot_path, as_version=4)
+    source = "\n".join(cell.source for cell in pilot.cells)
+    for control in (
+        "RUN_CHUNK_LENGTH_SMOKE_TEST=False",
+        "RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=False",
+        "CANDIDATE_SECONDS=(15,20,25,30,35)",
+        "CONFIRMATORY_VIDEO_LIMITS={'train':200,'validation':80,'test':80}",
+        "CONFIRMATORY_SEEDS=(20260805,20260817,20260829)",
+        "MANUAL_CHUNK_SECONDS=30.0",
+        "USE_SMOKE_RECOMMENDATION=False",
+        "USE_CONFIRMATORY_RECOMMENDATION=False",
+        "APPLY_CHUNK_SELECTION=False",
+        "complement_nb",
+        "sgd_incremental",
+        "prepare_local_bundle_input('dataset_5_salidas'",
+    ):
+        assert control in source
+    assert "test_used_for_selection" not in source
+    materialization = nbformat.read(materialization_path, as_version=4)
+    materialization_source = "\n".join(cell.source for cell in materialization.cells)
+    assert "activate_chunking_configuration" in materialization_source
+    assert "**CHUNK_CONFIG" in materialization_source
 
 
 def test_dataset_consumers_restore_and_verify_the_synced_checkpoint():

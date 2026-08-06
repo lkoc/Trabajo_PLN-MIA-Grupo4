@@ -219,6 +219,28 @@ def test_incremental_chunking_skips_unchanged_video_version():
     assert second_stats["unchanged_videos"] == 1
 
 
+def test_incremental_chunking_reprocesses_same_transcript_for_another_length():
+    transcripts = [
+        {
+            "video_id": "v1",
+            "segments": [
+                {"start": index * 10, "duration": 10, "text": chr(97 + index) * 50}
+                for index in range(4)
+            ],
+        }
+    ]
+    first, versions, _ = chunk_records_incrementally(transcripts, max_seconds=30)
+    changed, changed_versions, stats = chunk_records_incrementally(
+        transcripts,
+        first,
+        versions,
+        max_seconds=20,
+    )
+    assert stats["new_or_changed_videos"] == 1
+    assert changed
+    assert changed_versions[0]["chunking_signature"] != versions[0]["chunking_signature"]
+
+
 def test_append_jsonl_is_idempotent(tmp_path):
     path = tmp_path / "rows.jsonl"
     assert append_jsonl_once(path, [{"chunk_id": "c1", "x": 1}], id_field="chunk_id") == (1, 0)

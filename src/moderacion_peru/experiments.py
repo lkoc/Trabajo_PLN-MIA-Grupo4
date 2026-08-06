@@ -168,6 +168,8 @@ def train_classical_experiments(
     output_root: str | Path,
     *,
     force: bool = False,
+    model_names: Iterable[str] | None = None,
+    max_features: int = 150000,
 ) -> dict[str, Any]:
     """Ejecuta fit→calibración→test para los cinco baselines clásicos."""
 
@@ -185,7 +187,32 @@ def train_classical_experiments(
 
     dataset = Path(dataset_path).resolve()
     output = Path(output_root)
-    configuration = {"suite": "classical_v3", "seed": 20260805}
+    candidates_spec = {
+        "dummy": DummyClassifier(strategy="prior"),
+        "complement_nb": ComplementNB(alpha=1.0),
+        "logistic_regression": LogisticRegression(max_iter=2000, class_weight="balanced"),
+        "linear_svm": LinearSVC(class_weight="balanced"),
+        "sgd_incremental": SGDClassifier(loss="log_loss", random_state=20260805),
+    }
+    selected_names = list(candidates_spec) if model_names is None else list(dict.fromkeys(model_names))
+    unknown = sorted(set(selected_names) - set(candidates_spec))
+    if unknown:
+        raise ValueError(f"Modelos clasicos desconocidos: {unknown}")
+    if not selected_names:
+        raise ValueError("Debe seleccionar al menos un modelo clasico")
+    if max_features < 100:
+        raise ValueError("max_features debe ser al menos 100")
+    candidates_spec = {name: candidates_spec[name] for name in selected_names}
+
+    configuration: dict[str, Any] = {"suite": "classical_v3", "seed": 20260805}
+    if model_names is not None or max_features != 150000:
+        configuration.update(
+            {
+                "mode": "bounded_subset",
+                "models": selected_names,
+                "max_features": max_features,
+            }
+        )
     signature = _experiment_signature(dataset, "classical_suite", configuration)
     run_dir = output / "runs" / f"classical-{signature[:16]}"
     complete = run_dir / "suite_complete.json"
@@ -200,13 +227,6 @@ def train_classical_experiments(
     targets = encode_targets(train)
     validation_texts = [str(row["text"]) for row in validation]
     test_texts = [str(row["text"]) for row in test]
-    candidates_spec = {
-        "dummy": DummyClassifier(strategy="prior"),
-        "complement_nb": ComplementNB(alpha=1.0),
-        "logistic_regression": LogisticRegression(max_iter=2000, class_weight="balanced"),
-        "linear_svm": LinearSVC(class_weight="balanced"),
-        "sgd_incremental": SGDClassifier(loss="log_loss", random_state=20260805),
-    }
     run_dir.mkdir(parents=True, exist_ok=True)
     candidates: list[dict[str, Any]] = []
     for name, estimator in candidates_spec.items():
@@ -219,7 +239,7 @@ def train_classical_experiments(
                     TfidfVectorizer(
                         ngram_range=(1, 2),
                         min_df=1 if len(train) < 100 else 2,
-                        max_features=150000,
+                        max_features=max_features,
                         sublinear_tf=True,
                     ),
                 ),

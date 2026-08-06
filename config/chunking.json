@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0",
+  "max_seconds": 30.0,
+  "max_characters": 600,
+  "min_characters": 90,
+  "overlap_words": 12,
+  "selection_source": "legacy_default"
+}

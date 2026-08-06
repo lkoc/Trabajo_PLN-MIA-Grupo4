@@ -11,3 +11,33 @@
 Los pilotos de Ollama se guardan aquí. Una muestra menor de 200 casos es un smoke test técnico y no selecciona el modelo semántico. Las referencias humanas históricas estuvieron asistidas y no constituyen gold standard ciego.
 
 El 5 de agosto de 2026 se verificaron instalados los tres modelos y se ejecutó el smoke test acotado documentado en `INFORME_PILOTO_OLLAMA_20260805.md`. Qwen 9B fue el único técnicamente válido en el caso común; el tamaño no permite selección ni métricas semánticas comparables. El resultado vigente termina en `_bounded.json` y dispone de manifiesto SHA-256; los archivos anteriores se conservan como diagnósticos históricos.
+
+## Longitud de chunks
+
+`01_02_optimizacion_longitud_chunks.ipynb` contiene dos perfiles CPU. Ambos
+vuelven a trocear, entrenan desde cero, calibran en `validation` e infieren en
+`validation` y `test` para cada longitud; ningún modelo entrenado a 30 s se usa
+para evaluar otra longitud.
+
+El piloto rápido de una cohorte y dos modelos sugirió 35 s, pero su resultado
+fue inestable y no se acepta como decisión. La confirmación ampliada usó tres
+cohortes pareadas, 200/80/80 videos por split, tres modelos y transferencia de
+etiqueta solo cuando todos los chunks temporales solapados concordaban.
+
+| Segundos | AP daño validation, media ± DE | Victorias | Proxy de costo medio |
+|---:|---:|---:|---:|
+| 15 | 0.0784 ± 0.0035 | 0/3 | 52 106 |
+| 20 | 0.0895 ± 0.0075 | 0/3 | 39 855 |
+| 25 | 0.0688 ± 0.0056 | 0/3 | 31 881 |
+| **30** | **0.1142 ± 0.0050** | **3/3** | **30 181** |
+| 35 | 0.0554 ± 0.0057 | 0/3 | 22 809 |
+
+La recomendación confirmatoria del 6 de agosto de 2026 es **conservar 30 s**.
+35 s es más barato, pero su pérdida de 0.0588 AP excede la tolerancia absoluta
+de 0.01. `test` no intervino en la selección. Estos valores siguen siendo
+proxy y no sustituyen la evaluación productiva del flujo completo.
+
+El resultado completo, las semillas, cohortes y métricas por modelo se
+sincronizan en `chunk_length_expanded/confirmatory_comparison.json`; su
+interpretación para el paper y la presentación está en
+`docs/OPTIMIZACION_LONGITUD_CHUNKS.md`.
