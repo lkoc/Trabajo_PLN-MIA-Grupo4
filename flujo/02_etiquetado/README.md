@@ -1,4 +1,12 @@
-# Etapa 02 · Etiquetado semiautomático
+# Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural
+
+**Trabajo final del curso de Procesamiento de Lenguaje Natural (PLN) de la Maestría en Inteligencia Artificial de la Universidad Nacional de Ingeniería (UNI) — Semestre 2026-1**
+
+**Grupo 4:** Luis Enrique Koc Góngora, Alex Felipe Mancilla Antay, Herbert Antonio Meléndez García y Dennis Jack Paitán Cano
+
+---
+
+## Etapa 02 · Etiquetado semiautomático
 
 ## Orden
 

@@ -12,6 +12,24 @@ from notebook_references import apply_citations
 
 ROOT = Path(__file__).resolve().parents[1]
 
+PROJECT_TITLE = (
+    "Moderación semiautomática de videos peruanos de YouTube mediante modelos "
+    "clásicos y neuronales de procesamiento del lenguaje natural"
+)
+PROJECT_AUTHORS = [
+    "Luis Enrique Koc Góngora",
+    "Alex Felipe Mancilla Antay",
+    "Herbert Antonio Meléndez García",
+    "Dennis Jack Paitán Cano",
+]
+PROJECT_COVER = (
+    f"# {PROJECT_TITLE}\n\n"
+    "**Trabajo final del curso de Procesamiento de Lenguaje Natural (PLN) de la Maestría en "
+    "Inteligencia Artificial de la Universidad Nacional de Ingeniería (UNI) — Semestre 2026-1**\n\n"
+    f"**Grupo 4:** {', '.join(PROJECT_AUTHORS[:-1])} y {PROJECT_AUTHORS[-1]}\n\n"
+    "---"
+)
+
 
 SETUP = """from pathlib import Path
 import sys
@@ -136,9 +154,15 @@ def create(
 ) -> None:
     notebook = nbf.v4.new_notebook()
     notebook.metadata = {
+        "authors": [{"name": name} for name in PROJECT_AUTHORS],
         "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
         "language_info": {"name": "python", "version": "3.12"},
         "moderacion_peru": {
+            "project_title": PROJECT_TITLE,
+            "academic_work": "Trabajo final de Procesamiento de Lenguaje Natural (PLN)",
+            "institution": "Maestría en Inteligencia Artificial, Universidad Nacional de Ingeniería (UNI)",
+            "academic_term": "2026-1",
+            "group": "Grupo 4",
             "contract": "moderacion_peru_5_salidas_v2",
             "taxonomy_version": "2.1.0",
             "orchestrator": True,
@@ -152,7 +176,7 @@ def create(
     }
     notebook.cells = [
         nbf.v4.new_markdown_cell(
-            f"# {title}\n\n{purpose}\n\n{academic_context}\n\n"
+            f"{PROJECT_COVER}\n\n## {title}\n\n{purpose}\n\n{academic_context}\n\n"
             "**Contrato v2.1:** `SEGURO` + cuatro daños entrenados, incluida "
             "`ATAQUE_POR_GENERO_IDENTIDAD`. `SEGURO` es excluyente; los daños son multietiqueta. "
             "Los casos indeterminados se difieren y no entran al entrenamiento. Esta combinación, "
@@ -341,7 +365,7 @@ def main() -> None:
         "sugerencia puede producir influencia o anclaje [@choi2024llmeffect]. La precedencia humana, la "
         "adjudicación y el guardado *append-only* son reglas operativas locales.",
         [
-            ("Consolidación", "from moderacion_peru.consolidation import consolidate_annotations\nSOURCES=[p for p in [ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl',ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'] if p.exists()]\nCHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\nOUTPUT=ROOT/'datos/etiquetado/consolidado/anotaciones_v2.jsonl'\nprint(consolidate_annotations(SOURCES,OUTPUT,chunks_source=CHUNKS) if SOURCES else 'No hay campañas para consolidar')"),
+            ("Consolidación", "from moderacion_peru.consolidation import consolidate_annotations\nSOURCES=[p for p in [ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl',ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'] if p.exists()]\nCHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\nTRANSCRIPTS=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/etiquetado/consolidado/anotaciones_v2.jsonl'\nprint(consolidate_annotations(SOURCES,OUTPUT,chunks_source=CHUNKS,transcripts_source=TRANSCRIPTS) if SOURCES else 'No hay campañas para consolidar')"),
             ("Frontend", "print(f'modperu serve-labeling --campaign {OUTPUT}')"),
         ],
     )

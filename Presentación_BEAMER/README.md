@@ -1,4 +1,12 @@
-# Presentacion Beamer final
+# Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural
+
+**Trabajo final del curso de Procesamiento de Lenguaje Natural (PLN) de la Maestría en Inteligencia Artificial de la Universidad Nacional de Ingeniería (UNI) — Semestre 2026-1**
+
+**Grupo 4:** Luis Enrique Koc Góngora, Alex Felipe Mancilla Antay, Herbert Antonio Meléndez García y Dennis Jack Paitán Cano
+
+---
+
+## Presentacion Beamer final
 
 > **Estado de contrato (2026-08-05).** Los resultados presentados corresponden al baseline ejecutado de cuatro daños y `SEGURO` derivado. El flujo activo incorpora `SEGURO` como quinta salida aprendida; sus métricas quedan pendientes de reentrenamiento y no se infieren de las tablas históricas.
 

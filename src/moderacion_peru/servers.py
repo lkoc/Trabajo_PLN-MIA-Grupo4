@@ -4,8 +4,10 @@ import json
 import hashlib
 import mimetypes
 import os
+import threading
 import urllib.parse
 import uuid
+from datetime import datetime, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -66,15 +68,23 @@ def serve(
         review_path = root / "datos" / "produccion" / "review_events_v2.jsonl"
     registry_path = Path(registry).resolve() if registry else root / "modelos" / "registro_modelos_5_salidas.json"
     predictor: ProductionPredictor | None = None
+    prediction_lock = threading.Lock()
     inference_path = root / "datos" / "produccion" / "inference_events_v2.jsonl"
+    campaign_rows = list(read_jsonl(campaign_path)) if campaign_path and campaign_path.is_file() else []
+    for index, row in enumerate(campaign_rows):
+        previous = campaign_rows[index - 1] if index else None
+        following = campaign_rows[index + 1] if index + 1 < len(campaign_rows) else None
+        row["previous_text"] = previous.get("text") if previous and previous.get("video_id") == row.get("video_id") else None
+        row["next_text"] = following.get("text") if following and following.get("video_id") == row.get("video_id") else None
 
     def predict_one(text: str, *, metadata: dict[str, Any] | None = None) -> dict[str, Any]:
         nonlocal predictor
         if not registry_path.is_file():
             raise FileNotFoundError("No existe un registro productivo validado")
-        predictor = predictor or ProductionPredictor(registry_path)
-        scores = predictor.scores(text)
-        decision = resolve_prediction(scores, predictor.entry.thresholds)
+        with prediction_lock:
+            predictor = predictor or ProductionPredictor(registry_path)
+            scores = predictor.scores(text)
+            decision = resolve_prediction(scores, predictor.entry.thresholds)
         event_id = str(uuid.uuid4())
         event = {
             "schema_version": "2.1.0",
@@ -88,6 +98,7 @@ def serve(
             "labels": list(decision.labels),
             "requires_review": decision.requires_review,
             "review_reasons": list(decision.review_reasons),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             **(metadata or {}),
         }
         append_jsonl_once(inference_path, [event], id_field="event_id")
@@ -129,20 +140,15 @@ def serve(
                     return
                 query = urllib.parse.parse_qs(parsed.query)
                 offset = max(0, int(query.get("offset", [0])[0]))
-                limit = min(200, max(1, int(query.get("limit", [50])[0])))
-                rows = list(read_jsonl(campaign_path))
-                for index, row in enumerate(rows):
-                    previous = rows[index - 1] if index else None
-                    following = rows[index + 1] if index + 1 < len(rows) else None
-                    row["previous_text"] = previous.get("text") if previous and previous.get("video_id") == row.get("video_id") else None
-                    row["next_text"] = following.get("text") if following and following.get("video_id") == row.get("video_id") else None
+                limit = min(1000, max(1, int(query.get("limit", [50])[0])))
+                rows = campaign_rows
                 if query.get("pending", ["0"])[0] == "1" and review_path.is_file():
                     reviewed = {row["chunk_id"] for row in read_jsonl(review_path)}
                     rows = [row for row in rows if row.get("chunk_id") not in reviewed]
                 self.send_json({"total": len(rows), "offset": offset, "rows": rows[offset:offset + limit]})
                 return
             if parsed.path == "/api/progress" and mode == "labeling":
-                total = sum(1 for _ in read_jsonl(campaign_path)) if campaign_path and campaign_path.is_file() else 0
+                total = len(campaign_rows)
                 events = list(read_jsonl(review_path)) if review_path.is_file() else []
                 latest = {event["chunk_id"]: event for event in events}
                 resolved = sum(event.get("action") != "defer" for event in latest.values())
@@ -242,6 +248,9 @@ def serve(
                                 metadata={
                                     "chunk_id": chunk.chunk_id,
                                     "video_id": video_id,
+                                    "video_title": transcript.get("title"),
+                                    "channel_title": transcript.get("channel"),
+                                    "source_url": transcript.get("url"),
                                     "start_seconds": chunk.start_seconds,
                                     "end_seconds": chunk.end_seconds,
                                 },

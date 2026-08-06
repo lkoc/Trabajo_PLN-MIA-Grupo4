@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-05T23:47:53.011408+00:00",
+  "generated_at": "2026-08-06T01:07:02.689343+00:00",
   "taxonomy_contract": "moderacion_peru_5_salidas_v2",
   "taxonomy_version": "2.1.0",
   "core": {
     "name": "project_core.zip",
-    "sha256": "224dbca7a83be2eee53fe337a94a73c989b505ef5e145396983a7729e0f66be6",
-    "bytes": 41671,
+    "sha256": "6635080b8c7146707d94d91e4876fac00965ad00bda0d97a4c43ec03201906df",
+    "bytes": 62067,
     "files": [
       "config/colab_l4.json",
       "config/taxonomia_v2.json",
@@ -20,6 +20,7 @@
       "src/moderacion_peru/consolidation.py",
       "src/moderacion_peru/datasets.py",
       "src/moderacion_peru/device.py",
+      "src/moderacion_peru/experiments.py",
       "src/moderacion_peru/incremental.py",
       "src/moderacion_peru/io.py",
       "src/moderacion_peru/labeling.py",
@@ -33,6 +34,7 @@
       "src/moderacion_peru/providers/deepseek.py",
       "src/moderacion_peru/providers/huggingface.py",
       "src/moderacion_peru/providers/ollama.py",
+      "src/moderacion_peru/registry.py",
       "src/moderacion_peru/schemas.py",
       "src/moderacion_peru/servers.py",
       "src/moderacion_peru/taxonomy.py",

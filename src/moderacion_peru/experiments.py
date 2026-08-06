@@ -441,6 +441,7 @@ def _fit_hf(
     hardware: Any,
     *,
     structured_penalty: float = 0.0,
+    output_weights: Sequence[float] | None = None,
 ) -> None:
     try:
         import torch
@@ -456,7 +457,11 @@ def _fit_hf(
             labels = inputs.pop("labels")
             outputs = model(**inputs)
             logits = outputs.logits
-            loss = torch.nn.functional.binary_cross_entropy_with_logits(logits, labels)
+            elementwise = torch.nn.functional.binary_cross_entropy_with_logits(logits, labels, reduction="none")
+            if output_weights is not None:
+                weights = torch.as_tensor(output_weights, device=logits.device, dtype=logits.dtype)
+                elementwise = elementwise * weights.unsqueeze(0)
+            loss = elementwise.mean()
             if structured_penalty and logits.shape[1] == 5:
                 probabilities = torch.sigmoid(logits)
                 conflict = probabilities[:, 0] * probabilities[:, 1:].amax(dim=1)
@@ -552,6 +557,7 @@ def train_neural_experiment(
         "structured_penalty": 0.2 if experiment == "qwen_structured" else 0.0,
         "hardware_backend": hardware.backend,
         "dtype": hardware.dtype,
+        "multitask_weights": {"coarse": 1.0, "fine": 0.3, "flags": 0.2} if experiment == "multitask" else None,
     }
     signature = _experiment_signature(dataset, experiment, configuration)
     run_dir = output / "runs" / f"{experiment}-{signature[:16]}"
@@ -614,6 +620,11 @@ def train_neural_experiment(
             run_dir / "trainer",
             hardware,
             structured_penalty=0.2 if experiment == "qwen_structured" else 0.0,
+            output_weights=(
+                [1.0] * 5 + [0.3] * len(taxonomy.fine_labels) + [0.2] * len(taxonomy.flags)
+                if experiment == "multitask"
+                else None
+            ),
         )
         validation_all = _predict_hf(model, tokenizer, validation, spec.max_length, hardware, len(labels))
         test_all = _predict_hf(model, tokenizer, test, spec.max_length, hardware, len(labels))

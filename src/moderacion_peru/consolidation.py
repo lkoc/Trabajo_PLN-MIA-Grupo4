@@ -29,6 +29,7 @@ def consolidate_annotations(
     *,
     precedence: dict[str, int] | None = None,
     chunks_source: str | Path | None = None,
+    transcripts_source: str | Path | None = None,
 ) -> dict[str, Any]:
     priorities = precedence or DEFAULT_PRECEDENCE
     candidates: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -39,6 +40,10 @@ def consolidate_annotations(
     chunk_lookup = {
         str(row["chunk_id"]): row
         for row in (read_jsonl(chunks_source) if chunks_source and Path(chunks_source).is_file() else [])
+    }
+    video_lookup = {
+        str(row["video_id"]): row
+        for row in (read_jsonl(transcripts_source) if transcripts_source and Path(transcripts_source).is_file() else [])
     }
     selected = []
     conflicts = 0
@@ -52,6 +57,7 @@ def consolidate_annotations(
         )
         winner = dict(rows[0])
         chunk = chunk_lookup.get(chunk_id, {})
+        video = video_lookup.get(str(winner.get("video_id") or chunk.get("video_id") or ""), {})
         for field, alternatives in {
             "video_id": ("video_id",),
             "start_seconds": ("start_seconds",),
@@ -62,7 +68,15 @@ def consolidate_annotations(
             "cohort": ("cohort",),
         }.items():
             if winner.get(field) is None:
-                winner[field] = next((chunk.get(name) for name in alternatives if chunk.get(name) is not None), None)
+                winner[field] = next(
+                    (
+                        source.get(name)
+                        for source in (chunk, video)
+                        for name in alternatives
+                        if source.get(name) is not None
+                    ),
+                    None,
+                )
         top_priority = priorities.get(str(winner.get("label_source", "")), 0)
         tied = [row for row in rows if priorities.get(str(row.get("label_source", "")), 0) == top_priority]
         decisions = {tuple(row.get("coarse_labels", [])) for row in tied}
@@ -75,7 +89,13 @@ def consolidate_annotations(
             winner["consolidation_warning"] = "conflicting_top_priority_decisions"
         winner["consolidated_sources"] = [row.get("label_source") for row in rows]
         selected.append(winner)
-    selected.sort(key=lambda row: row["chunk_id"])
+    selected.sort(
+        key=lambda row: (
+            str(row.get("video_id") or ""),
+            float(row.get("start_seconds")) if row.get("start_seconds") is not None else float("inf"),
+            row["chunk_id"],
+        )
+    )
     destination_path = Path(destination)
     if destination_path.is_file() and canonical_json_sha256(list(read_jsonl(destination_path))) == canonical_json_sha256(selected):
         status = "noop"

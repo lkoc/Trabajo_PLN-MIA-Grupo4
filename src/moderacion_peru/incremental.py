@@ -211,6 +211,14 @@ def chunk_records_incrementally(
             continue
         stats["new_or_changed_videos"] += 1
         video_chunks = [chunk.to_dict() for chunk in chunk_transcript(version[0], segments)]
+        for row in video_chunks:
+            row.update(
+                {
+                    "video_title": video.get("video_title") or video.get("title"),
+                    "channel_title": video.get("channel_title") or video.get("channel"),
+                    "source_url": video.get("source_url") or video.get("url"),
+                }
+            )
         generated.extend(video_chunks)
         version_rows.append(
             {

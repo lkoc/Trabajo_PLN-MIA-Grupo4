@@ -74,7 +74,7 @@ python -m pytest
 python tools/audit_project.py
 ```
 
-Resultado: 41 pruebas aprobadas; 17/17 cuadernos con celda final; 85/85
+Resultado: 44 pruebas aprobadas; 17/17 cuadernos con celda final; 85/85
 entradas numeradas y citadas; cero claves ausentes en `referencias.bib`, cero
 entradas finales sin uso, cero números discontinuos y cero incidencias del
 auditor del proyecto.

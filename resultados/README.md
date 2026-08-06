@@ -1,4 +1,12 @@
-# Resultados del contrato v2
+# Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural
+
+**Trabajo final del curso de Procesamiento de Lenguaje Natural (PLN) de la Maestría en Inteligencia Artificial de la Universidad Nacional de Ingeniería (UNI) — Semestre 2026-1**
+
+**Grupo 4:** Luis Enrique Koc Góngora, Alex Felipe Mancilla Antay, Herbert Antonio Meléndez García y Dennis Jack Paitán Cano
+
+---
+
+## Resultados del contrato v2
 
 Este directorio recibirá únicamente métricas, figuras e informes producidos con `moderacion_peru_5_salidas_v2`. Toda corrida debe guardar manifiesto, hashes, split, cinco umbrales y evidencia de que test no seleccionó el modelo.
 

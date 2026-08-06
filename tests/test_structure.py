@@ -93,6 +93,38 @@ def test_required_frontends_are_small_templates():
     assert "youtube.com" in production_source
 
 
+def test_academic_cover_is_present_in_notebooks_frontends_and_readmes():
+    title = (
+        "Moderación semiautomática de videos peruanos de YouTube mediante modelos "
+        "clásicos y neuronales de procesamiento del lenguaje natural"
+    )
+    course = (
+        "Trabajo final del curso de Procesamiento de Lenguaje Natural (PLN) de la Maestría en "
+        "Inteligencia Artificial de la Universidad Nacional de Ingeniería (UNI) — Semestre 2026-1"
+    )
+    authors = (
+        "Luis Enrique Koc Góngora",
+        "Alex Felipe Mancilla Antay",
+        "Herbert Antonio Meléndez García",
+        "Dennis Jack Paitán Cano",
+    )
+    readmes = [
+        path
+        for path in ROOT.rglob("README.md")
+        if "archivo" not in path.parts and ".git" not in path.parts and ".pytest_cache" not in path.parts
+    ]
+    frontends = sorted((ROOT / "flujo").rglob("*.html"))
+    for path in readmes + frontends:
+        source = path.read_text(encoding="utf-8-sig")
+        assert all(item in source for item in (title, course, *authors)), path
+    for path in sorted((ROOT / "flujo").rglob("*.ipynb")):
+        notebook = nbformat.read(path, as_version=4)
+        assert all(item in notebook.cells[0].source for item in (title, course, *authors)), path
+        assert notebook.metadata["moderacion_peru"]["project_title"] == title
+        assert notebook.metadata["moderacion_peru"]["academic_term"] == "2026-1"
+        assert notebook.metadata["moderacion_peru"]["group"] == "Grupo 4"
+
+
 def test_neural_model_revisions_are_pinned():
     from moderacion_peru.models import TRANSFORMER_SPECS
 

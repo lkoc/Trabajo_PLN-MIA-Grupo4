@@ -1,4 +1,12 @@
-# Referencias y descargas
+# Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural
+
+**Trabajo final del curso de Procesamiento de Lenguaje Natural (PLN) de la Maestría en Inteligencia Artificial de la Universidad Nacional de Ingeniería (UNI) — Semestre 2026-1**
+
+**Grupo 4:** Luis Enrique Koc Góngora, Alex Felipe Mancilla Antay, Herbert Antonio Meléndez García y Dennis Jack Paitán Cano
+
+---
+
+## Referencias y descargas
 
 Esta carpeta reúne las fuentes citadas de forma efectiva en el artículo. El
 inventario se cerró el 29 de julio de 2026 contra

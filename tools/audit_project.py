@@ -17,6 +17,20 @@ BODY_CITATION = re.compile(r"\[(\d+)\]")
 REFERENCE_ENTRY = re.compile(r"^\[(\d+)\]\s", re.MULTILINE)
 MASTER_BIB_ENTRY = re.compile(r"^@[A-Za-z]+\{([^,]+),", re.MULTILINE)
 DEPRECATED_GENDER_LABEL = "ACOSO_GENERO_IDENTIDAD"
+PROJECT_TITLE = (
+    "Moderación semiautomática de videos peruanos de YouTube mediante modelos "
+    "clásicos y neuronales de procesamiento del lenguaje natural"
+)
+COURSE_LINE = (
+    "Trabajo final del curso de Procesamiento de Lenguaje Natural (PLN) de la Maestría en "
+    "Inteligencia Artificial de la Universidad Nacional de Ingeniería (UNI) — Semestre 2026-1"
+)
+PROJECT_AUTHORS = (
+    "Luis Enrique Koc Góngora",
+    "Alex Felipe Mancilla Antay",
+    "Herbert Antonio Meléndez García",
+    "Dennis Jack Paitán Cano",
+)
 
 
 def markdown_issues() -> list[str]:
@@ -141,12 +155,40 @@ def taxonomy_name_issues() -> list[str]:
     return issues
 
 
+def branding_issues() -> list[str]:
+    """Comprueba la carátula académica en todos los puntos de entrada activos."""
+    issues = []
+    readmes = [
+        path
+        for path in ROOT.rglob("README.md")
+        if "archivo" not in path.parts and ".git" not in path.parts and ".pytest_cache" not in path.parts
+    ]
+    frontends = sorted((ROOT / "flujo").rglob("*.html"))
+    for path in readmes + frontends:
+        text = path.read_text(encoding="utf-8-sig")
+        for required in (PROJECT_TITLE, COURSE_LINE, *PROJECT_AUTHORS):
+            if required not in text:
+                issues.append(f"missing_academic_cover:{path.relative_to(ROOT)}:{required}")
+    for path in sorted((ROOT / "flujo").rglob("*.ipynb")):
+        notebook = nbformat.read(path, as_version=4)
+        first = notebook.cells[0].source if notebook.cells and notebook.cells[0].cell_type == "markdown" else ""
+        for required in (PROJECT_TITLE, COURSE_LINE, *PROJECT_AUTHORS):
+            if required not in first:
+                issues.append(f"missing_notebook_cover:{path.relative_to(ROOT)}:{required}")
+        metadata = notebook.metadata.get("moderacion_peru", {})
+        if metadata.get("project_title") != PROJECT_TITLE:
+            issues.append(f"missing_project_title_metadata:{path.relative_to(ROOT)}")
+        if metadata.get("academic_term") != "2026-1" or metadata.get("group") != "Grupo 4":
+            issues.append(f"wrong_academic_metadata:{path.relative_to(ROOT)}")
+    return issues
+
+
 def main() -> int:
     sys.path.insert(0, str(ROOT / "src"))
     from moderacion_peru.taxonomy import load_taxonomy
 
     taxonomy = load_taxonomy()
-    issues = markdown_issues() + notebook_issues() + taxonomy_name_issues()
+    issues = markdown_issues() + notebook_issues() + taxonomy_name_issues() + branding_issues()
     notebooks = [nbformat.read(path, as_version=4) for path in sorted((ROOT / "flujo").rglob("*.ipynb"))]
     result = {
         "taxonomy": taxonomy.contract_id,
