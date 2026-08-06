@@ -290,7 +290,11 @@ DIRECTED_QUERY_CATALOG = [
 """
 
 
-SCRAPING_REUSE_AND_PLAN = """from moderacion_peru.acquisition import (
+SCRAPING_REUSE_AND_PLAN = """import importlib
+import moderacion_peru.acquisition as acquisition_module
+importlib.reload(acquisition_module)
+
+from moderacion_peru.acquisition import (
     VIDEO_DATASET_RESET_MARKER,
     bootstrap_canonical_from_existing,
     build_directed_sampling_plan,
@@ -361,7 +365,11 @@ show_summary('Fuentes seleccionadas', {
 
 
 SCRAPING_DISCOVERY = """from collections import Counter
+import importlib
 from tqdm.auto import tqdm
+import moderacion_peru.acquisition as acquisition_module
+importlib.reload(acquisition_module)
+
 from moderacion_peru.acquisition import (
     discover_youtube_candidates,
     expand_directed_channel_sources,
@@ -434,7 +442,11 @@ if DISCOVER_NEW:
                 directed_pool,
                 processed_video_ids(CANONICAL),
                 directed_plan,
-                max_candidates=MAX_DIRECTED_CANDIDATES,
+                max_candidates=(
+                    len(directed_pool)
+                    if MAX_DIRECTED_CANDIDATES is None
+                    else MAX_DIRECTED_CANDIDATES
+                ),
             )
             write_jsonl_atomic(DIRECTED_SELECTION_PATH, directed_selection)
             write_json_atomic(DIRECTED_PLAN_PATH, {
@@ -469,7 +481,11 @@ else:
 """
 
 
-SCRAPING_CANDIDATES = """from moderacion_peru.acquisition import processed_video_ids
+SCRAPING_CANDIDATES = """import importlib
+import moderacion_peru.acquisition as acquisition_module
+importlib.reload(acquisition_module)
+
+from moderacion_peru.acquisition import processed_video_ids
 
 if DISCOVERY_MODE == 'directed':
     candidates = load_candidates(DIRECTED_SELECTION_PATH)
@@ -511,7 +527,11 @@ show_summary('Candidatos filtrados antes de la adquisición', {
 
 
 SCRAPING_EXECUTION = """from functools import partial
+import importlib
 from tqdm.auto import tqdm
+import moderacion_peru.acquisition as acquisition_module
+importlib.reload(acquisition_module)
+
 from moderacion_peru.acquisition import fetch_youtube_subtitles, ingest_incremental
 
 FAILURES = ROOT/'datos/raw/fallos_adquisicion.jsonl'

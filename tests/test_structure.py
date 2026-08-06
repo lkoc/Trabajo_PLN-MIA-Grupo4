@@ -190,6 +190,9 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
     assert "build_directed_sampling_plan" in source
     assert "expand_directed_channel_sources" in source
     assert "select_directed_candidates" in source
+    assert "if MAX_DIRECTED_CANDIDATES is None" in source
+    assert "len(directed_pool)" in source
+    assert "importlib.reload(acquisition_module)" in source
     assert "cohorte_dirigida_vigente" in source
     assert '# RESET_VIDEO_DATASET = "ARCHIVAR_Y_REINICIAR_DATASET_VIDEOS"' in source
     assert not (ROOT / "flujo" / "01_datos" / "01_03_ampliacion_dirigida.ipynb").exists()
