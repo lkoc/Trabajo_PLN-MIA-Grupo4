@@ -25,7 +25,7 @@
 
 ## Interruptores deliberados
 
-- En `01_01`, seleccione `DISCOVERY_MODE="seed"`, `"directed"` o `"both"`; `MAX_NEW_VIDEOS` limita las llamadas nuevas. Use `DISCOVER_NEW=True` y `FETCH_NEW=True` únicamente cuando quiera ampliar el corpus.
+- En `01_01`, seleccione `DISCOVERY_MODE="seed"`, `"directed"` o `"both"`; `MAX_NEW_VIDEOS` limita las llamadas nuevas y `MAX_DIRECTED_CANDIDATES` limita la cohorte dirigida. `directed` calcula déficits sin consultar `test` y usa pesos iguales si todavía no hay datos etiquetados. Use `DISCOVER_NEW=True` y `FETCH_NEW=True` únicamente cuando quiera ampliar el corpus.
 - En `02_01`, active `RUN=True`; pruebe primero `LIMIT=20` y después quite el límite para cerrar el lote.
 - `02_02` conserva `RUN_REMOTE=False` salvo decisión explícita de usar la API comercial.
 - En `03_01`–`03_06`, active `RUN_TRAINING=True`. Una segunda ejecución con el mismo snapshot devuelve `status="noop"`.

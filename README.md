@@ -85,7 +85,9 @@ Las definiciones, inclusiones, exclusiones, contraejemplos y fuentes se encuentr
 
 La adquisición descarga únicamente subtítulos disponibles. No descarga video ni audio y no afirma usar reconocimiento automático del habla. El identificador de video, el hash de la transcripción y la versión del troceador impiden repetir trabajo ya materializado.
 
-Durante `01_01`, una barra informa el avance por fuente y otra el avance por candidato. El cierre separa fuentes correctas y fallidas, candidatos nuevos y existentes, reutilización del caché, subtítulos obtenidos, videos diferidos por cupo y fallos agrupados. Los errores repetitivos de `yt-dlp` no saturan la celda: el detalle completo queda en `datos/raw/fallos_descubrimiento_ultima_ejecucion.json` y `datos/raw/fallos_adquisicion.jsonl`.
+Durante `01_01`, una barra informa el avance por fuente y otra el avance por candidato. El modo `directed` calcula déficits por videos etiquetados de `train+validation`, estima rendimiento histórico por canal, expande canales desde búsquedas temáticas y materializa una cohorte vigente con *round-robin* ponderado; si no hay datos previos, reparte la adquisición por igual entre los cuatro daños. El cierre separa fuentes correctas y fallidas, candidatos nuevos y existentes, reutilización del caché, subtítulos obtenidos, videos diferidos por cupo o por el cortacircuito HTTP 429 y fallos agrupados. El detalle completo queda en `datos/raw/fallos_descubrimiento_ultima_ejecucion.json` y `datos/raw/fallos_adquisicion.jsonl`.
+
+El cortacircuito HTTP 429 aplica reintentos con *backoff* y, si YouTube mantiene el límite, detiene nuevas solicitudes durante esa ejecución: conserva un solo fallo `rate_limited` y deja el resto como diferido para una corrida posterior. No intenta eludir controles de la plataforma. La selección, sus fórmulas, los artefactos, el reinicio recuperable y las limitaciones del muestreo se documentan en [Metodología de scraping y adquisición de subtítulos](docs/METODOLOGIA_SCRAPING.md).
 
 ### 02 · Etiquetado semiautomático
 
@@ -124,7 +126,7 @@ El [frontend humano](flujo/02_etiquetado/frontend/validacion_humana.html) permit
 
 ```text
 config/                         taxonomía, Colab y disponibilidad de artefactos
-docs/                           contratos, hardware, orden y trazabilidad
+docs/                           metodología de scraping, contratos, hardware, orden y trazabilidad
 src/moderacion_peru/            implementación reutilizable y CLI modperu
 flujo/01_datos/                 adquisición, limpieza y ampliación
 flujo/02_etiquetado/            LLM, consolidación y validación humana

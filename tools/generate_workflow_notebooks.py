@@ -676,15 +676,29 @@ def main() -> None:
         "[@tatman2017captions]. Toda ampliación debe respetar los términos de la plataforma "
         "[@youtube2023terms] y la evaluación ética contextual recomendada para investigación en "
         "Internet [@aoir2020ethics]. La reutilización de cachés y la selección de candidatos son "
-        "decisiones locales registradas en manifiestos. El modo dirigido prioriza cobertura insuficiente "
-        "siguiendo criterios de aprendizaje activo y desbalance multietiqueta "
-        "[@fairstein2024balancing] [@huang2021balancing], pero no permite estimar prevalencias "
-        "en YouTube ni en el Perú.",
+        "decisiones locales registradas en manifiestos. El modo dirigido adapta principios de balance "
+        "para aprendizaje activo y clasificación multietiqueta de cola larga "
+        "[@fairstein2024balancing] [@huang2021balancing]: calcula soporte por videos únicos solo en "
+        "`train+validation`, excluye `test`, pondera los déficits, estima rendimiento histórico por "
+        "canal, expande canales desde consultas temáticas y materializa una cohorte aislada mediante "
+        "*round-robin*. Si no hay etiquetas previas utilizables, asigna 25% a cada daño. La fórmula, "
+        "los umbrales, las cuotas, el fallback y el cortacircuito HTTP 429 son decisiones operativas "
+        "propias; `target_category` registra el motivo de selección y nunca constituye una etiqueta. "
+        "Este muestreo enriquecido no permite estimar prevalencias en YouTube ni en el Perú.",
         [
             ("Preflight", "from moderacion_peru.artifacts import artifact_status\nshow_result('Disponibilidad de artefactos', artifact_status(ROOT), tone='neutral')"),
             ("Parámetros editables", SCRAPING_PARAMETERS),
             ("Canales y consultas", SCRAPING_SOURCES),
-            ("Reutilización y plan dirigido", SCRAPING_REUSE_AND_PLAN),
+            (
+                "Reutilización y plan dirigido\n\n"
+                "El soporte se mide por `video_id` único para no favorecer videos largos con más chunks. "
+                "La ponderación por déficit y el reparto multietiqueta se inspiran en problemas de "
+                "aprendizaje activo desbalanceado y distribuciones de cola larga "
+                "[@fairstein2024balancing] [@huang2021balancing]. Su implementación exacta es local: "
+                "`test` permanece congelado, el fallback sin historia reparte las cuatro categorías por "
+                "igual y las categorías objetivo solo orientan la adquisición.",
+                SCRAPING_REUSE_AND_PLAN,
+            ),
             ("Descubrimiento general o ampliación dirigida", SCRAPING_DISCOVERY),
             ("Cohorte activa y caché", SCRAPING_CANDIDATES),
             ("Ejecución controlada y tolerante a fallos", SCRAPING_EXECUTION),
