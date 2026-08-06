@@ -85,9 +85,9 @@ Las definiciones, inclusiones, exclusiones, contraejemplos y fuentes se encuentr
 
 La adquisición restaura la técnica estable del cuaderno histórico: `yt-dlp` escribe únicamente VTT manuales o automáticos en almacenamiento temporal, se elige la pista más completa y se exige un mínimo de 200 caracteres. `youtube-transcript-api` se usa solo como respaldo. No se descarga video ni audio ni se ejecuta reconocimiento automático del habla. El identificador de video, el hash de la transcripción y la versión del troceador impiden repetir trabajo ya materializado.
 
-Durante `01_01`, una barra informa el avance por fuente y otra el avance por candidato. El modo `directed` calcula déficits por videos etiquetados de `train+validation`, estima rendimiento histórico por canal, expande canales desde búsquedas temáticas y materializa una cohorte vigente con *round-robin* ponderado; si no hay datos previos, reparte la adquisición por igual entre los cuatro daños. Con `MAX_DIRECTED_CANDIDATES=None` y `MAX_NEW_VIDEOS=None` se conservan y recorren todos los candidatos dirigidos inéditos. La red se regula en lotes de 50, con una pausa adicional de 20 segundos entre lotes y pausas internas de 1–3 segundos en `yt-dlp`. El detalle queda en `datos/raw/fallos_descubrimiento_ultima_ejecucion.json` y `datos/raw/fallos_adquisicion.jsonl`.
+Durante `01_01`, una barra informa el avance por fuente y otra el avance por candidato. El modo `directed` calcula déficits por videos etiquetados de `train+validation`, estima rendimiento histórico por canal, expande canales desde búsquedas temáticas y materializa una cohorte vigente con *round-robin* ponderado; si no hay datos previos, reparte la adquisición por igual entre los cuatro daños. Con `MAX_DIRECTED_CANDIDATES=None` y `MAX_NEW_VIDEOS=None` se conservan y recorren todos los candidatos dirigidos inéditos. La cola de descarga usa una prioridad pseudoaleatoria reproducible e intercala un video por canal. La red se regula en lotes de 10, con una pausa adicional de 60 segundos entre lotes y pausas internas de 5–10 segundos en `yt-dlp`. El detalle queda en `datos/raw/fallos_descubrimiento_ultima_ejecucion.json` y `datos/raw/fallos_adquisicion.jsonl`.
 
-`yt-dlp` gestiona cabeceras, sesión HTTP, pausas y reintentos. El adquirente espera 30 segundos después de cada grupo de 10 respuestas 429 y solo abre el cortacircuito si se completan tres grupos sin éxito; una adquisición correcta reinicia ambos contadores. El remanente queda diferido para una corrida posterior y no se intenta eludir controles de la plataforma. Éxitos y fallos tienen checkpoints inmediatos, por lo que la siguiente corrida reanuda la cola. La selección, sus fórmulas, los artefactos, el reinicio recuperable y las limitaciones del muestreo se documentan en [Metodología de scraping y adquisición de subtítulos](docs/METODOLOGIA_SCRAPING.md).
+`yt-dlp` gestiona cabeceras, sesión HTTP, pausas y reintentos. No existe un cortacircuito global: si un video devuelve 429, se excluye únicamente su canal durante esa ejecución, se difieren sus videos posteriores y se continúa con todos los demás canales. Si falta identidad de canal, solo falla ese video. La aleatorización no corrige un bloqueo general de la IP; 429 simultáneos en numerosos canales requieren detener y reanudar más tarde. Éxitos y fallos tienen checkpoints inmediatos, por lo que la siguiente corrida reanuda la cola. La selección, sus fórmulas, los artefactos, el reinicio recuperable y las limitaciones del muestreo se documentan en [Metodología de scraping y adquisición de subtítulos](docs/METODOLOGIA_SCRAPING.md).
 
 ### 02 · Etiquetado semiautomático
 
@@ -249,7 +249,7 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 
 | Cuaderno | Interruptor inicial | Acción para ejecutar |
 |---|---|---|
-| `01_01` | plantilla segura: `DISCOVER_NEW=False`, `FETCH_NEW=False` | elija `DISCOVERY_MODE`; use `MAX_NEW_VIDEOS=None` para toda la cola y regule la red con lotes de 50 y pausas de 20 s |
+| `01_01` | plantilla segura: `DISCOVER_NEW=False`, `FETCH_NEW=False` | elija `DISCOVERY_MODE`; use `MAX_NEW_VIDEOS=None` para toda la cola y regule la red con lotes de 10, pausas internas de 5–10 s y 60 s entre lotes |
 | `02_01` | `RUN=False`, `LIMIT=20` | active `RUN=True`, valide el piloto y luego amplíe o retire el límite |
 | `02_02` | `RUN_REMOTE=False` | active solo con autorización para usar la API remota |
 | `03_01`–`03_06` | `RUN_TRAINING=False` | active la familia que se desea entrenar |
@@ -325,6 +325,22 @@ Para incorporar videos o subtítulos adicionales:
 
 El flujo omite videos conocidos, reutiliza subtítulos y cachés, y recorre todos los candidatos pendientes por lotes. Cada VTT válido se convierte en un checkpoint JSON antes de continuar y cada fallo se registra inmediatamente; una interrupción no obliga a repetir los éxitos anteriores. Después conserva las asignaciones de split por `video_id` y reanuda anotaciones por `chunk_id`. Un incremento crea otro snapshot inmutable que combina datos anteriores y nuevos. Los modelos neuronales pueden reanudar una interrupción o inicializar el run nuevo desde un candidato compatible anterior; nunca se entrena únicamente con el lote nuevo olvidando el corpus previo.
 
+### Continuar el flujo desde otra máquina
+
+Git conserva `datos/raw/transcripts_by_channel/`, candidatos, fallos y manifiestos de adquisición, además del bundle comprimido de Colab. El JSONL monolítico `transcripts_raw.jsonl`, `transcripts_cache/`, los chunks y el dataset sin comprimir siguen siendo artefactos locales: el primero se recompone desde las particiones por canal; caché no es necesaria; y los dos últimos se restauran desde el bundle verificado. Ninguna restauración borra filas existentes del canónico.
+
+Después de clonar y preparar el entorno:
+
+```powershell
+python tools/restore_synced_checkpoints.py
+```
+
+El comando verifica los SHA-256 de `datos/raw/transcripts_by_channel/index.json` y `resultados/colab_bundle/bundle_manifest.json`, reconstruye el canónico de forma idempotente y descomprime atómicamente chunks y dataset en sus rutas esperadas. Los cuadernos `03_01`–`03_08` repiten la verificación del dataset antes de usarlo: si falta, lo restauran; si existe con otro hash, se detienen en vez de sobrescribirlo.
+
+Cuando `02_05` produzca un snapshot nuevo, regenere el bundle con `python tools/prepare_colab_bundle.py --destination resultados/colab_bundle` antes de ejecutar `03`; el error ante hashes distintos evita entrenar accidentalmente con una versión no declarada.
+
+El dataset actual baja de aproximadamente 104,2 MiB a 20,3 MiB con gzip nivel 9, por lo que un único archivo comprimido es más simple y está holgadamente bajo los límites por archivo. Si una versión futura se aproxima a 45–50 MiB comprimidos, se deberá particionar primero por `split` y luego en partes numeradas, manteniendo un manifiesto único. El repositorio remoto es público: versionar estos checkpoints publica también el texto de los subtítulos y exige revisar licencias, términos de la plataforma y datos personales antes de hacer `push`.
+
 ## Google Colab L4 desde VS Code
 
 Los cuadernos `03_02`–`03_06`, y opcionalmente `02_01`, incluyen dentro de sus propias celdas el puente para una GPU NVIDIA L4. El cuaderno permanece en VS Code. Google Drive transporta únicamente el código mínimo, los chunks o el snapshot comprimido y los resultados finales; no sincroniza videos, audio, PDFs, modelos Ollama ni cachés de Hugging Face.
@@ -336,12 +352,14 @@ La preparación, verificación SHA-256, reanudación por `COLAB_RUN_ID` y recupe
 | Artefacto | Función |
 |---|---|
 | `datos/raw/transcripts_raw.jsonl` | vista canónica de transcripciones |
+| `datos/raw/transcripts_by_channel/*.jsonl` | checkpoint sincronizable, pequeño e idempotente por canal |
 | `datos/processed/chunks_v2.jsonl` | fragmentos con evidencia temporal |
 | `datos/etiquetado/**` | propuestas, campañas y eventos humanos |
 | `datos/model_ready/v2/snapshots/<id>/` | datasets entrenables inmutables |
 | `modelos/v2/**/candidate.json` | candidatos con configuración y métricas |
 | `modelos/registro_modelos_5_salidas.json` | único modelo autorizado para el frontend activo |
 | `resultados/**` | comparaciones, auditorías y manifiestos |
+| `resultados/colab_bundle/*.{gz,zip}` | checkpoint comprimido y verificable para restauración/Colab |
 | `archivo/` | contratos, cuadernos y métricas históricas preservadas |
 
 Cada snapshot y run registra hashes, versión de taxonomía, código, parámetros, hardware, insumos y salidas. [`config/artifacts.json`](config/artifacts.json) declara los artefactos esperados y cómo recuperarlos. [`docs/MATRIZ_TRAZABILIDAD.md`](docs/MATRIZ_TRAZABILIDAD.md) relaciona afirmaciones, fuentes y artefactos.

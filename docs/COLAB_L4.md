@@ -2,7 +2,7 @@
 
 ## Decisión de arquitectura
 
-El flujo usa la extensión oficial **Google Colab** para VS Code y Google Drive como único transporte. No necesita GitHub ni clona el repositorio. Los `.ipynb` permanecen en el workspace local; la celda integrada monta Drive, verifica el bundle, reconstruye un proyecto mínimo en `/content` y exige una GPU `NVIDIA L4`.
+El flujo de ejecución remota usa la extensión oficial **Google Colab** para VS Code y Google Drive como transporte hacia la VM. No necesita clonar el repositorio dentro de Colab. Como mecanismo adicional de continuidad entre máquinas locales, el mismo bundle se versiona en Git junto con las transcripciones particionadas por canal y los candidatos. Los `.ipynb` permanecen en el workspace local; la celda integrada monta Drive, verifica el bundle, reconstruye un proyecto mínimo en `/content` y exige una GPU `NVIDIA L4`.
 
 La extensión oficial se instala como `google.colab`; su flujo es `Select Kernel > Colab > Auto Connect`. `drive.mount()` funciona desde la extensión a partir de v0.2.1. Google advierte que montar Drive concede al código acceso a sus archivos y que la VM y las librerías instaladas no forman parte del notebook compartido, razón por la que cada cuaderno contiene un bootstrap explícito y verificable.
 
@@ -32,12 +32,12 @@ La carpeta privada ya creada es [ModeracionPeru_Colab](https://drive.google.com/
 
 | Archivo | Tamaño | Consumidores |
 |---|---:|---|
-| `project_core.zip` | 67 505 B | todos los cuadernos Colab |
-| `chunks_v2.jsonl.gz` | 11 549 973 B | `02_01` |
-| `dataset_5_salidas.jsonl.gz` | 21 275 598 B | `03_02`–`03_06` |
+| `project_core.zip` | 78 496 B | todos los cuadernos Colab |
+| `chunks_v2.jsonl.gz` | 11 491 109 B | `02_01` |
+| `dataset_5_salidas.jsonl.gz` | 21 201 195 B | `03_01`–`03_08` |
 | `bundle_manifest.json` | 2 913 B | verificación de todo el bundle |
 
-Total: aproximadamente 32,9 MB en lugar de 147,2 MB sin comprimir. No se sincronizan videos, audio, transcripciones crudas, PDFs, archivo histórico, modelos Ollama, caché de Hugging Face, paper, presentación ni frontends. La carpeta no está compartida públicamente.
+Total: aproximadamente 32,8 MB en lugar de 147,2 MB sin comprimir. No se sincronizan videos, audio, transcripciones crudas, PDFs, archivo histórico, modelos Ollama, caché de Hugging Face, paper, presentación ni frontends. La carpeta de Drive no está compartida públicamente; la copia versionada en el repositorio sí será pública al hacer `push`.
 
 ## Preparación o actualización local
 
@@ -46,6 +46,24 @@ El bundle reproducible se conserva también en `resultados/colab_bundle`:
 ```powershell
 python tools/prepare_colab_bundle.py --destination resultados/colab_bundle
 ```
+
+La compresión gzip usa nivel 9, nombre interno vacío y `mtime=0`, de modo que el
+mismo contenido produce un archivo reproducible. En una máquina recién clonada:
+
+```powershell
+python tools/restore_synced_checkpoints.py
+```
+
+restaura las entradas a sus rutas locales después de comprobar el SHA-256 del
+archivo comprimido y del contenido. Además, cada cuaderno `03_01`–`03_08`
+verifica el dataset antes de usarlo: lo descomprime solo si falta y falla si una
+copia existente no coincide. El dataset actual no necesita particionarse; si su
+gzip se acerca a 45–50 MiB, el contrato deberá ampliarse a archivos por `split`
+y partes numeradas.
+
+Cada vez que `02_05` publique un snapshot nuevo, regenere el bundle antes de
+ejecutar un cuaderno `03`. La divergencia deliberadamente bloquea el consumo de
+un dataset distinto del declarado en el manifiesto.
 
 Si se instala Google Drive para escritorio, puede actualizarse directamente mediante:
 

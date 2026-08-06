@@ -12,7 +12,20 @@
 
 Las nuevas corridas usan `raw/` para candidatos, caché por video y transcripciones; `processed/` para chunks deterministas; `etiquetado/` para salidas append-only; y `model_ready/v2/` para snapshots inmutables agrupados por `video_id`.
 
-El scraping reutiliza primero los `video_id` ya canónicos y luego el caché local. Solo consulta subtítulos para candidatos nuevos: `yt-dlp` escribe VTT sin audio/video, se exige un mínimo de 200 caracteres y toda la cola se recorre en lotes de 50 con una pausa de 20 segundos. Los JSON de caché y el registro inmediato de fallos permiten reanudar. La migración v2 materializa `SEGURO` únicamente desde una decisión segura explícita; una lista histórica vacía se deriva a revisión.
+El scraping reutiliza primero los `video_id` ya canónicos y luego el caché local. Solo consulta subtítulos para candidatos nuevos: `yt-dlp` escribe VTT sin audio/video, se exige un mínimo de 200 caracteres y toda la cola se recorre en lotes de 10 con una pausa de 60 segundos. La cola pseudoaleatoria es reproducible e intercala canales; un 429 difiere solo el canal afectado. Los JSON de caché y el registro inmediato de fallos permiten reanudar. La migración v2 materializa `SEGURO` únicamente desde una decisión segura explícita; una lista histórica vacía se deriva a revisión.
+
+La vista local `raw/transcripts_raw.jsonl` se conserva, pero Git sincroniza su
+partición idempotente `raw/transcripts_by_channel/`. Cada archivo corresponde a
+un canal y `index.json` registra cantidad, tamaño y SHA-256. Los candidatos,
+fallos y manifiestos también se sincronizan; `raw/transcripts_cache/` no. Tras clonar,
+`python tools/restore_synced_checkpoints.py` recompone el canónico y restaura
+las entradas comprimidas del bundle sin repetir descargas.
+
+`processed/chunks_v2.jsonl` es determinista y barato de regenerar con `01_02`;
+solo se conserva comprimido dentro del bundle para Colab. El dataset final no
+es barato de recrear porque contiene decisiones humanas y pseudoetiquetado con
+procedencia: se sincroniza como `resultados/colab_bundle/dataset_5_salidas.jsonl.gz`
+y los cuadernos de entrenamiento verifican su SHA-256 antes de usarlo.
 
 ## Documentación de la estructura anterior
 

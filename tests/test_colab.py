@@ -4,6 +4,8 @@ import gzip
 import json
 from pathlib import Path
 
+import pytest
+
 from moderacion_peru import colab
 from moderacion_peru.io import sha256_file
 from moderacion_peru.schemas import HardwareRecord
@@ -78,6 +80,48 @@ def test_colab_stages_declared_input_and_restores_published_run(tmp_path, monkey
     )
     assert second.resumed
     assert (second.scratch_output_dir / "checkpoint.json").is_file()
+
+
+def test_local_bundle_input_is_restored_verified_and_never_silently_replaced(tmp_path):
+    root = tmp_path / "project"
+    (root / "config").mkdir(parents=True)
+    bundle = root / "resultados" / "colab_bundle"
+    bundle.mkdir(parents=True)
+    source = tmp_path / "source.jsonl"
+    source.write_text('{"chunk_id":"c1"}\n', encoding="utf-8")
+    archive = bundle / "dataset.jsonl.gz"
+    with source.open("rb") as raw, gzip.open(archive, "wb") as compressed:
+        compressed.write(raw.read())
+    entry = {
+        "source": "datos/model_ready/v2/dataset.jsonl",
+        "archive": archive.name,
+        "source_sha256": sha256_file(source),
+        "archive_sha256": sha256_file(archive),
+    }
+    (root / "config" / "colab_l4.json").write_text(
+        json.dumps(
+            {
+                "manifest": "bundle_manifest.json",
+                "inputs": {"dataset": {"source": entry["source"], "archive": entry["archive"]}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (bundle / "bundle_manifest.json").write_text(
+        json.dumps({"inputs": {"dataset": entry}}),
+        encoding="utf-8",
+    )
+
+    first = colab.prepare_local_bundle_input("dataset", project_root=root)
+    second = colab.prepare_local_bundle_input("dataset", project_root=root)
+    destination = root / entry["source"]
+    assert first["status"] == "restored"
+    assert second["status"] == "verified_existing"
+    assert destination.read_bytes() == source.read_bytes()
+
+    destination.write_text("otro contenido\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="no coincide"):
+        colab.prepare_local_bundle_input("dataset", project_root=root)
 
 
 def test_non_l4_runtime_fails_explicitly(tmp_path, monkeypatch):

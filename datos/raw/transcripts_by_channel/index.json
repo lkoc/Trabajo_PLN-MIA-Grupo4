@@ -1,0 +1,4193 @@
+{
+  "schema_version": "1.0.0",
+  "partition_key": "youtube_channel",
+  "format": "jsonl",
+  "id_field": "video_id",
+  "max_channel_file_bytes": 26214400,
+  "total_channel_files": 299,
+  "total_channels": 297,
+  "total_videos": 2266,
+  "total_bytes": 205451926,
+  "files": [
+    {
+      "file": "arde-troya-con-juliana-oxenford--98afa5172ba6--part-0001.jsonl",
+      "channel_key": "title:arde troya con juliana oxenford",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Arde Troya con Juliana Oxenford"
+      ],
+      "videos": 110,
+      "bytes": 21604763,
+      "sha256": "8a8136fe682c76327e42d8e962dfd35d6c0044bd650832f5ce7bded0fd3756ae"
+    },
+    {
+      "file": "marisol-la-faraona-de-la-cumbia-and-tony-rosado-oficial--751585c05ccb--part-0001.jsonl",
+      "channel_key": "title:marisol la faraona de la cumbia and tony rosado oficial",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "MARISOL LA FARAONA DE LA CUMBIA and Tony Rosado Oficial"
+      ],
+      "videos": 1,
+      "bytes": 9686,
+      "sha256": "a2f90ef0385a2b04a42ad3f06b7ec072f44a03faa88dffba9e2b7b7aa9ef8ff3"
+    },
+    {
+      "file": "todo-good--c7a2cbfd6b80--part-0001.jsonl",
+      "channel_key": "title:todo good",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Todo Good"
+      ],
+      "videos": 74,
+      "bytes": 7353237,
+      "sha256": "706ab038a8a167acf1817e4c42af4c7ffa3436e5ee394d16df2febcb75a04582"
+    },
+    {
+      "file": "uc-1pqb0kwanjcrha63ztbkg--1a7971723a38--part-0001.jsonl",
+      "channel_key": "id:UC-1pqb0KwANjcRHA63ZTBkg",
+      "part": 1,
+      "channel_ids": [
+        "UC-1pqb0KwANjcRHA63ZTBkg"
+      ],
+      "channel_titles": [
+        "La Negra Candela Oficial"
+      ],
+      "videos": 24,
+      "bytes": 1456659,
+      "sha256": "ba21f25f89d4ec9dde533e8162a98067fc06db59feb789d4f6f45806dd5dce45"
+    },
+    {
+      "file": "uc-b7xv56unrdkj0vc3qw8cg--f410d4d9049f--part-0001.jsonl",
+      "channel_key": "id:UC-B7Xv56uNRDkj0vC3QW8Cg",
+      "part": 1,
+      "channel_ids": [
+        "UC-B7Xv56uNRDkj0vC3QW8Cg"
+      ],
+      "channel_titles": [
+        "La República - LR+"
+      ],
+      "videos": 23,
+      "bytes": 1665030,
+      "sha256": "cdcf1a66e8bdb31d8ae9f13f1409f671001aa41772f9051392d3033aa408d527"
+    },
+    {
+      "file": "uc-w7-vrelsbgqybkwtujhvq--101322bc9cbb--part-0001.jsonl",
+      "channel_key": "id:UC-W7-VrElSbgQYbKwtujHVQ",
+      "part": 1,
+      "channel_ids": [
+        "UC-W7-VrElSbgQYbKwtujHVQ"
+      ],
+      "channel_titles": [
+        "Eva"
+      ],
+      "videos": 1,
+      "bytes": 85267,
+      "sha256": "7676f36da52015232fda90a190e47ee00d01f8c6d2437179c4389b6e11fd5a52"
+    },
+    {
+      "file": "uc00nfmpfvwvruvysr9jtelg--60438e25039d--part-0001.jsonl",
+      "channel_key": "id:UC00nfmpfVwvRUvysr9jteLg",
+      "part": 1,
+      "channel_ids": [
+        "UC00nfmpfVwvRUvysr9jteLg"
+      ],
+      "channel_titles": [
+        "Netas Marionetas"
+      ],
+      "videos": 1,
+      "bytes": 16255,
+      "sha256": "315365c410d51e31f61d7d38390d91152f8a45e09b363110a269086eba2ee48e"
+    },
+    {
+      "file": "uc05nhifnrwxojkzgap-sffg--cb7d7606a005--part-0001.jsonl",
+      "channel_key": "id:UC05nHifnRWxoJkzgAP-sffg",
+      "part": 1,
+      "channel_ids": [
+        "UC05nHifnRWxoJkzgAP-sffg"
+      ],
+      "channel_titles": [
+        "Telefuturo - Prensa"
+      ],
+      "videos": 1,
+      "bytes": 11091,
+      "sha256": "21628a1ca3d095fd91b398f433147c28e2b8bf50f3ef351bbd09deb20658d9da"
+    },
+    {
+      "file": "uc08dcssldbivlvebhupqsxg--f3e662512901--part-0001.jsonl",
+      "channel_key": "id:UC08DCSsLDBIVLvebHUpqsXg",
+      "part": 1,
+      "channel_ids": [
+        "UC08DCSsLDBIVLvebHUpqsXg"
+      ],
+      "channel_titles": [
+        "Qwada"
+      ],
+      "videos": 1,
+      "bytes": 5712,
+      "sha256": "c3adfaf7749d73cf5fe68f18a7f9786e14465c8267ea6bfc22b095168674ca77"
+    },
+    {
+      "file": "uc0bx0xmppa8fv1rfwjk2swq--480846455d13--part-0001.jsonl",
+      "channel_key": "id:UC0BX0XMPPa8fV1rfWJk2SwQ",
+      "part": 1,
+      "channel_ids": [
+        "UC0BX0XMPPa8fV1rfWJk2SwQ"
+      ],
+      "channel_titles": [
+        "Movilh Chile"
+      ],
+      "videos": 4,
+      "bytes": 34508,
+      "sha256": "cfeb31cdcbf6756b700655a0139338564f61d48ec735a9f2331119bb7b065236"
+    },
+    {
+      "file": "uc0guogjwxbrkvb-vcbgnvjq--15384db14f92--part-0001.jsonl",
+      "channel_key": "id:UC0GuogjwXbrKvb-VcbgnVjQ",
+      "part": 1,
+      "channel_ids": [
+        "UC0GuogjwXbrKvb-VcbgnVjQ"
+      ],
+      "channel_titles": [
+        "MI FAMA PERU"
+      ],
+      "videos": 1,
+      "bytes": 17675,
+      "sha256": "78c68024dd00c3520594e9df13abed07970c45d640cda88eb78f7b7c0a3ebd96"
+    },
+    {
+      "file": "uc0icco7kpbkto-rply0htjq--fb02fd9cebe7--part-0001.jsonl",
+      "channel_key": "id:UC0IcCo7kPbktO-rply0HtJQ",
+      "part": 1,
+      "channel_ids": [
+        "UC0IcCo7kPbktO-rply0HtJQ"
+      ],
+      "channel_titles": [
+        "Gobierno Regional La Libertad"
+      ],
+      "videos": 1,
+      "bytes": 4061,
+      "sha256": "991b9a39190eb0a8f9ad4faca6df8a86b8335a2696cb2f78eb1a198af70e75a6"
+    },
+    {
+      "file": "uc0itq1d61dmwwelw-ubv-bw--9bb7f812421d--part-0001.jsonl",
+      "channel_key": "id:UC0iTq1d61dmwWElW-UBv-Bw",
+      "part": 1,
+      "channel_ids": [
+        "UC0iTq1d61dmwWElW-UBv-Bw"
+      ],
+      "channel_titles": [
+        "Reporta Perú"
+      ],
+      "videos": 1,
+      "bytes": 50083,
+      "sha256": "34df0427f77301aacd988f04e1c69337be0f33cdbd32615914a3cbc616782434"
+    },
+    {
+      "file": "uc0r4smsfydurf_vk9zir80a--c0aeb464998b--part-0001.jsonl",
+      "channel_key": "id:UC0R4smsFydUrF_vK9ziR80A",
+      "part": 1,
+      "channel_ids": [
+        "UC0R4smsFydUrF_vK9ziR80A"
+      ],
+      "channel_titles": [
+        "Sin Censura Media"
+      ],
+      "videos": 5,
+      "bytes": 2209851,
+      "sha256": "16af5ee91fd1d716d6f4d899c76607f03ea51f1d4c80095ec604729049650673"
+    },
+    {
+      "file": "uc0t1io_kwp59h29benzbfhq--32e32078f875--part-0001.jsonl",
+      "channel_key": "id:UC0T1io_kWp59h29bENZBfhQ",
+      "part": 1,
+      "channel_ids": [
+        "UC0T1io_kWp59h29bENZBfhQ"
+      ],
+      "channel_titles": [
+        "redyzcosmo"
+      ],
+      "videos": 4,
+      "bytes": 135203,
+      "sha256": "5cb3b7f60d1a8590c3f2c22b0b4b118bc051cfb32b47cd043fd123bed0959206"
+    },
+    {
+      "file": "uc0v2t-tbjc2sh_kq2aeqqvg--d2f20582fa61--part-0001.jsonl",
+      "channel_key": "id:UC0V2T-TbjC2sh_kq2AeQqVg",
+      "part": 1,
+      "channel_ids": [
+        "UC0V2T-TbjC2sh_kq2AeQqVg"
+      ],
+      "channel_titles": [
+        "HONESTIDAD PERÚ"
+      ],
+      "videos": 1,
+      "bytes": 12219,
+      "sha256": "f6cdd904725cd04f6cdbb09a0fc34df145b1d7924550525718d720530de0d9c3"
+    },
+    {
+      "file": "uc1ffd-trhncvm2-uhviv_xg--bd6036ac3ab3--part-0001.jsonl",
+      "channel_key": "id:UC1FFD-TRhncVM2-uhviV_xg",
+      "part": 1,
+      "channel_ids": [
+        "UC1FFD-TRhncVM2-uhviV_xg"
+      ],
+      "channel_titles": [
+        "DJ EL CUERVO"
+      ],
+      "videos": 2,
+      "bytes": 17704,
+      "sha256": "6e6e17196a90ab6a29b3b01cf08dc9b64dd0e0b655838f87768768402eadc334"
+    },
+    {
+      "file": "uc1fxclhy_uveoenwhnsviug--cee67a56cd46--part-0001.jsonl",
+      "channel_key": "id:UC1fXcLHy_uveoenwHNSVIug",
+      "part": 1,
+      "channel_ids": [
+        "UC1fXcLHy_uveoenwHNSVIug"
+      ],
+      "channel_titles": [
+        "Giancarlo Javier"
+      ],
+      "videos": 1,
+      "bytes": 56296,
+      "sha256": "405cc694b84244e172c7442e9ba49ccb83ef360b6c012661552ece220d807621"
+    },
+    {
+      "file": "uc1hnby1vabevqzxkixzwv3q--8748045408e4--part-0001.jsonl",
+      "channel_key": "id:UC1hnBY1vAbEVqzxKiXZWv3Q",
+      "part": 1,
+      "channel_ids": [
+        "UC1hnBY1vAbEVqzxKiXZWv3Q"
+      ],
+      "channel_titles": [
+        "Conducta Delictiva"
+      ],
+      "videos": 1,
+      "bytes": 374987,
+      "sha256": "988be406a97dced41f26e09608af96497ba635c77f429d018d67cffc1137ff3c"
+    },
+    {
+      "file": "uc1jgmxpgveggt0gel-fqclg--f74287c1eadb--part-0001.jsonl",
+      "channel_key": "id:UC1jgmxpGVeggT0GeL-FQClg",
+      "part": 1,
+      "channel_ids": [
+        "UC1jgmxpGVeggT0GeL-FQClg"
+      ],
+      "channel_titles": [
+        "DANIEL VEGA"
+      ],
+      "videos": 1,
+      "bytes": 29100,
+      "sha256": "641e6ccd06dd7b72747e2a3094b6ae06693fe19c2e43e2805c0f9736de78287f"
+    },
+    {
+      "file": "uc1msbip2dpza6o6ciep-d2a--dbe9e6e7dbb4--part-0001.jsonl",
+      "channel_key": "id:UC1MsbIp2dPzA6o6cIEp-d2A",
+      "part": 1,
+      "channel_ids": [
+        "UC1MsbIp2dPzA6o6cIEp-d2A"
+      ],
+      "channel_titles": [
+        "Proyecto Todo Mejora"
+      ],
+      "videos": 3,
+      "bytes": 48854,
+      "sha256": "57167940159bc4f72e216332cebf8854129c631d38862d689793e9d096ffd625"
+    },
+    {
+      "file": "uc1rjzqlqdlsosrhrafwnzkw--d22c4bb8e719--part-0001.jsonl",
+      "channel_key": "id:UC1rjzqLqdLSOsRhrAFwnzKw",
+      "part": 1,
+      "channel_ids": [
+        "UC1rjzqLqdLSOsRhrAFwnzKw"
+      ],
+      "channel_titles": [
+        "Estudio de Abogados Arredondo&Jordan"
+      ],
+      "videos": 1,
+      "bytes": 17754,
+      "sha256": "f0a5172dad1862e899bf4232ac9430f743b8e2572d90fbf0da21b751ee54c5a3"
+    },
+    {
+      "file": "uc294dkvc88kfzkkhsblmafq--605f53ea3463--part-0001.jsonl",
+      "channel_key": "id:UC294dkvc88KFZkkHsBLMAFQ",
+      "part": 1,
+      "channel_ids": [
+        "UC294dkvc88KFZkkHsBLMAFQ"
+      ],
+      "channel_titles": [
+        "Somos La Plata"
+      ],
+      "videos": 5,
+      "bytes": 357741,
+      "sha256": "4dbd7942adcb179a5402d9326a4b73e8e4c81e151c2a2cd32f4e38ec5421dd23"
+    },
+    {
+      "file": "uc2q91pxdf0bpf0ek44pgymw--07da61e3f87f--part-0001.jsonl",
+      "channel_key": "id:UC2Q91pxDF0BPf0eK44pgYMw",
+      "part": 1,
+      "channel_ids": [
+        "UC2Q91pxDF0BPf0eK44pgYMw"
+      ],
+      "channel_titles": [
+        "Telenueve"
+      ],
+      "videos": 1,
+      "bytes": 22392,
+      "sha256": "78a04224b6906a7e0a42566802aef4998095e097ffb41cd8767ae898c2acc599"
+    },
+    {
+      "file": "uc2qhjfzvnb2sdbfnod2zjba--67542cb34663--part-0001.jsonl",
+      "channel_key": "id:UC2QhJFzvnB2SDBfnOd2zJBA",
+      "part": 1,
+      "channel_ids": [
+        "UC2QhJFzvnB2SDBfnOd2zJBA"
+      ],
+      "channel_titles": [
+        "Perú Actual"
+      ],
+      "videos": 1,
+      "bytes": 4459,
+      "sha256": "bcd948d63ea00b2779c92a03957997e4cec60495f20a1e50eda5da836969ed8b"
+    },
+    {
+      "file": "uc2sek1w7dgohs_g3w1biz-w--37ecb68bde0e--part-0001.jsonl",
+      "channel_key": "id:UC2SEk1w7DgoHs_G3w1biz-w",
+      "part": 1,
+      "channel_ids": [
+        "UC2SEk1w7DgoHs_G3w1biz-w"
+      ],
+      "channel_titles": [
+        "El Universal"
+      ],
+      "videos": 11,
+      "bytes": 332477,
+      "sha256": "c30ddaf887d41b91fd7e9bfa591d3c150bb040dab0283c98dd166a6fcafd9527"
+    },
+    {
+      "file": "uc2xq2pk-got3rtz9zj32hlq--ba2429848eac--part-0001.jsonl",
+      "channel_key": "id:UC2Xq2PK-got3Rtz9ZJ32hLQ",
+      "part": 1,
+      "channel_ids": [
+        "UC2Xq2PK-got3Rtz9ZJ32hLQ"
+      ],
+      "channel_titles": [
+        "Noticias Caracol"
+      ],
+      "videos": 10,
+      "bytes": 730345,
+      "sha256": "01e9252b290a74e8447078094089f40b75233f06907c7e2683cb9917bf8aebc2"
+    },
+    {
+      "file": "uc3lzarm47w2oa5yhvdlqpdw--d349944a3856--part-0001.jsonl",
+      "channel_key": "id:UC3LZaRm47W2Oa5yHVdlQPdw",
+      "part": 1,
+      "channel_ids": [
+        "UC3LZaRm47W2Oa5yHVdlQPdw"
+      ],
+      "channel_titles": [
+        "Sin Etiquetas"
+      ],
+      "videos": 4,
+      "bytes": 136800,
+      "sha256": "e20f1daf63c3cf1a16ece38bc184595d1948095b359a12757ec59f1446bc649a"
+    },
+    {
+      "file": "uc3nugxbbl05tthfgbs6kpka--742c6df59544--part-0001.jsonl",
+      "channel_key": "id:UC3NUgxBBl05tthfGBS6kPkA",
+      "part": 1,
+      "channel_ids": [
+        "UC3NUgxBBl05tthfGBS6kPkA"
+      ],
+      "channel_titles": [
+        "NoticiasUnoColombia"
+      ],
+      "videos": 1,
+      "bytes": 12621,
+      "sha256": "14a4d397840b79a2e9ede71bef246f44153bccddbb5fb7250ace1a3f0e2bec64"
+    },
+    {
+      "file": "uc3rdtlrcgr3js3_3jow4baw--0ccbeee7c2e7--part-0001.jsonl",
+      "channel_key": "id:UC3rDtLrcgr3JS3_3JOW4BAw",
+      "part": 1,
+      "channel_ids": [
+        "UC3rDtLrcgr3JS3_3JOW4BAw"
+      ],
+      "channel_titles": [
+        "Latina Televisión"
+      ],
+      "videos": 35,
+      "bytes": 2217350,
+      "sha256": "1b4b86ab3b400ce050769a09b7b9d55a1b5bbef63433721ea07d56077c947ffa"
+    },
+    {
+      "file": "uc4dwvskvwj36tjyhjdqccaq--f3ffd1f6b28e--part-0001.jsonl",
+      "channel_key": "id:UC4dWvSKVWJ36tJyhjDQCCaQ",
+      "part": 1,
+      "channel_ids": [
+        "UC4dWvSKVWJ36tJyhjDQCCaQ"
+      ],
+      "channel_titles": [
+        "DNews"
+      ],
+      "videos": 2,
+      "bytes": 130852,
+      "sha256": "e1374fa5a7a404b07723363804eaee25dbeda85818b5ae41e775e9d6a0dc63ec"
+    },
+    {
+      "file": "uc4hap99arzdbc0vxhr96nsa--45d49f377008--part-0001.jsonl",
+      "channel_key": "id:UC4HaP99ArZDbC0VXHr96NsA",
+      "part": 1,
+      "channel_ids": [
+        "UC4HaP99ArZDbC0VXHr96NsA"
+      ],
+      "channel_titles": [
+        "Discent Legem - Perú"
+      ],
+      "videos": 2,
+      "bytes": 6681,
+      "sha256": "b654fda7fe406cb2f3f1658dd9ad3d0c9c0e6ec2c945a51f748bd29bf6fb185b"
+    },
+    {
+      "file": "uc4m7eadmre89rksgcawfsia--499bea08b454--part-0001.jsonl",
+      "channel_key": "id:UC4m7EADMRE89rksgCaWFSIA",
+      "part": 1,
+      "channel_ids": [
+        "UC4m7EADMRE89rksgCaWFSIA"
+      ],
+      "channel_titles": [
+        "Inka Filma"
+      ],
+      "videos": 5,
+      "bytes": 116023,
+      "sha256": "b0739e8fab2f04dc7df4a925edae0a24f2f116f58b72120b3ab97bfccfaff7a7"
+    },
+    {
+      "file": "uc4oqavxfunlkivyjuynqkta--71f2fe9b7cf4--part-0001.jsonl",
+      "channel_key": "id:UC4oQAvXFuNlKivYjUynQKTA",
+      "part": 1,
+      "channel_ids": [
+        "UC4oQAvXFuNlKivYjUynQKTA"
+      ],
+      "channel_titles": [
+        "RevistaSemana"
+      ],
+      "videos": 5,
+      "bytes": 260637,
+      "sha256": "058e772c87ec7bec07cff4953ebe5d9d29b604d1476eccdf3ed6339d067c021e"
+    },
+    {
+      "file": "uc5j8-2ft0zmmbkmk72r4aea--bad051203e6b--part-0001.jsonl",
+      "channel_key": "id:UC5j8-2FT0ZMMBkmK72R4aeA",
+      "part": 1,
+      "channel_ids": [
+        "UC5j8-2FT0ZMMBkmK72R4aeA"
+      ],
+      "channel_titles": [
+        "RPP Noticias"
+      ],
+      "videos": 29,
+      "bytes": 1344464,
+      "sha256": "e3aef5dbb811af5094b75bf365f6bf091527097837e7e0be25308f5518a88b88"
+    },
+    {
+      "file": "uc5q2iiiustywaocwij2q9xg--1d282505d288--part-0001.jsonl",
+      "channel_key": "id:UC5q2iIIustywaocwIj2q9Xg",
+      "part": 1,
+      "channel_ids": [
+        "UC5q2iIIustywaocwIj2q9Xg"
+      ],
+      "channel_titles": [
+        "Magazin Pacifico"
+      ],
+      "videos": 5,
+      "bytes": 323859,
+      "sha256": "b2da8efb33b8f41cc3c68aee34fdb0590b1f7067a648782fa4b48fc9d9e17536"
+    },
+    {
+      "file": "uc64jakmy2omrupsycgga9lw--443f40552d77--part-0001.jsonl",
+      "channel_key": "id:UC64JaKmY2OmRupSYcGgA9Lw",
+      "part": 1,
+      "channel_ids": [
+        "UC64JaKmY2OmRupSYcGgA9Lw"
+      ],
+      "channel_titles": [
+        "Multimedia PTV 2"
+      ],
+      "videos": 1,
+      "bytes": 40025,
+      "sha256": "885d74f73c93743610ac2264502341450ee45fd190eb7d9fac26b68af93238c5"
+    },
+    {
+      "file": "uc6cevzwdcxtfc0iufnsdr1w--2fdf9cb8213d--part-0001.jsonl",
+      "channel_key": "id:UC6CEvzwdcXTfc0iuFnSdr1w",
+      "part": 1,
+      "channel_ids": [
+        "UC6CEvzwdcXTfc0iuFnSdr1w"
+      ],
+      "channel_titles": [
+        "Farándula Pe"
+      ],
+      "videos": 1,
+      "bytes": 51705,
+      "sha256": "5e6b98029abae495ee1dc4e4af642cf3816f213f63ac86419a4b6d84ac69630b"
+    },
+    {
+      "file": "uc6d5kt7wogxiyhekekbzsxw--a23c8431f26c--part-0001.jsonl",
+      "channel_key": "id:UC6d5KT7WoGxIYHekEKBzsxw",
+      "part": 1,
+      "channel_ids": [
+        "UC6d5KT7WoGxIYHekEKBzsxw"
+      ],
+      "channel_titles": [
+        "MIGUELITO PERÚ"
+      ],
+      "videos": 1,
+      "bytes": 31165,
+      "sha256": "1e86733d2e01941f27e28257b6263399570603388625f4d08940fc9d3805a768"
+    },
+    {
+      "file": "uc6nvdkuzy2exmovfw4i9ohw--eee7355699f3--part-0001.jsonl",
+      "channel_key": "id:UC6NVDkuzY2exMOVFw4i9oHw",
+      "part": 1,
+      "channel_ids": [
+        "UC6NVDkuzY2exMOVFw4i9oHw"
+      ],
+      "channel_titles": [
+        "América TV"
+      ],
+      "videos": 10,
+      "bytes": 865847,
+      "sha256": "1f671d58854b04e5379c1b2759b5b99bbae973398f41b703f93ad1e85407c321"
+    },
+    {
+      "file": "uc6xanp5ygm8onobdcgu70uq--91752086374a--part-0001.jsonl",
+      "channel_key": "id:UC6xAnp5ygm8oNoBDCgu70UQ",
+      "part": 1,
+      "channel_ids": [
+        "UC6xAnp5ygm8oNoBDCgu70UQ"
+      ],
+      "channel_titles": [
+        "El Búho pe"
+      ],
+      "videos": 3,
+      "bytes": 109298,
+      "sha256": "08ff5bd9dab8b7d1b93dd224a8dba972630851ce972760cf02d27bd48948b773"
+    },
+    {
+      "file": "uc7j-40gfnclx1j239ljcuna--4371748b65e1--part-0001.jsonl",
+      "channel_key": "id:UC7J-40gfnclX1J239lJCUnA",
+      "part": 1,
+      "channel_ids": [
+        "UC7J-40gfnclX1J239lJCUnA"
+      ],
+      "channel_titles": [
+        "Educa-T sobre Discriminación racial"
+      ],
+      "videos": 1,
+      "bytes": 3903,
+      "sha256": "0bcc6334189fa80979a2378776dca0d439fcb21e4ec46d531a81be9916506a8d"
+    },
+    {
+      "file": "uc7k--fhnjzhptrbtldmsoqq--e92be21e01bb--part-0001.jsonl",
+      "channel_key": "id:UC7k--FhnJzhPTrbtldMSoQQ",
+      "part": 1,
+      "channel_ids": [
+        "UC7k--FhnJzhPTrbtldMSoQQ"
+      ],
+      "channel_titles": [
+        "adn Noticias"
+      ],
+      "videos": 1,
+      "bytes": 13746,
+      "sha256": "f27646af013f07d43423c45a1fbddc23388e3b396fde4948628893baef41d3b4"
+    },
+    {
+      "file": "uc7qzif0dta-xpxsp9hv4dtw--552f562da054--part-0001.jsonl",
+      "channel_key": "id:UC7QZIf0dta-XPXsp9Hv4dTw",
+      "part": 1,
+      "channel_ids": [
+        "UC7QZIf0dta-XPXsp9Hv4dTw"
+      ],
+      "channel_titles": [
+        "RTVE Noticias"
+      ],
+      "videos": 6,
+      "bytes": 69412,
+      "sha256": "e44a48a944df723e00fddc77116f616ac234466e8b0070eba76e6aef152257fc"
+    },
+    {
+      "file": "uc7xttuknihdbci-ihqxe1lw--fd649dad60c5--part-0001.jsonl",
+      "channel_key": "id:UC7xTtUKnihDbCi-IhqxE1lw",
+      "part": 1,
+      "channel_ids": [
+        "UC7xTtUKnihDbCi-IhqxE1lw"
+      ],
+      "channel_titles": [
+        "CHILA JATUN"
+      ],
+      "videos": 1,
+      "bytes": 3083,
+      "sha256": "ef00051443e36dc8bab54e73a9b201f5b3a0899e5c34b6ca0186bcc9caa451c8"
+    },
+    {
+      "file": "uc80-iuy0gcvm6kji1olsbda--36f80ef3b8af--part-0001.jsonl",
+      "channel_key": "id:UC80-IuY0gCVm6kjI1OlSbdA",
+      "part": 1,
+      "channel_ids": [
+        "UC80-IuY0gCVm6kjI1OlSbdA"
+      ],
+      "channel_titles": [
+        "El Archivista Kerandi."
+      ],
+      "videos": 1,
+      "bytes": 12520,
+      "sha256": "2fdfe19565130fcf4826e126433731d54444255141742393f9de562ca421b68f"
+    },
+    {
+      "file": "uc872f7q02kuqgza-jm30zjw--5aa5bf861287--part-0001.jsonl",
+      "channel_key": "id:UC872F7q02kUQgZa-jm30zJw",
+      "part": 1,
+      "channel_ids": [
+        "UC872F7q02kUQgZa-jm30zJw"
+      ],
+      "channel_titles": [
+        "Informativo Perú"
+      ],
+      "videos": 2,
+      "bytes": 201200,
+      "sha256": "738458360e837587dae37cc350168f17e6ea55e6f5c47115496f6ff287d075d3"
+    },
+    {
+      "file": "uc8ehbk2zul2oswts389cxja--011442fbcbcb--part-0001.jsonl",
+      "channel_key": "id:UC8ehBK2zUl2oSWTS389cxJA",
+      "part": 1,
+      "channel_ids": [
+        "UC8ehBK2zUl2oSWTS389cxJA"
+      ],
+      "channel_titles": [
+        "Y que viva Cristo Rey"
+      ],
+      "videos": 4,
+      "bytes": 218659,
+      "sha256": "1e458c3b0c23518da8083222e3b4a68704b75869458ac3909ac746cfa1a0388e"
+    },
+    {
+      "file": "uc8nng2qeumqixlqps-eu_ig--79b0c6625562--part-0001.jsonl",
+      "channel_key": "id:UC8NNg2qEuMQIXlqPS-eu_ig",
+      "part": 1,
+      "channel_ids": [
+        "UC8NNg2qEuMQIXlqPS-eu_ig"
+      ],
+      "channel_titles": [
+        "SNT Paraguay"
+      ],
+      "videos": 1,
+      "bytes": 110534,
+      "sha256": "9f37fbbca9ea7d695709c87ca8deadcd54b6b09a91220dbdde16d87c8ee26841"
+    },
+    {
+      "file": "uc8otx0xqryfjqzuzw5ss09g--507880c21baa--part-0001.jsonl",
+      "channel_key": "id:UC8otX0xqrYFJqZUzw5SS09g",
+      "part": 1,
+      "channel_ids": [
+        "UC8otX0xqrYFJqZUzw5SS09g"
+      ],
+      "channel_titles": [
+        "CANAL CNC BARRANQUILLA"
+      ],
+      "videos": 4,
+      "bytes": 149470,
+      "sha256": "7bf02497bc419f40c11a75bd28d64cb4ca5b05110bdb16ac5c9bdb9f1ef519c3"
+    },
+    {
+      "file": "uc93-umxa9lhhugno5oqn9xq--66d3397e9f6b--part-0001.jsonl",
+      "channel_key": "id:UC93-uMxa9LHhUgNO5Oqn9xQ",
+      "part": 1,
+      "channel_ids": [
+        "UC93-uMxa9LHhUgNO5Oqn9xQ"
+      ],
+      "channel_titles": [
+        "Noticias Perú"
+      ],
+      "videos": 1,
+      "bytes": 15483,
+      "sha256": "335e83bb0e99cb778874f8595872e6a86efe922709110e985eff54f77fead769"
+    },
+    {
+      "file": "uc9hebpvlifgx0iglskeyfka--773ca16b6fa8--part-0001.jsonl",
+      "channel_key": "id:UC9HeBpVlifgX0igLskEyfkA",
+      "part": 1,
+      "channel_ids": [
+        "UC9HeBpVlifgX0igLskEyfkA"
+      ],
+      "channel_titles": [
+        "Carla Harada"
+      ],
+      "videos": 2,
+      "bytes": 46660,
+      "sha256": "573e2bf0548d0ade48421958f1a641d8c2e73c4cae1a84c559653a59a03f934a"
+    },
+    {
+      "file": "uc9qzdm6uck4roriwu23ahyq--f88e8a495c46--part-0001.jsonl",
+      "channel_key": "id:UC9qzDM6UCk4roRIWu23aHYQ",
+      "part": 1,
+      "channel_ids": [
+        "UC9qzDM6UCk4roRIWu23aHYQ"
+      ],
+      "channel_titles": [
+        "TV Azteca Puebla"
+      ],
+      "videos": 1,
+      "bytes": 18010,
+      "sha256": "196f1724b3644625df8db44c026a1a263424a0d17e8441573c6e7fb461bd538c"
+    },
+    {
+      "file": "uc9uvtwikpy0o95avxyqcbuw--7d4d16b0ce61--part-0001.jsonl",
+      "channel_key": "id:UC9uvtWIkPy0o95avXyqcbUw",
+      "part": 1,
+      "channel_ids": [
+        "UC9uvtWIkPy0o95avXyqcbUw"
+      ],
+      "channel_titles": [
+        "Plural TV"
+      ],
+      "videos": 1,
+      "bytes": 12727,
+      "sha256": "2bfe5a97f82b77c4541daeb523258ff2d71f448a9bffeb4838c375ec3c5609eb"
+    },
+    {
+      "file": "uc_40x4qc0ffdaekepamdwmq--660758e68c63--part-0001.jsonl",
+      "channel_key": "id:UC_40x4qc0ffdAeKEPaMdWMQ",
+      "part": 1,
+      "channel_ids": [
+        "UC_40x4qc0ffdAeKEPaMdWMQ"
+      ],
+      "channel_titles": [
+        "Pulpo Negro"
+      ],
+      "videos": 1,
+      "bytes": 34423,
+      "sha256": "d09cce39d411e408d1748fa60782fc53902a7d2056e4fb59c3364be48bad026a"
+    },
+    {
+      "file": "uc_6jg6mhk_vuutbz6jb_xmg--be5837673c80--part-0001.jsonl",
+      "channel_key": "id:UC_6JG6mhk_vuUTbZ6JB_XMg",
+      "part": 1,
+      "channel_ids": [
+        "UC_6JG6mhk_vuUTbZ6JB_XMg"
+      ],
+      "channel_titles": [
+        "Al Sexto Día"
+      ],
+      "videos": 1,
+      "bytes": 52058,
+      "sha256": "f621f6300f47b9cc26726ab70887c2ad1b289182826c259e813252be6bf0458a"
+    },
+    {
+      "file": "uc_ept7m1uxlcfvcurk49ziw--0c90898defa6--part-0001.jsonl",
+      "channel_key": "id:UC_ept7M1UXlCfvcUrK49Ziw",
+      "part": 1,
+      "channel_ids": [
+        "UC_ept7M1UXlCfvcUrK49Ziw"
+      ],
+      "channel_titles": [
+        "Cosmos Televisión"
+      ],
+      "videos": 34,
+      "bytes": 537323,
+      "sha256": "f7dc99ea65f949b2c2cb73965309f0d748e52d9416597a65619012192fc88dff"
+    },
+    {
+      "file": "uc_hmrsenun8c5kdkirm7jea--fda45ec3c5e5--part-0001.jsonl",
+      "channel_key": "id:UC_hMrSENUn8C5KdKIRM7JeA",
+      "part": 1,
+      "channel_ids": [
+        "UC_hMrSENUn8C5KdKIRM7JeA"
+      ],
+      "channel_titles": [
+        "Kiketeckno"
+      ],
+      "videos": 2,
+      "bytes": 149097,
+      "sha256": "91f3f3385d86771d2b24f99b11e2723c8959a61bb9f783956c52959c082c2870"
+    },
+    {
+      "file": "uc_l1ba516-zbpmywpq8p55g--5e477082fb9e--part-0001.jsonl",
+      "channel_key": "id:UC_L1ba516-ZBPmywPq8P55g",
+      "part": 1,
+      "channel_ids": [
+        "UC_L1ba516-ZBPmywPq8P55g"
+      ],
+      "channel_titles": [
+        "UTV Noticias - Pucallpa"
+      ],
+      "videos": 2,
+      "bytes": 54879,
+      "sha256": "297df1a495bb56c73c25d28a41282a4de17099ee3d8d394236142d02af578a5d"
+    },
+    {
+      "file": "uc_oebszyvjiulf6svzr9rzw--dd05b767518f--part-0001.jsonl",
+      "channel_key": "id:UC_oebsZYvjiULf6sVZr9Rzw",
+      "part": 1,
+      "channel_ids": [
+        "UC_oebsZYvjiULf6sVZr9Rzw"
+      ],
+      "channel_titles": [
+        "Tuteve ATV"
+      ],
+      "videos": 4,
+      "bytes": 231186,
+      "sha256": "49e3f7aeb22f86168541a080a8f27d587351b849bcb476f495607ff84b5bf7c7"
+    },
+    {
+      "file": "uc_ybwf7uo1nii-pzt624jza--af79a282d6b9--part-0001.jsonl",
+      "channel_key": "id:UC_ybWf7uo1Nii-PZT624JZA",
+      "part": 1,
+      "channel_ids": [
+        "UC_ybWf7uo1Nii-PZT624JZA"
+      ],
+      "channel_titles": [
+        "Louis Producer"
+      ],
+      "videos": 1,
+      "bytes": 12961,
+      "sha256": "965b1875a719f25586b6b11416dd317fdba9c449ae018d4cc9ddb7f495f533c9"
+    },
+    {
+      "file": "uc_zpz_cv69p4ol0hdejz4ia--cd6e9f964fe8--part-0001.jsonl",
+      "channel_key": "id:UC_Zpz_cv69p4oL0hDEJz4IA",
+      "part": 1,
+      "channel_ids": [
+        "UC_Zpz_cv69p4oL0hDEJz4IA"
+      ],
+      "channel_titles": [
+        "enlacenacional"
+      ],
+      "videos": 6,
+      "bytes": 58039,
+      "sha256": "7443eda7cb4f6c4fb7a4606d9a383f6019cac03e1c696eff5e5177dde4ca31e6"
+    },
+    {
+      "file": "uca-_7rvjyejwcrdumqwhzew--a747a31632d2--part-0001.jsonl",
+      "channel_key": "id:UCA-_7rvJyEjwCrdUMqWHZEw",
+      "part": 1,
+      "channel_ids": [
+        "UCA-_7rvJyEjwCrdUMqWHZEw"
+      ],
+      "channel_titles": [
+        "SubrayadoHD"
+      ],
+      "videos": 1,
+      "bytes": 7376,
+      "sha256": "8314c0696bb42356398ca594a5b581751e76a9894f9b295c6ee47636ebb429f9"
+    },
+    {
+      "file": "uca4twenzmtvmh6yzbiapmja--23f8fea77dc1--part-0001.jsonl",
+      "channel_key": "id:UCA4tWENZMTVmH6yZBiAPMjA",
+      "part": 1,
+      "channel_ids": [
+        "UCA4tWENZMTVmH6yZBiAPMjA"
+      ],
+      "channel_titles": [
+        "Reíte pue mi gente"
+      ],
+      "videos": 1,
+      "bytes": 5048,
+      "sha256": "28614f11ef5b114e97a68d5fb187863d6c32f3ea3caa3cdc3302496631b9b4a8"
+    },
+    {
+      "file": "uca5h2yryfoluh4c22uy5jsq--adebcc4da03b--part-0001.jsonl",
+      "channel_key": "id:UCa5H2yRYfOlUH4c22uY5JsQ",
+      "part": 1,
+      "channel_ids": [
+        "UCa5H2yRYfOlUH4c22uY5JsQ"
+      ],
+      "channel_titles": [
+        "N60 Noticias"
+      ],
+      "videos": 2,
+      "bytes": 8643,
+      "sha256": "24730a4b9b2d0c6945e2feeb2464389f6f24fb13522a003031e2af4efb9125da"
+    },
+    {
+      "file": "ucahedztk6k7svp-umnzifmq--f3f12a234fd5--part-0001.jsonl",
+      "channel_key": "id:UCaHEdZtk6k7SVP-umnzifmQ",
+      "part": 1,
+      "channel_ids": [
+        "UCaHEdZtk6k7SVP-umnzifmQ"
+      ],
+      "channel_titles": [
+        "TheDonato"
+      ],
+      "videos": 1,
+      "bytes": 114195,
+      "sha256": "588314c4228fb0a9652526b34b686194067bf41db4893403a63039bae9737c77"
+    },
+    {
+      "file": "ucar25tjvwujoif_km7e2onq--5eb98c3bdcef--part-0001.jsonl",
+      "channel_key": "id:UCAR25TJVwUjoif_kM7e2ONQ",
+      "part": 1,
+      "channel_ids": [
+        "UCAR25TJVwUjoif_kM7e2ONQ"
+      ],
+      "channel_titles": [
+        "DineroEnImagen"
+      ],
+      "videos": 1,
+      "bytes": 313019,
+      "sha256": "ffefb0d4a0870003b7d70a4a1f8ef9edc42334b5f43d7e39b5dba4bf4a8da230"
+    },
+    {
+      "file": "ucauonff2yxgbaxhduketdfg--3118846fc6c2--part-0001.jsonl",
+      "channel_key": "id:UCauonFF2YxGbaXHduKETdfg",
+      "part": 1,
+      "channel_ids": [
+        "UCauonFF2YxGbaXHduKETdfg"
+      ],
+      "channel_titles": [
+        "Estudio Jurídico Defensa Absoluta"
+      ],
+      "videos": 1,
+      "bytes": 5757,
+      "sha256": "2250c22bbe94308b484090510a611dfce0405136efb108f38652b88d7d0a8b6a"
+    },
+    {
+      "file": "ucavacaig6qrzdijduegkohq--081d57936fe9--part-0001.jsonl",
+      "channel_key": "id:UCaVaCaiG6qRzDiJDuEGKOhQ",
+      "part": 1,
+      "channel_ids": [
+        "UCaVaCaiG6qRzDiJDuEGKOhQ"
+      ],
+      "channel_titles": [
+        "TVN"
+      ],
+      "videos": 5,
+      "bytes": 122384,
+      "sha256": "6118d4bac64417cb6d4081325ad5777a62110b2676f51631b1bd776198eda017"
+    },
+    {
+      "file": "ucaxf_i6xfdkfxfzme3wafwq--0a404578c0b5--part-0001.jsonl",
+      "channel_key": "id:UCAxF_I6XFDKfXFZMe3WAFwQ",
+      "part": 1,
+      "channel_ids": [
+        "UCAxF_I6XFDKfXFZMe3WAFwQ"
+      ],
+      "channel_titles": [
+        "UNICII DIRINCRI"
+      ],
+      "videos": 1,
+      "bytes": 22378,
+      "sha256": "d864dc6b68b9ba3fadac7c33c3f91c5c17e2c3c96814dc71515da597b4e42786"
+    },
+    {
+      "file": "ucb6jef7fzfcv3vcn8v0zqoa--85c5cf8368b3--part-0001.jsonl",
+      "channel_key": "id:UCb6JEf7fZfcv3vCN8V0zQoA",
+      "part": 1,
+      "channel_ids": [
+        "UCb6JEf7fZfcv3vCN8V0zQoA"
+      ],
+      "channel_titles": [
+        "Lawler"
+      ],
+      "videos": 1,
+      "bytes": 74912,
+      "sha256": "d3d20403dab70ae47bd1c2e7d5772b698b9d941954836383ee0f7ebddab06e52"
+    },
+    {
+      "file": "ucba1vmvohwlmddlars382zw--85c635b8e4d7--part-0001.jsonl",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "part": 1,
+      "channel_ids": [
+        "UCba1vMvOHWlMddLARS382Zw"
+      ],
+      "channel_titles": [
+        "Hablando Huevadas"
+      ],
+      "videos": 60,
+      "bytes": 25826137,
+      "sha256": "458eddbe46db33b5425dfd195896a587d8ed2191564d1eac375a66e31efecefd"
+    },
+    {
+      "file": "ucba1vmvohwlmddlars382zw--85c635b8e4d7--part-0002.jsonl",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "part": 2,
+      "channel_ids": [
+        "UCba1vMvOHWlMddLARS382Zw"
+      ],
+      "channel_titles": [
+        "Hablando Huevadas"
+      ],
+      "videos": 67,
+      "bytes": 25949808,
+      "sha256": "59ad83a38e3803f84d7f30a55e026b1571a5c8c928009a8eb010b6c8216afa7b"
+    },
+    {
+      "file": "ucba1vmvohwlmddlars382zw--85c635b8e4d7--part-0003.jsonl",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "part": 3,
+      "channel_ids": [
+        "UCba1vMvOHWlMddLARS382Zw"
+      ],
+      "channel_titles": [
+        "Hablando Huevadas"
+      ],
+      "videos": 6,
+      "bytes": 3227781,
+      "sha256": "9a805bfccd1755cf064e54a6816443d1b0cf8d6777155a899a5148d58c578803"
+    },
+    {
+      "file": "ucbiq92lt_ufno-ktzigvxgg--7a4bb92d783e--part-0001.jsonl",
+      "channel_key": "id:UCBiq92lt_ufNO-ktZigVXgg",
+      "part": 1,
+      "channel_ids": [
+        "UCBiq92lt_ufNO-ktZigVXgg"
+      ],
+      "channel_titles": [
+        "Panorama"
+      ],
+      "videos": 41,
+      "bytes": 2399498,
+      "sha256": "5d144ffb7cd37ddb38c8c62af26fea8a35ad34a817a5717ec7610d6368522653"
+    },
+    {
+      "file": "ucbiys4rvu9rnshxm8mtkrha--b119db96c7a9--part-0001.jsonl",
+      "channel_key": "id:UCbIYs4RVU9RNshXM8mtKRhA",
+      "part": 1,
+      "channel_ids": [
+        "UCbIYs4RVU9RNshXM8mtKRhA"
+      ],
+      "channel_titles": [
+        "Noticias Pisco"
+      ],
+      "videos": 1,
+      "bytes": 19052,
+      "sha256": "ddb3a89fb768910b9f7abb184fb50ec3555e5a8775bd3782cbbe0bbce9d0ebf3"
+    },
+    {
+      "file": "ucbjvtb0igmwa-ciwg2ici8g--ba9fab9828cd--part-0001.jsonl",
+      "channel_key": "id:UCbJvTB0igMwA-CIWg2ici8g",
+      "part": 1,
+      "channel_ids": [
+        "UCbJvTB0igMwA-CIWg2ici8g"
+      ],
+      "channel_titles": [
+        "Rio Uruguay Television - TACA Streams"
+      ],
+      "videos": 5,
+      "bytes": 55068,
+      "sha256": "0b1146455af5e1d505c0ed3471622062d8a70f233122945b1333d95a58dbce62"
+    },
+    {
+      "file": "ucbkbdf4g9ha4nrutkb02fja--bd53cb3f26e9--part-0001.jsonl",
+      "channel_key": "id:UCBKBDf4G9Ha4nrutKb02fJA",
+      "part": 1,
+      "channel_ids": [
+        "UCBKBDf4G9Ha4nrutKb02fJA"
+      ],
+      "channel_titles": [
+        "Derecho Virtual"
+      ],
+      "videos": 1,
+      "bytes": 116502,
+      "sha256": "3843c9818bcbab1762d8c48aa69ed77f3e28349157409eb236e37a7b64c0e79f"
+    },
+    {
+      "file": "ucbp0mdzbxa70fchlplcbt6g--e490d42304fb--part-0001.jsonl",
+      "channel_key": "id:UCBp0MdzbxA70fCHlpLCbT6g",
+      "part": 1,
+      "channel_ids": [
+        "UCBp0MdzbxA70fCHlpLCbT6g"
+      ],
+      "channel_titles": [
+        "Hoy Día"
+      ],
+      "videos": 5,
+      "bytes": 81412,
+      "sha256": "7c66951f688707a49c466139e36ec1ba61c7e909b9a8354127d9c8e8ba753697"
+    },
+    {
+      "file": "ucbtuuy99i5plmac_zcmxiyw--e13ba6cb143b--part-0001.jsonl",
+      "channel_key": "id:UCBTuUY99I5plMaC_ZcmXIYw",
+      "part": 1,
+      "channel_ids": [
+        "UCBTuUY99I5plMaC_ZcmXIYw"
+      ],
+      "channel_titles": [
+        "Unitel Bolivia"
+      ],
+      "videos": 1,
+      "bytes": 7306,
+      "sha256": "296c2a554ea0bd51871eff3bd5bba39e1e646d923209cb4eecb668cfbdf3421d"
+    },
+    {
+      "file": "ucbwvliesvhc4iz5w-apozyw--b63240922160--part-0001.jsonl",
+      "channel_key": "id:UCBWVLIesVhC4Iz5W-ApozYw",
+      "part": 1,
+      "channel_ids": [
+        "UCBWVLIesVhC4Iz5W-ApozYw"
+      ],
+      "channel_titles": [
+        "Giomar Salazar Abogados"
+      ],
+      "videos": 2,
+      "bytes": 10372,
+      "sha256": "aba6ad7b2532d1073dacd1161609d33d733dffce99e1b280567cfe7c88bdd628"
+    },
+    {
+      "file": "ucc25arac6qi7yj1uqg8lqxa--3a1575e422e2--part-0001.jsonl",
+      "channel_key": "id:UCC25ArAc6QI7yj1UQG8lqxA",
+      "part": 1,
+      "channel_ids": [
+        "UCC25ArAc6QI7yj1UQG8lqxA"
+      ],
+      "channel_titles": [
+        "Diario El Popular 🇵🇪"
+      ],
+      "videos": 4,
+      "bytes": 54808,
+      "sha256": "8cafc5e6340ab5647cc87badde30da6b94a76d52f571922cadce49d61f0d1ec5"
+    },
+    {
+      "file": "ucc2_uztib6yxmqwgh_3tntw--41861744ec05--part-0001.jsonl",
+      "channel_key": "id:UCc2_uZTIb6YxMQWgH_3tNTw",
+      "part": 1,
+      "channel_ids": [
+        "UCc2_uZTIb6YxMQWgH_3tNTw"
+      ],
+      "channel_titles": [
+        "Punto Seguido Revista"
+      ],
+      "videos": 23,
+      "bytes": 566584,
+      "sha256": "73f00b647cc5113e5095b9ed505202667fdd600c46cb425be0856a50133d323d"
+    },
+    {
+      "file": "uccamc7hfsnrtvaecmlubkqw--a36b32beae17--part-0001.jsonl",
+      "channel_key": "id:UCCaMc7HFSNrTvAecmLubKQw",
+      "part": 1,
+      "channel_ids": [
+        "UCCaMc7HFSNrTvAecmLubKQw"
+      ],
+      "channel_titles": [
+        "JusticiaTV - Audiencias"
+      ],
+      "videos": 2,
+      "bytes": 1960089,
+      "sha256": "fd26276cc2ad7eed930376192807871a8bb7b4a56ceb46f0032135cc4a333002"
+    },
+    {
+      "file": "ucccjc1pie1mirhce3ejenea--0bcc29925270--part-0001.jsonl",
+      "channel_key": "id:UCCCjc1piE1mIrhcE3ejENeA",
+      "part": 1,
+      "channel_ids": [
+        "UCCCjc1piE1mIrhcE3ejENeA"
+      ],
+      "channel_titles": [
+        "Reporte Indigo"
+      ],
+      "videos": 1,
+      "bytes": 11454,
+      "sha256": "2949953228bcbbaba46c30efd6c6c107a9c00dff82d3f23a04f2936123bfd728"
+    },
+    {
+      "file": "uccdmkjwqveui7wijtls68wq--4553193d10e6--part-0001.jsonl",
+      "channel_key": "id:UCCDMKJWQveui7WIjTLS68WQ",
+      "part": 1,
+      "channel_ids": [
+        "UCCDMKJWQveui7WIjTLS68WQ"
+      ],
+      "channel_titles": [
+        "NOTICIAS PERÚ TV"
+      ],
+      "videos": 1,
+      "bytes": 80456,
+      "sha256": "cc7ee5f27cbab246b86ada802fd803493a401ff213e1f729c17f0703ab447075"
+    },
+    {
+      "file": "ucchtke0raf8vnylm1hbq3jw--27dd9751ecc3--part-0001.jsonl",
+      "channel_key": "id:UCcHtke0raf8vNYLM1Hbq3Jw",
+      "part": 1,
+      "channel_ids": [
+        "UCcHtke0raf8vNYLM1Hbq3Jw"
+      ],
+      "channel_titles": [
+        "Imagen Noticias"
+      ],
+      "videos": 1,
+      "bytes": 61857,
+      "sha256": "4b59534fb6d91aa2bf7f34555307254f9e832b9c35de9d00783ffbb1b8bdacd0"
+    },
+    {
+      "file": "uccjs5mitiqxqjgefjt9n1mg--ed437d87330e--part-0001.jsonl",
+      "channel_key": "id:UCCJs5mITIqxqJGeFjt9N1Mg",
+      "part": 1,
+      "channel_ids": [
+        "UCCJs5mITIqxqJGeFjt9N1Mg"
+      ],
+      "channel_titles": [
+        "laSexta Noticias"
+      ],
+      "videos": 1,
+      "bytes": 7854,
+      "sha256": "1ef951fbb4852b6acb69cb5db487cd34d81b0d78bcda02f73c949b818a9a38a1"
+    },
+    {
+      "file": "uccnffqmpzlh5rgjim-k9whw--07446b8d51b3--part-0001.jsonl",
+      "channel_key": "id:UCcnFfqmPZlH5RGjIm-K9WHw",
+      "part": 1,
+      "channel_ids": [
+        "UCcnFfqmPZlH5RGjIm-K9WHw"
+      ],
+      "channel_titles": [
+        "el pro de mastercraft"
+      ],
+      "videos": 1,
+      "bytes": 6458,
+      "sha256": "3d9db848a8ff26ff8e8b9637182987d107ae34bbb13a4a73e01ce8f46ea04ee3"
+    },
+    {
+      "file": "uccq42srwicxaxcqqafglojq--38e83dfd1b25--part-0001.jsonl",
+      "channel_key": "id:UCcq42SRWicxaXcqqaFGlOjQ",
+      "part": 1,
+      "channel_ids": [
+        "UCcq42SRWicxaXcqqaFGlOjQ"
+      ],
+      "channel_titles": [
+        "ElObjetivo.p"
+      ],
+      "videos": 1,
+      "bytes": 6972,
+      "sha256": "6043285e052df9ca5d95db09d0403ae92c6840e3f9ea0eadd3a86c880a366f05"
+    },
+    {
+      "file": "uccvwaze_ffclq7tkdmh1vkq--93944ef497a1--part-0001.jsonl",
+      "channel_key": "id:UCcvWAZE_ffclq7tkdmH1VKQ",
+      "part": 1,
+      "channel_ids": [
+        "UCcvWAZE_ffclq7tkdmH1VKQ"
+      ],
+      "channel_titles": [
+        "Área de Derechos Humanos de Prodiana A.C."
+      ],
+      "videos": 4,
+      "bytes": 178363,
+      "sha256": "9a9df14787ea34577cb149b31fe86b1f91296b73a43c9013b3ff958d574afbb3"
+    },
+    {
+      "file": "uccwol2875hsusva8hfbzefq--d3550bf4be4f--part-0001.jsonl",
+      "channel_key": "id:UCCwOL2875hSUSva8hfbzEFQ",
+      "part": 1,
+      "channel_ids": [
+        "UCCwOL2875hSUSva8hfbzEFQ"
+      ],
+      "channel_titles": [
+        "follow peru"
+      ],
+      "videos": 1,
+      "bytes": 30261,
+      "sha256": "abccc8298039d1bc3fc8f029a1283620d93b36357b3838f3f1d682ef7b9646ed"
+    },
+    {
+      "file": "uccwrtme3lumnrqxmo2evcvw--aac641eebb2d--part-0001.jsonl",
+      "channel_key": "id:UCCwRtme3lumNRQXMO2EvCvw",
+      "part": 1,
+      "channel_ids": [
+        "UCCwRtme3lumNRQXMO2EvCvw"
+      ],
+      "channel_titles": [
+        "Teleamazonas Ecuador"
+      ],
+      "videos": 7,
+      "bytes": 1144778,
+      "sha256": "c6ad0134ae25631738471d3c12edaa4afc8a7baec431ee7665f4681a6e5a7cdd"
+    },
+    {
+      "file": "ucdezamgekbtu8ticczcw3jg--1f05dfa53a45--part-0001.jsonl",
+      "channel_key": "id:UCDEzAmgEkbtU8TICCZcw3Jg",
+      "part": 1,
+      "channel_ids": [
+        "UCDEzAmgEkbtU8TICCZcw3Jg"
+      ],
+      "channel_titles": [
+        "Daniel Latinel"
+      ],
+      "videos": 8,
+      "bytes": 1474828,
+      "sha256": "885022360a798f9c929599b5cd1b209db706ed725968d62ef171a0c255f1b75e"
+    },
+    {
+      "file": "ucdin0xw7q86oac_4klfp4ta--f10ff91ea6f2--part-0001.jsonl",
+      "channel_key": "id:UCdIn0XW7q86Oac_4KlFp4TA",
+      "part": 1,
+      "channel_ids": [
+        "UCdIn0XW7q86Oac_4KlFp4TA"
+      ],
+      "channel_titles": [
+        "Mi barrio En linea"
+      ],
+      "videos": 1,
+      "bytes": 22495,
+      "sha256": "f46407e35015b3844a8798f02a1630a422301e499836cb5e40990f9b5a59f392"
+    },
+    {
+      "file": "ucdjeu1ncsfbhctxqlsvhszw--05036ccdc7b7--part-0001.jsonl",
+      "channel_key": "id:UCdJEu1nCsFBHcTXqlSVHSZw",
+      "part": 1,
+      "channel_ids": [
+        "UCdJEu1nCsFBHcTXqlSVHSZw"
+      ],
+      "channel_titles": [
+        "Break Espectáculos"
+      ],
+      "videos": 1,
+      "bytes": 10133,
+      "sha256": "bac0337697c68a392b2ecb01946f88763b5d240c516ec4f924a6e72296972bf1"
+    },
+    {
+      "file": "ucdkw24rwdiksy0y9z1ut2ww--5487a8b55564--part-0001.jsonl",
+      "channel_key": "id:UCdkw24RWDiKsy0Y9Z1Ut2ww",
+      "part": 1,
+      "channel_ids": [
+        "UCdkw24RWDiKsy0Y9Z1Ut2ww"
+      ],
+      "channel_titles": [
+        "OkPerú"
+      ],
+      "videos": 1,
+      "bytes": 9534,
+      "sha256": "25b60946162dc3f65d06d7c754bac80a608e4ab43d8bfb696c027dfdc222dcaf"
+    },
+    {
+      "file": "ucdscrlcxffuhhsjblvvpbma--263ac810d9e3--part-0001.jsonl",
+      "channel_key": "id:UCDscRlCxFfuHhsJBlVvPBmA",
+      "part": 1,
+      "channel_ids": [
+        "UCDscRlCxFfuHhsJBlVvPBmA"
+      ],
+      "channel_titles": [
+        "LP - Pasión por el Derecho"
+      ],
+      "videos": 12,
+      "bytes": 1436672,
+      "sha256": "cbbbd8c5145a8aace2a39c53cd066c1fa91e99b090275cb142302a6c696ac9fc"
+    },
+    {
+      "file": "ucduxovbwu1bnyd7aucp0esw--396c836d5066--part-0001.jsonl",
+      "channel_key": "id:UCDUxOvbwu1bnyD7AucP0ESw",
+      "part": 1,
+      "channel_ids": [
+        "UCDUxOvbwu1bnyD7AucP0ESw"
+      ],
+      "channel_titles": [
+        "Al Rojo Vivo"
+      ],
+      "videos": 27,
+      "bytes": 375962,
+      "sha256": "d87163965cfac2ca31bd2c44ca9e7b2c8b4de98b5a6e346667177ab1716d4200"
+    },
+    {
+      "file": "uce_zhuvha19wtfzsngbrcyg--077af93e61c0--part-0001.jsonl",
+      "channel_key": "id:UCE_ZHUVha19wtfzsNgBrCYg",
+      "part": 1,
+      "channel_ids": [
+        "UCE_ZHUVha19wtfzsNgBrCYg"
+      ],
+      "channel_titles": [
+        "JurídicaMente"
+      ],
+      "videos": 2,
+      "bytes": 37612,
+      "sha256": "bd5816433f4ec23b057036984ce78fce91259c85d25e122a762ce8dfbd6a2282"
+    },
+    {
+      "file": "ucec6zp-kqucqkb0gglyl53g--b0ac489075c6--part-0001.jsonl",
+      "channel_key": "id:UCEc6ZP-KQucqkb0GgLyL53g",
+      "part": 1,
+      "channel_ids": [
+        "UCEc6ZP-KQucqkb0GgLyL53g"
+      ],
+      "channel_titles": [
+        "InformativosTvc"
+      ],
+      "videos": 5,
+      "bytes": 30423,
+      "sha256": "2019667178c6648fca17895947d1bc341f31d3b4fb50f785f861e419926d8c2d"
+    },
+    {
+      "file": "ucectykbtbpwwbqrfwel09zg--5ec3743a34d0--part-0001.jsonl",
+      "channel_key": "id:UCeCTykBtBpWWBqRfwEL09Zg",
+      "part": 1,
+      "channel_ids": [
+        "UCeCTykBtBpWWBqRfwEL09Zg"
+      ],
+      "channel_titles": [
+        "IDEHPUCP PUCP"
+      ],
+      "videos": 9,
+      "bytes": 3045280,
+      "sha256": "fa75ec7d6ba50994dc85dd283a8194345c098099f6604259ee7bbc883ce8e831"
+    },
+    {
+      "file": "ucefst2etmkfqk_mputulcvq--8d7aa0abfe48--part-0001.jsonl",
+      "channel_key": "id:UCeFst2EtMkfqK_MpuTULCVQ",
+      "part": 1,
+      "channel_ids": [
+        "UCeFst2EtMkfqK_MpuTULCVQ"
+      ],
+      "channel_titles": [
+        "Las Perlas TV"
+      ],
+      "videos": 5,
+      "bytes": 315670,
+      "sha256": "7dd656a5ca09ab92c1996d8837ff1f17dc597c01922888181c2b1251750906e5"
+    },
+    {
+      "file": "ucegnxyxxparm8f368ujjf-q--5f72e2c513eb--part-0001.jsonl",
+      "channel_key": "id:UCEgNxyXXpArM8F368uJjF-Q",
+      "part": 1,
+      "channel_ids": [
+        "UCEgNxyXXpArM8F368uJjF-Q"
+      ],
+      "channel_titles": [
+        "TRIVU"
+      ],
+      "videos": 1,
+      "bytes": 241744,
+      "sha256": "311b25375ca35f8697e67f288422cc170b55a43c9fb59913e2e263840ef2b54c"
+    },
+    {
+      "file": "ucejs1ftf3kszrjgxjy14vra--d0d520d71772--part-0001.jsonl",
+      "channel_key": "id:UCEJs1fTF3KszRJGxJY14VrA",
+      "part": 1,
+      "channel_ids": [
+        "UCEJs1fTF3KszRJGxJY14VrA"
+      ],
+      "channel_titles": [
+        "NTN24"
+      ],
+      "videos": 7,
+      "bytes": 413582,
+      "sha256": "27513ac40d102bc0bc02949296f810fb7e2193d2cb4f0f420aaf645e39284862"
+    },
+    {
+      "file": "ucepkbntk_q0axblxjtdunhg--bcb51150de9c--part-0001.jsonl",
+      "channel_key": "id:UCEPKBntK_q0AXblXJtDUNhg",
+      "part": 1,
+      "channel_ids": [
+        "UCEPKBntK_q0AXblXJtDUNhg"
+      ],
+      "channel_titles": [
+        "Farandula Politica"
+      ],
+      "videos": 3,
+      "bytes": 261364,
+      "sha256": "db1b009c066cbc018734f3ad07d8a4c435f194073c79edbe23fbd4d397678559"
+    },
+    {
+      "file": "uceq_sgwzdf8h-ujzwbxi5jq--738bd8436305--part-0001.jsonl",
+      "channel_key": "id:UCeq_SgWZDF8h-ujzwBXI5jQ",
+      "part": 1,
+      "channel_ids": [
+        "UCeq_SgWZDF8h-ujzwBXI5jQ"
+      ],
+      "channel_titles": [
+        "Teleantioquia"
+      ],
+      "videos": 1,
+      "bytes": 9006,
+      "sha256": "5a840bb666d44c6e4913a14b4c0a23302b84364e0084b953ba6e69bdf4e552b5"
+    },
+    {
+      "file": "ucesx6au8ugiihxgcqpbyy_a--581f2a122748--part-0001.jsonl",
+      "channel_key": "id:UCeSx6aU8UGIIHxGCQPbYY_A",
+      "part": 1,
+      "channel_ids": [
+        "UCeSx6aU8UGIIHxGCQPbYY_A"
+      ],
+      "channel_titles": [
+        "Canal Capital"
+      ],
+      "videos": 1,
+      "bytes": 10517,
+      "sha256": "03532b291d5da3e56190c6d9932e4cbe1d40fdcf2f70a11b52f6c60f33e155bf"
+    },
+    {
+      "file": "ucexzfpemilpyhr30xvdcxeg--dd2e0f98ac95--part-0001.jsonl",
+      "channel_key": "id:UCExZfPEMILpyHr30xvDCXeg",
+      "part": 1,
+      "channel_ids": [
+        "UCExZfPEMILpyHr30xvDCXeg"
+      ],
+      "channel_titles": [
+        "Rosario Sasieta"
+      ],
+      "videos": 1,
+      "bytes": 66550,
+      "sha256": "4c813f4ad353aa7a3973bf8fa74525a2da3ab10af72f60ec2ace8d53869bb964"
+    },
+    {
+      "file": "ucf1i8dw1goqxpajp6bew6mq--cb83466f92f0--part-0001.jsonl",
+      "channel_key": "id:UCF1i8dw1gOQXpajp6BEw6mQ",
+      "part": 1,
+      "channel_ids": [
+        "UCF1i8dw1gOQXpajp6BEw6mQ"
+      ],
+      "channel_titles": [
+        "Anti Estafas"
+      ],
+      "videos": 1,
+      "bytes": 52698,
+      "sha256": "07d931a30c83cce2fbd6e934b478c35163548fa0de25fa0a9faabf2c907a154a"
+    },
+    {
+      "file": "ucf6s3gpbzeqkqz38vvq0gla--264a7aac1f1c--part-0001.jsonl",
+      "channel_key": "id:UCF6s3gpbZEQKqZ38VvQ0gLA",
+      "part": 1,
+      "channel_ids": [
+        "UCF6s3gpbZEQKqZ38VvQ0gLA"
+      ],
+      "channel_titles": [
+        "Magaly TV La Firme"
+      ],
+      "videos": 110,
+      "bytes": 5894417,
+      "sha256": "83f897f6d5f778b7005b748a44e5d5c0bd24d257b1de001c149a89114968c87f"
+    },
+    {
+      "file": "ucfe_qycwncj_fvp6xp3mj2q--3d0b5f193d42--part-0001.jsonl",
+      "channel_key": "id:UCFe_qycWNCj_fVp6xp3mJ2Q",
+      "part": 1,
+      "channel_ids": [
+        "UCFe_qycWNCj_fVp6xp3mJ2Q"
+      ],
+      "channel_titles": [
+        "Castilla y León Televisión"
+      ],
+      "videos": 1,
+      "bytes": 9311,
+      "sha256": "5c6c0d99f9f977e7a57d7038da2a95e7228e6c10a0ec6e224628b282b0050a20"
+    },
+    {
+      "file": "ucffjpnp90bveamphnh1t_fg--8dd91b4b3228--part-0001.jsonl",
+      "channel_key": "id:UCffjpNp90bVEAMphnh1T_fg",
+      "part": 1,
+      "channel_ids": [
+        "UCffjpNp90bVEAMphnh1T_fg"
+      ],
+      "channel_titles": [
+        "Multimedia Terceros PTV"
+      ],
+      "videos": 1,
+      "bytes": 27626,
+      "sha256": "0da1dcd5f438c1b58d182aeeca8de5eb344fac4a2e34401c19bd1e64a9bf7ca7"
+    },
+    {
+      "file": "ucfgk2q2mvo1bklrqhsv6p0w--0cedd19e1117--part-0001.jsonl",
+      "channel_key": "id:UCFgk2Q2mVO1BklRQhSv6p0w",
+      "part": 1,
+      "channel_ids": [
+        "UCFgk2Q2mVO1BklRQhSv6p0w"
+      ],
+      "channel_titles": [
+        "C5N"
+      ],
+      "videos": 1,
+      "bytes": 30897,
+      "sha256": "a1046d63d52c45fb15e2cd393836023f1719fe5463201de9361362867258d01e"
+    },
+    {
+      "file": "ucfibnbtw8inbx8vl4f6cp0q--d217edaf6382--part-0001.jsonl",
+      "channel_key": "id:UCfiBnBtw8iNbX8vL4f6cp0Q",
+      "part": 1,
+      "channel_ids": [
+        "UCfiBnBtw8iNbX8vL4f6cp0Q"
+      ],
+      "channel_titles": [
+        "Juanito y Richard"
+      ],
+      "videos": 116,
+      "bytes": 4523369,
+      "sha256": "7cfadca64d8c98b7dd0f42a7f505fa98589e3dd251a85f71d02258c432867254"
+    },
+    {
+      "file": "ucfjqe5yfcfl1hj00ccnnr_q--03ddb7656035--part-0001.jsonl",
+      "channel_key": "id:UCfJqE5YFCfL1HJ00cCNNr_Q",
+      "part": 1,
+      "channel_ids": [
+        "UCfJqE5YFCfL1HJ00cCNNr_Q"
+      ],
+      "channel_titles": [
+        "Crimenes Imperfectos Expedientes X"
+      ],
+      "videos": 1,
+      "bytes": 92900,
+      "sha256": "da7fb8a2ae1d5f15ed3831587dabf0e9a024d2f31a7943006acae46afd53eed6"
+    },
+    {
+      "file": "ucfnowprj-skrzk_gpnbv5tg--9754107b38f2--part-0001.jsonl",
+      "channel_key": "id:UCFnOwPrJ-Skrzk_GPNBV5tg",
+      "part": 1,
+      "channel_ids": [
+        "UCFnOwPrJ-Skrzk_GPNBV5tg"
+      ],
+      "channel_titles": [
+        "Buenos Días Perú"
+      ],
+      "videos": 96,
+      "bytes": 2709188,
+      "sha256": "ce4fde2402fd65b5864b27de6f716106811892c9539130fb6f2a1748e48fd1e3"
+    },
+    {
+      "file": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d--part-0001.jsonl",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "part": 1,
+      "channel_ids": [
+        "UCFqwxsa2Wp6Y5FkUAcGShGA"
+      ],
+      "channel_titles": [
+        "Nunca MAS"
+      ],
+      "videos": 36,
+      "bytes": 5261876,
+      "sha256": "2bb56c1ef021d21f9b4cce0cef3f15cd015b360de407e5f3bfe72bb0be5d4f29"
+    },
+    {
+      "file": "ucfxhplbcojk9m70c4vytixg--c9e8dc122e71--part-0001.jsonl",
+      "channel_key": "id:UCFxHplbcoJK9m70c4VyTIxg",
+      "part": 1,
+      "channel_ids": [
+        "UCFxHplbcoJK9m70c4VyTIxg"
+      ],
+      "channel_titles": [
+        "MILENIO"
+      ],
+      "videos": 2,
+      "bytes": 46770,
+      "sha256": "03e9992a9550ca0b3093e08d021a42cd3d1b3f70292023d8e8733ab8adb3c92b"
+    },
+    {
+      "file": "ucfy8ariel9bxbuqbfuu8dog--d5d97353652a--part-0001.jsonl",
+      "channel_key": "id:UCfY8ARieL9bXBUQBfuU8dog",
+      "part": 1,
+      "channel_ids": [
+        "UCfY8ARieL9bXBUQBfuU8dog"
+      ],
+      "channel_titles": [
+        "Cristóbal Ruiz Fernández"
+      ],
+      "videos": 2,
+      "bytes": 167360,
+      "sha256": "555381969fbd34f0cee2f4deb9f1fe8e17aa0605093d4ffc4c1ce1d2a2df1d2a"
+    },
+    {
+      "file": "ucg-ony8a9cgfq6udchp4yna--ed5616c434af--part-0001.jsonl",
+      "channel_key": "id:UCG-ony8A9CgFq6uDChp4yNA",
+      "part": 1,
+      "channel_ids": [
+        "UCG-ony8A9CgFq6uDChp4yNA"
+      ],
+      "channel_titles": [
+        "GRABACIONES MIGUELITO"
+      ],
+      "videos": 1,
+      "bytes": 23406,
+      "sha256": "f933550b5ceeb4e61876c46da04d26497e89115c512276486904d2f753803b6e"
+    },
+    {
+      "file": "ucg0llqxlvd3qsemizmmosiw--40174734c628--part-0001.jsonl",
+      "channel_key": "id:UCG0lLqXlvd3QsemIzmMOSiw",
+      "part": 1,
+      "channel_ids": [
+        "UCG0lLqXlvd3QsemIzmMOSiw"
+      ],
+      "channel_titles": [
+        "Bethel Noticias"
+      ],
+      "videos": 1,
+      "bytes": 14675,
+      "sha256": "a2a2823baf75a560c88077ab1fed88f39fd9c5899a4c3128461f19c17debe634"
+    },
+    {
+      "file": "ucg0x_-u_fia1tyvz5xbujtq--a4c38277c21d--part-0001.jsonl",
+      "channel_key": "id:UCg0x_-U_FiA1TYvz5XbujTQ",
+      "part": 1,
+      "channel_ids": [
+        "UCg0x_-U_FiA1TYvz5XbujTQ"
+      ],
+      "channel_titles": [
+        "El Diario de Chihuahua"
+      ],
+      "videos": 1,
+      "bytes": 5503,
+      "sha256": "f4fbc083027388b7d6c355a35a1da084e123a4893f90f9bafa3dc7d584b5d653"
+    },
+    {
+      "file": "ucgbcdx7nhkuiqao8omet9ea--cc660f7d7ad9--part-0001.jsonl",
+      "channel_key": "id:UCGbCdx7nhKuiQaO8OMEt9eA",
+      "part": 1,
+      "channel_ids": [
+        "UCGbCdx7nhKuiQaO8OMEt9eA"
+      ],
+      "channel_titles": [
+        "Gestión Legal"
+      ],
+      "videos": 1,
+      "bytes": 17365,
+      "sha256": "a2f4782defd6286ad83b51ec9559b710fb2ba738411b1620ffa350c35464561f"
+    },
+    {
+      "file": "ucgbofrroopwrumvob5w61oa--1908a1846ac7--part-0001.jsonl",
+      "channel_key": "id:UCGbofRROopWrumVob5w61OA",
+      "part": 1,
+      "channel_ids": [
+        "UCGbofRROopWrumVob5w61OA"
+      ],
+      "channel_titles": [
+        "Caso Cerrado"
+      ],
+      "videos": 5,
+      "bytes": 384765,
+      "sha256": "51d48979823c4d7908c4d0ad966851f51262a061bccfb87b188bf8608fdfcfbf"
+    },
+    {
+      "file": "ucgenagbrdztmid251tfsioa--9eded8670ce1--part-0001.jsonl",
+      "channel_key": "id:UCgeNagbrDzTmID251TfSioA",
+      "part": 1,
+      "channel_ids": [
+        "UCgeNagbrDzTmID251TfSioA"
+      ],
+      "channel_titles": [
+        "JAIR ALEXANDER ROJAS CHIPANA"
+      ],
+      "videos": 1,
+      "bytes": 34231,
+      "sha256": "d6a5d0f294b72927c47723a9ae7b5b1bff52a62df0a3a3ca5a962b4230bd589a"
+    },
+    {
+      "file": "ucgfrkwifufvbprotjgyhoqq--677a494fd98a--part-0001.jsonl",
+      "channel_key": "id:UCgfRKWIfuFVbpRoTjGYHOQQ",
+      "part": 1,
+      "channel_ids": [
+        "UCgfRKWIfuFVbpRoTjGYHOQQ"
+      ],
+      "channel_titles": [
+        "anp_radio1928"
+      ],
+      "videos": 1,
+      "bytes": 187420,
+      "sha256": "3fae08a0eab2a61a7f29127940549aa332d75e26f7812893f63607832a7f6260"
+    },
+    {
+      "file": "ucggry4kgwzuqifg6llnhomg--8f5d69f4a91c--part-0001.jsonl",
+      "channel_key": "id:UCGGry4kGWZUqIfG6LLNhOmg",
+      "part": 1,
+      "channel_ids": [
+        "UCGGry4kGWZUqIfG6LLNhOmg"
+      ],
+      "channel_titles": [
+        "América Televisión"
+      ],
+      "videos": 9,
+      "bytes": 518314,
+      "sha256": "e5729c4f97024bc1376a8593bbfc0cfe6ad17f67c9e51d4419b505d1839e9f09"
+    },
+    {
+      "file": "ucgltr7avpfgf-senidbkzxq--8b0727ab56e7--part-0001.jsonl",
+      "channel_key": "id:UCgltr7AvpfGf-sEnIdBKZXQ",
+      "part": 1,
+      "channel_ids": [
+        "UCgltr7AvpfGf-sEnIdBKZXQ"
+      ],
+      "channel_titles": [
+        "Upsocl"
+      ],
+      "videos": 1,
+      "bytes": 24888,
+      "sha256": "adb3a1fbba545727bd2b04c928e6a3d1ccfa0ed916e363066b33fddc8aa75204"
+    },
+    {
+      "file": "ucgnn7gdtzoncedfmks0qskq--e2c5c7d8d67a--part-0001.jsonl",
+      "channel_key": "id:UCgnN7gdTzoncEdfMks0QSkQ",
+      "part": 1,
+      "channel_ids": [
+        "UCgnN7gdTzoncEdfMks0QSkQ"
+      ],
+      "channel_titles": [
+        "Conexiónbol"
+      ],
+      "videos": 1,
+      "bytes": 16753,
+      "sha256": "c112035ea8dd5d74a36ec33b6d4d9cc01052976efddbd4ae199b11b947b6d38e"
+    },
+    {
+      "file": "ucgoqd9t-svmzuklbxqtjfiq--0b287008b339--part-0001.jsonl",
+      "channel_key": "id:UCgOqD9t-svmzukLBXqtjFIQ",
+      "part": 1,
+      "channel_ids": [
+        "UCgOqD9t-svmzukLBXqtjFIQ"
+      ],
+      "channel_titles": [
+        "Publimetro Colombia"
+      ],
+      "videos": 1,
+      "bytes": 11279,
+      "sha256": "b4a0278fbb9f421b21d2a9f742924c5adb536b6646f70f112d882cdab534fc33"
+    },
+    {
+      "file": "ucgq6lh8rfwxgaaak1uqll6a--62cb98aed272--part-0001.jsonl",
+      "channel_key": "id:UCGq6lH8RFwXgAAAk1UQLl6A",
+      "part": 1,
+      "channel_ids": [
+        "UCGq6lH8RFwXgAAAk1UQLl6A"
+      ],
+      "channel_titles": [
+        "Red mundial"
+      ],
+      "videos": 1,
+      "bytes": 20428,
+      "sha256": "f9c1a27755ad83620ce60f79ca032ec888256352ea01ba599aeda2828d8813b6"
+    },
+    {
+      "file": "ucgr0st4zlabi-lqcwnu3wnq--f55b3b09ea1c--part-0001.jsonl",
+      "channel_key": "id:UCgR0st4ZLABi-LQcWNu3wnQ",
+      "part": 1,
+      "channel_ids": [
+        "UCgR0st4ZLABi-LQcWNu3wnQ"
+      ],
+      "channel_titles": [
+        "PBO"
+      ],
+      "videos": 6,
+      "bytes": 451438,
+      "sha256": "247cb659d5f4ad12e9263bbe0366d8c504c5cf7b5ed1365a39f42e153ec8704b"
+    },
+    {
+      "file": "ucgspwxamo2mw5myktsiurca--eeb8540f0b2d--part-0001.jsonl",
+      "channel_key": "id:UCGSpwxaMO2mW5mYKtsIurCA",
+      "part": 1,
+      "channel_ids": [
+        "UCGSpwxaMO2mW5mYKtsIurCA"
+      ],
+      "channel_titles": [
+        "JP"
+      ],
+      "videos": 1,
+      "bytes": 2926,
+      "sha256": "71a7dcbaad1f8fa7e69b730f7eb71cfdb117f56eb0acefc41ee82bdf467c748a"
+    },
+    {
+      "file": "uch1jkazwx0dhokncs7wcjcg--3833bd0c7fe4--part-0001.jsonl",
+      "channel_key": "id:UCH1JKAzwX0DHokncS7WcJCg",
+      "part": 1,
+      "channel_ids": [
+        "UCH1JKAzwX0DHokncS7WcJCg"
+      ],
+      "channel_titles": [
+        "TV Azteca Jalisco"
+      ],
+      "videos": 5,
+      "bytes": 54559,
+      "sha256": "5bd44c8390a12f3c7c27be65124bb011ee20262ab6cde6307575ab2571d39a7d"
+    },
+    {
+      "file": "ucheyikvyr_lmg_8wze3pm6g--b0a0597b0623--part-0001.jsonl",
+      "channel_key": "id:UChEYIkvyR_lMg_8wzE3PM6g",
+      "part": 1,
+      "channel_ids": [
+        "UChEYIkvyR_lMg_8wzE3PM6g"
+      ],
+      "channel_titles": [
+        "De Interes Nacional Peru"
+      ],
+      "videos": 8,
+      "bytes": 673200,
+      "sha256": "920cc503fe58a5ad6a3ca19b575b6ed9d877eed703e7826403b74c22989b753a"
+    },
+    {
+      "file": "uchldezlqlaqtarnyqowwwyq--4410c6eb35b9--part-0001.jsonl",
+      "channel_key": "id:UCHLDezLqlaqtArnyQoWwWyQ",
+      "part": 1,
+      "channel_ids": [
+        "UCHLDezLqlaqtArnyQoWwWyQ"
+      ],
+      "channel_titles": [
+        "Adolfo LAVIANA GONZALEZ"
+      ],
+      "videos": 1,
+      "bytes": 101827,
+      "sha256": "05eb7a4f517544aa6786739da5691afd4f684a86f9c318f2f1597779e47c9bea"
+    },
+    {
+      "file": "uchoz7o4nxtmyongwh1jamhw--2a4b549b0ecf--part-0001.jsonl",
+      "channel_key": "id:UChOz7o4nxtmYoNGwH1JAmhw",
+      "part": 1,
+      "channel_ids": [
+        "UChOz7o4nxtmYoNGwH1JAmhw"
+      ],
+      "channel_titles": [
+        "RBC PERÚ"
+      ],
+      "videos": 1,
+      "bytes": 11512,
+      "sha256": "01beb8769334024585030ac407f2971389ddbebb52d2386bde1966a0ae230f92"
+    },
+    {
+      "file": "uchxi7nzj8oqmdeg4egbr6eg--44a526db6870--part-0001.jsonl",
+      "channel_key": "id:UChXI7Nzj8oQMdEg4EgBr6eg",
+      "part": 1,
+      "channel_ids": [
+        "UChXI7Nzj8oQMdEg4EgBr6eg"
+      ],
+      "channel_titles": [
+        "Noticias Región Junín"
+      ],
+      "videos": 1,
+      "bytes": 16374,
+      "sha256": "78f289bbf726904d9c1bf7f4ba403d399fda008e66e6d84d6754856cc8750c34"
+    },
+    {
+      "file": "uchzccayke_vatc3z_tbexcg--a31b6b0c474c--part-0001.jsonl",
+      "channel_key": "id:UChZCcAYKe_VAtC3Z_tBexcg",
+      "part": 1,
+      "channel_ids": [
+        "UChZCcAYKe_VAtC3Z_tBexcg"
+      ],
+      "channel_titles": [
+        "martinezserrano"
+      ],
+      "videos": 1,
+      "bytes": 73369,
+      "sha256": "1abe212a7d214c13a5463f05a5ff1a2d6dc2b44f0cb377859dcf007e77200aae"
+    },
+    {
+      "file": "uchzs9l4gwae0lrfallqbagg--d2d61deafc4e--part-0001.jsonl",
+      "channel_key": "id:UChzS9L4GwAe0lRFallqbaGg",
+      "part": 1,
+      "channel_ids": [
+        "UChzS9L4GwAe0lRFallqbaGg"
+      ],
+      "channel_titles": [
+        "Trome Perú"
+      ],
+      "videos": 9,
+      "bytes": 896626,
+      "sha256": "49bf29d13668f5ccb45bf405ae098b5068429b41f494a75fd4070cb06e5660df"
+    },
+    {
+      "file": "uci3b73rhdrdwyftlxl0uziw--cb1ad89e4d6b--part-0001.jsonl",
+      "channel_key": "id:UCI3B73rHDRdWyFTLXL0uziw",
+      "part": 1,
+      "channel_ids": [
+        "UCI3B73rHDRdWyFTLXL0uziw"
+      ],
+      "channel_titles": [
+        "PDN - Peru Digital Noticias"
+      ],
+      "videos": 1,
+      "bytes": 78614,
+      "sha256": "f9df41044edc5472688126e76da88e443623732a7a13843c36ad4f8ee218b12a"
+    },
+    {
+      "file": "uci9thglbi6e127vu6hxp8ug--cdd7c5beeced--part-0001.jsonl",
+      "channel_key": "id:UCi9thgLbI6E127Vu6Hxp8ug",
+      "part": 1,
+      "channel_ids": [
+        "UCi9thgLbI6E127Vu6Hxp8ug"
+      ],
+      "channel_titles": [
+        "Noticias Telemedellín"
+      ],
+      "videos": 2,
+      "bytes": 23131,
+      "sha256": "8c8f42970f172602107cd37fe4af0713a8abe69bc0cb06ea321000f068f28aed"
+    },
+    {
+      "file": "uci_b7pqohyn9b8hcbylormq--54eddaa0ac44--part-0001.jsonl",
+      "channel_key": "id:UCi_b7pqoHyn9b8HcBYlOrmQ",
+      "part": 1,
+      "channel_ids": [
+        "UCi_b7pqoHyn9b8HcBYlOrmQ"
+      ],
+      "channel_titles": [
+        "Lagunillas TV"
+      ],
+      "videos": 1,
+      "bytes": 5989,
+      "sha256": "583e6fbeaec86c6832cc728e419c9d37f9b39729f9c6f5861a94afcff17ee16d"
+    },
+    {
+      "file": "uciejv-6eeemtgbmao1i0n4a--f2bd5d6d4c8d--part-0001.jsonl",
+      "channel_key": "id:UCiejV-6eEEmtgBmAo1I0n4A",
+      "part": 1,
+      "channel_ids": [
+        "UCiejV-6eEEmtgBmAo1I0n4A"
+      ],
+      "channel_titles": [
+        "GRUPO CASTEC"
+      ],
+      "videos": 1,
+      "bytes": 2924,
+      "sha256": "c80682efb229416f1e6253a442b992ca157d2b7cc4b4a5f979a52ffc677f8c66"
+    },
+    {
+      "file": "ucifwxd02rvki7-xxepoe64a--2bac9aec3754--part-0001.jsonl",
+      "channel_key": "id:UCiFwXD02rVki7-xXEpoE64A",
+      "part": 1,
+      "channel_ids": [
+        "UCiFwXD02rVki7-xXEpoE64A"
+      ],
+      "channel_titles": [
+        "Peru Noticias Snit"
+      ],
+      "videos": 1,
+      "bytes": 22598,
+      "sha256": "84285aa3dfbc5e15f4495d5841c2a2c7a57ec493a31fbd5d7f166a03ea5d0773"
+    },
+    {
+      "file": "ucilu2gho8groeb-zo93eyda--ae760c03994e--part-0001.jsonl",
+      "channel_key": "id:UCILU2ghO8GrOeB-zo93eYdA",
+      "part": 1,
+      "channel_ids": [
+        "UCILU2ghO8GrOeB-zo93eYdA"
+      ],
+      "channel_titles": [
+        "Multimedios Costa Rica"
+      ],
+      "videos": 1,
+      "bytes": 32355,
+      "sha256": "298b89ccd266ca50cd32055e5dfebba259e5adf7f52949788829717788e992bb"
+    },
+    {
+      "file": "ucirs_bsxc_lttqm0-molb5w--997e847220d8--part-0001.jsonl",
+      "channel_key": "id:UCirs_bsXC_LtTQM0-moLb5w",
+      "part": 1,
+      "channel_ids": [
+        "UCirs_bsXC_LtTQM0-moLb5w"
+      ],
+      "channel_titles": [
+        "Plumas Libres"
+      ],
+      "videos": 5,
+      "bytes": 79670,
+      "sha256": "34c7465031025dcafc3ed2c1914c287cfc6737dbe34845c80c4ae7ae3f3d5139"
+    },
+    {
+      "file": "uciu0qqdgb3gdsj8ny_jvlyq--50aab54f873b--part-0001.jsonl",
+      "channel_key": "id:UCiU0qQdgb3GDsj8nY_jVLYQ",
+      "part": 1,
+      "channel_ids": [
+        "UCiU0qQdgb3GDsj8nY_jVLYQ"
+      ],
+      "channel_titles": [
+        "JuvNacionalista"
+      ],
+      "videos": 1,
+      "bytes": 48830,
+      "sha256": "2432e69bd38781b05dbb45757b20fa33b6ef5582d62472b5285961be56148ad9"
+    },
+    {
+      "file": "ucixm7w8pu2ldzr1o3jioclg--42d95bbd67fd--part-0001.jsonl",
+      "channel_key": "id:UCiXm7w8Pu2Ldzr1o3JiOClg",
+      "part": 1,
+      "channel_ids": [
+        "UCiXm7w8Pu2Ldzr1o3JiOClg"
+      ],
+      "channel_titles": [
+        "El Tío Gabi 🎤"
+      ],
+      "videos": 1,
+      "bytes": 100775,
+      "sha256": "2870ece2c182b5e6c90733cc809b539b040f662ddbbda15ff156c1a889a9fc9f"
+    },
+    {
+      "file": "ucj0e3jnwjk_pgbsmzeqhhta--5546b828ee5d--part-0001.jsonl",
+      "channel_key": "id:UCj0E3JnWJk_pgbsmZeQHHTA",
+      "part": 1,
+      "channel_ids": [
+        "UCj0E3JnWJk_pgbsmZeQHHTA"
+      ],
+      "channel_titles": [
+        "Ayatola Núñez"
+      ],
+      "videos": 1,
+      "bytes": 9533,
+      "sha256": "1f8d18840ca11d658d838929b251688d16b4a2e434d3a4d42950ad6068a2497c"
+    },
+    {
+      "file": "ucj6pcylvpnirt_2w_mwa9aw--ffac96fc093f--part-0001.jsonl",
+      "channel_key": "id:UCj6PcyLvpnIRT_2W_mwa9Aw",
+      "part": 1,
+      "channel_ids": [
+        "UCj6PcyLvpnIRT_2W_mwa9Aw"
+      ],
+      "channel_titles": [
+        "Todo Noticias"
+      ],
+      "videos": 1,
+      "bytes": 15010,
+      "sha256": "4583b0d10feed4e2bddb31e894f82f47c2014e2be52c6c5333558804232609c5"
+    },
+    {
+      "file": "ucjbwxmpckbmbjwusi_feptg--14196f6efb82--part-0001.jsonl",
+      "channel_key": "id:UCjBWXmpcKbMBJwUsI_fePTg",
+      "part": 1,
+      "channel_ids": [
+        "UCjBWXmpcKbMBJwUsI_fePTg"
+      ],
+      "channel_titles": [
+        "Sara Agudelo López"
+      ],
+      "videos": 5,
+      "bytes": 38682,
+      "sha256": "9ade0c97bc114d693948977c0642be6baf7191bf67fd71034719af92123f6c5d"
+    },
+    {
+      "file": "ucjcfkdgdaduapecwkuaa2la--d75deaecca22--part-0001.jsonl",
+      "channel_key": "id:UCJcfkDGdaduapecwkuAa2LA",
+      "part": 1,
+      "channel_ids": [
+        "UCJcfkDGdaduapecwkuAa2LA"
+      ],
+      "channel_titles": [
+        "Brian Nuñez | Abogado Laboral Empresarial"
+      ],
+      "videos": 1,
+      "bytes": 34640,
+      "sha256": "d17275a5d0ea0d7f94652af7ef0cbcf90a549765952669ab4b5a54ac38d2ccb2"
+    },
+    {
+      "file": "ucjgcdsjgiwoyfyytvuv_hzw--887b6e85cbe6--part-0001.jsonl",
+      "channel_key": "id:UCJGCDSjgIwOYFyytvuV_HZw",
+      "part": 1,
+      "channel_ids": [
+        "UCJGCDSjgIwOYFyytvuV_HZw"
+      ],
+      "channel_titles": [
+        "EL FOCO+"
+      ],
+      "videos": 1,
+      "bytes": 271959,
+      "sha256": "b74bc24109d02a8099a84850f4b5d477a27c0f9771d370b29b432e6d5e8b2ef4"
+    },
+    {
+      "file": "ucjk_odb5iiulwk_k5wggvmg--38e7de8b5519--part-0001.jsonl",
+      "channel_key": "id:UCjk_ODB5iiuLwk_K5wGgVmg",
+      "part": 1,
+      "channel_ids": [
+        "UCjk_ODB5iiuLwk_K5wGgVmg"
+      ],
+      "channel_titles": [
+        "Portavoz Noticias"
+      ],
+      "videos": 6,
+      "bytes": 281428,
+      "sha256": "202ff6a933b80d089a4bc4582542bb15e3a2ea0aefb07452bcd7809086e4201e"
+    },
+    {
+      "file": "ucjodw-8tygjzjj2t77rbmxa--4abd5c10b74a--part-0001.jsonl",
+      "channel_key": "id:UCJOdW-8tYGjzJj2t77rBmXA",
+      "part": 1,
+      "channel_ids": [
+        "UCJOdW-8tYGjzJj2t77rBmXA"
+      ],
+      "channel_titles": [
+        "Epicentro TV"
+      ],
+      "videos": 8,
+      "bytes": 776297,
+      "sha256": "f24963b306bd5ec85b74ffaf5a3b864f4f07c16cc185a12ab15ee2f60b0436b0"
+    },
+    {
+      "file": "uck90v8pr_5a6lsoifojuf8a--b7aa893b2fde--part-0001.jsonl",
+      "channel_key": "id:UCK90V8pr_5a6LsoIfOJuF8A",
+      "part": 1,
+      "channel_ids": [
+        "UCK90V8pr_5a6LsoIfOJuF8A"
+      ],
+      "channel_titles": [
+        "Escuela Nacional de Formación Judicial"
+      ],
+      "videos": 7,
+      "bytes": 307604,
+      "sha256": "300975a669a3c9f149e8b886bf4a7e9037530442276723d8d555732aa39cb778"
+    },
+    {
+      "file": "uck_cfucx1bdp5tungjpfbxa--5d7a2ac8695f--part-0001.jsonl",
+      "channel_key": "id:UCK_CFUcx1BDP5tuNgjpfBxA",
+      "part": 1,
+      "channel_ids": [
+        "UCK_CFUcx1BDP5tuNgjpfBxA"
+      ],
+      "channel_titles": [
+        "Gian Carlo BellMac"
+      ],
+      "videos": 1,
+      "bytes": 10088,
+      "sha256": "23ac8c267d91f2c92421d1bf38d0e830a66576c17031acb96a0de6247628a517"
+    },
+    {
+      "file": "uckccyebqhhm3ukoi6shm-4q--3f1faa13998e--part-0001.jsonl",
+      "channel_key": "id:UCkccyEbqhhM3uKOI6Shm-4Q",
+      "part": 1,
+      "channel_ids": [
+        "UCkccyEbqhhM3uKOI6Shm-4Q"
+      ],
+      "channel_titles": [
+        "Meganoticias"
+      ],
+      "videos": 1,
+      "bytes": 9648,
+      "sha256": "d02c3ad272f7454120f3c3e9ef2036827a4b9b316d9d4f456db18096a5505f20"
+    },
+    {
+      "file": "uckdzothp55tujdjrej8qedw--b18e45cceac1--part-0001.jsonl",
+      "channel_key": "id:UCkDZOthP55TUjDjreJ8qeDw",
+      "part": 1,
+      "channel_ids": [
+        "UCkDZOthP55TUjDjreJ8qeDw"
+      ],
+      "channel_titles": [
+        "eljusticio"
+      ],
+      "videos": 1,
+      "bytes": 26826,
+      "sha256": "5f38a3acb9b09f6a2fb1483f0385cfbe51aea0d36495e6ce39e323f86d3ef407"
+    },
+    {
+      "file": "ucknw2trrulof4es2y1bwjpa--7e2a03ae2e02--part-0001.jsonl",
+      "channel_key": "id:UCKNW2TrrUlof4ES2y1BWjpA",
+      "part": 1,
+      "channel_ids": [
+        "UCKNW2TrrUlof4ES2y1BWjpA"
+      ],
+      "channel_titles": [
+        "The Mexican Family"
+      ],
+      "videos": 1,
+      "bytes": 21076,
+      "sha256": "1e5e05fd011bd959170c46a7c16866e61e712c90f80d15c1cbb8253bb498cc52"
+    },
+    {
+      "file": "ucknyabjdbf5eqdzp0fkvt5g--3094913c7f5f--part-0001.jsonl",
+      "channel_key": "id:UCknyABjdbf5eQdzp0FKVt5g",
+      "part": 1,
+      "channel_ids": [
+        "UCknyABjdbf5eQdzp0FKVt5g"
+      ],
+      "channel_titles": [
+        "Álvaro Navarro Abogado"
+      ],
+      "videos": 1,
+      "bytes": 33661,
+      "sha256": "8091584bc6cc59681cb755a1316f2e3a1b731363edcefb232d3a5e7507fe8248"
+    },
+    {
+      "file": "uckro5vznlecfcmhjljdomcq--11e2df75e4b4--part-0001.jsonl",
+      "channel_key": "id:UCkRo5vZnLeCfCMhjlJdOmCQ",
+      "part": 1,
+      "channel_ids": [
+        "UCkRo5vZnLeCfCMhjlJdOmCQ"
+      ],
+      "channel_titles": [
+        "Mundo Noticias"
+      ],
+      "videos": 1,
+      "bytes": 11887,
+      "sha256": "f731ba34ad671349352922aa0ed5384b97f1e5df8ae8e70ee71a899f4df02c67"
+    },
+    {
+      "file": "ucks4pt8dvdqtz5-o2be1zua--2d2fbdf1a913--part-0001.jsonl",
+      "channel_key": "id:UCkS4Pt8DVdqtZ5-o2Be1zuA",
+      "part": 1,
+      "channel_ids": [
+        "UCkS4Pt8DVdqtZ5-o2Be1zuA"
+      ],
+      "channel_titles": [
+        "Televisión Tarapoto"
+      ],
+      "videos": 1,
+      "bytes": 36905,
+      "sha256": "87f455f6f9b7124fbfe231a58aaaaf00343c34697053a8c935e7f7368a40763f"
+    },
+    {
+      "file": "uckzcoc42iipr1ucqjmiehsa--ac7431241ea9--part-0001.jsonl",
+      "channel_key": "id:UCkZCoc42IipR1ucqJmIehsA",
+      "part": 1,
+      "channel_ids": [
+        "UCkZCoc42IipR1ucqJmIehsA"
+      ],
+      "channel_titles": [
+        "TVPerú Noticias"
+      ],
+      "videos": 80,
+      "bytes": 2001681,
+      "sha256": "32c48785ab75eb0b325b34fe5792c4eddae1a0730b8356e538406fca381180e4"
+    },
+    {
+      "file": "uclc7tt-tiwtudueng9cnveq--63a558e07e08--part-0001.jsonl",
+      "channel_key": "id:UClc7TT-TIwTUduENg9CnVEQ",
+      "part": 1,
+      "channel_ids": [
+        "UClc7TT-TIwTUduENg9CnVEQ"
+      ],
+      "channel_titles": [
+        "Wapor Latinoamérica"
+      ],
+      "videos": 1,
+      "bytes": 6031,
+      "sha256": "a75d200670fc9b09c03f726f3ac0c368d1700a21827877c5a61ee3c99597d975"
+    },
+    {
+      "file": "ucles90c6x9ud5spa2g-nsta--5d96dac4c57d--part-0001.jsonl",
+      "channel_key": "id:UCLEs90C6x9Ud5Spa2g-nSTA",
+      "part": 1,
+      "channel_ids": [
+        "UCLEs90C6x9Ud5Spa2g-nSTA"
+      ],
+      "channel_titles": [
+        "Manu Vlogs"
+      ],
+      "videos": 1,
+      "bytes": 15896,
+      "sha256": "98c00f0238fb2d5463b6c745b168b6150fa812344815aaca00de1a40a8d7525a"
+    },
+    {
+      "file": "ucll0hv6_bi0x7us5or-c5ga--9789969fa6c7--part-0001.jsonl",
+      "channel_key": "id:UCll0HV6_bI0X7Us5OR-C5gA",
+      "part": 1,
+      "channel_ids": [
+        "UCll0HV6_bI0X7Us5OR-C5gA"
+      ],
+      "channel_titles": [
+        "Causa Liberal"
+      ],
+      "videos": 1,
+      "bytes": 128004,
+      "sha256": "34f6b427502bd60e363b16da11df3a2bf22d718fbbe928d8b3d61f6ff7ed9771"
+    },
+    {
+      "file": "uclltad3s3urrugqqf_7rysa--55be18648c34--part-0001.jsonl",
+      "channel_key": "id:UClLTad3S3URRuGQQf_7rysA",
+      "part": 1,
+      "channel_ids": [
+        "UClLTad3S3URRuGQQf_7rysA"
+      ],
+      "channel_titles": [
+        "Luis Romero Abogados"
+      ],
+      "videos": 1,
+      "bytes": 96291,
+      "sha256": "51ef57cd4f40a34b9459c6ae0fb855c0a760874c4b8c39ec234f854876a26e2d"
+    },
+    {
+      "file": "uclpacjwoh8gnjgprfhvkuww--6d0e75185a37--part-0001.jsonl",
+      "channel_key": "id:UClPACJWOH8GnjGPRFHvKUww",
+      "part": 1,
+      "channel_ids": [
+        "UClPACJWOH8GnjGPRFHvKUww"
+      ],
+      "channel_titles": [
+        "Carlos Morante"
+      ],
+      "videos": 1,
+      "bytes": 22212,
+      "sha256": "a19c7d6cd8d4e8bde6a01def519a8125039fe510f008e3d869659fea59beffb1"
+    },
+    {
+      "file": "uclqo4zaaz01hqdctlovcgka--def5a51690ff--part-0001.jsonl",
+      "channel_key": "id:UClqo4ZAAZ01HQdCTlovCgkA",
+      "part": 1,
+      "channel_ids": [
+        "UClqo4ZAAZ01HQdCTlovCgkA"
+      ],
+      "channel_titles": [
+        "EXCELSIOR"
+      ],
+      "videos": 3,
+      "bytes": 209073,
+      "sha256": "d1cbf0b9e3cc65fa1446cffeb5d017e5b30b30a8f8ae2bdff0e990a657e03ade"
+    },
+    {
+      "file": "ucls_lfwdqjqnxsqx2km_uew--4cf5b79480d4--part-0001.jsonl",
+      "channel_key": "id:UCLs_lFWdQjqNxSQx2KM_uew",
+      "part": 1,
+      "channel_ids": [
+        "UCLs_lFWdQjqNxSQx2KM_uew"
+      ],
+      "channel_titles": [
+        "MarthaReyesTV"
+      ],
+      "videos": 5,
+      "bytes": 663805,
+      "sha256": "452d8d6abd4dc784dea3933c8baa9c52539f8ef769ec5fe6c1f0f09cdf628207"
+    },
+    {
+      "file": "ucltcib85_6kmi7xgyvacr6q--f1dac8654491--part-0001.jsonl",
+      "channel_key": "id:UClTcIB85_6kMi7xGyVaCR6Q",
+      "part": 1,
+      "channel_ids": [
+        "UClTcIB85_6kMi7xGyVaCR6Q"
+      ],
+      "channel_titles": [
+        "Canal1Peru"
+      ],
+      "videos": 1,
+      "bytes": 9021,
+      "sha256": "496d172e304ec60fed502b42138ccaf08054628edfb580df552a86a7e2f17347"
+    },
+    {
+      "file": "ucltgupjklqa3zgdmhkczong--f79cea6122dd--part-0001.jsonl",
+      "channel_key": "id:UCLtGUPjKLqa3zgdmhKCZONg",
+      "part": 1,
+      "channel_ids": [
+        "UCLtGUPjKLqa3zgdmhKCZONg"
+      ],
+      "channel_titles": [
+        "EL COMERCIO"
+      ],
+      "videos": 1,
+      "bytes": 16498,
+      "sha256": "cf824f22860357ea1a07fdcffd7a16b5a808edf674e69ad5c2cafc1c440c6f8b"
+    },
+    {
+      "file": "ucltilbetd0qq15vkqonx4ba--17ca16e64d76--part-0001.jsonl",
+      "channel_key": "id:UCltIlBetd0qq15VkqOnX4bA",
+      "part": 1,
+      "channel_ids": [
+        "UCltIlBetd0qq15VkqOnX4bA"
+      ],
+      "channel_titles": [
+        "Dile a Los Aquijes"
+      ],
+      "videos": 1,
+      "bytes": 28352,
+      "sha256": "a940892ac4207e097f7364c34c06ce8e1c8eea6fa5d4b467b7361d9397ce9b78"
+    },
+    {
+      "file": "uclurfilcpedek4wuzx3owwg--05cad16d97a4--part-0001.jsonl",
+      "channel_key": "id:UCLurFiLCpEDEK4wUZX3OWwg",
+      "part": 1,
+      "channel_ids": [
+        "UCLurFiLCpEDEK4wUZX3OWwg"
+      ],
+      "channel_titles": [
+        "Charlis de la Cumbia"
+      ],
+      "videos": 1,
+      "bytes": 18026,
+      "sha256": "f8d695ad970c56af0ba3eeb854548139e6d49ae4f53869e4ec5bca3264ec5d5f"
+    },
+    {
+      "file": "uclxshdt2y0ip77fjq3fyjzg--590a5ad3d473--part-0001.jsonl",
+      "channel_key": "id:UCLxsHdt2y0IP77fJq3fYjzg",
+      "part": 1,
+      "channel_ids": [
+        "UCLxsHdt2y0IP77fJq3fYjzg"
+      ],
+      "channel_titles": [
+        "Abogado Juan Carlos Paz Bautista"
+      ],
+      "videos": 1,
+      "bytes": 11889,
+      "sha256": "65b01a922d31e31bf6f7ac75847f32be3626bd33631402d2b95d3587229dcb0b"
+    },
+    {
+      "file": "ucm7rsfxgjsnv-99anf_ffmq--27705c9f8f02--part-0001.jsonl",
+      "channel_key": "id:UCm7rsFxGJsNV-99aNF_fFMQ",
+      "part": 1,
+      "channel_ids": [
+        "UCm7rsFxGJsNV-99aNF_fFMQ"
+      ],
+      "channel_titles": [
+        "TRAMITEX Abogados de Extranjería"
+      ],
+      "videos": 1,
+      "bytes": 82910,
+      "sha256": "eacd4174f714027414425f2e6fbc340603b0ca73505c7b166296557d2aad9aae"
+    },
+    {
+      "file": "ucmfcn0ov7d61cwplym5qhpw--c852dec7464a--part-0001.jsonl",
+      "channel_key": "id:UCMfcN0OV7d61cWPLYm5qHpw",
+      "part": 1,
+      "channel_ids": [
+        "UCMfcN0OV7d61cWPLYm5qHpw"
+      ],
+      "channel_titles": [
+        "El Dominical de Panamericana"
+      ],
+      "videos": 16,
+      "bytes": 395188,
+      "sha256": "5304d90c849b757afdd58e11aa97557b9713693081f44bdf73bb1f9f81b411b4"
+    },
+    {
+      "file": "ucmjnkvlvegutwp9vlpa2xha--3961478c3e66--part-0001.jsonl",
+      "channel_key": "id:UCmJNkVlVEGUtwP9VlpA2xhA",
+      "part": 1,
+      "channel_ids": [
+        "UCmJNkVlVEGUtwP9VlpA2xhA"
+      ],
+      "channel_titles": [
+        "Naciones Unidas Paraguay"
+      ],
+      "videos": 6,
+      "bytes": 78914,
+      "sha256": "03f3ab14f0279f1dec0fc33b9da47ee16be11d07e46d6aba0791634cc2bece58"
+    },
+    {
+      "file": "ucmlbcgwff6caojtgjoja9tq--9ea2244627a1--part-0001.jsonl",
+      "channel_key": "id:UCMlbcGWFF6caOjtGjOJA9TQ",
+      "part": 1,
+      "channel_ids": [
+        "UCMlbcGWFF6caOjtGjOJA9TQ"
+      ],
+      "channel_titles": [
+        "DE HUMO"
+      ],
+      "videos": 5,
+      "bytes": 74268,
+      "sha256": "4c3b87fb4bd8f502eb55d548b93900f0b7849d5159d2684c81f51c5712dbf0cb"
+    },
+    {
+      "file": "ucmqzswg6v78-w4da3782j0q--8d860efc4ad3--part-0001.jsonl",
+      "channel_key": "id:UCMQZSWG6V78-W4DA3782J0Q",
+      "part": 1,
+      "channel_ids": [
+        "UCMQZSWG6V78-W4DA3782J0Q"
+      ],
+      "channel_titles": [
+        "Globo Enfoques"
+      ],
+      "videos": 1,
+      "bytes": 20876,
+      "sha256": "15b92ffa91cf8e601f7cb18cefbfb0ffe7702a87876efc41b534481f645ebed8"
+    },
+    {
+      "file": "ucmrzeykbuppuvrxh8ror__w--e97fa0289bce--part-0001.jsonl",
+      "channel_key": "id:UCmrzeYkbupPuvrXH8roR__w",
+      "part": 1,
+      "channel_ids": [
+        "UCmrzeYkbupPuvrXH8roR__w"
+      ],
+      "channel_titles": [
+        "DÍA D"
+      ],
+      "videos": 32,
+      "bytes": 4240778,
+      "sha256": "269bc4da355407fee47b97b37acc0edda329ea9dbf6e3bbb04c04065cf100f0f"
+    },
+    {
+      "file": "ucn1qv1anr8lva0idiic15ua--ada234db70e7--part-0001.jsonl",
+      "channel_key": "id:UCn1qv1ANr8LvA0iDiiC15UA",
+      "part": 1,
+      "channel_ids": [
+        "UCn1qv1ANr8LvA0iDiiC15UA"
+      ],
+      "channel_titles": [
+        "CIUDAD TV CONTENIDOS"
+      ],
+      "videos": 5,
+      "bytes": 366396,
+      "sha256": "c412fd2617d54013d0de8fe47516b4ef1ce7276f0b1d6e4582b925b30f56d00b"
+    },
+    {
+      "file": "ucnd09h2gugrdet_80lxofmw--5f6e227837da--part-0001.jsonl",
+      "channel_key": "id:UCNd09h2GugrdeT_80LxOFMw",
+      "part": 1,
+      "channel_ids": [
+        "UCNd09h2GugrdeT_80LxOFMw"
+      ],
+      "channel_titles": [
+        "Peru21TV"
+      ],
+      "videos": 1,
+      "bytes": 42744,
+      "sha256": "f3bd35f06b692e4e39f41f3985e6e8717fc02b16cd793992ec62acef8c655a6b"
+    },
+    {
+      "file": "ucnfgffdjqpjxricamh2beaq--f3d739a650a7--part-0001.jsonl",
+      "channel_key": "id:UCNFgFfDJqPjXricaMH2beAQ",
+      "part": 1,
+      "channel_ids": [
+        "UCNFgFfDJqPjXricaMH2beAQ"
+      ],
+      "channel_titles": [
+        "EL HERALDO"
+      ],
+      "videos": 5,
+      "bytes": 118607,
+      "sha256": "64644e6380ecec7d793c1e486e8925489131af30861200dcebe1e16b60ad8908"
+    },
+    {
+      "file": "ucngb4rxo4iue6bris29wxwa--4a06d93dd96c--part-0001.jsonl",
+      "channel_key": "id:UCngb4rxO4iUE6BrIs29WXwA",
+      "part": 1,
+      "channel_ids": [
+        "UCngb4rxO4iUE6BrIs29WXwA"
+      ],
+      "channel_titles": [
+        "Panamericana Televisión"
+      ],
+      "videos": 11,
+      "bytes": 1170739,
+      "sha256": "cc308edf28dd45b9ddd4f15ed44af35c15e321c7cc6c0f6e95119d90df73bac2"
+    },
+    {
+      "file": "ucnsvjezo4rigq898wddnobw--724f907ef651--part-0001.jsonl",
+      "channel_key": "id:UCnsvJeZO4RigQ898WdDNoBw",
+      "part": 1,
+      "channel_ids": [
+        "UCnsvJeZO4RigQ898WdDNoBw"
+      ],
+      "channel_titles": [
+        "EL PAÍS"
+      ],
+      "videos": 3,
+      "bytes": 35762,
+      "sha256": "2cfce41bbcb2e242931b91b3c2a748cff9ecdb05b008366586e4c4515759ecbd"
+    },
+    {
+      "file": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc--part-0001.jsonl",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "part": 1,
+      "channel_ids": [
+        "UCO0cdOFdG-3hxa_VPG8imnw"
+      ],
+      "channel_titles": [
+        "Goblinciano"
+      ],
+      "videos": 170,
+      "bytes": 13676123,
+      "sha256": "edce172a4dfd4c5903b90f86946e83229f3254f284272333f0bbfe6544815e98"
+    },
+    {
+      "file": "uco3svqnaucicaj49ks-w8fw--2d0cdbb70e09--part-0001.jsonl",
+      "channel_key": "id:UCo3SVQNaUcICAj49Ks-w8fw",
+      "part": 1,
+      "channel_ids": [
+        "UCo3SVQNaUcICAj49Ks-w8fw"
+      ],
+      "channel_titles": [
+        "Instituto Nacional de Formación Política de morena"
+      ],
+      "videos": 9,
+      "bytes": 2503421,
+      "sha256": "6d278e3da35b84c6c4b40923f9d9abb3ad10fd4c05adfa33c204c7486c472c89"
+    },
+    {
+      "file": "uco4dahbdrq5nu4i5rq-hlsa--a824553975c8--part-0001.jsonl",
+      "channel_key": "id:UCO4dAHBdRQ5NU4i5rQ-HLsA",
+      "part": 1,
+      "channel_ids": [
+        "UCO4dAHBdRQ5NU4i5rQ-HLsA"
+      ],
+      "channel_titles": [
+        "CC Digital Perú"
+      ],
+      "videos": 1,
+      "bytes": 5523,
+      "sha256": "2cdeaa974e9057e75242bf319b43120260fcf4e1b4aa592e8d6798675f4abf99"
+    },
+    {
+      "file": "uco_wu2holustsltqvtkfv-w--0a88d1afd0c2--part-0001.jsonl",
+      "channel_key": "id:UCo_wU2hOlUsTsltqvtkfv-w",
+      "part": 1,
+      "channel_ids": [
+        "UCo_wU2hOlUsTsltqvtkfv-w"
+      ],
+      "channel_titles": [
+        "Angel Duran Leon"
+      ],
+      "videos": 1,
+      "bytes": 2221,
+      "sha256": "b391e4a0f5764cd76f3b1206fc2e07d16ee334968f6531c2e58f0c495a4ce02f"
+    },
+    {
+      "file": "ucomwimnpaur6jhxdk63dpag--6baf00e9eaf0--part-0001.jsonl",
+      "channel_key": "id:UCoMWImnPAur6JhXDK63dpAg",
+      "part": 1,
+      "channel_ids": [
+        "UCoMWImnPAur6JhXDK63dpAg"
+      ],
+      "channel_titles": [
+        "Málaga 24h TV Noticias"
+      ],
+      "videos": 1,
+      "bytes": 7066,
+      "sha256": "80517aad72bd46a50bcdae16b5ec54a6eca4db93b9b4391d055ae5037b21648a"
+    },
+    {
+      "file": "ucorgbnbfytzbohshhojp0_w--06e45dfd126d--part-0001.jsonl",
+      "channel_key": "id:UCorgbnbfYTzboHsHhOjp0_w",
+      "part": 1,
+      "channel_ids": [
+        "UCorgbnbfYTzboHsHhOjp0_w"
+      ],
+      "channel_titles": [
+        "bast chelsea"
+      ],
+      "videos": 1,
+      "bytes": 22347,
+      "sha256": "a911d8bf16327cf07035e67e59e7cc75fa4d243c02846521d82a98b943f38ec9"
+    },
+    {
+      "file": "ucort3mldttmerpqprslsfng--a9969c46f1f9--part-0001.jsonl",
+      "channel_key": "id:UCort3mldTtMErPqprSlSfng",
+      "part": 1,
+      "channel_ids": [
+        "UCort3mldTtMErPqprSlSfng"
+      ],
+      "channel_titles": [
+        "Willax Televisión"
+      ],
+      "videos": 2,
+      "bytes": 28278,
+      "sha256": "3ee1430d1f14e7af2e3696a958b7fe926e4bdf14e8398df9d1137855804fd9ca"
+    },
+    {
+      "file": "ucoscc1ngjltfzopvjxd6peq--e86c0b556f51--part-0001.jsonl",
+      "channel_key": "id:UCOSCC1ngjlTfZOPvjXd6PeQ",
+      "part": 1,
+      "channel_ids": [
+        "UCOSCC1ngjlTfZOPvjXd6PeQ"
+      ],
+      "channel_titles": [
+        "tejemedios"
+      ],
+      "videos": 1,
+      "bytes": 15651,
+      "sha256": "a81672540d9126726dc127aa0971eb211234c515446126c29616ee4576574f3d"
+    },
+    {
+      "file": "ucp0ajjenkfbyzegttvbkhpg--f1ea55bf2030--part-0001.jsonl",
+      "channel_key": "id:UCP0AJJeNkFBYzegTTVbKhPg",
+      "part": 1,
+      "channel_ids": [
+        "UCP0AJJeNkFBYzegTTVbKhPg"
+      ],
+      "channel_titles": [
+        "Marco Sifuentes"
+      ],
+      "videos": 5,
+      "bytes": 312880,
+      "sha256": "7b9552fb19e06ba898e306663d87883a39665d0eb347452de50512a6cf1914ea"
+    },
+    {
+      "file": "ucp8ok938hjlano8bo-ca-fw--8a986debc417--part-0001.jsonl",
+      "channel_key": "id:UCp8ok938HJLanO8bO-ca-Fw",
+      "part": 1,
+      "channel_ids": [
+        "UCp8ok938HJLanO8bO-ca-Fw"
+      ],
+      "channel_titles": [
+        "Rex Anestesiado"
+      ],
+      "videos": 1,
+      "bytes": 10687,
+      "sha256": "6ee5e3cfbef5ef76b9bc46d030020ca6119c4ee308c6e71e533905fba57ec7cb"
+    },
+    {
+      "file": "ucpbdhz7nskmsxwkvputlglw--b741ea042f58--part-0001.jsonl",
+      "channel_key": "id:UCPBDhZ7NskmSXWKVPuTlGLw",
+      "part": 1,
+      "channel_ids": [
+        "UCPBDhZ7NskmSXWKVPuTlGLw"
+      ],
+      "channel_titles": [
+        "Javier Sanchez Negron"
+      ],
+      "videos": 1,
+      "bytes": 4253,
+      "sha256": "f48fad45d6cb4f5a3f226423432d9d1e830ca445b7a199a1865a3a0a328f611d"
+    },
+    {
+      "file": "ucpcmymqnk-fkzmkrmrarc_a--22b4d5efb031--part-0001.jsonl",
+      "channel_key": "id:UCpcmyMQnK-FKzmkrmRARc_A",
+      "part": 1,
+      "channel_ids": [
+        "UCpcmyMQnK-FKzmkrmRARc_A"
+      ],
+      "channel_titles": [
+        "El Notificador Peruano"
+      ],
+      "videos": 25,
+      "bytes": 2938192,
+      "sha256": "9cfd7a145387e1fe8cc5ff9f7cba15f4ddfa1277fd4a3205b0236732556ac04a"
+    },
+    {
+      "file": "ucpdmo4auxng5mvtkj_lbp8g--eb8bcb07b20f--part-0001.jsonl",
+      "channel_key": "id:UCPdMo4auXNg5mVtkJ_LbP8g",
+      "part": 1,
+      "channel_ids": [
+        "UCPdMo4auXNg5mVtkJ_LbP8g"
+      ],
+      "channel_titles": [
+        "Mi Canal Peru"
+      ],
+      "videos": 1,
+      "bytes": 12172,
+      "sha256": "8743761f3fd03746fbc5501277409fcca216c214ea45f19439585100069a6077"
+    },
+    {
+      "file": "ucpdubi2uwpb6br6ngkqzohq--baa6634a3f8c--part-0001.jsonl",
+      "channel_key": "id:UCpdubI2uwPB6bR6NGKqzohQ",
+      "part": 1,
+      "channel_ids": [
+        "UCpdubI2uwPB6bR6NGKqzohQ"
+      ],
+      "channel_titles": [
+        "VIDEOSDIARIOS"
+      ],
+      "videos": 4,
+      "bytes": 79162,
+      "sha256": "4f58df0f136a671d74c6cf79d4c3ea134416b670120329cd0b57d91c3ca034c1"
+    },
+    {
+      "file": "ucpf79fbh6rxwydn487koltq--dc6ab78f3610--part-0001.jsonl",
+      "channel_key": "id:UCpF79FBh6RxwYDN487KoltQ",
+      "part": 1,
+      "channel_ids": [
+        "UCpF79FBh6RxwYDN487KoltQ"
+      ],
+      "channel_titles": [
+        "ETCRADIO TV"
+      ],
+      "videos": 1,
+      "bytes": 7195,
+      "sha256": "d2675e34d335826ea39788d66ceaa2d2c8a6834f8d6146da696c57834e232949"
+    },
+    {
+      "file": "ucpfflf9o4wjr-yr7dg8gyug--bc3818d9f470--part-0001.jsonl",
+      "channel_key": "id:UCpFfLf9o4wJr-yr7dG8gYug",
+      "part": 1,
+      "channel_ids": [
+        "UCpFfLf9o4wJr-yr7dG8gYug"
+      ],
+      "channel_titles": [
+        "CDN 37"
+      ],
+      "videos": 5,
+      "bytes": 234766,
+      "sha256": "c9c13627e97a1655a47f68afdc2cd53590f95a33682b34d516f2356d934a8c7a"
+    },
+    {
+      "file": "ucphm2i2wk4vqjenwhn3px8a--4f34d078feb8--part-0001.jsonl",
+      "channel_key": "id:UCPhm2I2wk4vqjENwhn3px8A",
+      "part": 1,
+      "channel_ids": [
+        "UCPhm2I2wk4vqjENwhn3px8A"
+      ],
+      "channel_titles": [
+        "América Noticias"
+      ],
+      "videos": 27,
+      "bytes": 971259,
+      "sha256": "ab5380efb7ac1157d467ecf3b975ee00b5b7e3a8329f1d1b58c0f0c172d10d15"
+    },
+    {
+      "file": "ucpjtfkkpftzbvyid6goz4pa--6927da57dc78--part-0001.jsonl",
+      "channel_key": "id:UCpjTfkKPFTZbvyID6GoZ4PA",
+      "part": 1,
+      "channel_ids": [
+        "UCpjTfkKPFTZbvyID6GoZ4PA"
+      ],
+      "channel_titles": [
+        "Francovidalclips"
+      ],
+      "videos": 1,
+      "bytes": 140869,
+      "sha256": "8d2967da05d56aa613659fff1209b9b2d0ee216159018f283227d84d535dc3cd"
+    },
+    {
+      "file": "ucpoacjjnap0y0fhznrrxijq--06a0d3d09d91--part-0001.jsonl",
+      "channel_key": "id:UCpOAcjJNAp0Y0fhznRrXIJQ",
+      "part": 1,
+      "channel_ids": [
+        "UCpOAcjJNAp0Y0fhznRrXIJQ"
+      ],
+      "channel_titles": [
+        "CNN Chile"
+      ],
+      "videos": 7,
+      "bytes": 1399526,
+      "sha256": "dfb6477ad448509494dcf684ddc27be3b1d949cdc456e6fb02775919c7a0d2da"
+    },
+    {
+      "file": "ucppfqajdqwxc9_5om3aqdpg--570d8faad37a--part-0001.jsonl",
+      "channel_key": "id:UCPpfqaJdQwXc9_5oM3aqdPg",
+      "part": 1,
+      "channel_ids": [
+        "UCPpfqaJdQwXc9_5oM3aqdPg"
+      ],
+      "channel_titles": [
+        "La Mula Stream"
+      ],
+      "videos": 1,
+      "bytes": 1551,
+      "sha256": "2a92cb014b28f327f13bf28cfd8eaf6589adbfbbf1fd225d9aba9e0a255058ea"
+    },
+    {
+      "file": "ucpsj5fghmame9kx2d3zvn3q--099c912c34ad--part-0001.jsonl",
+      "channel_key": "id:UCpSJ5fGhmAME9Kx2D3ZvN3Q",
+      "part": 1,
+      "channel_ids": [
+        "UCpSJ5fGhmAME9Kx2D3ZvN3Q"
+      ],
+      "channel_titles": [
+        "Latina Noticias"
+      ],
+      "videos": 111,
+      "bytes": 3904852,
+      "sha256": "3e9404f3b246e729402d6819f3e4e89465bbd5deef725102696d0ab94f401f5b"
+    },
+    {
+      "file": "ucpxoddoaeicm1_3uukf5k3w--ab2e3235a584--part-0001.jsonl",
+      "channel_key": "id:UCPXOddOaeICM1_3UuKf5K3w",
+      "part": 1,
+      "channel_ids": [
+        "UCPXOddOaeICM1_3UuKf5K3w"
+      ],
+      "channel_titles": [
+        "The Real Chile"
+      ],
+      "videos": 5,
+      "bytes": 17720,
+      "sha256": "284a0301a8193fa5d84870f6aa8e85349b4aa3608e55d5d2ff6dbf4f2d91a5c6"
+    },
+    {
+      "file": "ucqgh078g5xvyb8gyzeb0ygw--82ec5849f975--part-0001.jsonl",
+      "channel_key": "id:UCQgH078G5XvyB8gyZEb0Ygw",
+      "part": 1,
+      "channel_ids": [
+        "UCQgH078G5XvyB8gyZEb0Ygw"
+      ],
+      "channel_titles": [
+        "Diario Sin Fronteras"
+      ],
+      "videos": 6,
+      "bytes": 292685,
+      "sha256": "008eef557e6714257f538d309563b75514f6cc704b7701f2b51df1302da5d851"
+    },
+    {
+      "file": "ucqh-6sv6ovhg4nx-niz_c1g--a23b91057325--part-0001.jsonl",
+      "channel_key": "id:UCQH-6sv6ovHg4Nx-niZ_C1g",
+      "part": 1,
+      "channel_ids": [
+        "UCQH-6sv6ovHg4Nx-niZ_C1g"
+      ],
+      "channel_titles": [
+        "TV MUNDO AREQUIPA"
+      ],
+      "videos": 9,
+      "bytes": 1939431,
+      "sha256": "ae94eaaa4936a69f3a623442e0a73e41a9f10772bd9993fe50cfcc6e626282f4"
+    },
+    {
+      "file": "ucqmo59twid4ohtdl4w320dq--a64574e2befe--part-0001.jsonl",
+      "channel_key": "id:UCQmo59tWId4OHTdl4W320DQ",
+      "part": 1,
+      "channel_ids": [
+        "UCQmo59tWId4OHTdl4W320DQ"
+      ],
+      "channel_titles": [
+        "Wayka"
+      ],
+      "videos": 14,
+      "bytes": 216605,
+      "sha256": "e73da3f6d9e810e48dcbd10203f63878985a9d6428327df45b609a43aab3805b"
+    },
+    {
+      "file": "ucqphlknmgosqo1purybx3pq--13940e291191--part-0001.jsonl",
+      "channel_key": "id:UCQpHLKNmGosqo1pURYBx3pQ",
+      "part": 1,
+      "channel_ids": [
+        "UCQpHLKNmGosqo1pURYBx3pQ"
+      ],
+      "channel_titles": [
+        "Recnux"
+      ],
+      "videos": 1,
+      "bytes": 2507,
+      "sha256": "4f2d51403e1e34dd888e199a4dd3c418e947c4cb59e9d6d626be97fe7e0197cc"
+    },
+    {
+      "file": "ucqrfca-_xe_0acyvv5h7x_g--8316f2e83d01--part-0001.jsonl",
+      "channel_key": "id:UCqrFca-_xE_0AcyVv5h7x_g",
+      "part": 1,
+      "channel_ids": [
+        "UCqrFca-_xE_0AcyVv5h7x_g"
+      ],
+      "channel_titles": [
+        "Revolución Tres Punto Cero"
+      ],
+      "videos": 1,
+      "bytes": 26698,
+      "sha256": "f72f4a2ef873531afe9600bde1cfa857175c81c5e66b5f328a5689e823cc4b98"
+    },
+    {
+      "file": "ucqrfou8czwijzlopkfhmqcg--d756bbce89c4--part-0001.jsonl",
+      "channel_key": "id:UCQRfou8CZWIJzLOpKfhmqcg",
+      "part": 1,
+      "channel_ids": [
+        "UCQRfou8CZWIJzLOpKfhmqcg"
+      ],
+      "channel_titles": [
+        "Producciones TeD Televisión en Digital"
+      ],
+      "videos": 1,
+      "bytes": 13742,
+      "sha256": "6aabe841f35a0426acb28accbc99f3e024c3c87a92723a5a72694c988d1b7656"
+    },
+    {
+      "file": "ucqv75y4h6murjpehbm22csa--8c3521eed2de--part-0001.jsonl",
+      "channel_key": "id:UCQV75Y4h6MUrjPeHBM22csA",
+      "part": 1,
+      "channel_ids": [
+        "UCQV75Y4h6MUrjPeHBM22csA"
+      ],
+      "channel_titles": [
+        "La Afición"
+      ],
+      "videos": 1,
+      "bytes": 13200,
+      "sha256": "b3d22b93ffe9269e57c6c5a6c91b820424f36308dde06fb566c63717dfcb999e"
+    },
+    {
+      "file": "ucr6tevofbycvtcdxv_niqkq--24a3b64364a1--part-0001.jsonl",
+      "channel_key": "id:UCr6TeVofbyCvtCdxV_niQKQ",
+      "part": 1,
+      "channel_ids": [
+        "UCr6TeVofbyCvtCdxV_niQKQ"
+      ],
+      "channel_titles": [
+        "Noticias Grupo Repretel"
+      ],
+      "videos": 6,
+      "bytes": 89820,
+      "sha256": "ab19c84b9aa28c7de75a3b1d543557884d6a17276d280222058c854b51cc1cdd"
+    },
+    {
+      "file": "ucr6tzxgwgqetm2hoiu9ioiq--b111242faaf8--part-0001.jsonl",
+      "channel_key": "id:UCr6tZxGWGQetM2Hoiu9iOIQ",
+      "part": 1,
+      "channel_ids": [
+        "UCr6tZxGWGQetM2Hoiu9iOIQ"
+      ],
+      "channel_titles": [
+        "RANDOM VIDEOS"
+      ],
+      "videos": 1,
+      "bytes": 1530,
+      "sha256": "a10cc255b239c5788ec251fd03031c6855b7f0b0fbae49a4e2bf70063b1eb89b"
+    },
+    {
+      "file": "ucr7tx3wfwk-fznenyxdxeiw--6c3e1282d303--part-0001.jsonl",
+      "channel_key": "id:UCr7TX3WFwk-fZneNyxdXeiw",
+      "part": 1,
+      "channel_ids": [
+        "UCr7TX3WFwk-fZneNyxdXeiw"
+      ],
+      "channel_titles": [
+        "Sistema acusatorio en México"
+      ],
+      "videos": 1,
+      "bytes": 2828,
+      "sha256": "8c76c8e4e9bc673a34907e92821e94717ef3d22876e0ae2bc9bc6ab7f1d615bc"
+    },
+    {
+      "file": "ucr9120ybaqmfntqgrtkmkjq--8919529fbf67--part-0001.jsonl",
+      "channel_key": "id:UCR9120YBAqMfntqgRTKmkjQ",
+      "part": 1,
+      "channel_ids": [
+        "UCR9120YBAqMfntqgRTKmkjQ"
+      ],
+      "channel_titles": [
+        "A24com"
+      ],
+      "videos": 3,
+      "bytes": 133545,
+      "sha256": "5280eadcbf2ed1451cd9f16decb0ea68467f84f9ee052777ba3fcfb4581c8bd4"
+    },
+    {
+      "file": "ucrikgthrn_awucjncuxyyka--6ec1bac4b2ac--part-0001.jsonl",
+      "channel_key": "id:UCrikgtHRn_AwUCJncUXyYKA",
+      "part": 1,
+      "channel_ids": [
+        "UCrikgtHRn_AwUCJncUXyYKA"
+      ],
+      "channel_titles": [
+        "Nacion y Frontera"
+      ],
+      "videos": 1,
+      "bytes": 57786,
+      "sha256": "eed0de0f45d13d16d27f476d0543cb4d0aaba4c7dfac8d2a22a36ec69cd3df02"
+    },
+    {
+      "file": "ucrl1-om_nm-btceytfd-ara--a11fcd0d0805--part-0001.jsonl",
+      "channel_key": "id:UCRl1-oM_NM-BtCEyTFd-aRA",
+      "part": 1,
+      "channel_ids": [
+        "UCRl1-oM_NM-BtCEyTFd-aRA"
+      ],
+      "channel_titles": [
+        "QUE HAY DE NUEVO PERU"
+      ],
+      "videos": 10,
+      "bytes": 142881,
+      "sha256": "6dc60f132274fec6764d81b2ee95c21eae16ce64a256e01827d818e8980b83de"
+    },
+    {
+      "file": "ucrmusz3anvzipfncs0y1daq--bd5d3d7d0def--part-0001.jsonl",
+      "channel_key": "id:UCRMUSZ3anVZipFNCs0y1dAQ",
+      "part": 1,
+      "channel_ids": [
+        "UCRMUSZ3anVZipFNCs0y1dAQ"
+      ],
+      "channel_titles": [
+        "TVC En la Comunidad"
+      ],
+      "videos": 1,
+      "bytes": 14330,
+      "sha256": "6458fb443e0c87e3e2e91a056af9cd375c23fe5ccdaba73822d1a92d0ac962b9"
+    },
+    {
+      "file": "ucrpmfcqnog595v5gas-ousq--ee07a9ca74d0--part-0001.jsonl",
+      "channel_key": "id:UCrpMfcQNog595v5gAS-oUsQ",
+      "part": 1,
+      "channel_ids": [
+        "UCrpMfcQNog595v5gAS-oUsQ"
+      ],
+      "channel_titles": [
+        "Canal 26"
+      ],
+      "videos": 1,
+      "bytes": 7309,
+      "sha256": "8bed7b35dd4180fb885d776138c969c964518ea57ee862cc9d9d9bb126b95a18"
+    },
+    {
+      "file": "ucrsbn-srqije1vuowk_v4gq--0a4cbfea06d8--part-0001.jsonl",
+      "channel_key": "id:UCRSBn-sRqIjE1VUOwk_V4GQ",
+      "part": 1,
+      "channel_ids": [
+        "UCRSBn-sRqIjE1VUOwk_V4GQ"
+      ],
+      "channel_titles": [
+        "El Canolexx"
+      ],
+      "videos": 1,
+      "bytes": 35594,
+      "sha256": "f8716f2eb9b6b445ab56415c643249e8054441f2c8acb508877bf96fb2647aa9"
+    },
+    {
+      "file": "ucrtzo3mpqvcmyfmjogxyw7g--04edeff94d61--part-0001.jsonl",
+      "channel_key": "id:UCRtZO3mPqvCMYfmJogXyW7g",
+      "part": 1,
+      "channel_ids": [
+        "UCRtZO3mPqvCMYfmJogXyW7g"
+      ],
+      "channel_titles": [
+        "El Litoral"
+      ],
+      "videos": 5,
+      "bytes": 183630,
+      "sha256": "d8673fc692380bb9eeaa61aced9356cfe4282e17655796e78887b43365636cf0"
+    },
+    {
+      "file": "ucrzab0s4lnqfjmv4fqarnta--d62a00a0d4c2--part-0001.jsonl",
+      "channel_key": "id:UCrzab0S4lNqFjmv4fQArnTA",
+      "part": 1,
+      "channel_ids": [
+        "UCrzab0S4lNqFjmv4fQArnTA"
+      ],
+      "channel_titles": [
+        "ITV Patagonia"
+      ],
+      "videos": 5,
+      "bytes": 326066,
+      "sha256": "61a85435498135f83a4d2fa7662c2ecd82f7380487c7d3d495314103a73ddc0b"
+    },
+    {
+      "file": "ucsakksrww3j7pm6davkraiq--62a2082de336--part-0001.jsonl",
+      "channel_key": "id:UCsakKsRww3J7pM6DavkrAIQ",
+      "part": 1,
+      "channel_ids": [
+        "UCsakKsRww3J7pM6DavkrAIQ"
+      ],
+      "channel_titles": [
+        "24 Horas"
+      ],
+      "videos": 42,
+      "bytes": 776453,
+      "sha256": "4100e26242b1d6f4db6cecad4f609f34fca6b1aa862af5ec42b427d6c09e2dab"
+    },
+    {
+      "file": "ucsef_kd9065owiwubvw5mxw--0b1c2d06ccd5--part-0001.jsonl",
+      "channel_key": "id:UCsEf_Kd9065OwIwubVw5Mxw",
+      "part": 1,
+      "channel_ids": [
+        "UCsEf_Kd9065OwIwubVw5Mxw"
+      ],
+      "channel_titles": [
+        "VideosFarandulita"
+      ],
+      "videos": 1,
+      "bytes": 16331,
+      "sha256": "e1d64a6c8a52e6c0e36127021bf33ba5f1fcdd83caf28b5b69b47ed61eb54878"
+    },
+    {
+      "file": "ucsnjcvum5dv_p-bdcho0qea--a631c1b1acc4--part-0001.jsonl",
+      "channel_key": "id:UCsNJCvuM5Dv_p-bdChO0QEA",
+      "part": 1,
+      "channel_ids": [
+        "UCsNJCvuM5Dv_p-bdChO0QEA"
+      ],
+      "channel_titles": [
+        "Canal46Chancay"
+      ],
+      "videos": 1,
+      "bytes": 3561,
+      "sha256": "3463b1c31dfa9dacf7ee63c12a3919068a480d9dfbbf7dff1c6f9e82d72b0121"
+    },
+    {
+      "file": "ucsrnhjcucr78q3ud6oxctng--9c957bb1447b--part-0001.jsonl",
+      "channel_key": "id:UCsRnhjcUCR78Q3Ud6OXCTNg",
+      "part": 1,
+      "channel_ids": [
+        "UCsRnhjcUCR78Q3Ud6OXCTNg"
+      ],
+      "channel_titles": [
+        "Teletrece"
+      ],
+      "videos": 7,
+      "bytes": 323655,
+      "sha256": "718144009de87ac64fd8728335f09843954c664fc73c8bce879ba8b345e532d0"
+    },
+    {
+      "file": "uct-gopcw4dobliyql9a1zta--2518c418ba44--part-0001.jsonl",
+      "channel_key": "id:UCt-GOpCw4dOBlIyqL9A1ztA",
+      "part": 1,
+      "channel_ids": [
+        "UCt-GOpCw4dOBlIyqL9A1ztA"
+      ],
+      "channel_titles": [
+        "Sr Pelo"
+      ],
+      "videos": 1,
+      "bytes": 14527,
+      "sha256": "ecf25912e52cae94d3421828c26f01441b48b8ed5c4e655064c251bee9e8d16c"
+    },
+    {
+      "file": "uct2rogzd2rwoviqg1svasyq--fb6d244c69d8--part-0001.jsonl",
+      "channel_key": "id:UCt2ROGzD2RWoViQG1svAsYQ",
+      "part": 1,
+      "channel_ids": [
+        "UCt2ROGzD2RWoViQG1svAsYQ"
+      ],
+      "channel_titles": [
+        "Teffy Lu"
+      ],
+      "videos": 5,
+      "bytes": 185167,
+      "sha256": "0ac12926b7e8a0502e38068718612c40d448a4af2d4b80e0023584730e8acee0"
+    },
+    {
+      "file": "uct3jhkkbev4zslnzhz26hpw--ba9327b17139--part-0001.jsonl",
+      "channel_key": "id:UCT3jhkKbEV4ZslnzhZ26hPw",
+      "part": 1,
+      "channel_ids": [
+        "UCT3jhkKbEV4ZslnzhZ26hPw"
+      ],
+      "channel_titles": [
+        "SOL TV Perú"
+      ],
+      "videos": 27,
+      "bytes": 680608,
+      "sha256": "f2aa8658a028111483f23af95b5f0234b9437853dc56a691576acb3f28c27006"
+    },
+    {
+      "file": "uct42axxeokqwroe3cdvx3ba--5efd5f40097e--part-0001.jsonl",
+      "channel_key": "id:UCt42aXXEokQWROe3CdVx3bA",
+      "part": 1,
+      "channel_ids": [
+        "UCt42aXXEokQWROe3CdVx3bA"
+      ],
+      "channel_titles": [
+        "Chimi chimi"
+      ],
+      "videos": 4,
+      "bytes": 146847,
+      "sha256": "0bbd9177b84ab0454f4a6df09e79d675646e36e60dbf22e4295223d73eecc21b"
+    },
+    {
+      "file": "uct4jg8h03dd0in3pb5l0pma--548c546edcab--part-0001.jsonl",
+      "channel_key": "id:UCT4Jg8h03dD0iN3Pb5L0PMA",
+      "part": 1,
+      "channel_ids": [
+        "UCT4Jg8h03dD0iN3Pb5L0PMA"
+      ],
+      "channel_titles": [
+        "DW Español"
+      ],
+      "videos": 7,
+      "bytes": 426742,
+      "sha256": "c69a0eb302457ff3e2df21b5dc89fb4e89239fa37211b07c294bcb2e28e9ffc2"
+    },
+    {
+      "file": "uct6hcrkvo3ywvw7ph7bfdcg--884fbe34e787--part-0001.jsonl",
+      "channel_key": "id:UCt6hcrKVO3yWvW7PH7bFdCg",
+      "part": 1,
+      "channel_ids": [
+        "UCt6hcrKVO3yWvW7PH7bFdCg"
+      ],
+      "channel_titles": [
+        "Adrien Lastic Official"
+      ],
+      "videos": 1,
+      "bytes": 19259,
+      "sha256": "98301439d44a2e21e267b7d1c16643e167d251ac61637caffd23d729267f2ed4"
+    },
+    {
+      "file": "uct78tvtnhk4hd9l0io3vttg--d49e9989e40a--part-0001.jsonl",
+      "channel_key": "id:UCt78tVTNhK4hd9l0Io3vTtg",
+      "part": 1,
+      "channel_ids": [
+        "UCt78tVTNhK4hd9l0Io3vTtg"
+      ],
+      "channel_titles": [
+        "Ciudadaniasx"
+      ],
+      "videos": 3,
+      "bytes": 90273,
+      "sha256": "e04bca4a594ca8aa348497697b0c5ed0b6fdb12ded2ffddfcdcd9ef449947528"
+    },
+    {
+      "file": "uct7kfgv6s2a-rh2jq8zdm1g--054a83201b38--part-0001.jsonl",
+      "channel_key": "id:UCT7KFGv6s2a-rh2Jq8ZdM1g",
+      "part": 1,
+      "channel_ids": [
+        "UCT7KFGv6s2a-rh2Jq8ZdM1g"
+      ],
+      "channel_titles": [
+        "Crónica TV"
+      ],
+      "videos": 5,
+      "bytes": 390671,
+      "sha256": "94f3223a9f845b5577b23ccada0dc9d26b26c2e2c245504b0660a4bcc7e6f1a6"
+    },
+    {
+      "file": "uct8pmbitxn2-nfw39_8504q--d6b8cd1d8a92--part-0001.jsonl",
+      "channel_key": "id:UCT8PmbITxn2-NFW39_8504Q",
+      "part": 1,
+      "channel_ids": [
+        "UCT8PmbITxn2-NFW39_8504Q"
+      ],
+      "channel_titles": [
+        "AM Noticias"
+      ],
+      "videos": 1,
+      "bytes": 16109,
+      "sha256": "1f8e362cb6df99f41d598fe391352ed23eaa3cd934a8bb5c9bd3e05b1616a1f4"
+    },
+    {
+      "file": "uct9dwqie2tzgr-qfavnowza--eeb6a921eff3--part-0001.jsonl",
+      "channel_key": "id:UCT9dwqIe2tZGR-QfavNoWzA",
+      "part": 1,
+      "channel_ids": [
+        "UCT9dwqIe2tZGR-QfavNoWzA"
+      ],
+      "channel_titles": [
+        "Walter Adan Chinchay"
+      ],
+      "videos": 1,
+      "bytes": 223934,
+      "sha256": "346b076716822c948f4a0856747b16e342cff8631f11aad5bbcd4c0f27a0d30d"
+    },
+    {
+      "file": "uct9p7_xkch8mt1ieg93zbua--0168f66d0349--part-0001.jsonl",
+      "channel_key": "id:UCT9P7_XkcH8mT1iEG93zBuA",
+      "part": 1,
+      "channel_ids": [
+        "UCT9P7_XkcH8mT1iEG93zBuA"
+      ],
+      "channel_titles": [
+        "EstrellaPerdida"
+      ],
+      "videos": 3,
+      "bytes": 320043,
+      "sha256": "a9e05dddcdd48d43bbc31f0c018b4fa065973086c9b7656a0101945da081c248"
+    },
+    {
+      "file": "uctccjypwhobnqt_s0wr4_bw--5dc3a9a4dbe8--part-0001.jsonl",
+      "channel_key": "id:UCtccjYpWHoBnQt_s0WR4_Bw",
+      "part": 1,
+      "channel_ids": [
+        "UCtccjYpWHoBnQt_s0WR4_Bw"
+      ],
+      "channel_titles": [
+        "Ley Justa"
+      ],
+      "videos": 1,
+      "bytes": 21383,
+      "sha256": "58bdbb39d90961185c77e0907101a6e5637b63e8cfbef616f81d7361475eeb03"
+    },
+    {
+      "file": "uctirbuml-o8o2khhhtwponw--5f74b61bde84--part-0001.jsonl",
+      "channel_key": "id:UCtIrbumL-O8o2KhhhtWponw",
+      "part": 1,
+      "channel_ids": [
+        "UCtIrbumL-O8o2KhhhtWponw"
+      ],
+      "channel_titles": [
+        "Eduardo Enrique"
+      ],
+      "videos": 1,
+      "bytes": 109723,
+      "sha256": "d820ebad6cf28c56b9fce39bfa452d0096515cd3d0f7a7e594828091bdcc3991"
+    },
+    {
+      "file": "uctxnz3gjaypwp3ehliatejq--b25f6c1c193f--part-0001.jsonl",
+      "channel_key": "id:UCTXNz3gjAypWp3EhlIATEJQ",
+      "part": 1,
+      "channel_ids": [
+        "UCTXNz3gjAypWp3EhlIATEJQ"
+      ],
+      "channel_titles": [
+        "24 Horas - TVN Chile"
+      ],
+      "videos": 7,
+      "bytes": 422411,
+      "sha256": "cfcefbcf2ad7efef1837e92305ab390f9d858b678e5e2dec84711a271c8e5cc2"
+    },
+    {
+      "file": "ucu56vjvy6tgg48bt2l3c2ga--41275b1fe748--part-0001.jsonl",
+      "channel_key": "id:UCU56vjVy6tGg48BT2L3C2GA",
+      "part": 1,
+      "channel_ids": [
+        "UCU56vjVy6tGg48BT2L3C2GA"
+      ],
+      "channel_titles": [
+        "carlos urbina castillo"
+      ],
+      "videos": 1,
+      "bytes": 10031,
+      "sha256": "03b1818b60381ff03132ffb8577b1e0b04a811e27f6c3d7891beef990692bfa1"
+    },
+    {
+      "file": "ucug8jhwdm-jkvjfr_in05bw--4552fb56d86b--part-0001.jsonl",
+      "channel_key": "id:UCug8JhwDM-jKVjFr_In05Bw",
+      "part": 1,
+      "channel_ids": [
+        "UCug8JhwDM-jKVjFr_In05Bw"
+      ],
+      "channel_titles": [
+        "Intro Snit"
+      ],
+      "videos": 1,
+      "bytes": 17906,
+      "sha256": "0b7d9961d7775a2757323541a415a9d9d6d3dc50ab3d505ed9f7c64489401aaa"
+    },
+    {
+      "file": "ucuihaqyuu2hkkgr7se_nlvw--82e3f0f9d991--part-0001.jsonl",
+      "channel_key": "id:UCuiHAQYUu2HKkGR7sE_nLVw",
+      "part": 1,
+      "channel_ids": [
+        "UCuiHAQYUu2HKkGR7sE_nLVw"
+      ],
+      "channel_titles": [
+        "Jurado Nacional de Elecciones"
+      ],
+      "videos": 9,
+      "bytes": 152247,
+      "sha256": "209464609124807eb6d3936fd3d7026fab681cedbb8bea0bfc0dd08a65b37b9b"
+    },
+    {
+      "file": "ucup6qv-_eil0hwtsjakynvw--c8d3f499a9d7--part-0001.jsonl",
+      "channel_key": "id:UCUP6qv-_EIL0hwTsJaKYnvw",
+      "part": 1,
+      "channel_ids": [
+        "UCUP6qv-_EIL0hwTsJaKYnvw"
+      ],
+      "channel_titles": [
+        "Azteca Noticias"
+      ],
+      "videos": 1,
+      "bytes": 38605,
+      "sha256": "bfea4486ee0bdf6785af55d1bdbcef00e999f26199218d532180b202b285e791"
+    },
+    {
+      "file": "ucup8rioo9tqvkllzdsunrwq--3b595e06a7f0--part-0001.jsonl",
+      "channel_key": "id:UCUP8rioo9tQVKlLzDsUnrWQ",
+      "part": 1,
+      "channel_ids": [
+        "UCUP8rioo9tQVKlLzDsUnrWQ"
+      ],
+      "channel_titles": [
+        "Historia del Perú"
+      ],
+      "videos": 8,
+      "bytes": 1458435,
+      "sha256": "3fe23c6a44fdfdd1b73d92df1244542274e45362a2fff54142439e0f0dbb6358"
+    },
+    {
+      "file": "ucuplbk1nni1dnjfu2biavrw--ff5ccc0e225e--part-0001.jsonl",
+      "channel_key": "id:UCUplbK1nnI1dnjfU2BiAVRw",
+      "part": 1,
+      "channel_ids": [
+        "UCUplbK1nnI1dnjfU2BiAVRw"
+      ],
+      "channel_titles": [
+        "Ministerio de Justicia y Derechos Humanos"
+      ],
+      "videos": 25,
+      "bytes": 9440717,
+      "sha256": "86f6f51d31637b94c08382131d294c11b7fbc6c831b7ab20a089df501be6f139"
+    },
+    {
+      "file": "ucusm-fannqoy02pnn67c0ka--1e35bbd817fd--part-0001.jsonl",
+      "channel_key": "id:UCUsm-fannqOY02PNN67C0KA",
+      "part": 1,
+      "channel_ids": [
+        "UCUsm-fannqOY02PNN67C0KA"
+      ],
+      "channel_titles": [
+        "NMás"
+      ],
+      "videos": 2,
+      "bytes": 15485,
+      "sha256": "e4d57615c5e530e6a4e80618a11cbec3b3f8f56214a931e532aeaf2ce3e200a5"
+    },
+    {
+      "file": "ucuvm3c8rmdapmk-g22shz7w--5646b4d42695--part-0001.jsonl",
+      "channel_key": "id:UCuvM3c8rmdApmk-g22shZ7w",
+      "part": 1,
+      "channel_ids": [
+        "UCuvM3c8rmdApmk-g22shZ7w"
+      ],
+      "channel_titles": [
+        "Bio Bio"
+      ],
+      "videos": 5,
+      "bytes": 249168,
+      "sha256": "d196a1abe4116f3bd7a0ece989ee3a049e45c462d6c35d1045d9fd2c4f2343be"
+    },
+    {
+      "file": "ucuwndz7skmzhkxfnxzyvvqw--accad0550489--part-0001.jsonl",
+      "channel_key": "id:UCUWNDZ7SKMzHkxFnXzYVvqw",
+      "part": 1,
+      "channel_ids": [
+        "UCUWNDZ7SKMzHkxFnXzYVvqw"
+      ],
+      "channel_titles": [
+        "Psiquiatría Mente y Salud"
+      ],
+      "videos": 5,
+      "bytes": 1303903,
+      "sha256": "31c55880ab7b6d178ed2d691ab01eeb85884797ad3286cf6e705686ce4a1b348"
+    },
+    {
+      "file": "ucuzonpa3xkurqvycdmy70xq--65dde09ce98c--part-0001.jsonl",
+      "channel_key": "id:UCUzonpa3XKurQVycdMY70XQ",
+      "part": 1,
+      "channel_ids": [
+        "UCUzonpa3XKurQVycdMY70XQ"
+      ],
+      "channel_titles": [
+        "Canal 10 Córdoba"
+      ],
+      "videos": 1,
+      "bytes": 18785,
+      "sha256": "4362cede4630ce9c3b20d127fbffd6970f001281e749700b0305cef14db424d1"
+    },
+    {
+      "file": "ucv3wvb8cmvwnadl-1alvwjg--4f307e89f707--part-0001.jsonl",
+      "channel_key": "id:UCv3WVB8cmvWnADL-1ALvwJg",
+      "part": 1,
+      "channel_ids": [
+        "UCv3WVB8cmvWnADL-1ALvwJg"
+      ],
+      "channel_titles": [
+        "TONY MONTANA"
+      ],
+      "videos": 1,
+      "bytes": 16955,
+      "sha256": "7fd390e92f22da848a8edf8f4d9d555d9d0a62f9fb9f377a4bf6ac1429d7b4ea"
+    },
+    {
+      "file": "ucvcloltbg5y32b0obg8j0eq--0ad2a8c60b9b--part-0001.jsonl",
+      "channel_key": "id:UCvCLoltBg5y32b0oBG8j0EQ",
+      "part": 1,
+      "channel_ids": [
+        "UCvCLoltBg5y32b0oBG8j0EQ"
+      ],
+      "channel_titles": [
+        "Poder Judicial del Perú"
+      ],
+      "videos": 1,
+      "bytes": 836495,
+      "sha256": "ec88f16ca8c3cf000486ed3bbefde9c4a32bfb05f27a5c83f8eddb5788ae1299"
+    },
+    {
+      "file": "ucvdbdpi2msvibocrachyouw--48914bd44685--part-0001.jsonl",
+      "channel_key": "id:UCvDBDpI2MSvibOCRacHYOUw",
+      "part": 1,
+      "channel_ids": [
+        "UCvDBDpI2MSvibOCRacHYOUw"
+      ],
+      "channel_titles": [
+        "JF DIGITAL"
+      ],
+      "videos": 1,
+      "bytes": 9679,
+      "sha256": "292444e3908305b6fa3c35c4e69daeb27be98dd8a6bd906fb4a36735da10e4d0"
+    },
+    {
+      "file": "ucvimqoxnczuenzrvabuymiw--5bdc191e5622--part-0001.jsonl",
+      "channel_key": "id:UCVimQoXNCZuEnZRVAbuYMiw",
+      "part": 1,
+      "channel_ids": [
+        "UCVimQoXNCZuEnZRVAbuYMiw"
+      ],
+      "channel_titles": [
+        "Diario Público"
+      ],
+      "videos": 6,
+      "bytes": 418618,
+      "sha256": "5fdf1488d6906e18ad125ac1ddac117b711081e3ae25e0437c541849dc58fb4a"
+    },
+    {
+      "file": "ucvjs-ynyawyoucx8bgrhvvw--70a1083029a1--part-0001.jsonl",
+      "channel_key": "id:UCvJS-YNyaWyOucx8bGrHVvw",
+      "part": 1,
+      "channel_ids": [
+        "UCvJS-YNyaWyOucx8bGrHVvw"
+      ],
+      "channel_titles": [
+        "AGENCIA EFE"
+      ],
+      "videos": 3,
+      "bytes": 28547,
+      "sha256": "9bffb7c46ccade55f64c7450914f817b8e4fecc447cc80e4dfb256cff222b89b"
+    },
+    {
+      "file": "ucvpmk2kxw-dpsto5fovtxla--ac44cc34ad26--part-0001.jsonl",
+      "channel_key": "id:UCvPmk2Kxw-DpSTo5FoVTXLA",
+      "part": 1,
+      "channel_ids": [
+        "UCvPmk2Kxw-DpSTo5FoVTXLA"
+      ],
+      "channel_titles": [
+        "Hay Nos Vidrios"
+      ],
+      "videos": 1,
+      "bytes": 21604,
+      "sha256": "a64e561aa101ee7b1250518c4e7d336cce695caccf065f9a5290c29fa2b51b60"
+    },
+    {
+      "file": "ucvpsrozgngfsl03nlbjtq9a--bf72250c4812--part-0001.jsonl",
+      "channel_key": "id:UCVpSRoZgngfSL03Nlbjtq9A",
+      "part": 1,
+      "channel_ids": [
+        "UCVpSRoZgngfSL03Nlbjtq9A"
+      ],
+      "channel_titles": [
+        "Noti7"
+      ],
+      "videos": 1,
+      "bytes": 15696,
+      "sha256": "2c2476dc5c67e506f29b1287b920a33de41d3e86e68f8c2046f17f65c2d3d617"
+    },
+    {
+      "file": "ucvsu0egxn7su7mfnqctgnhg--352f5bb5402b--part-0001.jsonl",
+      "channel_key": "id:UCvsU0EGXN7Su7MfNqcTGNHg",
+      "part": 1,
+      "channel_ids": [
+        "UCvsU0EGXN7Su7MfNqcTGNHg"
+      ],
+      "channel_titles": [
+        "Infobae"
+      ],
+      "videos": 5,
+      "bytes": 991488,
+      "sha256": "5f6af13af9b06e29e8d0a259e84a0431bcec2ebf335d3e0f6c58c3a8a13bbcc3"
+    },
+    {
+      "file": "ucvw7j-lf26d3g3x8i2zmkow--deeb7a5c1170--part-0001.jsonl",
+      "channel_key": "id:UCVW7J-lF26d3G3X8i2zmKow",
+      "part": 1,
+      "channel_ids": [
+        "UCVW7J-lF26d3G3X8i2zmKow"
+      ],
+      "channel_titles": [
+        "Radio Nacional"
+      ],
+      "videos": 9,
+      "bytes": 342931,
+      "sha256": "cfb865249bd68ec0223def4afe427fe0a0599641558d68ec71792cb3925befcf"
+    },
+    {
+      "file": "ucvzupbnzttltr542qoyalbw--7eeaa55e446e--part-0001.jsonl",
+      "channel_key": "id:UCvzuPbNztTlTr542qOYalbw",
+      "part": 1,
+      "channel_ids": [
+        "UCvzuPbNztTlTr542qOYalbw"
+      ],
+      "channel_titles": [
+        "DEVELADOR"
+      ],
+      "videos": 2,
+      "bytes": 60320,
+      "sha256": "9d2b8de2262da4d6dd203f7d20596995d1aba044434461446d842bf1352403a8"
+    },
+    {
+      "file": "ucwarmmgyhslcwntlfnfyjzq--3910037e117f--part-0001.jsonl",
+      "channel_key": "id:UCWArMmgyHslCwntLfnFYJzQ",
+      "part": 1,
+      "channel_ids": [
+        "UCWArMmgyHslCwntLfnFYJzQ"
+      ],
+      "channel_titles": [
+        "RADIO TV MELGAR ¡Periodistas al servicio de Ud!"
+      ],
+      "videos": 1,
+      "bytes": 19554,
+      "sha256": "7a716330868cddb239d098a3864d9bd3edfd78d292eec5e84dfe2c618e86d03f"
+    },
+    {
+      "file": "ucwga7giefccsstoetqaragw--eda762371185--part-0001.jsonl",
+      "channel_key": "id:UCwga7GiEFCCSstOEtQaRAgw",
+      "part": 1,
+      "channel_ids": [
+        "UCwga7GiEFCCSstOEtQaRAgw"
+      ],
+      "channel_titles": [
+        "tvoperutv"
+      ],
+      "videos": 1,
+      "bytes": 9888,
+      "sha256": "56036337e90651822f690f64083a0249b121199ecd4b8c740b02aff9528350f3"
+    },
+    {
+      "file": "ucwjkircmam0abf7_ibm84dw--762f5c0544e2--part-0001.jsonl",
+      "channel_key": "id:UCWJkIrCmaM0Abf7_IbM84Dw",
+      "part": 1,
+      "channel_ids": [
+        "UCWJkIrCmaM0Abf7_IbM84Dw"
+      ],
+      "channel_titles": [
+        "Girovisual Television"
+      ],
+      "videos": 5,
+      "bytes": 1197484,
+      "sha256": "f41095176c318181f0d0f19c9b25faafb67dfdf3043020ffe03accf88d6e3308"
+    },
+    {
+      "file": "ucwkuhdpem4kfuhi4-rme2-a--0aaa6f272005--part-0001.jsonl",
+      "channel_key": "id:UCwkUhDPem4kFuHI4-RME2-A",
+      "part": 1,
+      "channel_ids": [
+        "UCwkUhDPem4kFuHI4-RME2-A"
+      ],
+      "channel_titles": [
+        "Carlos Rivas"
+      ],
+      "videos": 1,
+      "bytes": 62845,
+      "sha256": "4c1e8bcc3c57927c59274bb67ebf07e74b61e5e1b1e4356a0e40a45ef3bec33e"
+    },
+    {
+      "file": "ucwlsxsmh9sp1lvfuokz--gw--091a78cdb0b6--part-0001.jsonl",
+      "channel_key": "id:UCwlsXSmh9sP1LvfuoKZ--gw",
+      "part": 1,
+      "channel_ids": [
+        "UCwlsXSmh9sP1LvfuoKZ--gw"
+      ],
+      "channel_titles": [
+        "Sí Juego"
+      ],
+      "videos": 1,
+      "bytes": 53266,
+      "sha256": "98b2aff9436fff716b7585d54459a214e3ac35f2ce19167df24afbc4aeaffe0d"
+    },
+    {
+      "file": "ucwne8gqz0xuuufijtpyivkg--663998283e61--part-0001.jsonl",
+      "channel_key": "id:UCWNE8gqZ0XUuufiJtPYivkg",
+      "part": 1,
+      "channel_ids": [
+        "UCWNE8gqZ0XUuufiJtPYivkg"
+      ],
+      "channel_titles": [
+        "AWDU Studios"
+      ],
+      "videos": 1,
+      "bytes": 21965,
+      "sha256": "6494e1aff1981a5ad0bfe1ca7dac43c642ed837a6d871023a7d7740c060e6b31"
+    },
+    {
+      "file": "ucwowmkyrsm0sgyepa2ysx4q--9762c718ddd2--part-0001.jsonl",
+      "channel_key": "id:UCWowmKyrSm0sGyEpa2ySX4Q",
+      "part": 1,
+      "channel_ids": [
+        "UCWowmKyrSm0sGyEpa2ySX4Q"
+      ],
+      "channel_titles": [
+        "Chimi Chi"
+      ],
+      "videos": 1,
+      "bytes": 35621,
+      "sha256": "30b03e3b3bbbd98207e13caf68e33ef7d05490cf9de32861799f27356998bc67"
+    },
+    {
+      "file": "ucwpasochva2wsbj5xij91yq--d1e1a0c67467--part-0001.jsonl",
+      "channel_key": "id:UCwpasOChVA2wSBJ5xij91YQ",
+      "part": 1,
+      "channel_ids": [
+        "UCwpasOChVA2wSBJ5xij91YQ"
+      ],
+      "channel_titles": [
+        "Reporte Perú"
+      ],
+      "videos": 1,
+      "bytes": 56272,
+      "sha256": "6507ed646c07aa14d591d41d1cc6f02451d9ffd50e4bdb991ad6d4387d2acd53"
+    },
+    {
+      "file": "ucwuphzazaggcbzcu8jgnysg--4634feb87fde--part-0001.jsonl",
+      "channel_key": "id:UCWUPHzAzAggcBzcu8jGnYsg",
+      "part": 1,
+      "channel_ids": [
+        "UCWUPHzAzAggcBzcu8jGnYsg"
+      ],
+      "channel_titles": [
+        "Amanecer Libertario"
+      ],
+      "videos": 1,
+      "bytes": 396294,
+      "sha256": "dd461a33c9434793e47a732359e892b52fcf2c4cb2ad7a7e972986af45556c1d"
+    },
+    {
+      "file": "ucwy3pdzk6rmltejvuz1ti6w--5d6919cdf1df--part-0001.jsonl",
+      "channel_key": "id:UCwy3Pdzk6RMLtejVuz1tI6w",
+      "part": 1,
+      "channel_ids": [
+        "UCwy3Pdzk6RMLtejVuz1tI6w"
+      ],
+      "channel_titles": [
+        "W Radio Colombia"
+      ],
+      "videos": 5,
+      "bytes": 352035,
+      "sha256": "fe4373e11bae755420846d3d958265338fb0e735828b6d420eecf861f5fa3210"
+    },
+    {
+      "file": "ucx7edskdguqwbtuyw9agr9w--0eae3ba17cc3--part-0001.jsonl",
+      "channel_key": "id:UCx7eDskdGUqWbtuYw9agR9w",
+      "part": 1,
+      "channel_ids": [
+        "UCx7eDskdGUqWbtuYw9agR9w"
+      ],
+      "channel_titles": [
+        "COSMOREALIDAD"
+      ],
+      "videos": 1,
+      "bytes": 39128,
+      "sha256": "028bae4e6a6b9dda1f3a41c5f262a84a4d841fe2da6d97cdb35bcab979865e0a"
+    },
+    {
+      "file": "ucxf2_smeoue-njdmizm2jzw--dbad133afef7--part-0001.jsonl",
+      "channel_key": "id:UCXF2_sMeOUe-NjdMIZm2Jzw",
+      "part": 1,
+      "channel_ids": [
+        "UCXF2_sMeOUe-NjdMIZm2Jzw"
+      ],
+      "channel_titles": [
+        "Promsex"
+      ],
+      "videos": 1,
+      "bytes": 43004,
+      "sha256": "839604d70ed9b62419c4ef5750792ecac7106ff93814dd42ea0487467364bafd"
+    },
+    {
+      "file": "ucxgo_rak_bkzp8vnvmyqbwg--535fc3a934e1--part-0001.jsonl",
+      "channel_key": "id:UCxgO_rak_BKZP8VNVmYqbWg",
+      "part": 1,
+      "channel_ids": [
+        "UCxgO_rak_BKZP8VNVmYqbWg"
+      ],
+      "channel_titles": [
+        "Exitosa Noticias"
+      ],
+      "videos": 31,
+      "bytes": 1104982,
+      "sha256": "6939ff3eecbcf92ba0a621dad0a1776e8aa40984d448c3f6934e67b8a1e7fe8c"
+    },
+    {
+      "file": "ucxlvolgiwits8-10v9td9ja--b8325a8f3522--part-0001.jsonl",
+      "channel_key": "id:UCXlVOlGIWITS8-10V9td9jA",
+      "part": 1,
+      "channel_ids": [
+        "UCXlVOlGIWITS8-10V9td9jA"
+      ],
+      "channel_titles": [
+        "Alfa Romeo"
+      ],
+      "videos": 8,
+      "bytes": 295133,
+      "sha256": "a2232e4b8b6ed752ac623316df2422c866d4a898408c18db3da683ad3d32606c"
+    },
+    {
+      "file": "ucxuko6rcz7z5fjfhoxhl_fw--aabc628171b6--part-0001.jsonl",
+      "channel_key": "id:UCXUKO6rcz7z5FJFHOXHL_fw",
+      "part": 1,
+      "channel_ids": [
+        "UCXUKO6rcz7z5FJFHOXHL_fw"
+      ],
+      "channel_titles": [
+        "Adryan Ayuque"
+      ],
+      "videos": 1,
+      "bytes": 78706,
+      "sha256": "be8ca233413bfde65a6cc0efa20977b04e64b2ed71649e6e49a3fafb8619fcf7"
+    },
+    {
+      "file": "ucy3zpoqxrsmzvnkde_jhy0a--c776b80835a1--part-0001.jsonl",
+      "channel_key": "id:UCy3ZPoqXrSMZVnkDE_jHy0A",
+      "part": 1,
+      "channel_ids": [
+        "UCy3ZPoqXrSMZVnkDE_jHy0A"
+      ],
+      "channel_titles": [
+        "Italcorp"
+      ],
+      "videos": 1,
+      "bytes": 22977,
+      "sha256": "29ad9213d23232460689659945d86237fe128e850320c6258c08d80cb8f03672"
+    },
+    {
+      "file": "ucy4ukhdd5u0curu_sbn-dga--97328ade2ae5--part-0001.jsonl",
+      "channel_key": "id:UCy4UKhdd5U0cUru_sBn-DGA",
+      "part": 1,
+      "channel_ids": [
+        "UCy4UKhdd5U0cUru_sBn-DGA"
+      ],
+      "channel_titles": [
+        "CTV Perú Oficial"
+      ],
+      "videos": 3,
+      "bytes": 105487,
+      "sha256": "d5d486a41930114cd6a4dc267978d955c42d99b038e25e872bf52a3b972447d5"
+    },
+    {
+      "file": "ucy6bk9tiskbgzsxb6fbyxba--b83449344ac7--part-0001.jsonl",
+      "channel_key": "id:UCY6bK9tiSKBgZsxB6fBYXbA",
+      "part": 1,
+      "channel_ids": [
+        "UCY6bK9tiSKBgZsxB6fBYXbA"
+      ],
+      "channel_titles": [
+        "lamula externos (la mula)"
+      ],
+      "videos": 4,
+      "bytes": 33695,
+      "sha256": "26b19014ec8f03cb357c171ff49c42f0ba04ea1408fcdd20d9c6bc66fd5fba7f"
+    },
+    {
+      "file": "ucy8d83kiw6sk4au73qezztw--67a5a57c9dae--part-0001.jsonl",
+      "channel_key": "id:UCY8d83kIW6sK4au73qeZZTw",
+      "part": 1,
+      "channel_ids": [
+        "UCY8d83kIW6sK4au73qeZZTw"
+      ],
+      "channel_titles": [
+        "AFP Español"
+      ],
+      "videos": 5,
+      "bytes": 41327,
+      "sha256": "fd2f23cb6ac535457362b34f0778a10e4c51378da7f9e766bad9047aeaa0965e"
+    },
+    {
+      "file": "ucychheklomrexr7i0ppiedg--0af52d46ef7a--part-0001.jsonl",
+      "channel_key": "id:UCYcHhekLOmRExr7I0PPieDg",
+      "part": 1,
+      "channel_ids": [
+        "UCYcHhekLOmRExr7I0PPieDg"
+      ],
+      "channel_titles": [
+        "El Tamalerito"
+      ],
+      "videos": 1,
+      "bytes": 57287,
+      "sha256": "88073eb3a4ff2c09b97339462ca1434708c0d87541644659cd9ec0097d7eaed0"
+    },
+    {
+      "file": "ucyg5uxs3xdsoaxixum1paew--c80f30971b9a--part-0001.jsonl",
+      "channel_key": "id:UCYG5uXS3xdsoaXIxum1pAEw",
+      "part": 1,
+      "channel_ids": [
+        "UCYG5uXS3xdsoaXIxum1pAEw"
+      ],
+      "channel_titles": [
+        "ATV Noticias"
+      ],
+      "videos": 47,
+      "bytes": 1622950,
+      "sha256": "26374d27b510a21b06ff0552fc00a7172d377507ad347ffa65a5e1b1034acc21"
+    },
+    {
+      "file": "ucyhlvskxzk1u7hfelypu0bw--fa5922b18b27--part-0001.jsonl",
+      "channel_key": "id:UCyhlvsKxZk1u7HfELYpu0bw",
+      "part": 1,
+      "channel_ids": [
+        "UCyhlvsKxZk1u7HfELYpu0bw"
+      ],
+      "channel_titles": [
+        "SDeA"
+      ],
+      "videos": 1,
+      "bytes": 18287,
+      "sha256": "39a1a0bc5e80039446000d5cc9396dab1cd1d1f9577236818c5546ae688e0dbb"
+    },
+    {
+      "file": "ucymhqa-ipxulp-fsf3pligw--a2807d8c7fde--part-0001.jsonl",
+      "channel_key": "id:UCYmHqa-ipXULp-FSf3pLIGw",
+      "part": 1,
+      "channel_ids": [
+        "UCYmHqa-ipXULp-FSf3pLIGw"
+      ],
+      "channel_titles": [
+        "Relapso Films"
+      ],
+      "videos": 8,
+      "bytes": 488854,
+      "sha256": "6a5d827185d9112da3579bdf2bfab002cf47507c6e67718e8381dd401b95a117"
+    },
+    {
+      "file": "ucyogb3smltlb8clgvh4c8rw--64e6a042ad03--part-0001.jsonl",
+      "channel_key": "id:UCyoGb3SMlTlB8CLGVH4c8Rw",
+      "part": 1,
+      "channel_ids": [
+        "UCyoGb3SMlTlB8CLGVH4c8Rw"
+      ],
+      "channel_titles": [
+        "euronews (en español)"
+      ],
+      "videos": 1,
+      "bytes": 9697,
+      "sha256": "a8a2bb42d5f67e14be62dbb7105a0fa44997ce000fee5a5051e65364f97d90b1"
+    },
+    {
+      "file": "ucyzeux1etvs1cfk1nuf_mlq--a1c529427805--part-0001.jsonl",
+      "channel_key": "id:UCyzEUX1Etvs1Cfk1NUf_mLQ",
+      "part": 1,
+      "channel_ids": [
+        "UCyzEUX1Etvs1Cfk1NUf_mLQ"
+      ],
+      "channel_titles": [
+        "Fernando Leiva - Psicólogo"
+      ],
+      "videos": 1,
+      "bytes": 225843,
+      "sha256": "b14d0c6e0239a1cc24d1623a0aedcfeb3894fcd8d9bf434c1b1c7436ae59f806"
+    },
+    {
+      "file": "uczhynj9-_r2oofrcikqv1fw--f11bf31c3e7d--part-0001.jsonl",
+      "channel_key": "id:UCZHyNJ9-_r2oofRCIKQv1Fw",
+      "part": 1,
+      "channel_ids": [
+        "UCZHyNJ9-_r2oofRCIKQv1Fw"
+      ],
+      "channel_titles": [
+        "Defensoría del Pueblo Perú"
+      ],
+      "videos": 8,
+      "bytes": 443032,
+      "sha256": "51065547c262889687765abf814557b183e833f5c83db0fc6d058990980977f7"
+    },
+    {
+      "file": "ucznntxxgbppjcevugviu1jw--4f3f182e2803--part-0001.jsonl",
+      "channel_key": "id:UCZNntxxGBPPJCevUGVIU1Jw",
+      "part": 1,
+      "channel_ids": [
+        "UCZNntxxGBPPJCevUGVIU1Jw"
+      ],
+      "channel_titles": [
+        "Render Productions"
+      ],
+      "videos": 1,
+      "bytes": 9173,
+      "sha256": "9a539688ed0fd4e9c881c0d0ecccfb11ca3d751bbd03120d3cbfe59474d63c7a"
+    },
+    {
+      "file": "uczr3pqroazayymsde6uu9na--c9176e31276d--part-0001.jsonl",
+      "channel_key": "id:UCZR3PQrOAzaYymsde6Uu9nA",
+      "part": 1,
+      "channel_ids": [
+        "UCZR3PQrOAzaYymsde6Uu9nA"
+      ],
+      "channel_titles": [
+        "Peru 21 El Bicentenario"
+      ],
+      "videos": 1,
+      "bytes": 49662,
+      "sha256": "36cc9089084f3e0c6081993479d002ba397691d3d087ac108d6c446b2890064b"
+    },
+    {
+      "file": "uczr9czl0yfosrwm-kllueqa--f917f8be4005--part-0001.jsonl",
+      "channel_key": "id:UCzr9CZL0yfOSRwM-kLluEQA",
+      "part": 1,
+      "channel_ids": [
+        "UCzr9CZL0yfOSRwM-kLluEQA"
+      ],
+      "channel_titles": [
+        "LA LUPA"
+      ],
+      "videos": 1,
+      "bytes": 4683,
+      "sha256": "9f10ee2f6810d2b220e15a24d70043559c19da4998b7d59c2fe8c180fca8cd1e"
+    },
+    {
+      "file": "uczrzjjnpwsnwedv1kxf5zlw--3a054f68a20a--part-0001.jsonl",
+      "channel_key": "id:UCzRzjJNpWSnWEDv1kXf5zlw",
+      "part": 1,
+      "channel_ids": [
+        "UCzRzjJNpWSnWEDv1kXf5zlw"
+      ],
+      "channel_titles": [
+        "Historia y Vidas"
+      ],
+      "videos": 1,
+      "bytes": 16519,
+      "sha256": "577bef4114971d66fdb9b6d64bc42a940cf941145f95c1a076144b7136ed0e10"
+    },
+    {
+      "file": "uczsahe4dfpuc7daaonlq8bq--8b93234d74f6--part-0001.jsonl",
+      "channel_key": "id:UCzsAhe4DFpuC7DAAoNLq8BQ",
+      "part": 1,
+      "channel_ids": [
+        "UCzsAhe4DFpuC7DAAoNLq8BQ"
+      ],
+      "channel_titles": [
+        "periodismope"
+      ],
+      "videos": 1,
+      "bytes": 48121,
+      "sha256": "fd4c420d275977378f06db1bfd06b39e957b520c27198072d3890094bc2fdaed"
+    },
+    {
+      "file": "ucztaqskejd4t83xaudytbhg--9fa19facdbb4--part-0001.jsonl",
+      "channel_key": "id:UCztaqSKeJd4T83XAUDYTBHg",
+      "part": 1,
+      "channel_ids": [
+        "UCztaqSKeJd4T83XAUDYTBHg"
+      ],
+      "channel_titles": [
+        "Central de Noticias ATV"
+      ],
+      "videos": 1,
+      "bytes": 11518,
+      "sha256": "c564866b3d48e0fd3c5abb42061afdbdd75667086e48f08621e9ff316aa1ff69"
+    }
+  ]
+}

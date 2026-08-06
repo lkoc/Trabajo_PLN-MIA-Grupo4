@@ -1,0 +1,16 @@
+{
+  "schema_version": "2.1.0",
+  "operation": "normalize_acquisition_target_category_alias",
+  "canonical_path": "datos/raw/transcripts_raw.jsonl",
+  "rows": 1377,
+  "rows_changed": 193,
+  "sha256_before": "90f2cd2150198ae1b48178af895ed07ac4432722e07b341d077fcb646473d0fa",
+  "sha256_after": "26351ad11a8d61647f71bc353644ca15448a9d43981beba7632e03b56196702b",
+  "canonical_label": "ATAQUE_POR_GENERO_IDENTIDAD",
+  "scope": [
+    "target_category",
+    "target_categories",
+    "categoria_objetivo"
+  ],
+  "source_policy": "Los snapshots históricos en datos/ampliacion y archivo permanecen sin cambios."
+}

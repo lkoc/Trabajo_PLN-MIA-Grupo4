@@ -1,0 +1,5029 @@
+{
+  "strategy": "deficit_weighted",
+  "damage_labels": [
+    "RACISMO_DISCRIMINACION",
+    "ATAQUE_POR_GENERO_IDENTIDAD",
+    "ACOSO_AMENAZA",
+    "CONTENIDO_SEXUAL"
+  ],
+  "eligible_splits": [
+    "train",
+    "validation"
+  ],
+  "labeled_rows": 101297,
+  "labeled_videos": 2781,
+  "support_videos": {
+    "RACISMO_DISCRIMINACION": 447,
+    "ATAQUE_POR_GENERO_IDENTIDAD": 410,
+    "ACOSO_AMENAZA": 759,
+    "CONTENIDO_SEXUAL": 288
+  },
+  "target_video_support": 759,
+  "deficit_videos": {
+    "RACISMO_DISCRIMINACION": 312,
+    "ATAQUE_POR_GENERO_IDENTIDAD": 349,
+    "ACOSO_AMENAZA": 0,
+    "CONTENIDO_SEXUAL": 471
+  },
+  "weights": {
+    "RACISMO_DISCRIMINACION": 0.2756183745583039,
+    "ATAQUE_POR_GENERO_IDENTIDAD": 0.3083038869257951,
+    "ACOSO_AMENAZA": 0.0,
+    "CONTENIDO_SEXUAL": 0.4160777385159011
+  },
+  "channel_profiles": [
+    {
+      "channel_id": null,
+      "channel_title": "Goblinciano",
+      "labeled_videos": 144,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 59,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 42,
+        "ACOSO_AMENAZA": 79,
+        "CONTENIDO_SEXUAL": 27
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.4097222222222222,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.2916666666666667,
+        "ACOSO_AMENAZA": 0.5486111111111112,
+        "CONTENIDO_SEXUAL": 0.1875
+      }
+    },
+    {
+      "channel_id": null,
+      "channel_title": "Arde Troya con Juliana Oxenford",
+      "labeled_videos": 92,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 9,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 11,
+        "ACOSO_AMENAZA": 45,
+        "CONTENIDO_SEXUAL": 2
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.09782608695652174,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.11956521739130435,
+        "ACOSO_AMENAZA": 0.4891304347826087,
+        "CONTENIDO_SEXUAL": 0.021739130434782608
+      }
+    },
+    {
+      "channel_id": null,
+      "channel_title": "Hablando Huevadas",
+      "labeled_videos": 88,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 78,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 81,
+        "ACOSO_AMENAZA": 85,
+        "CONTENIDO_SEXUAL": 84
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.8863636363636364,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.9204545454545454,
+        "ACOSO_AMENAZA": 0.9659090909090909,
+        "CONTENIDO_SEXUAL": 0.9545454545454546
+      }
+    },
+    {
+      "channel_id": null,
+      "channel_title": "Juanito y Richard",
+      "labeled_videos": 88,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 17,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 18,
+        "ACOSO_AMENAZA": 17,
+        "CONTENIDO_SEXUAL": 13
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.19318181818181818,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.20454545454545456,
+        "ACOSO_AMENAZA": 0.19318181818181818,
+        "CONTENIDO_SEXUAL": 0.14772727272727273
+      }
+    },
+    {
+      "channel_id": "UCpSJ5fGhmAME9Kx2D3ZvN3Q",
+      "channel_title": "Latina Noticias",
+      "labeled_videos": 72,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 2,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 9,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.027777777777777776,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.013888888888888888,
+        "ACOSO_AMENAZA": 0.125,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": null,
+      "channel_title": "Todo Good",
+      "labeled_videos": 64,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 5,
+        "ACOSO_AMENAZA": 12,
+        "CONTENIDO_SEXUAL": 2
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.015625,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.078125,
+        "ACOSO_AMENAZA": 0.1875,
+        "CONTENIDO_SEXUAL": 0.03125
+      }
+    },
+    {
+      "channel_id": null,
+      "channel_title": "Magaly TV La Firme",
+      "labeled_videos": 59,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 2,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 6,
+        "ACOSO_AMENAZA": 11,
+        "CONTENIDO_SEXUAL": 2
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.03389830508474576,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.1016949152542373,
+        "ACOSO_AMENAZA": 0.1864406779661017,
+        "CONTENIDO_SEXUAL": 0.03389830508474576
+      }
+    },
+    {
+      "channel_id": "UCFnOwPrJ-Skrzk_GPNBV5tg",
+      "channel_title": "Buenos Días Perú",
+      "labeled_videos": 57,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 2,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 2,
+        "ACOSO_AMENAZA": 15,
+        "CONTENIDO_SEXUAL": 2
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.03508771929824561,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.03508771929824561,
+        "ACOSO_AMENAZA": 0.2631578947368421,
+        "CONTENIDO_SEXUAL": 0.03508771929824561
+      }
+    },
+    {
+      "channel_id": "UCkZCoc42IipR1ucqJmIehsA",
+      "channel_title": "TVPerú Noticias",
+      "labeled_videos": 48,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 4,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.08333333333333333,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCYG5uXS3xdsoaXIxum1pAEw",
+      "channel_title": "ATV Noticias",
+      "labeled_videos": 35,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 2,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 11,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.05714285714285714,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.02857142857142857,
+        "ACOSO_AMENAZA": 0.3142857142857143,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCxgO_rak_BKZP8VNVmYqbWg",
+      "channel_title": "Exitosa Noticias",
+      "labeled_videos": 18,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 4,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.2222222222222222,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC5j8-2FT0ZMMBkmK72R4aeA",
+      "channel_title": "RPP Noticias",
+      "labeled_videos": 18,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.05555555555555555,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.05555555555555555,
+        "ACOSO_AMENAZA": 0.05555555555555555,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCPhm2I2wk4vqjENwhn3px8A",
+      "channel_title": "América Noticias",
+      "labeled_videos": 17,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.058823529411764705,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.058823529411764705,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCF6s3gpbZEQKqZ38VvQ0gLA",
+      "channel_title": "Magaly TV La Firme",
+      "labeled_videos": 15,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 3,
+        "ACOSO_AMENAZA": 5,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.2,
+        "ACOSO_AMENAZA": 0.3333333333333333,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCBiq92lt_ufNO-ktZigVXgg",
+      "channel_title": "Panorama",
+      "labeled_videos": 15,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 2,
+        "ACOSO_AMENAZA": 5,
+        "CONTENIDO_SEXUAL": 1
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.13333333333333333,
+        "ACOSO_AMENAZA": 0.3333333333333333,
+        "CONTENIDO_SEXUAL": 0.06666666666666667
+      }
+    },
+    {
+      "channel_id": "UCsakKsRww3J7pM6DavkrAIQ",
+      "channel_title": "24 Horas",
+      "labeled_videos": 14,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 3,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.21428571428571427,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC-B7Xv56uNRDkj0vC3QW8Cg",
+      "channel_title": "La República - LR+",
+      "labeled_videos": 13,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 2,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.07692307692307693,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.15384615384615385,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "labeled_videos": 12,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 5,
+        "ACOSO_AMENAZA": 10,
+        "CONTENIDO_SEXUAL": 2
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.08333333333333333,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.4166666666666667,
+        "ACOSO_AMENAZA": 0.8333333333333334,
+        "CONTENIDO_SEXUAL": 0.16666666666666666
+      }
+    },
+    {
+      "channel_id": "UCDscRlCxFfuHhsJBlVvPBmA",
+      "channel_title": "LP - Pasión por el Derecho",
+      "labeled_videos": 11,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.09090909090909091,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC3rDtLrcgr3JS3_3JOW4BAw",
+      "channel_title": "Latina Televisión",
+      "labeled_videos": 10,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 3,
+        "ACOSO_AMENAZA": 4,
+        "CONTENIDO_SEXUAL": 1
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.3,
+        "ACOSO_AMENAZA": 0.4,
+        "CONTENIDO_SEXUAL": 0.1
+      }
+    },
+    {
+      "channel_id": "UC_ept7M1UXlCfvcUrK49Ziw",
+      "channel_title": "Cosmos Televisión",
+      "labeled_videos": 8,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 2,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.25,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCMfcN0OV7d61cWPLYm5qHpw",
+      "channel_title": "El Dominical de Panamericana",
+      "labeled_videos": 8,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.125,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.125,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCmrzeYkbupPuvrXH8roR__w",
+      "channel_title": "DÍA D",
+      "labeled_videos": 7,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 2,
+        "ACOSO_AMENAZA": 2,
+        "CONTENIDO_SEXUAL": 2
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.14285714285714285,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.2857142857142857,
+        "ACOSO_AMENAZA": 0.2857142857142857,
+        "CONTENIDO_SEXUAL": 0.2857142857142857
+      }
+    },
+    {
+      "channel_id": "UCGGry4kGWZUqIfG6LLNhOmg",
+      "channel_title": "América Televisión",
+      "labeled_videos": 6,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 3,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.5,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCngb4rxO4iUE6BrIs29WXwA",
+      "channel_title": "Panamericana Televisión",
+      "labeled_videos": 6,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 5,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.16666666666666666,
+        "ACOSO_AMENAZA": 0.8333333333333334,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC2SEk1w7DgoHs_G3w1biz-w",
+      "channel_title": "El Universal",
+      "labeled_videos": 5,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.2,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCQmo59tWId4OHTdl4W320DQ",
+      "channel_title": "Wayka",
+      "labeled_videos": 5,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.2,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCt42aXXEokQWROe3CdVx3bA",
+      "channel_title": "Chimi chimi",
+      "labeled_videos": 4,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.25,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC_Zpz_cv69p4oL0hDEJz4IA",
+      "channel_title": "enlacenacional",
+      "labeled_videos": 4,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.25,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCRl1-oM_NM-BtCEyTFd-aRA",
+      "channel_title": "QUE HAY DE NUEVO PERU",
+      "labeled_videos": 4,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 2,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.25,
+        "ACOSO_AMENAZA": 0.5,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCGbofRROopWrumVob5w61OA",
+      "channel_title": "Caso Cerrado",
+      "labeled_videos": 3,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 2,
+        "ACOSO_AMENAZA": 2,
+        "CONTENIDO_SEXUAL": 1
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.6666666666666666,
+        "ACOSO_AMENAZA": 0.6666666666666666,
+        "CONTENIDO_SEXUAL": 0.3333333333333333
+      }
+    },
+    {
+      "channel_id": "UCy4UKhdd5U0cUru_sBn-DGA",
+      "channel_title": "CTV Perú Oficial",
+      "labeled_videos": 3,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 2,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.6666666666666666,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCC25ArAc6QI7yj1UQG8lqxA",
+      "channel_title": "Diario El Popular 🇵🇪",
+      "labeled_videos": 3,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.3333333333333333,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCT3jhkKbEV4ZslnzhZ26hPw",
+      "channel_title": "SOL TV Perú",
+      "labeled_videos": 3,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCR9120YBAqMfntqgRTKmkjQ",
+      "channel_title": "A24com",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.5,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCvJS-YNyaWyOucx8bGrHVvw",
+      "channel_title": "AGENCIA EFE",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCDUxOvbwu1bnyD7AucP0ESw",
+      "channel_title": "Al Rojo Vivo",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCt78tVTNhK4hd9l0Io3vTtg",
+      "channel_title": "Ciudadaniasx",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCpOAcjJNAp0Y0fhznRrXIJQ",
+      "channel_title": "CNN Chile",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.5,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCvzuPbNztTlTr542qOYalbw",
+      "channel_title": "DEVELADOR",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.5,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC4HaP99ArZDbC0VXHr96NsA",
+      "channel_title": "Discent Legem - Perú",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC1FFD-TRhncVM2-uhviV_xg",
+      "channel_title": "DJ EL CUERVO",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC4dWvSKVWJ36tJyhjDQCCaQ",
+      "channel_title": "DNews",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCT4Jg8h03dD0iN3Pb5L0PMA",
+      "channel_title": "DW Español",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC6xAnp5ygm8oNoBDCgu70UQ",
+      "channel_title": "El Búho pe",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 2,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.5,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UClqo4ZAAZ01HQdCTlovCgkA",
+      "channel_title": "EXCELSIOR",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.5,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCEPKBntK_q0AXblXJtDUNhg",
+      "channel_title": "Farandula Politica",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 2,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCBWVLIesVhC4Iz5W-ApozYw",
+      "channel_title": "Giomar Salazar Abogados",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 2,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 2,
+        "ACOSO_AMENAZA": 2,
+        "CONTENIDO_SEXUAL": 2
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 1.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 1.0
+      }
+    },
+    {
+      "channel_id": "UC872F7q02kUQgZa-jm30zJw",
+      "channel_title": "Informativo Perú",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.5,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC_hMrSENUn8C5KdKIRM7JeA",
+      "channel_title": "Kiketeckno",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCFxHplbcoJK9m70c4VyTIxg",
+      "channel_title": "MILENIO",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCUplbK1nnI1dnjfU2BiAVRw",
+      "channel_title": "Ministerio de Justicia y Derechos Humanos",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCa5H2yRYfOlUH4c22uY5JsQ",
+      "channel_title": "N60 Noticias",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCUsm-fannqOY02PNN67C0KA",
+      "channel_title": "NMás",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC2Xq2PK-got3Rtz9ZJ32hLQ",
+      "channel_title": "Noticias Caracol",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCi9thgLbI6E127Vu6Hxp8ug",
+      "channel_title": "Noticias Telemedellín",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UChzS9L4GwAe0lRFallqbaGg",
+      "channel_title": "Trome Perú",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.5,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCort3mldTtMErPqprSlSfng",
+      "channel_title": "Willax Televisión",
+      "labeled_videos": 2,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCTXNz3gjAypWp3EhlIATEJQ",
+      "channel_title": "24 Horas - TVN Chile",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCLxsHdt2y0IP77fJq3fYjzg",
+      "channel_title": "Abogado Juan Carlos Paz Bautista",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCt6hcrKVO3yWvW7PH7bFdCg",
+      "channel_title": "Adrien Lastic Official",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCXUKO6rcz7z5FJFHOXHL_fw",
+      "channel_title": "Adryan Ayuque",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 1
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 1.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 1.0
+      }
+    },
+    {
+      "channel_id": "UC_6JG6mhk_vuUTbZ6JB_XMg",
+      "channel_title": "Al Sexto Día",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCT8PmbITxn2-NFW39_8504Q",
+      "channel_title": "AM Noticias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCWUPHzAzAggcBzcu8jGnYsg",
+      "channel_title": "Amanecer Libertario",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC6NVDkuzY2exMOVFw4i9oHw",
+      "channel_title": "América TV",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCo_wU2hOlUsTsltqvtkfv-w",
+      "channel_title": "Angel Duran Leon",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCgfRKWIfuFVbpRoTjGYHOQQ",
+      "channel_title": "anp_radio1928",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCF1i8dw1gOQXpajp6BEw6mQ",
+      "channel_title": "Anti Estafas",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCWNE8gqZ0XUuufiJtPYivkg",
+      "channel_title": "AWDU Studios",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCj0E3JnWJk_pgbsmZeQHHTA",
+      "channel_title": "Ayatola Núñez",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCUP6qv-_EIL0hwTsJaKYnvw",
+      "channel_title": "Azteca Noticias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCorgbnbfYTzboHsHhOjp0_w",
+      "channel_title": "bast chelsea",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCG0lLqXlvd3QsemIzmMOSiw",
+      "channel_title": "Bethel Noticias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCdJEu1nCsFBHcTXqlSVHSZw",
+      "channel_title": "Break Espectáculos",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCJcfkDGdaduapecwkuAa2LA",
+      "channel_title": "Brian Nuñez | Abogado Laboral Empresarial",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCFgk2Q2mVO1BklRQhSv6p0w",
+      "channel_title": "C5N",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCUzonpa3XKurQVycdMY70XQ",
+      "channel_title": "Canal 10 Córdoba",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCrpMfcQNog595v5gAS-oUsQ",
+      "channel_title": "Canal 26",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 1.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCeSx6aU8UGIIHxGCQPbYY_A",
+      "channel_title": "Canal Capital",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UClTcIB85_6kMi7xGyVaCR6Q",
+      "channel_title": "Canal1Peru",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCsNJCvuM5Dv_p-bdChO0QEA",
+      "channel_title": "Canal46Chancay",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UClPACJWOH8GnjGPRFHvKUww",
+      "channel_title": "Carlos Morante",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCwkUhDPem4kFuHI4-RME2-A",
+      "channel_title": "Carlos Rivas",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCU56vjVy6tGg48BT2L3C2GA",
+      "channel_title": "carlos urbina castillo",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCFe_qycWNCj_fVp6xp3mJ2Q",
+      "channel_title": "Castilla y León Televisión",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCll0HV6_bI0X7Us5OR-C5gA",
+      "channel_title": "Causa Liberal",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCO4dAHBdRQ5NU4i5rQ-HLsA",
+      "channel_title": "CC Digital Perú",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCztaqSKeJd4T83XAUDYTBHg",
+      "channel_title": "Central de Noticias ATV",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCLurFiLCpEDEK4wUZX3OWwg",
+      "channel_title": "Charlis de la Cumbia",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC7xTtUKnihDbCi-IhqxE1lw",
+      "channel_title": "CHILA JATUN",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCWowmKyrSm0sGyEpa2ySX4Q",
+      "channel_title": "Chimi Chi",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC1hnBY1vAbEVqzxKiXZWv3Q",
+      "channel_title": "Conducta Delictiva",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCx7eDskdGUqWbtuYw9agR9w",
+      "channel_title": "COSMOREALIDAD",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC1jgmxpGVeggT0GeL-FQClg",
+      "channel_title": "DANIEL VEGA",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UChEYIkvyR_lMg_8wzE3PM6g",
+      "channel_title": "De Interes Nacional Peru",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 1.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCZHyNJ9-_r2oofRCIKQv1Fw",
+      "channel_title": "Defensoría del Pueblo Perú",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCBKBDf4G9Ha4nrutKb02fJA",
+      "channel_title": "Derecho Virtual",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCVimQoXNCZuEnZRVAbuYMiw",
+      "channel_title": "Diario Público",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCltIlBetd0qq15VkqOnX4bA",
+      "channel_title": "Dile a Los Aquijes",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCAR25TJVwUjoif_kM7e2ONQ",
+      "channel_title": "DineroEnImagen",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCtIrbumL-O8o2KhhhtWponw",
+      "channel_title": "Eduardo Enrique",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC80-IuY0gCVm6kjI1OlSbdA",
+      "channel_title": "El Archivista Kerandi.",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCRSBn-sRqIjE1VUOwk_V4GQ",
+      "channel_title": "El Canolexx",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCLtGUPjKLqa3zgdmhKCZONg",
+      "channel_title": "EL COMERCIO",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCg0x_-U_FiA1TYvz5XbujTQ",
+      "channel_title": "El Diario de Chihuahua",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCJGCDSjgIwOYFyytvuV_HZw",
+      "channel_title": "EL FOCO+",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCpcmyMQnK-FKzmkrmRARc_A",
+      "channel_title": "El Notificador Peruano",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCnsvJeZO4RigQ898WdDNoBw",
+      "channel_title": "EL PAÍS",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 1.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCcnFfqmPZlH5RGjIm-K9WHw",
+      "channel_title": "el pro de mastercraft",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCYcHhekLOmRExr7I0PPieDg",
+      "channel_title": "El Tamalerito",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCiXm7w8Pu2Ldzr1o3JiOClg",
+      "channel_title": "El Tío Gabi 🎤",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCkDZOthP55TUjDjreJ8qeDw",
+      "channel_title": "eljusticio",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCauonFF2YxGbaXHduKETdfg",
+      "channel_title": "Estudio Jurídico Defensa Absoluta",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCpF79FBh6RxwYDN487KoltQ",
+      "channel_title": "ETCRADIO TV",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC-W7-VrElSbgQYbKwtujHVQ",
+      "channel_title": "Eva",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC6CEvzwdcXTfc0iuFnSdr1w",
+      "channel_title": "Farándula Pe",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCyzEUX1Etvs1Cfk1NUf_mLQ",
+      "channel_title": "Fernando Leiva - Psicólogo",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCCwOL2875hSUSva8hfbzEFQ",
+      "channel_title": "follow peru",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCpjTfkKPFTZbvyID6GoZ4PA",
+      "channel_title": "Francovidalclips",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 1.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCGbCdx7nhKuiQaO8OMEt9eA",
+      "channel_title": "Gestión Legal",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCK_CFUcx1BDP5tuNgjpfBxA",
+      "channel_title": "Gian Carlo BellMac",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC1fXcLHy_uveoenwHNSVIug",
+      "channel_title": "Giancarlo Javier",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCMQZSWG6V78-W4DA3782J0Q",
+      "channel_title": "Globo Enfoques",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC0IcCo7kPbktO-rply0HtJQ",
+      "channel_title": "Gobierno Regional La Libertad",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCG-ony8A9CgFq6uDChp4yNA",
+      "channel_title": "GRABACIONES MIGUELITO",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCiejV-6eEEmtgBmAo1I0n4A",
+      "channel_title": "GRUPO CASTEC",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCvPmk2Kxw-DpSTo5FoVTXLA",
+      "channel_title": "Hay Nos Vidrios",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCzRzjJNpWSnWEDv1kXf5zlw",
+      "channel_title": "Historia y Vidas",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC0V2T-TbjC2sh_kq2AeQqVg",
+      "channel_title": "HONESTIDAD PERÚ",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCcHtke0raf8vNYLM1Hbq3Jw",
+      "channel_title": "Imagen Noticias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCug8JhwDM-jKVjFr_In05Bw",
+      "channel_title": "Intro Snit",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCy3ZPoqXrSMZVnkDE_jHy0A",
+      "channel_title": "Italcorp",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCPBDhZ7NskmSXWKVPuTlGLw",
+      "channel_title": "Javier Sanchez Negron",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCvDBDpI2MSvibOCRacHYOUw",
+      "channel_title": "JF DIGITAL",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCGSpwxaMO2mW5mYKtsIurCA",
+      "channel_title": "JP",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCuiHAQYUu2HKkGR7sE_nLVw",
+      "channel_title": "Jurado Nacional de Elecciones",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCE_ZHUVha19wtfzsNgBrCYg",
+      "channel_title": "JurídicaMente",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCCaMc7HFSNrTvAecmLubKQw",
+      "channel_title": "JusticiaTV - Audiencias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCiU0qQdgb3GDsj8nY_jVLYQ",
+      "channel_title": "JuvNacionalista",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCQV75Y4h6MUrjPeHBM22csA",
+      "channel_title": "La Afición",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCzr9CZL0yfOSRwM-kLluEQA",
+      "channel_title": "LA LUPA",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCPpfqaJdQwXc9_5oM3aqdPg",
+      "channel_title": "La Mula Stream",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCi_b7pqoHyn9b8HcBYlOrmQ",
+      "channel_title": "Lagunillas TV",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCY6bK9tiSKBgZsxB6fBYXbA",
+      "channel_title": "lamula externos (la mula)",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCCJs5mITIqxqJGeFjt9N1Mg",
+      "channel_title": "laSexta Noticias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCb6JEf7fZfcv3vCN8V0zQoA",
+      "channel_title": "Lawler",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCtccjYpWHoBnQt_s0WR4_Bw",
+      "channel_title": "Ley Justa",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC_ybWf7uo1Nii-PZT624JZA",
+      "channel_title": "Louis Producer",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UClLTad3S3URRuGQQf_7rysA",
+      "channel_title": "Luis Romero Abogados",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": null,
+      "channel_title": "MARISOL LA FARAONA DE LA CUMBIA and Tony Rosado Oficial",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UChZCcAYKe_VAtC3Z_tBexcg",
+      "channel_title": "martinezserrano",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCkccyEbqhhM3uKOI6Shm-4Q",
+      "channel_title": "Meganoticias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCdIn0XW7q86Oac_4KlFp4TA",
+      "channel_title": "Mi barrio En linea",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCPdMo4auXNg5mVtkJ_LbP8g",
+      "channel_title": "Mi Canal Peru",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC0GuogjwXbrKvb-VcbgnVjQ",
+      "channel_title": "MI FAMA PERU",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC6d5KT7WoGxIYHekEKBzsxw",
+      "channel_title": "MIGUELITO PERÚ",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC64JaKmY2OmRupSYcGgA9Lw",
+      "channel_title": "Multimedia PTV 2",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCILU2ghO8GrOeB-zo93eYdA",
+      "channel_title": "Multimedios Costa Rica",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCkRo5vZnLeCfCMhjlJdOmCQ",
+      "channel_title": "Mundo Noticias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCoMWImnPAur6JhXDK63dpAg",
+      "channel_title": "Málaga 24h TV Noticias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCrikgtHRn_AwUCJncUXyYKA",
+      "channel_title": "Nacion y Frontera",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC00nfmpfVwvRUvysr9jteLg",
+      "channel_title": "Netas Marionetas",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCVpSRoZgngfSL03Nlbjtq9A",
+      "channel_title": "Noti7",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC93-uMxa9LHhUgNO5Oqn9xQ",
+      "channel_title": "Noticias Perú",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCCDMKJWQveui7WIjTLS68WQ",
+      "channel_title": "NOTICIAS PERÚ TV",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC3NUgxBBl05tthfGBS6kPkA",
+      "channel_title": "NoticiasUnoColombia",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCEJs1fTF3KszRJGxJY14VrA",
+      "channel_title": "NTN24",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCdkw24RWDiKsy0Y9Z1Ut2ww",
+      "channel_title": "OkPerú",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCI3B73rHDRdWyFTLXL0uziw",
+      "channel_title": "PDN - Peru Digital Noticias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCzsAhe4DFpuC7DAAoNLq8BQ",
+      "channel_title": "periodismope",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCZR3PQrOAzaYymsde6Uu9nA",
+      "channel_title": "Peru 21 El Bicentenario",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCiFwXD02rVki7-xXEpoE64A",
+      "channel_title": "Peru Noticias Snit",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCNd09h2GugrdeT_80LxOFMw",
+      "channel_title": "Peru21TV",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC9uvtWIkPy0o95avXyqcbUw",
+      "channel_title": "Plural TV",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCvCLoltBg5y32b0oBG8j0EQ",
+      "channel_title": "Poder Judicial del Perú",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCjk_ODB5iiuLwk_K5wGgVmg",
+      "channel_title": "Portavoz Noticias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCQRfou8CZWIJzLOpKfhmqcg",
+      "channel_title": "Producciones TeD Televisión en Digital",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCXF2_sMeOUe-NjdMIZm2Jzw",
+      "channel_title": "Promsex",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCgOqD9t-svmzukLBXqtjFIQ",
+      "channel_title": "Publimetro Colombia",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC_40x4qc0ffdAeKEPaMdWMQ",
+      "channel_title": "Pulpo Negro",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC08DCSsLDBIVLvebHUpqsXg",
+      "channel_title": "Qwada",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCVW7J-lF26d3G3X8i2zmKow",
+      "channel_title": "Radio Nacional",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCWArMmgyHslCwntLfnFYJzQ",
+      "channel_title": "RADIO TV MELGAR ¡Periodistas al servicio de Ud!",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCr6tZxGWGQetM2Hoiu9iOIQ",
+      "channel_title": "RANDOM VIDEOS",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UChOz7o4nxtmYoNGwH1JAmhw",
+      "channel_title": "RBC PERÚ",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCQpHLKNmGosqo1pURYBx3pQ",
+      "channel_title": "Recnux",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCGq6lH8RFwXgAAAk1UQLl6A",
+      "channel_title": "Red mundial",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCwpasOChVA2wSBJ5xij91YQ",
+      "channel_title": "Reporte Perú",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCqrFca-_xE_0AcyVv5h7x_g",
+      "channel_title": "Revolución Tres Punto Cero",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCp8ok938HJLanO8bO-ca-Fw",
+      "channel_title": "Rex Anestesiado",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCExZfPEMILpyHr30xvDCXeg",
+      "channel_title": "Rosario Sasieta",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC7QZIf0dta-XPXsp9Hv4dTw",
+      "channel_title": "RTVE Noticias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCyhlvsKxZk1u7HfELYpu0bw",
+      "channel_title": "SDeA",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCr7TX3WFwk-fZneNyxdXeiw",
+      "channel_title": "Sistema acusatorio en México",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC8NNg2qEuMQIXlqPS-eu_ig",
+      "channel_title": "SNT Paraguay",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCA-_7rvJyEjwCrdUMqWHZEw",
+      "channel_title": "SubrayadoHD",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCwlsXSmh9sP1LvfuoKZ--gw",
+      "channel_title": "Sí Juego",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCOSCC1ngjlTfZOPvjXd6PeQ",
+      "channel_title": "tejemedios",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCeq_SgWZDF8h-ujzwBXI5jQ",
+      "channel_title": "Teleantioquia",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC05nHifnRWxoJkzgAP-sffg",
+      "channel_title": "Telefuturo - Prensa",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC2Q91pxDF0BPf0eK44pgYMw",
+      "channel_title": "Telenueve",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCsRnhjcUCR78Q3Ud6OXCTNg",
+      "channel_title": "Teletrece",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCkS4Pt8DVdqtZ5-o2Be1zuA",
+      "channel_title": "Televisión Tarapoto",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCKNW2TrrUlof4ES2y1BWjpA",
+      "channel_title": "The Mexican Family",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCaHEdZtk6k7SVP-umnzifmQ",
+      "channel_title": "TheDonato",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCj6PcyLvpnIRT_2W_mwa9Aw",
+      "channel_title": "Todo Noticias",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCv3WVB8cmvWnADL-1ALvwJg",
+      "channel_title": "TONY MONTANA",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCm7rsFxGJsNV-99aNF_fFMQ",
+      "channel_title": "TRAMITEX Abogados de Extranjería",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCEgNxyXXpArM8F368uJjF-Q",
+      "channel_title": "TRIVU",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 1
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 1.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 1.0
+      }
+    },
+    {
+      "channel_id": "UC9qzDM6UCk4roRIWu23aHYQ",
+      "channel_title": "TV Azteca Puebla",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCQH-6sv6ovHg4Nx-niZ_C1g",
+      "channel_title": "TV MUNDO AREQUIPA",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCRMUSZ3anVZipFNCs0y1dAQ",
+      "channel_title": "TVC En la Comunidad",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCwga7GiEFCCSstOEtQaRAgw",
+      "channel_title": "tvoperutv",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCAxF_I6XFDKfXFZMe3WAFwQ",
+      "channel_title": "UNICII DIRINCRI",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCBTuUY99I5plMaC_ZcmXIYw",
+      "channel_title": "Unitel Bolivia",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCgltr7AvpfGf-sEnIdBKZXQ",
+      "channel_title": "Upsocl",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 1.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UC_L1ba516-ZBPmywPq8P55g",
+      "channel_title": "UTV Noticias - Pucallpa",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCsEf_Kd9065OwIwubVw5Mxw",
+      "channel_title": "VideosFarandulita",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCT9dwqIe2tZGR-QfavNoWzA",
+      "channel_title": "Walter Adan Chinchay",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UClc7TT-TIwTUduENg9CnVEQ",
+      "channel_title": "Wapor Latinoamérica",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    },
+    {
+      "channel_id": "UCknyABjdbf5eQdzp0FKVt5g",
+      "channel_title": "Álvaro Navarro Abogado",
+      "labeled_videos": 1,
+      "positive_videos": {
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0
+      },
+      "positive_rate": {
+        "RACISMO_DISCRIMINACION": 0.0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0.0,
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": 0.0
+      }
+    }
+  ],
+  "planned_channels": [
+    {
+      "name": "Hablando Huevadas",
+      "url": "https://www.youtube.com/@HablandoHuevadasOficial",
+      "quota": 70,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD|CONTENIDO_SEXUAL",
+      "sampling_mode": "directed",
+      "priority_weight": 0.7243816254416962,
+      "reason": "semilla curada para ampliación dirigida"
+    },
+    {
+      "name": "Nunca MAS",
+      "url": "https://www.youtube.com/channel/UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD|CONTENIDO_SEXUAL|RACISMO_DISCRIMINACION",
+      "reason": "preclasificación histórica: 12 videos; ATAQUE_POR_GENERO_IDENTIDAD=5, CONTENIDO_SEXUAL=2, RACISMO_DISCRIMINACION=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.15878789678415536
+    },
+    {
+      "name": "Goblinciano",
+      "url": "https://www.youtube.com/@Goblinciano",
+      "quota": 85,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2756183745583039,
+      "reason": "semilla curada para ampliación dirigida"
+    },
+    {
+      "name": "Magaly TV La Firme",
+      "url": "https://www.youtube.com/@MagalyTVLaFirmeATV",
+      "quota": 35,
+      "target_category": "CONTENIDO_SEXUAL",
+      "sampling_mode": "directed",
+      "priority_weight": 0.4160777385159011,
+      "reason": "semilla curada para ampliación dirigida"
+    },
+    {
+      "name": "Juanito y Richard",
+      "url": "https://www.youtube.com/@JuanitoyRichard",
+      "quota": 85,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2756183745583039,
+      "reason": "semilla curada para ampliación dirigida"
+    },
+    {
+      "name": "DÍA D",
+      "url": "https://www.youtube.com/channel/UCmrzeYkbupPuvrXH8roR__w",
+      "channel_id": "UCmrzeYkbupPuvrXH8roR__w",
+      "target_category": "CONTENIDO_SEXUAL|ATAQUE_POR_GENERO_IDENTIDAD|RACISMO_DISCRIMINACION",
+      "reason": "preclasificación histórica: 7 videos; CONTENIDO_SEXUAL=2, ATAQUE_POR_GENERO_IDENTIDAD=2, RACISMO_DISCRIMINACION=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.14417288313048032
+    },
+    {
+      "name": "Latina Televisión",
+      "url": "https://www.youtube.com/channel/UC3rDtLrcgr3JS3_3JOW4BAw",
+      "channel_id": "UC3rDtLrcgr3JS3_3JOW4BAw",
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD|CONTENIDO_SEXUAL|RACISMO_DISCRIMINACION",
+      "reason": "preclasificación histórica: 10 videos; ATAQUE_POR_GENERO_IDENTIDAD=3, CONTENIDO_SEXUAL=1, RACISMO_DISCRIMINACION=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.1175893207695328
+    },
+    {
+      "name": "Caso Cerrado",
+      "url": "https://www.youtube.com/channel/UCGbofRROopWrumVob5w61OA",
+      "channel_id": "UCGbofRROopWrumVob5w61OA",
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD|CONTENIDO_SEXUAL",
+      "reason": "preclasificación histórica: 3 videos; ATAQUE_POR_GENERO_IDENTIDAD=2, CONTENIDO_SEXUAL=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.10461572438162545
+    },
+    {
+      "name": "Panorama",
+      "url": "https://www.youtube.com/channel/UCBiq92lt_ufNO-ktZigVXgg",
+      "channel_id": "UCBiq92lt_ufNO-ktZigVXgg",
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD|CONTENIDO_SEXUAL",
+      "reason": "preclasificación histórica: 15 videos; ATAQUE_POR_GENERO_IDENTIDAD=2, CONTENIDO_SEXUAL=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.061538661400956145
+    },
+    {
+      "name": "Buenos Días Perú",
+      "url": "https://www.youtube.com/channel/UCFnOwPrJ-Skrzk_GPNBV5tg",
+      "channel_id": "UCFnOwPrJ-Skrzk_GPNBV5tg",
+      "target_category": "CONTENIDO_SEXUAL|ATAQUE_POR_GENERO_IDENTIDAD|RACISMO_DISCRIMINACION",
+      "reason": "preclasificación histórica: 57 videos; CONTENIDO_SEXUAL=2, ATAQUE_POR_GENERO_IDENTIDAD=2, RACISMO_DISCRIMINACION=2",
+      "sampling_mode": "directed",
+      "priority_weight": 0.03895571350464735
+    },
+    {
+      "name": "RPP Noticias",
+      "url": "https://www.youtube.com/channel/UC5j8-2FT0ZMMBkmK72R4aeA",
+      "channel_id": "UC5j8-2FT0ZMMBkmK72R4aeA",
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD|RACISMO_DISCRIMINACION",
+      "reason": "preclasificación histórica: 18 videos; ATAQUE_POR_GENERO_IDENTIDAD=1, RACISMO_DISCRIMINACION=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.03427369795667538
+    },
+    {
+      "name": "QUE HAY DE NUEVO PERU",
+      "url": "https://www.youtube.com/channel/UCRl1-oM_NM-BtCEyTFd-aRA",
+      "channel_id": "UCRl1-oM_NM-BtCEyTFd-aRA",
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "preclasificación histórica: 4 videos; ATAQUE_POR_GENERO_IDENTIDAD=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.03425598743619945
+    },
+    {
+      "name": "El Universal",
+      "url": "https://www.youtube.com/channel/UC2SEk1w7DgoHs_G3w1biz-w",
+      "channel_id": "UC2SEk1w7DgoHs_G3w1biz-w",
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "preclasificación histórica: 5 videos; ATAQUE_POR_GENERO_IDENTIDAD=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.033032559313478045
+    },
+    {
+      "name": "Panamericana Televisión",
+      "url": "https://www.youtube.com/channel/UCngb4rxO4iUE6BrIs29WXwA",
+      "channel_id": "UCngb4rxO4iUE6BrIs29WXwA",
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "preclasificación histórica: 6 videos; ATAQUE_POR_GENERO_IDENTIDAD=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.031531079344683584
+    },
+    {
+      "name": "ATV Noticias",
+      "url": "https://www.youtube.com/channel/UCYG5uXS3xdsoaXIxum1pAEw",
+      "channel_id": "UCYG5uXS3xdsoaXIxum1pAEw",
+      "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "preclasificación histórica: 35 videos; RACISMO_DISCRIMINACION=2, ATAQUE_POR_GENERO_IDENTIDAD=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.027231460700983673
+    },
+    {
+      "name": "El Dominical de Panamericana",
+      "url": "https://www.youtube.com/channel/UCMfcN0OV7d61cWPLYm5qHpw",
+      "channel_id": "UCMfcN0OV7d61cWPLYm5qHpw",
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "preclasificación histórica: 8 videos; RACISMO_DISCRIMINACION=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.025441696113074206
+    },
+    {
+      "name": "La República - LR+",
+      "url": "https://www.youtube.com/channel/UC-B7Xv56uNRDkj0vC3QW8Cg",
+      "channel_id": "UC-B7Xv56uNRDkj0vC3QW8Cg",
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "preclasificación histórica: 13 videos; RACISMO_DISCRIMINACION=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.019905771495877505
+    },
+    {
+      "name": "América Noticias",
+      "url": "https://www.youtube.com/channel/UCPhm2I2wk4vqjENwhn3px8A",
+      "channel_id": "UCPhm2I2wk4vqjENwhn3px8A",
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "preclasificación histórica: 17 videos; RACISMO_DISCRIMINACION=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.016814039596260162
+    },
+    {
+      "name": "Latina Noticias",
+      "url": "https://www.youtube.com/channel/UCpSJ5fGhmAME9Kx2D3ZvN3Q",
+      "channel_id": "UCpSJ5fGhmAME9Kx2D3ZvN3Q",
+      "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "preclasificación histórica: 72 videos; RACISMO_DISCRIMINACION=2, ATAQUE_POR_GENERO_IDENTIDAD=1",
+      "sampling_mode": "directed",
+      "priority_weight": 0.014550390875479217
+    }
+  ],
+  "planned_queries": [
+    {
+      "query": "acoso sexual denuncia televisión peruana",
+      "target_category": "CONTENIDO_SEXUAL",
+      "sampling_mode": "directed",
+      "priority_weight": 0.4160777385159011,
+      "quota": 50
+    },
+    {
+      "query": "ataque homofóbico transfóbico Perú denuncia",
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "sampling_mode": "directed",
+      "priority_weight": 0.3083038869257951,
+      "quota": 50
+    },
+    {
+      "query": "discriminación regional clasismo racial Perú",
+      "target_category": "RACISMO_DISCRIMINACION",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2756183745583039,
+      "quota": 50
+    },
+    {
+      "query": "cosificación contenido sexual explícito televisión Perú",
+      "target_category": "CONTENIDO_SEXUAL",
+      "sampling_mode": "directed",
+      "priority_weight": 0.4160777385159011,
+      "quota": 50
+    },
+    {
+      "query": "ataque machista misoginia Perú denuncia",
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "sampling_mode": "directed",
+      "priority_weight": 0.3083038869257951,
+      "quota": 50
+    },
+    {
+      "query": "insultos racistas discriminación Perú denuncia",
+      "target_category": "RACISMO_DISCRIMINACION",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2756183745583039,
+      "quota": 50
+    }
+  ],
+  "expanded_channels": [
+    {
+      "name": "TVPerú Noticias",
+      "url": "https://www.youtube.com/channel/UCkZCoc42IipR1ucqJmIehsA",
+      "channel_id": "UCkZCoc42IipR1ucqJmIehsA",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD|CONTENIDO_SEXUAL",
+      "reason": "canal descubierto en 18 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 1.372549019607843
+    },
+    {
+      "name": "Wayka",
+      "url": "https://www.youtube.com/channel/UCQmo59tWId4OHTdl4W320DQ",
+      "channel_id": "UCQmo59tWId4OHTdl4W320DQ",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 4 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.7161310754050271
+    },
+    {
+      "name": "24 Horas",
+      "url": "https://www.youtube.com/channel/UCsakKsRww3J7pM6DavkrAIQ",
+      "channel_id": "UCsakKsRww3J7pM6DavkrAIQ",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION|CONTENIDO_SEXUAL",
+      "reason": "canal descubierto en 3 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.6587582029278143
+    },
+    {
+      "name": "Ministerio de Justicia y Derechos Humanos",
+      "url": "https://www.youtube.com/channel/UCUplbK1nnI1dnjfU2BiAVRw",
+      "channel_id": "UCUplbK1nnI1dnjfU2BiAVRw",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION|CONTENIDO_SEXUAL",
+      "reason": "canal descubierto en 2 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.5005695555142273
+    },
+    {
+      "name": "Magaly TV La Firme",
+      "url": "https://www.youtube.com/channel/UCF6s3gpbZEQKqZ38VvQ0gLA",
+      "channel_id": "UCF6s3gpbZEQKqZ38VvQ0gLA",
+      "quota": 100,
+      "target_category": "CONTENIDO_SEXUAL",
+      "reason": "canal descubierto en 3 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.4710314020934729
+    },
+    {
+      "name": "Al Rojo Vivo",
+      "url": "https://www.youtube.com/channel/UCDUxOvbwu1bnyD7AucP0ESw",
+      "channel_id": "UCDUxOvbwu1bnyD7AucP0ESw",
+      "quota": 100,
+      "target_category": "CONTENIDO_SEXUAL",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.40791935148617753
+    },
+    {
+      "name": "Cosmos Televisión",
+      "url": "https://www.youtube.com/channel/UC_ept7M1UXlCfvcUrK49Ziw",
+      "channel_id": "UC_ept7M1UXlCfvcUrK49Ziw",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION|CONTENIDO_SEXUAL",
+      "reason": "canal descubierto en 2 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.4047158108412902
+    },
+    {
+      "name": "América TV",
+      "url": "https://www.youtube.com/channel/UC6NVDkuzY2exMOVFw4i9oHw",
+      "channel_id": "UC6NVDkuzY2exMOVFw4i9oHw",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 2 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.37343865560029593
+    },
+    {
+      "name": "La Negra Candela Oficial",
+      "url": "https://www.youtube.com/channel/UC-1pqb0KwANjcRHA63ZTBkg",
+      "channel_id": "UC-1pqb0KwANjcRHA63ZTBkg",
+      "quota": 100,
+      "target_category": "CONTENIDO_SEXUAL",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.3467314487632509
+    },
+    {
+      "name": "24 Horas - TVN Chile",
+      "url": "https://www.youtube.com/channel/UCTXNz3gjAypWp3EhlIATEJQ",
+      "channel_id": "UCTXNz3gjAypWp3EhlIATEJQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 2 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.3260906496330525
+    },
+    {
+      "name": "Proyecto Todo Mejora",
+      "url": "https://www.youtube.com/channel/UC1MsbIp2dPzA6o6cIEp-d2A",
+      "channel_id": "UC1MsbIp2dPzA6o6cIEp-d2A",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.3083038869257951
+    },
+    {
+      "name": "W Radio Colombia",
+      "url": "https://www.youtube.com/channel/UCwy3Pdzk6RMLtejVuz1tI6w",
+      "channel_id": "UCwy3Pdzk6RMLtejVuz1tI6w",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.3083038869257951
+    },
+    {
+      "name": "Sin Etiquetas",
+      "url": "https://www.youtube.com/channel/UC3LZaRm47W2Oa5yHVdlQPdw",
+      "channel_id": "UC3LZaRm47W2Oa5yHVdlQPdw",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.3022587126723481
+    },
+    {
+      "name": "PBO",
+      "url": "https://www.youtube.com/channel/UCgR0st4ZLABi-LQcWNu3wnQ",
+      "channel_id": "UCgR0st4ZLABi-LQcWNu3wnQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2964460451209568
+    },
+    {
+      "name": "Teletrece",
+      "url": "https://www.youtube.com/channel/UCsRnhjcUCR78Q3Ud6OXCTNg",
+      "channel_id": "UCsRnhjcUCR78Q3Ud6OXCTNg",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.290852723514901
+    },
+    {
+      "name": "UOL",
+      "url": "https://www.youtube.com/channel/UCVFbXI6Gu8U2f9Gjtxw4A-Q",
+      "channel_id": "UCVFbXI6Gu8U2f9Gjtxw4A-Q",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.290852723514901
+    },
+    {
+      "name": "Carla Harada",
+      "url": "https://www.youtube.com/channel/UC9HeBpVlifgX0igLskEyfkA",
+      "channel_id": "UC9HeBpVlifgX0igLskEyfkA",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.28546656196832876
+    },
+    {
+      "name": "Infobae",
+      "url": "https://www.youtube.com/channel/UCvsU0EGXN7Su7MfNqcTGNHg",
+      "channel_id": "UCvsU0EGXN7Su7MfNqcTGNHg",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2802762608416319
+    },
+    {
+      "name": "Tuteve ATV",
+      "url": "https://www.youtube.com/channel/UC_oebsZYvjiULf6sVZr9Rzw",
+      "channel_id": "UC_oebsZYvjiULf6sVZr9Rzw",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2802762608416319
+    },
+    {
+      "name": "SOL TV Perú",
+      "url": "https://www.youtube.com/channel/UCT3jhkKbEV4ZslnzhZ26hPw",
+      "channel_id": "UCT3jhkKbEV4ZslnzhZ26hPw",
+      "quota": 100,
+      "target_category": "CONTENIDO_SEXUAL",
+      "reason": "canal descubierto en 2 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2790765319313971
+    },
+    {
+      "name": "IDEHPUCP PUCP",
+      "url": "https://www.youtube.com/channel/UCeCTykBtBpWWBqRfwEL09Zg",
+      "channel_id": "UCeCTykBtBpWWBqRfwEL09Zg",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2756183745583039
+    },
+    {
+      "name": "Sin Censura Media",
+      "url": "https://www.youtube.com/channel/UC0R4smsFydUrF_vK9ziR80A",
+      "channel_id": "UC0R4smsFydUrF_vK9ziR80A",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.275271327612317
+    },
+    {
+      "name": "Teffy Lu",
+      "url": "https://www.youtube.com/channel/UCt2ROGzD2RWoViQG1svAsYQ",
+      "channel_id": "UCt2ROGzD2RWoViQG1svAsYQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.275271327612317
+    },
+    {
+      "name": "Y que viva Cristo Rey",
+      "url": "https://www.youtube.com/channel/UC8ehBK2zUl2oSWTS389cxJA",
+      "channel_id": "UC8ehBK2zUl2oSWTS389cxJA",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2704420060752588
+    },
+    {
+      "name": "Área de Derechos Humanos de Prodiana A.C.",
+      "url": "https://www.youtube.com/channel/UCcvWAZE_ffclq7tkdmH1VKQ",
+      "channel_id": "UCcvWAZE_ffclq7tkdmH1VKQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2704420060752588
+    },
+    {
+      "name": "Bio Bio",
+      "url": "https://www.youtube.com/channel/UCuvM3c8rmdApmk-g22shZ7w",
+      "channel_id": "UCuvM3c8rmdApmk-g22shZ7w",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.26577921286706474
+    },
+    {
+      "name": "EL PAÍS",
+      "url": "https://www.youtube.com/channel/UCnsvJeZO4RigQ898WdDNoBw",
+      "channel_id": "UCnsvJeZO4RigQ898WdDNoBw",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.26577921286706474
+    },
+    {
+      "name": "Instituto Nacional de Formación Política de morena",
+      "url": "https://www.youtube.com/channel/UCo3SVQNaUcICAj49Ks-w8fw",
+      "channel_id": "UCo3SVQNaUcICAj49Ks-w8fw",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.26501766784452296
+    },
+    {
+      "name": "El Notificador Peruano",
+      "url": "https://www.youtube.com/channel/UCpcmyMQnK-FKzmkrmRARc_A",
+      "channel_id": "UCpcmyMQnK-FKzmkrmRARc_A",
+      "quota": 100,
+      "target_category": "CONTENIDO_SEXUAL",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2633403408328488
+    },
+    {
+      "name": "Psiquiatría Mente y Salud",
+      "url": "https://www.youtube.com/channel/UCUWNDZ7SKMzHkxFnXzYVvqw",
+      "channel_id": "UCUWNDZ7SKMzHkxFnXzYVvqw",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.26127448044558904
+    },
+    {
+      "name": "Render Productions",
+      "url": "https://www.youtube.com/channel/UCZNntxxGBPPJCevUGVIU1Jw",
+      "channel_id": "UCZNntxxGBPPJCevUGVIU1Jw",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.26127448044558904
+    },
+    {
+      "name": "Movilh Chile",
+      "url": "https://www.youtube.com/channel/UC0BX0XMPPa8fV1rfWJk2SwQ",
+      "channel_id": "UC0BX0XMPPa8fV1rfWJk2SwQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 2 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2569199057714959
+    },
+    {
+      "name": "Relapso Films",
+      "url": "https://www.youtube.com/channel/UCYmHqa-ipXULp-FSf3pLIGw",
+      "channel_id": "UCYmHqa-ipXULp-FSf3pLIGw",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2552021986650962
+    },
+    {
+      "name": "CIUDAD TV CONTENIDOS",
+      "url": "https://www.youtube.com/channel/UCn1qv1ANr8LvA0iDiiC15UA",
+      "channel_id": "UCn1qv1ANr8LvA0iDiiC15UA",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.25270810403753696
+    },
+    {
+      "name": "Radio Nacional",
+      "url": "https://www.youtube.com/channel/UCVW7J-lF26d3G3X8i2zmKow",
+      "channel_id": "UCVW7J-lF26d3G3X8i2zmKow",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.25056215868936715
+    },
+    {
+      "name": "ITV Patagonia",
+      "url": "https://www.youtube.com/channel/UCrzab0S4lNqFjmv4fQArnTA",
+      "channel_id": "UCrzab0S4lNqFjmv4fQArnTA",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2486321668756412
+    },
+    {
+      "name": "El Litoral",
+      "url": "https://www.youtube.com/channel/UCRtZO3mPqvCMYfmJogXyW7g",
+      "channel_id": "UCRtZO3mPqvCMYfmJogXyW7g",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2446856245442818
+    },
+    {
+      "name": "Marco Sifuentes",
+      "url": "https://www.youtube.com/channel/UCP0AJJeNkFBYzegTTVbKhPg",
+      "channel_id": "UCP0AJJeNkFBYzegTTVbKhPg",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2446856245442818
+    },
+    {
+      "name": "Alfa Romeo",
+      "url": "https://www.youtube.com/channel/UCXlVOlGIWITS8-10V9td9jA",
+      "channel_id": "UCXlVOlGIWITS8-10V9td9jA",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.24177050399851216
+    },
+    {
+      "name": "lamula externos (la mula)",
+      "url": "https://www.youtube.com/channel/UCY6bK9tiSKBgZsxB6fBYXbA",
+      "channel_id": "UCY6bK9tiSKBgZsxB6fBYXbA",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2408624116607774
+    },
+    {
+      "name": "Educa-T sobre Discriminación racial",
+      "url": "https://www.youtube.com/channel/UC7J-40gfnclX1J239lJCUnA",
+      "channel_id": "UC7J-40gfnclX1J239lJCUnA",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.23760204703302062
+    },
+    {
+      "name": "Crónica TV",
+      "url": "https://www.youtube.com/channel/UCT7KFGv6s2a-rh2Jq8ZdM1g",
+      "channel_id": "UCT7KFGv6s2a-rh2Jq8ZdM1g",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.23715683609676544
+    },
+    {
+      "name": "Meteoro Brasil",
+      "url": "https://www.youtube.com/channel/UCk5BcU1rOy6hepflk7_q_Pw",
+      "channel_id": "UCk5BcU1rOy6hepflk7_q_Pw",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.23715683609676544
+    },
+    {
+      "name": "Punto Seguido Revista",
+      "url": "https://www.youtube.com/channel/UCc2_uZTIb6YxMQWgH_3tNTw",
+      "channel_id": "UCc2_uZTIb6YxMQWgH_3tNTw",
+      "quota": 100,
+      "target_category": "CONTENIDO_SEXUAL",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2364078059749438
+    },
+    {
+      "name": "Historia del Perú",
+      "url": "https://www.youtube.com/channel/UCUP8rioo9tQVKlLzDsUnrWQ",
+      "channel_id": "UCUP8rioo9tQVKlLzDsUnrWQ",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2335748936934779
+    },
+    {
+      "name": "Revista Oeste",
+      "url": "https://www.youtube.com/channel/UCBQAI1ZhurW3nbtJR-gBBZg",
+      "channel_id": "UCBQAI1ZhurW3nbtJR-gBBZg",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2335635507013599
+    },
+    {
+      "name": "Cristóbal Ruiz Fernández",
+      "url": "https://www.youtube.com/channel/UCfY8ARieL9bXBUQBfuU8dog",
+      "channel_id": "UCfY8ARieL9bXBUQBfuU8dog",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.23007752755656347
+    },
+    {
+      "name": "Ministerio de Cultura - Arequipa",
+      "url": "https://www.youtube.com/channel/UCTkK2wgILGHA_0zlyFWJH8A",
+      "channel_id": "UCTkK2wgILGHA_0zlyFWJH8A",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2296819787985866
+    },
+    {
+      "name": "RTVE Noticias",
+      "url": "https://www.youtube.com/channel/UC7QZIf0dta-XPXsp9Hv4dTw",
+      "channel_id": "UC7QZIf0dta-XPXsp9Hv4dTw",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.22669403450426112
+    },
+    {
+      "name": "Las Perlas TV",
+      "url": "https://www.youtube.com/channel/UCeFst2EtMkfqK_MpuTULCVQ",
+      "channel_id": "UCeFst2EtMkfqK_MpuTULCVQ",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.22591670045762616
+    },
+    {
+      "name": "EstrellaPerdida",
+      "url": "https://www.youtube.com/channel/UCT9P7_XkcH8mT1iEG93zBuA",
+      "channel_id": "UCT9P7_XkcH8mT1iEG93zBuA",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.22340861371434428
+    },
+    {
+      "name": "Escuela Nacional de Formación Judicial",
+      "url": "https://www.youtube.com/channel/UCK90V8pr_5a6LsoIfOJuF8A",
+      "channel_id": "UCK90V8pr_5a6LsoIfOJuF8A",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2222728827083096
+    },
+    {
+      "name": "Noticias Grupo Repretel",
+      "url": "https://www.youtube.com/channel/UCr6TeVofbyCvtCdxV_niQKQ",
+      "channel_id": "UCr6TeVofbyCvtCdxV_niQKQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.22021706208985364
+    },
+    {
+      "name": "JAIR ALEXANDER ROJAS CHIPANA",
+      "url": "https://www.youtube.com/channel/UCgeNagbrDzTmID251TfSioA",
+      "channel_id": "UCgeNagbrDzTmID251TfSioA",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.21874474171293962
+    },
+    {
+      "name": "CDN 37",
+      "url": "https://www.youtube.com/channel/UCpFfLf9o4wJr-yr7dG8gYug",
+      "channel_id": "UCpFfLf9o4wJr-yr7dG8gYug",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.21711541332802473
+    },
+    {
+      "name": "Teleamazonas Ecuador",
+      "url": "https://www.youtube.com/channel/UCCwRtme3lumNRQXMO2EvCvw",
+      "channel_id": "UCCwRtme3lumNRQXMO2EvCvw",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.21532685512367492
+    },
+    {
+      "name": "Inka Filma",
+      "url": "https://www.youtube.com/channel/UC4m7EADMRE89rksgCaWFSIA",
+      "channel_id": "UC4m7EADMRE89rksgCaWFSIA",
+      "quota": 100,
+      "target_category": "CONTENIDO_SEXUAL",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.21447306109067066
+    },
+    {
+      "name": "Girovisual Television",
+      "url": "https://www.youtube.com/channel/UCWJkIrCmaM0Abf7_IbM84Dw",
+      "channel_id": "UCWJkIrCmaM0Abf7_IbM84Dw",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2140999214762466
+    },
+    {
+      "name": "Hoy Día",
+      "url": "https://www.youtube.com/channel/UCBp0MdzbxA70fCHlpLCbT6g",
+      "channel_id": "UCBp0MdzbxA70fCHlpLCbT6g",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.21116704583958568
+    },
+    {
+      "name": "Naciones Unidas Paraguay",
+      "url": "https://www.youtube.com/channel/UCmJNkVlVEGUtwP9VlpA2xhA",
+      "channel_id": "UCmJNkVlVEGUtwP9VlpA2xhA",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.20880179890780598
+    },
+    {
+      "name": "Sara Agudelo López",
+      "url": "https://www.youtube.com/channel/UCjBWXmpcKbMBJwUsI_fePTg",
+      "channel_id": "UCjBWXmpcKbMBJwUsI_fePTg",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2083134371120237
+    },
+    {
+      "name": "Exitosa Noticias",
+      "url": "https://www.youtube.com/channel/UCxgO_rak_BKZP8VNVmYqbWg",
+      "channel_id": "UCxgO_rak_BKZP8VNVmYqbWg",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 2 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.20765767946173583
+    },
+    {
+      "name": "De Interes Nacional Peru",
+      "url": "https://www.youtube.com/channel/UChEYIkvyR_lMg_8wzE3PM6g",
+      "channel_id": "UChEYIkvyR_lMg_8wzE3PM6g",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.20568535414798797
+    },
+    {
+      "name": "The Real Chile",
+      "url": "https://www.youtube.com/channel/UCPXOddOaeICM1_3UuKf5K3w",
+      "channel_id": "UCPXOddOaeICM1_3UuKf5K3w",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.20568535414798797
+    },
+    {
+      "name": "Portavoz Noticias",
+      "url": "https://www.youtube.com/channel/UCjk_ODB5iiuLwk_K5wGgVmg",
+      "channel_id": "UCjk_ODB5iiuLwk_K5wGgVmg",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.20553592461719672
+    },
+    {
+      "name": "VIDEOSDIARIOS",
+      "url": "https://www.youtube.com/channel/UCpdubI2uwPB6bR6NGKqzohQ",
+      "channel_id": "UCpdubI2uwPB6bR6NGKqzohQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.20283150455644414
+    },
+    {
+      "name": "Defensoría del Pueblo Perú",
+      "url": "https://www.youtube.com/channel/UCZHyNJ9-_r2oofRCIKQv1Fw",
+      "channel_id": "UCZHyNJ9-_r2oofRCIKQv1Fw",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.20266056952816466
+    },
+    {
+      "name": "Diario Sin Fronteras",
+      "url": "https://www.youtube.com/channel/UCQgH078G5XvyB8gyZEb0Ygw",
+      "channel_id": "UCQgH078G5XvyB8gyZEb0Ygw",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.20266056952816466
+    },
+    {
+      "name": "Magazin Pacifico",
+      "url": "https://www.youtube.com/channel/UC5q2iIIustywaocwIj2q9Xg",
+      "channel_id": "UC5q2iIIustywaocwIj2q9Xg",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.2001973291725942
+    },
+    {
+      "name": "Daniel Latinel",
+      "url": "https://www.youtube.com/channel/UCDEzAmgEkbtU8TICCZcw3Jg",
+      "channel_id": "UCDEzAmgEkbtU8TICCZcw3Jg",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.19972345982485792
+    },
+    {
+      "name": "TV MUNDO AREQUIPA",
+      "url": "https://www.youtube.com/channel/UCQH-6sv6ovHg4Nx-niZ_C1g",
+      "channel_id": "UCQH-6sv6ovHg4Nx-niZ_C1g",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.19972345982485792
+    },
+    {
+      "name": "uni-verse",
+      "url": "https://www.youtube.com/channel/UCPYtBDwhvO7bO8N4e_kR0aw",
+      "channel_id": "UCPYtBDwhvO7bO8N4e_kR0aw",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.19687026754164566
+    },
+    {
+      "name": "TVN Chile",
+      "url": "https://www.youtube.com/channel/UCaVaCaiG6qRzDiJDuEGKOhQ",
+      "channel_id": "UCaVaCaiG6qRzDiJDuEGKOhQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.19512904235809814
+    },
+    {
+      "name": "Noticias Región Junín",
+      "url": "https://www.youtube.com/channel/UChXI7Nzj8oQMdEg4EgBr6eg",
+      "channel_id": "UChXI7Nzj8oQMdEg4EgBr6eg",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.194097446872045
+    },
+    {
+      "name": "Trome Perú",
+      "url": "https://www.youtube.com/channel/UChzS9L4GwAe0lRFallqbaGg",
+      "channel_id": "UChzS9L4GwAe0lRFallqbaGg",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.194097446872045
+    },
+    {
+      "name": "RevistaSemana",
+      "url": "https://www.youtube.com/channel/UC4oQAvXFuNlKivYjUynQKTA",
+      "channel_id": "UC4oQAvXFuNlKivYjUynQKTA",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.19268992932862192
+    },
+    {
+      "name": "redyzcosmo",
+      "url": "https://www.youtube.com/channel/UC0T1io_kWp59h29bENZBfhQ",
+      "channel_id": "UC0T1io_kWp59h29bENZBfhQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.19031104131221918
+    },
+    {
+      "name": "EL HERALDO",
+      "url": "https://www.youtube.com/channel/UCNFgFfDJqPjXricaMH2beAQ",
+      "channel_id": "UCNFgFfDJqPjXricaMH2beAQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.1879901749547531
+    },
+    {
+      "name": "La Vanguardia",
+      "url": "https://www.youtube.com/channel/UClLLRs_mFTsNT5U-DqTYAGg",
+      "channel_id": "UClLLRs_mFTsNT5U-DqTYAGg",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.18572523308782835
+    },
+    {
+      "name": "Plumas Libres",
+      "url": "https://www.youtube.com/channel/UCirs_bsXC_LtTQM0-moLb5w",
+      "channel_id": "UCirs_bsXC_LtTQM0-moLb5w",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.18351421840821133
+    },
+    {
+      "name": "Manu Vlogs",
+      "url": "https://www.youtube.com/channel/UCLEs90C6x9Ud5Spa2g-nSTA",
+      "channel_id": "UCLEs90C6x9Ud5Spa2g-nSTA",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.18135522760340886
+    },
+    {
+      "name": "CNN Chile",
+      "url": "https://www.youtube.com/channel/UCpOAcjJNAp0Y0fhznRrXIJQ",
+      "channel_id": "UCpOAcjJNAp0Y0fhznRrXIJQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.17924644588709016
+    },
+    {
+      "name": "NTN24",
+      "url": "https://www.youtube.com/channel/UCEJs1fTF3KszRJGxJY14VrA",
+      "channel_id": "UCEJs1fTF3KszRJGxJY14VrA",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.1771861419113765
+    },
+    {
+      "name": "TV Azteca Jalisco",
+      "url": "https://www.youtube.com/channel/UCH1JKAzwX0DHokncS7WcJCg",
+      "channel_id": "UCH1JKAzwX0DHokncS7WcJCg",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.17517266302601994
+    },
+    {
+      "name": "AFP Español",
+      "url": "https://www.youtube.com/channel/UCY8d83kIW6sK4au73qeZZTw",
+      "channel_id": "UCY8d83kIW6sK4au73qeZZTw",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.17320443085718826
+    },
+    {
+      "name": "MarthaReyesTV",
+      "url": "https://www.youtube.com/channel/UCLs_lFWdQjqNxSQx2KM_uew",
+      "channel_id": "UCLs_lFWdQjqNxSQx2KM_uew",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.17127993718099727
+    },
+    {
+      "name": "DW Español",
+      "url": "https://www.youtube.com/channel/UCT4Jg8h03dD0iN3Pb5L0PMA",
+      "channel_id": "UCT4Jg8h03dD0iN3Pb5L0PMA",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.16939774006911817
+    },
+    {
+      "name": "Jurado Nacional de Elecciones",
+      "url": "https://www.youtube.com/channel/UCuiHAQYUu2HKkGR7sE_nLVw",
+      "channel_id": "UCuiHAQYUu2HKkGR7sE_nLVw",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.1660351653965686
+    },
+    {
+      "name": "DE HUMO",
+      "url": "https://www.youtube.com/channel/UCMlbcGWFF6caOjtGjOJA9TQ",
+      "channel_id": "UCMlbcGWFF6caOjtGjOJA9TQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.16575477791709414
+    },
+    {
+      "name": "CANAL CNC BARRANQUILLA",
+      "url": "https://www.youtube.com/channel/UC8otX0xqrYFJqZUzw5SS09g",
+      "channel_id": "UC8otX0xqrYFJqZUzw5SS09g",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.16399142921584844
+    },
+    {
+      "name": "Emily Romero Silva",
+      "url": "https://www.youtube.com/channel/UClzzSu8ymyUCSI5DS3kWUKA",
+      "channel_id": "UClzzSu8ymyUCSI5DS3kWUKA",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.16226520364515531
+    },
+    {
+      "name": "Télam",
+      "url": "https://www.youtube.com/channel/UCNyUm6fxPv-R5oh0fvQ63Hg",
+      "channel_id": "UCNyUm6fxPv-R5oh0fvQ63Hg",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.16057494110718495
+    },
+    {
+      "name": "Rio Uruguay Television - TACA Streams",
+      "url": "https://www.youtube.com/channel/UCbJvTB0igMwA-CIWg2ici8g",
+      "channel_id": "UCbJvTB0igMwA-CIWg2ici8g",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.15891952934319334
+    },
+    {
+      "name": "InformativosTvc",
+      "url": "https://www.youtube.com/channel/UCEc6ZP-KQucqkb0GgLyL53g",
+      "channel_id": "UCEc6ZP-KQucqkb0GgLyL53g",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.1572979014927526
+    },
+    {
+      "name": "Somos La Plata",
+      "url": "https://www.youtube.com/channel/UC294dkvc88KFZkkHsBLMAFQ",
+      "channel_id": "UC294dkvc88KFZkkHsBLMAFQ",
+      "quota": 100,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.15570903380090662
+    },
+    {
+      "name": "Diario Público",
+      "url": "https://www.youtube.com/channel/UCVimQoXNCZuEnZRVAbuYMiw",
+      "channel_id": "UCVimQoXNCZuEnZRVAbuYMiw",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.14506230239910733
+    },
+    {
+      "name": "Noticias Caracol",
+      "url": "https://www.youtube.com/channel/UC2Xq2PK-got3Rtz9ZJ32hLQ",
+      "channel_id": "UC2Xq2PK-got3Rtz9ZJ32hLQ",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.14207132709190923
+    },
+    {
+      "name": "Epicentro TV",
+      "url": "https://www.youtube.com/channel/UCJOdW-8tYGjzJj2t77rBmXA",
+      "channel_id": "UCJOdW-8tYGjzJj2t77rBmXA",
+      "quota": 100,
+      "target_category": "RACISMO_DISCRIMINACION",
+      "reason": "canal descubierto en 1 resultados temáticos",
+      "sampling_mode": "directed",
+      "priority_weight": 0.14062161967260403
+    }
+  ],
+  "directed_candidates_discovered": 10679,
+  "directed_candidates_selected": 1000,
+  "selection_path": "C:\\usr\\ths_mia_fiis\\pln\\trabajo\\datos\\raw\\directed_candidates_latest.jsonl"
+}

@@ -73,11 +73,23 @@ def _restore_run(drive_run_dir: Path, scratch_output_dir: Path) -> bool:
     return True
 
 
-def _stage_gzip(archive: Path, destination: Path, entry: dict[str, Any]) -> None:
+def _stage_gzip(
+    archive: Path,
+    destination: Path,
+    entry: dict[str, Any],
+    *,
+    replace_mismatch: bool = True,
+) -> str:
     if sha256_file(archive) != entry["archive_sha256"]:
         raise ValueError(f"SHA-256 inválido para {archive}")
-    if destination.is_file() and sha256_file(destination) == entry["source_sha256"]:
-        return
+    if destination.is_file():
+        if sha256_file(destination) == entry["source_sha256"]:
+            return "verified_existing"
+        if not replace_mismatch:
+            raise ValueError(
+                f"{destination} existe, pero no coincide con el checkpoint comprimido. "
+                "Actualice el bundle o retire deliberadamente la copia derivada antes de restaurar."
+            )
     destination.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary_name = tempfile.mkstemp(prefix=f".{destination.name}.", dir=destination.parent)
     try:
@@ -91,6 +103,50 @@ def _stage_gzip(archive: Path, destination: Path, entry: dict[str, Any]) -> None
     finally:
         if os.path.exists(temporary_name):
             os.unlink(temporary_name)
+    return "restored"
+
+
+def prepare_local_bundle_input(
+    input_key: str,
+    *,
+    project_root: str | Path,
+) -> dict[str, Any]:
+    """Verifica o restaura una entrada local desde el bundle sincronizado."""
+
+    project = Path(project_root).resolve()
+    config = load_colab_config(project)
+    if input_key not in config["inputs"]:
+        raise KeyError(f"Entrada de bundle desconocida: {input_key}")
+    bundle_dir = project / "resultados" / "colab_bundle"
+    manifest_path = bundle_dir / config["manifest"]
+    if not manifest_path.is_file():
+        raise FileNotFoundError(f"Falta el manifiesto del bundle sincronizado: {manifest_path}")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
+    configured = config["inputs"][input_key]
+    entry = manifest.get("inputs", {}).get(input_key)
+    if not entry:
+        raise KeyError(f"El manifiesto no declara la entrada {input_key}")
+    if configured["source"] != entry.get("source") or configured["archive"] != entry.get("archive"):
+        raise ValueError(f"El manifiesto y config/colab_l4.json difieren para {input_key}")
+    archive = bundle_dir / configured["archive"]
+    destination = project / configured["source"]
+    status = _stage_gzip(
+        archive,
+        destination,
+        entry,
+        replace_mismatch=False,
+    )
+    actual_sha256 = sha256_file(destination)
+    if actual_sha256 != entry["source_sha256"]:
+        raise ValueError(f"La entrada local {input_key} no coincide después de restaurarla")
+    return {
+        "status": status,
+        "input_key": input_key,
+        "path": destination.as_posix(),
+        "sha256": actual_sha256,
+        "bytes": destination.stat().st_size,
+        "archive": archive.as_posix(),
+    }
 
 
 def prepare_colab_context(

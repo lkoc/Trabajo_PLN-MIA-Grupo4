@@ -80,6 +80,13 @@ La barra `Procesando pendientes` representa la cohorte posterior al filtro, no
 la suma histórica de candidatos. `ingest_incremental` repite internamente la
 verificación del canónico y de la caché como segunda defensa.
 
+Con `RANDOMIZE_DOWNLOAD_QUEUE=True`, los pendientes se ordenan mediante una
+prioridad pseudoaleatoria derivada de `DOWNLOAD_RANDOM_SEED` y `video_id`. La
+semilla hace reproducible el orden y estable frente a reanudaciones. Los videos
+se agrupan por identidad de canal y se intercalan en round-robin: cada vuelta
+toma como máximo un video por canal. Así se evita comenzar siempre por las
+mismas fuentes sin eliminar candidatos ni alterar sus etiquetas de procedencia.
+
 ## 5. Cálculo dinámico del plan dirigido
 
 ### 5.1 Unidad de soporte
@@ -249,8 +256,11 @@ histórico. Para cada video realmente pendiente:
    intento en memoria, primero manual y luego automático [7];
 7. solo se acepta una transcripción con al menos
    `MIN_TRANSCRIPT_CHARACTERS=200`; y
-8. el resultado se guarda atómicamente en la caché individual y después se
-   incorpora una sola vez al canónico mediante `video_id`.
+8. el resultado se guarda atómicamente en la caché individual;
+9. se anexa idempotentemente al JSONL pequeño de su canal bajo
+   `datos/raw/transcripts_by_channel/`; un canal grande abre partes numeradas de
+   hasta 25 MiB; y
+10. después se incorpora una sola vez al canónico mediante `video_id`.
 
 La versión anterior del flujo activo abría con `requests` la URL firmada de
 `youtube.com/api/timedtext` que había localizado `yt-dlp`. Esa separación no
@@ -263,15 +273,24 @@ Cada registro canónico conserva `source_candidate`, `acquisition_status` y
 `transcript_sha256`. El hash se calcula sobre los segmentos serializados de
 forma estable y permite detectar cambios posteriores.
 
-## 11. Pausas, reintentos y cortacircuito HTTP 429
+La escritura por canal ocurre antes que el append al canónico. Si el proceso se
+interrumpe entre ambas operaciones, la reanudación vuelve a leer el checkpoint
+por video, detecta que la partición ya contiene ese `video_id` y completa el
+canónico sin duplicar. La materialización inicial recorre el canónico existente
+sin borrarlo ni modificarlo. Cuando una fila histórica solo tiene nombre de
+canal, se une a un `channel_id` únicamente si ese título identifica de forma
+inequívoca un solo ID; en caso contrario conserva una partición estable basada
+en el título.
+
+## 11. Pausas, reintentos y aislamiento HTTP 429 por canal
 
 La regulación ocurre en dos niveles:
 
-- `yt-dlp` recibe `sleep_interval=1`, `max_sleep_interval=3`,
-  `sleep_interval_requests=1` y `sleep_interval_subtitles=1`, además de tres
+- `yt-dlp` recibe `sleep_interval=5`, `max_sleep_interval=10`,
+  `sleep_interval_requests=5` y `sleep_interval_subtitles=5`, además de tres
   reintentos para extracción y descarga;
 - `ingest_incremental` procesa toda la cola en lotes de
-  `NETWORK_BATCH_SIZE=50` y espera `NETWORK_BATCH_PAUSE_SECONDS=20` antes del
+  `NETWORK_BATCH_SIZE=10` y espera `NETWORK_BATCH_PAUSE_SECONDS=60` antes del
   lote siguiente.
 
 El lote cuenta solo llamadas nuevas: reutilizar caché o filtrar un `video_id`
@@ -282,24 +301,23 @@ Antes de cada pausa, las filas completas acumuladas se anexan al canónico y se
 sincronizan a disco; la lista en memoria se vacía. Esto acota el uso de memoria y
 convierte cada lote en otro punto de reanudación.
 
-Un solo HTTP 429 ya no abre el circuito. El control adaptativo funciona así:
+No existe un cortacircuito global. Con `EXCLUDE_CHANNEL_ON_429=True`, un HTTP 429:
 
-1. cada video afectado se registra como `rate_limited`;
-2. `RATE_LIMIT_HITS_PER_COOLDOWN=10` acumula un primer grupo de diez respuestas
-   429 antes de pausar;
-3. al completar el grupo espera `RATE_LIMIT_COOLDOWN_SECONDS=30`, pone en cero
-   el contador del grupo y continúa;
-4. `RATE_LIMIT_COOLDOWNS_TO_OPEN=3` exige tres grupos completos sin ningún éxito,
-   equivalentes a 30 respuestas 429 desde la última adquisición correcta;
-5. cualquier adquisición correcta reinicia tanto el grupo parcial como el
-   número de grupos acumulados; y
-6. al tercer grupo se abre `rate_limit_circuit_open` y los candidatos restantes
-   se cuentan como `deferred_rate_limit`, no como fallidos.
+1. registra únicamente el video actual como `rate_limited`;
+2. identifica el canal por `channel_id`; si falta, usa título o URL del canal;
+3. incorpora esa identidad al conjunto de canales excluidos de la corrida;
+4. difiere sin red únicamente los candidatos posteriores del mismo canal; y
+5. continúa normalmente con todos los demás canales.
 
-Los elementos diferidos permanecen fuera del canónico y se reintentan en una
-ejecución futura. La barra separa `intentos_429`, `racha_429`, `grupos_429`,
-`enfriamientos_429` y `pausa_429`: este último es el número diferido, no el
-número de respuestas 429.
+La caché se consulta antes de esta exclusión: una transcripción ya descargada de
+un canal afectado todavía se reutiliza. Si el candidato no contiene ninguna
+identidad de canal, solo falla ese video y la cola general continúa. Los videos
+diferidos permanecen fuera del canónico y se reintentan en una ejecución futura.
+La barra separa `intentos_429`, `canales_429` y `pausa_429`; este último es el
+número de videos diferidos de esos canales, no el número de respuestas 429.
+La aleatorización no resuelve un bloqueo general de la IP: si muchos canales
+distintos devuelven 429, debe detenerse la corrida y reanudarse cuando haya
+terminado el enfriamiento impuesto por la plataforma.
 
 ## 12. Taxonomía de fallos
 
@@ -336,10 +354,40 @@ vuelve a recorrer lo que continúa pendiente.
 | `datos/raw/fallos_adquisicion.jsonl` | Fallos deduplicados por video y motivo |
 | `datos/raw/transcripts_cache/*.json` | Checkpoints atómicos por video |
 | `datos/raw/transcripts_raw.jsonl` | Vista canónica de transcripciones |
+| `datos/raw/transcripts_by_channel/*.jsonl` | Checkpoint sincronizable por canal, deduplicado por `video_id` |
+| `datos/raw/transcripts_by_channel/index.json` | Inventario de canales, tamaños y SHA-256 de cada partición |
 
 La cohorte vigente se sobrescribe atómicamente porque representa una selección
 concreta. El archivo general de candidatos y el canónico son incrementales y se
 deduplican por identificador.
+
+### 13.1 Sincronización y continuidad entre máquinas
+
+Las reglas de Git incluyen las particiones por canal, el índice, los candidatos
+generales y dirigidos, los manifiestos de adquisición y todo
+`resultados/colab_bundle/`. Permanecen fuera de Git:
+
+- `datos/raw/transcripts_cache/`, porque solo acelera reintentos locales;
+- `datos/raw/transcripts_raw.jsonl`, porque se recompone sin red desde las
+  particiones por canal;
+- `datos/processed/chunks_v2.jsonl` como artefacto de trabajo, porque el
+  troceado es determinista y barato; su copia comprimida se conserva únicamente
+  dentro del bundle requerido por Colab; y
+- `datos/model_ready/v2/dataset_5_salidas.jsonl` sin comprimir, porque el bundle
+  conserva una copia gzip verificable del snapshot, que no es barato recrear al
+  contener decisiones humanas y pseudoetiquetado con procedencia.
+
+Tras clonar, `python tools/restore_synced_checkpoints.py` verifica los hashes de
+las particiones y del bundle, completa el canónico sin borrar filas y
+descomprime atómicamente chunks y dataset. Los cuadernos `03_01`–`03_08`
+ejecutan además una verificación previa del dataset: restauran solo cuando falta
+y se detienen si la copia local existente tiene otro SHA-256.
+
+El dataset comprimido actual ocupa cerca de 20,3 MiB frente a 104,2 MiB sin
+comprimir. No se particiona mientras permanezca holgadamente por debajo de 50
+MiB. Si crece hasta ese orden, la primera partición será por `split` y, si aún
+fuera necesario, por partes numeradas; el manifiesto deberá seguir describiendo
+el hash de cada archivo y el hash lógico del dataset completo.
 
 ## 14. Reconstrucción desde cero
 
@@ -398,7 +446,7 @@ Las pruebas cubren:
 - cobertura completa con pausas entre lotes;
 - descarga VTT por la ruta integrada de `yt-dlp` y umbral mínimo de integridad;
 - reinicio confirmado, acotado, recuperable e idempotente;
-- cortacircuito ante HTTP 429; y
+- aislamiento por canal ante HTTP 429, sin corte global; y
 - presencia de los controles y llamadas relevantes en el cuaderno activo.
 
 La auditoría estática también verifica que el cuaderno tenga código sintácticamente

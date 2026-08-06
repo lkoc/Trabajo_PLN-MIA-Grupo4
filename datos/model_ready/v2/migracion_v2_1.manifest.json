@@ -1,0 +1,28 @@
+{
+  "schema_version": "2.1.0",
+  "operation": "legacy_to_five_trained_outputs",
+  "source": "datos\\model_ready\\transformer_grueso\\dataset_integrado_todas_pasadas.jsonl",
+  "source_sha256": "3f01b76d285d4cdd2a0922df1d2437a7f01abc4e05e2699c218b1f5faaba2069",
+  "destination": "datos\\model_ready\\v2\\dataset_5_salidas.jsonl",
+  "destination_sha256": "daea22bcf5fb0bdff080db0ecabc5d69ad4c097b57b5d5bab3ea92dc40af1b2e",
+  "counters": {
+    "rows": 117244,
+    "training_eligible": 117244,
+    "needs_review": 0,
+    "split:validation": 17805,
+    "label:SEGURO": 110181,
+    "label:ATAQUE_POR_GENERO_IDENTIDAD": 1961,
+    "label:CONTENIDO_SEXUAL": 2282,
+    "label:ACOSO_AMENAZA": 3028,
+    "split:train": 83492,
+    "label:RACISMO_DISCRIMINACION": 1856,
+    "split:test": 15947
+  },
+  "safe_policy": "only_explicit_legacy_SEGURO",
+  "split_policy": "sha256(video_id, seed=20260805), grouped 70/15/15",
+  "damage_merge": [
+    "ACOSO_PERSONAL",
+    "AMENAZA_DIRECTA",
+    "ACOSO_AMENAZA"
+  ]
+}

@@ -30,6 +30,23 @@ resultados/colab_bundle/*.gz
 !resultados/colab_bundle/README.md
 !resultados/colab_bundle/bundle_manifest.json
 !resultados/colab_bundle/drive_upload.json
+# Checkpoints comprimidos reproducibles: todos permanecen bajo 50 MiB.
+!resultados/colab_bundle/project_core.zip
+!resultados/colab_bundle/chunks_v2.jsonl.gz
+!resultados/colab_bundle/dataset_5_salidas.jsonl.gz
+!datos/model_ready/v2/*.manifest.json
+# Corpus reiniciable: particiones pequeñas sí; canónico y caché local no.
+!datos/raw/transcripts_by_channel/
+!datos/raw/transcripts_by_channel/**
+!datos/raw/video_candidates.jsonl
+!datos/raw/directed_candidates_latest.jsonl
+!datos/raw/videos_candidatos.csv
+!datos/raw/canales_semilla.csv
+!datos/raw/candidatos_por_verificar.csv
+!datos/raw/fallos_adquisicion.jsonl
+!datos/raw/fallos_descubrimiento_ultima_ejecucion.json
+!datos/raw/manifests/
+!datos/raw/manifests/**
 !.gitkeep
 
 # LaTeX
@@ -67,3 +84,4 @@ PLN_clases/**/transformer_weights*
 # Datos de subtítulos generados (pueden ser voluminosos)
 datos/raw/subtitulos/
 datos/raw/transcripts_raw.jsonl
+datos/raw/transcripts_cache/

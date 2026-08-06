@@ -146,19 +146,35 @@ def colab_setup(notebook_id: str) -> str:
     return COLAB_SETUP.replace("__NOTEBOOK_ID__", notebook_id)
 
 
+DATASET_CHECKPOINT = """from moderacion_peru.colab import prepare_local_bundle_input
+
+if globals().get('COLAB_CONTEXT') is None:
+    dataset_checkpoint = prepare_local_bundle_input('dataset_5_salidas', project_root=ROOT)
+else:
+    dataset_path = COLAB_CONTEXT.input('dataset_5_salidas')
+    dataset_checkpoint = {
+        'status': 'verified_in_colab',
+        'input_key': 'dataset_5_salidas',
+        'path': dataset_path,
+        'bytes': dataset_path.stat().st_size,
+    }
+show_result('Dataset descomprimido y verificado', dataset_checkpoint, tone='success')
+"""
+
+
 SCRAPING_PARAMETERS = """# ══════════════════════════════════════════════════════════════════════════════
 # CONTROLES DEL SCRAPING: edite únicamente este bloque
 # ══════════════════════════════════════════════════════════════════════════════
-DISCOVER_NEW = False          # True: consulta canales/búsquedas y guarda candidatos
-FETCH_NEW = False             # True: obtiene subtítulos solo de videos aún no procesados
+DISCOVER_NEW = True           # True: consulta canales/búsquedas y guarda candidatos
+FETCH_NEW = True              # True: obtiene subtítulos solo de videos aún no procesados
 DISCOVERY_MODE = "seed"       # "seed", "directed" o "both"
 
 MAX_NEW_VIDEOS = None         # None: incluye todos los pendientes; use un entero para un piloto
-NETWORK_BATCH_SIZE = 50       # llamadas nuevas por lote antes de una pausa larga
-NETWORK_BATCH_PAUSE_SECONDS = 20.0
-RATE_LIMIT_HITS_PER_COOLDOWN = 10 # espera después de cada grupo de 10 respuestas 429
-RATE_LIMIT_COOLDOWNS_TO_OPEN = 3  # corta al tercer grupo sin ningún éxito intermedio
-RATE_LIMIT_COOLDOWN_SECONDS = 30.0
+NETWORK_BATCH_SIZE = 10       # llamadas nuevas por lote antes de una pausa larga
+NETWORK_BATCH_PAUSE_SECONDS = 60.0
+EXCLUDE_CHANNEL_ON_429 = True # difiere solo el canal afectado; continúa con los demás
+RANDOMIZE_DOWNLOAD_QUEUE = True
+DOWNLOAD_RANDOM_SEED = 20260806 # orden reproducible e intercalado por canal
 MAX_VIDEOS_PER_CHANNEL = 75   # candidatos recientes inspeccionados por canal
 MAX_RESULTS_PER_QUERY = 30    # candidatos inspeccionados por consulta dirigida
 MAX_DIRECTED_CANDIDATES = None # None: conserva toda la cohorte dirigida inédita
@@ -170,9 +186,10 @@ SUBTITLE_LANGUAGES = ("es-PE", "es-419", "es")
 MIN_TRANSCRIPT_CHARACTERS = 200
 USE_TRANSCRIPT_API_FALLBACK = True
 YT_RETRIES = 3
-YT_SLEEP_MIN_SECONDS = 1.0
-YT_SLEEP_MAX_SECONDS = 3.0
+YT_SLEEP_MIN_SECONDS = 5.0
+YT_SLEEP_MAX_SECONDS = 10.0
 STOP_ON_VIDEO_ERROR = False   # False: registra el fallo y continúa con el siguiente
+SYNC_TRANSCRIPTS_BY_CHANNEL = True # checkpoint pequeño y sincronizable por canal
 
 # Reinicio destructivo recuperable: deje vacío normalmente. Para archivar los
 # artefactos activos y reconstruir el dataset de videos desde cero, descomente:
@@ -183,8 +200,6 @@ if DISCOVERY_MODE not in {"seed", "directed", "both"}:
     raise ValueError("DISCOVERY_MODE debe ser seed, directed o both")
 if ((MAX_NEW_VIDEOS is not None and MAX_NEW_VIDEOS < 0)
         or NETWORK_BATCH_SIZE < 1 or NETWORK_BATCH_PAUSE_SECONDS < 0
-        or RATE_LIMIT_HITS_PER_COOLDOWN < 1 or RATE_LIMIT_COOLDOWNS_TO_OPEN < 1
-        or RATE_LIMIT_COOLDOWN_SECONDS < 0
         or MAX_VIDEOS_PER_CHANNEL < 1 or MAX_RESULTS_PER_QUERY < 1
         or (MAX_DIRECTED_CANDIDATES is not None and MAX_DIRECTED_CANDIDATES < 1)
         or MAX_DIRECTED_SEED_CHANNELS < 1
@@ -192,6 +207,8 @@ if ((MAX_NEW_VIDEOS is not None and MAX_NEW_VIDEOS < 0)
     raise ValueError("Los límites de videos deben ser válidos")
 if MIN_TRANSCRIPT_CHARACTERS < 1:
     raise ValueError("MIN_TRANSCRIPT_CHARACTERS debe ser positivo")
+if RANDOMIZE_DOWNLOAD_QUEUE and not str(DOWNLOAD_RANDOM_SEED).strip():
+    raise ValueError("DOWNLOAD_RANDOM_SEED no puede estar vacío")
 if YT_SLEEP_MIN_SECONDS < 0 or YT_SLEEP_MAX_SECONDS < YT_SLEEP_MIN_SECONDS:
     raise ValueError("El intervalo de espera de yt-dlp no es válido")
 
@@ -202,9 +219,9 @@ show_summary('Configuración del scraping', {
     "max_new_videos": MAX_NEW_VIDEOS,
     "network_batch_size": NETWORK_BATCH_SIZE,
     "network_batch_pause_seconds": NETWORK_BATCH_PAUSE_SECONDS,
-    "rate_limit_hits_per_cooldown": RATE_LIMIT_HITS_PER_COOLDOWN,
-    "rate_limit_cooldowns_to_open": RATE_LIMIT_COOLDOWNS_TO_OPEN,
-    "rate_limit_cooldown_seconds": RATE_LIMIT_COOLDOWN_SECONDS,
+    "exclude_channel_on_429": EXCLUDE_CHANNEL_ON_429,
+    "randomize_download_queue": RANDOMIZE_DOWNLOAD_QUEUE,
+    "download_random_seed": DOWNLOAD_RANDOM_SEED,
     "max_videos_per_channel": MAX_VIDEOS_PER_CHANNEL,
     "max_results_per_query": MAX_RESULTS_PER_QUERY,
     "max_directed_candidates": MAX_DIRECTED_CANDIDATES,
@@ -213,6 +230,7 @@ show_summary('Configuración del scraping', {
     "subtitle_languages": SUBTITLE_LANGUAGES,
     "min_transcript_characters": MIN_TRANSCRIPT_CHARACTERS,
     "transcript_api_fallback": USE_TRANSCRIPT_API_FALLBACK,
+    "sync_transcripts_by_channel": SYNC_TRANSCRIPTS_BY_CHANNEL,
     "reset_video_dataset_armed": bool(RESET_VIDEO_DATASET),
 }, tone='neutral')
 
@@ -308,6 +326,7 @@ from moderacion_peru.acquisition import (
     build_directed_sampling_plan,
     discover_existing_transcript_sources,
     load_candidates,
+    materialize_transcripts_by_channel,
     merge_candidates,
     select_directed_search_queries,
     select_directed_seed_channels,
@@ -317,12 +336,23 @@ from moderacion_peru.taxonomy import load_taxonomy
 
 CANONICAL = ROOT/'datos/raw/transcripts_raw.jsonl'
 CACHE = ROOT/'datos/raw/transcripts_cache'
+TRANSCRIPTS_BY_CHANNEL = ROOT/'datos/raw/transcripts_by_channel'
 DIRECTED_DATASET = ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'
 rebuild_from_zero = (ROOT/VIDEO_DATASET_RESET_MARKER).exists()
 sources = [] if rebuild_from_zero else discover_existing_transcript_sources(ROOT, canonical_path=CANONICAL)
 reuse_stats = bootstrap_canonical_from_existing(sources, CANONICAL)
 reuse_stats['historical_bootstrap_disabled'] = rebuild_from_zero
 show_result('Reutilización de snapshots', reuse_stats, tone='warning' if rebuild_from_zero else 'success')
+if SYNC_TRANSCRIPTS_BY_CHANNEL:
+    channel_partition_stats = materialize_transcripts_by_channel(CANONICAL, TRANSCRIPTS_BY_CHANNEL)
+    show_summary('Checkpoint de transcripciones por canal', {
+        'videos': channel_partition_stats['total_videos'],
+        'canales': channel_partition_stats['total_channels'],
+        'partes_jsonl': channel_partition_stats['total_channel_files'],
+        'máximo_bytes_por_parte': channel_partition_stats['max_channel_file_bytes'],
+        'carpeta': TRANSCRIPTS_BY_CHANNEL,
+        'canonico_preservado': CANONICAL.exists(),
+    }, tone='success')
 
 taxonomy = load_taxonomy(ROOT/'config/taxonomia_v2.json')
 directed_plan = None
@@ -493,7 +523,7 @@ SCRAPING_CANDIDATES = """import importlib
 import moderacion_peru.acquisition as acquisition_module
 importlib.reload(acquisition_module)
 
-from moderacion_peru.acquisition import processed_video_ids
+from moderacion_peru.acquisition import order_candidates_for_acquisition, processed_video_ids
 
 if DISCOVERY_MODE == 'directed':
     candidates = load_candidates(DIRECTED_SELECTION_PATH)
@@ -519,6 +549,11 @@ pending_candidates = [
     candidate for candidate in candidates
     if str(candidate['video_id']).strip() not in processed_ids
 ]
+if RANDOMIZE_DOWNLOAD_QUEUE:
+    pending_candidates = order_candidates_for_acquisition(
+        pending_candidates,
+        random_seed=DOWNLOAD_RANDOM_SEED,
+    )
 cached_ids = {path.stem for path in CACHE.glob('*.json')}
 pending_cached = sum(
     str(candidate['video_id']).strip() in cached_ids for candidate in pending_candidates
@@ -530,6 +565,8 @@ show_summary('Candidatos filtrados antes de la adquisición', {
     'pendientes_totales': len(pending_candidates),
     'pendientes_reutilizables_desde_caché': pending_cached,
     'pendientes_que_requieren_red': len(pending_candidates) - pending_cached,
+    'cola_pseudoaleatoria': RANDOMIZE_DOWNLOAD_QUEUE,
+    'semilla_cola': DOWNLOAD_RANDOM_SEED if RANDOMIZE_DOWNLOAD_QUEUE else None,
 }, tone='neutral')
 """
 
@@ -560,8 +597,6 @@ if pending_candidates:
         video_progress.update(event.get('advance', 1))
         if event['status'] == 'batch_pause':
             description = 'Pausa entre lotes'
-        elif event['status'] == 'rate_limit_cooldown':
-            description = 'Enfriamiento 429'
         else:
             description = 'Procesando pendientes'
         video_progress.set_description(description)
@@ -573,9 +608,7 @@ if pending_candidates:
             diferidos=counters['deferred_by_limit'],
             pausa_429=counters['deferred_rate_limit'],
             intentos_429=counters.get('failure_rate_limited', 0),
-            racha_429=f"{counters['rate_limit_hits']}/{RATE_LIMIT_HITS_PER_COOLDOWN}",
-            grupos_429=f"{counters['rate_limit_sequences']}/{RATE_LIMIT_COOLDOWNS_TO_OPEN}",
-            enfriamientos_429=counters['rate_limit_cooldowns'],
+            canales_429=counters['rate_limited_channels'],
             lotes=counters['batch_pauses'],
         )
 
@@ -589,11 +622,10 @@ if pending_candidates:
             max_new_videos=MAX_NEW_VIDEOS,
             network_batch_size=NETWORK_BATCH_SIZE,
             batch_pause_seconds=NETWORK_BATCH_PAUSE_SECONDS,
-            rate_limit_hits_per_cooldown=RATE_LIMIT_HITS_PER_COOLDOWN,
-            rate_limit_cooldowns_to_open=RATE_LIMIT_COOLDOWNS_TO_OPEN,
-            rate_limit_cooldown_seconds=RATE_LIMIT_COOLDOWN_SECONDS,
+            exclude_rate_limited_channels=EXCLUDE_CHANNEL_ON_429,
             stop_on_error=STOP_ON_VIDEO_ERROR,
             progress_callback=report_acquisition,
+            channel_transcript_dir=TRANSCRIPTS_BY_CHANNEL if SYNC_TRANSCRIPTS_BY_CHANNEL else None,
         )
     finally:
         video_progress.close()
@@ -744,7 +776,7 @@ def main() -> None:
         "`train+validation`, excluye `test`, pondera los déficits, estima rendimiento histórico por "
         "canal, expande canales desde consultas temáticas y materializa una cohorte aislada mediante "
         "*round-robin*. Si no hay etiquetas previas utilizables, asigna 25% a cada daño. La fórmula, "
-        "los umbrales, las cuotas, el fallback y el cortacircuito HTTP 429 son decisiones operativas "
+        "los umbrales, las cuotas, el fallback y el aislamiento por canal ante HTTP 429 son decisiones operativas "
         "propias; `target_category` registra el motivo de selección y nunca constituye una etiqueta. "
         "Este muestreo enriquecido no permite estimar prevalencias en YouTube ni en el Perú.",
         [
@@ -997,7 +1029,10 @@ def main() -> None:
             f"03 · {subtitle}",
             "Entrena o audita el contrato v2.1 sin consultar test para seleccionar modelos, épocas o umbrales.",
             academic_context,
-            [("Configuración y ejecución", source)],
+            [
+                ("Restauración reproducible del dataset", DATASET_CHECKPOINT),
+                ("Configuración y ejecución", source),
+            ],
             colab_notebook_id=colab_id,
         )
     create(

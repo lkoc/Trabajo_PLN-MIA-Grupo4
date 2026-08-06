@@ -30,7 +30,7 @@ def atomic_gzip(source: Path, destination: Path) -> dict[str, object]:
     fd, temporary_name = tempfile.mkstemp(prefix=f".{destination.name}.", dir=destination.parent)
     try:
         with source.open("rb") as raw, os.fdopen(fd, "wb") as target:
-            with gzip.GzipFile(filename="", mode="wb", fileobj=target, mtime=0, compresslevel=6) as compressed:
+            with gzip.GzipFile(filename="", mode="wb", fileobj=target, mtime=0, compresslevel=9) as compressed:
                 while block := raw.read(1024 * 1024):
                     compressed.write(block)
             target.flush()

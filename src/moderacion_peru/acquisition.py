@@ -9,12 +9,13 @@ import re
 import shutil
 import tempfile
 import time
+import unicodedata
 from collections import defaultdict, deque
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
-from .io import append_jsonl_once, read_jsonl, sha256_text, write_json_atomic
+from .io import append_jsonl_once, read_jsonl, sha256_file, sha256_text, write_json_atomic
 
 
 TranscriptFetcher = Callable[[dict[str, Any]], dict[str, Any]]
@@ -566,6 +567,14 @@ def reset_active_video_dataset(
         Path("resultados/auditorias"),
         Path("resultados/colab_bundle"),
     )
+    channel_partition_dir = root / "datos" / "raw" / "transcripts_by_channel"
+    channel_partition_targets = (
+        [path.relative_to(root) for path in sorted(channel_partition_dir.glob("*.jsonl"))]
+        + [Path("datos/raw/transcripts_by_channel/index.json")]
+        if channel_partition_dir.is_dir()
+        else []
+    )
+    relative_targets = (*relative_targets, *channel_partition_targets)
     resolved_targets = []
     for relative in relative_targets:
         target = (root / relative).resolve()
@@ -651,6 +660,378 @@ def bootstrap_canonical_from_existing(
         "added": added,
         "already_canonical": skipped,
         "canonical_path": destination.resolve().as_posix(),
+    }
+
+
+CHANNEL_TRANSCRIPT_INDEX = "index.json"
+DEFAULT_MAX_CHANNEL_SHARD_BYTES = 25 * 1024 * 1024
+
+
+def _transcript_channel_fields(record: dict[str, Any]) -> tuple[str, str]:
+    source = record.get("source_candidate") or {}
+    channel_id = str(record.get("channel_id") or source.get("channel_id") or "").strip()
+    channel_title = str(
+        record.get("channel_title")
+        or record.get("channel")
+        or source.get("channel_title")
+        or source.get("channel")
+        or ""
+    ).strip()
+    return channel_id, channel_title
+
+
+def _safe_channel_slug(value: str) -> str:
+    ascii_value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^A-Za-z0-9._-]+", "-", ascii_value).strip("-._").lower()
+    return slug[:64] or "canal"
+
+
+def _channel_shard_descriptor(
+    record: dict[str, Any],
+    *,
+    title_aliases: dict[str, str] | None = None,
+) -> tuple[str, str]:
+    channel_id, channel_title = _transcript_channel_fields(record)
+    alias = (title_aliases or {}).get(channel_title.casefold()) if channel_title else None
+    if channel_id:
+        key = f"id:{channel_id}"
+        basename = channel_id
+    elif alias:
+        key = f"id:{alias}"
+        basename = alias
+    elif channel_title:
+        key = f"title:{channel_title.casefold()}"
+        basename = channel_title
+    else:
+        video_id = str(record.get("video_id") or "sin-identidad").strip()
+        key = f"video:{video_id}"
+        basename = video_id
+    file_stem = f"{_safe_channel_slug(basename)}--{sha256_text(key)[:12]}"
+    return key, file_stem
+
+
+def _channel_part_filename(file_stem: str, part: int) -> str:
+    if part < 1:
+        raise ValueError("La parte de canal debe ser positiva")
+    return f"{file_stem}--part-{part:04d}.jsonl"
+
+
+def _channel_index_payload(
+    entries: Iterable[dict[str, Any]],
+    *,
+    max_channel_file_bytes: int = DEFAULT_MAX_CHANNEL_SHARD_BYTES,
+) -> dict[str, Any]:
+    ordered = sorted(entries, key=lambda entry: str(entry["file"]))
+    return {
+        "schema_version": "1.0.0",
+        "partition_key": "youtube_channel",
+        "format": "jsonl",
+        "id_field": "video_id",
+        "max_channel_file_bytes": max_channel_file_bytes,
+        "total_channel_files": len(ordered),
+        "total_channels": len({str(entry["channel_key"]) for entry in ordered}),
+        "total_videos": sum(int(entry["videos"]) for entry in ordered),
+        "total_bytes": sum(int(entry["bytes"]) for entry in ordered),
+        "files": ordered,
+    }
+
+
+def _summarize_channel_shard(
+    path: Path,
+    *,
+    channel_key: str,
+    part: int,
+) -> dict[str, Any]:
+    channel_ids: set[str] = set()
+    channel_titles: set[str] = set()
+    videos = 0
+    for record in read_jsonl(path):
+        if not str(record.get("video_id") or "").strip():
+            raise ValueError(f"Falta video_id en {path}")
+        channel_id, channel_title = _transcript_channel_fields(record)
+        if channel_id:
+            channel_ids.add(channel_id)
+        if channel_title:
+            channel_titles.add(channel_title)
+        videos += 1
+    return {
+        "file": path.name,
+        "channel_key": channel_key,
+        "part": part,
+        "channel_ids": sorted(channel_ids),
+        "channel_titles": sorted(channel_titles, key=str.casefold),
+        "videos": videos,
+        "bytes": path.stat().st_size,
+        "sha256": sha256_file(path),
+    }
+
+
+def materialize_transcripts_by_channel(
+    canonical_path: str | Path,
+    output_dir: str | Path,
+    *,
+    max_channel_file_bytes: int = DEFAULT_MAX_CHANNEL_SHARD_BYTES,
+) -> dict[str, Any]:
+    """Particiona el canónico por canal sin modificarlo ni eliminarlo.
+
+    La materialización completa es atómica por archivo. Los títulos históricos
+    sin ``channel_id`` se asocian al ID cuando el título identifica un único
+    canal dentro del canónico. El índice es determinista y sirve para verificar
+    y restaurar el corpus en otra máquina.
+    """
+
+    if max_channel_file_bytes < 1024:
+        raise ValueError("max_channel_file_bytes debe ser al menos 1024")
+    canonical = Path(canonical_path)
+    target = Path(output_dir)
+    if not canonical.is_file():
+        target.mkdir(parents=True, exist_ok=True)
+        payload = _channel_index_payload([], max_channel_file_bytes=max_channel_file_bytes)
+        write_json_atomic(target / CHANNEL_TRANSCRIPT_INDEX, payload)
+        return {**payload, "canonical_exists": False, "output_dir": target.as_posix()}
+
+    title_ids: dict[str, set[str]] = defaultdict(set)
+    for record in read_jsonl(canonical):
+        channel_id, channel_title = _transcript_channel_fields(record)
+        if channel_id and channel_title:
+            title_ids[channel_title.casefold()].add(channel_id)
+    title_aliases = {
+        title: next(iter(channel_ids))
+        for title, channel_ids in title_ids.items()
+        if len(channel_ids) == 1
+    }
+
+    target.mkdir(parents=True, exist_ok=True)
+    staging = Path(tempfile.mkdtemp(prefix=f".{target.name}.", dir=target.parent))
+    channel_keys: dict[str, str] = {}
+    channel_parts: dict[str, int] = defaultdict(lambda: 1)
+    channel_part_bytes: dict[tuple[str, int], int] = defaultdict(int)
+    file_parts: dict[str, int] = {}
+    try:
+        for record in read_jsonl(canonical):
+            video_id = str(record.get("video_id") or "").strip()
+            if not video_id:
+                raise ValueError(f"Falta video_id en {canonical}")
+            channel_key, file_stem = _channel_shard_descriptor(
+                record,
+                title_aliases=title_aliases,
+            )
+            encoded = json.dumps(record, ensure_ascii=False, default=str) + "\n"
+            encoded_bytes = len(encoded.encode("utf-8"))
+            part = channel_parts[channel_key]
+            if (
+                channel_part_bytes[(channel_key, part)]
+                and channel_part_bytes[(channel_key, part)] + encoded_bytes > max_channel_file_bytes
+            ):
+                part += 1
+                channel_parts[channel_key] = part
+            filename = _channel_part_filename(file_stem, part)
+            previous_key = channel_keys.setdefault(filename, channel_key)
+            if previous_key != channel_key:
+                raise ValueError(f"Colisión de particiones para {filename}")
+            file_parts[filename] = part
+            with (staging / filename).open("a", encoding="utf-8", newline="\n") as handle:
+                handle.write(encoded)
+            channel_part_bytes[(channel_key, part)] += encoded_bytes
+
+        entries = [
+            _summarize_channel_shard(
+                path,
+                channel_key=channel_keys[path.name],
+                part=file_parts[path.name],
+            )
+            for path in sorted(staging.glob("*.jsonl"))
+        ]
+        payload = _channel_index_payload(
+            entries,
+            max_channel_file_bytes=max_channel_file_bytes,
+        )
+        new_filenames = {entry["file"] for entry in entries}
+        for path in sorted(staging.glob("*.jsonl")):
+            os.replace(path, target / path.name)
+        write_json_atomic(target / CHANNEL_TRANSCRIPT_INDEX, payload)
+        for stale in target.glob("*.jsonl"):
+            if stale.name not in new_filenames:
+                stale.unlink()
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
+    return {
+        **payload,
+        "canonical_exists": True,
+        "canonical_bytes": canonical.stat().st_size,
+        "canonical_sha256": sha256_file(canonical),
+        "output_dir": target.as_posix(),
+    }
+
+
+def append_transcripts_by_channel(
+    output_dir: str | Path,
+    rows: Iterable[dict[str, Any]],
+    *,
+    max_channel_file_bytes: int | None = None,
+) -> dict[str, int]:
+    """Añade checkpoints idempotentes al archivo pequeño de cada canal."""
+
+    materialized = list(rows)
+    target = Path(output_dir)
+    target.mkdir(parents=True, exist_ok=True)
+    index_path = target / CHANNEL_TRANSCRIPT_INDEX
+    if index_path.is_file():
+        index = json.loads(index_path.read_text(encoding="utf-8-sig"))
+    else:
+        index = _channel_index_payload([])
+    shard_limit = int(
+        max_channel_file_bytes
+        if max_channel_file_bytes is not None
+        else index.get("max_channel_file_bytes", DEFAULT_MAX_CHANNEL_SHARD_BYTES)
+    )
+    if shard_limit < 1024:
+        raise ValueError("max_channel_file_bytes debe ser al menos 1024")
+    entries_by_file = {str(entry["file"]): dict(entry) for entry in index.get("files", [])}
+
+    id_keys: dict[str, set[str]] = defaultdict(set)
+    title_keys: dict[str, set[str]] = defaultdict(set)
+    entries_by_key: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for filename, entry in entries_by_file.items():
+        channel_key = str(entry["channel_key"])
+        entries_by_key[channel_key].append(entry)
+        for channel_id in entry.get("channel_ids", []):
+            id_keys[str(channel_id)].add(channel_key)
+        for title in entry.get("channel_titles", []):
+            title_keys[str(title).casefold()].add(channel_key)
+
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    file_stems: dict[str, str] = {}
+    batch_title_ids: dict[str, set[str]] = defaultdict(set)
+    for record in materialized:
+        channel_id, channel_title = _transcript_channel_fields(record)
+        if channel_id and channel_title:
+            batch_title_ids[channel_title.casefold()].add(channel_id)
+    batch_title_aliases = {
+        title: next(iter(channel_ids))
+        for title, channel_ids in batch_title_ids.items()
+        if len(channel_ids) == 1
+    }
+    for record in materialized:
+        channel_id, channel_title = _transcript_channel_fields(record)
+        known_keys = id_keys.get(channel_id, set()) if channel_id else set()
+        if len(known_keys) != 1 and channel_title:
+            known_keys = title_keys.get(channel_title.casefold(), set())
+        if len(known_keys) == 1:
+            channel_key = next(iter(known_keys))
+            first_filename = str(entries_by_key[channel_key][0]["file"])
+            file_stem = re.sub(r"--part-\d{4}\.jsonl$", "", first_filename)
+        else:
+            channel_key, file_stem = _channel_shard_descriptor(
+                record,
+                title_aliases=batch_title_aliases,
+            )
+        grouped[channel_key].append(record)
+        file_stems[channel_key] = file_stem
+
+    added = skipped = 0
+    touched_files: set[str] = set()
+    for channel_key, group in sorted(grouped.items()):
+        channel_entries = sorted(
+            entries_by_key.get(channel_key, []),
+            key=lambda entry: (int(entry.get("part", 1)), str(entry["file"])),
+        )
+        existing_ids = {
+            str(record["video_id"])
+            for entry in channel_entries
+            for record in read_jsonl(target / str(entry["file"]))
+        }
+        part = int(channel_entries[-1].get("part", 1)) if channel_entries else 1
+        filename = (
+            str(channel_entries[-1]["file"])
+            if channel_entries
+            else _channel_part_filename(file_stems[channel_key], part)
+        )
+        current_bytes = (target / filename).stat().st_size if (target / filename).is_file() else 0
+        pending_by_file: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for record in group:
+            video_id = str(record.get("video_id") or "").strip()
+            if not video_id:
+                raise ValueError("Falta video_id en una transcripción")
+            if video_id in existing_ids:
+                skipped += 1
+                continue
+            encoded_bytes = len(
+                (json.dumps(record, ensure_ascii=False, default=str) + "\n").encode("utf-8")
+            )
+            if current_bytes and current_bytes + encoded_bytes > shard_limit:
+                part += 1
+                filename = _channel_part_filename(file_stems[channel_key], part)
+                current_bytes = 0
+            pending_by_file[filename].append(record)
+            current_bytes += encoded_bytes
+            existing_ids.add(video_id)
+            added += 1
+        for pending_filename, pending in pending_by_file.items():
+            _append_jsonl_checkpoint(target / pending_filename, pending)
+            touched_files.add(pending_filename)
+            pending_part = int(re.search(r"--part-(\d{4})\.jsonl$", pending_filename).group(1))
+            entries_by_file[pending_filename] = _summarize_channel_shard(
+                target / pending_filename,
+                channel_key=channel_key,
+                part=pending_part,
+            )
+    payload = _channel_index_payload(
+        entries_by_file.values(),
+        max_channel_file_bytes=shard_limit,
+    )
+    write_json_atomic(index_path, payload)
+    return {
+        "added": added,
+        "already_partitioned": skipped,
+        "channel_files_touched": len(touched_files),
+        "total_channel_files": payload["total_channel_files"],
+        "total_videos": payload["total_videos"],
+    }
+
+
+def restore_canonical_from_channel_transcripts(
+    channel_dir: str | Path,
+    canonical_path: str | Path,
+    *,
+    verify_hashes: bool = True,
+) -> dict[str, Any]:
+    """Restaura o completa el canónico desde las particiones sincronizadas."""
+
+    source = Path(channel_dir)
+    index_path = source / CHANNEL_TRANSCRIPT_INDEX
+    if not index_path.is_file():
+        raise FileNotFoundError(f"Falta el índice de transcripciones: {index_path}")
+    index = json.loads(index_path.read_text(encoding="utf-8-sig"))
+    canonical = Path(canonical_path)
+    existing = processed_video_ids(canonical)
+    canonical.parent.mkdir(parents=True, exist_ok=True)
+    added = skipped = 0
+    with canonical.open("a", encoding="utf-8", newline="\n") as handle:
+        for entry in index.get("files", []):
+            shard = source / str(entry["file"])
+            if not shard.is_file():
+                raise FileNotFoundError(f"Falta la partición declarada: {shard}")
+            if verify_hashes and sha256_file(shard) != entry.get("sha256"):
+                raise ValueError(f"SHA-256 inválido para {shard}")
+            for record in read_jsonl(shard):
+                video_id = str(record.get("video_id") or "").strip()
+                if not video_id:
+                    raise ValueError(f"Falta video_id en {shard}")
+                if video_id in existing:
+                    skipped += 1
+                    continue
+                handle.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
+                existing.add(video_id)
+                added += 1
+        handle.flush()
+        os.fsync(handle.fileno())
+    return {
+        "added": added,
+        "already_canonical": skipped,
+        "canonical_videos": len(existing),
+        "canonical_path": canonical.as_posix(),
+        "verified": verify_hashes,
     }
 
 
@@ -1152,6 +1533,66 @@ def _failure_record(candidate: dict[str, Any], error: BaseException) -> dict[str
     }
 
 
+def _candidate_channel_key(candidate: dict[str, Any]) -> str | None:
+    channel_id = str(candidate.get("channel_id") or "").strip()
+    if channel_id:
+        return f"id:{channel_id}"
+    channel_title = str(
+        candidate.get("channel_title") or candidate.get("channel") or ""
+    ).strip()
+    if channel_title:
+        return f"title:{channel_title.casefold()}"
+    channel_url = str(candidate.get("channel_url") or "").strip()
+    return f"url:{channel_url.casefold()}" if channel_url else None
+
+
+def order_candidates_for_acquisition(
+    candidates: Iterable[dict[str, Any]],
+    *,
+    random_seed: int | str = 20260806,
+) -> list[dict[str, Any]]:
+    """Orden pseudoaleatorio estable, intercalando un video por canal."""
+
+    seed = str(random_seed).strip()
+    if not seed:
+        raise ValueError("random_seed no puede estar vacío")
+    unique: dict[str, dict[str, Any]] = {}
+    for raw in candidates:
+        video_id = str(raw.get("video_id") or "").strip()
+        if video_id:
+            unique.setdefault(video_id, dict(raw))
+
+    buckets: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for video_id, candidate in unique.items():
+        channel_key = _candidate_channel_key(candidate) or f"video:{video_id}"
+        buckets[channel_key].append(candidate)
+    for group in buckets.values():
+        group.sort(
+            key=lambda row: sha256_text(f"{seed}\0video\0{row['video_id']}")
+        )
+
+    channels = deque(
+        sorted(
+            buckets,
+            key=lambda channel_key: sha256_text(f"{seed}\0channel\0{channel_key}"),
+        )
+    )
+    ordered: list[dict[str, Any]] = []
+    while channels:
+        channel_key = channels.popleft()
+        candidate = buckets[channel_key].pop(0)
+        ordered.append(
+            {
+                **candidate,
+                "download_queue_rank": len(ordered) + 1,
+                "download_queue_seed": seed,
+            }
+        )
+        if buckets[channel_key]:
+            channels.append(channel_key)
+    return ordered
+
+
 def _append_jsonl_checkpoint(path: str | Path, rows: Iterable[dict[str, Any]]) -> int:
     """Anexa filas ya deduplicadas y fuerza su persistencia antes de continuar."""
 
@@ -1179,11 +1620,9 @@ def ingest_incremental(
     network_batch_size: int | None = None,
     batch_pause_seconds: float = 0.0,
     stop_on_error: bool = False,
-    halt_on_rate_limit: bool = True,
-    rate_limit_hits_per_cooldown: int = 10,
-    rate_limit_cooldowns_to_open: int = 3,
-    rate_limit_cooldown_seconds: float = 30.0,
+    exclude_rate_limited_channels: bool = True,
     progress_callback: ProgressCallback | None = None,
+    channel_transcript_dir: str | Path | None = None,
 ) -> dict[str, int]:
     """Reutiliza corpus/caché y aísla los fallos de cada video nuevo.
 
@@ -1199,12 +1638,6 @@ def ingest_incremental(
         raise ValueError("network_batch_size debe ser positivo o None")
     if batch_pause_seconds < 0:
         raise ValueError("batch_pause_seconds no puede ser negativo")
-    if rate_limit_hits_per_cooldown < 1:
-        raise ValueError("rate_limit_hits_per_cooldown debe ser positivo")
-    if rate_limit_cooldowns_to_open < 1:
-        raise ValueError("rate_limit_cooldowns_to_open debe ser positivo")
-    if rate_limit_cooldown_seconds < 0:
-        raise ValueError("rate_limit_cooldown_seconds no puede ser negativo")
     canonical = Path(canonical_path)
     cache = Path(cache_dir)
     cache.mkdir(parents=True, exist_ok=True)
@@ -1225,26 +1658,27 @@ def ingest_incremental(
         "failed": 0,
         "deferred_by_limit": 0,
         "deferred_rate_limit": 0,
-        "rate_limit_circuit_open": 0,
-        "rate_limit_hits": 0,
-        "rate_limit_hits_peak": 0,
-        "rate_limit_sequences": 0,
-        "rate_limit_sequences_peak": 0,
-        "rate_limit_cooldowns": 0,
+        "rate_limited_channels": 0,
         "batch_pauses": 0,
         "unavailable": 0,
         "added": 0,
         "skipped_duplicate": 0,
         "failure_records_added": 0,
         "failure_records_existing": 0,
+        "channel_shard_added": 0,
+        "channel_shard_existing": 0,
+        "channel_shards_touched": 0,
     }
-    rate_limit_open = False
-    rate_limit_hits = 0
-    rate_limit_sequences = 0
+    rate_limited_channels: set[str] = set()
 
     def flush_output() -> None:
         if not output:
             return
+        if channel_transcript_dir is not None:
+            shard_stats = append_transcripts_by_channel(channel_transcript_dir, output)
+            counters["channel_shard_added"] += shard_stats["added"]
+            counters["channel_shard_existing"] += shard_stats["already_partitioned"]
+            counters["channel_shards_touched"] += shard_stats["channel_files_touched"]
         counters["added"] += _append_jsonl_checkpoint(canonical, output)
         output.clear()
 
@@ -1273,9 +1707,10 @@ def ingest_incremental(
             counters["reused_cache"] += 1
             completion_status = "reused_cache"
         elif fetcher is not None:
-            if rate_limit_open:
+            channel_key = _candidate_channel_key(candidate)
+            if channel_key is not None and channel_key in rate_limited_channels:
                 counters["deferred_rate_limit"] += 1
-                notify(video_id, "deferred_rate_limit")
+                notify(video_id, "deferred_rate_limited_channel")
                 continue
             if max_new_videos is not None and fetch_attempts >= max_new_videos:
                 counters["deferred_by_limit"] += 1
@@ -1307,38 +1742,17 @@ def ingest_incremental(
                         counters["failure_records_added"] += 1
                 failure_counter = f"failure_{failure['failure_kind']}"
                 counters[failure_counter] = counters.get(failure_counter, 0) + 1
-                if halt_on_rate_limit and failure["failure_kind"] == "rate_limited":
-                    rate_limit_hits += 1
-                    counters["rate_limit_hits"] = rate_limit_hits
-                    counters["rate_limit_hits_peak"] = max(
-                        counters["rate_limit_hits_peak"], rate_limit_hits
-                    )
-                    if rate_limit_hits >= rate_limit_hits_per_cooldown:
-                        rate_limit_hits = 0
-                        counters["rate_limit_hits"] = 0
-                        rate_limit_sequences += 1
-                        counters["rate_limit_sequences"] = rate_limit_sequences
-                        counters["rate_limit_sequences_peak"] = max(
-                            counters["rate_limit_sequences_peak"], rate_limit_sequences
-                        )
-                        if rate_limit_sequences >= rate_limit_cooldowns_to_open:
-                            rate_limit_open = True
-                            counters["rate_limit_circuit_open"] = 1
-                        elif not stop_on_error:
-                            flush_output()
-                            counters["rate_limit_cooldowns"] += 1
-                            notify(video_id, "rate_limit_cooldown")
-                            if rate_limit_cooldown_seconds:
-                                time.sleep(rate_limit_cooldown_seconds)
-                            continue
+                if (
+                    exclude_rate_limited_channels
+                    and failure["failure_kind"] == "rate_limited"
+                    and channel_key is not None
+                ):
+                    rate_limited_channels.add(channel_key)
+                    counters["rate_limited_channels"] = len(rate_limited_channels)
                 if stop_on_error:
                     raise
                 notify(video_id, "failed")
                 continue
-            rate_limit_hits = 0
-            rate_limit_sequences = 0
-            counters["rate_limit_hits"] = 0
-            counters["rate_limit_sequences"] = 0
             record["video_id"] = video_id
             record["acquisition_status"] = "fetched_new"
             write_json_atomic(cache / f"{video_id}.json", record)

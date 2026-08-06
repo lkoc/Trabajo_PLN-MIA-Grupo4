@@ -10,6 +10,7 @@ import pytest
 
 from moderacion_peru.datasets import assert_no_video_leakage, stable_video_split
 from moderacion_peru.acquisition import (
+    append_transcripts_by_channel,
     bootstrap_canonical_from_existing,
     build_directed_sampling_plan,
     classify_acquisition_error,
@@ -18,8 +19,11 @@ from moderacion_peru.acquisition import (
     fetch_youtube_subtitles,
     ingest_incremental,
     load_candidates,
+    materialize_transcripts_by_channel,
     normalize_category_metadata,
+    order_candidates_for_acquisition,
     reset_active_video_dataset,
+    restore_canonical_from_channel_transcripts,
     select_directed_candidates,
     select_directed_search_queries,
     VIDEO_DATASET_RESET_CONFIRMATION,
@@ -150,9 +154,16 @@ def test_video_dataset_reset_is_confirmed_scoped_and_recoverable(tmp_path):
     root = tmp_path / "project"
     (root / "src/moderacion_peru").mkdir(parents=True)
     (root / "datos/raw/transcripts_cache").mkdir(parents=True)
+    (root / "datos/raw/transcripts_by_channel").mkdir(parents=True)
     (root / "datos/ampliacion/historico").mkdir(parents=True)
     (root / "datos/raw/transcripts_raw.jsonl").write_text("{}\n", encoding="utf-8")
     (root / "datos/raw/transcripts_cache/v1.json").write_text("{}", encoding="utf-8")
+    channel_readme = root / "datos/raw/transcripts_by_channel/README.md"
+    channel_readme.write_text("documentación\n", encoding="utf-8")
+    (root / "datos/raw/transcripts_by_channel/canal--part-0001.jsonl").write_text(
+        '{}\n', encoding="utf-8"
+    )
+    (root / "datos/raw/transcripts_by_channel/index.json").write_text("{}", encoding="utf-8")
     historical = root / "datos/ampliacion/historico/transcripts_raw.jsonl"
     historical.write_text("{}\n", encoding="utf-8")
 
@@ -162,6 +173,7 @@ def test_video_dataset_reset_is_confirmed_scoped_and_recoverable(tmp_path):
 
     assert not (root / "datos/raw/transcripts_raw.jsonl").exists()
     assert historical.exists()
+    assert channel_readme.exists()
     assert result["archive_path"]
     assert (root / result["archive_path"] / "datos/raw/transcripts_raw.jsonl").exists()
     assert (root / "datos/raw/manifests/rebuild_from_zero.json").exists()
@@ -228,6 +240,104 @@ def test_existing_transcripts_are_reused_without_touching_source(tmp_path):
     assert second["added"] == 0
     assert source.read_bytes() == original
     assert list(read_jsonl(canonical))[0]["view_count"] is None
+
+
+def test_channel_partitions_preserve_canonical_and_restore_idempotently(tmp_path):
+    canonical = tmp_path / "raw" / "transcripts_raw.jsonl"
+    canonical.parent.mkdir()
+    rows = [
+        {"video_id": "v1", "channel_title": "Canal Á", "segments": [{"text": "uno"}]},
+        {
+            "video_id": "v2",
+            "channel_id": "channel-a",
+            "channel": "Canal Á",
+            "segments": [{"text": "dos"}],
+        },
+        {
+            "video_id": "v3",
+            "channel_id": "channel-b",
+            "channel": "Canal B",
+            "segments": [{"text": "tres"}],
+        },
+    ]
+    canonical.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+    original = canonical.read_bytes()
+    partitions = tmp_path / "raw" / "transcripts_by_channel"
+
+    materialized = materialize_transcripts_by_channel(canonical, partitions)
+
+    assert canonical.read_bytes() == original
+    assert materialized["total_videos"] == 3
+    assert materialized["total_channel_files"] == 2
+    index = json.loads((partitions / "index.json").read_text(encoding="utf-8"))
+    assert sum(entry["videos"] for entry in index["files"]) == 3
+    assert {tuple(entry["channel_ids"]) for entry in index["files"]} == {
+        ("channel-a",),
+        ("channel-b",),
+    }
+
+    appended = append_transcripts_by_channel(
+        partitions,
+        [
+            {"video_id": "v4", "channel_id": "channel-a", "channel": "Canal Á"},
+            {"video_id": "v5", "channel_id": "channel-c", "channel": "Canal C"},
+        ],
+    )
+    repeated = append_transcripts_by_channel(
+        partitions,
+        [
+            {"video_id": "v4", "channel_id": "channel-a", "channel": "Canal Á"},
+            {"video_id": "v5", "channel_id": "channel-c", "channel": "Canal C"},
+        ],
+    )
+    assert appended["added"] == 2
+    assert repeated["already_partitioned"] == 2
+
+    restored = tmp_path / "clone" / "datos" / "raw" / "transcripts_raw.jsonl"
+    first = restore_canonical_from_channel_transcripts(partitions, restored)
+    second = restore_canonical_from_channel_transcripts(partitions, restored)
+    assert first["added"] == 5
+    assert second["added"] == 0
+    assert second["already_canonical"] == 5
+    assert {row["video_id"] for row in read_jsonl(restored)} == {"v1", "v2", "v3", "v4", "v5"}
+
+
+def test_large_channel_is_split_into_bounded_numbered_parts(tmp_path):
+    canonical = tmp_path / "transcripts_raw.jsonl"
+    rows = [
+        {
+            "video_id": f"v{index}",
+            "channel_id": "large-channel",
+            "channel": "Canal grande",
+            "segments": [{"text": str(index) * 700}],
+        }
+        for index in range(4)
+    ]
+    canonical.write_text(
+        "".join(json.dumps(row) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+    output = tmp_path / "by_channel"
+
+    result = materialize_transcripts_by_channel(
+        canonical,
+        output,
+        max_channel_file_bytes=1200,
+    )
+
+    parts = sorted(output.glob("*.jsonl"))
+    assert result["total_channels"] == 1
+    assert result["total_channel_files"] == 4
+    assert [path.name.rsplit("--", 1)[-1] for path in parts] == [
+        "part-0001.jsonl",
+        "part-0002.jsonl",
+        "part-0003.jsonl",
+        "part-0004.jsonl",
+    ]
+    assert all(path.stat().st_size <= 1200 for path in parts)
 
 
 def test_candidates_accept_csv_and_jsonl(tmp_path):
@@ -350,6 +460,27 @@ def test_network_batches_cover_all_candidates_and_pause_between_batches(tmp_path
     assert [event["advance"] for event in progress if event["status"] == "batch_pause"] == [0, 0]
 
 
+def test_download_order_is_seeded_complete_and_interleaved_by_channel():
+    candidates = [
+        {"video_id": "a1", "channel_id": "a"},
+        {"video_id": "a2", "channel_id": "a"},
+        {"video_id": "b1", "channel_id": "b"},
+        {"video_id": "b2", "channel_id": "b"},
+        {"video_id": "c1", "channel_id": "c"},
+    ]
+
+    first = order_candidates_for_acquisition(candidates, random_seed=17)
+    repeated = order_candidates_for_acquisition(reversed(candidates), random_seed=17)
+    different = order_candidates_for_acquisition(candidates, random_seed=18)
+
+    assert [row["video_id"] for row in first] == [row["video_id"] for row in repeated]
+    assert {row["video_id"] for row in first} == {row["video_id"] for row in candidates}
+    assert [row["download_queue_rank"] for row in first] == [1, 2, 3, 4, 5]
+    assert [row["video_id"] for row in first] != [row["video_id"] for row in different]
+    first_round_channels = [row["channel_id"] for row in first[:3]]
+    assert len(set(first_round_channels)) == 3
+
+
 def test_subtitle_fetch_restores_historical_ytdlp_vtt_route(monkeypatch):
     captured = {}
 
@@ -395,37 +526,18 @@ def test_subtitle_fetch_restores_historical_ytdlp_vtt_route(monkeypatch):
     assert record["segments"][0]["text"].startswith("Esta es una transcripción")
 
 
-def test_rate_limit_opens_circuit_and_defers_remaining_network_calls(tmp_path):
-    candidates = [{"video_id": f"v{index}"} for index in range(32)]
+def test_rate_limit_excludes_only_affected_channel_and_continues(tmp_path):
+    candidates = [
+        {"video_id": "c1-fails", "channel_id": "c1"},
+        {"video_id": "c2-ok-1", "channel_id": "c2"},
+        {"video_id": "c1-deferred", "channel_id": "c1"},
+        {"video_id": "c2-ok-2", "channel_id": "c2"},
+    ]
     attempted = []
 
     def fetcher(candidate):
         attempted.append(candidate["video_id"])
-        raise RuntimeError("HTTP 429 Too Many Requests")
-
-    stats = ingest_incremental(
-        candidates,
-        tmp_path / "transcripts.jsonl",
-        tmp_path / "cache",
-        fetcher=fetcher,
-        rate_limit_cooldown_seconds=0,
-    )
-
-    assert attempted == [f"v{index}" for index in range(30)]
-    assert stats["failed"] == 30
-    assert stats["failure_rate_limited"] == 30
-    assert stats["rate_limit_circuit_open"] == 1
-    assert stats["rate_limit_cooldowns"] == 2
-    assert stats["rate_limit_hits_peak"] == 10
-    assert stats["rate_limit_sequences_peak"] == 3
-    assert stats["deferred_rate_limit"] == 2
-
-
-def test_success_resets_consecutive_rate_limit_strikes(tmp_path):
-    candidates = [{"video_id": value} for value in ("v1", "v2", "v3", "v4")]
-
-    def fetcher(candidate):
-        if candidate["video_id"] in {"v1", "v3"}:
+        if candidate["channel_id"] == "c1":
             raise RuntimeError("HTTP 429 Too Many Requests")
         return {
             "video_id": candidate["video_id"],
@@ -437,16 +549,37 @@ def test_success_resets_consecutive_rate_limit_strikes(tmp_path):
         tmp_path / "transcripts.jsonl",
         tmp_path / "cache",
         fetcher=fetcher,
-        rate_limit_hits_per_cooldown=1,
-        rate_limit_cooldowns_to_open=2,
-        rate_limit_cooldown_seconds=0,
     )
 
-    assert stats["failed"] == 2
+    assert attempted == ["c1-fails", "c2-ok-1", "c2-ok-2"]
+    assert stats["failed"] == 1
     assert stats["fetched"] == 2
-    assert stats["rate_limit_hits_peak"] == 1
-    assert stats["rate_limit_sequences_peak"] == 1
-    assert stats["rate_limit_circuit_open"] == 0
+    assert stats["failure_rate_limited"] == 1
+    assert stats["rate_limited_channels"] == 1
+    assert stats["deferred_rate_limit"] == 1
+
+
+def test_rate_limit_without_channel_identity_does_not_block_other_candidates(tmp_path):
+    candidates = [{"video_id": "unknown-fails"}, {"video_id": "unknown-ok"}]
+
+    def fetcher(candidate):
+        if candidate["video_id"] == "unknown-fails":
+            raise RuntimeError("HTTP 429 Too Many Requests")
+        return {
+            "video_id": candidate["video_id"],
+            "segments": [{"start": 0.0, "duration": 1.0, "text": "texto"}],
+        }
+
+    stats = ingest_incremental(
+        candidates,
+        tmp_path / "transcripts.jsonl",
+        tmp_path / "cache",
+        fetcher=fetcher,
+    )
+
+    assert stats["failed"] == 1
+    assert stats["fetched"] == 1
+    assert stats["rate_limited_channels"] == 0
     assert stats["deferred_rate_limit"] == 0
 
 

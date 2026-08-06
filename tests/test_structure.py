@@ -176,12 +176,13 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
         "MAX_RESULTS_PER_QUERY",
         "MAX_DIRECTED_CANDIDATES",
         "MAX_EXPANDED_CHANNELS",
-        "RATE_LIMIT_HITS_PER_COOLDOWN",
-        "RATE_LIMIT_COOLDOWNS_TO_OPEN",
-        "RATE_LIMIT_COOLDOWN_SECONDS",
+        "EXCLUDE_CHANNEL_ON_429",
+        "RANDOMIZE_DOWNLOAD_QUEUE",
+        "DOWNLOAD_RANDOM_SEED",
         "CHANNEL_SOURCES",
         "SEARCH_QUERIES",
         "STOP_ON_VIDEO_ERROR",
+        "SYNC_TRANSCRIPTS_BY_CHANNEL",
         "RESET_VIDEO_DATASET",
         "fallos_adquisicion.jsonl",
     ):
@@ -196,6 +197,8 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
     assert "if MAX_DIRECTED_CANDIDATES is None" in source
     assert "len(directed_pool)" in source
     assert "importlib.reload(acquisition_module)" in source
+    assert "materialize_transcripts_by_channel" in source
+    assert "channel_transcript_dir=TRANSCRIPTS_BY_CHANNEL" in source
     assert "cohorte_dirigida_vigente" in source
     assert '# RESET_VIDEO_DATASET = "ARCHIVAR_Y_REINICIAR_DATASET_VIDEOS"' in source
     assert not (ROOT / "flujo" / "01_datos" / "01_03_ampliacion_dirigida.ipynb").exists()
@@ -205,6 +208,28 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
         / "flujo_reorganizado_v2"
         / "01_03_ampliacion_dirigida_reemplazado.ipynb"
     ).is_file()
+
+
+def test_dataset_consumers_restore_and_verify_the_synced_checkpoint():
+    for path in sorted((ROOT / "flujo" / "03_entrenamiento").glob("*.ipynb")):
+        notebook = nbformat.read(path, as_version=4)
+        source = "\n".join(cell.source for cell in notebook.cells)
+        assert "prepare_local_bundle_input('dataset_5_salidas'" in source, path
+        assert "Dataset descomprimido y verificado" in source, path
+
+
+def test_synced_checkpoint_rules_preserve_hashes_and_exclude_rebuildable_working_files():
+    ignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
+    assert "!datos/raw/transcripts_by_channel/**" in ignore
+    assert "!datos/raw/video_candidates.jsonl" in ignore
+    assert "!resultados/colab_bundle/dataset_5_salidas.jsonl.gz" in ignore
+    assert "datos/raw/transcripts_raw.jsonl" in ignore
+    assert "datos/raw/transcripts_cache/" in ignore
+    assert "datos/processed/*" in ignore
+    assert "datos/model_ready/v2/*" in ignore
+    assert "*.jsonl text eol=lf" in attributes
+    assert "*.gz binary" in attributes
 
 
 def test_neural_model_revisions_are_pinned():
