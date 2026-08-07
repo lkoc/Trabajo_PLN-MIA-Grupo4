@@ -5,6 +5,7 @@ import json
 import pytest
 
 from moderacion_peru.chunk_optimization import (
+    CHUNK_SELECTION_VERSION,
     _bounded_neural_rows,
     _paired_video_cluster_bootstrap,
     activate_chunking_configuration,
@@ -12,8 +13,10 @@ from moderacion_peru.chunk_optimization import (
     recommend_chunk_seconds,
     recommend_chunk_seconds_cluster_bootstrap,
     run_bounded_neural_chunk_comparison,
+    run_chunk_length_robust_test,
 )
 from moderacion_peru.incremental import DEFAULT_CHUNKING_CONFIGURATION
+from moderacion_peru.io import sha256_file, sha256_text
 
 
 def _write(path, payload: bytes) -> None:
@@ -190,6 +193,57 @@ def test_temporal_references_fail_early_when_chunks_are_not_restored(tmp_path):
 
     with pytest.raises(FileNotFoundError, match="chunks_v2"):
         build_temporal_label_references(tmp_path / "missing_chunks.jsonl", dataset)
+
+
+def test_complete_robust_result_is_reused_before_rebuilding_cohorts(tmp_path):
+    output = tmp_path / "robust"
+    confirmatory = output / "confirmatory_comparison.json"
+    _write(confirmatory, b'{"reporting_status":"complete"}\n')
+    configuration = {
+        "candidate_seconds": [15.0, 20.0, 25.0, 30.0, 35.0],
+        "reference_seconds": 30.0,
+        "model_names": ["complement_nb", "logistic_regression", "sgd_incremental"],
+        "video_limits": {"train": 300, "validation": 100, "test": 100},
+        "seeds": [20260805, 20260817, 20260829, 20260841, 20260853],
+        "max_features": 25000,
+        "minimum_overlap_fraction": 0.8,
+        "bootstrap_replicates": 1000,
+        "confidence_level": 0.95,
+        "noninferiority_margin": 0.01,
+        "bootstrap_seed": 20260807,
+        "runtime_budget_seconds": 1800.0,
+    }
+    signature_configuration = {
+        "confirmatory_sha256": sha256_file(confirmatory),
+        "reference_seconds": 30.0,
+        "bootstrap_replicates": 1000,
+        "confidence_level": 0.95,
+        "noninferiority_margin": 0.01,
+        "bootstrap_seed": 20260807,
+    }
+    signature = sha256_text(
+        json.dumps(signature_configuration, ensure_ascii=False, sort_keys=True)
+    )
+    cached = {
+        "selection_version": CHUNK_SELECTION_VERSION,
+        "configuration": configuration,
+        "run_signature": signature,
+        "reporting_status": "complete",
+        "marker": "cached_without_rebuild",
+    }
+    _write(
+        output / "robust_comparison.json",
+        json.dumps(cached, ensure_ascii=False).encode("utf-8"),
+    )
+
+    result = run_chunk_length_robust_test(
+        tmp_path / "missing_transcripts.jsonl",
+        tmp_path / "missing_chunks.jsonl",
+        tmp_path / "missing_dataset.jsonl",
+        output,
+    )
+
+    assert result["marker"] == "cached_without_rebuild"
 
 
 def test_video_cluster_bootstrap_is_paired_and_reproducible(tmp_path):

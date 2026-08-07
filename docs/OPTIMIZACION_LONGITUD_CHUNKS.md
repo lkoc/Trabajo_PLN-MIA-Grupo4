@@ -5,7 +5,7 @@
 **Actualización del protocolo robusto:** 7 de agosto de 2026
 
 **Decisión:** conservar ventanas de **30 segundos**  
-**Ámbito:** prueba confirmatoria local, corta y reproducible para fundamentar el
+**Ámbito:** evaluación local confirmatoria y robusta para fundamentar el
 preprocesamiento del paper y la presentación  
 **Artefacto de resultados:**
 [`confirmatory_comparison.json`](../resultados/pilotos/chunk_length_expanded/confirmatory_comparison.json) y
@@ -168,6 +168,18 @@ fueron respectivamente `−0.0415`, `−0.0247`, `−0.0462` y `−0.0530`; todo
 intervalos quedaron por debajo de cero y ninguno satisfizo el margen de no
 inferioridad. Los 100 videos de validation estuvieron presentes en todas las
 alternativas de cada una de las cinco cohortes.
+
+| Longitud | AP validation | IC bootstrap 95% AP | ΔAP vs. 30 s | IC bootstrap 95% ΔAP | No inferior, margen 0.01 | Proxy de costo |
+|---:|---:|---:|---:|---:|:---:|---:|
+| 15 s | 0.0818 | [0.0756, 0.0967] | −0.0415 | [−0.0552, −0.0284] | No | 74 799 |
+| 20 s | 0.0986 | [0.0896, 0.1164] | −0.0247 | [−0.0335, −0.0134] | No | 57 127 |
+| 25 s | 0.0770 | [0.0691, 0.0960] | −0.0462 | [−0.0532, −0.0363] | No | 45 657 |
+| **30 s** | **0.1233** | **[0.1099, 0.1446]** | **0.0000** | **[0.0000, 0.0000]** | **Sí** | **43 297** |
+| 35 s | 0.0703 | [0.0615, 0.0906] | −0.0530 | [−0.0649, −0.0351] | No | 32 642 |
+
+Después de congelar la recomendación, 30 s obtuvo AP macro de daño `0.1371` en
+`test`. Este valor es descriptivo: no intervino en la elección, en el bootstrap
+ni en la regla de no inferioridad.
 
 El bootstrap mejora la cuantificación de incertidumbre frente a tres intervalos
 t descriptivos, pero no elimina el solapamiento entre cohortes, no crea nuevas
@@ -375,7 +387,7 @@ de cruzar regiones con etiquetas distintas y pierde ejemplos bajo la regla de
 acuerdo temporal. Esta explicación es plausible y no debe presentarse como un
 mecanismo causal demostrado.
 
-## Estado y plantilla del perfil robusto
+## Estado del perfil robusto
 
 | Campo predeclarado | Valor actual |
 |---|---|
@@ -411,15 +423,18 @@ alternativa que satisfizo el margen predeclarado de no inferioridad de 0.01 AP�
 
 ## Contenido recomendado para la presentación
 
-Una diapositiva puede usar tres mensajes:
+La diapositiva principal actualizada puede usar tres mensajes:
 
-- **Diseño:** 5 longitudes × 3 modelos × 3 cohortes pareadas = 45 ajustes CPU.
-- **Resultado:** 30 s ganó 3/3; AP validation 0.114 ± 0.005.
-- **Decisión:** se conserva 30 s; 35 s es 24% más barato, pero pierde 0.059 AP.
+- **Diseño:** 5 longitudes × 3 modelos × 5 cohortes = 75 ajustes; 1 000
+  réplicas bootstrap agrupadas por video.
+- **Resultado:** 30 s alcanzó AP validation 0.1233, IC 95%
+  [0.1099, 0.1446], y fue la única alternativa no inferior.
+- **Decisión:** se conserva 30 s; `test` se reporta después como resultado
+  descriptivo (AP 0.1371), nunca como criterio de selección.
 
-La tabla agregada o un gráfico de AP media con barras de desviación estándar es
-suficiente. Test debe aparecer como resultado descriptivo, no como criterio de
-selección.
+La tabla robusta anterior o un gráfico de AP con IC bootstrap es preferible a
+barras de desviación estándar. Test debe aparecer como resultado descriptivo,
+no como criterio de selección.
 
 ## Limitaciones y amenazas de validez
 
