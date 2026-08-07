@@ -20,13 +20,25 @@ from .incremental import (
     normalize_chunking_configuration,
     normalize_text,
 )
-from .io import read_jsonl, sha256_file, sha256_text, write_json_atomic, write_jsonl_atomic
+from .io import (
+    append_jsonl_once,
+    read_jsonl,
+    sha256_file,
+    sha256_text,
+    write_json_atomic,
+    write_jsonl_atomic,
+)
 from .taxonomy import load_taxonomy
 
 
 CHUNK_SELECTION_VERSION = "1.1.0"
 DEFAULT_CHUNKING_CONFIG_PATH = Path("config/chunking.json")
 ACTIVE_CHUNKING_STATE_PATH = Path("datos/processed/chunking_active.json")
+DEFAULT_CHUNK_SMOKE_HF_MODEL = (
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+)
+DEFAULT_CHUNK_SMOKE_HF_REVISION = "e8f8c211226b894fcb81acc59f3b34ba3efd5f42"
+DEFAULT_CHUNK_SMOKE_OLLAMA_MODEL = "gemma3:4b"
 
 # Solo artefactos derivados de la longitud. Las transcripciones y candidatos nunca se mueven.
 MANAGED_ARTIFACT_PATTERNS = (
