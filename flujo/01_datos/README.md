@@ -18,7 +18,7 @@ Entrada: candidatos con `video_id` y URL, snapshots históricos, transcripciones
 Salida: transcripciones JSONL y chunks v2 con tiempos, hash de transcripción, versión y firma de configuración del troceador.
 Control: nunca se descarga audio o video; primero se consolidan sin modificarlos los `transcripts_raw.jsonl` ya existentes, después se recuperan los VTT faltantes aunque el JSON ya sea canónico, se reutiliza el caché y solo al final se consulta la red para un `video_id` nuevo. La adquisición recupera la ruta histórica `yt-dlp → VTT`, conserva todas las pistas descargadas, elige la más completa, exige 200 caracteres y usa `youtube-transcript-api` solo como respaldo. La limpieza conserva la eliminación de hasta 12 palabras solapadas en subtítulos rodantes, el cierre a 30 segundos/600 caracteres y el mínimo de 90 caracteres.
 
-`01_01` reúne el scraping inicial y la antigua ampliación dirigida. Su bloque de controles permite elegir `DISCOVERY_MODE="seed"`, `"directed"` o `"both"`; editar canales y consultas; ampliar la cobertura de búsqueda; y configurar reintentos, lote, pausa y aleatorización. `directed` usa los déficits de `train+validation`, rendimiento histórico por canal, expansión desde búsquedas y una cohorte aislada; sin etiquetas previas activa un fallback equitativo para los cuatro daños. `MAX_DIRECTED_CANDIDATES=None` conserva toda la cohorte inédita y `MAX_NEW_VIDEOS=None` recorre todos sus pendientes. `RANDOMIZE_DOWNLOAD_QUEUE=True` crea un orden reproducible con `DOWNLOAD_RANDOM_SEED` e intercala canales. La red usa lotes de 10, 60 segundos entre lotes y 5–10 segundos dentro de `yt-dlp`. `DISCOVER_NEW=False` no consulta fuentes y `FETCH_NEW=False` no obtiene subtítulos.
+`01_01` reúne el scraping inicial y la antigua ampliación dirigida. Su bloque de controles permite elegir `DISCOVERY_MODE="seed"`, `"directed"` o `"both"`; editar canales y consultas; ampliar la cobertura de búsqueda; y configurar reintentos, lote, pausa y aleatorización. La versión actual continúa la corrida parcial con `DISCOVER_NEW=False`, `FETCH_NEW=True` y `BACKFILL_MISSING_VTT=True`: primero completa VTT conocidos y luego procesa candidatos existentes, sin descubrir fuentes nuevas. `MAX_VTT_BACKFILL=None` y `MAX_NEW_VIDEOS=None` recorren ambas colas completas. `RANDOMIZE_DOWNLOAD_QUEUE=True` crea un orden reproducible con `DOWNLOAD_RANDOM_SEED` e intercala canales. La red usa lotes de 10, 15 segundos entre lotes, pausas internas de 2.5–10 segundos y timeout de 30 segundos por operación. `FETCH_NEW=False` deja la ejecución sin solicitudes de subtítulos.
 
 La opción comentada `RESET_VIDEO_DATASET = "ARCHIVAR_Y_REINICIAR_DATASET_VIDEOS"` mueve los artefactos activos a `archivo/reinicios_dataset_videos/` y bloquea la reimportación automática de snapshots históricos. Es recuperable e idempotente; no borra código ni el archivo histórico.
 
@@ -27,7 +27,10 @@ Para ampliar la muestra, active el modo requerido o agregue filas a `datos/raw/v
 `01_02` no es necesario para cada incremento. Su modo rápido reentrena dos
 modelos para cada longitud y su confirmación corta reentrena tres modelos en
 tres cohortes pareadas; en ambos casos también calibra e infiere con la misma
-longitud. Después del modo rápido puede ejecutar una comparación neuronal
+longitud. El perfil robusto nuevo amplía el diseño a cinco cohortes de
+300/100/100 videos, 75 ajustes y 1 000 réplicas bootstrap agrupadas por video;
+compara contra 30 s con margen de no inferioridad de 0.01 AP y nunca selecciona
+con `test`. Después del modo rápido puede ejecutar una comparación neuronal
 acotada: MiniLM multilingüe congelado sobre 120/40 filas y `gemma3:4b` sobre
 solo tres filas de validación por longitud. Gemma reanuda por `chunk_id`, tiene
 un presupuesto total de diez minutos y no interviene en la recomendación

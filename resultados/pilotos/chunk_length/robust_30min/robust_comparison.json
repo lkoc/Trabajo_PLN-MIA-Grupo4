@@ -1,0 +1,512 @@
+{
+  "schema_version": "1.0",
+  "selection_version": "1.2.0",
+  "profile": "robust_30min",
+  "run_signature": "568fb6c6015576535cbb33d4e29b7d75fae99903c974c50fa33cb7b7f3f964f5",
+  "configuration": {
+    "candidate_seconds": [
+      15.0,
+      20.0,
+      25.0,
+      30.0,
+      35.0
+    ],
+    "reference_seconds": 30.0,
+    "model_names": [
+      "complement_nb",
+      "logistic_regression",
+      "sgd_incremental"
+    ],
+    "video_limits": {
+      "train": 300,
+      "validation": 100,
+      "test": 100
+    },
+    "seeds": [
+      20260805,
+      20260817,
+      20260829,
+      20260841,
+      20260853
+    ],
+    "max_features": 25000,
+    "minimum_overlap_fraction": 0.8,
+    "bootstrap_replicates": 1000,
+    "confidence_level": 0.95,
+    "noninferiority_margin": 0.01,
+    "bootstrap_seed": 20260807,
+    "runtime_budget_seconds": 1800.0
+  },
+  "design": {
+    "fits": 75,
+    "paired_cohorts": 5,
+    "primary_metric": "validation_average_precision_macro_damage",
+    "reference_predeclared": true,
+    "test_used_for_selection": false
+  },
+  "confirmatory_result": "confirmatory_comparison.json",
+  "bootstrap": {
+    "schema_version": "1.0",
+    "method": "paired_video_cluster_percentile_bootstrap",
+    "unit_of_resampling": "video_id_with_all_its_chunks",
+    "aggregation": "mean_models_then_mean_cohorts",
+    "split": "validation",
+    "replicates": 1000,
+    "confidence_level": 0.95,
+    "bootstrap_seed": 20260807,
+    "reference_seconds": 30.0,
+    "noninferiority_margin": 0.01,
+    "common_validation_videos_by_seed": {
+      "20260805": 100,
+      "20260817": 100,
+      "20260829": 100,
+      "20260841": 100,
+      "20260853": 100
+    },
+    "prediction_files": [
+      {
+        "path": "repetitions/seed-20260805/15s/models/runs/classical-599bd2f7281e80d9/complement_nb/predictions_validation.jsonl",
+        "sha256": "f9ce9cc3077dfa603be93f890e3cad33d2ed45170e49c787cbbafb5d1f887540"
+      },
+      {
+        "path": "repetitions/seed-20260805/15s/models/runs/classical-599bd2f7281e80d9/logistic_regression/predictions_validation.jsonl",
+        "sha256": "4b99915512c53f9a26429c79ab089cd9e25bc85fb021c85a2dd5ae2ef565b9a3"
+      },
+      {
+        "path": "repetitions/seed-20260805/15s/models/runs/classical-599bd2f7281e80d9/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "92bce56788cf8afac6542550b343eff238398c85462b8bde4b676fbcda2e4080"
+      },
+      {
+        "path": "repetitions/seed-20260805/20s/models/runs/classical-13de7132b339b5b4/complement_nb/predictions_validation.jsonl",
+        "sha256": "3a8a9e5893a2e8f69bf5a0a0b218721b3ef4cf3191568eef5187d206c14caf11"
+      },
+      {
+        "path": "repetitions/seed-20260805/20s/models/runs/classical-13de7132b339b5b4/logistic_regression/predictions_validation.jsonl",
+        "sha256": "811cb11c10ee6fd7238f87dc36a403633db3110fbbd0273d8f161c8e4a5ac3c9"
+      },
+      {
+        "path": "repetitions/seed-20260805/20s/models/runs/classical-13de7132b339b5b4/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "099c2e885d17d8723ae0aed9621332a756fce0d441b127582faaef8aa0ecf9d6"
+      },
+      {
+        "path": "repetitions/seed-20260805/25s/models/runs/classical-e751aca13d115cb0/complement_nb/predictions_validation.jsonl",
+        "sha256": "8c075faf3d91880efc3d926ed1d46f69db4e7a3245f828c80b9ab6f6db8382be"
+      },
+      {
+        "path": "repetitions/seed-20260805/25s/models/runs/classical-e751aca13d115cb0/logistic_regression/predictions_validation.jsonl",
+        "sha256": "c7efbbcea37dcac4ebeb851f65f1db4c43ea1ddd7439f1d5de0efb2ed9dfa221"
+      },
+      {
+        "path": "repetitions/seed-20260805/25s/models/runs/classical-e751aca13d115cb0/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "7885cb95fe52e031712202265ee49528b362472d8969aef990e603f09af69a43"
+      },
+      {
+        "path": "repetitions/seed-20260805/30s/models/runs/classical-0a721468a7d63efd/complement_nb/predictions_validation.jsonl",
+        "sha256": "bb5f0afa98ce911b7d4057fb71312a0a8269ab75fef737e519951ca1138d5db6"
+      },
+      {
+        "path": "repetitions/seed-20260805/30s/models/runs/classical-0a721468a7d63efd/logistic_regression/predictions_validation.jsonl",
+        "sha256": "d38c1f281c8d22dde94d1e621e1c544e0020e10b6a88b533445b042e312f940e"
+      },
+      {
+        "path": "repetitions/seed-20260805/30s/models/runs/classical-0a721468a7d63efd/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "7bee34e9784acebb828cf2e3afe253d28731280a08128b1b8d71d59e4b477dd7"
+      },
+      {
+        "path": "repetitions/seed-20260805/35s/models/runs/classical-bf46a41664141989/complement_nb/predictions_validation.jsonl",
+        "sha256": "fddc9e1313bdec7a17acedbd02d732300bc5a4811410cdcb90d1fabf9e34156c"
+      },
+      {
+        "path": "repetitions/seed-20260805/35s/models/runs/classical-bf46a41664141989/logistic_regression/predictions_validation.jsonl",
+        "sha256": "37e9eddfcbb87fba2f46c6e2e697b88bcca9133c76975b66311eb8e3f84c3064"
+      },
+      {
+        "path": "repetitions/seed-20260805/35s/models/runs/classical-bf46a41664141989/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "38e75aac9f9a8cff4058c174fc853e6fd3c753c5ed6acf3ae359e0f2c63877f1"
+      },
+      {
+        "path": "repetitions/seed-20260817/15s/models/runs/classical-c91448c7364d1ac4/complement_nb/predictions_validation.jsonl",
+        "sha256": "c9282abf575f4cb1c8cf3bb5133ec2d2f218ef465fb753d15aecfafb9897cc6a"
+      },
+      {
+        "path": "repetitions/seed-20260817/15s/models/runs/classical-c91448c7364d1ac4/logistic_regression/predictions_validation.jsonl",
+        "sha256": "cb8e227aeba8134f478585db3e91622ca9dba29faadf2aceb4de3ba299075e8e"
+      },
+      {
+        "path": "repetitions/seed-20260817/15s/models/runs/classical-c91448c7364d1ac4/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "a89cb9c87e5331de90653764df7c973a8b60dff400bfa76ea99fe56dc4b516c3"
+      },
+      {
+        "path": "repetitions/seed-20260817/20s/models/runs/classical-b9a7e6e2005bcce7/complement_nb/predictions_validation.jsonl",
+        "sha256": "1a46b19fa299a469ef1a2878c1257da7bda046643bf64309060c3672238f40ce"
+      },
+      {
+        "path": "repetitions/seed-20260817/20s/models/runs/classical-b9a7e6e2005bcce7/logistic_regression/predictions_validation.jsonl",
+        "sha256": "1db5e72d92a5ac7028b187d946c24c366023715ec630b68888ebbd831ae3ef30"
+      },
+      {
+        "path": "repetitions/seed-20260817/20s/models/runs/classical-b9a7e6e2005bcce7/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "0960c46987a74ebefc183366d247d9b79d8c3c68343bc9593866d7724361d073"
+      },
+      {
+        "path": "repetitions/seed-20260817/25s/models/runs/classical-99513a3bfdb676c9/complement_nb/predictions_validation.jsonl",
+        "sha256": "18d63f4f8a0675b6976201bdd22cdeaa3713bacad8134f4366068f029b8d4d22"
+      },
+      {
+        "path": "repetitions/seed-20260817/25s/models/runs/classical-99513a3bfdb676c9/logistic_regression/predictions_validation.jsonl",
+        "sha256": "5a9d558f98d6e0c23d6dfbaee0936d7e40a01d56001f3e0305aff6e940dbb04a"
+      },
+      {
+        "path": "repetitions/seed-20260817/25s/models/runs/classical-99513a3bfdb676c9/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "8a9e1c724dd495b3167f4b02e38624d3a835bbd5c3857c5b16c1f02f17d49800"
+      },
+      {
+        "path": "repetitions/seed-20260817/30s/models/runs/classical-44e1390743865d91/complement_nb/predictions_validation.jsonl",
+        "sha256": "3f37125104a99804c7c0f5dedde6d5fad0d394d33d8652d74ca9cb9b514af73c"
+      },
+      {
+        "path": "repetitions/seed-20260817/30s/models/runs/classical-44e1390743865d91/logistic_regression/predictions_validation.jsonl",
+        "sha256": "00dcd2a4118f1d9aa996f0c3f1071293234d010e9a67288d18ae1e8cc8e7db81"
+      },
+      {
+        "path": "repetitions/seed-20260817/30s/models/runs/classical-44e1390743865d91/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "e2bd8fa6a46df4751f1687d2af7d328bff8d4371d07a555c935f7d8aec070907"
+      },
+      {
+        "path": "repetitions/seed-20260817/35s/models/runs/classical-98119d4a063e070d/complement_nb/predictions_validation.jsonl",
+        "sha256": "90a818ef2891cd26218cc62eb601c4b5e1aee6bb998bfbe04f3fa7fa13729e6a"
+      },
+      {
+        "path": "repetitions/seed-20260817/35s/models/runs/classical-98119d4a063e070d/logistic_regression/predictions_validation.jsonl",
+        "sha256": "f231855e5e220cedab8587b8918a7749d201e711c3cd2fcca3f18a0ea8bab729"
+      },
+      {
+        "path": "repetitions/seed-20260817/35s/models/runs/classical-98119d4a063e070d/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "bf1c6b346e02f154636b8120254dcf4ffe4aa83853fcbaa07e7c02fa0cf89947"
+      },
+      {
+        "path": "repetitions/seed-20260829/15s/models/runs/classical-113b78d6f86064d3/complement_nb/predictions_validation.jsonl",
+        "sha256": "f945d2ec2d74f6f37cf350a2e6bd445586954eefaa5e2a5fa48016ec02a03f8b"
+      },
+      {
+        "path": "repetitions/seed-20260829/15s/models/runs/classical-113b78d6f86064d3/logistic_regression/predictions_validation.jsonl",
+        "sha256": "1c671cc0b54db913db809fcdf482ac58e24f121c641374f490ad8c3f1a58586f"
+      },
+      {
+        "path": "repetitions/seed-20260829/15s/models/runs/classical-113b78d6f86064d3/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "1c9c4d7afd801a20428f92c480f39d45a7826c88791e6e36142338976366754e"
+      },
+      {
+        "path": "repetitions/seed-20260829/20s/models/runs/classical-97255c6c437e1f8f/complement_nb/predictions_validation.jsonl",
+        "sha256": "b7008b4da6b5e7d335215ef8ecf602a6a515a682a2964803d2cc15576062f496"
+      },
+      {
+        "path": "repetitions/seed-20260829/20s/models/runs/classical-97255c6c437e1f8f/logistic_regression/predictions_validation.jsonl",
+        "sha256": "e49c327d92ec4aff9bfcab2b616ac07da5f3a8b0478a5fe0de4760b43170e7a2"
+      },
+      {
+        "path": "repetitions/seed-20260829/20s/models/runs/classical-97255c6c437e1f8f/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "c1b964f5ebf7a095b9b03221aa9f85c75cc5629dc05411b9b5ef7f6955db89fc"
+      },
+      {
+        "path": "repetitions/seed-20260829/25s/models/runs/classical-17b28fb908b6217f/complement_nb/predictions_validation.jsonl",
+        "sha256": "f8f840ee86d6fce3480bf618fa5c6b60efbbac4e918f64f5edbdce4152a74a5d"
+      },
+      {
+        "path": "repetitions/seed-20260829/25s/models/runs/classical-17b28fb908b6217f/logistic_regression/predictions_validation.jsonl",
+        "sha256": "c2edf93984f09490c55eccbe4b8b71f3ba81ab4db70f6d4136d663620fdbf05d"
+      },
+      {
+        "path": "repetitions/seed-20260829/25s/models/runs/classical-17b28fb908b6217f/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "c35289ee836f2084842559d1c0aec1752c351947bc4dffc5f268fa48c1ae6ab3"
+      },
+      {
+        "path": "repetitions/seed-20260829/30s/models/runs/classical-8c28b054d1624ba7/complement_nb/predictions_validation.jsonl",
+        "sha256": "c539ec4328185459df79fa90ffd6cd363049883cd6689f8ccef5e7f13eee4db9"
+      },
+      {
+        "path": "repetitions/seed-20260829/30s/models/runs/classical-8c28b054d1624ba7/logistic_regression/predictions_validation.jsonl",
+        "sha256": "bcf40edd7ad2b9dfc0bcdc1778e645faa88050ace64e53c96e195a0230f2e3b9"
+      },
+      {
+        "path": "repetitions/seed-20260829/30s/models/runs/classical-8c28b054d1624ba7/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "111f314902c753832266421366e01dda6019c9e484ebfa6b5e0bf3ed0c70097b"
+      },
+      {
+        "path": "repetitions/seed-20260829/35s/models/runs/classical-1f6f34b5dd88bcab/complement_nb/predictions_validation.jsonl",
+        "sha256": "fcc43da8970c0603ffcac42077e7bee82fd0000539e4c83dd5b1c09a6008adbc"
+      },
+      {
+        "path": "repetitions/seed-20260829/35s/models/runs/classical-1f6f34b5dd88bcab/logistic_regression/predictions_validation.jsonl",
+        "sha256": "c5b5cd12d0415ed97b62b58f1898899c0f90f636d28cff39a33f662f09097f00"
+      },
+      {
+        "path": "repetitions/seed-20260829/35s/models/runs/classical-1f6f34b5dd88bcab/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "24e4c354af10861a1e93902332abf4144d44253b7d9ba7a2d868e5bdf5b91083"
+      },
+      {
+        "path": "repetitions/seed-20260841/15s/models/runs/classical-80c8e2094781c684/complement_nb/predictions_validation.jsonl",
+        "sha256": "192bcceebe53a692b7d110c9e75bc30fa300f23d238a7bfc419266ac8d611611"
+      },
+      {
+        "path": "repetitions/seed-20260841/15s/models/runs/classical-80c8e2094781c684/logistic_regression/predictions_validation.jsonl",
+        "sha256": "48dbd3551350153a91971bf09863f44d55c1b6451c4e7a9c387be88fcb612fc0"
+      },
+      {
+        "path": "repetitions/seed-20260841/15s/models/runs/classical-80c8e2094781c684/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "9d997978b37c8c36da2f0335940624797c3ecfb5befeea0933699e33fc6e28d3"
+      },
+      {
+        "path": "repetitions/seed-20260841/20s/models/runs/classical-1816a3b68f9fed06/complement_nb/predictions_validation.jsonl",
+        "sha256": "c38694c131f243d6f669529ae195a54f66e36a2dd584d171a9a1e71b5c3cb0b1"
+      },
+      {
+        "path": "repetitions/seed-20260841/20s/models/runs/classical-1816a3b68f9fed06/logistic_regression/predictions_validation.jsonl",
+        "sha256": "1e68908fb5b2565c0cd2bf046db67255b1c7ab009fddf61f84552846d8565e22"
+      },
+      {
+        "path": "repetitions/seed-20260841/20s/models/runs/classical-1816a3b68f9fed06/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "fba6935674d0450744b50ae7373c1710084f12fd4fa3a510d76fc9d10204bf12"
+      },
+      {
+        "path": "repetitions/seed-20260841/25s/models/runs/classical-61212dd1957f8afb/complement_nb/predictions_validation.jsonl",
+        "sha256": "bbf76e19ec78a38449f4ad949393c9cde5694ddbda8fdd126180f32f5f2d47ba"
+      },
+      {
+        "path": "repetitions/seed-20260841/25s/models/runs/classical-61212dd1957f8afb/logistic_regression/predictions_validation.jsonl",
+        "sha256": "f92c5916c95bd1a20588ef9ce080bfcefd92337f795891ee878c4048694e4de0"
+      },
+      {
+        "path": "repetitions/seed-20260841/25s/models/runs/classical-61212dd1957f8afb/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "1d994e23d09bf819dda0d4edbc8bdd37944fd20cde8f1d1135c527377e25c891"
+      },
+      {
+        "path": "repetitions/seed-20260841/30s/models/runs/classical-59e6f2fbe9c4014f/complement_nb/predictions_validation.jsonl",
+        "sha256": "9b34d9198b7dfe6605614626a84d2aafd76805e4e963c7e2c6c01c8c39d9aaea"
+      },
+      {
+        "path": "repetitions/seed-20260841/30s/models/runs/classical-59e6f2fbe9c4014f/logistic_regression/predictions_validation.jsonl",
+        "sha256": "5ac58a7279aa35f6c087e718411f5ae834d7ee994847cf306a21eb2fcc66ccb2"
+      },
+      {
+        "path": "repetitions/seed-20260841/30s/models/runs/classical-59e6f2fbe9c4014f/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "17e7659a17e651a7fbd7842cd702536a34fc69d24e737abd4e3f446b06a8d393"
+      },
+      {
+        "path": "repetitions/seed-20260841/35s/models/runs/classical-61b2f8cb0300735c/complement_nb/predictions_validation.jsonl",
+        "sha256": "ad1c9d20129787c2b9e89309ce526c9c248a6c486b48b1bd6bd7d34e95e5da95"
+      },
+      {
+        "path": "repetitions/seed-20260841/35s/models/runs/classical-61b2f8cb0300735c/logistic_regression/predictions_validation.jsonl",
+        "sha256": "99d37678b384aa56528092413ea3c8889b52637ba4a79b1d735c8fa22ff7367c"
+      },
+      {
+        "path": "repetitions/seed-20260841/35s/models/runs/classical-61b2f8cb0300735c/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "1cb255c495365780321fc4efb5d6872543a1e14249ee89cca75fab695d1e1687"
+      },
+      {
+        "path": "repetitions/seed-20260853/15s/models/runs/classical-5efde45524fd9d00/complement_nb/predictions_validation.jsonl",
+        "sha256": "6e46aa3dcd8330742638cc43d2d659ee26720f26b635b02414277c338faa105e"
+      },
+      {
+        "path": "repetitions/seed-20260853/15s/models/runs/classical-5efde45524fd9d00/logistic_regression/predictions_validation.jsonl",
+        "sha256": "554f164a3518eb60427e324acb8d4f908a2be5557cd769dcdcfccc20edd5942a"
+      },
+      {
+        "path": "repetitions/seed-20260853/15s/models/runs/classical-5efde45524fd9d00/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "f5510b21add930e7c865880a12d96d05d1397450f50561385f9da4614ad24319"
+      },
+      {
+        "path": "repetitions/seed-20260853/20s/models/runs/classical-2668d80f5c81d630/complement_nb/predictions_validation.jsonl",
+        "sha256": "1089de85a5a836ae0f5d2b87b6d85640463f2b9970e1343ba067516ece41954e"
+      },
+      {
+        "path": "repetitions/seed-20260853/20s/models/runs/classical-2668d80f5c81d630/logistic_regression/predictions_validation.jsonl",
+        "sha256": "65eb9d360dfb2448e3bd9230fdd5a913869c3643877adf20399b14dc37bbca1d"
+      },
+      {
+        "path": "repetitions/seed-20260853/20s/models/runs/classical-2668d80f5c81d630/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "72a393b01815448b720581490670dc87ad9d1c328bb874ce21b4a493e9c03d5d"
+      },
+      {
+        "path": "repetitions/seed-20260853/25s/models/runs/classical-915e0f7167e321fb/complement_nb/predictions_validation.jsonl",
+        "sha256": "57dc6236a74140c4cde9cf737e5d510a7bda63806f74ae0841b5ef93780ccba0"
+      },
+      {
+        "path": "repetitions/seed-20260853/25s/models/runs/classical-915e0f7167e321fb/logistic_regression/predictions_validation.jsonl",
+        "sha256": "c62c38e4a99da97f72deba339746d5d7a19816720402b7a2ce8368381d93d9ba"
+      },
+      {
+        "path": "repetitions/seed-20260853/25s/models/runs/classical-915e0f7167e321fb/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "8e49479b52eb8119221d410cc0788a1544131ee8cdc6a666f5db174af8f03203"
+      },
+      {
+        "path": "repetitions/seed-20260853/30s/models/runs/classical-2412661da04ea32c/complement_nb/predictions_validation.jsonl",
+        "sha256": "32fe2868cb1e70cbe2c580fc02cde27f038620f4a59fde024c0e870881338aaf"
+      },
+      {
+        "path": "repetitions/seed-20260853/30s/models/runs/classical-2412661da04ea32c/logistic_regression/predictions_validation.jsonl",
+        "sha256": "f1a432d1a37ddd8df6863083457e5e44f6d9aff3d70f25cdba1ce1ca4e8495d5"
+      },
+      {
+        "path": "repetitions/seed-20260853/30s/models/runs/classical-2412661da04ea32c/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "1ef2a599b6560dedbb6cf6351e387447be34f617714352f63f63fca063e4e098"
+      },
+      {
+        "path": "repetitions/seed-20260853/35s/models/runs/classical-0637017869325061/complement_nb/predictions_validation.jsonl",
+        "sha256": "0ad2869a8c95af0848625389a4caca1dc3625dff7bd6bd83b11ef9b4b0b14521"
+      },
+      {
+        "path": "repetitions/seed-20260853/35s/models/runs/classical-0637017869325061/logistic_regression/predictions_validation.jsonl",
+        "sha256": "efd6f679a6500a1a77c5b2cb152caa0f63c76220a91e711fd5817c680d61f1e3"
+      },
+      {
+        "path": "repetitions/seed-20260853/35s/models/runs/classical-0637017869325061/sgd_incremental/predictions_validation.jsonl",
+        "sha256": "026f2689c6837663d858da72b742d12ea18d6e9c870dc415fdbcdf11f086b478"
+      }
+    ],
+    "comparisons": [
+      {
+        "chunk_seconds": 15.0,
+        "paired_validation_ap_macro_damage": 0.08181444623917992,
+        "bootstrap_ap_mean": 0.08581277320340368,
+        "bootstrap_ap_standard_error": 0.005552275404806738,
+        "bootstrap_ap_ci_low": 0.07563092559849045,
+        "bootstrap_ap_ci_high": 0.09665865504223894,
+        "delta_vs_reference": -0.04146267532845278,
+        "delta_vs_reference_ci_low": -0.055166130208160705,
+        "delta_vs_reference_ci_high": -0.028372440813409016,
+        "probability_noninferior": 0.0,
+        "probability_better_than_reference": 0.0,
+        "noninferior": false,
+        "compute_proxy": 74799,
+        "validation_wins": 0,
+        "test_ap_macro_damage_descriptive": 0.09832091519501342
+      },
+      {
+        "chunk_seconds": 20.0,
+        "paired_validation_ap_macro_damage": 0.09855324100129133,
+        "bootstrap_ap_mean": 0.10295178170829528,
+        "bootstrap_ap_standard_error": 0.006903324983858144,
+        "bootstrap_ap_ci_low": 0.08958718914146648,
+        "bootstrap_ap_ci_high": 0.11643267182781393,
+        "delta_vs_reference": -0.02472388056634138,
+        "delta_vs_reference_ci_low": -0.03349071028798374,
+        "delta_vs_reference_ci_high": -0.013417996821760604,
+        "probability_noninferior": 0.004,
+        "probability_better_than_reference": 0.0,
+        "noninferior": false,
+        "compute_proxy": 57127,
+        "validation_wins": 0,
+        "test_ap_macro_damage_descriptive": 0.0922688796705179
+      },
+      {
+        "chunk_seconds": 25.0,
+        "paired_validation_ap_macro_damage": 0.07703627609485549,
+        "bootstrap_ap_mean": 0.08205527068768993,
+        "bootstrap_ap_standard_error": 0.007261952115986373,
+        "bootstrap_ap_ci_low": 0.06910001343544059,
+        "bootstrap_ap_ci_high": 0.095987460706839,
+        "delta_vs_reference": -0.04624084547277722,
+        "delta_vs_reference_ci_low": -0.05318275010048012,
+        "delta_vs_reference_ci_high": -0.03631460559706091,
+        "probability_noninferior": 0.0,
+        "probability_better_than_reference": 0.0,
+        "noninferior": false,
+        "compute_proxy": 45657,
+        "validation_wins": 0,
+        "test_ap_macro_damage_descriptive": 0.08679691664836933
+      },
+      {
+        "chunk_seconds": 30.0,
+        "paired_validation_ap_macro_damage": 0.12327712156763271,
+        "bootstrap_ap_mean": 0.12690446668682506,
+        "bootstrap_ap_standard_error": 0.009006777455275894,
+        "bootstrap_ap_ci_low": 0.10992776097359686,
+        "bootstrap_ap_ci_high": 0.14460894593439483,
+        "delta_vs_reference": 0.0,
+        "delta_vs_reference_ci_low": 0.0,
+        "delta_vs_reference_ci_high": 0.0,
+        "probability_noninferior": 1.0,
+        "probability_better_than_reference": 0.0,
+        "noninferior": true,
+        "compute_proxy": 43297,
+        "validation_wins": 5,
+        "test_ap_macro_damage_descriptive": 0.1370574899102155
+      },
+      {
+        "chunk_seconds": 35.0,
+        "paired_validation_ap_macro_damage": 0.0703047929707769,
+        "bootstrap_ap_mean": 0.07630348375696658,
+        "bootstrap_ap_standard_error": 0.007650576473420266,
+        "bootstrap_ap_ci_low": 0.06147402011699861,
+        "bootstrap_ap_ci_high": 0.090579768735057,
+        "delta_vs_reference": -0.052972328596855814,
+        "delta_vs_reference_ci_low": -0.06492308720899595,
+        "delta_vs_reference_ci_high": -0.03514373872746542,
+        "probability_noninferior": 0.0,
+        "probability_better_than_reference": 0.0,
+        "noninferior": false,
+        "compute_proxy": 32642,
+        "validation_wins": 0,
+        "test_ap_macro_damage_descriptive": 0.08039824178932074
+      }
+    ],
+    "recommendation": {
+      "schema_version": "1.0",
+      "selection_version": "1.2.0",
+      "profile": "paired_video_cluster_bootstrap",
+      "recommended_seconds": 30.0,
+      "reference_seconds": 30.0,
+      "noninferiority_margin": 0.01,
+      "paired_validation_ap_macro_damage": 0.12327712156763271,
+      "delta_vs_reference": 0.0,
+      "delta_vs_reference_ci_low": 0.0,
+      "delta_vs_reference_ci_high": 0.0,
+      "compute_proxy": 43297,
+      "eligible_seconds": [
+        30.0
+      ],
+      "selection_rule": "menor filas_train×modelos entre longitudes cuyo límite inferior bootstrap de ΔAP frente a la referencia es al menos -margen",
+      "bootstrap_split": "validation",
+      "bootstrap_cluster": "video_id",
+      "test_used_for_selection": false,
+      "warning": "La inferencia sigue condicionada a etiquetas temporales proxy y a cohortes parcialmente solapadas; la activación final es manual."
+    },
+    "test_used_for_selection": false,
+    "limitations": [
+      "Las cohortes repetidas pueden solaparse y no son folds independientes.",
+      "El bootstrap preserva la dependencia intravideo, pero no corrige etiquetas proxy.",
+      "Se usa la intersección de videos con predicciones en todas las longitudes y modelos."
+    ]
+  },
+  "recommendation": {
+    "schema_version": "1.0",
+    "selection_version": "1.2.0",
+    "profile": "paired_video_cluster_bootstrap",
+    "recommended_seconds": 30.0,
+    "reference_seconds": 30.0,
+    "noninferiority_margin": 0.01,
+    "paired_validation_ap_macro_damage": 0.12327712156763271,
+    "delta_vs_reference": 0.0,
+    "delta_vs_reference_ci_low": 0.0,
+    "delta_vs_reference_ci_high": 0.0,
+    "compute_proxy": 43297,
+    "eligible_seconds": [
+      30.0
+    ],
+    "selection_rule": "menor filas_train×modelos entre longitudes cuyo límite inferior bootstrap de ΔAP frente a la referencia es al menos -margen",
+    "bootstrap_split": "validation",
+    "bootstrap_cluster": "video_id",
+    "test_used_for_selection": false,
+    "warning": "La inferencia sigue condicionada a etiquetas temporales proxy y a cohortes parcialmente solapadas; la activación final es manual."
+  },
+  "runtime": {
+    "wall_seconds_this_invocation": 838.472,
+    "model_elapsed_seconds_recorded": 570.434,
+    "budget_seconds": 1800.0,
+    "exceeded_budget": false,
+    "note": "El presupuesto es una meta de diseño, no un corte destructivo; cada ajuste y cada predicción quedan reanudables por firma."
+  },
+  "reporting_status": "complete"
+}

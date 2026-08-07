@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "selection_version": "1.2.0",
+  "profile": "paired_video_cluster_bootstrap",
+  "recommended_seconds": 30.0,
+  "reference_seconds": 30.0,
+  "noninferiority_margin": 0.01,
+  "paired_validation_ap_macro_damage": 0.12327712156763271,
+  "delta_vs_reference": 0.0,
+  "delta_vs_reference_ci_low": 0.0,
+  "delta_vs_reference_ci_high": 0.0,
+  "compute_proxy": 43297,
+  "eligible_seconds": [
+    30.0
+  ],
+  "selection_rule": "menor filas_train×modelos entre longitudes cuyo límite inferior bootstrap de ΔAP frente a la referencia es al menos -margen",
+  "bootstrap_split": "validation",
+  "bootstrap_cluster": "video_id",
+  "test_used_for_selection": false,
+  "warning": "La inferencia sigue condicionada a etiquetas temporales proxy y a cohortes parcialmente solapadas; la activación final es manual."
+}

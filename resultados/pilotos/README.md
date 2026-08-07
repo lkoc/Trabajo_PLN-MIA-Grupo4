@@ -14,7 +14,8 @@ El 5 de agosto de 2026 se verificaron instalados los tres modelos y se ejecutó 
 
 ## Longitud de chunks
 
-`01_02_optimizacion_longitud_chunks.ipynb` contiene dos perfiles CPU. Ambos
+`01_02_optimizacion_longitud_chunks.ipynb` contiene perfiles CPU rápido,
+confirmatorio y robusto. Todos
 vuelven a trocear, entrenan desde cero, calibran en `validation` e infieren en
 `validation` y `test` para cada longitud; ningún modelo entrenado a 30 s se usa
 para evaluar otra longitud.
@@ -43,6 +44,14 @@ La recomendación confirmatoria del 6 de agosto de 2026 es **conservar 30 s**.
 35 s es más barato, pero su pérdida de 0.0588 AP excede la tolerancia absoluta
 de 0.01. `test` no intervino en la selección. Estos valores siguen siendo
 proxy y no sustituyen la evaluación productiva del flujo completo.
+
+El perfil robusto del 7 de agosto completó cinco cohortes de 300/100/100 videos,
+75 ajustes y 1 000 réplicas bootstrap agrupadas por `video_id` en 838.5 s. Con
+30 s como referencia y margen de no inferioridad de 0.01 AP, obtuvo AP `0.1233`
+e IC 95% `[0.1099, 0.1446]`; ninguna otra longitud fue no inferior. `test` no
+participó en la selección. Los resultados están en
+`chunk_length/robust_30min/robust_comparison.json` y
+`robust_recommendation.json`.
 
 El resultado completo, las semillas, cohortes y métricas por modelo se
 sincronizan en `chunk_length_expanded/confirmatory_comparison.json`; su

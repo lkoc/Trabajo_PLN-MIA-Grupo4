@@ -23,6 +23,26 @@ La adquisición debe respetar los términos de la plataforma [3] y las
 consideraciones contextuales de la investigación en Internet [4]. El proyecto
 no usa este muestreo para estimar prevalencias de daño en YouTube o en el Perú.
 
+### Estado de la versión sincronizada al 7 de agosto de 2026
+
+La versión actual de `01_01` está preparada para continuar la adquisición en
+esta máquina: `DISCOVER_NEW=False`, `FETCH_NEW=True` y
+`BACKFILL_MISSING_VTT=True`. En consecuencia, no amplía el descubrimiento, pero
+sí intenta primero completar los VTT faltantes del corpus conocido y después
+procesa candidatos ya materializados. Usa lotes de 10, una pausa adicional de
+15 segundos entre lotes, pausas internas pseudoaleatorias de 2.5–10 segundos y
+un timeout de socket de 30 segundos por operación. Los límites de backfill y de
+videos nuevos están en `None`, por lo que la ejecución recorre toda la cola y
+puede reanudarse después de una interrupción.
+
+Los índices leídos al actualizar este documento no representan todavía el
+cierre de la corrida: las particiones por canal continúan creciendo y existen
+VTT nuevos aún no incorporados al último `vtt_by_video/index.json`. Ese índice
+anterior registra 3 274 archivos para 3 270 videos y un manifiesto de 983 VTT
+faltantes. Por ello, 983 es un checkpoint de entrada, no el faltante final. La
+cifra consolidada solo debe reportarse después de terminar `01_01`, regenerar
+ambos índices y volver a calcular `missing_vtt.jsonl`.
+
 ## 2. Principios operativos
 
 El diseño aplica los siguientes principios:
@@ -61,7 +81,8 @@ La variable `DISCOVERY_MODE` admite tres valores:
 `DISCOVER_NEW=False` evita las consultas de descubrimiento. En modo `directed`
 se reutiliza la última cohorte dirigida materializada. `FETCH_NEW=False` permite
 inspeccionar el plan, los candidatos, el canónico y la caché sin solicitar
-subtítulos nuevos.
+subtítulos nuevos; también impide que el backfill acceda a la red. El valor
+actual es `FETCH_NEW=True` porque se desea continuar la descarga parcial.
 
 ## 4. Reutilización y filtro previo
 
@@ -73,10 +94,13 @@ Antes de cualquier descarga, el cuaderno:
    todavía falten, salvo que esté activo el reinicio desde cero;
 3. vuelve a materializar las particiones por canal desde el canónico ya
    consolidado;
-4. inventaría todo `video_id` con texto disponible en el canónico, la caché,
+4. consolida e indexa los VTT locales, calcula por `video_id` el manifiesto
+   exacto de transcripciones sin VTT válido y ejecuta esa cola de backfill antes
+   de adquirir videos nuevos;
+5. inventaría todo `video_id` con texto disponible en el canónico, la caché,
    los snapshots, los datasets model-ready y los chunks históricos;
-5. carga y deduplica candidatos por `video_id`; y
-6. elimina de la cohorte activa la unión global de videos conocidos, no solo
+6. carga y deduplica candidatos por `video_id`; y
+7. elimina de la cohorte activa la unión global de videos conocidos, no solo
    los presentes en el canónico.
 
 Los datasets y chunks históricos no se convierten artificialmente en una
@@ -260,7 +284,7 @@ descubrirla nuevamente. Los fallos también quedan registrados en el checkpoint,
 pero se reintentan en una ejecución posterior; las fuentes exitosas anteriores
 no se repiten.
 
-`YT_SOCKET_TIMEOUT_SECONDS=45` limita cada operación HTTP de `yt-dlp`. Al
+`YT_SOCKET_TIMEOUT_SECONDS=30` limita cada operación HTTP de `yt-dlp`. Al
 agotarse, se aplican los reintentos configurados y, si no hay recuperación, la
 fuente se registra como `timeout`, se guarda su estado y el recorrido continúa
 con la siguiente. El timeout no es un límite de duración total del canal: un
@@ -298,6 +322,12 @@ los VTT ausentes, aunque la transcripción JSON ya exista. Si solo responde
 `transcript-api` y una nota de procedencia; no se presentan como VTT originales
 de `yt-dlp`.
 
+Esta cola se procesa antes que los candidatos nuevos y usa
+`datos/raw/fallos_vtt_backfill.jsonl`, separado de los fallos de adquisición.
+Cada éxito conserva primero el VTT y desaparece del siguiente manifiesto al
+reindexar; una interrupción no obliga a repetirlo. `MAX_VTT_BACKFILL=None`
+recorre todos los pendientes y un entero permite una prueba acotada.
+
 La versión anterior del flujo activo abría con `requests` la URL firmada de
 `youtube.com/api/timedtext` que había localizado `yt-dlp`. Esa separación no
 existía en el cuaderno histórico y podía perder parte del contexto HTTP que
@@ -322,12 +352,12 @@ en el título.
 
 La regulación ocurre en dos niveles:
 
-- `yt-dlp` recibe `sleep_interval=5`, `max_sleep_interval=10`,
-  `sleep_interval_requests=5` y `sleep_interval_subtitles=5`, además de tres
-  reintentos para extracción y descarga y un timeout de socket de 45 segundos
+- `yt-dlp` recibe `sleep_interval=2.5`, `max_sleep_interval=10`,
+  `sleep_interval_requests=2.5` y `sleep_interval_subtitles=2.5`, además de tres
+  reintentos para extracción y descarga y un timeout de socket de 30 segundos
   por operación HTTP;
 - `ingest_incremental` procesa toda la cola en lotes de
-  `NETWORK_BATCH_SIZE=10` y espera `NETWORK_BATCH_PAUSE_SECONDS=20` antes del
+  `NETWORK_BATCH_SIZE=10` y espera `NETWORK_BATCH_PAUSE_SECONDS=15` antes del
   lote siguiente.
 
 El lote cuenta solo llamadas nuevas: reutilizar caché o filtrar un `video_id`
@@ -392,6 +422,7 @@ sin repetir los canales o consultas exitosos.
 | `datos/raw/manifests/discovery_<modo>_checkpoint.json` | Resultado atómico y reanudable por canal o consulta |
 | `datos/raw/fallos_descubrimiento_ultima_ejecucion.json` | Fallos de canales y consultas de la corrida |
 | `datos/raw/fallos_adquisicion.jsonl` | Fallos deduplicados por video y motivo |
+| `datos/raw/fallos_vtt_backfill.jsonl` | Fallos de la recuperación específica de VTT ya conocidos |
 | `datos/raw/transcripts_cache/*.json` | Checkpoints atómicos por video |
 | `datos/raw/transcripts_raw.jsonl` | Vista canónica de transcripciones |
 | `datos/raw/transcripts_by_channel/*.jsonl` | Checkpoint sincronizable por canal, deduplicado por `video_id` |

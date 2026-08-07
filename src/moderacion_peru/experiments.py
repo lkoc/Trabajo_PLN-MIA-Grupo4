@@ -56,6 +56,7 @@ def _complete_candidate(path: Path, signature: str) -> dict[str, Any] | None:
         target = manifest.parent / record["path"]
         if not target.is_file() or sha256_file(target) != record["sha256"]:
             return None
+    candidate["candidate_path"] = str(path)
     return candidate
 
 

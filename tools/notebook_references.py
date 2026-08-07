@@ -216,6 +216,16 @@ REFERENCE_LIBRARY = {
         "the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets,\" PLOS ONE, "
         "vol. 10, no. 3, Art. no. e0118432, 2015, doi: 10.1371/journal.pone.0118432."
     ),
+    "efron1979bootstrap": (
+        "B. Efron, \"Bootstrap Methods: Another Look at the Jackknife,\" The Annals "
+        "of Statistics, vol. 7, no. 1, pp. 1–26, 1979, "
+        "doi: 10.1214/aos/1176344552."
+    ),
+    "field2007clusterbootstrap": (
+        "C. A. Field and A. H. Welsh, \"Bootstrapping Clustered Data,\" Journal of "
+        "the Royal Statistical Society: Series B, vol. 69, no. 3, pp. 369–390, "
+        "2007, doi: 10.1111/j.1467-9868.2007.00593.x."
+    ),
     "sklearn2026averageprecision": (
         "scikit-learn developers, \"average_precision_score API,\" scikit-learn API "
         "Reference, 2026. [Online]. Available: https://scikit-learn.org/stable/modules/"

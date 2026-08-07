@@ -15,7 +15,7 @@ resultados/metricas/*
 resultados/figuras/*
 resultados/logs/*
 resultados/operacion_05/*
-05_frontend_despliegue/*
+archivo/05_frontend_despliegue/*
 artefactos/*
 datos/model_ready/v2/*
 resultados/pilotos/*
@@ -23,6 +23,14 @@ resultados/pilotos/*
 resultados/pilotos/chunk_length_expanded/*
 !resultados/pilotos/chunk_length_expanded/confirmatory_comparison.json
 !resultados/pilotos/chunk_length_expanded/confirmatory_recommendation.json
+!resultados/pilotos/chunk_length/
+resultados/pilotos/chunk_length/*
+!resultados/pilotos/chunk_length/robust_30min/
+resultados/pilotos/chunk_length/robust_30min/*
+!resultados/pilotos/chunk_length/robust_30min/confirmatory_comparison.json
+!resultados/pilotos/chunk_length/robust_30min/confirmatory_recommendation.json
+!resultados/pilotos/chunk_length/robust_30min/robust_comparison.json
+!resultados/pilotos/chunk_length/robust_30min/robust_recommendation.json
 archivo/chunking_configurations/*/state/**
 resultados/colab_bundle/*.zip
 resultados/colab_bundle/*.gz

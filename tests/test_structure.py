@@ -232,9 +232,11 @@ def test_chunk_length_pilot_is_optional_and_materialization_is_separate():
     assert not (ROOT / "flujo" / "01_datos" / "01_02_limpieza_troceado_incremental.ipynb").exists()
     pilot = nbformat.read(pilot_path, as_version=4)
     source = "\n".join(cell.source for cell in pilot.cells)
+    assert "show_table(" not in source or "limit=" not in source
     for control in (
         "RUN_CHUNK_LENGTH_SMOKE_TEST=False",
         "RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=False",
+        "RUN_CHUNK_LENGTH_ROBUST_TEST=False",
         "RUN_BOUNDED_HF_COMPARISON=False",
         "RUN_BOUNDED_OLLAMA_COMPARISON=False",
         "CANDIDATE_SECONDS=(15,20,25,30,35)",
@@ -242,6 +244,12 @@ def test_chunk_length_pilot_is_optional_and_materialization_is_separate():
         "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
         "OLLAMA_SMOKE_MODEL='gemma3:4b'",
         "OLLAMA_SMOKE_MAX_WALL_SECONDS=600.0",
+        "ROBUST_VIDEO_LIMITS={'train':300,'validation':100,'test':100}",
+        "ROBUST_SEEDS=(20260805,20260817,20260829,20260841,20260853)",
+        "ROBUST_BOOTSTRAP_REPLICATES=1000",
+        "ROBUST_REFERENCE_SECONDS=30.0",
+        "ROBUST_NONINFERIORITY_MARGIN=0.01",
+        "USE_ROBUST_RECOMMENDATION=False",
         "CONFIRMATORY_VIDEO_LIMITS={'train':200,'validation':80,'test':80}",
         "CONFIRMATORY_SEEDS=(20260805,20260817,20260829)",
         "MANUAL_CHUNK_SECONDS=30.0",
@@ -251,6 +259,8 @@ def test_chunk_length_pilot_is_optional_and_materialization_is_separate():
         "complement_nb",
         "sgd_incremental",
         "run_bounded_neural_chunk_comparison",
+        "run_chunk_length_robust_test",
+        "prepare_local_bundle_input('chunks_v2'",
         "prepare_local_bundle_input('dataset_5_salidas'",
     ):
         assert control in source

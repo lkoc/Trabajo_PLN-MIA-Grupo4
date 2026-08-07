@@ -1,11 +1,20 @@
 # Informe de selección de la longitud de chunks
 
-**Fecha de ejecución:** 6 de agosto de 2026  
+**Fecha de ejecución confirmatoria:** 6 de agosto de 2026
+
+**Actualización del protocolo robusto:** 7 de agosto de 2026
+
 **Decisión:** conservar ventanas de **30 segundos**  
 **Ámbito:** prueba confirmatoria local, corta y reproducible para fundamentar el
 preprocesamiento del paper y la presentación  
 **Artefacto de resultados:**
-[`confirmatory_comparison.json`](../resultados/pilotos/chunk_length_expanded/confirmatory_comparison.json)
+[`confirmatory_comparison.json`](../resultados/pilotos/chunk_length_expanded/confirmatory_comparison.json) y
+[`robust_comparison.json`](../resultados/pilotos/chunk_length/robust_30min/robust_comparison.json)
+
+La confirmación ampliada permanece como evidencia histórica ejecutada. El 7 de
+agosto se completó además el perfil robusto: cinco cohortes, 75 ajustes y 1 000
+réplicas bootstrap agrupadas por video. Ambas evaluaciones sostienen la misma
+decisión de 30 segundos.
 
 ## Resumen ejecutivo
 
@@ -28,6 +37,18 @@ el intervalo t descriptivo del 95% para las tres repeticiones fue
 tolerancia absoluta predefinida de `0.01`. Por ello, la evidencia ampliada
 justifica mantener 30 s como compromiso entre contexto, desempeño y costo.
 
+El diseño previo ya era pareado por cohorte, pero no utilizaba bootstrap y sus
+intervalos t con tres repeticiones eran únicamente descriptivos. Para mejorar
+la incertidumbre sin sustituir el esquema existente, se incorporó un perfil de
+cinco cohortes, 75 ajustes y 1 000 réplicas de bootstrap pareado agrupado por
+`video_id`. La nueva regla predeclara 30 s como referencia y un margen de no
+inferioridad de 0.01 AP; `test` sigue excluido de toda selección [3], [13], [14].
+La corrida robusta obtuvo AP macro de daño `0.1233`, IC bootstrap 95%
+`[0.1099, 0.1446]`, para 30 s. Ninguna otra longitud fue no inferior: el límite
+superior de `ΔAP` frente a 30 s permaneció por debajo de cero en las cuatro
+alternativas. La ejecución completa tardó 838.5 segundos, aproximadamente
+14 minutos, por debajo del presupuesto de 30 minutos.
+
 ## Fundamento metodológico del smoke test
 
 En este informe, *smoke test* no designa una prueba estadística ni una versión
@@ -42,12 +63,13 @@ un sistema [2]. La elección concreta de 72 videos, dos modelos y diez ajustes e
 el smoke test inicial fue una decisión operativa local; no procede de esas
 fuentes.
 
-El ejercicio tuvo tres niveles deliberadamente distintos:
+El ejercicio y su ampliación tienen cuatro niveles deliberadamente distintos:
 
 | Nivel | Propósito válido | Lo que no permite concluir |
 |---|---|---|
 | Smoke test rápido | detectar errores de contrato y comprobar que cada longitud puede completar el flujo | elegir por sí solo una longitud ni reportar desempeño final |
 | Confirmación local ampliada | comparar el orden relativo de cinco longitudes con entrenamiento real y cohortes pareadas | afirmar significancia fuerte o generalización productiva |
+| Perfil robusto de ~30 min | cuantificar incertidumbre con cinco cohortes y bootstrap pareado por video; aplicar una regla de no inferioridad predeclarada | corregir etiquetas proxy, convertir cohortes solapadas en folds independientes o anticipar resultados aún no ejecutados |
 | Evaluación productiva posterior | entrenar las familias finales y reportar el modelo congelado | reutilizar test para volver a escoger longitud o modelo |
 
 El smoke test rápido sugirió 35 s, mientras la confirmación ampliada favoreció
@@ -107,6 +129,51 @@ La tercera ejecución usó 200/80/80 videos por cohorte y mantuvo tres modelos,
 tres semillas, acuerdo temporal y 20 000 rasgos. También completó 45 ajustes y
 terminó en aproximadamente 5.6 minutos. Sus resultados son la base de la
 decisión vigente y se desarrollan en las secciones siguientes.
+
+### 4. Perfil robusto de aproximadamente 30 minutos
+
+La versión actual conserva las cinco longitudes, los tres modelos CPU, la
+transferencia por acuerdo temporal y los splits congelados. Amplía la muestra a
+300/100/100 videos por cohorte, usa cinco semillas deterministas y 25 000
+rasgos TF-IDF. El diseño requiere
+`5 longitudes × 3 modelos × 5 cohortes = 75` ajustes. La ejecución observada
+terminó en 838.5 segundos —aproximadamente 14 minutos—;
+`ROBUST_RUNTIME_BUDGET_SECONDS=1800` es una meta de diseño registrada, no un
+corte que descarte una cohorte a mitad de ejecución.
+
+Después de los ajustes, se cargan las predicciones de `validation`, se toma la
+intersección de `video_id` presente en todas las longitudes y modelos de cada
+cohorte, y se realizan 1 000 réplicas. Cada réplica remuestrea videos completos
+con reemplazo y conserva todos sus chunks. El mismo remuestreo se aplica a las
+cinco longitudes y los tres modelos, de modo que las diferencias permanezcan
+pareadas y la dependencia intravideo no se trate como si cada chunk fuera una
+observación independiente [13], [14].
+
+La estadística primaria es la media de AP macro de los cuatro daños sobre
+modelos y cohortes. Para cada alternativa se obtiene un intervalo percentil del
+95% de `ΔAP = AP_alternativa − AP_30s`. Se declara no inferior solo si el límite
+inferior es al menos `−0.01`; entre las no inferiores se elige el menor proxy
+`filas_train × modelos`. La referencia de 30 s, el margen, el nivel de confianza
+y la regla quedan definidos antes de ejecutar el perfil. `test` se calcula solo
+para descripción y nunca entra al bootstrap ni a la recomendación.
+
+Los artefactos ejecutados son:
+
+- `resultados/pilotos/chunk_length/robust_30min/robust_comparison.json`;
+- `resultados/pilotos/chunk_length/robust_30min/robust_recommendation.json`.
+
+30 s alcanzó AP macro de daño `0.1233`, con IC percentil 95%
+`[0.1099, 0.1446]`. Las diferencias de 15, 20, 25 y 35 s frente a la referencia
+fueron respectivamente `−0.0415`, `−0.0247`, `−0.0462` y `−0.0530`; todos sus
+intervalos quedaron por debajo de cero y ninguno satisfizo el margen de no
+inferioridad. Los 100 videos de validation estuvieron presentes en todas las
+alternativas de cada una de las cinco cohortes.
+
+El bootstrap mejora la cuantificación de incertidumbre frente a tres intervalos
+t descriptivos, pero no elimina el solapamiento entre cohortes, no crea nuevas
+anotaciones humanas y no corrige posibles sesgos de la transferencia temporal.
+Por ello es una evaluación más robusta y defendible dentro del corpus actual,
+no una demostración de validez externa.
 
 ## Pregunta y criterio de decisión
 
@@ -308,6 +375,20 @@ de cruzar regiones con etiquetas distintas y pierde ejemplos bajo la regla de
 acuerdo temporal. Esta explicación es plausible y no debe presentarse como un
 mecanismo causal demostrado.
 
+## Estado y plantilla del perfil robusto
+
+| Campo predeclarado | Valor actual |
+|---|---|
+| Longitudes | 15, 20, 25, 30 y 35 s |
+| Cohortes | 5, pareadas por `video_id` dentro de cada repetición |
+| Videos por cohorte | 300 train / 100 validation / 100 test |
+| Modelos | ComplementNB, regresión logística y SGD |
+| Ajustes | 75 |
+| Bootstrap | 1 000 réplicas agrupadas por video, IC percentil 95% |
+| Referencia / margen | 30 s / 0.01 AP de no inferioridad |
+| Selección | solo `validation`; menor costo entre no inferiores |
+| Resultado robusto | **30 s**, AP 0.1233, IC 95% [0.1099, 0.1446]; única no inferior |
+
 ## Texto recomendado para el paper
 
 > La longitud de los fragmentos se seleccionó mediante tres submuestras
@@ -322,6 +403,11 @@ mecanismo causal demostrado.
 Al incorporar este texto debe citarse la fuente de AP y de los modelos, y el
 informe debe figurar como artefacto reproducible del proyecto. Las métricas deben
 redondearse en la publicación, pero los valores completos permanecen en JSON.
+
+Puede añadirse: “La sensibilidad de la decisión se evaluó mediante cinco
+cohortes pareadas y 1 000 réplicas bootstrap agrupadas por video. La ventana de
+30 s obtuvo AP macro de daño 0.1233, IC 95% [0.1099, 0.1446], y fue la única
+alternativa que satisfizo el margen predeclarado de no inferioridad de 0.01 AP”.
 
 ## Contenido recomendado para la presentación
 
@@ -341,6 +427,9 @@ selección.
   temporales, no nuevas anotaciones humanas ciegas.
 - Las tres cohortes se solapan y no son folds independientes; por ello sus
   intervalos son descriptivos y no pruebas de significancia [7].
+- En el perfil robusto, el remuestreo por video respeta la dependencia entre
+  chunks de un mismo video, pero las cinco cohortes continúan siendo
+  submuestras parcialmente solapadas y no cinco experimentos independientes.
 - Se compararon modelos clásicos ligeros; otra arquitectura puede responder de
   forma diferente a la longitud.
 - La métrica absoluta no representa un modelo productivo ni sustituye el
@@ -359,6 +448,10 @@ temporales más finas antes de agregarlas.
 
 El protocolo está implementado en
 [`01_02_optimizacion_longitud_chunks.ipynb`](../flujo/01_datos/01_02_optimizacion_longitud_chunks.ipynb).
+Antes de construir las cohortes, el cuaderno verifica o restaura desde el bundle
+sincronizado tanto `chunks_v2` —necesario para recuperar los tiempos de las
+etiquetas históricas— como `dataset_5_salidas`; ambos deben coincidir con sus
+SHA-256 declarados.
 Los controles relevantes son:
 
 - `RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=True`;
@@ -367,6 +460,28 @@ Los controles relevantes son:
 - `CONFIRMATORY_MODELS=('complement_nb','logistic_regression','sgd_incremental')`;
 - `USE_CONFIRMATORY_RECOMMENDATION=True` para previsualizar 30 s;
 - `APPLY_CHUNK_SELECTION=False` para no mover el dataset durante la prueba.
+
+Para ejecutar el perfil robusto nuevo, use en cambio:
+
+- `RUN_CHUNK_LENGTH_SMOKE_TEST=False`;
+- `RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=False`;
+- `RUN_CHUNK_LENGTH_ROBUST_TEST=True`;
+- `ROBUST_VIDEO_LIMITS={'train':300,'validation':100,'test':100}`;
+- `ROBUST_SEEDS=(20260805,20260817,20260829,20260841,20260853)`;
+- `ROBUST_MAX_FEATURES=25000`;
+- `ROBUST_BOOTSTRAP_REPLICATES=1000`;
+- `ROBUST_REFERENCE_SECONDS=30.0`;
+- `ROBUST_NONINFERIORITY_MARGIN=0.01`;
+- `RUN_BOUNDED_HF_COMPARISON=False` y
+  `RUN_BOUNDED_OLLAMA_COMPARISON=False` para respetar el presupuesto;
+- `USE_ROBUST_RECOMMENDATION=False` y `APPLY_CHUNK_SELECTION=False` durante la
+  primera auditoría.
+
+La corrida guarda cada candidato por firma. Si se interrumpe, la siguiente
+ejecución reutiliza los ajustes completos y continúa con los pendientes. Una
+vez revisados los dos JSON robustos, `USE_ROBUST_RECOMMENDATION=True` solo
+previsualiza la elección; el cambio material sigue exigiendo
+`APPLY_CHUNK_SELECTION=True`.
 
 La corrida es reanudable por firma. El cambio de longitud solo ocurre si se
 activa explícitamente `APPLY_CHUNK_SELECTION=True`. La configuración actual
@@ -440,3 +555,11 @@ doi: [10.1007/978-3-7908-2604-3_16](https://doi.org/10.1007/978-3-7908-2604-3_16
 Learning in Python,” *Journal of Machine Learning Research*, vol. 12,
 pp. 2825–2830, 2011.
 [En línea](https://www.jmlr.org/papers/v12/pedregosa11a.html).
+
+[13] B. Efron, “Bootstrap Methods: Another Look at the Jackknife,” *The Annals
+of Statistics*, vol. 7, no. 1, pp. 1–26, 1979,
+doi: [10.1214/aos/1176344552](https://doi.org/10.1214/aos/1176344552).
+
+[14] C. A. Field and A. H. Welsh, “Bootstrapping Clustered Data,” *Journal of
+the Royal Statistical Society: Series B*, vol. 69, no. 3, pp. 369–390, 2007,
+doi: [10.1111/j.1467-9868.2007.00593.x](https://doi.org/10.1111/j.1467-9868.2007.00593.x).

@@ -31,7 +31,7 @@ from .io import (
 from .taxonomy import load_taxonomy
 
 
-CHUNK_SELECTION_VERSION = "1.1.0"
+CHUNK_SELECTION_VERSION = "1.2.0"
 DEFAULT_CHUNKING_CONFIG_PATH = Path("config/chunking.json")
 ACTIVE_CHUNKING_STATE_PATH = Path("datos/processed/chunking_active.json")
 DEFAULT_CHUNK_SMOKE_HF_MODEL = (
@@ -239,10 +239,23 @@ def build_temporal_label_references(
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """Une el dataset histórico con sus tiempos sin confiar en IDs secuenciales antiguos."""
 
+    chunks_file = Path(chunks_path)
+    dataset_file = Path(dataset_path)
+    if not chunks_file.is_file():
+        raise FileNotFoundError(
+            f"Faltan los chunks temporales de referencia: {chunks_file}. "
+            "Restaure el input 'chunks_v2' desde el bundle sincronizado."
+        )
+    if not dataset_file.is_file():
+        raise FileNotFoundError(
+            f"Falta el dataset etiquetado de referencia: {dataset_file}. "
+            "Restaure el input 'dataset_5_salidas' desde el bundle sincronizado."
+        )
+
     labels_by_key: dict[tuple[str, str], tuple[tuple[str, ...], str]] = {}
     conflicts: set[tuple[str, str]] = set()
     dataset_rows = 0
-    for row in read_jsonl(dataset_path):
+    for row in read_jsonl(dataset_file):
         dataset_rows += 1
         key = _text_key(str(row.get("video_id", "")), str(row.get("text", "")))
         value = (tuple(row.get("coarse_labels", [])), str(row.get("split", "")))
@@ -254,7 +267,7 @@ def build_temporal_label_references(
 
     references: list[dict[str, Any]] = []
     chunk_rows = 0
-    for chunk in read_jsonl(chunks_path):
+    for chunk in read_jsonl(chunks_file):
         chunk_rows += 1
         key = _text_key(str(chunk.get("video_id", "")), str(chunk.get("text", "")))
         matched = labels_by_key.get(key)
@@ -278,6 +291,11 @@ def build_temporal_label_references(
         "conflicting_keys_excluded": len(conflicts),
         "matched_videos": len({row["video_id"] for row in references}),
     }
+    if not references:
+        raise ValueError(
+            "Los chunks y el dataset existen, pero no comparten referencias "
+            f"temporales por (video_id, hash_texto): {stats}"
+        )
     return references, stats
 
 
@@ -556,6 +574,16 @@ def run_chunk_length_smoke_test(
             max_features=max_features,
         )
         candidates = result["candidates"]
+        validation_prediction_paths = {
+            str(candidate["experiment"]): (
+                Path(candidate["candidate_path"]).parent
+                / "predictions_validation.jsonl"
+            )
+            .resolve()
+            .relative_to(duration_dir.resolve())
+            .as_posix()
+            for candidate in candidates
+        }
         elapsed = time.perf_counter() - started
         comparison = {
             "chunk_seconds": chunk_seconds,
@@ -570,6 +598,7 @@ def run_chunk_length_smoke_test(
             "test_ap_macro_damage_descriptive": _mean_metric(candidates, "test", "average_precision_macro_damage"),
             "validation_ap_by_model": _metric_by_model(candidates, "validation", "average_precision_macro_damage"),
             "test_ap_by_model_descriptive": _metric_by_model(candidates, "test", "average_precision_macro_damage"),
+            "validation_prediction_paths": validation_prediction_paths,
             "compute_proxy": split_counts["train"] * len(model_names),
             "elapsed_seconds_observed": round(elapsed, 3),
             "run_signature": result["run_signature"],
@@ -1239,4 +1268,464 @@ def run_chunk_length_confirmatory_test(
     }
     write_json_atomic(output / "confirmatory_comparison.json", payload)
     write_json_atomic(output / "confirmatory_recommendation.json", recommendation)
+    return payload
+
+
+def recommend_chunk_seconds_cluster_bootstrap(
+    comparisons: Sequence[dict[str, Any]],
+    *,
+    reference_seconds: float = 30.0,
+    noninferiority_margin: float = 0.01,
+) -> dict[str, Any]:
+    """Elige menor costo solo si el IC pareado descarta una pérdida relevante."""
+
+    if noninferiority_margin <= 0:
+        raise ValueError("El margen de no inferioridad debe ser positivo")
+    by_seconds = {float(row["chunk_seconds"]): row for row in comparisons}
+    reference = float(reference_seconds)
+    if reference not in by_seconds:
+        raise ValueError("La longitud de referencia debe estar entre las comparadas")
+    eligible = [
+        row
+        for row in comparisons
+        if float(row["delta_vs_reference_ci_low"])
+        >= -float(noninferiority_margin)
+    ]
+    if not eligible:
+        raise ValueError("Ni la referencia quedó marcada como no inferior")
+    chosen = min(
+        eligible,
+        key=lambda row: (
+            int(row["compute_proxy"]),
+            -float(row["paired_validation_ap_macro_damage"]),
+            -float(row["chunk_seconds"]),
+        ),
+    )
+    return {
+        "schema_version": "1.0",
+        "selection_version": CHUNK_SELECTION_VERSION,
+        "profile": "paired_video_cluster_bootstrap",
+        "recommended_seconds": float(chosen["chunk_seconds"]),
+        "reference_seconds": reference,
+        "noninferiority_margin": float(noninferiority_margin),
+        "paired_validation_ap_macro_damage": float(
+            chosen["paired_validation_ap_macro_damage"]
+        ),
+        "delta_vs_reference": float(chosen["delta_vs_reference"]),
+        "delta_vs_reference_ci_low": float(
+            chosen["delta_vs_reference_ci_low"]
+        ),
+        "delta_vs_reference_ci_high": float(
+            chosen["delta_vs_reference_ci_high"]
+        ),
+        "compute_proxy": int(chosen["compute_proxy"]),
+        "eligible_seconds": sorted(float(row["chunk_seconds"]) for row in eligible),
+        "selection_rule": (
+            "menor filas_train×modelos entre longitudes cuyo límite inferior "
+            "bootstrap de ΔAP frente a la referencia es al menos -margen"
+        ),
+        "bootstrap_split": "validation",
+        "bootstrap_cluster": "video_id",
+        "test_used_for_selection": False,
+        "warning": (
+            "La inferencia sigue condicionada a etiquetas temporales proxy y a "
+            "cohortes parcialmente solapadas; la activación final es manual."
+        ),
+    }
+
+
+def _prediction_blocks(path: Path) -> dict[str, tuple[Any, Any]]:
+    try:
+        import numpy as np
+    except ImportError as exc:
+        raise RuntimeError("NumPy es necesario para el bootstrap agrupado") from exc
+    taxonomy = load_taxonomy()
+    grouped_truth: dict[str, list[list[int]]] = defaultdict(list)
+    grouped_scores: dict[str, list[list[float]]] = defaultdict(list)
+    for row in read_jsonl(path):
+        video_id = str(row.get("video_id", ""))
+        if not video_id:
+            raise ValueError(f"Predicción sin video_id: {path}")
+        true_labels = set(row.get("true_labels", []))
+        scores = row.get("scores", {})
+        if set(scores) != set(taxonomy.target_labels):
+            raise ValueError(f"Predicción sin las cinco salidas: {path}")
+        grouped_truth[video_id].append(
+            [int(label in true_labels) for label in taxonomy.target_labels]
+        )
+        grouped_scores[video_id].append(
+            [float(scores[label]) for label in taxonomy.target_labels]
+        )
+    return {
+        video_id: (
+            np.asarray(grouped_truth[video_id], dtype=np.int8),
+            np.asarray(grouped_scores[video_id], dtype=float),
+        )
+        for video_id in sorted(grouped_truth)
+    }
+
+
+def _macro_damage_ap_from_blocks(
+    blocks: dict[str, tuple[Any, Any]],
+    sampled_videos: Sequence[str],
+) -> float:
+    try:
+        import numpy as np
+        from sklearn.metrics import average_precision_score
+    except ImportError as exc:
+        raise RuntimeError("Instale NumPy y scikit-learn para el bootstrap") from exc
+    truth_parts = [blocks[video_id][0] for video_id in sampled_videos]
+    score_parts = [blocks[video_id][1] for video_id in sampled_videos]
+    if not truth_parts:
+        raise ValueError("El bootstrap no recibió videos comunes")
+    truth = np.concatenate(truth_parts, axis=0)
+    scores = np.concatenate(score_parts, axis=0)
+    taxonomy = load_taxonomy()
+    values = []
+    for label in taxonomy.damage_labels:
+        index = taxonomy.target_labels.index(label)
+        values.append(
+            float(average_precision_score(truth[:, index], scores[:, index]))
+            if truth[:, index].any()
+            else 0.0
+        )
+    return float(np.mean(values))
+
+
+def _paired_video_cluster_bootstrap(
+    confirmatory: dict[str, Any],
+    output_root: Path,
+    *,
+    reference_seconds: float,
+    bootstrap_replicates: int,
+    confidence_level: float,
+    noninferiority_margin: float,
+    bootstrap_seed: int,
+) -> dict[str, Any]:
+    try:
+        import numpy as np
+    except ImportError as exc:
+        raise RuntimeError("NumPy es necesario para el bootstrap agrupado") from exc
+    if bootstrap_replicates < 200:
+        raise ValueError("Use al menos 200 réplicas bootstrap")
+    if not 0.8 <= confidence_level < 1:
+        raise ValueError("confidence_level debe estar en [0.8, 1)")
+
+    seconds = [
+        float(value) for value in confirmatory["configuration"]["candidate_seconds"]
+    ]
+    reference = float(reference_seconds)
+    if reference not in seconds:
+        raise ValueError("reference_seconds debe estar entre candidate_seconds")
+    models = [str(value) for value in confirmatory["configuration"]["model_names"]]
+    blocks: dict[int, dict[float, dict[str, dict[str, tuple[Any, Any]]]]] = {}
+    common_videos: dict[int, list[str]] = {}
+    prediction_files: list[Path] = []
+
+    for repetition in confirmatory["repetitions"]:
+        seed = int(repetition["seed"])
+        blocks[seed] = {}
+        video_sets: list[set[str]] = []
+        repetition_root = output_root / "repetitions" / f"seed-{seed}"
+        for chunk_seconds in seconds:
+            comparison = next(
+                row
+                for row in repetition["comparisons"]
+                if float(row["chunk_seconds"]) == chunk_seconds
+            )
+            relative_paths = comparison.get("validation_prediction_paths", {})
+            if set(relative_paths) != set(models):
+                raise ValueError(
+                    "Faltan rutas de predicción; regenere el perfil con la versión actual"
+                )
+            duration_root = repetition_root / f"{chunk_seconds:g}s"
+            blocks[seed][chunk_seconds] = {}
+            for model in models:
+                prediction_path = duration_root / str(relative_paths[model])
+                if not prediction_path.is_file():
+                    raise FileNotFoundError(prediction_path)
+                prediction_files.append(prediction_path)
+                model_blocks = _prediction_blocks(prediction_path)
+                blocks[seed][chunk_seconds][model] = model_blocks
+                video_sets.append(set(model_blocks))
+        common = sorted(set.intersection(*video_sets)) if video_sets else []
+        if len(common) < 20:
+            raise ValueError(
+                f"La cohorte {seed} solo tiene {len(common)} videos comunes; se requieren 20"
+            )
+        common_videos[seed] = common
+
+    seeds = [int(repetition["seed"]) for repetition in confirmatory["repetitions"]]
+    point_estimates: dict[float, float] = {}
+    for chunk_seconds in seconds:
+        seed_values = []
+        for seed in seeds:
+            model_values = [
+                _macro_damage_ap_from_blocks(
+                    blocks[seed][chunk_seconds][model], common_videos[seed]
+                )
+                for model in models
+            ]
+            seed_values.append(statistics.mean(model_values))
+        point_estimates[chunk_seconds] = statistics.mean(seed_values)
+
+    rng = np.random.default_rng(bootstrap_seed)
+    distributions = {chunk_seconds: [] for chunk_seconds in seconds}
+    for _ in range(bootstrap_replicates):
+        sampled_by_seed = {
+            seed: rng.choice(
+                common_videos[seed],
+                size=len(common_videos[seed]),
+                replace=True,
+            ).tolist()
+            for seed in seeds
+        }
+        for chunk_seconds in seconds:
+            seed_values = []
+            for seed in seeds:
+                model_values = [
+                    _macro_damage_ap_from_blocks(
+                        blocks[seed][chunk_seconds][model], sampled_by_seed[seed]
+                    )
+                    for model in models
+                ]
+                seed_values.append(statistics.mean(model_values))
+            distributions[chunk_seconds].append(statistics.mean(seed_values))
+
+    alpha = (1.0 - confidence_level) / 2.0
+    base_by_seconds = {
+        float(row["chunk_seconds"]): row
+        for row in confirmatory["aggregated_comparisons"]
+    }
+    reference_distribution = np.asarray(distributions[reference], dtype=float)
+    comparisons = []
+    for chunk_seconds in seconds:
+        distribution = np.asarray(distributions[chunk_seconds], dtype=float)
+        delta_distribution = distribution - reference_distribution
+        base = base_by_seconds[chunk_seconds]
+        comparisons.append(
+            {
+                "chunk_seconds": chunk_seconds,
+                "paired_validation_ap_macro_damage": point_estimates[chunk_seconds],
+                "bootstrap_ap_mean": float(distribution.mean()),
+                "bootstrap_ap_standard_error": float(distribution.std(ddof=1)),
+                "bootstrap_ap_ci_low": float(np.quantile(distribution, alpha)),
+                "bootstrap_ap_ci_high": float(
+                    np.quantile(distribution, 1.0 - alpha)
+                ),
+                "delta_vs_reference": (
+                    point_estimates[chunk_seconds] - point_estimates[reference]
+                ),
+                "delta_vs_reference_ci_low": float(
+                    np.quantile(delta_distribution, alpha)
+                ),
+                "delta_vs_reference_ci_high": float(
+                    np.quantile(delta_distribution, 1.0 - alpha)
+                ),
+                "probability_noninferior": float(
+                    np.mean(delta_distribution >= -noninferiority_margin)
+                ),
+                "probability_better_than_reference": float(
+                    np.mean(delta_distribution > 0)
+                ),
+                "noninferior": bool(
+                    np.quantile(delta_distribution, alpha)
+                    >= -noninferiority_margin
+                ),
+                "compute_proxy": int(base["compute_proxy"]),
+                "validation_wins": int(base["validation_wins"]),
+                "test_ap_macro_damage_descriptive": float(
+                    base["test_ap_macro_damage_descriptive"]
+                ),
+            }
+        )
+
+    recommendation = recommend_chunk_seconds_cluster_bootstrap(
+        comparisons,
+        reference_seconds=reference,
+        noninferiority_margin=noninferiority_margin,
+    )
+    return {
+        "schema_version": "1.0",
+        "method": "paired_video_cluster_percentile_bootstrap",
+        "unit_of_resampling": "video_id_with_all_its_chunks",
+        "aggregation": "mean_models_then_mean_cohorts",
+        "split": "validation",
+        "replicates": bootstrap_replicates,
+        "confidence_level": confidence_level,
+        "bootstrap_seed": bootstrap_seed,
+        "reference_seconds": reference,
+        "noninferiority_margin": noninferiority_margin,
+        "common_validation_videos_by_seed": {
+            str(seed): len(common_videos[seed]) for seed in seeds
+        },
+        "prediction_files": [
+            {
+                "path": path.resolve().relative_to(output_root.resolve()).as_posix(),
+                "sha256": sha256_file(path),
+            }
+            for path in sorted(set(prediction_files))
+        ],
+        "comparisons": comparisons,
+        "recommendation": recommendation,
+        "test_used_for_selection": False,
+        "limitations": [
+            "Las cohortes repetidas pueden solaparse y no son folds independientes.",
+            "El bootstrap preserva la dependencia intravideo, pero no corrige etiquetas proxy.",
+            "Se usa la intersección de videos con predicciones en todas las longitudes y modelos.",
+        ],
+    }
+
+
+def run_chunk_length_robust_test(
+    transcript_path: str | Path,
+    chunks_path: str | Path,
+    dataset_path: str | Path,
+    output_root: str | Path,
+    *,
+    candidate_seconds: Sequence[float] = (15, 20, 25, 30, 35),
+    reference_seconds: float = 30.0,
+    model_names: Sequence[str] = (
+        "complement_nb",
+        "logistic_regression",
+        "sgd_incremental",
+    ),
+    video_limits: dict[str, int] | None = None,
+    seeds: Sequence[int] = (20260805, 20260817, 20260829, 20260841, 20260853),
+    max_features: int = 25000,
+    minimum_overlap_fraction: float = 0.8,
+    bootstrap_replicates: int = 1000,
+    confidence_level: float = 0.95,
+    noninferiority_margin: float = 0.01,
+    bootstrap_seed: int = 20260807,
+    runtime_budget_seconds: float = 1800.0,
+    force: bool = False,
+) -> dict[str, Any]:
+    """Perfil defendible de ~30 min: cinco cohortes y bootstrap por video."""
+
+    if len(set(seeds)) < 5:
+        raise ValueError("El perfil robusto requiere al menos cinco cohortes")
+    limits = video_limits or {"train": 300, "validation": 100, "test": 100}
+    if runtime_budget_seconds <= 0:
+        raise ValueError("runtime_budget_seconds debe ser positivo")
+    output = Path(output_root)
+    output.mkdir(parents=True, exist_ok=True)
+    confirmatory_path = output / "confirmatory_comparison.json"
+    robust_path = output / "robust_comparison.json"
+    requested_configuration = {
+        "candidate_seconds": [float(value) for value in candidate_seconds],
+        "reference_seconds": float(reference_seconds),
+        "model_names": list(model_names),
+        "video_limits": limits,
+        "seeds": [int(seed) for seed in seeds],
+        "max_features": int(max_features),
+        "minimum_overlap_fraction": float(minimum_overlap_fraction),
+        "bootstrap_replicates": int(bootstrap_replicates),
+        "confidence_level": float(confidence_level),
+        "noninferiority_margin": float(noninferiority_margin),
+        "bootstrap_seed": int(bootstrap_seed),
+        "runtime_budget_seconds": float(runtime_budget_seconds),
+    }
+    if robust_path.is_file() and confirmatory_path.is_file() and not force:
+        cached = json.loads(robust_path.read_text(encoding="utf-8-sig"))
+        cached_signature_configuration = {
+            "confirmatory_sha256": sha256_file(confirmatory_path),
+            "reference_seconds": float(reference_seconds),
+            "bootstrap_replicates": int(bootstrap_replicates),
+            "confidence_level": float(confidence_level),
+            "noninferiority_margin": float(noninferiority_margin),
+            "bootstrap_seed": int(bootstrap_seed),
+        }
+        cached_signature = sha256_text(
+            json.dumps(
+                cached_signature_configuration,
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+        )
+        if (
+            cached.get("selection_version") == CHUNK_SELECTION_VERSION
+            and cached.get("configuration") == requested_configuration
+            and cached.get("run_signature") == cached_signature
+            and cached.get("reporting_status") == "complete"
+        ):
+            return cached
+
+    started = time.perf_counter()
+    confirmatory = run_chunk_length_confirmatory_test(
+        transcript_path,
+        chunks_path,
+        dataset_path,
+        output,
+        candidate_seconds=candidate_seconds,
+        model_names=model_names,
+        video_limits=limits,
+        seeds=seeds,
+        max_features=max_features,
+        minimum_overlap_fraction=minimum_overlap_fraction,
+        max_validation_ap_drop=noninferiority_margin,
+        force=force,
+    )
+    configuration = {
+        "confirmatory_sha256": sha256_file(confirmatory_path),
+        "reference_seconds": float(reference_seconds),
+        "bootstrap_replicates": int(bootstrap_replicates),
+        "confidence_level": float(confidence_level),
+        "noninferiority_margin": float(noninferiority_margin),
+        "bootstrap_seed": int(bootstrap_seed),
+    }
+    run_signature = sha256_text(
+        json.dumps(configuration, ensure_ascii=False, sort_keys=True)
+    )
+    if robust_path.is_file() and not force:
+        cached = json.loads(robust_path.read_text(encoding="utf-8-sig"))
+        if cached.get("run_signature") == run_signature:
+            return cached
+
+    bootstrap = _paired_video_cluster_bootstrap(
+        confirmatory,
+        output,
+        reference_seconds=reference_seconds,
+        bootstrap_replicates=bootstrap_replicates,
+        confidence_level=confidence_level,
+        noninferiority_margin=noninferiority_margin,
+        bootstrap_seed=bootstrap_seed,
+    )
+    elapsed = time.perf_counter() - started
+    observed_model_seconds = sum(
+        float(row["elapsed_seconds_observed_total"])
+        for row in confirmatory["aggregated_comparisons"]
+    )
+    payload = {
+        "schema_version": "1.0",
+        "selection_version": CHUNK_SELECTION_VERSION,
+        "profile": "robust_30min",
+        "run_signature": run_signature,
+        "configuration": requested_configuration,
+        "design": {
+            "fits": len(candidate_seconds) * len(model_names) * len(seeds),
+            "paired_cohorts": len(seeds),
+            "primary_metric": "validation_average_precision_macro_damage",
+            "reference_predeclared": True,
+            "test_used_for_selection": False,
+        },
+        "confirmatory_result": str(
+            confirmatory_path.resolve().relative_to(output.resolve())
+        ),
+        "bootstrap": bootstrap,
+        "recommendation": bootstrap["recommendation"],
+        "runtime": {
+            "wall_seconds_this_invocation": round(elapsed, 3),
+            "model_elapsed_seconds_recorded": round(observed_model_seconds, 3),
+            "budget_seconds": float(runtime_budget_seconds),
+            "exceeded_budget": elapsed > runtime_budget_seconds,
+            "note": (
+                "El presupuesto es una meta de diseño, no un corte destructivo; "
+                "cada ajuste y cada predicción quedan reanudables por firma."
+            ),
+        },
+        "reporting_status": "complete",
+    }
+    write_json_atomic(robust_path, payload)
+    write_json_atomic(output / "robust_recommendation.json", payload["recommendation"])
     return payload
