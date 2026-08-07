@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import html
 import json
 import math
@@ -15,7 +16,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
-from .io import append_jsonl_once, read_jsonl, sha256_file, sha256_text, write_json_atomic
+from .io import (
+    append_jsonl_once,
+    read_jsonl,
+    sha256_file,
+    sha256_text,
+    write_json_atomic,
+    write_jsonl_atomic,
+)
 
 
 TranscriptFetcher = Callable[[dict[str, Any]], dict[str, Any]]
@@ -707,6 +715,8 @@ def bootstrap_canonical_from_cache(
 
 CHANNEL_TRANSCRIPT_INDEX = "index.json"
 DEFAULT_MAX_CHANNEL_SHARD_BYTES = 25 * 1024 * 1024
+VTT_CHECKPOINT_INDEX = "index.json"
+VTT_MISSING_MANIFEST = "missing_vtt.jsonl"
 
 
 def _transcript_channel_fields(record: dict[str, Any]) -> tuple[str, str]:
@@ -1077,6 +1087,207 @@ def restore_canonical_from_channel_transcripts(
     }
 
 
+def vtt_video_id(path: str | Path) -> str:
+    """Extrae el ID de YouTube de ``video_id.idioma.vtt``."""
+
+    name = Path(path).name
+    if Path(name).suffix.casefold() != ".vtt":
+        raise ValueError(f"No es un archivo VTT: {path}")
+    video_id = name.split(".", 1)[0].strip()
+    if not video_id:
+        raise ValueError(f"El VTT no contiene video_id: {path}")
+    return video_id
+
+
+def _vtt_language(path: str | Path) -> str | None:
+    parts = Path(path).name.split(".")
+    return parts[1] if len(parts) > 2 and parts[1] else None
+
+
+def _persist_vtt_bytes(output_dir: str | Path, filename: str, payload: bytes) -> Path:
+    """Guarda bytes VTT atómicamente sin sobrescribir una variante diferente."""
+
+    target_dir = Path(output_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    safe_name = Path(filename).name
+    target = target_dir / safe_name
+    payload_sha = hashlib.sha256(payload).hexdigest()
+    if target.is_file():
+        if sha256_file(target) == payload_sha:
+            return target
+        target = target.with_name(f"{target.stem}.{payload_sha[:12]}.vtt")
+        if target.is_file():
+            if sha256_file(target) == payload_sha:
+                return target
+            raise ValueError(f"Colisión de VTT no resoluble: {target}")
+    fd, temporary_name = tempfile.mkstemp(prefix=f".{target.name}.", dir=target_dir)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary_name, target)
+    finally:
+        if os.path.exists(temporary_name):
+            os.unlink(temporary_name)
+    return target
+
+
+def _vtt_backfill_candidate(record: dict[str, Any]) -> dict[str, Any]:
+    source = record.get("source_candidate")
+    candidate = dict(source) if isinstance(source, dict) else {}
+    for key in (
+        "video_id",
+        "url",
+        "title",
+        "channel_id",
+        "channel_title",
+        "channel",
+        "channel_url",
+        "categoria_fuente",
+        "target_category",
+        "sampling_mode",
+    ):
+        if record.get(key) is not None:
+            candidate.setdefault(key, record[key])
+    candidate["video_id"] = str(record["video_id"])
+    candidate["previous_subtitle_source"] = (
+        record.get("subtitle_source") or record.get("fuente_subs")
+    )
+    return normalize_category_metadata(_json_safe(candidate))
+
+
+def materialize_vtt_checkpoint(
+    project_root: str | Path,
+    output_dir: str | Path,
+    transcript_records: Iterable[dict[str, Any]],
+) -> dict[str, Any]:
+    """Consolida VTT locales por video y publica índice y cola de faltantes.
+
+    Las fuentes originales permanecen intactas. El checkpoint plano conserva el
+    nombre de cada pista y deduplica por bytes; ``channel_key`` usa exactamente
+    el descriptor empleado por las particiones JSONL por canal.
+    """
+
+    root = Path(project_root).resolve()
+    target = Path(output_dir).resolve()
+    records: dict[str, dict[str, Any]] = {}
+    for raw_record in transcript_records:
+        record = normalize_category_metadata(_json_safe(raw_record))
+        video_id = str(record.get("video_id") or "").strip()
+        if video_id:
+            records.setdefault(video_id, record)
+
+    title_ids: dict[str, set[str]] = defaultdict(set)
+    for record in records.values():
+        channel_id, channel_title = _transcript_channel_fields(record)
+        if channel_id and channel_title:
+            title_ids[channel_title.casefold()].add(channel_id)
+    title_aliases = {
+        title: next(iter(channel_ids))
+        for title, channel_ids in title_ids.items()
+        if len(channel_ids) == 1
+    }
+
+    source_paths = [
+        path.resolve()
+        for path in sorted((root / "datos").rglob("*.vtt"))
+        if path.is_file() and target not in path.resolve().parents
+    ]
+    existing_hashes = {
+        path.name: sha256_file(path) for path in target.glob("*.vtt") if path.is_file()
+    } if target.is_dir() else {}
+    copied_sources: dict[str, list[str]] = defaultdict(list)
+    copied = reused = 0
+    for source in source_paths:
+        source_sha = sha256_file(source)
+        destination = _persist_vtt_bytes(target, source.name, source.read_bytes())
+        try:
+            relative_source = source.relative_to(root).as_posix()
+        except ValueError:
+            relative_source = source.as_posix()
+        copied_sources[destination.name].append(relative_source)
+        if existing_hashes.get(destination.name) == source_sha:
+            reused += 1
+        else:
+            copied += 1
+            existing_hashes[destination.name] = source_sha
+
+    entries: list[dict[str, Any]] = []
+    valid_video_ids: set[str] = set()
+    invalid_files = 0
+    for path in sorted(target.glob("*.vtt"), key=lambda item: item.name.casefold()):
+        payload = path.read_bytes()
+        valid_webvtt = payload.lstrip(b"\xef\xbb\xbf").startswith(b"WEBVTT") and b"-->" in payload
+        video_id = vtt_video_id(path)
+        if valid_webvtt:
+            valid_video_ids.add(video_id)
+        else:
+            invalid_files += 1
+        record = records.get(video_id, {"video_id": video_id})
+        channel_key, channel_file_stem = _channel_shard_descriptor(
+            record,
+            title_aliases=title_aliases,
+        )
+        channel_id, channel_title = _transcript_channel_fields(record)
+        entries.append(
+            {
+                "file": path.name,
+                "video_id": video_id,
+                "language": _vtt_language(path),
+                "origin": (
+                    "generated_from_transcript_api"
+                    if ".transcript-api." in path.name
+                    else "original_ytdlp_vtt"
+                ),
+                "channel_key": channel_key,
+                "channel_file_stem": channel_file_stem,
+                "channel_id": channel_id or None,
+                "channel_title": channel_title or None,
+                "transcript_available": video_id in records,
+                "valid_webvtt": valid_webvtt,
+                "bytes": path.stat().st_size,
+                "sha256": sha256_file(path),
+                "source_paths": sorted(set(copied_sources.get(path.name, []))),
+            }
+        )
+
+    missing_ids = sorted(set(records) - valid_video_ids)
+    missing = [_vtt_backfill_candidate(records[video_id]) for video_id in missing_ids]
+    write_jsonl_atomic(target / VTT_MISSING_MANIFEST, missing)
+    payload = {
+        "schema_version": "1.0.0",
+        "partition_key": "youtube_video",
+        "format": "webvtt",
+        "id_field": "video_id",
+        "total_files": len(entries),
+        "total_videos": len({entry["video_id"] for entry in entries}),
+        "total_bytes": sum(int(entry["bytes"]) for entry in entries),
+        "original_vtt_files": sum(entry["origin"] == "original_ytdlp_vtt" for entry in entries),
+        "transcript_api_vtt_files": sum(
+            entry["origin"] == "generated_from_transcript_api" for entry in entries
+        ),
+        "invalid_vtt_files": invalid_files,
+        "transcript_videos": len(records),
+        "transcript_videos_with_vtt": len(set(records) & valid_video_ids),
+        "missing_vtt_videos": len(missing),
+        "missing_manifest": VTT_MISSING_MANIFEST,
+        "files": entries,
+    }
+    write_json_atomic(target / VTT_CHECKPOINT_INDEX, payload)
+    return {
+        **payload,
+        "source_files": len(source_paths),
+        "copied": copied,
+        "reused": reused,
+        "output_dir": target.as_posix(),
+    }
+
+
+def load_vtt_backfill_candidates(vtt_dir: str | Path) -> list[dict[str, Any]]:
+    return list(read_jsonl(Path(vtt_dir) / VTT_MISSING_MANIFEST))
+
+
 def discover_derived_transcript_sources(project_root: str | Path) -> list[Path]:
     """Localiza datasets/chunks con texto, excluyendo candidatos y fallos."""
 
@@ -1105,50 +1316,123 @@ def consolidate_available_transcripts(
     include_historical_snapshots: bool = True,
     verify_partition_hashes: bool = True,
 ) -> dict[str, Any]:
-    """Consolida toda transcripción completa disponible sin sobrescribir fuentes.
+    """Consolida fuentes completas con prioridad para el checkpoint sincronizado.
 
-    El orden permite reconstruir el canónico en otra máquina: snapshots
-    históricos, particiones sincronizadas por canal y, finalmente, cachés
-    individuales locales. Todos los anexos son idempotentes por ``video_id``.
+    Las particiones Git son autoritativas cuando un ``video_id`` también aparece
+    en una copia histórica local. Los IDs exclusivos del canónico, snapshots y
+    caché se preservan. Ninguna fuente se modifica; solo se recompone la vista
+    canónica de trabajo de manera atómica.
     """
 
     root = Path(project_root).resolve()
     canonical = Path(canonical_path)
+    existing_records = list(read_jsonl(canonical)) if canonical.is_file() else []
+    initial_by_id = {
+        str(record["video_id"]): record
+        for record in existing_records
+        if str(record.get("video_id") or "").strip()
+    }
+    initial_ids = set(initial_by_id)
+
     historical_sources = (
         discover_existing_transcript_sources(root, canonical_path=canonical)
         if include_historical_snapshots
         else []
     )
-    historical = bootstrap_canonical_from_existing(historical_sources, canonical)
+    historical_records: list[dict[str, Any]] = []
+    for source in historical_sources:
+        for raw_record in read_jsonl(source):
+            record = normalize_category_metadata(_json_safe(raw_record))
+            video_id = str(record.get("video_id") or "").strip()
+            if not video_id:
+                continue
+            record["video_id"] = video_id
+            record.setdefault("acquisition_status", "reused_existing_snapshot")
+            record.setdefault("source_snapshot", source.as_posix())
+            record.setdefault(
+                "transcript_sha256",
+                sha256_text(
+                    json.dumps(record.get("segments", []), ensure_ascii=False, sort_keys=True)
+                ),
+            )
+            historical_records.append(record)
 
     partitions_path = Path(channel_dir)
-    if (partitions_path / CHANNEL_TRANSCRIPT_INDEX).is_file():
-        partitions = restore_canonical_from_channel_transcripts(
-            partitions_path,
-            canonical,
-            verify_hashes=verify_partition_hashes,
-        )
-    else:
-        partitions = {
-            "added": 0,
-            "already_canonical": 0,
-            "canonical_videos": len(processed_video_ids(canonical)),
-            "canonical_path": canonical.as_posix(),
-            "verified": False,
-            "status": "partition_index_missing",
-        }
+    partition_records: list[dict[str, Any]] = []
+    partition_index = partitions_path / CHANNEL_TRANSCRIPT_INDEX
+    partitions_verified = False
+    if partition_index.is_file():
+        index = json.loads(partition_index.read_text(encoding="utf-8-sig"))
+        for entry in index.get("files", []):
+            shard = partitions_path / str(entry["file"])
+            if not shard.is_file():
+                raise FileNotFoundError(f"Falta la partición declarada: {shard}")
+            if verify_partition_hashes and sha256_file(shard) != entry.get("sha256"):
+                raise ValueError(f"SHA-256 inválido para {shard}")
+            partition_records.extend(read_jsonl(shard))
+        partitions_verified = verify_partition_hashes
 
-    cache = bootstrap_canonical_from_cache(cache_dir, canonical)
-    canonical_ids = processed_video_ids(canonical)
+    cache_records: list[dict[str, Any]] = []
+    cache_files = sorted(Path(cache_dir).glob("*.json")) if Path(cache_dir).is_dir() else []
+    for path in cache_files:
+        payload = json.loads(path.read_text(encoding="utf-8-sig"))
+        if not isinstance(payload, dict):
+            raise ValueError(f"El caché no contiene un objeto JSON: {path}")
+        record = normalize_category_metadata(_json_safe(payload))
+        video_id = str(record.get("video_id") or "").strip()
+        if not video_id or path.stem != video_id:
+            raise ValueError(f"El caché {path} no corresponde a {video_id or 'un video_id vacío'}")
+        record["video_id"] = video_id
+        record.setdefault("acquisition_status", "reused_existing_cache")
+        record.setdefault("source_cache", path.resolve().as_posix())
+        record.setdefault(
+            "transcript_sha256",
+            sha256_text(
+                json.dumps(record.get("segments", []), ensure_ascii=False, sort_keys=True)
+            ),
+        )
+        cache_records.append(record)
+
+    merged: dict[str, dict[str, Any]] = {}
+    for source_records in (
+        partition_records,
+        existing_records,
+        historical_records,
+        cache_records,
+    ):
+        for raw_record in source_records:
+            record = normalize_category_metadata(_json_safe(raw_record))
+            video_id = str(record.get("video_id") or "").strip()
+            if video_id:
+                record["video_id"] = video_id
+                merged.setdefault(video_id, record)
+    write_jsonl_atomic(canonical, merged.values())
+
+    historical_ids = {
+        str(record["video_id"]) for record in historical_records if record.get("video_id")
+    }
+    partition_ids = {
+        str(record["video_id"]) for record in partition_records if record.get("video_id")
+    }
+    cache_ids = {str(record["video_id"]) for record in cache_records if record.get("video_id")}
+    refreshed = sum(
+        video_id in initial_by_id and partition_record != initial_by_id[video_id]
+        for video_id, partition_record in {
+            str(record["video_id"]): record
+            for record in partition_records
+            if record.get("video_id")
+        }.items()
+    )
     return {
         "historical_sources": len(historical_sources),
-        "historical_candidate_rows": historical["candidate_rows"],
-        "historical_added": historical["added"],
-        "partitions_added": partitions["added"],
-        "partitions_verified": partitions["verified"],
-        "cache_files": cache["cache_files"],
-        "cache_added": cache["added"],
-        "canonical_videos": len(canonical_ids),
+        "historical_candidate_rows": len(historical_records),
+        "historical_added": len(historical_ids - initial_ids),
+        "partitions_added": len(partition_ids - initial_ids - historical_ids),
+        "partitions_refreshed": refreshed,
+        "partitions_verified": partitions_verified,
+        "cache_files": len(cache_files),
+        "cache_added": len(cache_ids - initial_ids - historical_ids - partition_ids),
+        "canonical_videos": len(merged),
         "canonical_path": canonical.resolve().as_posix(),
     }
 
@@ -1605,6 +1889,37 @@ def _vtt_seconds(value: str) -> float:
     return hours * 3600 + minutes * 60 + seconds
 
 
+def _vtt_timestamp(seconds: float) -> str:
+    milliseconds = max(0, round(float(seconds) * 1000))
+    hours, remainder = divmod(milliseconds, 3_600_000)
+    minutes, remainder = divmod(remainder, 60_000)
+    whole_seconds, milliseconds = divmod(remainder, 1000)
+    return f"{hours:02d}:{minutes:02d}:{whole_seconds:02d}.{milliseconds:03d}"
+
+
+def _segments_to_vtt_bytes(segments: Iterable[dict[str, Any]]) -> bytes:
+    """Serializa la respuesta cruda de transcript-api con procedencia explícita."""
+
+    lines = ["WEBVTT", "NOTE generated from youtube-transcript-api; not an original yt-dlp file", ""]
+    cue = 0
+    for segment in segments:
+        text = str(segment.get("text") or "").strip()
+        if not text:
+            continue
+        cue += 1
+        start = max(float(segment.get("start", 0.0)), 0.0)
+        duration = max(float(segment.get("duration", 0.0)), 0.001)
+        lines.extend(
+            [
+                str(cue),
+                f"{_vtt_timestamp(start)} --> {_vtt_timestamp(start + duration)}",
+                text.replace("\r", " ").replace("\n", " "),
+                "",
+            ]
+        )
+    return "\n".join(lines).encode("utf-8")
+
+
 def _read_vtt_segments(path: Path) -> list[dict[str, Any]]:
     """Lee el VTT producido por yt-dlp con el contrato del cuaderno histórico."""
 
@@ -1680,8 +1995,9 @@ def fetch_youtube_subtitles(
     socket_timeout_seconds: float = 45.0,
     minimum_transcript_characters: int = DEFAULT_MIN_TRANSCRIPT_CHARACTERS,
     use_transcript_api_fallback: bool = True,
+    vtt_output_dir: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Descarga solo VTT mediante yt-dlp, como el cuaderno histórico."""
+    """Descarga subtítulos y conserva todas las pistas VTT si se solicita."""
 
     try:
         import yt_dlp
@@ -1700,6 +2016,7 @@ def fetch_youtube_subtitles(
     best_segments: list[dict[str, Any]] = []
     selected_language: str | None = None
     subtitle_source = "yt-dlp-vtt"
+    downloaded_vtt_tracks: list[tuple[str, bytes]] = []
     with tempfile.TemporaryDirectory(prefix="moderacion_peru_subtitles_") as temp_dir:
         options = _youtube_options(
             retries=retries,
@@ -1730,6 +2047,7 @@ def fetch_youtube_subtitles(
         for path in Path(temp_dir).glob("*.vtt"):
             segments = _read_vtt_segments(path)
             scored_tracks.append((_transcript_characters(segments), segments, path))
+            downloaded_vtt_tracks.append((path.name, path.read_bytes()))
         if scored_tracks:
             _, best_segments, best_path = max(scored_tracks, key=lambda item: item[0])
             selected_language = next(
@@ -1777,6 +2095,21 @@ def fetch_youtube_subtitles(
             )
         raise RuntimeError(f"{video_id} no tiene subtítulos en los idiomas {language_priority}")
 
+    persisted_vtt_files: list[str] = []
+    if vtt_output_dir is not None:
+        for filename, payload in downloaded_vtt_tracks:
+            persisted = _persist_vtt_bytes(vtt_output_dir, filename, payload)
+            persisted_vtt_files.append(persisted.name)
+        if "transcript-api" in subtitle_source:
+            language = selected_language or "es"
+            generated_name = f"{video_id}.{language}.transcript-api.vtt"
+            persisted = _persist_vtt_bytes(
+                vtt_output_dir,
+                generated_name,
+                _segments_to_vtt_bytes(best_segments),
+            )
+            persisted_vtt_files.append(persisted.name)
+
     return {
         "video_id": video_id,
         "url": url,
@@ -1785,6 +2118,7 @@ def fetch_youtube_subtitles(
         "channel": info.get("channel") or candidate.get("channel_title"),
         "language": selected_language,
         "subtitle_source": subtitle_source,
+        "vtt_files": sorted(set(persisted_vtt_files)),
         "segments": best_segments,
     }
 
@@ -2063,4 +2397,140 @@ def ingest_incremental(
             flush_output()
         notify(video_id, completion_status)
     flush_output()
+    return counters
+
+
+def backfill_missing_vtt(
+    candidates: Iterable[dict[str, Any]],
+    vtt_dir: str | Path,
+    *,
+    fetcher: TranscriptFetcher | None,
+    failure_path: str | Path | None = None,
+    max_new_videos: int | None = None,
+    network_batch_size: int | None = None,
+    batch_pause_seconds: float = 0.0,
+    stop_on_error: bool = False,
+    exclude_rate_limited_channels: bool = True,
+    progress_callback: ProgressCallback | None = None,
+) -> dict[str, int]:
+    """Rellena VTT faltantes aunque su transcripción JSON ya sea canónica."""
+
+    if max_new_videos is not None and max_new_videos < 0:
+        raise ValueError("max_new_videos no puede ser negativo")
+    if network_batch_size is not None and network_batch_size < 1:
+        raise ValueError("network_batch_size debe ser positivo o None")
+    if batch_pause_seconds < 0:
+        raise ValueError("batch_pause_seconds no puede ser negativo")
+    target = Path(vtt_dir)
+    target.mkdir(parents=True, exist_ok=True)
+    available = {
+        vtt_video_id(path)
+        for path in target.glob("*.vtt")
+        if path.is_file()
+        and path.read_bytes().lstrip(b"\xef\xbb\xbf").startswith(b"WEBVTT")
+        and b"-->" in path.read_bytes()
+    }
+    failure_ids = (
+        {str(row.get("failure_id")) for row in read_jsonl(failure_path)}
+        if failure_path is not None and Path(failure_path).exists()
+        else set()
+    )
+    attempts = 0
+    rate_limited_channels: set[str] = set()
+    counters = {
+        "already_available": 0,
+        "fetch_attempted": 0,
+        "fetched": 0,
+        "failed": 0,
+        "deferred_by_limit": 0,
+        "deferred_rate_limit": 0,
+        "rate_limited_channels": 0,
+        "batch_pauses": 0,
+        "network_disabled": 0,
+        "failure_records_added": 0,
+        "failure_records_existing": 0,
+    }
+
+    def notify(video_id: str, status: str, *, advance: int = 1) -> None:
+        if progress_callback is not None:
+            progress_callback(
+                {
+                    "phase": "vtt_backfill",
+                    "video_id": video_id,
+                    "status": status,
+                    "advance": advance,
+                    "counters": dict(counters),
+                }
+            )
+
+    for raw_candidate in candidates:
+        candidate = dict(raw_candidate)
+        video_id = str(candidate.get("video_id") or "").strip()
+        if not video_id:
+            raise ValueError("Cada candidato de backfill requiere video_id")
+        if video_id in available:
+            counters["already_available"] += 1
+            notify(video_id, "already_available")
+            continue
+        channel_key = _candidate_channel_key(candidate)
+        if channel_key is not None and channel_key in rate_limited_channels:
+            counters["deferred_rate_limit"] += 1
+            notify(video_id, "deferred_rate_limited_channel")
+            continue
+        if fetcher is None:
+            counters["network_disabled"] += 1
+            notify(video_id, "network_disabled")
+            continue
+        if max_new_videos is not None and attempts >= max_new_videos:
+            counters["deferred_by_limit"] += 1
+            notify(video_id, "deferred_by_limit")
+            continue
+        if (
+            network_batch_size is not None
+            and attempts
+            and attempts % network_batch_size == 0
+        ):
+            counters["batch_pauses"] += 1
+            notify(video_id, "batch_pause", advance=0)
+            if batch_pause_seconds:
+                time.sleep(batch_pause_seconds)
+        attempts += 1
+        counters["fetch_attempted"] += 1
+        try:
+            fetcher(candidate)
+            persisted = [
+                path
+                for path in target.glob(f"{video_id}.*.vtt")
+                if path.is_file()
+                and path.read_bytes().lstrip(b"\xef\xbb\xbf").startswith(b"WEBVTT")
+                and b"-->" in path.read_bytes()
+            ]
+            if not persisted:
+                raise RuntimeError(f"La descarga de {video_id} no conservó ningún VTT válido")
+        except Exception as exc:
+            counters["failed"] += 1
+            failure = _failure_record(candidate, exc)
+            if failure_path is not None:
+                if failure["failure_id"] in failure_ids:
+                    counters["failure_records_existing"] += 1
+                else:
+                    _append_jsonl_checkpoint(failure_path, [failure])
+                    failure_ids.add(failure["failure_id"])
+                    counters["failure_records_added"] += 1
+            failure_counter = f"failure_{failure['failure_kind']}"
+            counters[failure_counter] = counters.get(failure_counter, 0) + 1
+            if (
+                exclude_rate_limited_channels
+                and failure["failure_kind"] == "rate_limited"
+                and channel_key is not None
+            ):
+                rate_limited_channels.add(channel_key)
+                counters["rate_limited_channels"] = len(rate_limited_channels)
+            if stop_on_error:
+                raise
+            notify(video_id, "failed")
+            continue
+        available.add(video_id)
+        counters["fetched"] += 1
+        notify(video_id, "fetched")
     return counters

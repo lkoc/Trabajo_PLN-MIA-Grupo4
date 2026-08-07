@@ -170,8 +170,10 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
     for control in (
         "DISCOVER_NEW",
         "FETCH_NEW",
+        "BACKFILL_MISSING_VTT",
         "DISCOVERY_MODE",
         "MAX_NEW_VIDEOS",
+        "MAX_VTT_BACKFILL",
         "MAX_VIDEOS_PER_CHANNEL",
         "MAX_RESULTS_PER_QUERY",
         "MAX_DIRECTED_CANDIDATES",
@@ -183,6 +185,7 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
         "SEARCH_QUERIES",
         "STOP_ON_VIDEO_ERROR",
         "SYNC_TRANSCRIPTS_BY_CHANNEL",
+        "SYNC_VTT_BY_VIDEO",
         "YT_SOCKET_TIMEOUT_SECONDS",
         "RESUME_DISCOVERY",
         "DISCOVERY_CHECKPOINT_PATH",
@@ -205,6 +208,8 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
     assert "len(directed_pool)" in source
     assert "importlib.reload(acquisition_module)" in source
     assert "materialize_transcripts_by_channel" in source
+    assert "materialize_vtt_checkpoint" in source
+    assert "backfill_missing_vtt" in source
     assert "fuente=source_name" in source
     assert "checkpoint_path=DISCOVERY_CHECKPOINT_PATH" in source
     assert "channel_transcript_dir=TRANSCRIPTS_BY_CHANNEL" in source
@@ -261,6 +266,7 @@ def test_synced_checkpoint_rules_preserve_hashes_and_exclude_rebuildable_working
     ignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
     attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
     assert "!datos/raw/transcripts_by_channel/**" in ignore
+    assert "!datos/raw/vtt_by_video/**" in ignore
     assert "!datos/raw/video_candidates.jsonl" in ignore
     assert "!resultados/colab_bundle/dataset_5_salidas.jsonl.gz" in ignore
     assert "datos/raw/transcripts_raw.jsonl" in ignore

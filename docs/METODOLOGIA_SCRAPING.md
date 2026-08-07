@@ -283,11 +283,20 @@ histórico. Para cada video realmente pendiente:
    intento en memoria, primero manual y luego automático [7];
 7. solo se acepta una transcripción con al menos
    `MIN_TRANSCRIPT_CHARACTERS=200`; y
-8. el resultado se guarda atómicamente en la caché individual;
-9. se anexa idempotentemente al JSONL pequeño de su canal bajo
+8. todas las pistas VTT descargadas se guardan atómicamente bajo
+   `datos/raw/vtt_by_video/` antes de abandonar el directorio temporal;
+9. el resultado se guarda atómicamente en la caché individual;
+10. se anexa idempotentemente al JSONL pequeño de su canal bajo
    `datos/raw/transcripts_by_channel/`; un canal grande abre partes numeradas de
    hasta 25 MiB; y
-10. después se incorpora una sola vez al canónico mediante `video_id`.
+11. después se incorpora una sola vez al canónico mediante `video_id`.
+
+`BACKFILL_MISSING_VTT=True` usa el manifiesto sincronizado
+`datos/raw/vtt_by_video/missing_vtt.jsonl` para volver a solicitar únicamente
+los VTT ausentes, aunque la transcripción JSON ya exista. Si solo responde
+`youtube-transcript-api`, sus segmentos se serializan a WebVTT con el sufijo
+`transcript-api` y una nota de procedencia; no se presentan como VTT originales
+de `yt-dlp`.
 
 La versión anterior del flujo activo abría con `requests` la URL firmada de
 `youtube.com/api/timedtext` que había localizado `yt-dlp`. Esa separación no
@@ -387,6 +396,9 @@ sin repetir los canales o consultas exitosos.
 | `datos/raw/transcripts_raw.jsonl` | Vista canónica de transcripciones |
 | `datos/raw/transcripts_by_channel/*.jsonl` | Checkpoint sincronizable por canal, deduplicado por `video_id` |
 | `datos/raw/transcripts_by_channel/index.json` | Inventario de canales, tamaños y SHA-256 de cada partición |
+| `datos/raw/vtt_by_video/*.vtt` | Pistas WebVTT consolidadas y sincronizables por video |
+| `datos/raw/vtt_by_video/index.json` | Inventario, procedencia, canal, tamaño, validez y SHA-256 de cada VTT |
+| `datos/raw/vtt_by_video/missing_vtt.jsonl` | Cola exacta y reanudable de transcripciones canónicas sin VTT válido |
 
 La cohorte vigente se sobrescribe atómicamente porque representa una selección
 concreta. El archivo general de candidatos y el canónico son incrementales y se
@@ -394,7 +406,7 @@ deduplican por identificador.
 
 ### 13.1 Sincronización y continuidad entre máquinas
 
-Las reglas de Git incluyen las particiones por canal, el índice, los candidatos
+Las reglas de Git incluyen los VTT por video, las particiones por canal, sus índices, los candidatos
 generales y dirigidos, los manifiestos de adquisición y todo
 `resultados/colab_bundle/`. Permanecen fuera de Git:
 

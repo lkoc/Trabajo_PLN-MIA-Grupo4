@@ -329,11 +329,11 @@ Para incorporar videos o subtítulos adicionales:
 4. active las familias de `03` que desea actualizar;
 5. publique de nuevo solo cuando `03_07` encuentre candidatos completos del snapshot nuevo.
 
-El flujo omite videos conocidos, reutiliza subtítulos y cachés, y recorre todos los candidatos pendientes por lotes. Cada VTT válido se convierte en un checkpoint JSON antes de continuar y cada fallo se registra inmediatamente; una interrupción no obliga a repetir los éxitos anteriores. Después conserva las asignaciones de split por `video_id` y reanuda anotaciones por `chunk_id`. Un incremento crea otro snapshot inmutable que combina datos anteriores y nuevos. Los modelos neuronales pueden reanudar una interrupción o inicializar el run nuevo desde un candidato compatible anterior; nunca se entrena únicamente con el lote nuevo olvidando el corpus previo.
+El flujo omite videos conocidos, reutiliza subtítulos y cachés, y recorre todos los candidatos pendientes por lotes. Cada pista VTT se conserva inmediatamente en `datos/raw/vtt_by_video/` antes de continuar y cada fallo se registra; una interrupción no obliga a repetir los éxitos anteriores. `BACKFILL_MISSING_VTT=True` trata por separado los JSON ya canónicos cuyo VTT falta. Después conserva las asignaciones de split por `video_id` y reanuda anotaciones por `chunk_id`. Un incremento crea otro snapshot inmutable que combina datos anteriores y nuevos. Los modelos neuronales pueden reanudar una interrupción o inicializar el run nuevo desde un candidato compatible anterior; nunca se entrena únicamente con el lote nuevo olvidando el corpus previo.
 
 ### Continuar el flujo desde otra máquina
 
-Git conserva `datos/raw/transcripts_by_channel/`, candidatos, fallos y manifiestos de adquisición, además del bundle comprimido de Colab. El JSONL monolítico `transcripts_raw.jsonl`, `transcripts_cache/`, los chunks y el dataset sin comprimir siguen siendo artefactos locales: el primero se recompone desde las particiones por canal; caché no es necesaria; y los dos últimos se restauran desde el bundle verificado. Ninguna restauración borra filas existentes del canónico.
+Git conserva `datos/raw/vtt_by_video/`, `datos/raw/transcripts_by_channel/`, candidatos, fallos y manifiestos de adquisición, además del bundle comprimido de Colab. El JSONL monolítico `transcripts_raw.jsonl`, `transcripts_cache/`, los chunks y el dataset sin comprimir siguen siendo artefactos locales: el primero se recompone desde las particiones por canal; caché no es necesaria; y los dos últimos se restauran desde el bundle verificado. Ninguna restauración borra filas existentes del canónico.
 
 Después de clonar y preparar el entorno:
 
@@ -341,7 +341,7 @@ Después de clonar y preparar el entorno:
 python tools/restore_synced_checkpoints.py
 ```
 
-El comando verifica los SHA-256 de `datos/raw/transcripts_by_channel/index.json` y `resultados/colab_bundle/bundle_manifest.json`, reconstruye el canónico de forma idempotente y descomprime atómicamente chunks y dataset en sus rutas esperadas. Los cuadernos `03_01`–`03_08` repiten la verificación del dataset antes de usarlo: si falta, lo restauran; si existe con otro hash, se detienen en vez de sobrescribirlo.
+El comando verifica los SHA-256 de `datos/raw/transcripts_by_channel/index.json`, cada entrada de `datos/raw/vtt_by_video/index.json` y `resultados/colab_bundle/bundle_manifest.json`; reconstruye el canónico de forma idempotente y descomprime atómicamente chunks y dataset en sus rutas esperadas. Los cuadernos `03_01`–`03_08` repiten la verificación del dataset antes de usarlo: si falta, lo restauran; si existe con otro hash, se detienen en vez de sobrescribirlo.
 
 Cuando `02_05` produzca un snapshot nuevo, regenere el bundle con `python tools/prepare_colab_bundle.py --destination resultados/colab_bundle` antes de ejecutar `03`; el error ante hashes distintos evita entrenar accidentalmente con una versión no declarada.
 
@@ -359,6 +359,7 @@ La preparación, verificación SHA-256, reanudación por `COLAB_RUN_ID` y recupe
 |---|---|
 | `datos/raw/transcripts_raw.jsonl` | vista canónica de transcripciones |
 | `datos/raw/transcripts_by_channel/*.jsonl` | checkpoint sincronizable, pequeño e idempotente por canal |
+| `datos/raw/vtt_by_video/*.vtt` | checkpoint sincronizable de pistas WebVTT, deduplicado por `video_id` y nombre de pista |
 | `datos/processed/chunks_v2.jsonl` | fragmentos con evidencia temporal |
 | `datos/etiquetado/**` | propuestas, campañas y eventos humanos |
 | `datos/model_ready/v2/snapshots/<id>/` | datasets entrenables inmutables |

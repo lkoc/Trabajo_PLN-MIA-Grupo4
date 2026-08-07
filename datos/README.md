@@ -21,6 +21,10 @@ fallos y manifiestos también se sincronizan; `raw/transcripts_cache/` no. Tras 
 `python tools/restore_synced_checkpoints.py` recompone el canónico y restaura
 las entradas comprimidas del bundle sin repetir descargas.
 
+Git también sincroniza `raw/vtt_by_video/`: contiene todas las pistas WebVTT
+consolidadas, un índice con SHA-256 y `missing_vtt.jsonl`. `01_01` consume esa
+cola aunque el JSON del video ya exista y guarda cada VTT antes de avanzar.
+
 `processed/chunks_v2.jsonl` es determinista y barato de regenerar con `01_03`;
 solo se conserva comprimido dentro del bundle para Colab. El dataset final no
 es barato de recrear porque contiene decisiones humanas y pseudoetiquetado con

@@ -4,10 +4,10 @@
   "format": "jsonl",
   "id_field": "video_id",
   "max_channel_file_bytes": 26214400,
-  "total_channel_files": 305,
-  "total_channels": 303,
-  "total_videos": 2428,
-  "total_bytes": 219736318,
+  "total_channel_files": 320,
+  "total_channels": 317,
+  "total_videos": 4213,
+  "total_bytes": 398837010,
   "files": [
     {
       "file": "arde-troya-con-juliana-oxenford--98afa5172ba6--part-0001.jsonl",
@@ -17,9 +17,105 @@
       "channel_titles": [
         "Arde Troya con Juliana Oxenford"
       ],
-      "videos": 110,
-      "bytes": 21604763,
-      "sha256": "8a8136fe682c76327e42d8e962dfd35d6c0044bd650832f5ce7bded0fd3756ae"
+      "videos": 133,
+      "bytes": 25730349,
+      "sha256": "d24af19fc59456be96e22424d458c0539f4fa389ee6b657a36c6b2c22f8005b7"
+    },
+    {
+      "file": "arde-troya-con-juliana-oxenford--98afa5172ba6--part-0002.jsonl",
+      "channel_key": "title:arde troya con juliana oxenford",
+      "part": 2,
+      "channel_ids": [],
+      "channel_titles": [
+        "Arde Troya con Juliana Oxenford"
+      ],
+      "videos": 52,
+      "bytes": 9649533,
+      "sha256": "50c7b56895147a2146fac6e5c3d2b35fc89263dbdcf34d492c9350d00519d6fb"
+    },
+    {
+      "file": "buen-viaje--b87a3e0df3c7--part-0001.jsonl",
+      "channel_key": "title:buen viaje",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Buen Viaje"
+      ],
+      "videos": 75,
+      "bytes": 2599404,
+      "sha256": "2b2fb017c54743d5fdc11ce81d71778821b04c6b655510c32c122797c037cb13"
+    },
+    {
+      "file": "cocina-cajamarquina--e7d3727f9c1e--part-0001.jsonl",
+      "channel_key": "title:cocina cajamarquina",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Cocina Cajamarquina"
+      ],
+      "videos": 13,
+      "bytes": 481694,
+      "sha256": "e751ce19aeb8925438d48112686f8680f628f7868a08ec15f9ba6074e8b6d0e6"
+    },
+    {
+      "file": "el-popular--533269c95978--part-0001.jsonl",
+      "channel_key": "title:el popular",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "El Popular"
+      ],
+      "videos": 2,
+      "bytes": 9373,
+      "sha256": "0fe2a60b90e783c5262990409c8d455de9c51829e5202034bcc36b5b5934056b"
+    },
+    {
+      "file": "instarandula--4edfb959ceb5--part-0001.jsonl",
+      "channel_key": "title:instarandula",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Instarandula"
+      ],
+      "videos": 42,
+      "bytes": 3246131,
+      "sha256": "273c7350382180970f973ff82b3f4ab7d999345a82ed0c9ef427e3a87a1cd083"
+    },
+    {
+      "file": "l1max--87064b95434d--part-0001.jsonl",
+      "channel_key": "title:l1max",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "L1MAX"
+      ],
+      "videos": 66,
+      "bytes": 5288487,
+      "sha256": "b13c66134f0aef78710a24ad9c8e1712a19a4be60871bc96813522b1646b390d"
+    },
+    {
+      "file": "libero-deportes--b9fd5160a40c--part-0001.jsonl",
+      "channel_key": "title:líbero deportes",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Líbero Deportes"
+      ],
+      "videos": 75,
+      "bytes": 1325414,
+      "sha256": "998cd43c81f22aa98f28ba4b2eeae6936d9b749e7ccf0b241458bf0f4b4280b0"
+    },
+    {
+      "file": "marco-sifuentes-ocram--ae332f024eed--part-0001.jsonl",
+      "channel_key": "title:marco sifuentes / ocram",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Marco Sifuentes / Ocram"
+      ],
+      "videos": 38,
+      "bytes": 5093865,
+      "sha256": "7148cff200c642ef921fd14f64bbe6977c0cbb0f1d0e57c76a204b3396dcc47f"
     },
     {
       "file": "marisol-la-faraona-de-la-cumbia-and-tony-rosado-oficial--751585c05ccb--part-0001.jsonl",
@@ -34,6 +130,66 @@
       "sha256": "a2f90ef0385a2b04a42ad3f06b7ec072f44a03faa88dffba9e2b7b7aa9ef8ff3"
     },
     {
+      "file": "misias-pero-viajeras--c37ecf07ad45--part-0001.jsonl",
+      "channel_key": "title:misias pero viajeras",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Misias pero viajeras"
+      ],
+      "videos": 75,
+      "bytes": 10160564,
+      "sha256": "0a168e92dc7d1205a106695dc1e5fd66f8cdd7780acff6654eb566c359b58273"
+    },
+    {
+      "file": "nada-espacial--b64c85e0b459--part-0001.jsonl",
+      "channel_key": "title:nada espacial",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Nada Espacial"
+      ],
+      "videos": 69,
+      "bytes": 18741183,
+      "sha256": "0300e8c576d6e9b3464bf867814c65ba73c8c9b7b250ef804cb411ff860cfc22"
+    },
+    {
+      "file": "panamericana-noticias--43d1d95cb92f--part-0001.jsonl",
+      "channel_key": "title:panamericana noticias",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Panamericana Noticias"
+      ],
+      "videos": 75,
+      "bytes": 6836160,
+      "sha256": "8a155bf5e4727e929efc65a66fa65571f91be5daf999b484830ee514b2b2e8a8"
+    },
+    {
+      "file": "sin-guion-con-rosa-maria-palacios--cce7b0d110a6--part-0001.jsonl",
+      "channel_key": "title:sin guion con rosa maria palacios",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Sin Guion con Rosa Maria Palacios"
+      ],
+      "videos": 75,
+      "bytes": 15715400,
+      "sha256": "2eaf1aa888590d52a1b96905130a317fcb297c4464e6cab1e5ce7b64f000dd47"
+    },
+    {
+      "file": "tio-lenguado-y-descocaos--5d667c229b96--part-0001.jsonl",
+      "channel_key": "title:tío lenguado y descocaos",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Tío Lenguado y Descocaos"
+      ],
+      "videos": 75,
+      "bytes": 5028327,
+      "sha256": "7eb29e3719972e74939d746e0d0ce6a9c10e023b46a040cbfa75bf7c3bb379b2"
+    },
+    {
       "file": "todo-good--c7a2cbfd6b80--part-0001.jsonl",
       "channel_key": "title:todo good",
       "part": 1,
@@ -41,9 +197,9 @@
       "channel_titles": [
         "Todo Good"
       ],
-      "videos": 74,
-      "bytes": 7353237,
-      "sha256": "706ab038a8a167acf1817e4c42af4c7ffa3436e5ee394d16df2febcb75a04582"
+      "videos": 148,
+      "bytes": 16224271,
+      "sha256": "e86c240608b0fb35b39b397be1e4691a812f61b8f13235cfa9ce27f10286bea5"
     },
     {
       "file": "uc-1pqb0kwanjcrha63ztbkg--1a7971723a38--part-0001.jsonl",
@@ -489,9 +645,9 @@
       "channel_titles": [
         "RPP Noticias"
       ],
-      "videos": 31,
-      "bytes": 1568305,
-      "sha256": "512136a9abb4e4c1c008a31ff54939ddb093b812f2664b1e21b17d04a0614299"
+      "videos": 132,
+      "bytes": 8759547,
+      "sha256": "cbc5f40fa4531e4077725460fad84e249ee8382b0203214d796af90e6df17468"
     },
     {
       "file": "uc5q2iiiustywaocwij2q9xg--1d282505d288--part-0001.jsonl",
@@ -1035,9 +1191,9 @@
       "channel_titles": [
         "Hablando Huevadas"
       ],
-      "videos": 6,
-      "bytes": 3227781,
-      "sha256": "9a805bfccd1755cf064e54a6816443d1b0cf8d6777155a899a5148d58c578803"
+      "videos": 56,
+      "bytes": 26061145,
+      "sha256": "66cab20e3eb74cd7a36619503fa69e5cd3a073f86c9d042b3e1385fab2b693d1"
     },
     {
       "file": "ucbiq92lt_ufno-ktzigvxgg--7a4bb92d783e--part-0001.jsonl",
@@ -1049,9 +1205,9 @@
       "channel_titles": [
         "Panorama"
       ],
-      "videos": 42,
-      "bytes": 2457122,
-      "sha256": "5fe6068f2a3a794143fb848b833025f796dfd3c5717aaeabd3398d2f84d23b8c"
+      "videos": 117,
+      "bytes": 7323293,
+      "sha256": "82fa4d60bbc403017ee2ce85c3e3066f69a125b952756ea5e2cf4e647f1ac045"
     },
     {
       "file": "ucbiys4rvu9rnshxm8mtkrha--b119db96c7a9--part-0001.jsonl",
@@ -1581,9 +1737,9 @@
       "channel_titles": [
         "Magaly TV La Firme"
       ],
-      "videos": 113,
-      "bytes": 6005809,
-      "sha256": "ee8598e7af5b621f87a48931a483f9bf2d936330acbb31d6fd055f789c117732"
+      "videos": 188,
+      "bytes": 9169014,
+      "sha256": "065bfcb853c015622f3bc6e42aee9a8afe2878a2b54800ac8515ce4a3090c8af"
     },
     {
       "file": "ucfe_qycwncj_fvp6xp3mj2q--3d0b5f193d42--part-0001.jsonl",
@@ -1637,9 +1793,9 @@
       "channel_titles": [
         "Juanito y Richard"
       ],
-      "videos": 116,
-      "bytes": 4523369,
-      "sha256": "7cfadca64d8c98b7dd0f42a7f505fa98589e3dd251a85f71d02258c432867254"
+      "videos": 182,
+      "bytes": 7542562,
+      "sha256": "84e36b9ab3f1b736e17a31555e5e5346a7ef1d11a3b84b8f39c6ef7fd3842299"
     },
     {
       "file": "ucfjqe5yfcfl1hj00ccnnr_q--03ddb7656035--part-0001.jsonl",
@@ -1973,9 +2129,9 @@
       "channel_titles": [
         "El diario de Curwen"
       ],
-      "videos": 1,
-      "bytes": 115421,
-      "sha256": "5a67dcb9e6eeb4e298e8d15017762b4180f25acfd97fac53f08994e98ebe48c7"
+      "videos": 73,
+      "bytes": 7015078,
+      "sha256": "c67669bff04978cdd504ce1c929517b4f9cc56159c3d385ab11fe6b2ab6d5a09"
     },
     {
       "file": "uchxi7nzj8oqmdeg4egbr6eg--44a526db6870--part-0001.jsonl",
@@ -2715,9 +2871,9 @@
       "channel_titles": [
         "Goblinciano"
       ],
-      "videos": 170,
-      "bytes": 13676123,
-      "sha256": "edce172a4dfd4c5903b90f86946e83229f3254f284272333f0bbfe6544815e98"
+      "videos": 239,
+      "bytes": 20816602,
+      "sha256": "7d7b3e2da4bdabf6d08dd5fcb4384ced0a1ee6031216d8303286e588d1ec569f"
     },
     {
       "file": "uco3svqnaucicaj49ks-w8fw--2d0cdbb70e09--part-0001.jsonl",
@@ -2995,9 +3151,9 @@
       "channel_titles": [
         "Latina Noticias"
       ],
-      "videos": 114,
-      "bytes": 4019592,
-      "sha256": "56a60404a6e2088a102343bae88c90e017f8037b60e77cb9ef6a5ec018424375"
+      "videos": 214,
+      "bytes": 7567681,
+      "sha256": "6650938d659ec9cb9c2292fab31145657518c13c5ec0f786a27e997820073b76"
     },
     {
       "file": "ucpxoddoaeicm1_3uukf5k3w--ab2e3235a584--part-0001.jsonl",
@@ -4003,9 +4159,9 @@
       "channel_titles": [
         "Exitosa Noticias"
       ],
-      "videos": 33,
-      "bytes": 1121084,
-      "sha256": "91fed3bc7f293241040e80ed3076f89667118655282cf3e1137ee87d8800ebb5"
+      "videos": 108,
+      "bytes": 4318415,
+      "sha256": "8a56e912e8f6d84bb5b35f7cf1c34fed5523cdbdd3f629ed28c40750835b0d3c"
     },
     {
       "file": "ucxlvolgiwits8-10v9td9ja--b8325a8f3522--part-0001.jsonl",
@@ -4115,9 +4271,9 @@
       "channel_titles": [
         "ATV Noticias"
       ],
-      "videos": 50,
-      "bytes": 2343270,
-      "sha256": "b089297f6fb42049922391f252cf5d964bff5900d0444455a8543b2d89dec81c"
+      "videos": 148,
+      "bytes": 8269027,
+      "sha256": "1b9ab62bf62cf64236148526b44ceb981d668f41a1c4d9cadd61ff07af922726"
     },
     {
       "file": "ucyhlvskxzk1u7hfelypu0bw--fa5922b18b27--part-0001.jsonl",
@@ -4272,6 +4428,30 @@
       "videos": 1,
       "bytes": 11518,
       "sha256": "c564866b3d48e0fd3c5abb42061afdbdd75667086e48f08621e9ff316aa1ff69"
+    },
+    {
+      "file": "viaja-y-prueba--71bee44725f4--part-0001.jsonl",
+      "channel_key": "title:viaja y prueba",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Viaja y Prueba"
+      ],
+      "videos": 75,
+      "bytes": 4616484,
+      "sha256": "67e1e497d3d67a8dc563dd217cb3ad95ddaa9a50f22c2c9c5f4dce10527edbb2"
+    },
+    {
+      "file": "willax-television--139606f74e70--part-0001.jsonl",
+      "channel_key": "title:willax television",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Willax Television"
+      ],
+      "videos": 100,
+      "bytes": 9527565,
+      "sha256": "155cfbf20e049281d61c59fd3186f00ff7645a3263c3c953319026b111351e50"
     }
   ]
 }

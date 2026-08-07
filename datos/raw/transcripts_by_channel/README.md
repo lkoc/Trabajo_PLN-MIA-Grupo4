@@ -10,7 +10,7 @@
 
 Esta carpeta es el checkpoint sincronizable del corpus de subtítulos. Cada JSONL contiene videos de un solo canal; los canales grandes usan partes `part-0001`, `part-0002`, etc., de hasta 25 MiB. `index.json` registra canal, parte, cantidad de videos, tamaño y SHA-256 de cada archivo.
 
-`datos/raw/transcripts_raw.jsonl` se conserva localmente como vista canónica y no se borra ni se versiona. El cuaderno `01_01` materializa inicialmente estas particiones y, después, añade cada transcripción nueva directamente al archivo de su canal. La escritura es idempotente por `video_id`.
+`datos/raw/transcripts_raw.jsonl` se conserva localmente como vista canónica y no se borra ni se versiona. El cuaderno `01_01` consolida primero las particiones sincronizadas y los snapshots históricos disponibles; después vuelve a materializar esta carpeta y añade cada transcripción nueva directamente al archivo de su canal. La escritura es idempotente por `video_id`.
 
 Después de clonar el repositorio en otra máquina, ejecute:
 

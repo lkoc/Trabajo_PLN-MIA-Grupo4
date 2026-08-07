@@ -9,6 +9,12 @@
       "recovery": "Regenerar incrementalmente desde los videos ya registrados o recuperar la instantánea externa verificada."
     },
     {
+      "path": "datos/raw/vtt_by_video/index.json",
+      "role": "checkpoint sincronizable de VTT crudos y cola de faltantes",
+      "required_by": ["01_01_scraping_incremental"],
+      "recovery": "Ejecutar 01_01 con SYNC_VTT_BY_VIDEO=True; el cuaderno consolida las fuentes locales y recupera solo los video_id faltantes."
+    },
+    {
       "path": "datos/processed/chunks_v2.jsonl",
       "role": "chunks canónicos",
       "required_by": ["02_01_etiquetado_local_ollama"],

@@ -1,5 +1,6 @@
 *.jsonl text eol=lf
 *.json text eol=lf
 *.ipynb text eol=lf
+*.vtt binary
 *.gz binary
 *.zip binary

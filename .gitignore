@@ -44,6 +44,8 @@ resultados/colab_bundle/*.gz
 # Corpus reiniciable: particiones pequeñas sí; canónico y caché local no.
 !datos/raw/transcripts_by_channel/
 !datos/raw/transcripts_by_channel/**
+!datos/raw/vtt_by_video/
+!datos/raw/vtt_by_video/**
 !datos/raw/video_candidates.jsonl
 !datos/raw/directed_candidates_latest.jsonl
 !datos/raw/videos_candidatos.csv

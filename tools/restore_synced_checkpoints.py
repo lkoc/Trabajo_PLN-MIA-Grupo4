@@ -19,6 +19,43 @@ from moderacion_peru.acquisition import restore_canonical_from_channel_transcrip
 from moderacion_peru.io import sha256_file
 
 
+def verify_vtt_checkpoint(vtt_dir: Path) -> dict[str, object]:
+    index_path = vtt_dir / "index.json"
+    if not index_path.is_file():
+        raise FileNotFoundError(f"Falta el índice VTT: {index_path}")
+    index = json.loads(index_path.read_text(encoding="utf-8-sig"))
+    total_bytes = 0
+    video_ids: set[str] = set()
+    for entry in index.get("files", []):
+        path = vtt_dir / str(entry["file"])
+        if not path.is_file():
+            raise FileNotFoundError(f"Falta el VTT declarado: {path}")
+        if sha256_file(path) != entry.get("sha256"):
+            raise ValueError(f"SHA-256 inválido para {path}")
+        total_bytes += path.stat().st_size
+        video_ids.add(str(entry["video_id"]))
+    if len(index.get("files", [])) != int(index.get("total_files", -1)):
+        raise ValueError(f"Cantidad de VTT inconsistente en {index_path}")
+    if len(video_ids) != int(index.get("total_videos", -1)):
+        raise ValueError(f"Cantidad de videos VTT inconsistente en {index_path}")
+    if total_bytes != int(index.get("total_bytes", -1)):
+        raise ValueError(f"Tamaño total VTT inconsistente en {index_path}")
+    missing_path = vtt_dir / str(index.get("missing_manifest", "missing_vtt.jsonl"))
+    if not missing_path.is_file():
+        raise FileNotFoundError(f"Falta el manifiesto de VTT pendientes: {missing_path}")
+    missing_rows = sum(1 for line in missing_path.read_text(encoding="utf-8-sig").splitlines() if line)
+    if missing_rows != int(index.get("missing_vtt_videos", -1)):
+        raise ValueError(f"Cantidad de VTT pendientes inconsistente en {missing_path}")
+    return {
+        "status": "verified",
+        "path": vtt_dir.as_posix(),
+        "files": len(index.get("files", [])),
+        "videos": len(video_ids),
+        "bytes": total_bytes,
+        "missing_vtt_videos": missing_rows,
+    }
+
+
 def restore_gzip(
     archive: Path,
     destination: Path,
@@ -77,6 +114,7 @@ def restore(project_root: str | Path, *, force: bool = False) -> dict[str, objec
         root / "datos" / "raw" / "transcripts_by_channel",
         root / "datos" / "raw" / "transcripts_raw.jsonl",
     )
+    vtt_result = verify_vtt_checkpoint(root / "datos" / "raw" / "vtt_by_video")
 
     bundle = root / "resultados" / "colab_bundle"
     manifest_path = bundle / "bundle_manifest.json"
@@ -95,6 +133,7 @@ def restore(project_root: str | Path, *, force: bool = False) -> dict[str, objec
     return {
         "project_root": root.as_posix(),
         "transcripts": transcript_result,
+        "vtt": vtt_result,
         "bundle_inputs": restored_inputs,
     }
 

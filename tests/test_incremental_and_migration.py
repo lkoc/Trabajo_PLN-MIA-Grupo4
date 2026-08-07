@@ -11,6 +11,7 @@ import pytest
 from moderacion_peru.datasets import assert_no_video_leakage, stable_video_split
 from moderacion_peru.acquisition import (
     append_transcripts_by_channel,
+    backfill_missing_vtt,
     bootstrap_canonical_from_existing,
     collect_project_video_inventory,
     consolidate_available_transcripts,
@@ -21,7 +22,9 @@ from moderacion_peru.acquisition import (
     fetch_youtube_subtitles,
     ingest_incremental,
     load_candidates,
+    load_vtt_backfill_candidates,
     materialize_transcripts_by_channel,
+    materialize_vtt_checkpoint,
     normalize_category_metadata,
     order_candidates_for_acquisition,
     reset_active_video_dataset,
@@ -288,6 +291,7 @@ def test_all_available_transcripts_and_derived_video_ids_are_consolidated(tmp_pa
     )
     partition_seed = root / "partition_seed.jsonl"
     partition_seed.write_text(
+        '{"video_id":"v1","channel_id":"c1","segments":[{"text":"uno actual"}]}\n'
         '{"video_id":"v4","channel_id":"c4","segments":[{"text":"cuatro"}]}\n',
         encoding="utf-8",
     )
@@ -322,7 +326,9 @@ def test_all_available_transcripts_and_derived_video_ids_are_consolidated(tmp_pa
     assert second["historical_added"] == 0
     assert second["partitions_added"] == 0
     assert second["cache_added"] == 0
-    assert {row["video_id"] for row in read_jsonl(canonical)} == {"v1", "v2", "v3", "v4"}
+    consolidated = {row["video_id"]: row for row in read_jsonl(canonical)}
+    assert set(consolidated) == {"v1", "v2", "v3", "v4"}
+    assert consolidated["v1"]["segments"] == [{"text": "uno actual"}]
     assert known_ids == {"v1", "v2", "v3", "v4", "v5"}
     assert inventory["full_transcripts_union"] == 4
     assert inventory["derived_text_videos"] == 2
@@ -569,7 +575,7 @@ def test_download_order_is_seeded_complete_and_interleaved_by_channel():
     assert len(set(first_round_channels)) == 3
 
 
-def test_subtitle_fetch_restores_historical_ytdlp_vtt_route(monkeypatch):
+def test_subtitle_fetch_restores_historical_ytdlp_vtt_route(monkeypatch, tmp_path):
     captured = {}
 
     class FakeYoutubeDL:
@@ -603,6 +609,7 @@ def test_subtitle_fetch_restores_historical_ytdlp_vtt_route(monkeypatch):
         sleep_max_seconds=0,
         minimum_transcript_characters=20,
         use_transcript_api_fallback=False,
+        vtt_output_dir=tmp_path / "vtt_by_video",
     )
 
     assert captured["skip_download"] is True
@@ -611,7 +618,104 @@ def test_subtitle_fetch_restores_historical_ytdlp_vtt_route(monkeypatch):
     assert captured["subtitlesformat"] == "vtt"
     assert captured["sleep_interval_requests"] == 0
     assert record["subtitle_source"] == "manual-yt-dlp-vtt"
+    assert record["vtt_files"] == ["v1.es.vtt"]
+    assert (tmp_path / "vtt_by_video" / "v1.es.vtt").read_text(encoding="utf-8").startswith(
+        "WEBVTT"
+    )
     assert record["segments"][0]["text"].startswith("Esta es una transcripción")
+
+
+def test_vtt_checkpoint_consolidates_sources_and_lists_only_missing_transcripts(tmp_path):
+    main = tmp_path / "datos/raw/subtitulos"
+    expansion = tmp_path / "datos/ampliacion/lote/raw/subtitulos"
+    main.mkdir(parents=True)
+    expansion.mkdir(parents=True)
+    main.joinpath("v1.es.vtt").write_text(
+        "WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nuno\n",
+        encoding="utf-8",
+    )
+    expansion.joinpath("v2.es-419.vtt").write_text(
+        "WEBVTT\n\n00:00:00.000 --> 00:00:01.000\ndos\n",
+        encoding="utf-8",
+    )
+    records = [
+        {"video_id": "v1", "channel_id": "c1", "channel_title": "Canal 1"},
+        {"video_id": "v2", "channel_id": "c2", "channel_title": "Canal 2"},
+        {"video_id": "v3", "channel_id": "c3", "channel_title": "Canal 3"},
+    ]
+
+    result = materialize_vtt_checkpoint(tmp_path, tmp_path / "datos/raw/vtt_by_video", records)
+
+    assert result["total_files"] == 2
+    assert result["total_videos"] == 2
+    assert result["transcript_videos"] == 3
+    assert result["missing_vtt_videos"] == 1
+    assert load_vtt_backfill_candidates(tmp_path / "datos/raw/vtt_by_video") == [
+        {"video_id": "v3", "channel_id": "c3", "channel_title": "Canal 3", "previous_subtitle_source": None}
+    ]
+    assert main.joinpath("v1.es.vtt").is_file()
+    assert expansion.joinpath("v2.es-419.vtt").is_file()
+
+
+def test_transcript_api_fallback_is_saved_as_provenance_marked_vtt(monkeypatch, tmp_path):
+    class FakeYoutubeDL:
+        def __init__(self, _options):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def extract_info(self, _url, download=False):
+            assert download is True
+            return {}
+
+    monkeypatch.setitem(sys.modules, "yt_dlp", SimpleNamespace(YoutubeDL=FakeYoutubeDL))
+    monkeypatch.setattr(
+        "moderacion_peru.acquisition._transcript_api_fallback",
+        lambda *_: (
+            [{"start": 0.0, "duration": 3.0, "text": "texto suficientemente largo"}],
+            "es",
+            "automatic-transcript-api",
+        ),
+    )
+
+    record = fetch_youtube_subtitles(
+        {"video_id": "v1", "url": "https://youtube.invalid/v1"},
+        sleep_min_seconds=0,
+        sleep_max_seconds=0,
+        minimum_transcript_characters=20,
+        vtt_output_dir=tmp_path,
+    )
+
+    assert record["vtt_files"] == ["v1.es.transcript-api.vtt"]
+    generated = (tmp_path / record["vtt_files"][0]).read_text(encoding="utf-8")
+    assert generated.startswith("WEBVTT")
+    assert "not an original yt-dlp file" in generated
+
+
+def test_vtt_backfill_is_reentrant_and_does_not_require_missing_json(tmp_path):
+    target = tmp_path / "vtt_by_video"
+    fetched = []
+
+    def fetcher(candidate):
+        video_id = candidate["video_id"]
+        fetched.append(video_id)
+        target.mkdir(parents=True, exist_ok=True)
+        target.joinpath(f"{video_id}.es.vtt").write_text(
+            "WEBVTT\n\n00:00:00.000 --> 00:00:01.000\ntexto\n",
+            encoding="utf-8",
+        )
+        return {"video_id": video_id, "segments": [{"text": "texto"}]}
+
+    first = backfill_missing_vtt([{"video_id": "v1"}], target, fetcher=fetcher)
+    second = backfill_missing_vtt([{"video_id": "v1"}], target, fetcher=fetcher)
+
+    assert first["fetched"] == 1
+    assert second["already_available"] == 1
+    assert fetched == ["v1"]
 
 
 def test_rate_limit_excludes_only_affected_channel_and_continues(tmp_path):

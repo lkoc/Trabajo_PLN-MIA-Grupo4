@@ -167,9 +167,11 @@ SCRAPING_PARAMETERS = """# ═════════════════�
 # ══════════════════════════════════════════════════════════════════════════════
 DISCOVER_NEW = False          # True: consulta canales/búsquedas y guarda candidatos
 FETCH_NEW = True              # True: obtiene subtítulos solo de videos aún no procesados
+BACKFILL_MISSING_VTT = True   # True: recupera VTT aunque el JSON del video ya exista
 DISCOVERY_MODE = "directed"   # "seed", "directed" o "both"
 
 MAX_NEW_VIDEOS = None         # None: incluye todos los pendientes; use un entero para un piloto
+MAX_VTT_BACKFILL = None       # None: intenta todos los VTT faltantes; reanudable por archivo
 NETWORK_BATCH_SIZE = 10       # llamadas nuevas por lote antes de una pausa larga
 NETWORK_BATCH_PAUSE_SECONDS = 20.0
 EXCLUDE_CHANNEL_ON_429 = True # difiere solo el canal afectado; continúa con los demás
@@ -192,6 +194,7 @@ YT_SOCKET_TIMEOUT_SECONDS = 45.0 # máximo por operación HTTP antes de reintent
 RESUME_DISCOVERY = True       # checkpoint atómico después de cada canal o consulta
 STOP_ON_VIDEO_ERROR = False   # False: registra el fallo y continúa con el siguiente
 SYNC_TRANSCRIPTS_BY_CHANNEL = True # checkpoint pequeño y sincronizable por canal
+SYNC_VTT_BY_VIDEO = True      # checkpoint VTT crudo, deduplicado y sincronizable
 
 # Reinicio destructivo recuperable: deje vacío normalmente. Para archivar los
 # artefactos activos y reconstruir el dataset de videos desde cero, descomente:
@@ -201,6 +204,7 @@ RESET_VIDEO_DATASET = ""
 if DISCOVERY_MODE not in {"seed", "directed", "both"}:
     raise ValueError("DISCOVERY_MODE debe ser seed, directed o both")
 if ((MAX_NEW_VIDEOS is not None and MAX_NEW_VIDEOS < 0)
+        or (MAX_VTT_BACKFILL is not None and MAX_VTT_BACKFILL < 0)
         or NETWORK_BATCH_SIZE < 1 or NETWORK_BATCH_PAUSE_SECONDS < 0
         or MAX_VIDEOS_PER_CHANNEL < 1 or MAX_RESULTS_PER_QUERY < 1
         or (MAX_DIRECTED_CANDIDATES is not None and MAX_DIRECTED_CANDIDATES < 1)
@@ -219,8 +223,10 @@ if YT_SOCKET_TIMEOUT_SECONDS <= 0:
 show_summary('Configuración del scraping', {
     "discover_new": DISCOVER_NEW,
     "fetch_new": FETCH_NEW,
+    "backfill_missing_vtt": BACKFILL_MISSING_VTT,
     "discovery_mode": DISCOVERY_MODE,
     "max_new_videos": MAX_NEW_VIDEOS,
+    "max_vtt_backfill": MAX_VTT_BACKFILL,
     "network_batch_size": NETWORK_BATCH_SIZE,
     "network_batch_pause_seconds": NETWORK_BATCH_PAUSE_SECONDS,
     "exclude_channel_on_429": EXCLUDE_CHANNEL_ON_429,
@@ -237,6 +243,7 @@ show_summary('Configuración del scraping', {
     "yt_socket_timeout_seconds": YT_SOCKET_TIMEOUT_SECONDS,
     "resume_discovery": RESUME_DISCOVERY,
     "sync_transcripts_by_channel": SYNC_TRANSCRIPTS_BY_CHANNEL,
+    "sync_vtt_by_video": SYNC_VTT_BY_VIDEO,
     "reset_video_dataset_armed": bool(RESET_VIDEO_DATASET),
 }, tone='neutral')
 
@@ -332,6 +339,8 @@ from moderacion_peru.acquisition import (
     collect_project_video_inventory,
     consolidate_available_transcripts,
     load_candidates,
+    load_vtt_backfill_candidates,
+    materialize_vtt_checkpoint,
     materialize_transcripts_by_channel,
     merge_candidates,
     select_directed_search_queries,
@@ -343,6 +352,7 @@ from moderacion_peru.taxonomy import load_taxonomy
 CANONICAL = ROOT/'datos/raw/transcripts_raw.jsonl'
 CACHE = ROOT/'datos/raw/transcripts_cache'
 TRANSCRIPTS_BY_CHANNEL = ROOT/'datos/raw/transcripts_by_channel'
+VTT_BY_VIDEO = ROOT/'datos/raw/vtt_by_video'
 DIRECTED_DATASET = ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'
 rebuild_from_zero = (ROOT/VIDEO_DATASET_RESET_MARKER).exists()
 consolidation_stats = consolidate_available_transcripts(
@@ -368,6 +378,24 @@ if SYNC_TRANSCRIPTS_BY_CHANNEL:
         'carpeta': TRANSCRIPTS_BY_CHANNEL,
         'canonico_preservado': CANONICAL.exists(),
     }, tone='success')
+
+VTT_BACKFILL_CANDIDATES = []
+if SYNC_VTT_BY_VIDEO:
+    vtt_checkpoint_stats = materialize_vtt_checkpoint(
+        ROOT,
+        VTT_BY_VIDEO,
+        read_jsonl(CANONICAL) if CANONICAL.exists() else [],
+    )
+    VTT_BACKFILL_CANDIDATES = load_vtt_backfill_candidates(VTT_BY_VIDEO)
+    show_summary('Checkpoint consolidado de VTT por video', {
+        'archivos_vtt': vtt_checkpoint_stats['total_files'],
+        'videos_con_vtt': vtt_checkpoint_stats['total_videos'],
+        'videos_con_transcripcion': vtt_checkpoint_stats['transcript_videos'],
+        'videos_sin_vtt': vtt_checkpoint_stats['missing_vtt_videos'],
+        'vtt_invalidos': vtt_checkpoint_stats['invalid_vtt_files'],
+        'cola_backfill': VTT_BY_VIDEO/'missing_vtt.jsonl',
+        'carpeta': VTT_BY_VIDEO,
+    }, tone='warning' if VTT_BACKFILL_CANDIDATES else 'success')
 
 KNOWN_VIDEO_IDS, VIDEO_INVENTORY = collect_project_video_inventory(
     ROOT,
@@ -646,9 +674,17 @@ from tqdm.auto import tqdm
 import moderacion_peru.acquisition as acquisition_module
 importlib.reload(acquisition_module)
 
-from moderacion_peru.acquisition import fetch_youtube_subtitles, ingest_incremental
+from moderacion_peru.acquisition import (
+    backfill_missing_vtt,
+    fetch_youtube_subtitles,
+    ingest_incremental,
+    materialize_transcripts_by_channel,
+    materialize_vtt_checkpoint,
+    order_candidates_for_acquisition,
+)
 
 FAILURES = ROOT/'datos/raw/fallos_adquisicion.jsonl'
+VTT_FAILURES = ROOT/'datos/raw/fallos_vtt_backfill.jsonl'
 fetcher = partial(
     fetch_youtube_subtitles,
     languages=SUBTITLE_LANGUAGES,
@@ -658,7 +694,62 @@ fetcher = partial(
     socket_timeout_seconds=YT_SOCKET_TIMEOUT_SECONDS,
     minimum_transcript_characters=MIN_TRANSCRIPT_CHARACTERS,
     use_transcript_api_fallback=USE_TRANSCRIPT_API_FALLBACK,
+    vtt_output_dir=VTT_BY_VIDEO if SYNC_VTT_BY_VIDEO else None,
 )
+
+vtt_backfill_queue = list(VTT_BACKFILL_CANDIDATES)
+if RANDOMIZE_DOWNLOAD_QUEUE:
+    vtt_backfill_queue = order_candidates_for_acquisition(
+        vtt_backfill_queue,
+        random_seed=DOWNLOAD_RANDOM_SEED,
+    )
+if BACKFILL_MISSING_VTT and vtt_backfill_queue:
+    vtt_progress = tqdm(total=len(vtt_backfill_queue), desc='Recuperando VTT faltantes', unit='video')
+
+    def report_vtt_backfill(event):
+        counters = event['counters']
+        vtt_progress.update(event.get('advance', 1))
+        vtt_progress.set_description(
+            'Pausa entre lotes VTT' if event['status'] == 'batch_pause' else 'Recuperando VTT faltantes'
+        )
+        vtt_progress.set_postfix(
+            recuperados=counters['fetched'],
+            fallidos=counters['failed'],
+            diferidos=counters['deferred_by_limit'],
+            pausa_429=counters['deferred_rate_limit'],
+            canales_429=counters['rate_limited_channels'],
+            lotes=counters['batch_pauses'],
+        )
+
+    try:
+        vtt_backfill_stats = backfill_missing_vtt(
+            vtt_backfill_queue,
+            VTT_BY_VIDEO,
+            fetcher=fetcher if FETCH_NEW else None,
+            failure_path=VTT_FAILURES,
+            max_new_videos=MAX_VTT_BACKFILL,
+            network_batch_size=NETWORK_BATCH_SIZE,
+            batch_pause_seconds=NETWORK_BATCH_PAUSE_SECONDS,
+            exclude_rate_limited_channels=EXCLUDE_CHANNEL_ON_429,
+            stop_on_error=STOP_ON_VIDEO_ERROR,
+            progress_callback=report_vtt_backfill,
+        )
+    finally:
+        vtt_progress.close()
+    show_summary(
+        'Resumen de recuperación VTT',
+        {'pendientes_antes': len(vtt_backfill_queue), **vtt_backfill_stats},
+        tone='success' if not vtt_backfill_stats['failed'] else 'warning',
+    )
+elif vtt_backfill_queue:
+    show_callout(
+        'Backfill VTT pendiente',
+        f'Hay {len(vtt_backfill_queue)} videos sin VTT; active BACKFILL_MISSING_VTT y FETCH_NEW.',
+        tone='warning',
+    )
+else:
+    show_callout('VTT completos', 'No hay transcripciones canónicas sin VTT.', tone='success')
+
 if pending_candidates:
     video_progress = tqdm(total=len(pending_candidates), desc='Procesando pendientes', unit='video')
 
@@ -728,6 +819,26 @@ else:
         'Active DISCOVER_NEW o añada un CSV/JSONL. El corpus existente no se vuelve a descargar.',
         tone='warning',
     )
+
+if SYNC_TRANSCRIPTS_BY_CHANNEL:
+    final_channel_stats = materialize_transcripts_by_channel(CANONICAL, TRANSCRIPTS_BY_CHANNEL)
+    show_summary('JSONL por canal consolidados al cierre', {
+        'videos': final_channel_stats['total_videos'],
+        'canales': final_channel_stats['total_channels'],
+        'partes_jsonl': final_channel_stats['total_channel_files'],
+    }, tone='success')
+if SYNC_VTT_BY_VIDEO:
+    final_vtt_stats = materialize_vtt_checkpoint(
+        ROOT,
+        VTT_BY_VIDEO,
+        read_jsonl(CANONICAL) if CANONICAL.exists() else [],
+    )
+    show_summary('VTT consolidados al cierre', {
+        'archivos_vtt': final_vtt_stats['total_files'],
+        'videos_con_vtt': final_vtt_stats['total_videos'],
+        'videos_sin_vtt': final_vtt_stats['missing_vtt_videos'],
+        'manifiesto_faltantes': VTT_BY_VIDEO/'missing_vtt.jsonl',
+    }, tone='success' if not final_vtt_stats['missing_vtt_videos'] else 'warning')
 """
 
 
