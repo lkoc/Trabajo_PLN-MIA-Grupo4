@@ -9,7 +9,7 @@ Todo el recorrido usa el contrato de etiquetas v2.1 con `SEGURO`, `RACISMO_DISCR
 | 1 | `01_01_scraping_incremental` | canales/consultas + candidatos + JSON/VTT/caché históricos | VTT y JSON por canal consolidados, índices, manifiesto faltante y canónico | procesa primero el backfill VTT; cada éxito se conserva antes de continuar y se omite al reanudar |
 | 2 | `01_02_optimizacion_longitud_chunks` | transcripciones + chunks etiquetados + snapshot | perfil clásico decisorio y perfil neuronal robusto MiniLM/Gemma para 15/20/25/30/35 s | reanuda ajustes y respuestas por firma; la jerarquía no cambia datos sin aplicación explícita |
 | 3 | `01_03_limpieza_troceado_incremental` | JSON por canal + VTT locales + configuración activa | canónico reconstruido, chunks v2 y manifiesto descriptivo | barra por video; hash de transcripción + firma; `REBUILD_CHUNKS_FROM_ZERO` solo para reconstrucción respaldada |
-| 4 | `02_00_preparacion_bundle_colab` | chunks + snapshot local + carpeta de Drive Desktop | `bundle_releases/<bundle_id>` verificado | no-op si la versión inmutable ya existe; se repite después de `02_05` |
+| 4 | `02_00_preparacion_bundle_colab` | bundle sincronizado en GitHub o carga local por navegador | `bundle_releases/<bundle_id>` y `latest.json` en Drive | se ejecuta en Colab; verifica identidad y SHA-256, reutiliza versiones válidas y se repite después de `02_05` |
 | 5 | `02_01_etiquetado_local_ollama` | chunks pendientes | anotaciones locales | `chunk_id` |
 | 6 | `02_02_etiquetado_remoto` | muestra opcional | anotaciones remotas | opcional, `chunk_id` y activación comercial explícita |
 | 7 | `02_03_revision_llm_dirigida` | baja confianza/duda | cola priorizada | selección determinista; opcional |
@@ -31,7 +31,7 @@ Todo el recorrido usa el contrato de etiquetas v2.1 con `SEGURO`, `RACISMO_DISCR
 
 - En `01_01`, la continuación actual usa `DISCOVER_NEW=False`, `FETCH_NEW=True` y `BACKFILL_MISSING_VTT=True`: no busca fuentes nuevas, recupera primero los VTT faltantes y después recorre candidatos materializados. `MAX_VTT_BACKFILL=None` y `MAX_NEW_VIDEOS=None` incluyen ambas colas completas. `RANDOMIZE_DOWNLOAD_QUEUE=True` ordena de forma pseudoaleatoria reproducible e intercala canales. `NETWORK_BATCH_SIZE=10` y `NETWORK_BATCH_PAUSE_SECONDS=15` regulan la ejecución; `yt-dlp` añade pausas internas de 2.5–10 segundos y un timeout de 30 segundos por operación. Cambie `FETCH_NEW=False` para una inspección sin red.
 - `01_02` es opcional. `RUN_CHUNK_LENGTH_SMOKE_TEST=True` hace 10 ajustes CPU y `RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=True` hace 45 ajustes en tres cohortes pareadas. El perfil decisorio clásico activa `RUN_CHUNK_LENGTH_ROBUST_TEST=True`: 75 ajustes en cinco cohortes de 300/100/100 videos y 1 000 réplicas bootstrap por `video_id`, con referencia 30 s y margen 0.01 AP. Después, `RUN_NEURAL_ROBUST_TEST=True` compara las mismas cinco longitudes sobre un panel pareado de 100 anclas de `validation`: 25 cabezas MiniLM y hasta 500 respuestas estructuradas de `gemma3:4b`, cinco cohortes de reporte y 2 000 réplicas bootstrap por familia. MiniLM y Ollama son confirmatorios; no se promedian ni cambian automáticamente la longitud. Ante conflicto se conserva la selección clásica hasta validación humana independiente. Solo `APPLY_CHUNK_SELECTION=True` modifica la firma activa.
-- En `02_00`, use kernel local, configure `DRIVE_ROOT` y active `RUN_PREPARE_BUNDLE=True`; espere la sincronización de Drive antes de conectar Colab.
+- En `02_00`, use Google Colab, mantenga `BUNDLE_SOURCE='github'` si el bundle ya está sincronizado —o use `'local_upload'` para escoger los cuatro archivos locales más recientes— y active `RUN_PUBLISH_BUNDLE=True`. La autorización integrada de `drive.mount()` no requiere Google Cloud Console ni Drive Desktop.
 - En `02_01`, active `RUN=True`; pruebe primero `LIMIT=20` y después quite el límite para cerrar el lote.
 - `02_02` conserva `RUN_REMOTE=False` salvo decisión explícita de usar la API comercial.
 - En `03_01`–`03_06`, active `RUN_TRAINING=True`. Una segunda ejecución con el mismo snapshot devuelve `status="noop"`.
@@ -52,9 +52,10 @@ consume en Colab. El dataset no se considera barato de reconstruir: incorpora
 anotación humana y pseudoetiquetas con procedencia, por lo que su checkpoint
 comprimido sí forma parte del estado sincronizado.
 
-Después de que `02_05` cree un snapshot distinto, vuelva a ejecutar `02_00` con
-kernel local antes de iniciar `03`; así se publica otro `bundle_id` inmutable en
-Drive y los cuadernos Colab activan exactamente el dataset declarado.
+Después de que `02_05` cree un snapshot distinto, regenere el bundle local,
+sincronícelo con GitHub o selecciónelo mediante `local_upload`, y vuelva a
+ejecutar `02_00` en Colab antes de iniciar `03`; así se publica otro `bundle_id`
+inmutable y los consumidores activan exactamente el dataset declarado.
 
 ## Qué ocurre cuando crece la muestra
 

@@ -155,7 +155,8 @@ def test_chunk_optimization_notebook_loads_consolidated_results_before_models():
 
 
 def test_colab_notebooks_embed_reproducible_drive_bootstrap():
-    expected = {"02_01", "03_02", "03_03", "03_04", "03_05", "03_06"}
+    expected_consumers = {"02_01", "03_02", "03_03", "03_04", "03_05", "03_06"}
+    expected = {"02_00", *expected_consumers}
     manifest = json.loads(
         (ROOT / "resultados" / "colab_bundle" / "bundle_manifest.json").read_text(encoding="utf-8")
     )
@@ -169,15 +170,25 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
         if metadata["eligible"]:
             observed.add(metadata["notebook_id"])
             assert "drive.mount" in source
+            assert f'COLAB_EXPECTED_CORE_SHA256 = "{expected_core_sha256}"' in source
+            assert "bundle_releases" in source
+            assert "latest.json" in source
+            assert metadata["build_bundle_id"] == expected_bundle_id
+            assert metadata["expected_core_sha256"] == expected_core_sha256
+            if metadata["notebook_id"] == "02_00":
+                assert "raw.githubusercontent.com" in source
+                assert "files.upload()" in source
+                assert "RUN_PUBLISH_BUNDLE=False" in source
+                assert metadata["expected_gpu"] is None
+                assert metadata["transport"] == "github_or_browser_upload_to_google_drive"
+                assert metadata["bundle_resolution"] == "publishes_drive_latest_pointer"
+                continue
             assert "prepare_colab_context" in source
             assert "publish_colab_outputs" in source
             assert "COLAB_REQUIRE_L4 = True" in source
             assert "COLAB_AUTO_UPDATE_BUNDLE = True" in source
             assert f'COLAB_NOTEBOOK_BUILD_BUNDLE_ID = "{expected_bundle_id}"' in source
-            assert f'COLAB_EXPECTED_CORE_SHA256 = "{expected_core_sha256}"' in source
-            assert "bundle_releases" in source
             assert "_activate_verified_drive_release" in source
-            assert "latest.json" in source
             assert "02_00_preparacion_bundle_colab.ipynb" in source
             assert "raw.githubusercontent" not in source.lower()
             assert "urllib.request" not in source
@@ -185,9 +196,7 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
             assert 'pip", "install", "-q", "-r"' in source
             assert "git clone" not in source.lower()
             assert metadata["transport"] == "google_drive_versioned_releases"
-            assert metadata["build_bundle_id"] == expected_bundle_id
             assert metadata["bundle_resolution"] == "drive_latest_pointer"
-            assert metadata["expected_core_sha256"] == expected_core_sha256
     assert observed == expected
 
 
@@ -461,10 +470,16 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
         assert "from tqdm.auto import tqdm" in notebook_sources[path.name]
 
     bundle = notebook_sources["02_00_preparacion_bundle_colab.ipynb"]
-    assert "RUN_PREPARE_BUNDLE=False" in bundle
-    assert "publish_drive_release" in bundle
-    assert "bundle_progress" in bundle
-    assert "bundle_releases" not in bundle  # La función encapsula la ruta versionada.
+    assert "RUN_PUBLISH_BUNDLE=False" in bundle
+    assert "BUNDLE_SOURCE='github'" in bundle
+    assert "local_upload" in bundle
+    assert "raw.githubusercontent.com" in bundle
+    assert "files.upload()" in bundle
+    assert "drive.mount('/content/drive'" in bundle
+    assert "_verify_bundle" in bundle
+    assert "bundle_releases" in bundle
+    assert "latest.json" in bundle
+    assert "published_to_drive" in bundle
     local = notebook_sources["02_01_etiquetado_local_ollama.ipynb"]
     assert "LIMIT=20" in local
     assert "LIMIT=None" in local

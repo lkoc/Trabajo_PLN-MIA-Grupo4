@@ -62,6 +62,16 @@ def bundle_file_specs(manifest: dict[str, object]) -> list[tuple[str, str]]:
     return [(str(name), str(expected_sha256)) for name, expected_sha256 in specs]
 
 
+def latest_pointer_for_release(release_dir: Path, manifest: dict[str, object]) -> dict[str, str]:
+    return {
+        "schema_version": "1.0.0",
+        "bundle_id": str(manifest["bundle_id"]),
+        "core_sha256": str(manifest["core"]["sha256"]),
+        "manifest_sha256": sha256_file(release_dir / "bundle_manifest.json"),
+        "published_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 def verify_bundle_directory(directory: str | Path, expected_bundle_id: str | None = None) -> dict[str, object]:
     bundle_dir = Path(directory).expanduser().resolve()
     manifest_path = bundle_dir / "bundle_manifest.json"
@@ -237,13 +247,7 @@ def publish_drive_release(
                 shutil.rmtree(staging)
         status = "published"
     latest_pointer = releases_root / "latest.json"
-    pointer = {
-        "schema_version": "1.0.0",
-        "bundle_id": bundle_id,
-        "core_sha256": manifest["core"]["sha256"],
-        "manifest_sha256": sha256_file(release_dir / "bundle_manifest.json"),
-        "published_at": datetime.now(timezone.utc).isoformat(),
-    }
+    pointer = latest_pointer_for_release(release_dir, manifest)
     fd, temporary_pointer = tempfile.mkstemp(prefix=".latest.", dir=releases_root)
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
@@ -273,7 +277,7 @@ def main() -> int:
     parser.add_argument(
         "--destination",
         default=str(ROOT / "resultados" / "colab_bundle"),
-        help="Carpeta bundle en Google Drive Desktop o staging local",
+        help="Staging local del bundle reproducible",
     )
     parser.add_argument(
         "--drive-root",

@@ -12,7 +12,7 @@
 
 ## Orden
 
-1. `02_00_preparacion_bundle_colab.ipynb` — con kernel local, publica en Drive la versión inmutable requerida por Colab; ejecútelo antes de `02_01` y nuevamente después de `02_05` antes de entrenar en Colab.
+1. `02_00_preparacion_bundle_colab.ipynb` — se ejecuta en Colab, descarga el bundle sincronizado de GitHub o recibe los cuatro archivos locales mediante el navegador, verifica identidad y SHA-256 y publica la versión inmutable en Drive. Ejecútelo antes de `02_01` y nuevamente después de `02_05`.
 2. `02_01_etiquetado_local_ollama.ipynb` — Ollama local oficial o Hugging Face/Qwen sobre Colab L4 como backend opcional.
 3. `02_02_etiquetado_remoto.ipynb` — opcional y con activación explícita.
 4. `02_03_revision_llm_dirigida.ipynb` — discrepancias y baja confianza.
@@ -21,7 +21,7 @@
 
 Cada salida conserva modelo, prompt, taxonomía, confianza, flags y estado de revisión. El proceso reanuda por `chunk_id` y no vuelve a pagar ni recalcular filas completas.
 
-Los seis cuadernos muestran barras `tqdm` en las operaciones potencialmente largas. `02_00` informa construcción, compresión y copia; `02_01` y `02_02` informan etiquetados y errores; `02_03` muestra el recorrido que construye la cola dirigida; `02_04` separa lectura, carga y consolidación; `02_05` separa eventos humanos, reconciliación, deduplicación y validación de splits. Las etapas instantáneas de preflight no crean barras artificiales.
+Los seis cuadernos muestran barras `tqdm` en las operaciones potencialmente largas. `02_00` informa descarga y copia a Drive; `02_01` y `02_02` informan etiquetados y errores; `02_03` muestra el recorrido que construye la cola dirigida; `02_04` separa lectura, carga y consolidación; `02_05` separa eventos humanos, reconciliación, deduplicación y validación de splits. Las etapas instantáneas de preflight no crean barras artificiales.
 
 ```powershell
 modperu serve-labeling --campaign datos/etiquetado/consolidado/anotaciones_v2.jsonl
@@ -31,4 +31,4 @@ La sugerencia LLM permanece oculta hasta que el revisor decide mostrarla. La int
 
 Los eventos humanos no alteran el archivo LLM. `02_05` construye una vista derivada por precedencia y después un snapshot inmutable. Si no existen eventos humanos —la revisión es opcional— conserva las decisiones automáticas resueltas; nunca convierte una abstención en `SEGURO`.
 
-La alternativa Colab no ejecuta Ollama: usa el adaptador Hugging Face bajo el mismo contrato. El transporte es exclusivamente Google Drive: `02_00` publica `bundle_releases/<bundle_id>` y actualiza `bundle_releases/latest.json`; el bootstrap lee ese puntero y activa la versión después de verificar todos sus SHA-256. Las anotaciones se escriben en `/content` y se publican a Drive como un run reanudable. Consulte [`docs/COLAB_L4.md`](../../docs/COLAB_L4.md).
+La alternativa Colab no ejecuta Ollama: usa el adaptador Hugging Face bajo el mismo contrato. `02_00` usa la autorización integrada de Colab para publicar `bundle_releases/<bundle_id>` y actualizar `bundle_releases/latest.json`; no requiere Google Cloud Console ni Drive Desktop. El bootstrap consumidor lee el puntero y activa la versión después de verificar todos sus SHA-256. Las anotaciones se escriben en `/content` y se publican a Drive como un run reanudable. Consulte [`docs/COLAB_L4.md`](../../docs/COLAB_L4.md).

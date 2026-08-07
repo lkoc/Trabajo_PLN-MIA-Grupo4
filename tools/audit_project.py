@@ -186,12 +186,22 @@ def notebook_issues() -> list[str]:
                     )
         colab = notebook.metadata.get("moderacion_peru", {}).get("colab", {})
         if colab.get("eligible"):
-            for required in (
-                "drive.mount",
-                "prepare_colab_context",
-                "publish_colab_outputs",
-                "COLAB_REQUIRE_L4",
-            ):
+            if colab.get("transport") == "github_or_browser_upload_to_google_drive":
+                required_controls = (
+                    "drive.mount",
+                    "raw.githubusercontent.com",
+                    "files.upload()",
+                    "_verify_bundle",
+                    "latest.json",
+                )
+            else:
+                required_controls = (
+                    "drive.mount",
+                    "prepare_colab_context",
+                    "publish_colab_outputs",
+                    "COLAB_REQUIRE_L4",
+                )
+            for required in required_controls:
                 if required not in source:
                     issues.append(
                         f"missing_colab_bootstrap:{path.relative_to(ROOT)}:{required}"

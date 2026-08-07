@@ -241,6 +241,7 @@ usarse como sustituto de evidencia científica revisada por pares.
 | Salida estructurada de Ollama | [Documentación oficial](https://docs.ollama.com/capabilities/structured-outputs) | JSON Schema enviado, validación Pydantic, temperatura y reintentos del adaptador local. |
 | PEFT 0.18.0 | [Referencia LoRA](https://huggingface.co/docs/peft/v0.18.0/package_reference/lora) | Versión, rango, `target_modules`, `lora_alpha` y dropout; los valores concretos son locales. |
 | Google Colab para VS Code | [Wiki oficial](https://github.com/googlecolab/colab-vscode/wiki/Known-Issues-and-Workarounds) | Versión de la extensión, soporte de `drive.mount`, hardware observado y SHA-256 del bundle. |
+| Google Colab y Drive montado | [Preguntas frecuentes oficiales](https://research.google.com/colaboratory/faq.html) | Autorización de `drive.mount`, carácter efímero de la VM, `bundle_id`, SHA-256 verificados y ruta publicada. |
 | DeepSeek V4 Flash/Pro | [Lanzamiento](https://api-docs.deepseek.com/news/news260424/) y [modelos](https://api-docs.deepseek.com/quick_start/pricing/) | IDs exactos, fecha de acceso, rol de preanotación/revisión y protocolo humano posterior. |
 | yt-dlp | [Repositorio oficial](https://github.com/yt-dlp/yt-dlp) | Versión usada, opciones de subtítulos e idiomas solicitados. |
 | youtube-transcript-api | [Repositorio oficial](https://github.com/jdepoix/youtube-transcript-api) | Versión usada y condición de fallback. |

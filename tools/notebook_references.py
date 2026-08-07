@@ -85,6 +85,11 @@ REFERENCE_LIBRARY = {
         "2026. [Online]. Available: https://github.com/googlecolab/colab-vscode/wiki/"
         "Known-Issues-and-Workarounds. Accessed: Aug. 5, 2026."
     ),
+    "googlecolab2026faq": (
+        'Google Colab, "Frequently Asked Questions," Google Research, 2026. [Online]. '
+        "Available: https://research.google.com/colaboratory/faq.html. "
+        "Accessed: Aug. 7, 2026."
+    ),
     "schroeder2025llmassisted": (
         'H. Schroeder, D. Roy, and J. Kabbara, "Just Put a Human in the Loop? '
         'Investigating LLM-Assisted Annotation for Subjective Tasks," in Findings ACL, '
