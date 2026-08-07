@@ -16,6 +16,7 @@ DEFAULT_PRECEDENCE = {
     "human": 45,
     "human_accepted": 40,
     "llm_remote_review": 30,
+    "llm_local_review": 30,
     "llm_remote": 20,
     "deepseek_remote": 20,
     "ollama_local": 10,

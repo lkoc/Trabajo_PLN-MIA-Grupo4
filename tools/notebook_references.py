@@ -80,6 +80,12 @@ REFERENCE_LIBRARY = {
         "https://huggingface.co/Qwen/Qwen3-4B/tree/1cfa9a7208912126459214e8b04321603b3df60c. "
         "Accessed: Aug. 5, 2026."
     ),
+    "hf2026qwen17bcard": (
+        'Qwen Team, "Model Card: Qwen/Qwen3-1.7B," Hugging Face Hub, revision '
+        "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e, 2025. [Online]. Available: "
+        "https://huggingface.co/Qwen/Qwen3-1.7B/tree/70d244cc86ccca08cf5af4e1e306ecf908b1ad5e. "
+        "Accessed: Aug. 7, 2026."
+    ),
     "googlecolab2026vscode": (
         'Google Colab, "Known Issues and Workarounds," googlecolab/colab-vscode Wiki, '
         "2026. [Online]. Available: https://github.com/googlecolab/colab-vscode/wiki/"
@@ -99,6 +105,11 @@ REFERENCE_LIBRARY = {
         'DeepSeek, "DeepSeek V4 Preview Release," DeepSeek API Documentation, Apr. 2026. '
         "[Online]. Available: https://api-docs.deepseek.com/news/news260424/. "
         "Accessed: Aug. 5, 2026."
+    ),
+    "deepseek2026pricing": (
+        'DeepSeek, "Models and Pricing," DeepSeek API Documentation, 2026. '
+        "[Online]. Available: https://api-docs.deepseek.com/quick_start/pricing. "
+        "Accessed: Aug. 7, 2026."
     ),
     "settles2009active": (
         'B. Settles, "Active Learning Literature Survey," Univ. Wisconsin–Madison, '

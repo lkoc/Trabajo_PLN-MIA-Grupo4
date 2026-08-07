@@ -168,10 +168,12 @@ def prepare_colab_context(
     if notebook_id not in config["notebooks"]:
         raise ValueError(f"El cuaderno {notebook_id} no está habilitado para Colab")
 
-    hardware = resolve_device("cuda")
-    if hardware.backend != "cuda":
+    notebook_config = config["notebooks"][notebook_id]
+    requires_cuda = bool(notebook_config.get("requires_cuda", True))
+    hardware = resolve_device("cuda" if requires_cuda else "auto")
+    if requires_cuda and hardware.backend != "cuda":
         raise RuntimeError("Este flujo requiere un runtime Colab con GPU CUDA")
-    if require_l4 and "L4" not in hardware.device_name.upper():
+    if requires_cuda and require_l4 and "L4" not in hardware.device_name.upper():
         raise RuntimeError(
             f"Se esperaba NVIDIA L4 y Colab asignó {hardware.device_name}. "
             "Cambie el tipo de runtime o establezca COLAB_REQUIRE_L4=False de forma explícita."

@@ -58,11 +58,17 @@ def test_active_notebooks_are_ordered_and_clean():
             == "moderacion_peru_5_salidas_v2"
         )
         assert notebook.metadata["moderacion_peru"]["taxonomy_version"] == "2.1.0"
-        assert all(
-            not cell.get("outputs")
+        output_cells = [
+            cell
             for cell in notebook.cells
-            if cell.cell_type == "code"
-        )
+            if cell.cell_type == "code" and cell.get("outputs")
+        ]
+        if path.name == "01_03_limpieza_troceado_incremental.ipynb":
+            # El resultado descriptivo ejecutado pertenece al usuario y se conserva
+            # deliberadamente para reporting; ningún otro cuaderno activo guarda salida.
+            assert output_cells
+        else:
+            assert not output_cells
         source = "\n".join(cell.source for cell in notebook.cells)
         assert all(output in notebook.cells[0].source for output in TRAINED_OUTPUTS)
         assert ABBREVIATED_CONTRACT not in source
@@ -199,6 +205,11 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
             assert "git clone" not in source.lower()
             assert metadata["transport"] == "google_drive_versioned_releases"
             assert metadata["bundle_resolution"] == "drive_latest_pointer"
+            if metadata["notebook_id"] == "02_01":
+                assert metadata["expected_gpu"] is None
+                assert "esta campaña API funciona con runtime CPU" in source
+            else:
+                assert metadata["expected_gpu"] == "NVIDIA L4"
     assert observed == expected
 
 
@@ -485,18 +496,20 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     assert "latest.json" in bundle
     assert "published_to_drive" in bundle
     local = notebook_sources["02_01_etiquetado_local_ollama.ipynb"]
-    assert "LIMIT=20" in local
-    assert "LIMIT=None" in local
-    assert "no deje el valor en blanco" in local
-    assert "progress_callback=report_label_progress" in local
+    assert "PRIMARY_LIMIT=300" in local
+    assert "None para TODOS los pendientes" in local
+    assert "Nunca lo deje en blanco" in local
+    assert "progress_callback=labeling_progress" in local
     assert "from tqdm.std import tqdm" in local
-    assert "Texto visible en Colab desde VS Code" in local
-    assert "inspect.signature(annotate_incremental)" in local
-    assert "continuará con los siguientes 20" in local
-    assert "progress_callback=report_remote_progress" in notebook_sources[
+    assert "Salida textual visible también desde VS Code" in local
+    assert "validate_connection()" in local
+    assert "PROCESSING_BATCH_SIZE=160" in local
+    assert "estimated_cost_usd" in local
+    assert "quarantine_invalid_progress=True" in local
+    assert "progress_callback=report_local_progress" in notebook_sources[
         "02_02_etiquetado_remoto.ipynb"
     ]
-    assert "Construyendo cola dirigida" in notebook_sources[
+    assert "Leyendo {name}" in notebook_sources[
         "02_03_revision_llm_dirigida.ipynb"
     ]
     assert "progress_callback=report_consolidation_progress" in notebook_sources[

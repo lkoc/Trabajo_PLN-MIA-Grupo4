@@ -14,12 +14,19 @@ from moderacion_peru.schemas import HardwareRecord
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_colab_config_syncs_only_gpu_inputs():
+def test_colab_config_syncs_only_declared_inputs_and_keeps_api_on_cpu():
     config = json.loads((ROOT / "config" / "colab_l4.json").read_text(encoding="utf-8"))
     assert set(config["inputs"]) == {"chunks_v2", "dataset_5_salidas"}
     assert set(config["notebooks"]) == {"02_01", "03_02", "03_03", "03_04", "03_05", "03_06"}
     assert "datos/raw/transcripts_raw.jsonl" in config["excluded_from_drive"]
-    assert all(specification["expected_gpu"] == "NVIDIA L4" for specification in config["notebooks"].values())
+    assert config["notebooks"]["02_01"]["requires_cuda"] is False
+    assert config["notebooks"]["02_01"]["expected_gpu"] is None
+    assert all(
+        specification["requires_cuda"] is True
+        and specification["expected_gpu"] == "NVIDIA L4"
+        for notebook_id, specification in config["notebooks"].items()
+        if notebook_id != "02_01"
+    )
 
 
 def test_colab_stages_declared_input_and_restores_published_run(tmp_path, monkeypatch):

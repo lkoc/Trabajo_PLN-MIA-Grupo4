@@ -23,11 +23,11 @@
   },
   "notebooks": {
     "02_01": {
-      "colab_mode": "optional_huggingface",
-      "requires_cuda": true,
-      "expected_gpu": "NVIDIA L4",
+      "colab_mode": "optional_deepseek_api",
+      "requires_cuda": false,
+      "expected_gpu": null,
       "input_keys": ["chunks_v2"],
-      "reason": "Alternativa al etiquetado Ollama que en esta máquina ejecutó 100 % CPU."
+      "reason": "Cascada calibrada Flash-Pro por API; funciona con runtime CPU y no reserva una GPU innecesaria."
     },
     "03_02": {
       "colab_mode": "recommended",

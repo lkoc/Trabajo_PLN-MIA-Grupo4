@@ -1145,6 +1145,7 @@ def create(
     *,
     colab_notebook_id: str | None = None,
     colab_publisher: bool = False,
+    colab_requires_gpu: bool = True,
 ) -> None:
     if ONLY_NOTEBOOKS is not None and path not in ONLY_NOTEBOOKS:
         return
@@ -1179,7 +1180,7 @@ def create(
                     if colab_publisher
                     else "google_drive_versioned_releases" if colab_notebook_id else None
                 ),
-                "expected_gpu": "NVIDIA L4" if colab_notebook_id else None,
+                "expected_gpu": "NVIDIA L4" if colab_notebook_id and colab_requires_gpu else None,
                 "build_bundle_id": bundle_identity["bundle_id"] if bundle_identity else None,
                 "bundle_resolution": (
                     "publishes_drive_latest_pointer"
@@ -1222,9 +1223,14 @@ def create(
     elif colab_notebook_id:
         notebook.cells.append(
             nbf.v4.new_markdown_cell(
-                "## Backend opcional Google Colab L4 desde VS Code\n\n"
+                "## Backend opcional Google Colab desde VS Code\n\n"
                 "Instale la extensión oficial **Google Colab** (`google.colab`), seleccione "
-                "`Select Kernel > Colab` y asigne una **NVIDIA L4**. El notebook permanece local; "
+                + (
+                    "`Select Kernel > Colab` y asigne una **NVIDIA L4**. "
+                    if colab_requires_gpu
+                    else "`Select Kernel > Colab`; esta campaña API funciona con runtime CPU. "
+                )
+                + "El notebook permanece local; "
                 "Drive transporta solo versiones inmutables del bundle. Si la copia activa no coincide, "
                 "la celda lee `bundle_releases/latest.json`, verifica todos sus SHA-256 y promueve "
                 "automáticamente esa versión. "
@@ -1679,116 +1685,225 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
     )
     create(
         "flujo/02_etiquetado/02_01_etiquetado_local_ollama.ipynb",
-        "02.01 · Etiquetado Ollama local o Hugging Face en Colab",
-        "Usa Ollama HTTP en local o, opcionalmente, Hugging Face sobre Colab L4; ambos conservan el mismo contrato y reanudan por `chunk_id`.",
-        "Ollama admite un JSON Schema en la salida estructurada y su validación posterior con Pydantic "
-        "[@ollama2026structured]. El backend local usa exactamente `qwen3.5:4b` y debe registrar el digest "
-        "publicado por Ollama [@ollama2026qwen35]; el backend Colab usa `Qwen/Qwen3-4B`, cuyo linaje se "
-        "describe en el informe Qwen3 [@qwen2025qwen3] y cuya revisión exacta consta en la tarjeta del "
-        "modelo [@hf2026qwen4bcard]. Las salidas LLM son propuestas de anotación y no *ground truth*: "
-        "la anotación asistida en tareas subjetivas requiere controles humanos y de anclaje "
-        "[@schroeder2025llmassisted]. El prompt, el reintento y la precedencia son decisiones locales.",
+        "02.01 · Cascada de etiquetado calibrada",
+        "Reproduce el patrón histórico Flash→Pro: calibra una primera pasada económica, etiqueta el corpus por lotes y dirige los casos riesgosos a un revisor más capaz.",
+        "La procedencia de `deepseek-v4-flash` y `deepseek-v4-pro` está documentada por el proveedor "
+        "[@deepseek2026v4], al igual que sus precios por tokens y caché [@deepseek2026pricing]. La selección "
+        "dirigida pertenece a la familia de aprendizaje activo [@settles2009active]. El acuerdo Flash–Pro "
+        "calibra una regla operativa, pero no constituye *ground truth*; las tareas subjetivas conservan una "
+        "instancia humana final independiente [@schroeder2025llmassisted]. Los umbrales, el presupuesto, "
+        "el control seguro y la precedencia son decisiones locales auditables.",
         [
             (
-                "Selección del proveedor",
-                "if COLAB_CONTEXT is not None:\n"
-                "    from moderacion_peru.providers import HuggingFaceProvider\n"
-                "    provider=HuggingFaceProvider(model='Qwen/Qwen3-4B',revision='1cfa9a7208912126459214e8b04321603b3df60c',device='cuda',max_new_tokens=512)\n"
-                "    SOURCE=COLAB_CONTEXT.input('chunks_v2')\n"
-                "    OUTPUT=COLAB_CONTEXT.scratch_output_dir/'huggingface_qwen3_4b_v2.jsonl'\n"
-                "    ERRORS=COLAB_CONTEXT.scratch_output_dir/'huggingface_qwen3_4b_v2.errors.jsonl'\n"
-                "else:\n"
-                "    from moderacion_peru.providers import OllamaProvider\n"
-                "    provider=OllamaProvider(model='qwen3.5:4b')\n"
-                "    SOURCE=ROOT/'datos/processed/chunks_v2.jsonl'\n"
-                "    OUTPUT=ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl'\n"
-                "    ERRORS=ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.errors.jsonl'\n"
-                "show_result('Estado del proveedor', provider.probe(), tone='success')\nshow_summary('Rutas de la campaña', {'entrada': SOURCE, 'salida': OUTPUT, 'errores': ERRORS}, tone='neutral')",
+                "Configuración explícita y credencial",
+                "import os\n"
+                "from pathlib import Path\n"
+                "from moderacion_peru.providers import DeepSeekProvider\n\n"
+                "if globals().get('IN_COLAB') and not os.getenv('DEEPSEEK_API_KEY'):\n"
+                "    try:\n"
+                "        from google.colab import userdata\n"
+                "        os.environ['DEEPSEEK_API_KEY']=userdata.get('DEEPSEEK_API_KEY') or ''\n"
+                "    except Exception:\n"
+                "        pass\n\n"
+                "SOURCE=COLAB_CONTEXT.input('chunks_v2') if COLAB_CONTEXT else ROOT/'datos/processed/chunks_v2.jsonl'\n"
+                "CAMPAIGN_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'datos/etiquetado/cascada_deepseek_v4'\n"
+                "CAMPAIGN_ROOT.mkdir(parents=True,exist_ok=True)\n"
+                "RUN_API_PREFLIGHT=False  # True consulta /models; valida la clave sin enviar textos.\n"
+                "RUN_CALIBRATION=False  # Primero: panel pareado Flash–Pro. Costo esperado muy bajo.\n"
+                "RUN_PRIMARY=False      # Después: primera pasada Flash.\n"
+                "RUN_DIRECTED_REVIEW=False  # Al final: Pro solo sobre la cola dirigida.\n"
+                "CALIBRATION_PANEL_SIZE=1000  # Aún breve; permite evaluar LI95%≈0.95 con potencia útil.\n"
+                "PRIMARY_LIMIT=300  # Piloto histórico; use 20 para smoke o None para TODOS los pendientes. Nunca lo deje en blanco.\n"
+                "REVIEW_LIMIT=500   # Piloto histórico; use None para TODA la cola pendiente.\n"
+                "PROCESSING_BATCH_SIZE=160  # 32 solicitudes concurrentes × 5 registros.\n"
+                "MAX_PRIMARY_COST_USD=60.0\n"
+                "MAX_REVIEW_COST_USD=25.0\n"
+                "SAFE_CONTROL_RATE=0.10\n\n"
+                "primary_provider=DeepSeekProvider(model='deepseek-v4-flash',max_workers=32,records_per_request=5,max_cost_usd=MAX_PRIMARY_COST_USD,label_source='deepseek_remote')\n"
+                "reviewer_provider=DeepSeekProvider(model='deepseek-v4-pro',max_workers=32,records_per_request=5,max_cost_usd=MAX_REVIEW_COST_USD,label_source='llm_remote_review')\n"
+                "if not primary_provider.probe()['credential_configured']:\n"
+                "    show_callout('Falta credencial','Defina DEEPSEEK_API_KEY en el entorno o como secreto de Colab. El preflight no consume crédito.',tone='warning')\n"
+                "show_result('Primera pasada',primary_provider.probe(),tone='success')\n"
+                "show_result('Revisor dirigido',reviewer_provider.probe(),tone='success')\n"
+                "if RUN_API_PREFLIGHT:\n"
+                "    show_result('Credencial y catálogo verificados; no se enviaron textos',{'Flash':primary_provider.validate_connection(),'Pro':reviewer_provider.validate_connection()},tone='success')\n"
+                "show_summary('Rutas y activación',{'entrada':SOURCE,'campaña':CAMPAIGN_ROOT,'calibración':RUN_CALIBRATION,'primaria':RUN_PRIMARY,'revisión':RUN_DIRECTED_REVIEW},tone='neutral')",
             ),
             (
-                "Etiquetado incremental",
+                "Carga visible y presupuesto proyectado",
                 "if globals().get('IN_COLAB'):\n"
-                "    from tqdm.std import tqdm  # Texto visible en Colab desde VS Code.\n"
+                "    from tqdm.std import tqdm  # Salida textual visible también desde VS Code.\n"
                 "else:\n"
                 "    from tqdm.auto import tqdm\n"
-                "import inspect\n"
                 "from moderacion_peru.io import read_jsonl\n"
-                "from moderacion_peru.labeling import annotate_incremental\n\n"
-                "if 'progress_callback' not in inspect.signature(annotate_incremental).parameters:\n"
-                "    raise RuntimeError('El kernel cargó un bundle anterior sin progress_callback. Ejecute 02_00 en Colab, reinicie completamente el kernel y vuelva a empezar por la celda de bootstrap.')\n\n"
-                "RUN=False  # Cambie a True después de verificar proveedor, entrada y rutas.\n"
-                "LIMIT=20   # Smoke test: procesa como máximo 20 chunks pendientes.\n"
-                "# Para procesar TODOS los chunks pendientes use LIMIT=None; no deje el valor en blanco.\n"
-                "# Si mantiene LIMIT=20 y vuelve a ejecutar, continuará con los siguientes 20 porque reanuda por chunk_id.\n\n"
-                "label_progress={'bar':None}\n"
-                "def report_label_progress(event):\n"
-                "    if event['status']=='started':\n"
-                "        label_progress['bar']=tqdm(total=event['selected'],desc='Etiquetado incremental',unit='chunk')\n"
-                "        return\n"
-                "    bar=label_progress.get('bar')\n"
-                "    if bar is not None and event.get('advance'):\n"
-                "        bar.update(event['advance'])\n"
-                "        bar.set_postfix(etiquetados=event['labeled'],errores=event['errors'])\n\n"
-                "if RUN:\n"
-                "    try:\n"
-                "        labeling_result=annotate_incremental(read_jsonl(SOURCE),provider,OUTPUT,error_path=ERRORS,limit=LIMIT,progress_callback=report_label_progress)\n"
-                "    finally:\n"
-                "        if label_progress.get('bar') is not None:\n"
-                "            label_progress['bar'].close()\n"
-                "    show_result('Resultado del etiquetado incremental',labeling_result,tone='success')\n"
+                "CHUNKS=list(tqdm(read_jsonl(SOURCE),desc='Cargando chunks',unit='chunk'))\n"
+                "# Consumo medido en el histórico por cada 5 000 chunks: 8.28 M entrada y 0.724 M salida.\n"
+                "scale=len(CHUNKS)/5000\n"
+                "input_m=8.28*scale; output_m=0.724*scale\n"
+                "cost_no_cache=input_m*0.14+output_m*0.28\n"
+                "cost_cache_90=input_m*(0.10*0.14+0.90*0.0028)+output_m*0.28\n"
+                "show_summary('Escenarios de costo Flash',{'chunks':len(CHUNKS),'entrada_proyectada_M':round(input_m,2),'salida_proyectada_M':round(output_m,2),'sin_caché_USD':round(cost_no_cache,2),'90%_caché_USD':round(cost_cache_90,2),'tope_configurado_USD':MAX_PRIMARY_COST_USD},tone='success')",
+            ),
+            (
+                "Funciones de ejecución, avance y checkpoint",
+                "from moderacion_peru.io import read_jsonl,write_json_atomic,write_jsonl_atomic\n"
+                "from moderacion_peru.labeling import annotate_batched_incremental\n\n"
+                "def labeling_progress(description):\n"
+                "    state={'bar':None}\n"
+                "    def callback(event):\n"
+                "        if event['status']=='phase_started':\n"
+                "            if state.get('bar') is not None: state['bar'].close()\n"
+                "            label='Verificando progreso guardado' if event['phase']=='existing_progress' else 'Buscando chunks pendientes'\n"
+                "            state['bar']=tqdm(total=event.get('total'),desc=label,unit='chunk'); return\n"
+                "        if event['status']=='phase_progress':\n"
+                "            if state.get('bar') is not None: state['bar'].update(event.get('phase_advance',0))\n"
+                "            return\n"
+                "        if event['status']=='phase_finished':\n"
+                "            if state.get('bar') is not None: state['bar'].close(); state['bar']=None\n"
+                "            return\n"
+                "        if event['status']=='started':\n"
+                "            state['bar']=tqdm(total=event['selected'],desc=description,unit='chunk')\n"
+                "            return\n"
+                "        bar=state.get('bar')\n"
+                "        if bar is not None and event.get('advance'):\n"
+                "            bar.update(event['advance'])\n"
+                "            usage=event.get('provider_usage') or {}\n"
+                "            cache=usage.get('cache_hit_rate')\n"
+                "            bar.set_postfix(ok=event['labeled'],errores=event['errors'],USD=f\"{usage.get('estimated_cost_usd',0):.4f}\",caché='—' if cache is None else f'{100*cache:.1f}%')\n"
+                "        if event['status']=='finished' and bar is not None:\n"
+                "            bar.close(); state['bar']=None\n"
+                "    return callback\n\n"
+                "def run_campaign(rows,provider,output_name,*,limit,description):\n"
+                "    output=CAMPAIGN_ROOT/output_name\n"
+                "    probe=provider.probe()\n"
+                "    signature={'model':probe['model'],'prompt_sha256':probe['prompt_sha256'],'operational_prompt_sha256':probe['operational_prompt_sha256'],'records_per_request':probe['records_per_request'],'label_source':probe['label_source']}\n"
+                "    result=annotate_batched_incremental(rows,provider,output,error_path=output.with_suffix('.errors.jsonl'),limit=limit,processing_batch_size=PROCESSING_BATCH_SIZE,progress_callback=labeling_progress(description),run_metadata={'provider':signature,'taxonomy':'moderacion_peru_5_salidas_v2','taxonomy_version':'2.1.0'},quarantine_invalid_progress=True)\n"
+                "    write_json_atomic(output.with_suffix('.result.json'),result)\n"
+                "    return output,result",
+            ),
+            (
+                "Calibración corta Flash frente a Pro",
+                "from moderacion_peru.labeling_calibration import select_calibration_panel,calibrate_primary_against_reviewer\n\n"
+                "PANEL_PATH=CAMPAIGN_ROOT/'calibration_panel.jsonl'\n"
+                "CALIBRATION_PATH=CAMPAIGN_ROOT/'calibration_flash_vs_pro.json'\n"
+                "if RUN_CALIBRATION:\n"
+                "    if PANEL_PATH.is_file():\n"
+                "        panel=list(tqdm(read_jsonl(PANEL_PATH),desc='Recuperando panel congelado',unit='chunk'))\n"
+                "        if len(panel)!=CALIBRATION_PANEL_SIZE: raise ValueError('El panel guardado no coincide con CALIBRATION_PANEL_SIZE; use otra carpeta de campaña')\n"
+                "    else:\n"
+                "        panel_progress={'bar':tqdm(total=len(CHUNKS),desc='Seleccionando panel',unit='chunk')}\n"
+                "        def report_panel(event):\n"
+                "            if event.get('advance'): panel_progress['bar'].update(event['advance'])\n"
+                "        panel=select_calibration_panel(CHUNKS,panel_size=CALIBRATION_PANEL_SIZE,seed=42,max_per_video=1,progress_callback=report_panel)\n"
+                "        panel_progress['bar'].close()\n"
+                "        write_jsonl_atomic(PANEL_PATH,panel)\n"
+                "    flash_path,flash_panel_result=run_campaign(panel,primary_provider,'calibration_flash.jsonl',limit=None,description='Calibración Flash')\n"
+                "    pro_path,pro_panel_result=run_campaign(panel,reviewer_provider,'calibration_pro.jsonl',limit=None,description='Calibración Pro')\n"
+                "    calibration=calibrate_primary_against_reviewer(read_jsonl(flash_path),read_jsonl(pro_path),minimum_auto_count=200,bootstrap_replicates=1000)\n"
+                "    write_json_atomic(CALIBRATION_PATH,calibration)\n"
+                "    show_table('Riesgo–cobertura por umbral',calibration['comparisons'],max_rows=len(calibration['comparisons']))\n"
+                "    show_result('Umbral operativo calibrado',calibration,tone='success' if calibration['threshold_status']=='calibrated' else 'warning')\n"
+                "elif CALIBRATION_PATH.is_file():\n"
+                "    calibration=__import__('json').loads(CALIBRATION_PATH.read_text(encoding='utf-8-sig'))\n"
+                "    show_table('Calibración guardada (sin repetir API)',calibration['comparisons'],max_rows=len(calibration['comparisons']))\n"
                 "else:\n"
-                "    show_callout('Preflight completo','Cambie RUN=True. LIMIT=20 ejecuta el piloto; LIMIT=None procesa todo lo pendiente y conserva la reanudación por chunk_id.',tone='neutral')",
+                "    calibration=None\n"
+                "    show_callout('Calibración pendiente','Active RUN_CALIBRATION=True. El panel de 1 000 es pareado por chunk y el bootstrap agrupa por video.',tone='neutral')",
+            ),
+            (
+                "Primera pasada completa con Flash",
+                "PRIMARY_PATH=CAMPAIGN_ROOT/'primary_flash.jsonl'\n"
+                "if RUN_PRIMARY:\n"
+                "    PRIMARY_PATH,primary_result=run_campaign(CHUNKS,primary_provider,'primary_flash.jsonl',limit=PRIMARY_LIMIT,description='Primera pasada Flash')\n"
+                "    show_result('Resultado Flash',primary_result,tone='success')\n"
+                "else:\n"
+                "    show_callout('Primera pasada desactivada','PRIMARY_LIMIT=300 reproduce el piloto histórico; use 20 para un smoke mínimo y None para todo. La salida reanuda por chunk_id y muestra costo real.',tone='neutral')",
+            ),
+            (
+                "Enrutamiento y revisión dirigida con Pro",
+                "from moderacion_peru.labeling_calibration import build_directed_review_queue\n"
+                "REVIEW_QUEUE_PATH=CAMPAIGN_ROOT/'directed_review_queue.jsonl'\n"
+                "REVIEW_PATH=CAMPAIGN_ROOT/'review_pro.jsonl'\n"
+                "if RUN_DIRECTED_REVIEW:\n"
+                "    if calibration is None or not PRIMARY_PATH.is_file():\n"
+                "        raise FileNotFoundError('Complete la calibración y la primera pasada antes de revisar')\n"
+                "    primary_rows=list(tqdm(read_jsonl(PRIMARY_PATH),desc='Cargando propuestas Flash',unit='anotación'))\n"
+                "    primary_ids={row['chunk_id'] for row in primary_rows}\n"
+                "    paired_chunks=[row for row in tqdm(CHUNKS,desc='Uniendo chunks con Flash',unit='chunk') if row['chunk_id'] in primary_ids]\n"
+                "    queue_progress={'bar':tqdm(total=len(paired_chunks),desc='Construyendo cola Pro',unit='chunk')}\n"
+                "    def report_queue(event):\n"
+                "        if event.get('advance'): queue_progress['bar'].update(event['advance'])\n"
+                "    review_queue,routing=build_directed_review_queue(paired_chunks,primary_rows,confidence_threshold=float(calibration['selected_threshold']),safe_control_rate=SAFE_CONTROL_RATE,seed=42,progress_callback=report_queue)\n"
+                "    queue_progress['bar'].close()\n"
+                "    write_jsonl_atomic(REVIEW_QUEUE_PATH,review_queue); write_json_atomic(CAMPAIGN_ROOT/'routing_summary.json',routing)\n"
+                "    REVIEW_PATH,review_result=run_campaign(review_queue,reviewer_provider,'review_pro.jsonl',limit=REVIEW_LIMIT,description='Revisión dirigida Pro')\n"
+                "    show_summary('Enrutamiento histórico actualizado',routing,tone='success')\n"
+                "    show_result('Resultado Pro',review_result,tone='success')\n"
+                "else:\n"
+                "    show_callout('Revisión dirigida desactivada','Active solo después de completar Flash. Se revisan daño, abstención, baja confianza y 10% de controles seguros.',tone='neutral')",
+            ),
+            (
+                "Resultados persistidos y reportables",
+                "import json\n"
+                "saved={}\n"
+                "for path in sorted(CAMPAIGN_ROOT.glob('*.result.json')):\n"
+                "    saved[path.stem.replace('.result','')]=json.loads(path.read_text(encoding='utf-8-sig'))\n"
+                "if CALIBRATION_PATH.is_file():\n"
+                "    current=json.loads(CALIBRATION_PATH.read_text(encoding='utf-8-sig'))\n"
+                "    show_table('Tabla reportable de calibración',current['comparisons'],max_rows=len(current['comparisons']))\n"
+                "    show_summary('Conclusión de calibración',{'estado':current['threshold_status'],'umbral':current['selected_threshold'],'pares':current['paired_chunks'],'referencia':current['reference_kind'],'bootstrap_agrupado_por_video':current['selected_threshold_cluster_bootstrap_95']},tone='success' if current['threshold_status']=='calibrated' else 'warning')\n"
+                "show_result('Resultados recuperados sin repetir cálculos',saved,tone='success' if saved else 'neutral')\n"
+                "show_callout('Límite inferencial','Flash–Pro es una calibración operativa y no reemplaza validación humana independiente. El score declarado no se interpreta como probabilidad estadística.',tone='warning')",
             ),
         ],
         colab_notebook_id="02_01",
+        colab_requires_gpu=False,
     )
     create(
         "flujo/02_etiquetado/02_02_etiquetado_remoto.ipynb",
-        "02.02 · Etiquetado remoto opcional",
-        "Mantiene un proveedor remoto compatible, pero nunca consume crédito durante preflight ni sin activación explícita.",
-        "El identificador y el comportamiento del proveedor remoto se documentan con la publicación "
-        "oficial de DeepSeek V4 [@deepseek2026v4]. Esta procedencia identifica el servicio, pero no valida "
-        "sus etiquetas. La evidencia sobre anotación asistida por LLM aconseja mantener separadas la "
-        "propuesta automática y la decisión humana [@schroeder2025llmassisted]. La activación explícita, "
-        "los límites de gasto y la precedencia de fuentes son reglas locales.",
+        "02.02 · Alternativa local ligera y diagnóstico",
+        "Mantiene una ruta sin costo de API con Qwen3-1.7B y el mismo prompt compacto; es un fallback, no se mezcla con la campaña principal Flash→Pro.",
+        "Qwen3 es una familia multilingüe de pesos abiertos [@qwen2025qwen3]. La revisión exacta de "
+        "`Qwen/Qwen3-1.7B` se fija mediante su tarjeta oficial [@hf2026qwen17bcard]. Esta ruta reduce "
+        "memoria respecto de 4B, pero su calidad debe calibrarse por separado y sus propuestas no son "
+        "*ground truth* [@schroeder2025llmassisted].",
         [
             (
-                "Preflight sin red",
-                "from moderacion_peru.providers import DeepSeekProvider\nprovider=DeepSeekProvider()\nshow_result('Estado del proveedor remoto', provider.probe(), tone='neutral')",
+                "Proveedor local ligero",
+                "from moderacion_peru.providers import HuggingFaceProvider\n"
+                "from moderacion_peru.io import read_jsonl\n"
+                "provider=HuggingFaceProvider(model='Qwen/Qwen3-1.7B',revision='70d244cc86ccca08cf5af4e1e306ecf908b1ad5e',device='auto',records_per_request=5,inference_batch_size=4,max_new_tokens=256)\n"
+                "SOURCE=ROOT/'datos/processed/chunks_v2.jsonl'\n"
+                "OUTPUT=ROOT/'datos/etiquetado/fallback_hf/qwen3_1_7b_v2.jsonl'\n"
+                "ERRORS=OUTPUT.with_suffix('.errors.jsonl')\n"
+                "show_result('Estado del fallback',provider.probe(),tone='neutral')",
             ),
             (
-                "Ejecución explícita",
+                "Ejecución por lotes y avance",
                 "from tqdm.auto import tqdm\n"
-                "from moderacion_peru.io import read_jsonl\n"
-                "from moderacion_peru.labeling import annotate_incremental\n"
-                "SOURCE=ROOT/'datos/processed/chunks_v2.jsonl'\n"
-                "OUTPUT=ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'\n"
-                "RUN_REMOTE=False\n\n"
-                "remote_progress={'bar':None}\n"
-                "def report_remote_progress(event):\n"
+                "from moderacion_peru.labeling import annotate_batched_incremental\n"
+                "RUN_FALLBACK=False\n"
+                "LIMIT=20  # Use None para todos los pendientes después del smoke test.\n"
+                "local_progress={'bar':None}\n"
+                "def report_local_progress(event):\n"
                 "    if event['status']=='started':\n"
-                "        remote_progress['bar']=tqdm(total=event['selected'],desc='Etiquetado remoto',unit='chunk')\n"
-                "        return\n"
-                "    bar=remote_progress.get('bar')\n"
+                "        local_progress['bar']=tqdm(total=event['selected'],desc='Fallback Qwen3-1.7B',unit='chunk'); return\n"
+                "    bar=local_progress.get('bar')\n"
                 "    if bar is not None and event.get('advance'):\n"
-                "        bar.update(event['advance'])\n"
-                "        bar.set_postfix(etiquetados=event['labeled'],errores=event['errors'])\n\n"
-                "if RUN_REMOTE:\n"
-                "    try:\n"
-                "        remote_result=annotate_incremental(read_jsonl(SOURCE),provider,OUTPUT,progress_callback=report_remote_progress)\n"
-                "    finally:\n"
-                "        if remote_progress.get('bar') is not None:\n"
-                "            remote_progress['bar'].close()\n"
-                "    show_result('Resultado del etiquetado remoto',remote_result,tone='success')\n"
+                "        bar.update(event['advance']); bar.set_postfix(ok=event['labeled'],errores=event['errors'])\n"
+                "    if event['status']=='finished' and bar is not None: bar.close(); local_progress['bar']=None\n"
+                "if RUN_FALLBACK:\n"
+                "    fallback_result=annotate_batched_incremental(read_jsonl(SOURCE),provider,OUTPUT,error_path=ERRORS,limit=LIMIT,processing_batch_size=20,progress_callback=report_local_progress,run_metadata={'provider':provider.probe(),'role':'independent_fallback'})\n"
+                "    show_result('Resultado local',fallback_result,tone='success')\n"
                 "else:\n"
-                "    show_callout('API remota desactivada','No se realizó ninguna llamada comercial.',tone='neutral')",
+                "    show_callout('Fallback desactivado','La campaña principal se ejecuta completa en 02_01. Active esta ruta solo para un diagnóstico independiente.',tone='neutral')",
             ),
         ],
     )
     create(
         "flujo/02_etiquetado/02_03_revision_llm_dirigida.ipynb",
-        "02.03 · Revisión LLM dirigida",
-        "Prioriza desacuerdos, baja confianza, contexto y clases minoritarias sin tratarlos como verdad humana.",
+        "02.03 · Auditoría de la revisión dirigida",
+        "Recupera sin repetir API la calibración, el enrutamiento y las dos capas de etiquetas generadas en 02_01.",
         "La selección por incertidumbre pertenece a la familia de aprendizaje activo "
         "[@settles2009active], mientras que el balance puede aumentar la atención sobre clases raras "
         "[@fairstein2024balancing]. En lenguaje abusivo, el contexto conversacional puede cambiar la "
@@ -1797,23 +1912,29 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "la sugerencia se tratan como decisiones locales que deben auditarse.",
         [
             (
-                "Selección reproducible",
+                "Resultados persistidos de la cascada",
+                "import json\n"
                 "from tqdm.auto import tqdm\n"
                 "from moderacion_peru.io import read_jsonl\n"
-                "SOURCE=ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl'\n"
-                "review=[]\n"
-                "scanned=0\n"
-                "if SOURCE.exists():\n"
-                "    for row in tqdm(read_jsonl(SOURCE),desc='Construyendo cola dirigida',unit='anotación'):\n"
-                "        scanned+=1\n"
-                "        if row.get('needs_review') or row.get('score_confianza',1)<0.8:\n"
-                "            review.append(row)\n"
-                "review.sort(key=lambda row:row['chunk_id'])\n"
-                "show_summary('Cola de revisión dirigida',{'etiquetados':scanned,'requieren_revisión':len(review),'umbral_confianza':0.8},tone='warning' if review else 'success')",
+                "CAMPAIGN_ROOT=ROOT/'datos/etiquetado/cascada_deepseek_v4'\n"
+                "PRIMARY=CAMPAIGN_ROOT/'primary_flash.jsonl'\n"
+                "REVIEW=CAMPAIGN_ROOT/'review_pro.jsonl'\n"
+                "QUEUE=CAMPAIGN_ROOT/'directed_review_queue.jsonl'\n"
+                "CALIBRATION=CAMPAIGN_ROOT/'calibration_flash_vs_pro.json'\n"
+                "ROUTING=CAMPAIGN_ROOT/'routing_summary.json'\n"
+                "counts={}\n"
+                "for name,path in [('Flash',PRIMARY),('cola_Pro',QUEUE),('Pro',REVIEW)]:\n"
+                "    counts[name]=sum(1 for _ in tqdm(read_jsonl(path),desc=f'Leyendo {name}',unit='fila')) if path.is_file() else 0\n"
+                "show_summary('Cobertura persistida',counts,tone='success' if counts['Flash'] else 'warning')\n"
+                "if CALIBRATION.is_file():\n"
+                "    calibration=json.loads(CALIBRATION.read_text(encoding='utf-8-sig'))\n"
+                "    show_table('Riesgo–cobertura Flash frente a Pro',calibration['comparisons'],max_rows=len(calibration['comparisons']))\n"
+                "    show_summary('Regla calibrada',{'estado':calibration['threshold_status'],'umbral':calibration['selected_threshold'],'pares':calibration['paired_chunks'],'bootstrap_por_video':calibration['selected_threshold_cluster_bootstrap_95']},tone='success' if calibration['threshold_status']=='calibrated' else 'warning')\n"
+                "if ROUTING.is_file(): show_result('Composición de la cola dirigida',json.loads(ROUTING.read_text(encoding='utf-8-sig')),tone='success')",
             ),
             (
                 "Siguiente paso",
-                "show_callout('Siguiente paso', 'La revisión puede usar otro modelo o pasar directamente a 02_04 para validación humana.', tone='neutral')",
+                "show_callout('Interpretación','Pro tiene precedencia sobre Flash solo en los chunks revisados. El desacuerdo o la confianza baja permanece visible y la decisión final corresponde a 02_04–02_05 con revisión humana.',tone='warning')",
             ),
         ],
     )
@@ -1831,7 +1952,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "Consolidación",
                 "from tqdm.auto import tqdm\n"
                 "from moderacion_peru.consolidation import consolidate_annotations\n"
-                "SOURCES=[p for p in [ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl',ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'] if p.exists()]\n"
+                "SOURCES=[p for p in [ROOT/'datos/etiquetado/cascada_deepseek_v4/primary_flash.jsonl',ROOT/'datos/etiquetado/cascada_deepseek_v4/review_pro.jsonl',ROOT/'datos/etiquetado/fallback_hf/qwen3_1_7b_v2.jsonl'] if p.exists()]\n"
                 "CHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\n"
                 "TRANSCRIPTS=ROOT/'datos/raw/transcripts_raw.jsonl'\n"
                 "OUTPUT=ROOT/'datos/etiquetado/consolidado/anotaciones_v2.jsonl'\n"

@@ -4,10 +4,16 @@ import json
 
 import pytest
 
-from moderacion_peru.labeling import annotate_incremental
+from moderacion_peru.labeling import annotate_batched_incremental, annotate_incremental
+from moderacion_peru.labeling_calibration import (
+    build_directed_review_queue,
+    calibrate_primary_against_reviewer,
+    select_calibration_panel,
+)
 from moderacion_peru.io import read_jsonl
 from moderacion_peru.io import sha256_file
 from moderacion_peru.providers.base import ProviderError, normalize_payload
+from moderacion_peru.providers.deepseek import DeepSeekProvider
 from moderacion_peru.providers.huggingface import HuggingFaceProvider
 from moderacion_peru.providers.ollama import OllamaProvider
 from moderacion_peru.pilot import multilabel_metrics
@@ -72,6 +78,86 @@ def test_incremental_labeling_reports_progress_and_none_removes_limit(tmp_path):
 def test_incremental_labeling_rejects_invalid_limits(tmp_path, invalid_limit):
     with pytest.raises(ValueError, match="None o un entero positivo"):
         annotate_incremental([], object(), tmp_path / "annotations.jsonl", limit=invalid_limit)
+
+
+def test_deepseek_batches_and_retries_only_invalid_row(monkeypatch):
+    calls = []
+
+    class Response:
+        def __init__(self, content):
+            self.content = content
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "choices": [{"message": {"content": json.dumps(self.content)}}],
+                "usage": {
+                    "prompt_tokens": 100,
+                    "prompt_cache_hit_tokens": 80,
+                    "prompt_cache_miss_tokens": 20,
+                    "completion_tokens": 10,
+                },
+            }
+
+    def fake_post(url, *, headers, json, timeout):
+        calls.append(json)
+        if len(calls) == 1:
+            return Response(
+                {
+                    "annotations": [
+                        payload(
+                            chunk_id="c1",
+                            notes=None,
+                            fine_labels=["seguro", "humor_encubridor"],
+                        ),
+                        payload(chunk_id="c2", fine_labels=[]),
+                    ]
+                }
+            )
+        return Response({"annotations": [payload(chunk_id="c2")]})
+
+    monkeypatch.setattr("moderacion_peru.providers.deepseek.requests.post", fake_post)
+    provider = DeepSeekProvider(
+        api_key="fixture", max_workers=1, records_per_request=2, retries=0
+    )
+    results = provider.annotate_batch(
+        [
+            {"chunk_id": "c1", "text": "uno", "video_id": "v1"},
+            {"chunk_id": "c2", "text": "dos", "video_id": "v2"},
+        ]
+    )
+
+    assert len(calls) == 2
+    assert [result.chunk_id for result in results] == ["c1", "c2"]
+    assert results[0].notes == ""
+    assert results[0].flags == ["humor_encubridor"]
+    assert provider.usage_summary()["requests"] == 2
+    assert provider.usage_summary()["estimated_cost_usd"] > 0
+
+
+def test_deepseek_preflight_sends_no_corpus(monkeypatch):
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"data": [{"id": "deepseek-v4-flash"}]}
+
+    observed = {}
+
+    def fake_get(url, *, headers, timeout):
+        observed.update({"url": url, "headers": headers, "timeout": timeout})
+        return Response()
+
+    monkeypatch.setattr("moderacion_peru.providers.deepseek.requests.get", fake_get)
+    provider = DeepSeekProvider(api_key="fixture")
+    result = provider.validate_connection()
+
+    assert observed["url"].endswith("/models")
+    assert result["model_available"] is True
+    assert result["status"] == "credential_and_models_verified_no_corpus_sent"
 
 
 def test_provider_requires_explicit_safe_fine_label():
@@ -304,3 +390,158 @@ def test_huggingface_uses_chat_template_without_thinking_and_retries():
     assert generator.calls == 2
     assert generator.tokenizer.calls[0]["enable_thinking"] is False
     assert provider.probe()["revision"] == "1cfa9a7208912126459214e8b04321603b3df60c"
+
+
+def test_huggingface_provider_batches_wrapped_annotations():
+    class Tokenizer:
+        def apply_chat_template(self, messages, **kwargs):
+            return "\n".join(message["content"] for message in messages)
+
+    class Generator:
+        tokenizer = Tokenizer()
+
+        def __call__(self, prompts, **kwargs):
+            outputs = []
+            for prompt_text in prompts:
+                ids = [part.split('"')[0] for part in prompt_text.split('"chunk_id": "')[1:]]
+                annotations = [payload(chunk_id=chunk_id) for chunk_id in ids]
+                outputs.append([{"generated_text": json.dumps({"annotations": annotations})}])
+            return outputs
+
+    provider = HuggingFaceProvider(
+        model="fixture", records_per_request=2, inference_batch_size=2, retries=0
+    )
+    provider._pipeline = Generator()
+    rows = provider.annotate_batch(
+        [
+            {"chunk_id": "c1", "video_id": "v1", "text": "uno"},
+            {"chunk_id": "c2", "video_id": "v2", "text": "dos"},
+            {"chunk_id": "c3", "video_id": "v3", "text": "tres"},
+        ]
+    )
+
+    assert [row.chunk_id for row in rows] == ["c1", "c2", "c3"]
+    assert provider.probe()["records_per_request"] == 2
+    assert len(provider.probe()["operational_prompt_sha256"]) == 64
+
+
+def test_batched_incremental_is_resumable_and_signed(tmp_path):
+    class BatchFixtureProvider:
+        def annotate(self, chunk):
+            return normalize_payload(
+                payload(chunk_id=chunk["chunk_id"]),
+                text=chunk["text"],
+                source="fixture",
+                annotator_type="llm_local",
+                model="fixture",
+            )
+
+        def annotate_batch(self, chunks):
+            return [self.annotate(chunk) for chunk in chunks]
+
+    records = [
+        {"chunk_id": f"c{index}", "video_id": f"v{index}", "text": f"texto {index}"}
+        for index in range(5)
+    ]
+    output = tmp_path / "batched.jsonl"
+    progress = []
+    first = annotate_batched_incremental(
+        records,
+        BatchFixtureProvider(),
+        output,
+        limit=4,
+        processing_batch_size=2,
+        progress_callback=progress.append,
+        run_metadata={"model": "fixture", "prompt": "v1"},
+    )
+    second = annotate_batched_incremental(
+        records,
+        BatchFixtureProvider(),
+        output,
+        processing_batch_size=2,
+        run_metadata={"model": "fixture", "prompt": "v1"},
+    )
+
+    assert first["labeled"] == 4
+    assert first["batches"] == 2
+    assert second["already_completed"] == 4
+    assert second["labeled"] == 1
+    assert len(list(read_jsonl(output))) == 5
+    assert sum(event.get("advance", 0) for event in progress) == 4
+    with output.open("a", encoding="utf-8") as handle:
+        handle.write('{"chunk_id":"corrupto","text":"sin contrato"}\n')
+    third = annotate_batched_incremental(
+        records,
+        BatchFixtureProvider(),
+        output,
+        processing_batch_size=2,
+        run_metadata={"model": "fixture", "prompt": "v1"},
+        quarantine_invalid_progress=True,
+    )
+    assert third["quarantined_progress"] is not None
+    assert len(list(read_jsonl(output))) == 5
+    assert list(tmp_path.glob("batched.jsonl.quarantine-*.jsonl"))
+    with pytest.raises(ValueError, match="otro modelo, prompt o configuración"):
+        annotate_batched_incremental(
+            records,
+            BatchFixtureProvider(),
+            output,
+            run_metadata={"model": "different", "prompt": "v1"},
+        )
+
+
+def test_calibration_and_historical_routing_policy():
+    chunks = [
+        {
+            "chunk_id": f"c{index}",
+            "video_id": f"v{index}",
+            "channel_title": f"canal-{index % 2}",
+            "start_seconds": 0,
+            "text": f"texto {index}",
+        }
+        for index in range(100)
+    ]
+    panel = select_calibration_panel(chunks, panel_size=20, seed=7)
+    assert len(panel) == 20
+    assert len({row["video_id"] for row in panel}) == 20
+
+    primary = []
+    reviewer = []
+    for index, chunk in enumerate(chunks):
+        primary.append(
+            {
+                **chunk,
+                "coarse_labels": ["SEGURO"],
+                "needs_review": index == 0,
+                "score_confianza": 0.95,
+            }
+        )
+        reviewer.append({**chunk, "coarse_labels": ["SEGURO"]})
+    calibration = calibrate_primary_against_reviewer(
+        primary,
+        reviewer,
+        minimum_auto_count=10,
+        bootstrap_replicates=20,
+    )
+    assert calibration["threshold_status"] == "calibrated"
+    assert calibration["selected_threshold"] == 0.70
+
+    primary[1]["coarse_labels"] = ["ACOSO_AMENAZA"]
+    primary[2]["score_confianza"] = 0.60
+    queue, manifest = build_directed_review_queue(
+        chunks,
+        primary,
+        confidence_threshold=0.90,
+        safe_control_rate=0,
+    )
+    reasons = {row["chunk_id"]: row["routing_reason"] for row in queue}
+    assert reasons == {
+        "c0": "needs_review",
+        "c1": "damage",
+        "c2": "low_confidence",
+    }
+    assert manifest["routing_reasons"] == {
+        "needs_review": 1,
+        "damage": 1,
+        "low_confidence": 1,
+    }

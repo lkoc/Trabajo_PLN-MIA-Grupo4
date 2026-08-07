@@ -95,3 +95,21 @@ class AnnotationProvider(ABC):
     @abstractmethod
     def annotate(self, chunk: dict[str, Any]) -> AnnotationRecord:
         raise NotImplementedError
+
+    def annotate_batch(
+        self, chunks: list[dict[str, Any]]
+    ) -> list[AnnotationRecord | Exception]:
+        """Anota un lote y conserva un resultado independiente por entrada.
+
+        Los proveedores sin soporte vectorizado mantienen el comportamiento
+        correcto mediante este fallback. Los backends GPU pueden sobrescribirlo
+        para explotar batching real sin abrir hilos que compitan por la GPU.
+        """
+
+        results: list[AnnotationRecord | Exception] = []
+        for chunk in chunks:
+            try:
+                results.append(self.annotate(chunk))
+            except (ProviderError, ValueError, RuntimeError) as exc:
+                results.append(exc)
+        return results

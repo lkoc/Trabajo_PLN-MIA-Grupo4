@@ -77,14 +77,14 @@ nuevo, antes de entrenar con `03_02`–`03_06`.
 
 ## Consumidores y GPU
 
-Los cuadernos `02_01` y `03_02`–`03_06` pueden ejecutarse en Colab. Su bootstrap:
+Los cuadernos `02_01` y `03_02`–`03_06` pueden ejecutarse en Colab. `02_01` usa la API DeepSeek y funciona con un runtime CPU; no reserva una GPU innecesaria. `03_02`–`03_06` sí requieren la L4. Su bootstrap:
 
 1. monta Drive y lee `bundle_releases/latest.json`;
 2. exige que el SHA-256 del core coincida con el esperado por el cuaderno;
 3. valida el manifiesto y todos los archivos de la versión;
 4. actualiza la copia activa `bundle/` dejando su manifiesto para el final;
 5. extrae e instala el core en el SSD efímero `/content`;
-6. exige una `NVIDIA L4` mientras `COLAB_REQUIRE_L4=True`.
+6. exige una `NVIDIA L4` solo si el cuaderno declara `requires_cuda=true` y `COLAB_REQUIRE_L4=True`.
 
 Si el bundle cambió después de que el kernel importó `moderacion_peru`, el
 cuaderno exige reiniciar el kernel para evitar mezclar versiones. Los modelos se
@@ -97,6 +97,13 @@ importar la biblioteca, evitando que un kernel controlado desde VS Code intente
 consultar el almacén de secretos exclusivo de la interfaz web de Colab. Un
 repositorio privado o restringido requeriría autenticación explícita y segura.
 Consulte las [variables de entorno oficiales de Hugging Face](https://huggingface.co/docs/huggingface_hub/en/package_reference/environment_variables).
+
+La credencial comercial de `02_01` se configura como secreto de Colab llamado
+`DEEPSEEK_API_KEY`. El cuaderno intenta leerlo únicamente cuando la variable de
+entorno no existe. `RUN_API_PREFLIGHT=True` consulta `/models` sin enviar textos;
+`RUN_CALIBRATION`, `RUN_PRIMARY` y `RUN_DIRECTED_REVIEW` sí transmiten los chunks
+al proveedor. La barra registra costo por tokens y los topes se configuran antes
+de activar cada fase.
 
 Los checkpoints se generan en `/content` y, al activar `PUBLISH_TO_DRIVE=True`,
 se publican como un TAR.GZ verificable bajo:

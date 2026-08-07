@@ -101,9 +101,9 @@ Durante `01_01`, primero se consolidan en el canónico todas las transcripciones
 | Cuaderno | Función | Control principal |
 |---|---|---|
 | `02_00_preparacion_bundle_colab` | en Colab descarga el bundle sincronizado de GitHub —o recibe el local por navegador—, lo verifica y publica una versión inmutable en Drive | `RUN_PUBLISH_BUNDLE=False`; `BUNDLE_SOURCE='github'` o `'local_upload'` |
-| `02_01_etiquetado_local_ollama` | genera propuestas estructuradas con Ollama o, opcionalmente, Hugging Face en Colab | piloto inicial con `LIMIT=20`; reanuda por `chunk_id` |
-| `02_02_etiquetado_remoto` | ofrece un proveedor DeepSeek remoto intercambiable | `RUN_REMOTE=False` evita llamadas comerciales accidentales |
-| `02_03_revision_llm_dirigida` | prioriza baja confianza, duda o cobertura insuficiente | selección determinista y trazable |
+| `02_01_etiquetado_local_ollama` | nombre histórico conservado; ejecuta la cascada calibrada DeepSeek Flash→Pro con prompt compacto, cohortes, bootstrap por video, costo y reanudación | active en orden `RUN_API_PREFLIGHT`, `RUN_CALIBRATION`, `RUN_PRIMARY` y `RUN_DIRECTED_REVIEW`; use `None` para todos los pendientes |
+| `02_02_etiquetado_remoto` | fallback local independiente con `Qwen/Qwen3-1.7B` | `RUN_FALLBACK=False`; no se mezcla con la campaña principal |
+| `02_03_revision_llm_dirigida` | recupera calibración, enrutamiento y resultados Flash/Pro sin repetir llamadas | tablas reportables y límite inferencial explícito |
 | `02_04_consolidacion_validacion_humana` | consolida proveedores y sirve la campaña humana | precedencia explícita, propuesta ocultable y eventos append-only |
 | `02_05_cierre_humano_snapshot` | aplica la última decisión humana y congela el dataset | excluye diferidos/rechazados y conserva `video_id`, flags, split y procedencia |
 
@@ -165,7 +165,7 @@ Los resultados preliminares de los cuadernos se muestran mediante el componente 
 - Git.
 - Python 3.11, 3.12 o 3.13; se recomienda Python 3.12.
 - VS Code con las extensiones Python y Jupyter, o JupyterLab mediante el extra `cuadernos`.
-- Ollama para el etiquetado local de `02_01`; el resto del flujo no requiere LM Studio.
+- `DEEPSEEK_API_KEY` para la campaña principal de `02_01`; el fallback local de `02_02` requiere Transformers y GPU recomendable, pero no Ollama ni LM Studio.
 - PyTorch instalado para el backend de entrenamiento elegido. El proyecto acepta `auto`, `cuda`, `rocm`, `xpu` y `cpu`; consulte [`docs/HARDWARE.md`](docs/HARDWARE.md) antes de instalar una rueda específica.
 - Espacio adicional para datos, cachés y checkpoints. Los pesos neuronales y varios artefactos generados no se almacenan en Git.
 
@@ -219,7 +219,7 @@ ollama list
 
 El adaptador llama a la API HTTP de Ollama y exige JSON conforme al esquema de anotación. Si Ollama, el modelo o la API no están disponibles, la corrida falla de forma explícita y conserva el punto de reanudación.
 
-La ruta remota es opcional. Solo si se decide usarla, configure `DEEPSEEK_API_KEY` fuera del repositorio y cambie `RUN_REMOTE=True` en `02_02`. Nunca guarde credenciales en un cuaderno, `.env` versionado o manifiesto.
+La campaña activa reproduce el esquema histórico económico Flash→Pro. Configure `DEEPSEEK_API_KEY` fuera del repositorio —o como secreto de Colab— y active cada fase explícitamente en `02_01`. El preflight consulta `/models` sin enviar corpus; las fases de calibración y etiquetado sí transmiten texto al proveedor y muestran costo acumulado. Nunca guarde credenciales en un cuaderno, `.env` versionado o manifiesto. El método, la comparación económica y los artefactos reportables están en [`docs/METODOLOGIA_ETIQUETADO_CASCADA.md`](docs/METODOLOGIA_ETIQUETADO_CASCADA.md).
 
 ### 5. Verificar entorno, contrato y artefactos
 
@@ -253,7 +253,7 @@ El recorrido completo contiene 18 cuadernos:
 
 ```text
 01_01 → 01_02 opcional → 01_03
-→ 02_00 en Colab → 02_01 → 02_02 opcional → 02_03 → 02_04 → 02_05 → 02_00 en Colab
+→ 02_00 en Colab → 02_01 (calibración→Flash→Pro) → 02_02 fallback opcional → 02_03 auditoría → 02_04 → 02_05 → 02_00 en Colab
 → 03_01 ... 03_06 en ramas comparables
 → 03_07 → 03_08 → 04_01
 ```
@@ -265,8 +265,8 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 | `01_01` | continuación actual: `DISCOVER_NEW=False`, `FETCH_NEW=True`, `BACKFILL_MISSING_VTT=True` | reanuda primero todos los VTT faltantes y después los candidatos; usa lotes de 10, pausas internas de 2.5–10 s y 15 s entre lotes; cambie `FETCH_NEW=False` si solo desea inspeccionar sin red |
 | `01_02` | se reutiliza el clásico; ambos `RUN_...=True`, ambos `FORCE_...=False`, `USE_ROBUST_RECOMMENDATION=True` y `APPLY_CHUNK_SELECTION=False` | prioriza los JSON consolidados y muestra el perfil de cinco longitudes y el cierre MiniLM 20/30 sin recalcular; solo ejecuta una etapa si falta su artefacto |
 | `02_00` | `RUN_PUBLISH_BUNDLE=False`, `BUNDLE_SOURCE='github'` | ábralo en Colab; use GitHub si el bundle está sincronizado o `'local_upload'` para seleccionar los cuatro archivos locales, active y autorice `drive.mount()` |
-| `02_01` | `RUN=False`, `LIMIT=20` | active `RUN=True`, valide el piloto y luego amplíe o retire el límite |
-| `02_02` | `RUN_REMOTE=False` | active solo con autorización para usar la API remota |
+| `02_01` | cuatro interruptores en `False`; panel 1 000, `PRIMARY_LIMIT=300`, `REVIEW_LIMIT=500` | valide `/models`, ejecute calibración, piloto Flash y revisión; use `None` para todo. Reanuda, pone en cuarentena progreso inválido y detiene nuevos lotes al alcanzar el presupuesto |
+| `02_02` | `RUN_FALLBACK=False`, `LIMIT=20` | active solo si necesita un diagnóstico local independiente; `None` procesa todos los pendientes |
 | `03_01`–`03_06` | `RUN_TRAINING=False` | active la familia que se desea entrenar |
 | `03_07` | `RUN_PUBLISH=False` | active después de reunir candidatos completos del mismo snapshot |
 
@@ -334,7 +334,7 @@ Para incorporar videos o subtítulos adicionales:
 
 1. añada candidatos con `video_id` y URL a `datos/raw/videos_candidatos.csv` o al JSONL de candidatos;
 2. ejecute nuevamente `01_01` y `01_03`; este último recompone `transcripts_raw.jsonl` desde los JSON por canal y VTT locales, muestra avance por video y procesa solo hashes nuevos o modificados; `01_02` solo se repite si desea reevaluar o cambiar la longitud;
-3. sincronice el bundle con GitHub —o elija `local_upload`— y ejecute `02_00` en Colab antes de usar el backend Colab de `02_01`; después complete `02_01`–`02_05` para los chunks pendientes;
+3. sincronice el bundle con GitHub —o elija `local_upload`— y ejecute `02_00` en Colab antes de `02_01`; después complete la calibración y cascada Flash→Pro, audítela en `02_03` y cierre `02_04`–`02_05` para los chunks pendientes;
 4. regenere el bundle y vuelva a ejecutar `02_00` en Colab después de `02_05` para publicar en Drive el snapshot nuevo;
 5. active las familias de `03` que desea actualizar;
 6. publique de nuevo solo cuando `03_07` encuentre candidatos completos del snapshot nuevo.
@@ -359,7 +359,7 @@ El dataset actual baja de aproximadamente 104,2 MiB a 20,3 MiB con gzip nivel 9,
 
 ## Google Colab L4 desde VS Code
 
-Los cuadernos `03_02`–`03_06`, y opcionalmente `02_01`, incluyen dentro de sus propias celdas el puente para una GPU NVIDIA L4. `02_00_preparacion_bundle_colab.ipynb` se ejecuta directamente en Colab: descarga el bundle sincronizado desde GitHub o recibe el bundle local por el selector del navegador, verifica su identidad, monta Drive y publica la versión. No requiere Google Cloud Console ni Drive Desktop. Después, el bootstrap consumidor resuelve `bundle_releases/latest.json`, verifica el `bundle_id` y todos los SHA-256 y activa la versión antes de importar el proyecto. No transfiere videos, audio, PDFs, modelos Ollama ni cachés de Hugging Face.
+Los cuadernos `03_02`–`03_06`, y opcionalmente `02_01`, incluyen el puente a Colab. La cascada API de `02_01` no usa la GPU asignada; la L4 solo es necesaria para modelos locales/neuronales. `02_00_preparacion_bundle_colab.ipynb` descarga el bundle sincronizado desde GitHub o recibe el bundle local por el selector del navegador, verifica su identidad, monta Drive y publica la versión. No requiere Google Cloud Console ni Drive Desktop. Después, el consumidor resuelve `bundle_releases/latest.json`, verifica el `bundle_id` y todos los SHA-256 y activa la versión antes de importar el proyecto. No transfiere videos, audio, PDFs, modelos Ollama ni cachés de Hugging Face.
 
 La preparación, verificación SHA-256, reanudación por `COLAB_RUN_ID` y recuperación de resultados se describen en [`docs/COLAB_L4.md`](docs/COLAB_L4.md). El backend L4 falla explícitamente si Colab asigna una GPU distinta cuando `COLAB_REQUIRE_L4=True`.
 

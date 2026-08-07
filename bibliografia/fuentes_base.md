@@ -83,6 +83,8 @@ en la bibliografía científica del paper.
 | `wulczyn2017exmachina` | Antecedente de anotación y detección de ataques personales a gran escala. | Su corpus de Wikipedia no forma parte de los datos locales. | [ACM](https://doi.org/10.1145/3038912.3052591) |
 | `mathew2021hatexplain` | Antecedente de objetivos del abuso, racionales humanos, explicabilidad y sesgo. | HateXplain no es un conjunto de entrenamiento del proyecto. | [AAAI](https://ojs.aaai.org/index.php/AAAI/article/view/17745) |
 | `deepseek2026v4` | Procedencia de los modelos `deepseek-v4-flash` y `deepseek-v4-pro` empleados en preanotación/revisión. | Es documentación del proveedor; no prueba calidad, acuerdo ni validez de las etiquetas. | [DeepSeek API Docs](https://api-docs.deepseek.com/news/news260424/) |
+| `deepseek2026pricing` | Precios vigentes por tokens de entrada, caché y salida usados por el estimador de presupuesto. | El precio puede cambiar; no demuestra calidad ni fija el costo final antes de observar caché, salida y reintentos. | [DeepSeek Models and Pricing](https://api-docs.deepseek.com/quick_start/pricing) |
+| `hf2026qwen17bcard` | Identidad y revisión exacta del fallback local `Qwen/Qwen3-1.7B`. | La tarjeta acredita procedencia, no desempeño en el corpus peruano ni equivalencia con DeepSeek. | [Hugging Face Hub](https://huggingface.co/Qwen/Qwen3-1.7B/tree/70d244cc86ccca08cf5af4e1e306ecf908b1ad5e) |
 
 ### Taxonomía de daño y señales de revisión
 
