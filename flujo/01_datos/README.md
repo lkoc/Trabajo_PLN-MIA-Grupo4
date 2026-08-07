@@ -24,18 +24,32 @@ La opción comentada `RESET_VIDEO_DATASET = "ARCHIVAR_Y_REINICIAR_DATASET_VIDEOS
 
 Para ampliar la muestra, active el modo requerido o agregue filas a `datos/raw/video_candidates.jsonl` o `datos/raw/videos_candidatos.csv` y vuelva a ejecutar `01_01`. El corpus previo permanece intacto. `BACKFILL_MISSING_VTT=True` consume `datos/raw/vtt_by_video/missing_vtt.jsonl`; `MAX_VTT_BACKFILL=None` recorre toda esa cola. Cada éxito guarda el VTT antes de avanzar y cada fallo se anexa de forma idempotente; al reanudar no se repiten los videos consolidados. Los videos exclusivos para miembros, privados, retirados, sin subtítulos o con menos de 200 caracteres se registran sin detener el lote.
 
-`01_02` no es necesario para cada incremento. Su modo rápido reentrena dos
-modelos para cada longitud y su confirmación corta reentrena tres modelos en
-tres cohortes pareadas; en ambos casos también calibra e infiere con la misma
-longitud. El perfil robusto nuevo amplía el diseño a cinco cohortes de
-300/100/100 videos, 75 ajustes y 1 000 réplicas bootstrap agrupadas por video;
-compara contra 30 s con margen de no inferioridad de 0.01 AP y nunca selecciona
-con `test`. Después del modo rápido puede ejecutar una comparación neuronal
-acotada: MiniLM multilingüe congelado sobre 120/40 filas y `gemma3:4b` sobre
-solo tres filas de validación por longitud. Gemma reanuda por `chunk_id`, tiene
-un presupuesto total de diez minutos y no interviene en la recomendación
-automática. La confirmación vigente conserva 30 s. Una elección manual tiene
-precedencia y solo se aplica con `APPLY_CHUNK_SELECTION=True`.
+`01_02` no es necesario para cada incremento. Su modo rápido y la confirmación
+corta permanecen como diagnósticos opcionales. El perfil robusto clásico es la
+etapa decisoria: cinco cohortes de 300/100/100 videos, 75 ajustes y 1 000
+réplicas bootstrap agrupadas por video; compara 15, 20, 25, 30 y 35 s contra la
+referencia de 30 s con margen de no inferioridad de 0.01 AP y nunca selecciona
+con `test`.
+
+La etapa posterior usa `RUN_NEURAL_ROBUST_TEST=True` y conserva exactamente las
+mismas cinco longitudes. Construye un panel enriquecido y pareado de 100 anclas
+de `validation`, dividido por video en cinco cohortes de reporte. MiniLM queda
+congelado y alimenta 25 cabezas logísticas —cinco longitudes por cinco cohortes
+de entrenamiento—; `gemma3:4b` procesa hasta 500 combinaciones ancla–longitud
+con [`config/prompt_operacional_ollama_v2.md`](../../config/prompt_operacional_ollama_v2.md).
+Cada familia usa 2 000 réplicas bootstrap agrupadas por video. MiniLM produce AP
+continua y Ollama etiquetas duras; sus métricas no se promedian. Son análisis
+confirmatorios de sensibilidad y factibilidad, no un segundo selector. Si
+divergen, el cuaderno informa el conflicto y conserva la decisión clásica hasta
+validación humana independiente. Solo `APPLY_CHUNK_SELECTION=True` aplica una
+longitud; el método citado y los resultados canónicos se documentan en
+[`docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md`](../../docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md).
+
+La ejecución completa obtuvo evidencia inconclusa en MiniLM: 20 s presentó la
+mayor AP puntual, 0.59, pero su intervalo de diferencia frente a 30 s incluyó
+cero. Ollama produjo 474/500 salidas válidas; 15, 20 y 25 s no alcanzaron la
+compuerta estructural de 0.95. Su mayor F1 puntual fue 0.42 para 30 s. La
+síntesis jerárquica mantiene 30 s y no cambia la configuración activa.
 
 Antes de activar otra longitud, los chunks, etiquetas, snapshot, modelos,
 resultados y bundle correspondientes a la firma activa se mueven a

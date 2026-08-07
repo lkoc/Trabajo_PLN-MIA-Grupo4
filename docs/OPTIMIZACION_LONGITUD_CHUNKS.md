@@ -70,6 +70,7 @@ El ejercicio y su ampliación tienen cuatro niveles deliberadamente distintos:
 | Smoke test rápido | detectar errores de contrato y comprobar que cada longitud puede completar el flujo | elegir por sí solo una longitud ni reportar desempeño final |
 | Confirmación local ampliada | comparar el orden relativo de cinco longitudes con entrenamiento real y cohortes pareadas | afirmar significancia fuerte o generalización productiva |
 | Perfil robusto de ~30 min | cuantificar incertidumbre con cinco cohortes y bootstrap pareado por video; aplicar una regla de no inferioridad predeclarada | corregir etiquetas proxy, convertir cohortes solapadas en folds independientes o anticipar resultados aún no ejecutados |
+| Perfil neuronal robusto separado | contrastar las cinco longitudes con MiniLM y `gemma3:4b` sobre un panel pareado, cohortes y bootstrap por video | reemplazar el selector clásico, promediar AP continua con F1 dura o estimar prevalencia desde una muestra enriquecida |
 | Evaluación productiva posterior | entrenar las familias finales y reportar el modelo congelado | reutilizar test para volver a escoger longitud o modelo |
 
 El smoke test rápido sugirió 35 s, mientras la confirmación ampliada favoreció
@@ -401,6 +402,36 @@ mecanismo causal demostrado.
 | Selección | solo `validation`; menor costo entre no inferiores |
 | Resultado robusto | **30 s**, AP 0.1233, IC 95% [0.1099, 0.1446]; única no inferior |
 
+## Perfil neuronal robusto separado
+
+La selección clásica queda congelada antes de consultar las familias
+neuronales. El análisis vigente ya no se limita a 20 y 30 s: compara 15, 20,
+25, 30 y 35 s sobre un panel pareado de `validation`, con cohortes y bootstrap
+agrupado por video. MiniLM evalúa sensibilidad de representación mediante
+scores continuos; Ollama evalúa sensibilidad semántica y factibilidad de salida
+estructurada mediante etiquetas duras. Sus métricas no se promedian ni
+intervienen en la selección automática.
+
+El método completo, las fuentes fundacionales, los resultados ejecutados y la
+síntesis jerárquica se mantienen en
+[`ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md`](ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md).
+El artefacto preliminar que comparó solo 20 y 30 s permanece disponible para
+trazabilidad, pero no forma parte de la comparación final ni se usa como
+resultado confirmatorio.
+
+La ejecución final completó 25 cabezas MiniLM y 500 intentos Ollama. MiniLM fue
+inconcluso: 20 s tuvo la mayor AP puntual, pero el intervalo pareado de su
+diferencia frente a 30 s incluyó cero. Ollama produjo 474/500 salidas válidas;
+15, 20 y 25 s fallaron la compuerta de esquema de 0.95, mientras 30 s obtuvo la
+mayor F1 puntual. La síntesis conserva 30 s. Las cifras con intervalos y el
+análisis de validez se reportan en el informe neuronal separado.
+
+La regla entre familias es predeclarada: el perfil clásico selecciona o conserva
+la longitud principal; MiniLM y Ollama intentan refutar o respaldar esa decisión
+desde representaciones distintas. Si alguna familia diverge, se informa el
+conflicto y se mantienen 30 s hasta disponer de una validación humana
+independiente. `test` no participa en ninguna de estas decisiones.
+
 ## Texto recomendado para el paper
 
 > La longitud de los fragmentos se seleccionó mediante tres submuestras
@@ -421,6 +452,10 @@ cohortes pareadas y 1 000 réplicas bootstrap agrupadas por video. La ventana de
 30 s obtuvo AP macro de daño 0.1233, IC 95% [0.1099, 0.1446], y fue la única
 alternativa que satisfizo el margen predeclarado de no inferioridad de 0.01 AP”.
 
+La evidencia neuronal se reporta por separado porque usa otro panel y métricas
+no intercambiables. El texto final debe tomarse del informe neuronal canónico,
+no del piloto preliminar de 20/30 s.
+
 ## Contenido recomendado para la presentación
 
 La diapositiva principal actualizada puede usar tres mensajes:
@@ -431,6 +466,9 @@ La diapositiva principal actualizada puede usar tres mensajes:
   [0.1099, 0.1446], y fue la única alternativa no inferior.
 - **Decisión:** se conserva 30 s; `test` se reporta después como resultado
   descriptivo (AP 0.1371), nunca como criterio de selección.
+- **Sensibilidad neuronal:** resumir por separado MiniLM y Ollama para las cinco
+  longitudes; no promediar sus métricas y conservar la decisión clásica ante
+  conflicto hasta una validación humana independiente.
 
 La tabla robusta anterior o un gráfico de AP con IC bootstrap es preferible a
 barras de desviación estándar. Test debe aparecer como resultado descriptivo,
@@ -447,6 +485,9 @@ no como criterio de selección.
   submuestras parcialmente solapadas y no cinco experimentos independientes.
 - Se compararon modelos clásicos ligeros; otra arquitectura puede responder de
   forma diferente a la longitud.
+- Las amenazas propias de MiniLM y Ollama —panel enriquecido, etiquetas proxy,
+  métricas no intercambiables y validez de esquema— se desarrollan en el informe
+  neuronal separado.
 - La métrica absoluta no representa un modelo productivo ni sustituye el
   reentrenamiento completo del contrato de cinco salidas.
 - La regla de acuerdo descarta ventanas ambiguas y puede favorecer longitudes
@@ -463,6 +504,9 @@ temporales más finas antes de agregarlas.
 
 El protocolo está implementado en
 [`01_02_optimizacion_longitud_chunks.ipynb`](../flujo/01_datos/01_02_optimizacion_longitud_chunks.ipynb).
+El resumen neuronal final se conserva en
+[`neural_robust_comparison.json`](../resultados/pilotos/chunk_length/neural_robust/neural_robust_comparison.json);
+el piloto `neural_smoke_comparison.json` es preliminar y no se mezcla con él.
 Antes de construir las cohortes, el cuaderno verifica o restaura desde el bundle
 sincronizado tanto `chunks_v2` —necesario para recuperar los tiempos de las
 etiquetas históricas— como `dataset_5_salidas`; ambos deben coincidir con sus
@@ -487,9 +531,9 @@ Para ejecutar el perfil robusto nuevo, use en cambio:
 - `ROBUST_BOOTSTRAP_REPLICATES=1000`;
 - `ROBUST_REFERENCE_SECONDS=30.0`;
 - `ROBUST_NONINFERIORITY_MARGIN=0.01`;
-- `RUN_BOUNDED_HF_COMPARISON=False` y
-  `RUN_BOUNDED_OLLAMA_COMPARISON=False` para respetar el presupuesto;
-- `USE_ROBUST_RECOMMENDATION=False` y `APPLY_CHUNK_SELECTION=False` durante la
+- `RUN_NEURAL_ROBUST_TEST=True` después de cerrar el perfil clásico;
+- `CANDIDATE_SECONDS=(15,20,25,30,35)` para las tres familias;
+- `USE_ROBUST_RECOMMENDATION=True` y `APPLY_CHUNK_SELECTION=False` durante la
   primera auditoría.
 
 La corrida guarda cada candidato por firma. Si se interrumpe, la siguiente

@@ -778,6 +778,7 @@ def run_bounded_neural_chunk_comparison(
         "profile": "bounded_neural_chunk_comparison",
         "candidate_seconds": seconds,
         "selection_effect": "informative_only",
+        "evidence_role": "bounded_confirmatory_sensitivity_not_definitive",
         "test_used_for_selection": False,
         "comparability_warning": (
             "MiniLM produce scores continuos con una cabeza supervisada; Gemma produce "
@@ -956,6 +957,9 @@ def run_bounded_neural_chunk_comparison(
                 "dataset_sha256": sha256_file(dataset),
                 "model": ollama_model,
                 "model_digest": probe.get("model_digest"),
+                "operational_prompt_sha256": probe.get(
+                    "operational_prompt_sha256"
+                ),
                 "validation_limit": ollama_validation_limit,
                 "timeout_seconds": ollama_timeout_seconds,
                 "seed": seed,
@@ -1055,6 +1059,9 @@ def run_bounded_neural_chunk_comparison(
                 "backend": "ollama_http",
                 "model": ollama_model,
                 "model_digest": probe.get("model_digest"),
+                "operational_prompt_sha256": probe.get(
+                    "operational_prompt_sha256"
+                ),
                 "profile": "bounded_structured_hard_labels",
                 "requested_validation_rows": len(validation_rows),
                 "successful_rows": len(evaluated),
@@ -1087,7 +1094,7 @@ def run_bounded_neural_chunk_comparison(
             "stopped_by_wall_clock": stopped_by_wall_clock,
             "elapsed_wall_seconds": round(time.perf_counter() - wall_started, 3),
             "warning": (
-                "Muestra mínima y etiquetas duras; informa costo y cumplimiento, "
+                "Muestra acotada y etiquetas duras; informa costo y cumplimiento, "
                 "pero no selecciona longitud. La salida se reanuda por chunk_id."
             ),
         }

@@ -1,0 +1,139 @@
+{
+  "schema_version": "1.0",
+  "profile": "bounded_neural_chunk_comparison",
+  "candidate_seconds": [
+    20.0,
+    30.0
+  ],
+  "selection_effect": "informative_only",
+  "evidence_role": "bounded_confirmatory_sensitivity_not_definitive",
+  "test_used_for_selection": false,
+  "comparability_warning": "MiniLM produce scores continuos con una cabeza supervisada; Gemma produce etiquetas duras sobre una muestra mucho menor. No se deben ordenar juntos.",
+  "huggingface": {
+    "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "revision": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+    "comparisons": [
+      {
+        "chunk_seconds": 20.0,
+        "backend": "huggingface_local_cache",
+        "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        "revision": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+        "profile": "frozen_mean_pooling_plus_logistic",
+        "train_rows": 120,
+        "validation_rows": 40,
+        "validation_ap_macro_damage": 0.47767953276395536,
+        "validation_ap_macro_five": 0.4749372511434008,
+        "elapsed_seconds_observed": 2.795,
+        "hardware": {
+          "backend": "cpu",
+          "requested": "auto",
+          "device_name": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+          "torch_version": "2.6.0+cpu",
+          "runtime_version": null,
+          "total_memory_bytes": null,
+          "dtype": "float32",
+          "fallback_reason": null
+        },
+        "run_signature": "aeb609285e7208e0f53e1afc04663bf043aa9ccff6f49b3f914df594857ede63",
+        "selection_effect": "informative_only"
+      },
+      {
+        "chunk_seconds": 30.0,
+        "backend": "huggingface_local_cache",
+        "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        "revision": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+        "profile": "frozen_mean_pooling_plus_logistic",
+        "train_rows": 120,
+        "validation_rows": 40,
+        "validation_ap_macro_damage": 0.4612656253488425,
+        "validation_ap_macro_five": 0.4601805918790417,
+        "elapsed_seconds_observed": 2.835,
+        "hardware": {
+          "backend": "cpu",
+          "requested": "auto",
+          "device_name": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+          "torch_version": "2.6.0+cpu",
+          "runtime_version": null,
+          "total_memory_bytes": null,
+          "dtype": "float32",
+          "fallback_reason": null
+        },
+        "run_signature": "7c624a1b89384c46ca3d23c3fa0edac9089d26cbd104fd9945934515f798d50c",
+        "selection_effect": "informative_only"
+      }
+    ],
+    "warning": "Encoder congelado; no equivale al fine-tuning de 03_entrenamiento."
+  },
+  "ollama": {
+    "model": "gemma3:4b",
+    "probe": {
+      "provider": "ollama_http",
+      "base_url": "http://127.0.0.1:11434",
+      "version": "0.32.6",
+      "model": "gemma3:4b",
+      "model_available": true,
+      "model_digest": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+      "model_details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "gemma3",
+        "families": [
+          "gemma3"
+        ],
+        "parameter_size": "4.3B",
+        "quantization_level": "Q4_K_M"
+      },
+      "operational_prompt_path": "config/prompt_operacional_ollama_v2.md",
+      "operational_prompt_sha256": "cb12c0c5d79c693339c73f0779d8116941c905e1e23e207644c13eec3e89380c",
+      "models": [
+        "qwen3.5:9b",
+        "gemma3:4b",
+        "qwen3.5:4b"
+      ]
+    },
+    "comparisons": [
+      {
+        "chunk_seconds": 20.0,
+        "backend": "ollama_http",
+        "model": "gemma3:4b",
+        "model_digest": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+        "operational_prompt_sha256": "cb12c0c5d79c693339c73f0779d8116941c905e1e23e207644c13eec3e89380c",
+        "profile": "bounded_structured_hard_labels",
+        "requested_validation_rows": 10,
+        "successful_rows": 9,
+        "failed_rows": 1,
+        "valid_schema_rate": 0.9,
+        "exact_label_set_match_rate": 0.0,
+        "validation_hard_ap_macro_damage": 0.5694444444444444,
+        "validation_hard_f1_macro_damage": 0.41666666666666663,
+        "elapsed_seconds_observed_successes": 62.604,
+        "run_signature": "4fcabdb14000eac05275fe107227fe8c11a2ebf47a8ed06465184e682b5e646e",
+        "selection_effect": "informative_only",
+        "completed": false
+      },
+      {
+        "chunk_seconds": 30.0,
+        "backend": "ollama_http",
+        "model": "gemma3:4b",
+        "model_digest": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+        "operational_prompt_sha256": "cb12c0c5d79c693339c73f0779d8116941c905e1e23e207644c13eec3e89380c",
+        "profile": "bounded_structured_hard_labels",
+        "requested_validation_rows": 10,
+        "successful_rows": 8,
+        "failed_rows": 2,
+        "valid_schema_rate": 0.8,
+        "exact_label_set_match_rate": 0.0,
+        "validation_hard_ap_macro_damage": 0.44791666666666663,
+        "validation_hard_f1_macro_damage": 0.2,
+        "elapsed_seconds_observed_successes": 59.06,
+        "run_signature": "8e1972acbf64d06d50512b44c17f88143f6b7db5b07506aec0d4af9fd556d54b",
+        "selection_effect": "informative_only",
+        "completed": false
+      }
+    ],
+    "max_wall_seconds": 900.0,
+    "stopped_by_wall_clock": false,
+    "elapsed_wall_seconds": 145.725,
+    "warning": "Muestra acotada y etiquetas duras; informa costo y cumplimiento, pero no selecciona longitud. La salida se reanuda por chunk_id."
+  }
+}

@@ -17,9 +17,16 @@ def test_active_notebooks_are_ordered_and_clean():
     assert len(notebooks) == 17
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
-        assert notebook.metadata["moderacion_peru"]["contract"] == "moderacion_peru_5_salidas_v2"
+        assert (
+            notebook.metadata["moderacion_peru"]["contract"]
+            == "moderacion_peru_5_salidas_v2"
+        )
         assert notebook.metadata["moderacion_peru"]["taxonomy_version"] == "2.1.0"
-        assert all(not cell.get("outputs") for cell in notebook.cells if cell.cell_type == "code")
+        assert all(
+            not cell.get("outputs")
+            for cell in notebook.cells
+            if cell.cell_type == "code"
+        )
         source = "\n".join(cell.source for cell in notebook.cells)
         assert "LM Studio" not in source
         assert "D:\\" not in source
@@ -38,7 +45,9 @@ def test_active_notebooks_are_ordered_and_clean():
 
 
 def test_each_notebook_has_consistent_ieee_references_as_final_cell():
-    master_bib = (ROOT / "Documento_final_paper" / "referencias.bib").read_text(encoding="utf-8")
+    master_bib = (ROOT / "Documento_final_paper" / "referencias.bib").read_text(
+        encoding="utf-8"
+    )
     master_keys = set(re.findall(r"^@[A-Za-z]+\{([^,]+),", master_bib, re.MULTILINE))
     for path in sorted((ROOT / "flujo").rglob("*.ipynb")):
         notebook = nbformat.read(path, as_version=4)
@@ -58,8 +67,25 @@ def test_each_notebook_has_consistent_ieee_references_as_final_cell():
             cell.source for cell in notebook.cells[:-1] if cell.cell_type == "markdown"
         )
         assert set(map(int, BODY_CITATION.findall(body))) == expected
-        assert list(map(int, REFERENCE_ENTRY.findall(final_cell.source))) == list(range(1, len(keys) + 1))
+        assert list(map(int, REFERENCE_ENTRY.findall(final_cell.source))) == list(
+            range(1, len(keys) + 1)
+        )
         assert "[@" not in "\n".join(cell.source for cell in notebook.cells)
+
+
+def test_neural_chunk_report_has_consistent_numeric_references():
+    report = (ROOT / "docs" / "ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md").read_text(
+        encoding="utf-8"
+    )
+    body, references = report.split("## Referencias", maxsplit=1)
+    cited = set(map(int, BODY_CITATION.findall(body)))
+    entries = list(map(int, REFERENCE_ENTRY.findall(references)))
+
+    assert cited == set(range(1, 13))
+    assert entries == list(range(1, 13))
+    assert len(entries) == len(set(entries))
+    assert "doi.org/10.18653/v1/P18-1128" in references
+    assert "proceedings.neurips.cc/paper/2020" in references
 
 
 def test_colab_notebooks_embed_reproducible_drive_bootstrap():
@@ -75,7 +101,7 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
             assert "prepare_colab_context" in source
             assert "publish_colab_outputs" in source
             assert "COLAB_REQUIRE_L4 = True" in source
-            assert "pip\", \"install\", \"-q\", \"-r\"" in source
+            assert 'pip", "install", "-q", "-r"' in source
             assert "git clone" not in source.lower()
             assert metadata["transport"] == "google_drive_only"
     assert observed == expected
@@ -119,7 +145,10 @@ def test_academic_cover_is_present_in_notebooks_frontends_and_readmes():
     readmes = [
         path
         for path in ROOT.rglob("README.md")
-        if "archivo" not in path.parts and ".git" not in path.parts and ".pytest_cache" not in path.parts
+        if "archivo" not in path.parts
+        and "modelos" not in path.parts
+        and ".git" not in path.parts
+        and ".pytest_cache" not in path.parts
     ]
     frontends = sorted((ROOT / "flujo").rglob("*.html"))
     for path in readmes + frontends:
@@ -127,7 +156,9 @@ def test_academic_cover_is_present_in_notebooks_frontends_and_readmes():
         assert all(item in source for item in (title, course, *authors)), path
     for path in sorted((ROOT / "flujo").rglob("*.ipynb")):
         notebook = nbformat.read(path, as_version=4)
-        assert all(item in notebook.cells[0].source for item in (title, course, *authors)), path
+        assert all(
+            item in notebook.cells[0].source for item in (title, course, *authors)
+        ), path
         assert notebook.metadata["moderacion_peru"]["project_title"] == title
         assert notebook.metadata["moderacion_peru"]["academic_term"] == "2026-1"
         assert notebook.metadata["moderacion_peru"]["group"] == "Grupo 4"
@@ -215,7 +246,9 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
     assert "channel_transcript_dir=TRANSCRIPTS_BY_CHANNEL" in source
     assert "cohorte_dirigida_vigente" in source
     assert '# RESET_VIDEO_DATASET = "ARCHIVAR_Y_REINICIAR_DATASET_VIDEOS"' in source
-    assert not (ROOT / "flujo" / "01_datos" / "01_03_ampliacion_dirigida.ipynb").exists()
+    assert not (
+        ROOT / "flujo" / "01_datos" / "01_03_ampliacion_dirigida.ipynb"
+    ).exists()
     assert (
         ROOT
         / "archivo"
@@ -225,44 +258,92 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
 
 
 def test_chunk_length_pilot_is_optional_and_materialization_is_separate():
-    pilot_path = ROOT / "flujo" / "01_datos" / "01_02_optimizacion_longitud_chunks.ipynb"
-    materialization_path = ROOT / "flujo" / "01_datos" / "01_03_limpieza_troceado_incremental.ipynb"
+    pilot_path = (
+        ROOT / "flujo" / "01_datos" / "01_02_optimizacion_longitud_chunks.ipynb"
+    )
+    materialization_path = (
+        ROOT / "flujo" / "01_datos" / "01_03_limpieza_troceado_incremental.ipynb"
+    )
     assert pilot_path.is_file()
     assert materialization_path.is_file()
-    assert not (ROOT / "flujo" / "01_datos" / "01_02_limpieza_troceado_incremental.ipynb").exists()
+    assert not (
+        ROOT / "flujo" / "01_datos" / "01_02_limpieza_troceado_incremental.ipynb"
+    ).exists()
     pilot = nbformat.read(pilot_path, as_version=4)
     source = "\n".join(cell.source for cell in pilot.cells)
-    assert "show_table(" not in source or "limit=" not in source
+    for cell in pilot.cells:
+        if cell.cell_type != "code":
+            continue
+        tree = ast.parse(cell.source)
+        for call in (
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "show_table"
+        ):
+            assert all(keyword.arg != "limit" for keyword in call.keywords)
+    run_controls: dict[str, bool] = {}
+    for cell in pilot.cells:
+        if cell.cell_type != "code":
+            continue
+        for node in ast.parse(cell.source).body:
+            if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+                continue
+            target = node.targets[0]
+            if (
+                isinstance(target, ast.Name)
+                and target.id.startswith("RUN_")
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, bool)
+            ):
+                run_controls[target.id] = node.value.value
+    expected_run_controls = {
+        "RUN_CHUNK_LENGTH_SMOKE_TEST",
+        "RUN_CHUNK_LENGTH_CONFIRMATORY_TEST",
+        "RUN_CHUNK_LENGTH_ROBUST_TEST",
+        "RUN_NEURAL_ROBUST_TEST",
+    }
+    assert expected_run_controls <= run_controls.keys()
+    assert not (
+        run_controls["RUN_CHUNK_LENGTH_CONFIRMATORY_TEST"]
+        and run_controls["RUN_CHUNK_LENGTH_ROBUST_TEST"]
+    )
+    assert run_controls["RUN_NEURAL_ROBUST_TEST"]
+    assert "RUN_BOUNDED_HF_COMPARISON" not in source
+    assert "RUN_BOUNDED_OLLAMA_COMPARISON" not in source
+    assert "NEURAL_CANDIDATE_SECONDS" not in source
     for control in (
-        "RUN_CHUNK_LENGTH_SMOKE_TEST=False",
-        "RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=False",
-        "RUN_CHUNK_LENGTH_ROBUST_TEST=False",
-        "RUN_BOUNDED_HF_COMPARISON=False",
-        "RUN_BOUNDED_OLLAMA_COMPARISON=False",
         "CANDIDATE_SECONDS=(15,20,25,30,35)",
-        "NEURAL_CANDIDATE_SECONDS=(20,30)",
         "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-        "OLLAMA_SMOKE_MODEL='gemma3:4b'",
-        "OLLAMA_SMOKE_MAX_WALL_SECONDS=600.0",
+        "NEURAL_OLLAMA_MODEL='gemma3:4b'",
+        "NEURAL_PANEL_SIZE=100",
+        "NEURAL_REPORTING_COHORTS=5",
+        "NEURAL_MINILM_TRAIN_LIMIT=1000",
+        "NEURAL_MINILM_BOOTSTRAP_REPLICATES=2000",
+        "NEURAL_OLLAMA_BOOTSTRAP_REPLICATES=2000",
+        "NEURAL_OLLAMA_MAX_WALL_SECONDS=5400.0",
+        "NEURAL_OLLAMA_MINIMUM_SCHEMA_RATE=0.95",
         "ROBUST_VIDEO_LIMITS={'train':300,'validation':100,'test':100}",
         "ROBUST_SEEDS=(20260805,20260817,20260829,20260841,20260853)",
         "ROBUST_BOOTSTRAP_REPLICATES=1000",
         "ROBUST_REFERENCE_SECONDS=30.0",
         "ROBUST_NONINFERIORITY_MARGIN=0.01",
-        "USE_ROBUST_RECOMMENDATION=False",
+        "USE_ROBUST_RECOMMENDATION=True",
         "CONFIRMATORY_VIDEO_LIMITS={'train':200,'validation':80,'test':80}",
         "CONFIRMATORY_SEEDS=(20260805,20260817,20260829)",
         "MANUAL_CHUNK_SECONDS=30.0",
-        "USE_SMOKE_RECOMMENDATION=False",
-        "USE_CONFIRMATORY_RECOMMENDATION=False",
         "APPLY_CHUNK_SELECTION=False",
         "complement_nb",
         "sgd_incremental",
-        "run_bounded_neural_chunk_comparison",
+        "run_neural_chunk_robust_test",
         "run_chunk_length_robust_test",
-        "Diseño para reporte académico",
-        "Resultados robustos para reporte",
-        "Resultado académico principal",
+        "Perfil clásico: resultados reportables",
+        "MiniLM robusto: resultados reportables",
+        "Ollama robusto: resultados reportables",
+        "Síntesis jerárquica",
+        "Roles no intercambiables",
+        "500 respuestas Ollama",
         "prepare_local_bundle_input('chunks_v2'",
         "prepare_local_bundle_input('dataset_5_salidas'",
     ):
@@ -300,12 +381,17 @@ def test_synced_checkpoint_rules_preserve_hashes_and_exclude_rebuildable_working
 def test_neural_model_revisions_are_pinned():
     from moderacion_peru.models import TRANSFORMER_SPECS
 
-    assert all(spec.revision and len(spec.revision) == 40 for spec in TRANSFORMER_SPECS.values())
+    assert all(
+        spec.revision and len(spec.revision) == 40
+        for spec in TRANSFORMER_SPECS.values()
+    )
 
 
 def test_lm_studio_only_exists_in_archive():
     active_roots = [ROOT / "src", ROOT / "flujo"]
-    active_files = [path for root in active_roots for path in root.rglob("*") if path.is_file()]
+    active_files = [
+        path for root in active_roots for path in root.rglob("*") if path.is_file()
+    ]
     hits = []
     for path in active_files:
         if path.suffix.lower() not in {".md", ".py", ".ipynb", ".html", ".json"}:

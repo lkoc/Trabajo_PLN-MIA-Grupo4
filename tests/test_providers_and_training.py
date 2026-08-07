@@ -4,6 +4,7 @@ import json
 
 import pytest
 
+from moderacion_peru.io import sha256_file
 from moderacion_peru.providers.base import ProviderError, normalize_payload
 from moderacion_peru.providers.huggingface import HuggingFaceProvider
 from moderacion_peru.providers.ollama import OllamaProvider
@@ -73,7 +74,9 @@ def test_no_output_is_not_turned_into_safe():
         "ACOSO_AMENAZA",
         "CONTENIDO_SEXUAL",
     ]
-    result = resolve_prediction(dict.fromkeys(labels, 0.1), dict.fromkeys(labels, 0.5), uncertainty_margin=0)
+    result = resolve_prediction(
+        dict.fromkeys(labels, 0.1), dict.fromkeys(labels, 0.5), uncertainty_margin=0
+    )
     assert result.labels == ()
     assert "sin_categoria_sobre_umbral" in result.review_reasons
 
@@ -110,6 +113,47 @@ def test_ollama_disables_thinking_and_limits_structured_output(monkeypatch):
     assert result.coarse_labels == ["SEGURO"]
     assert captured["body"]["think"] is False
     assert captured["body"]["options"]["num_predict"] == 512
+    prompt = "\n".join(message["content"] for message in captured["body"]["messages"])
+    assert "GUÍA OPERATIVA VIGENTE" in prompt
+    assert "ridiculo_encubridor" in prompt
+    assert result.prompt_sha256
+
+
+def test_ollama_retry_asks_to_correct_invalid_structured_output(monkeypatch):
+    captured = []
+
+    class Response:
+        def __init__(self, content):
+            self.content = content
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"message": {"content": self.content}}
+
+    responses = iter([Response("sin JSON"), Response(json.dumps(payload()))])
+
+    def fake_post(url, *, json, timeout):
+        captured.append(
+            {
+                "messages": [dict(message) for message in json["messages"]],
+                "seed": json["options"]["seed"],
+            }
+        )
+        return next(responses)
+
+    monkeypatch.setattr("moderacion_peru.providers.ollama.requests.post", fake_post)
+    result = OllamaProvider(model="fixture", retries=1, seed=17).annotate(
+        {"chunk_id": "c1", "text": "contenido neutral"}
+    )
+
+    assert result.coarse_labels == ["SEGURO"]
+    assert len(captured) == 2
+    assert captured[0]["seed"] == captured[1]["seed"] == 17
+    assert len(captured[0]["messages"]) == 2
+    assert len(captured[1]["messages"]) == 4
+    assert "salida anterior no cumple" in captured[1]["messages"][-1]["content"]
 
 
 def test_provider_preserves_video_group_and_temporal_metadata(monkeypatch):
@@ -165,12 +209,24 @@ def test_ollama_probe_records_exact_model_digest(monkeypatch):
     }
 
     def fake_get(url, *, timeout):
-        return Response(responses[next(path for path in responses if url.endswith(path))])
+        return Response(
+            responses[next(path for path in responses if url.endswith(path))]
+        )
 
     monkeypatch.setattr("moderacion_peru.providers.ollama.requests.get", fake_get)
     result = OllamaProvider().probe()
     assert result["model_digest"] == "2a654d98e6fb"
     assert result["model_details"]["quantization_level"] == "Q4_K_M"
+    assert len(result["operational_prompt_sha256"]) == 64
+    assert result["operational_prompt_sha256"] == sha256_file(
+        OllamaProvider().operational_prompt_path
+    )
+    assert result["operational_prompt_path"].endswith(
+        "config\\prompt_operacional_ollama_v2.md"
+    ) or result["operational_prompt_path"].endswith(
+        "config/prompt_operacional_ollama_v2.md"
+    )
+    assert result["seed"] == 20260805
 
 
 def test_huggingface_uses_chat_template_without_thinking_and_retries():

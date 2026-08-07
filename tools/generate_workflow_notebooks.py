@@ -858,7 +858,11 @@ def create(
     notebook = nbf.v4.new_notebook()
     notebook.metadata = {
         "authors": [{"name": name} for name in PROJECT_AUTHORS],
-        "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+        "kernelspec": {
+            "display_name": "Python 3",
+            "language": "python",
+            "name": "python3",
+        },
         "language_info": {"name": "python", "version": "3.12"},
         "moderacion_peru": {
             "project_title": PROJECT_TITLE,
@@ -967,7 +971,10 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "propias; `target_category` registra el motivo de selección y nunca constituye una etiqueta. "
         "Este muestreo enriquecido no permite estimar prevalencias en YouTube ni en el Perú.",
         [
-            ("Preflight", "from moderacion_peru.artifacts import artifact_status\nshow_result('Disponibilidad de artefactos', artifact_status(ROOT), tone='neutral')"),
+            (
+                "Preflight",
+                "from moderacion_peru.artifacts import artifact_status\nshow_result('Disponibilidad de artefactos', artifact_status(ROOT), tone='neutral')",
+            ),
             ("Parámetros editables", SCRAPING_PARAMETERS),
             ("Canales y consultas", SCRAPING_SOURCES),
             (
@@ -987,48 +994,38 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
     )
     create(
         "flujo/01_datos/01_02_optimizacion_longitud_chunks.ipynb",
-        "01.02 · Piloto opcional de longitud de chunks",
-        "Compara localmente ventanas de 15, 20, 25, 30 y 35 segundos mediante perfiles progresivos: smoke test, confirmación corta, perfil robusto de unos 30 minutos y diagnósticos neuronales secundarios.",
-        "La selección de hiperparámetros usa exclusivamente `validation`; consultar `test` para elegir "
-        "introduciría sesgo de selección [@cawley2010selection]. Se promedia *average precision* de los "
-        "cuatro daños por ser una medida informativa ante desbalance [@saito2015pr]. ComplementNB y SGD "
-        "con TF-IDF reutilizan el mismo entrenador de los cuadernos posteriores y la implementación de "
-        "scikit-learn [@pedregosa2011sklearn]. El comparador neuronal reutiliza como encoder congelado "
-        "`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` [@hf2026minilmcard] y aplica "
-        "*mean pooling*; no equivale a un ajuste fino. `gemma3:4b`, el LLM de menor tamaño de archivo "
-        "entre los tres modelos Ollama descargados, se limita a tres filas por longitud y salida "
-        "estructurada [@ollama2026gemma34b] [@ollama2026structured]. Sus etiquetas duras y la AP de "
-        "MiniLM no son métricas intercambiables y no intervienen en la recomendación automática. "
-        "El perfil robusto preserva cinco cohortes pareadas y remuestrea videos completos, no chunks "
-        "como si fueran independientes, mediante bootstrap agrupado [@efron1979bootstrap] "
-        "[@field2007clusterbootstrap]. La referencia de 30 s y el margen de no inferioridad de 0.01 "
-        "se predeclaran antes de la corrida; esta regla evita escoger retrospectivamente la referencia. "
-        "La transferencia de etiquetas por mayor solapamiento "
-        "temporal, la muestra enriquecida, la tolerancia absoluta de 0.02 AP y el proxy de costo "
-        "`filas_train × modelos` son decisiones metodológicas locales. El resultado es orientativo, no "
-        "una estimación productiva; `test` se muestra solo después y nunca participa en la recomendación.",
+        "01.02 · Selección robusta y triangulación neuronal de longitud",
+        "Compara 15, 20, 25, 30 y 35 segundos mediante un perfil clásico decisorio y dos análisis neuronales confirmatorios.",
+        "La selección usa exclusivamente `validation`; consultar `test` para elegir longitud produciría "
+        "sesgo de selección [@cawley2010selection]. La métrica clásica y la de MiniLM es *average "
+        "precision* macro de los cuatro daños, apropiada para clases desbalanceadas [@saito2015pr]. "
+        "Los baselines clásicos reutilizan TF-IDF y estimadores de scikit-learn [@salton1988tfidf] "
+        "[@pedregosa2011sklearn]. MiniLM funciona como encoder congelado con una cabeza logística; "
+        "su familia se fundamenta en destilación y representaciones multilingües [@wang2020minilm] "
+        "[@reimers2020multilingual], y el checkpoint queda fijado por su tarjeta [@hf2026minilmcard]. "
+        "Ollama usa `gemma3:4b`, salida estructurada y el prompt operativo vigente en "
+        "`config/prompt_operacional_ollama_v2.md` "
+        "[@ollama2026gemma34b] [@ollama2026structured]. El bootstrap remuestrea videos completos para "
+        "preservar la dependencia entre ventanas pareadas [@efron1979bootstrap] "
+        "[@field2007clusterbootstrap]; la comparación pareada y las hipótesis predeclaradas siguen "
+        "recomendaciones de evaluación estadística en PLN [@dror2018significance]. La composición del "
+        "panel enriquecido, las cuotas por daño, los márgenes de no inferioridad, la penalización de "
+        "salidas inválidas y la jerarquía de decisión son elecciones locales. Las métricas heterogéneas "
+        "nunca se promedian: el perfil clásico selecciona o conserva la longitud; MiniLM examina "
+        "sensibilidad a representaciones neuronales y Ollama examina sensibilidad semántica y "
+        "viabilidad operativa. Si una familia diverge, se reporta el conflicto y se mantiene la "
+        "decisión clásica hasta una validación humana independiente. `test` permanece cerrado.",
         [
             (
-                "Controles opcionales y elección manual",
+                "Controles y protocolo predeclarado",
                 "RUN_CHUNK_LENGTH_SMOKE_TEST=False\n"
                 "RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=False\n"
-                "RUN_CHUNK_LENGTH_ROBUST_TEST=False\n"
-                "RUN_BOUNDED_HF_COMPARISON=False\n"
-                "RUN_BOUNDED_OLLAMA_COMPARISON=False\n"
+                "RUN_CHUNK_LENGTH_ROBUST_TEST=False  # Active solo para reconstruir la etapa clásica\n"
+                "RUN_NEURAL_ROBUST_TEST=True\n"
                 "CANDIDATE_SECONDS=(15,20,25,30,35)\n"
                 "TOY_MODELS=('complement_nb','sgd_incremental')\n"
                 "TOY_VIDEO_LIMITS={'train':40,'validation':16,'test':16}\n"
                 "TOY_MAX_FEATURES=12000\n"
-                "NEURAL_CANDIDATE_SECONDS=(20,30)\n"
-                "HF_SMOKE_MODEL='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'\n"
-                "HF_SMOKE_REVISION='e8f8c211226b894fcb81acc59f3b34ba3efd5f42'\n"
-                "HF_SMOKE_TRAIN_LIMIT=120\n"
-                "HF_SMOKE_VALIDATION_LIMIT=40\n"
-                "HF_SMOKE_BATCH_SIZE=16\n"
-                "OLLAMA_SMOKE_MODEL='gemma3:4b'\n"
-                "OLLAMA_SMOKE_VALIDATION_LIMIT=3\n"
-                "OLLAMA_SMOKE_TIMEOUT_SECONDS=90.0\n"
-                "OLLAMA_SMOKE_MAX_WALL_SECONDS=600.0\n"
                 "CONFIRMATORY_MODELS=('complement_nb','logistic_regression','sgd_incremental')\n"
                 "CONFIRMATORY_VIDEO_LIMITS={'train':200,'validation':80,'test':80}\n"
                 "CONFIRMATORY_SEEDS=(20260805,20260817,20260829)\n"
@@ -1043,15 +1040,35 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "ROBUST_BOOTSTRAP_SEED=20260807\n"
                 "ROBUST_RUNTIME_BUDGET_SECONDS=1800.0\n"
                 "MAX_VALIDATION_AP_DROP=0.02\n"
-                "MANUAL_CHUNK_SECONDS=30.0  # Puede elegirse cualquier valor positivo\n"
-                "USE_SMOKE_RECOMMENDATION=False\n"
-                "USE_CONFIRMATORY_RECOMMENDATION=False\n"
-                "USE_ROBUST_RECOMMENDATION=False\n"
-                "APPLY_CHUNK_SELECTION=False  # Si es False, no mueve ningún dataset\n"
+                "NEURAL_PANEL_SIZE=100\n"
+                "NEURAL_MIN_DAMAGE_PER_LABEL=20\n"
+                "NEURAL_MAX_ANCHORS_PER_VIDEO=2\n"
+                "NEURAL_REPORTING_COHORTS=5\n"
+                "NEURAL_PANEL_SELECTION_SEED=20260807\n"
+                "NEURAL_MINILM_MODEL='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'\n"
+                "NEURAL_MINILM_REVISION='e8f8c211226b894fcb81acc59f3b34ba3efd5f42'\n"
+                "NEURAL_MINILM_TRAIN_LIMIT=1000\n"
+                "NEURAL_MINILM_BATCH_SIZE=16\n"
+                "NEURAL_MINILM_MAX_LENGTH=128\n"
+                "NEURAL_MINILM_BOOTSTRAP_REPLICATES=2000\n"
+                "NEURAL_MINILM_NONINFERIORITY_MARGIN=0.01\n"
+                "NEURAL_OLLAMA_MODEL='gemma3:4b'\n"
+                "NEURAL_OLLAMA_TIMEOUT_SECONDS=90.0\n"
+                "NEURAL_OLLAMA_MAX_WALL_SECONDS=5400.0\n"
+                "NEURAL_OLLAMA_RETRIES=1\n"
+                "NEURAL_OLLAMA_BOOTSTRAP_REPLICATES=2000\n"
+                "NEURAL_OLLAMA_NONINFERIORITY_MARGIN=0.02\n"
+                "NEURAL_OLLAMA_MINIMUM_SCHEMA_RATE=0.95\n"
+                "MANUAL_CHUNK_SECONDS=30.0\n"
+                "USE_ROBUST_RECOMMENDATION=True\n"
+                "APPLY_CHUNK_SELECTION=False\n"
                 "from moderacion_peru.colab import prepare_local_bundle_input\n"
-                "from moderacion_peru.chunk_optimization import activate_chunking_configuration, run_bounded_neural_chunk_comparison, run_chunk_length_confirmatory_test, run_chunk_length_robust_test, run_chunk_length_smoke_test\n"
+                "from moderacion_peru.chunk_optimization import activate_chunking_configuration, run_chunk_length_confirmatory_test, run_chunk_length_robust_test, run_chunk_length_smoke_test\n"
+                "from moderacion_peru.neural_chunk_robust import run_neural_chunk_robust_test\n"
                 "from moderacion_peru.incremental import DEFAULT_CHUNKING_CONFIGURATION\n"
                 "import json\n"
+                "def sig2(value):\n"
+                "    return None if value is None else float(f'{float(value):.2g}')\n"
                 "TRANSCRIPTS=ROOT/'datos/raw/transcripts_raw.jsonl'\n"
                 "CHUNKS_CHECKPOINT=prepare_local_bundle_input('chunks_v2',project_root=ROOT)\n"
                 "CHUNKS=Path(CHUNKS_CHECKPOINT['path'])\n"
@@ -1059,89 +1076,100 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "DATASET=Path(DATASET_CHECKPOINT['path'])\n"
                 "PILOT_ROOT=ROOT/'resultados/pilotos/chunk_length'\n"
                 "ROBUST_ROOT=PILOT_ROOT/'robust_30min'\n"
-                "RECOMMENDATION=PILOT_ROOT/'recommendation.json'\n"
-                "CONFIRMATORY_RECOMMENDATION=PILOT_ROOT/'confirmatory_recommendation.json'\n"
+                "NEURAL_ROOT=PILOT_ROOT/'neural_robust'\n"
+                "ROBUST_RESULT_PATH=ROBUST_ROOT/'robust_comparison.json'\n"
+                "NEURAL_RESULT_PATH=NEURAL_ROOT/'neural_robust_comparison.json'\n"
                 "ROBUST_RECOMMENDATION=ROBUST_ROOT/'robust_recommendation.json'\n"
+                "if tuple(CANDIDATE_SECONDS)!=(15,20,25,30,35):\n"
+                "    raise ValueError('Este protocolo exige CANDIDATE_SECONDS=(15,20,25,30,35)')\n"
                 "if RUN_CHUNK_LENGTH_CONFIRMATORY_TEST and RUN_CHUNK_LENGTH_ROBUST_TEST:\n"
-                "    raise ValueError('El perfil robusto ya incluye la confirmación; active solo uno de los dos')\n"
-                "show_summary('Configuración de pruebas', {'humo_rápido':RUN_CHUNK_LENGTH_SMOKE_TEST,'minilm_acotado':RUN_BOUNDED_HF_COMPARISON,'gemma_acotado':RUN_BOUNDED_OLLAMA_COMPARISON,'confirmatoria_corta':RUN_CHUNK_LENGTH_CONFIRMATORY_TEST,'robusta_30_min':RUN_CHUNK_LENGTH_ROBUST_TEST,'longitudes':CANDIDATE_SECONDS,'longitudes_neuronales':NEURAL_CANDIDATE_SECONDS,'cohortes_robustas':len(ROBUST_SEEDS),'bootstrap_replicates':ROBUST_BOOTSTRAP_REPLICATES,'dataset':DATASET,'aplicar_selección':APPLY_CHUNK_SELECTION}, tone='neutral')",
+                "    raise ValueError('El perfil robusto ya incluye la confirmación; active solo uno')\n"
+                "show_summary('Secuencia configurada',{'1_clasico_decisorio':RUN_CHUNK_LENGTH_ROBUST_TEST or ROBUST_RESULT_PATH.is_file(),'2_minilm_confirmatorio':RUN_NEURAL_ROBUST_TEST,'3_ollama_confirmatorio':RUN_NEURAL_ROBUST_TEST,'longitudes':CANDIDATE_SECONDS,'panel_validation':NEURAL_PANEL_SIZE,'cohortes_reporte':NEURAL_REPORTING_COHORTS,'respuestas_ollama_previstas':NEURAL_PANEL_SIZE*len(CANDIDATE_SECONDS),'test_usado_para_seleccion':False},tone='neutral')",
             ),
             (
-                "Prueba de humo local de extremo a extremo",
+                "Diagnósticos clásicos opcionales",
                 "if RUN_CHUNK_LENGTH_SMOKE_TEST:\n"
                 "    smoke_result=run_chunk_length_smoke_test(TRANSCRIPTS,CHUNKS,DATASET,PILOT_ROOT,candidate_seconds=CANDIDATE_SECONDS,model_names=TOY_MODELS,video_limits=TOY_VIDEO_LIMITS,max_features=TOY_MAX_FEATURES,max_validation_ap_drop=MAX_VALIDATION_AP_DROP)\n"
-                "    show_result('Recomendación del piloto',smoke_result['recommendation'],tone='success')\n"
-                "    show_table('Comparación por longitud',smoke_result['comparisons'],max_rows=len(CANDIDATE_SECONDS))\n"
+                "    show_result('Recomendación exploratoria',smoke_result['recommendation'],tone='success')\n"
+                "    show_table('Smoke clásico',smoke_result['comparisons'],max_rows=len(CANDIDATE_SECONDS))\n"
                 "else:\n"
-                "    show_callout('Piloto desactivado','Cambie RUN_CHUNK_LENGTH_SMOKE_TEST=True para entrenar diez baselines CPU pequeños. Los resultados se reanudan por firma.',tone='neutral')",
-            ),
-            (
-                "Comparación neuronal acotada y no selectiva",
-                "if RUN_BOUNDED_HF_COMPARISON or RUN_BOUNDED_OLLAMA_COMPARISON:\n"
-                "    missing_neural_seconds=set(NEURAL_CANDIDATE_SECONDS)-set(CANDIDATE_SECONDS)\n"
-                "    if missing_neural_seconds:\n"
-                "        raise ValueError(f'Incluya estas longitudes neuronales en CANDIDATE_SECONDS: {sorted(missing_neural_seconds)}')\n"
-                "    neural_result=run_bounded_neural_chunk_comparison(PILOT_ROOT,candidate_seconds=NEURAL_CANDIDATE_SECONDS,run_hf=RUN_BOUNDED_HF_COMPARISON,run_ollama=RUN_BOUNDED_OLLAMA_COMPARISON,hf_model_id=HF_SMOKE_MODEL,hf_revision=HF_SMOKE_REVISION,hf_train_limit=HF_SMOKE_TRAIN_LIMIT,hf_validation_limit=HF_SMOKE_VALIDATION_LIMIT,hf_batch_size=HF_SMOKE_BATCH_SIZE,ollama_model=OLLAMA_SMOKE_MODEL,ollama_validation_limit=OLLAMA_SMOKE_VALIDATION_LIMIT,ollama_timeout_seconds=OLLAMA_SMOKE_TIMEOUT_SECONDS,max_ollama_wall_seconds=OLLAMA_SMOKE_MAX_WALL_SECONDS)\n"
-                "    if 'huggingface' in neural_result:\n"
-                "        show_table('MiniLM congelado por longitud',neural_result['huggingface']['comparisons'],max_rows=len(NEURAL_CANDIDATE_SECONDS))\n"
-                "    if 'ollama' in neural_result:\n"
-                "        show_table('Gemma 3 4B: muestra descriptiva',neural_result['ollama']['comparisons'],max_rows=len(NEURAL_CANDIDATE_SECONDS))\n"
-                "    show_callout('Interpretación',neural_result['comparability_warning'],tone='warning')\n"
-                "else:\n"
-                "    show_callout('Comparación neuronal desactivada','Primero ejecute el smoke test CPU para materializar 20 s y 30 s. Luego active MiniLM, Gemma o ambos; Gemma procesa como máximo seis filas y dispone de un presupuesto total de diez minutos.',tone='neutral')",
-            ),
-            (
-                "Confirmación corta pareada",
+                "    show_callout('Smoke clásico omitido','Es opcional y no sustituye el perfil robusto.',tone='neutral')\n"
                 "if RUN_CHUNK_LENGTH_CONFIRMATORY_TEST:\n"
                 "    confirmatory_result=run_chunk_length_confirmatory_test(TRANSCRIPTS,CHUNKS,DATASET,PILOT_ROOT,candidate_seconds=CANDIDATE_SECONDS,model_names=CONFIRMATORY_MODELS,video_limits=CONFIRMATORY_VIDEO_LIMITS,seeds=CONFIRMATORY_SEEDS,max_features=CONFIRMATORY_MAX_FEATURES)\n"
-                "    show_result('Recomendación confirmatoria',confirmatory_result['recommendation'],tone='success')\n"
-                "    show_table('Media y dispersión entre cohortes pareadas',confirmatory_result['aggregated_comparisons'],max_rows=len(CANDIDATE_SECONDS))\n"
+                "    show_result('Recomendación confirmatoria corta',confirmatory_result['recommendation'],tone='success')\n"
+                "    show_table('Confirmación clásica corta',confirmatory_result['aggregated_comparisons'],max_rows=len(CANDIDATE_SECONDS))\n"
                 "else:\n"
-                "    show_callout('Confirmación desactivada','Active RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=True solo después del piloto rápido. Reentrena e infiere 45 baselines CPU: 5 longitudes × 3 modelos × 3 cohortes.',tone='neutral')",
+                "    show_callout('Confirmación corta omitida','Es opcional porque el perfil robusto ya incorpora cinco cohortes.',tone='neutral')",
             ),
             (
-                "Perfil robusto de aproximadamente 30 minutos",
+                "Etapa 1 — perfil robusto clásico decisorio",
                 "if RUN_CHUNK_LENGTH_ROBUST_TEST:\n"
                 "    robust_result=run_chunk_length_robust_test(TRANSCRIPTS,CHUNKS,DATASET,ROBUST_ROOT,candidate_seconds=CANDIDATE_SECONDS,reference_seconds=ROBUST_REFERENCE_SECONDS,model_names=CONFIRMATORY_MODELS,video_limits=ROBUST_VIDEO_LIMITS,seeds=ROBUST_SEEDS,max_features=ROBUST_MAX_FEATURES,bootstrap_replicates=ROBUST_BOOTSTRAP_REPLICATES,confidence_level=ROBUST_CONFIDENCE_LEVEL,noninferiority_margin=ROBUST_NONINFERIORITY_MARGIN,bootstrap_seed=ROBUST_BOOTSTRAP_SEED,runtime_budget_seconds=ROBUST_RUNTIME_BUDGET_SECONDS)\n"
-                "    show_summary('Diseño para reporte académico',{'ajustes':robust_result['design']['fits'],'cohortes_pareadas':robust_result['design']['paired_cohorts'],'videos_por_cohorte':ROBUST_VIDEO_LIMITS,'replicas_bootstrap':robust_result['bootstrap']['replicates'],'unidad_remuestreo':'video_id con todos sus chunks','metrica_primaria':'AP macro de cuatro daños en validation','referencia_s':ROBUST_REFERENCE_SECONDS,'margen_no_inferioridad_AP':ROBUST_NONINFERIORITY_MARGIN,'test_usado_para_seleccion':False},tone='neutral')\n"
-                "    robust_reporting_rows=[]\n"
-                "    for row in robust_result['bootstrap']['comparisons']:\n"
-                "        robust_reporting_rows.append({'longitud_s':row['chunk_seconds'],'AP_validation':round(row['paired_validation_ap_macro_damage'],4),'IC95_AP':[round(row['bootstrap_ap_ci_low'],4),round(row['bootstrap_ap_ci_high'],4)],'delta_AP_vs_30s':round(row['delta_vs_reference'],4),'IC95_delta':[round(row['delta_vs_reference_ci_low'],4),round(row['delta_vs_reference_ci_high'],4)],'no_inferior_margen_0_01':'Sí' if row['noninferior'] else 'No','proxy_costo':row['compute_proxy']})\n"
-                "    show_table('Resultados robustos para reporte',robust_reporting_rows,max_rows=len(CANDIDATE_SECONDS))\n"
-                "    robust_selected=next(row for row in robust_result['bootstrap']['comparisons'] if float(row['chunk_seconds'])==float(robust_result['recommendation']['recommended_seconds']))\n"
-                "    show_summary('Resultado académico principal',{'longitud_recomendada_s':robust_result['recommendation']['recommended_seconds'],'AP_macro_damage_validation':round(robust_selected['paired_validation_ap_macro_damage'],4),'IC95_bootstrap_AP':[round(robust_selected['bootstrap_ap_ci_low'],4),round(robust_selected['bootstrap_ap_ci_high'],4)],'alternativas_no_inferiores':robust_result['recommendation']['eligible_seconds'],'AP_macro_damage_test_descriptiva':round(robust_selected['test_ap_macro_damage_descriptive'],4),'test_usado_para_seleccion':False},tone='success')\n"
-                "    show_summary('Tiempo y presupuesto',robust_result['runtime'],tone='warning' if robust_result['runtime']['exceeded_budget'] else 'success')\n"
+                "elif ROBUST_RESULT_PATH.is_file():\n"
+                "    robust_result=json.loads(ROBUST_RESULT_PATH.read_text(encoding='utf-8-sig'))\n"
                 "else:\n"
-                "    show_callout('Perfil robusto desactivado','Active RUN_CHUNK_LENGTH_ROBUST_TEST=True para 75 ajustes CPU y 1000 réplicas bootstrap agrupadas por video. Reanuda modelos por firma y apunta a unos 30 minutos.',tone='neutral')",
+                "    robust_result=None\n"
+                "if robust_result:\n"
+                "    classical_rows=[{'longitud_s':row['chunk_seconds'],'AP_validation':sig2(row['paired_validation_ap_macro_damage']),'IC95_AP':[sig2(row['bootstrap_ap_ci_low']),sig2(row['bootstrap_ap_ci_high'])],'delta_vs_30s':sig2(row['delta_vs_reference']),'IC95_delta':[sig2(row['delta_vs_reference_ci_low']),sig2(row['delta_vs_reference_ci_high'])],'no_inferior':'Sí' if row['noninferior'] else 'No','proxy_costo':row['compute_proxy']} for row in robust_result['bootstrap']['comparisons']]\n"
+                "    show_table('Perfil clásico: resultados reportables',classical_rows,max_rows=len(CANDIDATE_SECONDS))\n"
+                "    show_summary('Decisión primaria',{'longitud_s':robust_result['recommendation']['recommended_seconds'],'partición':'validation','métrica':'AP macro de cuatro daños','cohortes':robust_result['design']['paired_cohorts'],'ajustes':robust_result['design']['fits'],'réplicas_bootstrap':robust_result['bootstrap']['replicates'],'test_usado_para_seleccion':False,'artefacto':ROBUST_RESULT_PATH},tone='success')\n"
+                "else:\n"
+                "    show_callout('Falta el perfil clásico','Active RUN_CHUNK_LENGTH_ROBUST_TEST=True antes del perfil neuronal.',tone='danger')",
             ),
             (
-                "Previsualización o activación reversible",
+                "Etapas 2 y 3 — perfil neuronal robusto pareado",
+                "if RUN_NEURAL_ROBUST_TEST:\n"
+                "    if not ROBUST_RESULT_PATH.is_file():\n"
+                "        raise FileNotFoundError('Ejecute primero la etapa clásica robusta')\n"
+                "    show_callout('Perfil neuronal en ejecución','La celda escribe checkpoints durante MiniLM y Ollama. Las tablas aparecen al final; una nueva ejecución reutiliza todo resultado con firma compatible.',tone='neutral')\n"
+                "    neural_result=run_neural_chunk_robust_test(TRANSCRIPTS,CHUNKS,DATASET,ROBUST_ROOT,NEURAL_ROOT,candidate_seconds=CANDIDATE_SECONDS,reference_seconds=ROBUST_REFERENCE_SECONDS,seeds=ROBUST_SEEDS,panel_size=NEURAL_PANEL_SIZE,minimum_damage_anchors_per_label=NEURAL_MIN_DAMAGE_PER_LABEL,max_anchors_per_video=NEURAL_MAX_ANCHORS_PER_VIDEO,reporting_cohorts=NEURAL_REPORTING_COHORTS,panel_selection_seed=NEURAL_PANEL_SELECTION_SEED,minilm_model_id=NEURAL_MINILM_MODEL,minilm_revision=NEURAL_MINILM_REVISION,minilm_train_limit_per_cohort=NEURAL_MINILM_TRAIN_LIMIT,minilm_batch_size=NEURAL_MINILM_BATCH_SIZE,minilm_max_length=NEURAL_MINILM_MAX_LENGTH,minilm_bootstrap_replicates=NEURAL_MINILM_BOOTSTRAP_REPLICATES,minilm_noninferiority_margin=NEURAL_MINILM_NONINFERIORITY_MARGIN,ollama_model=NEURAL_OLLAMA_MODEL,ollama_timeout_seconds=NEURAL_OLLAMA_TIMEOUT_SECONDS,ollama_max_wall_seconds=NEURAL_OLLAMA_MAX_WALL_SECONDS,ollama_retries=NEURAL_OLLAMA_RETRIES,ollama_bootstrap_replicates=NEURAL_OLLAMA_BOOTSTRAP_REPLICATES,ollama_noninferiority_margin=NEURAL_OLLAMA_NONINFERIORITY_MARGIN,ollama_minimum_schema_rate=NEURAL_OLLAMA_MINIMUM_SCHEMA_RATE,confidence_level=ROBUST_CONFIDENCE_LEVEL)\n"
+                "elif NEURAL_RESULT_PATH.is_file():\n"
+                "    neural_result=json.loads(NEURAL_RESULT_PATH.read_text(encoding='utf-8-sig'))\n"
+                "else:\n"
+                "    neural_result=None\n"
+                "if neural_result:\n"
+                "    panel=neural_result['panel']\n"
+                "    show_summary('Panel pareado de validation',{'anclas':panel['anchors'],'videos':panel['distinct_videos'],'conteos_etiqueta':panel['label_counts'],'cohortes_disjuntas':panel['anchors_per_reporting_cohort'],'muestra':'enriquecida; no estima prevalencia','test_usado':False},tone='neutral')\n"
+                "    minilm_rows=[{'longitud_s':row['chunk_seconds'],'AP_ensemble':sig2(row['ensemble_validation_ap_macro_damage']),'IC95_AP':[sig2(row['bootstrap_ap_ci_low']),sig2(row['bootstrap_ap_ci_high'])],'delta_vs_30s':sig2(row['delta_vs_reference']),'IC95_delta':[sig2(row['delta_vs_reference_ci_low']),sig2(row['delta_vs_reference_ci_high'])],'no_inferior':'Sí' if row['noninferior'] else 'No'} for row in neural_result['minilm']['bootstrap']['comparisons']]\n"
+                "    show_table('MiniLM robusto: resultados reportables',minilm_rows,max_rows=len(CANDIDATE_SECONDS))\n"
+                "    ollama_boot={float(row['chunk_seconds']):row for row in neural_result['ollama']['bootstrap']['comparisons']}\n"
+                "    ollama_rows=[]\n"
+                "    for row in neural_result['ollama']['duration_results']:\n"
+                "        boot=ollama_boot[float(row['chunk_seconds'])]\n"
+                "        ollama_rows.append({'longitud_s':row['chunk_seconds'],'válidas':f\"{row['successful_rows']}/{row['requested_rows']}\",'tasa_esquema':sig2(row['valid_schema_rate']),'F1_macro_daños':sig2(row['f1_macro_damage']),'IC95_F1':[sig2(boot['bootstrap_f1_ci_low']),sig2(boot['bootstrap_f1_ci_high'])],'delta_vs_30s':sig2(boot['delta_vs_reference']),'IC95_delta':[sig2(boot['delta_vs_reference_ci_low']),sig2(boot['delta_vs_reference_ci_high'])],'exact_match':sig2(row['exact_label_set_match_rate']),'hamming_loss':sig2(row['hamming_loss_five'])})\n"
+                "    show_table('Ollama robusto: resultados reportables',ollama_rows,max_rows=len(CANDIDATE_SECONDS))\n"
+                "    hierarchy=neural_result['hierarchical_synthesis']\n"
+                "    hierarchy_warning='conflict' in hierarchy['hierarchy_status'] or neural_result['reporting_status']!='complete'\n"
+                "    show_summary('Síntesis jerárquica',hierarchy,tone='warning' if hierarchy_warning else 'success')\n"
+                "    if neural_result['reporting_status']!='complete':\n"
+                "        show_callout('Ejecución parcial y reanudable','Vuelva a ejecutar esta celda. Se conservarán respuestas válidas y ajustes MiniLM cuya firma coincida.',tone='warning')\n"
+                "else:\n"
+                "    show_callout('Perfil neuronal pendiente','Active RUN_NEURAL_ROBUST_TEST=True después del perfil clásico. El diseño solicita 25 cabezas MiniLM y 500 respuestas Ollama.',tone='neutral')",
+            ),
+            (
+                "Lectura académica y límites de aplicación",
+                "if neural_result:\n"
+                "    show_summary('Roles no intercambiables',{'clásico':'decisorio; selecciona o conserva longitud','MiniLM':'confirmatorio; sensibilidad a representación neuronal continua','Ollama':'confirmatorio; sensibilidad semántica y factibilidad de salida estructurada','agregación_entre_familias':'ninguna','política_de_conflicto':'conservar la selección clásica hasta validación humana independiente','artefacto_reportable':NEURAL_RESULT_PATH},tone='neutral')\n"
+                "    show_callout('Alcance','Los intervalos describen este panel enriquecido de validation. No estiman prevalencia ni desempeño productivo. La confianza declarada por Ollama no se interpreta como probabilidad calibrada.',tone='warning')\n"
+                "else:\n"
+                "    show_callout('Resultados aún no ejecutados','No reporte expectativas como resultados. Ejecute la etapa neuronal y use su artefacto canónico.',tone='neutral')",
+            ),
+            (
+                "Activación manual y reversible",
                 "if USE_ROBUST_RECOMMENDATION:\n"
                 "    if not ROBUST_RECOMMENDATION.is_file():\n"
-                "        raise FileNotFoundError('Ejecute primero el perfil robusto o seleccione MANUAL_CHUNK_SECONDS')\n"
+                "        raise FileNotFoundError('Ejecute primero el perfil robusto clásico')\n"
                 "    selected_seconds=float(json.loads(ROBUST_RECOMMENDATION.read_text(encoding='utf-8-sig'))['recommended_seconds'])\n"
                 "    selection_source='01_02_robust_bootstrap_recommendation'\n"
-                "elif USE_CONFIRMATORY_RECOMMENDATION:\n"
-                "    if not CONFIRMATORY_RECOMMENDATION.is_file():\n"
-                "        raise FileNotFoundError('Ejecute primero la confirmación corta o seleccione MANUAL_CHUNK_SECONDS')\n"
-                "    selected_seconds=float(json.loads(CONFIRMATORY_RECOMMENDATION.read_text(encoding='utf-8-sig'))['recommended_seconds'])\n"
-                "    selection_source='01_02_confirmatory_recommendation'\n"
-                "elif USE_SMOKE_RECOMMENDATION:\n"
-                "    if not RECOMMENDATION.is_file():\n"
-                "        raise FileNotFoundError('Ejecute primero el piloto o seleccione MANUAL_CHUNK_SECONDS')\n"
-                "    selected_seconds=float(json.loads(RECOMMENDATION.read_text(encoding='utf-8-sig'))['recommended_seconds'])\n"
-                "    selection_source='01_02_smoke_recommendation'\n"
                 "else:\n"
                 "    selected_seconds=float(MANUAL_CHUNK_SECONDS)\n"
                 "    selection_source='01_02_manual'\n"
-                "if selected_seconds <= 0:\n"
-                "    raise ValueError('MANUAL_CHUNK_SECONDS debe ser positivo')\n"
                 "selected_config={**DEFAULT_CHUNKING_CONFIGURATION,'max_seconds':selected_seconds}\n"
                 "if APPLY_CHUNK_SELECTION:\n"
                 "    activation=activate_chunking_configuration(ROOT,selected_config,source=selection_source)\n"
                 "    show_result('Configuración activada sin borrar derivados',activation,tone='success')\n"
                 "else:\n"
-                "    show_summary('Selección previsualizada',{'segundos':selected_seconds,'origen':selection_source,'acción':'Active APPLY_CHUNK_SELECTION=True; 01_03 materializará o restaurará esta firma.'},tone='neutral')",
+                "    show_summary('Selección previsualizada',{'segundos':selected_seconds,'origen':selection_source,'regla':'Las pruebas neuronales no modifican automáticamente este valor.','acción':'Active APPLY_CHUNK_SELECTION=True; 01_03 materializará o restaurará la firma.'},tone='neutral')",
             ),
         ],
     )
@@ -1155,8 +1183,14 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "de deduplicación son parámetros locales versionados. Cada firma tiene un archivo recuperable: "
         "cambiarla mueve los derivados vigentes y volver a una firma restaura sus bytes verificados.",
         [
-            ("Configuración activa y archivo reversible", "from moderacion_peru.chunk_optimization import activate_chunking_configuration, load_chunking_configuration\nfrom moderacion_peru.incremental import chunk_records_incrementally\nfrom moderacion_peru.io import append_jsonl_once, read_jsonl\nSOURCE=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/processed/chunks_v2.jsonl'\nVERSION_INDEX=ROOT/'datos/processed/chunking_v2_versions.jsonl'\nCHUNK_CONFIG_PATH=ROOT/'config/chunking.json'\nCHUNK_CONFIG=load_chunking_configuration(CHUNK_CONFIG_PATH)\nactivation=activate_chunking_configuration(ROOT,CHUNK_CONFIG,source='01_03_materialization')\nshow_result('Estado de la configuración de chunks',activation,tone='success')"),
-            ("Materialización", "existing=list(read_jsonl(OUTPUT)) if OUTPUT.exists() else []\nversions=list(read_jsonl(VERSION_INDEX)) if VERSION_INDEX.exists() else []\nnew_rows,new_versions,stats=chunk_records_incrementally(read_jsonl(SOURCE) if SOURCE.exists() else [],existing,versions,**CHUNK_CONFIG)\nadded,skipped=append_jsonl_once(OUTPUT,new_rows,id_field='chunk_id')\nversions_added,_=append_jsonl_once(VERSION_INDEX,new_versions,id_field='version_id')\nstats.update({'added':added,'duplicate_ids':skipped,'versions_registered':versions_added,'chunk_configuration':CHUNK_CONFIG})\nshow_result('Resultado de limpieza y troceado', stats, tone='success')"),
+            (
+                "Configuración activa y archivo reversible",
+                "from moderacion_peru.chunk_optimization import activate_chunking_configuration, load_chunking_configuration\nfrom moderacion_peru.incremental import chunk_records_incrementally\nfrom moderacion_peru.io import append_jsonl_once, read_jsonl\nSOURCE=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/processed/chunks_v2.jsonl'\nVERSION_INDEX=ROOT/'datos/processed/chunking_v2_versions.jsonl'\nCHUNK_CONFIG_PATH=ROOT/'config/chunking.json'\nCHUNK_CONFIG=load_chunking_configuration(CHUNK_CONFIG_PATH)\nactivation=activate_chunking_configuration(ROOT,CHUNK_CONFIG,source='01_03_materialization')\nshow_result('Estado de la configuración de chunks',activation,tone='success')",
+            ),
+            (
+                "Materialización",
+                "existing=list(read_jsonl(OUTPUT)) if OUTPUT.exists() else []\nversions=list(read_jsonl(VERSION_INDEX)) if VERSION_INDEX.exists() else []\nnew_rows,new_versions,stats=chunk_records_incrementally(read_jsonl(SOURCE) if SOURCE.exists() else [],existing,versions,**CHUNK_CONFIG)\nadded,skipped=append_jsonl_once(OUTPUT,new_rows,id_field='chunk_id')\nversions_added,_=append_jsonl_once(VERSION_INDEX,new_versions,id_field='version_id')\nstats.update({'added':added,'duplicate_ids':skipped,'versions_registered':versions_added,'chunk_configuration':CHUNK_CONFIG})\nshow_result('Resultado de limpieza y troceado', stats, tone='success')",
+            ),
         ],
     )
     create(
@@ -1210,8 +1244,14 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "propuesta automática y la decisión humana [@schroeder2025llmassisted]. La activación explícita, "
         "los límites de gasto y la precedencia de fuentes son reglas locales.",
         [
-            ("Preflight sin red", "from moderacion_peru.providers import DeepSeekProvider\nprovider=DeepSeekProvider()\nshow_result('Estado del proveedor remoto', provider.probe(), tone='neutral')"),
-            ("Ejecución explícita", "from moderacion_peru.io import read_jsonl\nfrom moderacion_peru.labeling import annotate_incremental\nSOURCE=ROOT/'datos/processed/chunks_v2.jsonl'\nOUTPUT=ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'\nRUN_REMOTE=False\nif RUN_REMOTE:\n    show_result('Resultado del etiquetado remoto', annotate_incremental(read_jsonl(SOURCE),provider,OUTPUT), tone='success')\nelse:\n    show_callout('API remota desactivada', 'No se realizó ninguna llamada comercial.', tone='neutral')"),
+            (
+                "Preflight sin red",
+                "from moderacion_peru.providers import DeepSeekProvider\nprovider=DeepSeekProvider()\nshow_result('Estado del proveedor remoto', provider.probe(), tone='neutral')",
+            ),
+            (
+                "Ejecución explícita",
+                "from moderacion_peru.io import read_jsonl\nfrom moderacion_peru.labeling import annotate_incremental\nSOURCE=ROOT/'datos/processed/chunks_v2.jsonl'\nOUTPUT=ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'\nRUN_REMOTE=False\nif RUN_REMOTE:\n    show_result('Resultado del etiquetado remoto', annotate_incremental(read_jsonl(SOURCE),provider,OUTPUT), tone='success')\nelse:\n    show_callout('API remota desactivada', 'No se realizó ninguna llamada comercial.', tone='neutral')",
+            ),
         ],
     )
     create(
@@ -1225,8 +1265,14 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "la decisión humana [@choi2024llmeffect], el ordenamiento, el umbral 0.8 y la posibilidad de ocultar "
         "la sugerencia se tratan como decisiones locales que deben auditarse.",
         [
-            ("Selección reproducible", "from moderacion_peru.io import read_jsonl\nSOURCE=ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl'\nrows=list(read_jsonl(SOURCE)) if SOURCE.exists() else []\nreview=[r for r in rows if r.get('needs_review') or r.get('score_confianza',1)<0.8]\nreview.sort(key=lambda r:r['chunk_id'])\nshow_summary('Cola de revisión dirigida', {'etiquetados': len(rows), 'requieren_revisión': len(review), 'umbral_confianza': 0.8}, tone='warning' if review else 'success')"),
-            ("Siguiente paso", "show_callout('Siguiente paso', 'La revisión puede usar otro modelo o pasar directamente a 02_04 para validación humana.', tone='neutral')"),
+            (
+                "Selección reproducible",
+                "from moderacion_peru.io import read_jsonl\nSOURCE=ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl'\nrows=list(read_jsonl(SOURCE)) if SOURCE.exists() else []\nreview=[r for r in rows if r.get('needs_review') or r.get('score_confianza',1)<0.8]\nreview.sort(key=lambda r:r['chunk_id'])\nshow_summary('Cola de revisión dirigida', {'etiquetados': len(rows), 'requieren_revisión': len(review), 'umbral_confianza': 0.8}, tone='warning' if review else 'success')",
+            ),
+            (
+                "Siguiente paso",
+                "show_callout('Siguiente paso', 'La revisión puede usar otro modelo o pasar directamente a 02_04 para validación humana.', tone='neutral')",
+            ),
         ],
     )
     create(
@@ -1239,8 +1285,14 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "sugerencia puede producir influencia o anclaje [@choi2024llmeffect]. La precedencia humana, la "
         "adjudicación y el guardado *append-only* son reglas operativas locales.",
         [
-            ("Consolidación", "from moderacion_peru.consolidation import consolidate_annotations\nSOURCES=[p for p in [ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl',ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'] if p.exists()]\nCHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\nTRANSCRIPTS=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/etiquetado/consolidado/anotaciones_v2.jsonl'\nif SOURCES:\n    show_result('Consolidación de campañas', consolidate_annotations(SOURCES,OUTPUT,chunks_source=CHUNKS,transcripts_source=TRANSCRIPTS), tone='success')\nelse:\n    show_callout('Sin campañas', 'No hay propuestas para consolidar todavía.', tone='warning')"),
-            ("Frontend", "show_command('Iniciar validación humana', f'modperu serve-labeling --campaign {OUTPUT}', description='Ejecute este comando en una terminal del entorno virtual.')"),
+            (
+                "Consolidación",
+                "from moderacion_peru.consolidation import consolidate_annotations\nSOURCES=[p for p in [ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl',ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'] if p.exists()]\nCHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\nTRANSCRIPTS=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/etiquetado/consolidado/anotaciones_v2.jsonl'\nif SOURCES:\n    show_result('Consolidación de campañas', consolidate_annotations(SOURCES,OUTPUT,chunks_source=CHUNKS,transcripts_source=TRANSCRIPTS), tone='success')\nelse:\n    show_callout('Sin campañas', 'No hay propuestas para consolidar todavía.', tone='warning')",
+            ),
+            (
+                "Frontend",
+                "show_command('Iniciar validación humana', f'modperu serve-labeling --campaign {OUTPUT}', description='Ejecute este comando en una terminal del entorno virtual.')",
+            ),
         ],
     )
     create(
@@ -1393,8 +1445,14 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "deferencia a una persona experta [@mozannar2020defer]. El modo sombra, los umbrales y los motivos "
         "de revisión son decisiones locales y no constituyen una garantía de seguridad.",
         [
-            ("Disponibilidad", "from moderacion_peru.artifacts import artifact_status\nshow_result('Disponibilidad de producción', artifact_status(ROOT), tone='neutral')"),
-            ("Inicio", "show_command('Iniciar frontend de producción', 'modperu serve-production --host 127.0.0.1 --port 8765', description='Ejecute este comando en una terminal del entorno virtual.')\nshow_callout('Modo de operación', 'La interfaz reutiliza caché de subtítulos, no descarga audio/video, registra inferencias y permite revisión append-only.', tone='info')"),
+            (
+                "Disponibilidad",
+                "from moderacion_peru.artifacts import artifact_status\nshow_result('Disponibilidad de producción', artifact_status(ROOT), tone='neutral')",
+            ),
+            (
+                "Inicio",
+                "show_command('Iniciar frontend de producción', 'modperu serve-production --host 127.0.0.1 --port 8765', description='Ejecute este comando en una terminal del entorno virtual.')\nshow_callout('Modo de operación', 'La interfaz reutiliza caché de subtítulos, no descarga audio/video, registra inferencias y permite revisión append-only.', tone='info')",
+            ),
         ],
     )
 

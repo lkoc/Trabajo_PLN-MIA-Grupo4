@@ -20,12 +20,30 @@ vuelven a trocear, entrenan desde cero, calibran en `validation` e infieren en
 `validation` y `test` para cada longitud; ningún modelo entrenado a 30 s se usa
 para evaluar otra longitud.
 
-El cuaderno también ofrece dos diagnósticos neuronales desactivados por defecto.
-MiniLM multilingüe se usa como encoder congelado con *mean pooling* y una cabeza
-logística pequeña sobre 120/40 filas. `gemma3:4b` procesa tres filas por longitud,
-persiste cada respuesta para reanudar y se detiene al alcanzar diez minutos. Sus
-etiquetas duras no son directamente comparables con la AP continua de MiniLM y
-ninguno de estos diagnósticos modifica la recomendación confirmatoria.
+El perfil neuronal robusto posterior compara también 15, 20, 25, 30 y 35 s.
+Usa el mismo panel pareado de 100 anclas de `validation` en las dos familias y
+mantiene sus papeles separados: MiniLM congelado con 25 cabezas logísticas
+evalúa sensibilidad de representación; `gemma3:4b` solicita hasta 500 salidas
+estructuradas con el prompt operativo v2 y evalúa sensibilidad semántica y
+factibilidad. Ambas familias calculan 2 000 réplicas bootstrap agrupadas por
+video. Sus métricas no son intercambiables y no se promedian.
+
+Los checkpoints voluminosos permanecen locales. Git conserva únicamente los
+artefactos reportables: `paired_validation_panel_manifest.json`,
+`minilm/minilm_robust_comparison.json`,
+`ollama/ollama_robust_comparison.json`, `hierarchical_synthesis.json` y
+`neural_robust_comparison.json`, todos bajo `chunk_length/neural_robust/`.
+La interpretación con citas y las amenazas de validez están en
+[`docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md`](../../docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md).
+El antiguo `neural_smoke_comparison.json` queda como piloto preliminar y no se
+mezcla con esta comparación final.
+
+La corrida final completó 25 cabezas MiniLM y 500 intentos Ollama. MiniLM dejó
+la comparación inconclusa: 20 s obtuvo la mayor AP puntual, 0.59, pero su IC de
+diferencia frente a 30 s incluyó cero; solo 35 s quedó significativamente por
+debajo. Ollama obtuvo 474 salidas válidas y 26 fallos; la compuerta de 0.95
+falló para 15, 20 y 25 s. La mayor F1 puntual fue 0.42 para 30 s, seguida por
+0.40 para 35 s. La síntesis no combina esas métricas y conserva 30 s.
 
 El piloto rápido de una cohorte y dos modelos sugirió 35 s, pero su resultado
 fue inestable y no se acepta como decisión. La confirmación ampliada usó tres

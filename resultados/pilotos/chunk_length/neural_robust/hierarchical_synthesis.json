@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "neural_robust_version": "1.0.0",
+  "hierarchy_status": "inconclusive_neural_evidence_hold_classical",
+  "final_recommended_seconds": 30.0,
+  "decision_changed_by_neural_tests": false,
+  "metric_aggregation_across_families": "none",
+  "selection_split": "validation",
+  "test_used_for_selection": false,
+  "families": [
+    {
+      "order": 1,
+      "family": "classical_robust",
+      "role": "selects_or_preserves_primary_length",
+      "metric": "average_precision_macro_damage",
+      "recommended_seconds": 30.0,
+      "status": "decisive_primary"
+    },
+    {
+      "order": 2,
+      "family": "minilm_frozen_robust",
+      "role": "checks_representation_sensitivity",
+      "metric": "continuous_average_precision_macro_damage",
+      "best_point_estimate_seconds": 20.0,
+      "status": "inconclusive_or_noninferior_alternatives"
+    },
+    {
+      "order": 3,
+      "family": "ollama_semantic_robust",
+      "role": "checks_semantic_sensitivity_and_operational_feasibility",
+      "metric": "hard_f1_macro_damage_with_invalid_outputs_penalized",
+      "best_point_estimate_seconds": 30.0,
+      "status": "operationally_inconclusive_schema_gate_failed"
+    }
+  ],
+  "conflict_policy": "Si una familia neuronal contradice la referencia clásica, se reporta el conflicto y se conserva la decisión clásica hasta disponer de una validación humana independiente.",
+  "independent_human_validation_required_to_override": false
+}

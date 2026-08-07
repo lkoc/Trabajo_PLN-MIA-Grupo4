@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "neural_robust_version": "1.0.0",
+  "run_signature": "461ad52ec99d18eef89d76970f31a19d888907a433f484e1a21b1161e26f23a4",
+  "configuration": {
+    "transcript_sha256": "6b964fd0d639d8f28f170b9d8775a435877d8b7724b2ac9b0a5acf3c382cf139",
+    "chunks_sha256": "bbf20426e65f6e231dd8b337d71cade121c6a936d5a1bcc999698983bf8c92d0",
+    "dataset_sha256": "daea22bcf5fb0bdff080db0ecabc5d69ad4c097b57b5d5bab3ea92dc40af1b2e",
+    "candidate_seconds": [
+      15.0,
+      20.0,
+      25.0,
+      30.0,
+      35.0
+    ],
+    "panel_size": 100,
+    "minimum_damage_anchors_per_label": 20,
+    "max_anchors_per_video": 2,
+    "reporting_cohorts": 5,
+    "selection_seed": 20260807,
+    "split": "validation",
+    "window_policy": "same_reference_midpoint_centered_window"
+  },
+  "panel_path": "paired_validation_panel.jsonl",
+  "panel_sha256": "8e663c04a66799091e84801455f7dbe82300b401898bbaa1bd29ff15762971bb",
+  "anchors": 100,
+  "distinct_videos": 93,
+  "anchors_per_reporting_cohort": {
+    "4": 20,
+    "3": 20,
+    "1": 20,
+    "2": 20,
+    "5": 20
+  },
+  "label_counts": {
+    "SEGURO": 36,
+    "RACISMO_DISCRIMINACION": 20,
+    "ATAQUE_POR_GENERO_IDENTIDAD": 22,
+    "ACOSO_AMENAZA": 41,
+    "CONTENIDO_SEXUAL": 20
+  },
+  "reference_match": {
+    "chunk_rows": 47449,
+    "dataset_rows": 117244,
+    "matched_references": 36087,
+    "conflicting_keys_excluded": 0,
+    "matched_videos": 1336
+  },
+  "test_used": false,
+  "limitations": [
+    "El panel de validation está enriquecido y no estima prevalencia natural.",
+    "Las etiquetas de referencia proceden del contrato vigente y no de una nueva anotación ciega.",
+    "Las ventanas están centradas en la misma ancla para aislar longitud; no reproducen todas las fronteras secuenciales de producción."
+  ]
+}
