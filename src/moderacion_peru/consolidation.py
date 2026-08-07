@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -23,6 +24,30 @@ DEFAULT_PRECEDENCE = {
 }
 
 
+ProgressCallback = Callable[[dict[str, Any]], None]
+
+
+def _notify_progress(
+    callback: ProgressCallback | None,
+    *,
+    status: str,
+    phase: str,
+    advance: int = 0,
+    total: int | None = None,
+    **details: Any,
+) -> None:
+    if callback is not None:
+        callback(
+            {
+                "status": status,
+                "phase": phase,
+                "advance": advance,
+                "total": total,
+                **details,
+            }
+        )
+
+
 def consolidate_annotations(
     sources: Iterable[str | Path],
     destination: str | Path,
@@ -30,24 +55,67 @@ def consolidate_annotations(
     precedence: dict[str, int] | None = None,
     chunks_source: str | Path | None = None,
     transcripts_source: str | Path | None = None,
+    progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     priorities = precedence or DEFAULT_PRECEDENCE
+    source_paths = [Path(source) for source in sources]
     candidates: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    for source in sources:
+    loaded_annotations = 0
+    _notify_progress(
+        progress_callback,
+        status="phase_started",
+        phase="loading_annotations",
+        sources=len(source_paths),
+    )
+    for source in source_paths:
         for row in read_jsonl(source):
             candidates[row["chunk_id"]].append(row)
+            loaded_annotations += 1
+            _notify_progress(
+                progress_callback,
+                status="progress",
+                phase="loading_annotations",
+                advance=1,
+                completed=loaded_annotations,
+            )
 
-    chunk_lookup = {
-        str(row["chunk_id"]): row
-        for row in (read_jsonl(chunks_source) if chunks_source and Path(chunks_source).is_file() else [])
-    }
-    video_lookup = {
-        str(row["video_id"]): row
-        for row in (read_jsonl(transcripts_source) if transcripts_source and Path(transcripts_source).is_file() else [])
-    }
+    chunk_lookup: dict[str, dict[str, Any]] = {}
+    _notify_progress(
+        progress_callback, status="phase_started", phase="loading_chunks"
+    )
+    if chunks_source and Path(chunks_source).is_file():
+        for completed, row in enumerate(read_jsonl(chunks_source), 1):
+            chunk_lookup[str(row["chunk_id"])] = row
+            _notify_progress(
+                progress_callback,
+                status="progress",
+                phase="loading_chunks",
+                advance=1,
+                completed=completed,
+            )
+    video_lookup: dict[str, dict[str, Any]] = {}
+    _notify_progress(
+        progress_callback, status="phase_started", phase="loading_transcripts"
+    )
+    if transcripts_source and Path(transcripts_source).is_file():
+        for completed, row in enumerate(read_jsonl(transcripts_source), 1):
+            video_lookup[str(row["video_id"])] = row
+            _notify_progress(
+                progress_callback,
+                status="progress",
+                phase="loading_transcripts",
+                advance=1,
+                completed=completed,
+            )
     selected = []
     conflicts = 0
-    for chunk_id, rows in candidates.items():
+    _notify_progress(
+        progress_callback,
+        status="phase_started",
+        phase="consolidating",
+        total=len(candidates),
+    )
+    for completed, (chunk_id, rows) in enumerate(candidates.items(), 1):
         rows.sort(
             key=lambda row: (
                 priorities.get(str(row.get("label_source", "")), 0),
@@ -89,6 +157,15 @@ def consolidate_annotations(
             winner["consolidation_warning"] = "conflicting_top_priority_decisions"
         winner["consolidated_sources"] = [row.get("label_source") for row in rows]
         selected.append(winner)
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="consolidating",
+            advance=1,
+            total=len(candidates),
+            completed=completed,
+            conflicts=conflicts,
+        )
     selected.sort(
         key=lambda row: (
             str(row.get("video_id") or ""),
@@ -97,23 +174,62 @@ def consolidate_annotations(
         )
     )
     destination_path = Path(destination)
-    if destination_path.is_file() and canonical_json_sha256(list(read_jsonl(destination_path))) == canonical_json_sha256(selected):
+    previous_rows: list[dict[str, Any]] = []
+    if destination_path.is_file():
+        _notify_progress(
+            progress_callback, status="phase_started", phase="checking_existing"
+        )
+        for completed, row in enumerate(read_jsonl(destination_path), 1):
+            previous_rows.append(row)
+            _notify_progress(
+                progress_callback,
+                status="progress",
+                phase="checking_existing",
+                advance=1,
+                completed=completed,
+            )
+    if destination_path.is_file() and canonical_json_sha256(previous_rows) == canonical_json_sha256(selected):
         status = "noop"
     else:
         write_jsonl_atomic(destination_path, selected)
         status = "updated"
-    return {"status": status, "chunks": len(selected), "conflicts": conflicts}
+    result = {"status": status, "chunks": len(selected), "conflicts": conflicts}
+    _notify_progress(
+        progress_callback,
+        status="finished",
+        phase="consolidation",
+        result_status=status,
+        chunks=len(selected),
+        conflicts=conflicts,
+    )
+    return result
 
 
-def _latest_review_events(sources: Iterable[str | Path]) -> tuple[dict[str, ReviewEvent], int]:
+def _latest_review_events(
+    sources: Iterable[str | Path],
+    progress_callback: ProgressCallback | None = None,
+) -> tuple[dict[str, ReviewEvent], int]:
     latest: dict[str, ReviewEvent] = {}
     duplicates = 0
     seen_event_ids: set[str] = set()
+    _notify_progress(
+        progress_callback, status="phase_started", phase="loading_review_events"
+    )
+    completed = 0
     for source in sources:
         for raw in read_jsonl(source):
+            completed += 1
             event = ReviewEvent.model_validate(raw)
             if event.event_id in seen_event_ids:
                 duplicates += 1
+                _notify_progress(
+                    progress_callback,
+                    status="progress",
+                    phase="loading_review_events",
+                    advance=1,
+                    completed=completed,
+                    duplicates=duplicates,
+                )
                 continue
             seen_event_ids.add(event.event_id)
             previous = latest.get(event.chunk_id)
@@ -121,6 +237,14 @@ def _latest_review_events(sources: Iterable[str | Path]) -> tuple[dict[str, Revi
             previous_key = (previous.created_at, previous.event_id) if previous else None
             if previous_key is None or current_key > previous_key:
                 latest[event.chunk_id] = event
+            _notify_progress(
+                progress_callback,
+                status="progress",
+                phase="loading_review_events",
+                advance=1,
+                completed=completed,
+                duplicates=duplicates,
+            )
     return latest, duplicates
 
 
@@ -131,6 +255,7 @@ def reconcile_human_reviews(
     *,
     chunks_source: str | Path | None = None,
     state_path: str | Path | None = None,
+    progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     """Aplica el último evento humano por chunk sin modificar eventos ni propuestas.
 
@@ -160,17 +285,42 @@ def reconcile_human_reviews(
 
         previous = json.loads(state.read_text(encoding="utf-8"))
         if previous.get("input_signature") == signature:
-            return {**previous.get("counters", {}), "status": "noop", "input_signature": signature}
+            result = {
+                **previous.get("counters", {}),
+                "status": "noop",
+                "input_signature": signature,
+            }
+            _notify_progress(
+                progress_callback,
+                status="finished",
+                phase="reconciliation",
+                result_status="noop",
+                rows=result.get("rows", 0),
+            )
+            return result
 
-    chunk_lookup = {
-        str(row["chunk_id"]): row
-        for row in (read_jsonl(chunks_source) if chunks_source and Path(chunks_source).is_file() else [])
-    }
-    events, duplicate_events = _latest_review_events(reviews)
+    chunk_lookup: dict[str, dict[str, Any]] = {}
+    _notify_progress(
+        progress_callback, status="phase_started", phase="loading_chunks"
+    )
+    if chunks_source and Path(chunks_source).is_file():
+        for completed, row in enumerate(read_jsonl(chunks_source), 1):
+            chunk_lookup[str(row["chunk_id"])] = row
+            _notify_progress(
+                progress_callback,
+                status="progress",
+                phase="loading_chunks",
+                advance=1,
+                completed=completed,
+            )
+    events, duplicate_events = _latest_review_events(reviews, progress_callback)
     rows: list[dict[str, Any]] = []
     counters: dict[str, int] = defaultdict(int)
     base_ids: set[str] = set()
-    for raw in read_jsonl(source):
+    _notify_progress(
+        progress_callback, status="phase_started", phase="reconciling"
+    )
+    for completed, raw in enumerate(read_jsonl(source), 1):
         row = dict(raw)
         chunk_id = str(row["chunk_id"])
         base_ids.add(chunk_id)
@@ -229,6 +379,17 @@ def reconcile_human_reviews(
             counters["without_human_event"] += 1
         validated = AnnotationRecord.model_validate(row)
         rows.append(validated.model_dump(mode="json"))
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="reconciling",
+            advance=1,
+            completed=completed,
+            reviewed=sum(
+                counters.get(key, 0)
+                for key in ("human:accept", "human:modify", "human:defer", "human:reject")
+            ),
+        )
 
     counters["rows"] = len(rows)
     counters["duplicate_events"] = duplicate_events
@@ -245,4 +406,12 @@ def reconcile_human_reviews(
         "counters": dict(counters),
     }
     write_json_atomic(state, payload)
-    return {**dict(counters), "status": "updated", "input_signature": signature}
+    result = {**dict(counters), "status": "updated", "input_signature": signature}
+    _notify_progress(
+        progress_callback,
+        status="finished",
+        phase="reconciliation",
+        result_status="updated",
+        rows=len(rows),
+    )
+    return result

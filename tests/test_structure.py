@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import json
 import re
 from pathlib import Path
 
@@ -10,6 +11,41 @@ import nbformat
 ROOT = Path(__file__).resolve().parents[1]
 BODY_CITATION = re.compile(r"\[(\d+)\]")
 REFERENCE_ENTRY = re.compile(r"^\[(\d+)\]\s", re.MULTILINE)
+TRAINED_OUTPUTS = (
+    "SEGURO",
+    "RACISMO_DISCRIMINACION",
+    "ATAQUE_POR_GENERO_IDENTIDAD",
+    "ACOSO_AMENAZA",
+    "CONTENIDO_SEXUAL",
+)
+ABBREVIATED_CONTRACT = "`SEGURO` + cuatro daños entrenados, incluida"
+CONTRACT_SUMMARY_DOCUMENTS = (
+    "README.md",
+    "datos/README.md",
+    "datos/model_ready/v2/README.md",
+    "resultados/README.md",
+    "modelos/README.md",
+    "bibliografia/fuentes_base.md",
+    "Planning/PLAN_REORGANIZACION_REPRODUCIBLE.md",
+    "config/prompt_operacional_ollama_v2.md",
+    "docs/TAXONOMIA_V2.md",
+    "docs/CONTRATOS_DATOS.md",
+    "docs/MATRIZ_TRAZABILIDAD.md",
+    "docs/MIGRACION_Y_COMPATIBILIDAD.md",
+    "docs/ORDEN_EJECUCION.md",
+    "docs/OPTIMIZACION_LONGITUD_CHUNKS.md",
+    "docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md",
+    "flujo/01_datos/README.md",
+    "flujo/02_etiquetado/README.md",
+    "flujo/03_entrenamiento/README.md",
+    "flujo/04_produccion/README.md",
+    "Documento_final_paper/README.md",
+    "Documento_final_paper/AUDITORIA_CITAS_Y_ESTILO.md",
+    "Documento_final_paper/guia_estructura_paper_ieee.md",
+    "Documento_final_paper/guia_redaccion_paper_ieee.md",
+    "Documento_final_paper/figuras/README.md",
+    "Presentación_BEAMER/README.md",
+)
 
 
 def test_active_notebooks_are_ordered_and_clean():
@@ -28,6 +64,8 @@ def test_active_notebooks_are_ordered_and_clean():
             if cell.cell_type == "code"
         )
         source = "\n".join(cell.source for cell in notebook.cells)
+        assert all(output in notebook.cells[0].source for output in TRAINED_OUTPUTS)
+        assert ABBREVIATED_CONTRACT not in source
         assert "LM Studio" not in source
         assert "D:\\" not in source
         assert "G:\\" not in source
@@ -42,6 +80,13 @@ def test_active_notebooks_are_ordered_and_clean():
                     and node.func.id == "print"
                 ]
                 assert not print_calls, f"Use notebook_ui en lugar de print(): {path}"
+
+
+def test_active_contract_summaries_name_every_trained_output():
+    for relative in CONTRACT_SUMMARY_DOCUMENTS:
+        source = (ROOT / relative).read_text(encoding="utf-8-sig")
+        assert all(output in source for output in TRAINED_OUTPUTS), relative
+        assert ABBREVIATED_CONTRACT not in source, relative
 
 
 def test_each_notebook_has_consistent_ieee_references_as_final_cell():
@@ -81,11 +126,32 @@ def test_neural_chunk_report_has_consistent_numeric_references():
     cited = set(map(int, BODY_CITATION.findall(body)))
     entries = list(map(int, REFERENCE_ENTRY.findall(references)))
 
-    assert cited == set(range(1, 13))
-    assert entries == list(range(1, 13))
+    assert cited == set(range(1, 14))
+    assert entries == list(range(1, 14))
     assert len(entries) == len(set(entries))
     assert "doi.org/10.18653/v1/P18-1128" in references
     assert "proceedings.neurips.cc/paper/2020" in references
+
+
+def test_chunk_optimization_notebook_loads_consolidated_results_before_models():
+    notebook = nbformat.read(
+        ROOT / "flujo" / "01_datos" / "01_02_optimizacion_longitud_chunks.ipynb",
+        as_version=4,
+    )
+    source = "\n".join(
+        cell.source for cell in notebook.cells if cell.cell_type == "code"
+    )
+
+    assert "FORCE_NEURAL_ROBUST_RECOMPUTE=False" in source
+    assert "FORCE_MINILM_20_30_RECOMPUTE=False" in source
+    assert source.index(
+        "if NEURAL_RESULT_PATH.is_file() and not FORCE_NEURAL_ROBUST_RECOMPUTE:"
+    ) < source.index("elif RUN_NEURAL_ROBUST_TEST:")
+    assert source.index(
+        "if MINILM_NI_RESULT_PATH.is_file() and not FORCE_MINILM_20_30_RECOMPUTE:"
+    ) < source.index("elif RUN_MINILM_20_30_NONINFERIORITY_TEST:")
+    assert "no se llamó MiniLM ni Ollama" in source
+    assert "no se recalcularon embeddings, ajustes ni bootstrap" in source
 
 
 def test_colab_notebooks_embed_reproducible_drive_bootstrap():
@@ -353,6 +419,12 @@ def test_chunk_length_pilot_is_optional_and_materialization_is_separate():
     materialization_source = "\n".join(cell.source for cell in materialization.cells)
     assert "activate_chunking_configuration" in materialization_source
     assert "**CHUNK_CONFIG" in materialization_source
+    assert "REBUILD_CHUNKS_FROM_ZERO=False" in materialization_source
+    assert "materialize_chunk_records" in materialization_source
+    assert "consolidate_available_transcripts" in materialization_source
+    assert "materialize_transcripts_by_channel" in materialization_source
+    assert "from tqdm.auto import tqdm" in materialization_source
+    assert "report_chunk_progress" in materialization_source
 
 
 def test_dataset_consumers_restore_and_verify_the_synced_checkpoint():
@@ -361,6 +433,33 @@ def test_dataset_consumers_restore_and_verify_the_synced_checkpoint():
         source = "\n".join(cell.source for cell in notebook.cells)
         assert "prepare_local_bundle_input('dataset_5_salidas'" in source, path
         assert "Dataset descomprimido y verificado" in source, path
+
+
+def test_stage_02_notebooks_show_progress_for_long_operations():
+    notebook_sources = {}
+    for path in sorted((ROOT / "flujo" / "02_etiquetado").glob("02_*.ipynb")):
+        notebook = nbformat.read(path, as_version=4)
+        notebook_sources[path.name] = "\n".join(cell.source for cell in notebook.cells)
+        assert "from tqdm.auto import tqdm" in notebook_sources[path.name]
+
+    local = notebook_sources["02_01_etiquetado_local_ollama.ipynb"]
+    assert "LIMIT=20" in local
+    assert "LIMIT=None" in local
+    assert "no deje el valor en blanco" in local
+    assert "progress_callback=report_label_progress" in local
+    assert "continuará con los siguientes 20" in local
+    assert "progress_callback=report_remote_progress" in notebook_sources[
+        "02_02_etiquetado_remoto.ipynb"
+    ]
+    assert "Construyendo cola dirigida" in notebook_sources[
+        "02_03_revision_llm_dirigida.ipynb"
+    ]
+    assert "progress_callback=report_consolidation_progress" in notebook_sources[
+        "02_04_consolidacion_validacion_humana.ipynb"
+    ]
+    closure = notebook_sources["02_05_cierre_humano_snapshot.ipynb"]
+    assert "progress_callback=report_stage_progress" in closure
+    assert "Deduplicando snapshot" in closure
 
 
 def test_synced_checkpoint_rules_preserve_hashes_and_exclude_rebuildable_working_files():
@@ -374,8 +473,27 @@ def test_synced_checkpoint_rules_preserve_hashes_and_exclude_rebuildable_working
     assert "datos/raw/transcripts_cache/" in ignore
     assert "datos/processed/*" in ignore
     assert "datos/model_ready/v2/*" in ignore
+    assert "archivo/chunk_rebuilds/" in ignore
     assert "*.jsonl text eol=lf" in attributes
     assert "*.gz binary" in attributes
+
+
+def test_chunk_materialization_report_matches_the_tracked_manifest():
+    manifest_path = ROOT / "datos/processed/chunk_materialization_manifest.json"
+    report_path = ROOT / "docs/MATERIALIZACION_TROCEADO.md"
+    assert manifest_path.is_file()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
+    report = report_path.read_text(encoding="utf-8-sig")
+    chunk_rows = int(manifest["outputs"]["chunks"]["rows"])
+    transcript_videos = int(manifest["coverage"]["transcript_videos"])
+    formatted_rows = f"{chunk_rows:,}".replace(",", ".")
+    formatted_videos = f"{transcript_videos:,}".replace(",", ".")
+    assert formatted_rows in report
+    assert formatted_videos in report
+    assert manifest["outputs"]["chunks"]["sha256"] in report
+    assert "!datos/processed/chunk_materialization_manifest.json" in (
+        ROOT / ".gitignore"
+    ).read_text(encoding="utf-8")
 
 
 def test_neural_model_revisions_are_pinned():

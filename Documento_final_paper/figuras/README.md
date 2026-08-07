@@ -15,7 +15,7 @@ artefactos funcionales y se conservan junto con sus fuentes reproducibles.
 - pipeline_moderacion.tex: adquisición, preanotación, adjudicación y entrenamiento.
 - brechas_problema.tex: brecha real, subyacente y tecnológica.
 - ciclo_dsr.tex: fases DSR y cronología de iteraciones.
-- datos_taxonomia.tex: cinco salidas activas (SEGURO y cuatro daños), 12 fenómenos de daño, dos estados seguros finos y tres flags transversales en carriles separados.
+- datos_taxonomia.tex: cinco salidas activas (`SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`), 12 fenómenos de daño, dos estados seguros finos y tres flags transversales en carriles separados.
 - fuentes_dataset.tex: criterios de adquisición y volumen total del corpus integrado.
 - familias_modelo.tex: familias y estructuras comparadas.
 - resultados_finales.tex: métricas de los ganadores por familia.

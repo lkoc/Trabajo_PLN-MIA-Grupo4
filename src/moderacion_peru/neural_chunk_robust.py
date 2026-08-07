@@ -31,8 +31,11 @@ from .taxonomy import load_taxonomy
 
 
 NEURAL_ROBUST_VERSION = "1.0.0"
+MINILM_NONINFERIORITY_VERSION = "1.0.0"
 DEFAULT_NEURAL_CANDIDATE_SECONDS = (15.0, 20.0, 25.0, 30.0, 35.0)
 DEFAULT_NEURAL_SEEDS = (20260805, 20260817, 20260829, 20260841, 20260853)
+DEFAULT_MINILM_NONINFERIORITY_SECONDS = (20.0, 30.0)
+DEFAULT_MINILM_NONINFERIORITY_REPEATS = (20260901, 20260913, 20260925)
 
 
 def _require_five_candidates(candidate_seconds: Sequence[float]) -> tuple[float, ...]:
@@ -900,6 +903,763 @@ def run_minilm_neural_robust(
     return payload
 
 
+def _select_minilm_noninferiority_anchors(
+    references: Sequence[dict[str, Any]],
+    *,
+    panel_size: int,
+    minimum_damage_videos_per_label: int,
+    selection_seed: int,
+) -> list[dict[str, Any]]:
+    """Selecciona una sola ancla por video de train para el contraste 20/30."""
+
+    if panel_size <= 0 or minimum_damage_videos_per_label <= 0:
+        raise ValueError("El tamaño del panel y las cuotas deben ser positivos")
+    taxonomy = load_taxonomy()
+    train = [dict(row) for row in references if str(row.get("split")) == "train"]
+    videos = {str(row["video_id"]) for row in train}
+    if len(videos) < panel_size:
+        raise ValueError(
+            f"Train solo contiene {len(videos)} videos y el panel solicita {panel_size}"
+        )
+    label_video_counts = {
+        label: len(
+            {
+                str(row["video_id"])
+                for row in train
+                if label in row["coarse_labels"]
+            }
+        )
+        for label in taxonomy.damage_labels
+    }
+    insufficient = {
+        label: count
+        for label, count in label_video_counts.items()
+        if count < minimum_damage_videos_per_label
+    }
+    if insufficient:
+        raise ValueError(
+            "No existen suficientes videos de daño para las cuotas: "
+            + json.dumps(insufficient, ensure_ascii=False, sort_keys=True)
+        )
+
+    selected: list[dict[str, Any]] = []
+    selected_videos: set[str] = set()
+    label_counts: Counter[str] = Counter()
+
+    def add(row: dict[str, Any], stratum: str) -> None:
+        video_id = str(row["video_id"])
+        if video_id in selected_videos:
+            return
+        item = dict(row)
+        item["anchor_id"] = str(item["chunk_id"])
+        item["primary_stratum"] = stratum
+        selected.append(item)
+        selected_videos.add(video_id)
+        label_counts.update(item["coarse_labels"])
+
+    # Las cuotas se cubren antes de llenar el panel. Los daños con menos videos
+    # elegibles se procesan primero y una fila multietiqueta aporta a cada daño.
+    for label in sorted(
+        taxonomy.damage_labels,
+        key=lambda value: (label_video_counts[value], value),
+    ):
+        candidates = sorted(
+            (row for row in train if label in row["coarse_labels"]),
+            key=lambda row: (
+                -sum(
+                    1.0 / label_video_counts[value]
+                    for value in row["coarse_labels"]
+                    if value in label_video_counts
+                ),
+                _stable_key(selection_seed, "quota", label, row["chunk_id"]),
+            ),
+        )
+        for row in candidates:
+            if label_counts[label] >= minimum_damage_videos_per_label:
+                break
+            add(row, f"QUOTA_{label}")
+
+    missing = {
+        label: minimum_damage_videos_per_label - label_counts[label]
+        for label in taxonomy.damage_labels
+        if label_counts[label] < minimum_damage_videos_per_label
+    }
+    if missing:
+        raise ValueError(f"No se alcanzaron las cuotas del panel: {missing}")
+
+    by_video: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in train:
+        by_video[str(row["video_id"])].append(row)
+    damage_videos = sorted(
+        (
+            (video_id, rows)
+            for video_id, rows in by_video.items()
+            if any(
+                label in row["coarse_labels"]
+                for row in rows
+                for label in taxonomy.damage_labels
+            )
+        ),
+        key=lambda item: _stable_key(selection_seed, "damage-video", item[0]),
+    )
+    for video_id, rows in damage_videos:
+        if len(selected) >= panel_size:
+            break
+        if video_id in selected_videos:
+            continue
+        chosen = max(
+            rows,
+            key=lambda row: (
+                sum(
+                    1.0 / label_video_counts[label]
+                    for label in row["coarse_labels"]
+                    if label in label_video_counts
+                ),
+                _stable_key(selection_seed, "damage-anchor", row["chunk_id"]),
+            ),
+        )
+        add(chosen, "DAMAGE_VIDEO")
+
+    remaining_videos = sorted(
+        (video_id for video_id in by_video if video_id not in selected_videos),
+        key=lambda video_id: _stable_key(selection_seed, "fill-video", video_id),
+    )
+    for video_id in remaining_videos:
+        if len(selected) >= panel_size:
+            break
+        rows = by_video[video_id]
+        safe = [row for row in rows if row["coarse_labels"] == [taxonomy.safe_label]]
+        candidates = safe or rows
+        chosen = min(
+            candidates,
+            key=lambda row: _stable_key(selection_seed, "fill-anchor", row["chunk_id"]),
+        )
+        add(chosen, taxonomy.safe_label if safe else "FILL")
+
+    if len(selected) != panel_size:
+        raise ValueError(
+            f"Solo se seleccionaron {len(selected)} de {panel_size} videos"
+        )
+    return sorted(
+        selected,
+        key=lambda row: _stable_key(selection_seed, "panel", row["anchor_id"]),
+    )
+
+
+def build_minilm_noninferiority_panel(
+    transcript_path: str | Path,
+    chunks_path: str | Path,
+    dataset_path: str | Path,
+    output_root: str | Path,
+    *,
+    panel_size: int = 750,
+    minimum_damage_videos_per_label: int = 80,
+    folds: int = 5,
+    selection_seed: int = 20260831,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Construye el panel train cross-fit pareado y mantiene test cerrado."""
+
+    if folds < 2:
+        raise ValueError("El cross-fit requiere al menos dos pliegues")
+    output = Path(output_root)
+    output.mkdir(parents=True, exist_ok=True)
+    panel_path = output / "paired_train_crossfit_panel.jsonl"
+    manifest_path = output / "paired_train_crossfit_panel_manifest.json"
+    configuration = {
+        "profile": "minilm_20_30_train_video_crossfit",
+        "transcript_sha256": sha256_file(transcript_path),
+        "chunks_sha256": sha256_file(chunks_path),
+        "dataset_sha256": sha256_file(dataset_path),
+        "candidate_seconds": list(DEFAULT_MINILM_NONINFERIORITY_SECONDS),
+        "panel_size": int(panel_size),
+        "minimum_damage_videos_per_label": int(
+            minimum_damage_videos_per_label
+        ),
+        "anchors_per_video": 1,
+        "folds": int(folds),
+        "selection_seed": int(selection_seed),
+        "source_split": "train",
+        "window_policy": "same_reference_midpoint_centered_window",
+        "test_used": False,
+    }
+    signature = sha256_text(
+        json.dumps(configuration, ensure_ascii=False, sort_keys=True)
+    )
+    if panel_path.is_file() and manifest_path.is_file():
+        cached = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
+        if (
+            cached.get("run_signature") == signature
+            and cached.get("panel_sha256") == sha256_file(panel_path)
+        ):
+            return list(read_jsonl(panel_path)), cached
+
+    references, reference_match = build_temporal_label_references(
+        chunks_path, dataset_path
+    )
+    train_references = [
+        row for row in references if str(row.get("split")) == "train"
+    ]
+    train_video_ids = {str(row["video_id"]) for row in train_references}
+    transcripts = _load_selected_transcripts(transcript_path, train_video_ids)
+    valid_references = []
+    invalid_reference_count = 0
+    for row in train_references:
+        transcript = transcripts.get(str(row["video_id"]))
+        if transcript is None:
+            invalid_reference_count += 1
+            continue
+        center = (
+            float(row["start_seconds"]) + float(row["end_seconds"])
+        ) / 2.0
+        try:
+            for chunk_seconds in DEFAULT_MINILM_NONINFERIORITY_SECONDS:
+                _window_from_transcript(
+                    transcript,
+                    center_seconds=center,
+                    duration_seconds=chunk_seconds,
+                )
+        except ValueError:
+            invalid_reference_count += 1
+            continue
+        valid_references.append(row)
+    selected = _select_minilm_noninferiority_anchors(
+        valid_references,
+        panel_size=panel_size,
+        minimum_damage_videos_per_label=minimum_damage_videos_per_label,
+        selection_seed=selection_seed,
+    )
+    video_ids = {str(row["video_id"]) for row in selected}
+    missing = sorted(video_ids - set(transcripts))
+    if missing:
+        raise ValueError(
+            f"Faltan {len(missing)} transcripciones del panel; ejemplo: {missing[0]}"
+        )
+    fold_by_anchor = _assign_disjoint_reporting_cohorts(
+        selected,
+        cohort_count=folds,
+        selection_seed=selection_seed,
+    )
+    panel = []
+    for anchor in selected:
+        anchor_id = str(anchor["anchor_id"])
+        center = (
+            float(anchor["start_seconds"]) + float(anchor["end_seconds"])
+        ) / 2.0
+        windows = {}
+        for chunk_seconds in DEFAULT_MINILM_NONINFERIORITY_SECONDS:
+            window = _window_from_transcript(
+                transcripts[str(anchor["video_id"])],
+                center_seconds=center,
+                duration_seconds=chunk_seconds,
+            )
+            window["chunk_id"] = (
+                f"{anchor_id}__minilm_ni_{chunk_seconds:g}s_"
+                f"{window['text_sha256'][:10]}"
+            )
+            windows[f"{chunk_seconds:g}"] = window
+        panel.append(
+            {
+                "anchor_id": anchor_id,
+                "reference_chunk_id": str(anchor["chunk_id"]),
+                "video_id": str(anchor["video_id"]),
+                "reference_start_seconds": float(anchor["start_seconds"]),
+                "reference_end_seconds": float(anchor["end_seconds"]),
+                "coarse_labels": list(anchor["coarse_labels"]),
+                "source_split": "train",
+                "primary_stratum": str(anchor["primary_stratum"]),
+                "crossfit_fold": int(fold_by_anchor[anchor_id]),
+                "windows": windows,
+            }
+        )
+    write_jsonl_atomic(panel_path, panel)
+    taxonomy = load_taxonomy()
+    manifest = {
+        "schema_version": "1.0",
+        "minilm_noninferiority_version": MINILM_NONINFERIORITY_VERSION,
+        "run_signature": signature,
+        "configuration": configuration,
+        "panel_path": panel_path.name,
+        "panel_sha256": sha256_file(panel_path),
+        "anchors": len(panel),
+        "distinct_videos": len({row["video_id"] for row in panel}),
+        "anchors_per_video_max": max(
+            Counter(row["video_id"] for row in panel).values()
+        ),
+        "anchors_per_crossfit_fold": dict(
+            Counter(str(row["crossfit_fold"]) for row in panel)
+        ),
+        "label_counts": {
+            label: sum(label in row["coarse_labels"] for row in panel)
+            for label in taxonomy.target_labels
+        },
+        "reference_match": reference_match,
+        "valid_train_references_for_both_windows": len(valid_references),
+        "invalid_or_missing_train_references_excluded": invalid_reference_count,
+        "test_used": False,
+        "limitations": [
+            "El panel está enriquecido y no estima prevalencia natural.",
+            "Las etiquetas son transferencias del contrato vigente, no una nueva anotación humana ciega.",
+            "La evaluación es interna por cross-fit sobre train; no reemplaza validación externa.",
+        ],
+    }
+    write_json_atomic(manifest_path, manifest)
+    return panel, manifest
+
+
+def _minilm_training_pool(
+    classical_robust_root: str | Path,
+    *,
+    chunk_seconds: float,
+    classical_seeds: Sequence[int],
+) -> tuple[list[dict[str, Any]], dict[str, str]]:
+    classical_root = Path(classical_robust_root)
+    paths = [
+        classical_root
+        / "repetitions"
+        / f"seed-{int(seed)}"
+        / f"{chunk_seconds:g}s"
+        / "toy_dataset.jsonl"
+        for seed in classical_seeds
+    ]
+    missing = [str(path) for path in paths if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(
+            "Faltan cohortes clásicas para el cross-fit; ejemplo: " + missing[0]
+        )
+    unique: dict[tuple[str, str, tuple[str, ...]], dict[str, Any]] = {}
+    for path in paths:
+        for row in read_jsonl(path):
+            if str(row.get("split")) != "train":
+                continue
+            key = (
+                str(row["video_id"]),
+                str(row.get("text_sha256") or sha256_text(str(row["text"]))),
+                tuple(str(label) for label in row["coarse_labels"]),
+            )
+            if key not in unique:
+                item = dict(row)
+                item["_ni_pool_id"] = sha256_text(
+                    json.dumps(key, ensure_ascii=False, sort_keys=False)
+                )
+                unique[key] = item
+    rows = sorted(unique.values(), key=lambda row: row["_ni_pool_id"])
+    project_root = next(
+        (
+            candidate
+            for candidate in (classical_root.resolve(), *classical_root.resolve().parents)
+            if (candidate / "pyproject.toml").is_file()
+        ),
+        None,
+    )
+    return rows, {
+        (
+            path.resolve().relative_to(project_root).as_posix()
+            if project_root is not None
+            else path.name
+        ): sha256_file(path)
+        for path in paths
+    }
+
+
+def run_minilm_20_30_noninferiority_test(
+    transcript_path: str | Path,
+    chunks_path: str | Path,
+    dataset_path: str | Path,
+    classical_robust_root: str | Path,
+    output_root: str | Path,
+    *,
+    panel_size: int = 750,
+    minimum_damage_videos_per_label: int = 80,
+    folds: int = 5,
+    panel_selection_seed: int = 20260831,
+    classical_seeds: Sequence[int] = DEFAULT_NEURAL_SEEDS,
+    repeat_seeds: Sequence[int] = DEFAULT_MINILM_NONINFERIORITY_REPEATS,
+    model_id: str = DEFAULT_CHUNK_SMOKE_HF_MODEL,
+    revision: str = DEFAULT_CHUNK_SMOKE_HF_REVISION,
+    train_limit_per_fit: int = 4000,
+    batch_size: int = 16,
+    max_length: int = 128,
+    device: str = "auto",
+    bootstrap_replicates: int = 5000,
+    confidence_level: float = 0.95,
+    noninferiority_margin: float = 0.01,
+    bootstrap_seed: int = 20260907,
+) -> dict[str, Any]:
+    """Contraste interno confirmatorio 20 s vs. 30 s con cross-fit por video."""
+
+    try:
+        import numpy as np
+    except ImportError as exc:
+        raise RuntimeError("NumPy es necesario para MiniLM") from exc
+    if len(tuple(repeat_seeds)) < 2:
+        raise ValueError("Use al menos dos repeticiones de entrenamiento")
+    if train_limit_per_fit < 100:
+        raise ValueError("train_limit_per_fit debe ser al menos 100")
+    if not 0.0 < noninferiority_margin < 1.0:
+        raise ValueError("El margen de no inferioridad debe estar entre 0 y 1")
+    output = Path(output_root)
+    output.mkdir(parents=True, exist_ok=True)
+    result_path = output / "minilm_20_30_noninferiority.json"
+    started_all = time.perf_counter()
+    panel, panel_manifest = build_minilm_noninferiority_panel(
+        transcript_path,
+        chunks_path,
+        dataset_path,
+        output,
+        panel_size=panel_size,
+        minimum_damage_videos_per_label=minimum_damage_videos_per_label,
+        folds=folds,
+        selection_seed=panel_selection_seed,
+    )
+    seconds = DEFAULT_MINILM_NONINFERIORITY_SECONDS
+    training_pools: dict[float, list[dict[str, Any]]] = {}
+    pool_hashes: dict[str, str] = {}
+    for chunk_seconds in seconds:
+        rows, hashes = _minilm_training_pool(
+            classical_robust_root,
+            chunk_seconds=chunk_seconds,
+            classical_seeds=classical_seeds,
+        )
+        training_pools[chunk_seconds] = rows
+        pool_hashes.update(hashes)
+    configuration = {
+        "profile": "minilm_20_30_train_video_crossfit_noninferiority",
+        "panel_sha256": panel_manifest["panel_sha256"],
+        "candidate_seconds": list(seconds),
+        "reference_seconds": 30.0,
+        "source_split": "train_crossfit",
+        "folds": int(folds),
+        "repeat_seeds": [int(seed) for seed in repeat_seeds],
+        "classical_seeds": [int(seed) for seed in classical_seeds],
+        "model_id": model_id,
+        "revision": revision,
+        "train_limit_per_fit": int(train_limit_per_fit),
+        "batch_size": int(batch_size),
+        "max_length": int(max_length),
+        "device": device,
+        "bootstrap_replicates": int(bootstrap_replicates),
+        "confidence_level": float(confidence_level),
+        "noninferiority_margin": float(noninferiority_margin),
+        "bootstrap_seed": int(bootstrap_seed),
+        "training_pool_sha256": pool_hashes,
+        "test_used": False,
+    }
+    run_signature = sha256_text(
+        json.dumps(configuration, ensure_ascii=False, sort_keys=True)
+    )
+    if result_path.is_file():
+        cached = json.loads(result_path.read_text(encoding="utf-8-sig"))
+        if (
+            cached.get("run_signature") == run_signature
+            and cached.get("reporting_status") == "complete"
+        ):
+            return cached
+
+    try:
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.multiclass import OneVsRestClassifier
+        from transformers import AutoModel, AutoTokenizer
+    except ImportError as exc:
+        raise RuntimeError(
+            "Instale el extra entrenamiento para ejecutar MiniLM"
+        ) from exc
+    from .device import resolve_device, torch_device_name
+    from .training import encode_targets
+
+    hardware = resolve_device(device)
+    torch_device = torch_device_name(hardware)
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_id, revision=revision, local_files_only=True
+        )
+        encoder = AutoModel.from_pretrained(
+            model_id, revision=revision, local_files_only=True
+        ).to(torch_device)
+    except OSError as exc:
+        raise FileNotFoundError(
+            f"El checkpoint fijado de {model_id} no está completo en caché"
+        ) from exc
+
+    panel_truth = _encode_truth(panel)
+    panel_embeddings = {
+        chunk_seconds: _frozen_hf_embeddings(
+            tokenizer,
+            encoder,
+            [row["windows"][f"{chunk_seconds:g}"]["text"] for row in panel],
+            device=torch_device,
+            batch_size=batch_size,
+            max_length=max_length,
+        )
+        for chunk_seconds in seconds
+    }
+    pool_embeddings = {
+        chunk_seconds: _frozen_hf_embeddings(
+            tokenizer,
+            encoder,
+            [str(row["text"]) for row in training_pools[chunk_seconds]],
+            device=torch_device,
+            batch_size=batch_size,
+            max_length=max_length,
+        )
+        for chunk_seconds in seconds
+    }
+    taxonomy = load_taxonomy()
+    panel_index = {str(row["anchor_id"]): index for index, row in enumerate(panel)}
+    scores_by_repeat = {
+        int(seed): {
+            chunk_seconds: np.full(
+                (len(panel), len(taxonomy.target_labels)), np.nan, dtype=float
+            )
+            for chunk_seconds in seconds
+        }
+        for seed in repeat_seeds
+    }
+    runs = []
+    for repeat_seed in repeat_seeds:
+        for fold in range(1, folds + 1):
+            holdout_indexes = [
+                index
+                for index, row in enumerate(panel)
+                if int(row["crossfit_fold"]) == fold
+            ]
+            holdout_videos = {str(panel[index]["video_id"]) for index in holdout_indexes}
+            if not holdout_indexes:
+                raise ValueError(f"El pliegue {fold} quedó vacío")
+            for chunk_seconds in seconds:
+                duration_root = (
+                    output
+                    / "crossfit"
+                    / f"repeat-{int(repeat_seed)}"
+                    / f"fold-{fold}"
+                    / f"{chunk_seconds:g}s"
+                )
+                summary_path = duration_root / "summary.json"
+                predictions_path = duration_root / "predictions_holdout.jsonl"
+                child_configuration = {
+                    "parent_run_signature": run_signature,
+                    "repeat_seed": int(repeat_seed),
+                    "fold": int(fold),
+                    "chunk_seconds": float(chunk_seconds),
+                    "holdout_video_ids_sha256": sha256_text(
+                        json.dumps(sorted(holdout_videos), ensure_ascii=False)
+                    ),
+                }
+                child_signature = sha256_text(
+                    json.dumps(child_configuration, ensure_ascii=False, sort_keys=True)
+                )
+                if summary_path.is_file() and predictions_path.is_file():
+                    cached = json.loads(summary_path.read_text(encoding="utf-8-sig"))
+                    prediction_rows = list(read_jsonl(predictions_path))
+                    if (
+                        cached.get("run_signature") == child_signature
+                        and len(prediction_rows) == len(holdout_indexes)
+                    ):
+                        for row in prediction_rows:
+                            index = panel_index[str(row["anchor_id"])]
+                            scores_by_repeat[int(repeat_seed)][chunk_seconds][index] = [
+                                float(row["scores"][label])
+                                for label in taxonomy.target_labels
+                            ]
+                        runs.append(cached)
+                        continue
+
+                pool = training_pools[chunk_seconds]
+                available = [
+                    row
+                    for row in pool
+                    if str(row["video_id"]) not in holdout_videos
+                ]
+                train_rows = _bounded_neural_rows(
+                    available,
+                    "train",
+                    train_limit_per_fit,
+                    seed=int(repeat_seed) + fold * 101 + int(chunk_seconds),
+                )
+                pool_index = {
+                    str(row["_ni_pool_id"]): index for index, row in enumerate(pool)
+                }
+                train_indexes = [
+                    pool_index[str(row["_ni_pool_id"])] for row in train_rows
+                ]
+                leaked = sorted(
+                    holdout_videos
+                    & {str(row["video_id"]) for row in train_rows}
+                )
+                if leaked:
+                    raise AssertionError(
+                        f"Fuga de video en fold {fold}: {leaked[0]}"
+                    )
+                started = time.perf_counter()
+                classifier = OneVsRestClassifier(
+                    LogisticRegression(
+                        max_iter=500,
+                        class_weight="balanced",
+                        random_state=int(repeat_seed),
+                    ),
+                    n_jobs=1,
+                )
+                classifier.fit(
+                    pool_embeddings[chunk_seconds][train_indexes],
+                    encode_targets(train_rows),
+                )
+                scores = np.asarray(
+                    classifier.predict_proba(
+                        panel_embeddings[chunk_seconds][holdout_indexes]
+                    ),
+                    dtype=float,
+                )
+                scores_by_repeat[int(repeat_seed)][chunk_seconds][holdout_indexes] = scores
+                prediction_rows = [
+                    {
+                        "anchor_id": panel[index]["anchor_id"],
+                        "video_id": panel[index]["video_id"],
+                        "crossfit_fold": fold,
+                        "repeat_seed": int(repeat_seed),
+                        "chunk_seconds": float(chunk_seconds),
+                        "true_labels": panel[index]["coarse_labels"],
+                        "scores": {
+                            label: float(scores[position, label_index])
+                            for label_index, label in enumerate(taxonomy.target_labels)
+                        },
+                    }
+                    for position, index in enumerate(holdout_indexes)
+                ]
+                write_jsonl_atomic(predictions_path, prediction_rows)
+                summary = {
+                    "schema_version": "1.0",
+                    "run_signature": child_signature,
+                    "repeat_seed": int(repeat_seed),
+                    "fold": int(fold),
+                    "chunk_seconds": float(chunk_seconds),
+                    "train_rows": len(train_rows),
+                    "train_video_clusters": len(
+                        {str(row["video_id"]) for row in train_rows}
+                    ),
+                    "holdout_anchors": len(holdout_indexes),
+                    "holdout_video_clusters": len(holdout_videos),
+                    "video_leakage_count": 0,
+                    "elapsed_seconds_observed": round(
+                        time.perf_counter() - started, 3
+                    ),
+                    "predictions_path": predictions_path.resolve()
+                    .relative_to(output.resolve())
+                    .as_posix(),
+                    "hardware": hardware.model_dump(),
+                    "test_used": False,
+                }
+                write_json_atomic(summary_path, summary)
+                runs.append(summary)
+
+    per_repeat_ap: dict[float, list[float]] = defaultdict(list)
+    for repeat_seed in repeat_seeds:
+        for chunk_seconds in seconds:
+            scores = scores_by_repeat[int(repeat_seed)][chunk_seconds]
+            if np.isnan(scores).any():
+                raise AssertionError(
+                    f"Predicciones OOF incompletas para {repeat_seed}/{chunk_seconds:g}s"
+                )
+            per_repeat_ap[chunk_seconds].append(
+                _macro_damage_ap(panel_truth, scores)
+            )
+    ensemble_scores = {
+        chunk_seconds: np.mean(
+            np.stack(
+                [
+                    scores_by_repeat[int(seed)][chunk_seconds]
+                    for seed in repeat_seeds
+                ],
+                axis=0,
+            ),
+            axis=0,
+        )
+        for chunk_seconds in seconds
+    }
+    bootstrap = _bootstrap_minilm_predictions(
+        panel,
+        ensemble_scores,
+        per_repeat_ap,
+        reference_seconds=30.0,
+        bootstrap_replicates=bootstrap_replicates,
+        confidence_level=confidence_level,
+        noninferiority_margin=noninferiority_margin,
+        bootstrap_seed=bootstrap_seed,
+    )
+    bootstrap["split"] = "train_crossfit_out_of_fold"
+    bootstrap["aggregation"] = (
+        "mean_out_of_fold_scores_across_training_repeats_before_bootstrap"
+    )
+    challenger = next(
+        row for row in bootstrap["comparisons"] if row["chunk_seconds"] == 20.0
+    )
+    noninferior = bool(challenger["noninferior"])
+    interpretation = {
+        "status": (
+            "noninferiority_established"
+            if noninferior
+            else "noninferiority_not_established"
+        ),
+        "primary_contrast": "20s_minus_30s",
+        "null_hypothesis": "delta_ap_le_minus_0.01",
+        "alternative_hypothesis": "delta_ap_gt_minus_0.01",
+        "delta_ap": float(challenger["delta_vs_reference"]),
+        "delta_ap_ci_low": float(challenger["delta_vs_reference_ci_low"]),
+        "delta_ap_ci_high": float(challenger["delta_vs_reference_ci_high"]),
+        "noninferiority_margin": float(noninferiority_margin),
+        "noninferior": noninferior,
+        "superiority_established": bool(
+            float(challenger["delta_vs_reference_ci_low"]) > 0.0
+        ),
+        "decision_effect": "complementary_only_classical_30s_remains_primary",
+    }
+    payload = {
+        "schema_version": "1.0",
+        "minilm_noninferiority_version": MINILM_NONINFERIORITY_VERSION,
+        "profile": "minilm_20_30_train_video_crossfit_noninferiority",
+        "run_signature": run_signature,
+        "configuration": configuration,
+        "design": {
+            "panel_anchors": len(panel),
+            "panel_video_clusters": len({row["video_id"] for row in panel}),
+            "anchors_per_video": 1,
+            "folds": int(folds),
+            "training_repeats": len(tuple(repeat_seeds)),
+            "fits": len(seconds) * folds * len(tuple(repeat_seeds)),
+            "primary_metric": "out_of_fold_average_precision_macro_damage",
+            "primary_contrast": "20s_minus_30s",
+            "test_used": False,
+        },
+        "panel": panel_manifest,
+        "runs": runs,
+        "bootstrap": bootstrap,
+        "interpretation": interpretation,
+        "runtime": {
+            "wall_seconds_this_invocation": round(
+                time.perf_counter() - started_all, 3
+            ),
+            "fit_seconds_recorded": round(
+                sum(float(row["elapsed_seconds_observed"]) for row in runs), 3
+            ),
+        },
+        "reporting_status": "complete",
+        "limitations": [
+            "La prueba es interna y usa predicciones fuera de pliegue sobre train; no es validación externa.",
+            "El panel está enriquecido y la AP no estima prevalencia productiva.",
+            "Las etiquetas son transferencias temporales y no anotaciones humanas nuevas.",
+            "El resultado complementa, pero no reemplaza, la selección clásica decisoria de 30 s.",
+        ],
+    }
+    write_json_atomic(result_path, payload)
+    try:
+        import torch
+
+        del encoder
+        if hardware.backend in {"cuda", "rocm"}:
+            torch.cuda.empty_cache()
+    except (ImportError, RuntimeError):
+        pass
+    return payload
+
+
 def _ollama_metrics_from_records(
     panel: Sequence[dict[str, Any]],
     records: dict[tuple[str, float], dict[str, Any]],
@@ -1117,13 +1877,20 @@ def run_ollama_neural_robust(
     predictions_path = output / "predictions.jsonl"
     errors_path = output / "errors.jsonl"
     result_path = output / "ollama_robust_comparison.json"
-    provider = OllamaProvider(
-        model=model,
-        timeout=timeout_seconds,
-        retries=retries,
-        think=False,
-        seed=seed,
-    )
+    # Algunos kernels abiertos antes de la incorporación de semillas conservan
+    # en memoria una versión anterior del proveedor. La introspección mantiene
+    # compatible esa sesión; un kernel nuevo usa siempre la semilla explícita.
+    import inspect
+
+    provider_kwargs = {
+        "model": model,
+        "timeout": timeout_seconds,
+        "retries": retries,
+        "think": False,
+    }
+    if "seed" in inspect.signature(OllamaProvider).parameters:
+        provider_kwargs["seed"] = seed
+    provider = OllamaProvider(**provider_kwargs)
     probe = provider.probe()
     if not probe.get("model_available"):
         raise FileNotFoundError(f"Ollama responde, pero {model} no está descargado")

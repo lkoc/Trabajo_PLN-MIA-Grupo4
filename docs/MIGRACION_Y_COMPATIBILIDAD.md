@@ -1,5 +1,7 @@
 # Migración y compatibilidad
 
+El contrato de etiquetas canónico v2.1 contiene `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente y los cuatro daños son multietiqueta; una fila indeterminada se difiere y se excluye del entrenamiento.
+
 ## Datos
 
 La orden siguiente crea otro archivo y su manifiesto; rechaza como error usar la misma ruta de entrada y salida:

@@ -8,6 +8,8 @@
 
 ## Etapa 04 · Producción supervisada
 
+**Contrato de etiquetas v2.1:** cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran al entrenamiento. Esta combinación, sus umbrales y sus reglas de exclusividad son decisiones operativas locales.
+
 `04_01_frontend_produccion.ipynb` comprueba el registro de cinco salidas e inicia un servidor exclusivamente local:
 
 ```powershell

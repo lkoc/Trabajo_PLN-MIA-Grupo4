@@ -8,7 +8,7 @@
 
 ## Datos
 
-> **Contrato activo:** `moderacion_peru_5_salidas_v2`. El texto histórico se mantiene debajo para reconstruir los artefactos anteriores; sus rutas pueden apuntar a `archivo/`.
+> **Contrato de etiquetas activo v2.1:** cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran al entrenamiento. Esta combinación, sus umbrales y sus reglas de exclusividad son decisiones operativas locales. El texto histórico se mantiene debajo para reconstruir los artefactos anteriores; sus rutas pueden apuntar a `archivo/`.
 
 Las nuevas corridas usan `raw/` para candidatos, caché por video y transcripciones; `processed/` para chunks deterministas; `etiquetado/` para salidas append-only; y `model_ready/v2/` para snapshots inmutables agrupados por `video_id`.
 
@@ -21,6 +21,11 @@ fallos y manifiestos también se sincronizan; `raw/transcripts_cache/` no. Tras 
 `python tools/restore_synced_checkpoints.py` recompone el canónico y restaura
 las entradas comprimidas del bundle sin repetir descargas.
 
+El corte del 7 de agosto contiene 5.002 videos distribuidos en 339 partes y 336
+claves de canal o procedencia. La parte mayor ocupa 26.061.145 bytes; ninguna
+supera 50 MB. El canónico local ocupa 455.104.683 bytes y se reconstruye desde
+esas partes, por lo que continúa fuera de Git.
+
 Git también sincroniza `raw/vtt_by_video/`: contiene todas las pistas WebVTT
 consolidadas, un índice con SHA-256 y `missing_vtt.jsonl`. `01_01` consume esa
 cola aunque el JSON del video ya exista y guarda cada VTT antes de avanzar.
@@ -30,6 +35,11 @@ solo se conserva comprimido dentro del bundle para Colab. El dataset final no
 es barato de recrear porque contiene decisiones humanas y pseudoetiquetado con
 procedencia: se sincroniza como `resultados/colab_bundle/dataset_5_salidas.jsonl.gz`
 y los cuadernos de entrenamiento verifican su SHA-256 antes de usarlo.
+
+`processed/chunk_materialization_manifest.json` sí se sincroniza: no contiene
+texto del corpus y registra hashes, conteos, cobertura y estadística descriptiva
+de los 166.940 chunks activos. El informe legible está en
+[`docs/MATERIALIZACION_TROCEADO.md`](../docs/MATERIALIZACION_TROCEADO.md).
 
 La longitud activa está declarada en `config/chunking.json`. El identificador
 del chunk incorpora la firma completa de esa configuración. Si se cambia desde

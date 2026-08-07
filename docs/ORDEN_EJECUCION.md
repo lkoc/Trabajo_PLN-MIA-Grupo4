@@ -1,12 +1,14 @@
 # Orden reproducible de ejecución
 
+Todo el recorrido usa el contrato de etiquetas v2.1 con `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta. Los casos indeterminados se difieren y no entran al entrenamiento. El troceador se versiona por separado y actualmente corresponde a v2.2.0.
+
 ## Recorrido completo
 
 | Paso | Cuaderno | Entrada principal | Salida principal | Reanudación/no-op |
 |---:|---|---|---|---|
 | 1 | `01_01_scraping_incremental` | canales/consultas + candidatos + JSON/VTT/caché históricos | VTT y JSON por canal consolidados, índices, manifiesto faltante y canónico | procesa primero el backfill VTT; cada éxito se conserva antes de continuar y se omite al reanudar |
 | 2 | `01_02_optimizacion_longitud_chunks` | transcripciones + chunks etiquetados + snapshot | perfil clásico decisorio y perfil neuronal robusto MiniLM/Gemma para 15/20/25/30/35 s | reanuda ajustes y respuestas por firma; la jerarquía no cambia datos sin aplicación explícita |
-| 3 | `01_03_limpieza_troceado_incremental` | transcripciones + configuración activa | chunks v2 | hash de transcripción + firma de configuración + `chunk_id` |
+| 3 | `01_03_limpieza_troceado_incremental` | JSON por canal + VTT locales + configuración activa | canónico reconstruido, chunks v2 y manifiesto descriptivo | barra por video; hash de transcripción + firma; `REBUILD_CHUNKS_FROM_ZERO` solo para reconstrucción respaldada |
 | 4 | `02_01_etiquetado_local_ollama` | chunks pendientes | anotaciones locales | `chunk_id` |
 | 5 | `02_02_etiquetado_remoto` | muestra opcional | anotaciones remotas | opcional, `chunk_id` y activación comercial explícita |
 | 6 | `02_03_revision_llm_dirigida` | baja confianza/duda | cola priorizada | selección determinista; opcional |
@@ -55,6 +57,6 @@ el mismo SHA-256.
 
 ## Qué ocurre cuando crece la muestra
 
-Agregue candidatos y ejecute otra vez `01_01→01_03`; no es necesario repetir la optimización opcional de `01_02`. Los videos, subtítulos, chunks y etiquetas ya resueltos se omiten. `01_01` adquiere los pendientes por lotes, guarda cada éxito en caché y cada fallo en JSONL antes de avanzar; un 429 excluye solo el canal afectado durante esa ejecución y el flujo continúa con los demás canales. `02_05` crea un snapshot nuevo que incluye filas anteriores y nuevas, conserva las asignaciones por `video_id` y no modifica snapshots previos. Los modelos neuronales inicializan el nuevo run desde el candidato compatible anterior y entrenan con el snapshot completo; si no cambió ninguna entrada, todo el tramo permanece en no-op.
+Agregue candidatos y ejecute otra vez `01_01→01_03`; no es necesario repetir la optimización opcional de `01_02`. Los videos, subtítulos, chunks y etiquetas ya resueltos se omiten. `01_01` adquiere los pendientes por lotes, guarda cada éxito en caché y cada fallo en JSONL antes de avanzar; un 429 excluye solo el canal afectado durante esa ejecución y el flujo continúa con los demás canales. `01_03` recompone el canónico desde las partes sincronizadas, recupera VTT locales sin JSON, actualiza las partes por canal y materializa únicamente hashes nuevos o modificados. Los VTT nunca se borran. `02_05` crea un snapshot nuevo que incluye filas anteriores y nuevas cuando sus `chunk_id` permanecen compatibles; después de una reconstrucción de versión debe generarse un snapshot nuevo sin trasladar etiquetas automáticamente. Los modelos neuronales inicializan el nuevo run desde el candidato compatible anterior y entrenan con el snapshot completo; si no cambió ninguna entrada, todo el tramo permanece en no-op.
 
 El snapshot migrado actual permite comenzar directamente en `03_01` para conservar la línea base. Reconstruir desde adquisición requiere completar `01_01→01_03` y no infiere `SEGURO` de listas vacías.

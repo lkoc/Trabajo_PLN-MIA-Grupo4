@@ -8,7 +8,7 @@
 
 ## Documento final IEEE
 
-> **Estado de contrato (2026-08-05).** Las métricas y tablas del manuscrito son la línea base ejecutada de cuatro salidas de daño, con `SEGURO` derivado. La implementación reproducible activa usa cinco salidas aprendidas (`SEGURO` y cuatro daños); su reentrenamiento y evaluación integral están pendientes y no se sustituyen por las métricas históricas. El PDF anterior está preservado por SHA-256 en `Planning/inventario_pre_reorganizacion.json`.
+> **Estado de contrato (2026-08-05).** Las métricas y tablas del manuscrito son la línea base ejecutada de cuatro salidas de daño, con `SEGURO` derivado. La implementación reproducible activa usa cinco salidas aprendidas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente y los cuatro daños son multietiqueta; los casos indeterminados se difieren y no entran al entrenamiento. Su reentrenamiento y evaluación integral están pendientes y no se sustituyen por las métricas históricas. El PDF anterior está preservado por SHA-256 en `Planning/inventario_pre_reorganizacion.json`.
 
 Esta carpeta contiene el artículo final del proyecto **Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural**. El manuscrito presenta el artefacto ya construido y evaluado mediante Design Science Research (DSR): modelos compactos priorizan y diagnostican preliminarmente fragmentos problemáticos, y un supervisor humano conserva la decisión.
 

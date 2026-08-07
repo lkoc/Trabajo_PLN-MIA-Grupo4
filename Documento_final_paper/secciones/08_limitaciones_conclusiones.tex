@@ -20,7 +20,7 @@ El prototipo resuelve el aislamiento entre resultados experimentales y uso prác
 
 Las acciones prioritarias son construir una cohorte temporal en condiciones naturales con doble revisión para comprobar las categorías, repetir la comparación y la calibración con varias semillas y un test no utilizado durante el desarrollo, y ejecutar un piloto en modo sombra. Ese piloto debe medir falsos negativos, consenso, capacidad de revisión, deriva, latencia, privacidad y seguridad antes de ofrecer acceso externo o iniciar ciclos de reentrenamiento.
 
-Como resultado de la auditoría de reproducibilidad, el flujo activo queda organizado en cuatro etapas incrementales y adopta cinco salidas entrenadas: \texttt{SEGURO} y cuatro daños. Esta decisión corrige el uso previo de seguro como complemento, pero no constituye un resultado comparativo nuevo. La aceptación del contrato v2 exige reentrenar la cabeza, recalibrar los cinco umbrales y reportar desempeño por salida, falsos seguros, conflictos y carga de revisión.
+Como resultado de la auditoría de reproducibilidad, el flujo activo queda organizado en cuatro etapas incrementales y adopta cinco salidas entrenadas: \texttt{SEGURO}, \texttt{RACISMO\_DISCRIMINACION}, \texttt{ATAQUE\_POR\_GENERO\_IDENTIDAD}, \texttt{ACOSO\_AMENAZA} y \texttt{CONTENIDO\_SEXUAL}. \texttt{SEGURO} es excluyente y los cuatro daños son multietiqueta; los casos indeterminados se difieren y no entran al entrenamiento. Esta decisión corrige el uso previo de seguro como complemento, pero no constituye un resultado comparativo nuevo. La aceptación del contrato v2 exige reentrenar la cabeza, recalibrar los cinco umbrales y reportar desempeño por salida, falsos seguros, conflictos y carga de revisión.
 
 \section*{Disponibilidad y ética}
 

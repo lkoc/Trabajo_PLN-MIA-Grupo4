@@ -2,7 +2,7 @@
 
 Última verificación bibliográfica: **2026-07-29**. Revisión de contrato y rutas: **2026-08-05**.
 
-Las fuentes de esta matriz orientan definiciones y límites; no “validan” por sí solas la taxonomía. El contrato v2 aprende `SEGURO` y cuatro daños, conserva 14 etiquetas finas y tres flags, y mantiene separadas la evidencia académica general, la evidencia peruana/institucional, la política de plataforma y las decisiones locales. Sus métricas permanecen pendientes; las cifras publicadas pertenecen al baseline archivado.
+Las fuentes de esta matriz orientan definiciones y límites; no “validan” por sí solas la taxonomía. El contrato v2 aprende cinco salidas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`; conserva 14 etiquetas finas y tres flags, y mantiene separadas la evidencia académica general, la evidencia peruana/institucional, la política de plataforma y las decisiones locales. `SEGURO` es excluyente, mientras los cuatro daños son multietiqueta. Sus métricas permanecen pendientes; las cifras publicadas pertenecen al baseline archivado.
 
 La auditoría v2.1 vincula de forma explícita las cuatro salidas `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL` con los artículos adjuntos. El detalle de afirmación, fuente, alcance peruano y límite está en [`docs/MATRIZ_EVIDENCIA_TAXONOMIA.md`](../docs/MATRIZ_EVIDENCIA_TAXONOMIA.md). `ATAQUE_POR_GENERO_IDENTIDAD` sustituye el nombre anterior porque explicita daño sin reducir todos los casos a acoso ni exigir intención de odio.
 

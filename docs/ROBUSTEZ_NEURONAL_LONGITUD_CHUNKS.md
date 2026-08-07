@@ -3,10 +3,14 @@
 **Fecha de corte:** 7 de agosto de 2026  
 **Estado:** ejecución completa  
 **Decisión primaria congelada:** conservar 30 s  
-**Ámbito:** análisis confirmatorio de sensibilidad sobre `validation`; `test` no
-participa
+**Ámbito:** análisis confirmatorio de sensibilidad sobre `validation` y cierre
+complementario fuera de pliegue sobre `train`; `test` no participa
 
-Este informe documenta el perfil activado por `RUN_NEURAL_ROBUST_TEST`. La
+El contrato evaluado tiene cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; MiniLM y Ollama agregan sus métricas de daño sobre las otras cuatro categorías multietiqueta.
+
+Este informe documenta el perfil activado por `RUN_NEURAL_ROBUST_TEST` y el
+contraste 20 s–30 s activado por
+`RUN_MINILM_20_30_NONINFERIORITY_TEST`. La
 selección principal procede del perfil clásico y permanece congelada antes de
 consultar MiniLM u Ollama. Esta separación evita reutilizar la evaluación final
 para favorecer una configuración [1].
@@ -15,8 +19,10 @@ Los artefactos de evidencia son el
 [manifiesto del panel](../resultados/pilotos/chunk_length/neural_robust/paired_validation_panel_manifest.json),
 el [resultado MiniLM](../resultados/pilotos/chunk_length/neural_robust/minilm/minilm_robust_comparison.json),
 el [resultado Ollama](../resultados/pilotos/chunk_length/neural_robust/ollama/ollama_robust_comparison.json),
-la [síntesis jerárquica](../resultados/pilotos/chunk_length/neural_robust/hierarchical_synthesis.json)
-y el [resumen consolidado](../resultados/pilotos/chunk_length/neural_robust/neural_robust_comparison.json).
+la [síntesis jerárquica](../resultados/pilotos/chunk_length/neural_robust/hierarchical_synthesis.json),
+el [resumen consolidado](../resultados/pilotos/chunk_length/neural_robust/neural_robust_comparison.json),
+el [manifiesto cross-fit](../resultados/pilotos/chunk_length/neural_robust/minilm_20_30_noninferiority/paired_train_crossfit_panel_manifest.json)
+y el [resultado de no inferioridad](../resultados/pilotos/chunk_length/neural_robust/minilm_20_30_noninferiority/minilm_20_30_noninferiority.json).
 Las predicciones individuales permanecen como checkpoints locales
 reconstruibles y no se presentan como resultados consolidados.
 
@@ -96,6 +102,23 @@ El margen local de no inferioridad es 0.01 AP. El límite inferior del intervalo
 de la diferencia debe ser al menos −0.01 para declarar una alternativa no
 inferior a 30 s.
 
+### Contraste complementario MiniLM 20 s–30 s
+
+El panel robusto anterior se conserva como piloto de cinco longitudes. Para
+resolver específicamente su incertidumbre se predeclara
+`ΔAP = AP_20s − AP_30s`, con `H0: ΔAP ≤ −0.01` y
+`H1: ΔAP > −0.01`, formulación direccional propia de no inferioridad [13]. El
+seguimiento no vuelve a escoger entre cinco candidatos: compara únicamente
+20 s y la referencia de 30 s.
+
+Como `validation` solo contiene 181 videos, el seguimiento emplea 750 videos
+distintos de `train` mediante *cross-fitting* de cinco pliegues por `video_id`.
+Se selecciona una ancla por video, se generan las dos ventanas centradas y cada
+video recibe predicciones exclusivamente de una cabeza que no observó ninguna
+fila de ese video. Tres repeticiones por pliegue y longitud producen 30 ajustes.
+Los scores fuera de pliegue se promedian entre repeticiones antes de 5 000
+réplicas bootstrap pareadas por video [8], [9]. `test` permanece cerrado.
+
 ### Ollama robusto
 
 Ollama procesa las mismas 100 anclas y cinco longitudes: 500 respuestas
@@ -138,6 +161,31 @@ Estos valores describen el panel enriquecido. No deben compararse en valor
 absoluto con la AP clásica, porque cambian la representación, el entrenamiento
 y el universo de evaluación.
 
+### Resultado del contraste complementario MiniLM 20 s–30 s
+
+La ejecución utilizó 750 anclas de 750 videos, cinco pliegues de 150 y soportes
+de 95/122/263/94 para racismo, género/identidad, acoso/amenaza y contenido
+sexual. Se excluyeron antes del muestreo 50 referencias cuyo intervalo ya no
+contenía texto en la transcripción canónica. Los 30 ajustes registraron cero
+videos compartidos entre entrenamiento y el pliegue evaluado. La corrida tardó
+765.5 s —12.8 min— en CPU.
+
+| Longitud | AP macro daño OOF | IC bootstrap 95% | Δ frente a 30 s | IC 95% de Δ | No inferior, margen 0.01 |
+|---:|---:|---:|---:|---:|:---:|
+| **20 s** | **0.492** | **[0.445, 0.543]** | **0.024** | **[−0.0090, 0.059]** | **Sí** |
+| 30 s | 0.468 | [0.424, 0.517] | 0.000 | [0.000, 0.000] | Sí, referencia |
+
+El límite inferior de `ΔAP` fue `−0.0090`, mayor que `−0.01`; se estableció
+**no inferioridad de 20 s frente a 30 s**. No se estableció superioridad porque
+el intervalo incluyó cero. La probabilidad bootstrap descriptiva de no
+inferioridad fue 0.978. El artefacto reportable es
+[`minilm_20_30_noninferiority.json`](../resultados/pilotos/chunk_length/neural_robust/minilm_20_30_noninferiority/minilm_20_30_noninferiority.json).
+
+Este cierre es interno: el panel procede de `train`, aunque todas sus
+predicciones sean fuera de pliegue. No equivale a una réplica externa ni a una
+nueva anotación humana y, por la jerarquía del estudio, no modifica la selección
+clásica.
+
 ## Resultados Ollama
 
 Ollama intentó las 500 combinaciones y produjo 474 salidas válidas y 26 fallos
@@ -173,13 +221,14 @@ local, no un límite de complejidad del modelo.
 
 ## Síntesis jerárquica
 
-La evidencia MiniLM no contradice de forma concluyente la referencia clásica:
-20 s obtuvo la mayor AP puntual, pero su intervalo pareado de diferencia incluyó
-cero. Ollama situó 30 s en la mayor F1 puntual y no encontró una alternativa
-superior, aunque falló la compuerta operativa de esquema. En consecuencia, la
-síntesis se clasifica como **evidencia neuronal inconclusa** y conserva **30 s**.
-No se promedian métricas, no se consulta `test` y no se activa ningún cambio de
-datos.
+El panel MiniLM de cinco longitudes fue inconcluso, pero el seguimiento
+específico estableció que 20 s es no inferior —no superior— a 30 s dentro de la
+evaluación interna fuera de pliegue. Ollama situó 30 s en la mayor F1 puntual y
+no encontró una alternativa superior, aunque falló la compuerta operativa de
+esquema. En ninguna familia se demostró que otra longitud fuera mejor que 30 s.
+La síntesis conserva **30 s** porque el perfil clásico es decisorio y el cierre
+MiniLM es complementario. No se promedian métricas, no se consulta `test` y no
+se activa ningún cambio de datos.
 
 La distancia entre la decisión clásica y su corroboración neuronal se reduce,
 pero no se elimina: MiniLM admite alternativas inciertas y Ollama no alcanza la
@@ -196,6 +245,8 @@ mayor punto neuronal.
   las fronteras secuenciales del troceador de producción.
 - **Estadística:** el bootstrap agrupa por video, aunque las cohortes MiniLM de
   entrenamiento pueden solaparse y no son cinco estudios independientes.
+- **Seguimiento 20/30:** el cross-fit elimina fuga directa del video evaluado,
+  pero procede de `train` y no constituye una muestra externa independiente.
 - **Externa:** el panel enriquecido permite comparar sensibilidad, no estimar
   prevalencia o desempeño productivo.
 - **Medición:** AP continua de MiniLM y F1 dura de Ollama responden preguntas
@@ -216,15 +267,18 @@ Con el perfil clásico ya materializado, los controles principales son:
 ```python
 RUN_CHUNK_LENGTH_ROBUST_TEST=False
 RUN_NEURAL_ROBUST_TEST=True
+RUN_MINILM_20_30_NONINFERIORITY_TEST=True
+FORCE_NEURAL_ROBUST_RECOMPUTE=False
+FORCE_MINILM_20_30_RECOMPUTE=False
 CANDIDATE_SECONDS=(15,20,25,30,35)
 USE_ROBUST_RECOMMENDATION=True
 APPLY_CHUNK_SELECTION=False
 ```
 
-La celda escribe checkpoints durante la ejecución y muestra las tablas al
-finalizar. Si se ejecutó externamente, basta volver a correr las celdas del
-cuaderno: los resultados compatibles se leen desde caché y no se repiten las
-solicitudes completadas.
+Con ambos controles `FORCE_...=False`, el cuaderno comprueba primero los JSON
+consolidados y muestra las tablas sin llamar MiniLM, Ollama ni bootstrap. Los
+controles `RUN_...=True` significan ejecutar únicamente si falta el artefacto.
+Active un `FORCE_...=True` solo para reconstruir deliberadamente esa etapa.
 
 Los conteos y la correspondencia entre afirmaciones, fuentes externas y
 artefactos internos se registran en
@@ -287,3 +341,7 @@ no. 4, pp. 427–437, 2009. doi:
 Investigating LLM-Assisted Annotation for Subjective Tasks,” in *Findings of
 ACL*, pp. 25771–25795, 2025. doi:
 [10.18653/v1/2025.findings-acl.1323](https://doi.org/10.18653/v1/2025.findings-acl.1323).
+
+[13] W. C. Blackwelder, “Proving the Null Hypothesis in Clinical Trials,”
+*Controlled Clinical Trials*, vol. 3, no. 4, pp. 345–353, 1982. doi:
+[10.1016/0197-2456(82)90024-1](https://doi.org/10.1016/0197-2456(82)90024-1).

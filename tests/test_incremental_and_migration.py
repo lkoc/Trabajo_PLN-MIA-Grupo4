@@ -27,6 +27,7 @@ from moderacion_peru.acquisition import (
     materialize_vtt_checkpoint,
     normalize_category_metadata,
     order_candidates_for_acquisition,
+    recover_transcripts_from_vtt,
     reset_active_video_dataset,
     restore_canonical_from_channel_transcripts,
     select_directed_candidates,
@@ -38,6 +39,7 @@ from moderacion_peru.incremental import (
     chunk_records_incrementally,
     chunk_transcript,
     deduplicate_chunks,
+    materialize_chunk_records,
     pending_video_ids,
     remove_vtt_overlap,
 )
@@ -224,6 +226,20 @@ def test_incremental_chunking_skips_unchanged_video_version():
     assert second_stats["unchanged_videos"] == 1
 
 
+def test_incremental_chunking_reports_one_progress_event_per_transcript():
+    transcripts = [
+        {"video_id": "v1", "segments": [{"start": 0, "duration": 30, "text": "x " * 60}]},
+        {"video_id": "v2", "segments": [{"start": 0, "duration": 30, "text": "y " * 60}]},
+    ]
+    progress = []
+
+    chunk_records_incrementally(transcripts, progress_callback=progress.append)
+
+    assert [event["video_id"] for event in progress] == ["v1", "v2"]
+    assert [event["advance"] for event in progress] == [1, 1]
+    assert {event["status"] for event in progress} == {"materialized"}
+
+
 def test_incremental_chunking_reprocesses_same_transcript_for_another_length():
     transcripts = [
         {
@@ -267,6 +283,92 @@ def test_existing_transcripts_are_reused_without_touching_source(tmp_path):
     assert second["added"] == 0
     assert source.read_bytes() == original
     assert list(read_jsonl(canonical))[0]["view_count"] is None
+
+
+def test_vtt_only_transcripts_are_recovered_without_network(tmp_path):
+    vtt_dir = tmp_path / "vtt"
+    vtt_dir.mkdir()
+    (vtt_dir / "video-1.es.vtt").write_text(
+        "WEBVTT\n\n00:00:00.000 --> 00:00:10.000\nTexto recuperable suficientemente largo\n",
+        encoding="utf-8",
+    )
+    (vtt_dir / "video-2.es.vtt").write_text(
+        "WEBVTT\n\n00:00:00.000 --> 00:00:01.000\ncorto\n",
+        encoding="utf-8",
+    )
+    candidates = tmp_path / "video_candidates.jsonl"
+    candidates.write_text(
+        json.dumps(
+            {
+                "video_id": "video-1",
+                "url": "https://www.youtube.com/watch?v=video-1",
+                "channel_id": "canal-1",
+                "channel_title": "Canal uno",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    original_vtt = {
+        path.name: path.read_bytes() for path in sorted(vtt_dir.glob("*.vtt"))
+    }
+
+    recovered, stats = recover_transcripts_from_vtt(
+        vtt_dir,
+        candidate_sources=[candidates],
+        minimum_transcript_characters=20,
+    )
+
+    assert [row["video_id"] for row in recovered] == ["video-1"]
+    assert recovered[0]["channel_id"] == "canal-1"
+    assert recovered[0]["subtitle_source"] == "recovered-local-vtt"
+    assert stats["recovered"] == 1
+    assert stats["too_short"] == 1
+    assert {
+        path.name: path.read_bytes() for path in sorted(vtt_dir.glob("*.vtt"))
+    } == original_vtt
+
+
+def test_full_chunk_rebuild_is_atomic_and_keeps_recoverable_backup(tmp_path):
+    root = tmp_path / "project"
+    source = root / "datos/raw/transcripts_raw.jsonl"
+    output = root / "datos/processed/chunks_v2.jsonl"
+    versions = root / "datos/processed/chunking_v2_versions.jsonl"
+    source.parent.mkdir(parents=True)
+    output.parent.mkdir(parents=True)
+    source.write_text(
+        json.dumps(
+            {
+                "video_id": "v1",
+                "segments": [{"start": 0, "duration": 30, "text": "texto " * 40}],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    output.write_text('{"chunk_id":"anterior","video_id":"viejo"}\n', encoding="utf-8")
+    versions.write_text(
+        '{"version_id":"anterior","video_id":"viejo"}\n', encoding="utf-8"
+    )
+
+    result = materialize_chunk_records(
+        root,
+        read_jsonl(source),
+        source_path=source,
+        output_path=output,
+        version_index_path=versions,
+        rebuild=True,
+        min_characters=1,
+    )
+
+    assert result["operation"] == "full_chunk_rebuild"
+    assert result["coverage"]["transcript_videos"] == 1
+    assert result["outputs"]["chunks"]["rows"] >= 1
+    backup = root / result["backup"]
+    assert (backup / "backup_manifest.json").is_file()
+    assert (backup / "datos/processed/chunks_v2.jsonl").read_text(
+        encoding="utf-8"
+    ).startswith('{"chunk_id":"anterior"')
 
 
 def test_all_available_transcripts_and_derived_video_ids_are_consolidated(tmp_path):

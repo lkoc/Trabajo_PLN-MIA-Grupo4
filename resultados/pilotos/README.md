@@ -32,7 +32,8 @@ Los checkpoints voluminosos permanecen locales. Git conserva únicamente los
 artefactos reportables: `paired_validation_panel_manifest.json`,
 `minilm/minilm_robust_comparison.json`,
 `ollama/ollama_robust_comparison.json`, `hierarchical_synthesis.json` y
-`neural_robust_comparison.json`, todos bajo `chunk_length/neural_robust/`.
+`neural_robust_comparison.json`, además del manifiesto y resultado bajo
+`minilm_20_30_noninferiority/`, todos dentro de `chunk_length/neural_robust/`.
 La interpretación con citas y las amenazas de validez están en
 [`docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md`](../../docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md).
 El antiguo `neural_smoke_comparison.json` queda como piloto preliminar y no se
@@ -44,6 +45,13 @@ diferencia frente a 30 s incluyó cero; solo 35 s quedó significativamente por
 debajo. Ollama obtuvo 474 salidas válidas y 26 fallos; la compuerta de 0.95
 falló para 15, 20 y 25 s. La mayor F1 puntual fue 0.42 para 30 s, seguida por
 0.40 para 35 s. La síntesis no combina esas métricas y conserva 30 s.
+
+El cierre complementario MiniLM comparó únicamente 20 s y 30 s con 750 videos
+de `train`, una ancla por video, cinco pliegues y tres repeticiones. Sus 30
+ajustes produjeron predicciones fuera de pliegue y 5 000 réplicas bootstrap por
+video. 20 s alcanzó AP 0.492 frente a 0.468 para 30 s; `ΔAP=0.024`, IC 95%
+`[−0.0090, 0.059]`. Se estableció no inferioridad con margen 0.01, pero no
+superioridad. El resultado interno no modifica la selección clásica de 30 s.
 
 El piloto rápido de una cohorte y dos modelos sugirió 35 s, pero su resultado
 fue inestable y no se acepta como decisión. La confirmación ampliada usó tres

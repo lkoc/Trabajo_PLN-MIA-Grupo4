@@ -9,7 +9,11 @@
 preprocesamiento del paper y la presentación  
 **Artefacto de resultados:**
 [`confirmatory_comparison.json`](../resultados/pilotos/chunk_length_expanded/confirmatory_comparison.json) y
-[`robust_comparison.json`](../resultados/pilotos/chunk_length/robust_30min/robust_comparison.json)
+[`robust_comparison.json`](../resultados/pilotos/chunk_length/robust_30min/robust_comparison.json),
+con cierre complementario en
+[`minilm_20_30_noninferiority.json`](../resultados/pilotos/chunk_length/neural_robust/minilm_20_30_noninferiority/minilm_20_30_noninferiority.json)
+
+El contrato evaluado tiene cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; la AP macro de daño agrega exclusivamente las otras cuatro categorías, que son multietiqueta.
 
 La confirmación ampliada permanece como evidencia histórica ejecutada. El 7 de
 agosto se completó además el perfil robusto: cinco cohortes, 75 ajustes y 1 000
@@ -421,16 +425,107 @@ resultado confirmatorio.
 
 La ejecución final completó 25 cabezas MiniLM y 500 intentos Ollama. MiniLM fue
 inconcluso: 20 s tuvo la mayor AP puntual, pero el intervalo pareado de su
-diferencia frente a 30 s incluyó cero. Ollama produjo 474/500 salidas válidas;
-15, 20 y 25 s fallaron la compuerta de esquema de 0.95, mientras 30 s obtuvo la
-mayor F1 puntual. La síntesis conserva 30 s. Las cifras con intervalos y el
-análisis de validez se reportan en el informe neuronal separado.
+diferencia frente a 30 s no descartó una pérdida mayor que el margen local de
+no inferioridad de 0.01 AP. Ollama produjo 474/500 salidas válidas; 15, 20 y
+25 s fallaron la compuerta de esquema de 0.95, mientras 30 s obtuvo la mayor F1
+puntual. La síntesis conserva 30 s. Las cifras con intervalos y el análisis de
+validez se reportan en el informe neuronal separado.
+
+### Seguimiento complementario ejecutado: no inferioridad MiniLM de 20 s frente a 30 s
+
+El resultado MiniLM se interpreta con la misma dirección inferencial que los
+otros ejercicios: 30 s permanece como referencia y la alternativa de 20 s debe
+demostrar que su pérdida no excede el margen preespecificado. Sea
+`ΔAP = AP_20s − AP_30s`; el contraste queda formulado como
+`H0: ΔAP ≤ −0.01` frente a `H1: ΔAP > −0.01`. Esta inversión respecto de una
+prueba convencional de igualdad es la formulación propia de no inferioridad
+[15]. El protocolo local conserva el criterio ya implementado: declarar no
+inferioridad únicamente cuando el límite inferior del IC bootstrap percentil
+bilateral del 95% de `ΔAP` sea al menos `−0.01`.
+
+En el panel ejecutado, 100 anclas correspondieron a 93 videos distintos. MiniLM
+obtuvo AP macro de daño `0.5855` con 20 s y `0.5561` con 30 s; por tanto,
+`ΔAP = 0.0294`, pero su IC bootstrap pareado del 95% fue
+`[−0.0458, 0.1039]`. Debido a que `−0.0458 < −0.01`, **el estudio actual no
+demuestra no inferioridad**, aunque la estimación puntual favorezca 20 s. Volver
+a ejecutar las mismas observaciones o aumentar de 2 000 a más réplicas
+bootstrap solo reduciría error Monte Carlo; no aportaría videos independientes
+ni estrecharía materialmente la incertidumbre muestral [13], [14].
+
+El desglose exploratorio muestra que la ventaja no fue uniforme entre daños:
+
+| Etiqueta | Positivos en el panel | AP 20 s | AP 30 s | ΔAP 20 s − 30 s |
+|---|---:|---:|---:|---:|
+| Racismo/discriminación | 20 | 0.405 | 0.415 | −0.010 |
+| Ataque por género/identidad | 22 | 0.707 | 0.542 | +0.165 |
+| Acoso/amenaza | 41 | 0.628 | 0.603 | +0.025 |
+| Contenido sexual | 20 | 0.602 | 0.665 | −0.063 |
+
+La AP macro favorable a 20 s estuvo impulsada principalmente por
+género/identidad, mientras racismo y contenido sexual favorecieron puntualmente
+a 30 s. Estos resultados por etiqueta son análisis de sensibilidad y no
+contrastes confirmatorios independientes.
+
+Para dimensionar el seguimiento se usó el panel anterior únicamente como
+piloto. Su semiancho observado del IC de `ΔAP` fue `0.0748`, equivalente a un
+error estándar aproximado de `0.0382` bajo una aproximación normal. Suponiendo
+una reducción con `1/sqrt(n)` y persistencia de la diferencia piloto, la
+planificación estimó aproximadamente 686 videos independientes para 80% de
+potencia y 919 para 90%. Estas cifras fueron cálculos locales de planificación,
+no garantías, porque AP es no lineal y el panel está enriquecido.
+
+El 7 de agosto de 2026 se ejecutó el contraste complementario con 750 videos
+distintos de `train`, exactamente una ancla por video y cinco pliegues de 150
+videos. Cada predicción fue fuera de pliegue: la cabeza que evaluó un video se
+ajustó excluyendo todas las filas de ese `video_id`. Se realizaron tres
+repeticiones de entrenamiento por pliegue y longitud:
+`2 longitudes × 5 pliegues × 3 repeticiones = 30` ajustes, con hasta 4 000 filas
+de entrenamiento por ajuste. Los scores fuera de pliegue se promediaron entre
+repeticiones y se aplicaron 5 000 réplicas bootstrap pareadas por video [13],
+[14]. `test` permaneció cerrado. El panel incluyó 95 casos de
+racismo/discriminación, 122 de ataque por género/identidad, 263 de
+acoso/amenaza y 94 de contenido sexual; al ser una muestra enriquecida, esas
+proporciones no estiman prevalencia.
+
+20 s obtuvo AP macro de daño fuera de pliegue `0.4918`, frente a `0.4676` para
+30 s. La diferencia fue `ΔAP = 0.0242`, con IC bootstrap 95%
+`[−0.0090, 0.0591]`. El límite inferior fue mayor que el margen `−0.01`; por
+tanto, **se estableció no inferioridad de 20 s frente a 30 s en MiniLM**. No se
+estableció superioridad porque el intervalo todavía incluyó cero. La prueba
+terminó en 765.5 s —12.8 min— y su artefacto canónico es
+[`minilm_20_30_noninferiority.json`](../resultados/pilotos/chunk_length/neural_robust/minilm_20_30_noninferiority/minilm_20_30_noninferiority.json).
+
+La prueba cierra la incertidumbre interna de MiniLM bajo el margen
+preespecificado, pero no reemplaza la decisión clásica. Es una evaluación
+interna por *cross-fit* sobre `train`, usa etiquetas temporales transferidas y
+no constituye validación humana ni externa. Por la jerarquía predeclarada se
+conservan 30 s.
 
 La regla entre familias es predeclarada: el perfil clásico selecciona o conserva
 la longitud principal; MiniLM y Ollama intentan refutar o respaldar esa decisión
 desde representaciones distintas. Si alguna familia diverge, se informa el
 conflicto y se mantienen 30 s hasta disponer de una validación humana
 independiente. `test` no participa en ninguna de estas decisiones.
+
+### Conclusión jerárquica de las tres familias
+
+En ninguna de las tres familias evaluadas existe evidencia suficiente para
+afirmar que una longitud alternativa se desempeñe mejor que 30 s. El perfil
+clásico favoreció 30 s y ninguna alternativa cumplió su criterio de no
+inferioridad. En el panel robusto MiniLM, 20 s alcanzó la mayor AP puntual sin
+demostrar superioridad ni no inferioridad; el seguimiento fuera de pliegue
+estableció su no inferioridad, pero no su superioridad, frente a 30 s. En
+Ollama, 30 s obtuvo la mayor
+F1 puntual; 15, 20 y 25 s no superaron la compuerta de validez de esquema y el
+intervalo de 35 s frente a 30 s permaneció inconcluso. Por tanto, la decisión
+defendible es **conservar 30 s**.
+
+Esta conclusión expresa ausencia de evidencia suficiente para reemplazar la
+referencia; no demuestra que 30 s sea universalmente superior para toda
+arquitectura, corpus o etiqueta. El seguimiento MiniLM resolvió no inferioridad
+dentro del diseño interno, pero una decisión distinta todavía requeriría que la
+evidencia decisoria clásica o una validación humana independiente respaldaran el
+cambio.
 
 ## Texto recomendado para el paper
 
@@ -456,6 +551,24 @@ La evidencia neuronal se reporta por separado porque usa otro panel y métricas
 no intercambiables. El texto final debe tomarse del informe neuronal canónico,
 no del piloto preliminar de 20/30 s.
 
+Para MiniLM puede añadirse:
+
+> En el análisis neuronal pareado, 20 s obtuvo una AP macro de daño de 0.59,
+> frente a 0.56 para 30 s (`ΔAP = 0.029`; IC bootstrap 95%
+> `[−0.046, 0.104]`). El límite inferior cruzó el margen preespecificado de
+> no inferioridad de `−0.01`; por ello no se estableció no inferioridad y se
+> mantuvo 30 s. El resultado se consideró piloto para dimensionar una nueva
+> comparación confirmatoria 20 s–30 s sobre videos independientes.
+
+Después de ejecutar el seguimiento, debe añadirse:
+
+> En un contraste complementario de 750 videos con predicción fuera de pliegue,
+> 20 s obtuvo AP macro de daño 0.49 y 30 s obtuvo 0.47. La diferencia pareada
+> fue 0.024, con IC bootstrap 95% [−0.0090, 0.059]; como el límite inferior
+> superó el margen preespecificado de −0.01, se estableció no inferioridad de
+> 20 s, pero no superioridad. Al ser evidencia interna sobre `train`, este
+> resultado no reemplazó la selección clásica de 30 s.
+
 ## Contenido recomendado para la presentación
 
 La diapositiva principal actualizada puede usar tres mensajes:
@@ -469,6 +582,8 @@ La diapositiva principal actualizada puede usar tres mensajes:
 - **Sensibilidad neuronal:** resumir por separado MiniLM y Ollama para las cinco
   longitudes; no promediar sus métricas y conservar la decisión clásica ante
   conflicto hasta una validación humana independiente.
+- **Cierre MiniLM 20/30:** 750 videos fuera de pliegue; ΔAP 0.024,
+  IC 95% [−0.0090, 0.059]; 20 s no inferior, pero no superior a 30 s.
 
 La tabla robusta anterior o un gráfico de AP con IC bootstrap es preferible a
 barras de desviación estándar. Test debe aparecer como resultado descriptivo,
@@ -488,6 +603,10 @@ no como criterio de selección.
 - Las amenazas propias de MiniLM y Ollama —panel enriquecido, etiquetas proxy,
   métricas no intercambiables y validez de esquema— se desarrollan en el informe
   neuronal separado.
+- La selección exploratoria de 20 s como mejor estimación MiniLM ocurrió después
+  de comparar cinco longitudes. El seguimiento evitó reutilizar ese panel y
+  predeclaró únicamente 20 s–30 s, pero su evaluación fuera de pliegue procede
+  de `train`; es confirmación interna, no una réplica externa.
 - La métrica absoluta no representa un modelo productivo ni sustituye el
   reentrenamiento completo del contrato de cinco salidas.
 - La regla de acuerdo descarta ventanas ambiguas y puede favorecer longitudes
@@ -532,6 +651,11 @@ Para ejecutar el perfil robusto nuevo, use en cambio:
 - `ROBUST_REFERENCE_SECONDS=30.0`;
 - `ROBUST_NONINFERIORITY_MARGIN=0.01`;
 - `RUN_NEURAL_ROBUST_TEST=True` después de cerrar el perfil clásico;
+- `RUN_MINILM_20_30_NONINFERIORITY_TEST=True` para leer o reconstruir el
+  contraste complementario de 750 videos;
+- `FORCE_NEURAL_ROBUST_RECOMPUTE=False` y
+  `FORCE_MINILM_20_30_RECOMPUTE=False` para priorizar los JSON existentes y
+  mostrar outputs sin volver a llamar modelos ni bootstrap;
 - `CANDIDATE_SECONDS=(15,20,25,30,35)` para las tres familias;
 - `USE_ROBUST_RECOMMENDATION=True` y `APPLY_CHUNK_SELECTION=False` durante la
   primera auditoría.
@@ -622,3 +746,7 @@ doi: [10.1214/aos/1176344552](https://doi.org/10.1214/aos/1176344552).
 [14] C. A. Field and A. H. Welsh, “Bootstrapping Clustered Data,” *Journal of
 the Royal Statistical Society: Series B*, vol. 69, no. 3, pp. 369–390, 2007,
 doi: [10.1111/j.1467-9868.2007.00593.x](https://doi.org/10.1111/j.1467-9868.2007.00593.x).
+
+[15] W. C. Blackwelder, “Proving the Null Hypothesis in Clinical Trials,”
+*Controlled Clinical Trials*, vol. 3, no. 4, pp. 345–353, 1982,
+doi: [10.1016/0197-2456(82)90024-1](https://doi.org/10.1016/0197-2456(82)90024-1).

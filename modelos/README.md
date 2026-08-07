@@ -8,11 +8,11 @@
 
 ## Modelos
 
-> **Contrato activo:** `moderacion_peru_5_salidas_v2`.
+> **Contrato activo v2.1:** `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; los cuatro daños son multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran al entrenamiento.
 
 El registro activo esperado es `registro_modelos_5_salidas.json`. Debe declarar las cinco salidas en orden, umbrales, checkpoint, SHA-256, hardware, linaje y estado de despliegue.
 
-No se copiará un clasificador de cuatro daños al registro v2. Los encoders o backbones pueden reutilizarse como inicialización, pero la nueva cabeza y sus umbrales requieren entrenamiento y validación. Los artefactos históricos permanecen en `archivo/`.
+No se copiará al registro v2 un clasificador de `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL` que no haya aprendido también `SEGURO`. Los encoders o backbones pueden reutilizarse como inicialización, pero la nueva cabeza y sus umbrales requieren entrenamiento y validación. Los artefactos históricos permanecen en `archivo/`.
 
 Cada ejecución activa vive bajo `v2/<familia>/runs/<experimento-firma>/` y contiene `candidate.json`, métricas, predicciones, bundle de inferencia y `checkpoint_manifest.json`. Las rutas internas son portables para recuperar runs de Colab. `03_07` rechaza candidatos incompletos o entrenados con otro SHA-256 del snapshot y no reescribe el registro cuando la selección permanece igual.
 

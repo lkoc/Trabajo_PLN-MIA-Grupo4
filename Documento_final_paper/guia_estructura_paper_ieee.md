@@ -1,6 +1,6 @@
 # Estructura del paper IEEE con metodologia DSR
 
-> **Enmienda de contrato v2 (2026-08-05).** El paper debe distinguir el baseline ejecutado de cuatro daños con `SEGURO` derivado del flujo activo de cinco salidas aprendidas. Las métricas v2 permanecen pendientes hasta reentrenar y recalibrar.
+> **Enmienda de contrato v2 (2026-08-05).** El paper debe distinguir el baseline ejecutado de cuatro daños con `SEGURO` derivado del flujo activo de cinco salidas aprendidas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta. Las métricas v2 permanecen pendientes hasta reentrenar y recalibrar.
 
 Esta guia define la arquitectura narrativa del articulo final. Debe conservar el formato `IEEEtran` en hoja A4 mediante la opción de clase `a4paper` y presentar evidencia del artefacto construido, sus iteraciones y sus limites. La extension final depende de las reglas de la convocatoria o del curso; nunca debe reducirse la tipografia para forzar el numero de paginas. La auditoría final debe comprobar que el PDF mide físicamente 210 × 297 mm; no basta con que el documento declare A4 en el fuente.
 
@@ -114,7 +114,7 @@ La reconstrucción histórica de la taxonomía debe comenzar en `archivo/taxonom
 - `PROMPT_ETIQUETADO_LLM.md`: esquema de salida e invariantes de labels, flags, confianza y revisión;
 - `chunks_para_etiquetar.json`: objetos NDJSON pese a la extensión `.json`;
 - `cgt_labeled_chunks_parte_0001`–`0003.jsonl`: prueba consecutiva de 60 filas, no muestra representativa ni referencia `gold`;
-- regla de derivación: el mapeo fino produce cuatro daños y estados seguros explícitos; acoso personal y amenaza se unen mediante OR/máximo, y `SEGURO` constituye la quinta salida exclusiva. Los nombres de scripts pertenecen a la guía técnica, no al cuerpo del artículo.
+- regla de derivación: el mapeo fino produce `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`, además de estados seguros explícitos; acoso personal y amenaza se unen mediante OR/máximo, y `SEGURO` constituye la quinta salida exclusiva. Los nombres de scripts pertenecen a la guía técnica, no al cuerpo del artículo.
 
 Las copias archivadas de CSV y guía dentro de `archivo/taxonomia_v1_3/para_equiquetado_LLM/` son snapshots históricos. Para describir el contrato v2, dé prioridad a `config/taxonomia_v2.json`, `src/moderacion_peru/` y sus manifiestos; use el archivo solo para reconstruir qué instrucciones recibió el anotador original.
 

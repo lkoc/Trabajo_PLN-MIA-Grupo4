@@ -1,12 +1,20 @@
-# Contratos de datos v2.1
+# Contratos de datos y etiquetas
+
+El proyecto mantiene versiones independientes: `v2.1` es el contrato de etiquetas de cinco salidas y `v2.2.0` es la versión actual del troceador. Una actualización del troceador no cambia por sí sola la taxonomía, sus reglas de exclusividad ni sus umbrales; por eso no corresponde sustituir `v2.1` por `v2.2` de forma global.
+
+El contrato de anotación y entrenamiento tiene cinco salidas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran al entrenamiento. Sus umbrales y reglas de exclusividad son decisiones operativas locales.
 
 ## Video y transcripción
 
 Una transcripción canónica contiene `video_id`, URL, canal, fuente de subtítulo, segmentos temporales y `transcript_sha256`. La presencia del `video_id` impide una nueva descarga; un archivo de caché válido se reutiliza antes de consultar la red.
 
+Por compatibilidad histórica, `transcript_sha256` tiene alcance de capa. En la adquisición es la huella del JSON crudo de segmentos ordenado por claves; en chunks e índice de versiones es la huella de esos segmentos después de aplicar tiempos a tres decimales y la normalización textual del troceador. No se exige que ambas huellas sean iguales: la primera controla la integridad del checkpoint y la segunda la idempotencia de la materialización. La auditoría debe recalcular cada una con su algoritmo, no compararlas directamente.
+
+`transcripts_raw.jsonl` es una vista local reconstruible. La representación sincronizable se divide bajo `transcripts_by_channel/`; el índice declara cada parte, cantidad, bytes y SHA-256. Un VTT sin JSON puede aportar una transcripción solo si supera 200 caracteres útiles. La recuperación es de solo lectura: ningún VTT se elimina ni sobrescribe.
+
 ## Chunk
 
-`chunk_id` se deriva de versión del troceador, firma de configuración, `video_id`, tiempos y texto normalizado. La firma cubre `max_seconds`, límites de caracteres y solapamiento. Cambiar una regla crea nuevos IDs y una nueva versión; no modifica los chunks anteriores. Las filas 2.1 sin firma equivalen explícitamente al contrato histórico de 30 s.
+`chunk_id` se deriva de versión del troceador, firma de configuración, `video_id`, tiempos y texto normalizado. La firma cubre `max_seconds`, límites de caracteres y solapamiento. Cambiar una regla crea nuevos IDs y una nueva versión; no modifica los chunks anteriores. Las filas del troceador 2.1 sin firma equivalen explícitamente a la configuración histórica de 30 s; esta versión no debe confundirse con el contrato de etiquetas v2.1.
 
 `config/chunking.json` declara la configuración deseada y
 `datos/processed/chunking_active.json` registra la firma local activa. Una
@@ -15,11 +23,13 @@ transición mueve todos los derivados gestionados a
 hashes. La restauración rechaza un archivo alterado o una colisión; nunca mueve
 transcripciones raw ni candidatos.
 
+`chunk_materialization_manifest.json` registra la firma, hashes de entrada y salida, cobertura por `video_id`, estadística descriptiva y el respaldo de una reconstrucción total. El modo incremental es idempotente por `(video_id, transcript_sha256, chunking_signature)`. Una reconstrucción bajo otra versión o firma puede cambiar `chunk_id`; las etiquetas no se transfieren por posición o texto sin una nueva adjudicación explícita.
+
 ## Anotación
 
 Campos mínimos: `chunk_id`, `video_id`, `text`, `coarse_labels`, `fine_labels`, `flags`, `needs_review`, `training_eligible`, fuente, modelo, prompt y versiones. `video_id` puede faltar en propuestas históricas, pero `02_05` debe recuperarlo del chunk fuente antes de crear datos entrenables; nunca se parte `chunk_id` para deducirlo. Invariantes:
 
-- `SEGURO` o uno/más daños, nunca ambos;
+- `SEGURO` o una o más de `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`, nunca ambos grupos;
 - una lista vacía solo es válida con revisión y exclusión temporal del entrenamiento;
 - los flags no son categorías principales;
 - toda salida conserva procedencia.

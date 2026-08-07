@@ -8,7 +8,7 @@
 
 ## Presentacion Beamer final
 
-> **Estado de contrato (2026-08-05).** Los resultados presentados corresponden al baseline ejecutado de cuatro daños y `SEGURO` derivado. El flujo activo incorpora `SEGURO` como quinta salida aprendida; sus métricas quedan pendientes de reentrenamiento y no se infieren de las tablas históricas.
+> **Estado de contrato (2026-08-05).** Los resultados presentados corresponden al baseline ejecutado de cuatro daños y `SEGURO` derivado. El flujo activo aprende `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente y los cuatro daños son multietiqueta; los casos indeterminados se difieren y no entran al entrenamiento. Sus métricas quedan pendientes de reentrenamiento y no se infieren de las tablas históricas.
 
 Esta carpeta contiene la presentación académica del Grupo 4 para el artículo **Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural**. El Beamer resume visualmente el paper IEEE/DSR y su aporte: moderación semiautomática con modelos compactos, alertas temporales y decisión de un supervisor. No debe conservar lenguaje de propuesta, plan de trabajo o MVP futuro.
 

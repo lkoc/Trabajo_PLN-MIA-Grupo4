@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-06T18:28:54.881390+00:00",
+  "generated_at": "2026-08-07T17:59:37.488855+00:00",
   "taxonomy_contract": "moderacion_peru_5_salidas_v2",
   "taxonomy_version": "2.1.0",
   "core": {
     "name": "project_core.zip",
-    "sha256": "aacee6cbf31ca3959fd5fc151ee5b15ac9fb80df59b6e544647d0e7d90f6c6a8",
-    "bytes": 78496,
+    "sha256": "5e46097857c11444a080bd68bb814dc69bb4861b0cdc9e7a668d4619aabed12f",
+    "bytes": 125923,
     "files": [
       "config/colab_l4.json",
       "config/taxonomia_v2.json",
@@ -15,6 +15,7 @@
       "src/moderacion_peru/__init__.py",
       "src/moderacion_peru/acquisition.py",
       "src/moderacion_peru/artifacts.py",
+      "src/moderacion_peru/chunk_optimization.py",
       "src/moderacion_peru/cli.py",
       "src/moderacion_peru/colab.py",
       "src/moderacion_peru/consolidation.py",
@@ -27,6 +28,7 @@
       "src/moderacion_peru/manifests.py",
       "src/moderacion_peru/migration.py",
       "src/moderacion_peru/models.py",
+      "src/moderacion_peru/neural_chunk_robust.py",
       "src/moderacion_peru/notebook_ui.py",
       "src/moderacion_peru/paths.py",
       "src/moderacion_peru/pilot.py",
@@ -49,10 +51,10 @@
       "required_by": [
         "02_01"
       ],
-      "source_sha256": "bbf20426e65f6e231dd8b337d71cade121c6a936d5a1bcc999698983bf8c92d0",
-      "source_bytes": 37914379,
-      "archive_sha256": "596369c1142b3284c5960bfb4d5f8aa3bfa5ea8281a1f065bece7c62d7f400f8",
-      "archive_bytes": 11491109
+      "source_sha256": "2506123ed7a9d78fcf466e1af8875d96a70651ae8b4c22a1e8e13ccd1c542828",
+      "source_bytes": 182547658,
+      "archive_sha256": "dd39339d355c9cce9aca54c9d20fc1ea4fd3f36c7e9bce1b083b45c9be311ade",
+      "archive_bytes": 43159648
     },
     "dataset_5_salidas": {
       "source": "datos/model_ready/v2/dataset_5_salidas.jsonl",

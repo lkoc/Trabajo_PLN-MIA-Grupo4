@@ -40,7 +40,7 @@
       "exclude": ["referencia neutral a género u orientación", "desacuerdo sin ataque identitario"],
       "counterexample": "Una explicación informativa de diversidad sexual no constituye daño por género o identidad.",
       "fine_labels": ["misoginia_acoso_genero", "homofobia_transfobia"],
-      "evidence_layers": ["tipologías de abuso por identidad", "Defensoría del Pueblo", "evidencia peruana de violencia de género en línea", "decisión nominal v2.1: categoría definida por el blanco identitario, no por una única modalidad de acoso"]
+      "evidence_layers": ["tipologías de abuso por identidad", "Defensoría del Pueblo", "evidencia peruana de violencia de género en línea", "decisión nominal del contrato de etiquetas v2.1: categoría definida por el blanco identitario, no por una única modalidad de acoso"]
     },
     "ACOSO_AMENAZA": {
       "display_name": "Acoso y amenaza",

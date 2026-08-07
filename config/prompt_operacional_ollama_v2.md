@@ -1,4 +1,4 @@
-# Prompt operacional compacto para Ollama — contrato v2.1
+# Prompt operacional compacto para Ollama — contrato de etiquetas v2.1
 
 Versión: 2.1.0
 
@@ -7,6 +7,13 @@ Este archivo es una guía ejecutable del contrato
 del prompt histórico conservado en
 `archivo/contrato_4_danos_seguro_derivado/03_2_etiquetado_llm_api/prompt_operacional_compacto.md`.
 La autoridad normativa sigue siendo `config/taxonomia_v2.json`.
+
+Las únicas salidas gruesas permitidas son `SEGURO`,
+`RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y
+`CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son
+multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no
+entran al entrenamiento. Esta combinación, sus umbrales y sus reglas de
+exclusividad son decisiones operativas locales.
 
 ## Rol y criterio general
 

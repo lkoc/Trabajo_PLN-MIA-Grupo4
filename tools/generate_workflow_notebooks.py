@@ -31,6 +31,14 @@ PROJECT_COVER = (
     f"**Grupo 4:** {', '.join(PROJECT_AUTHORS[:-1])} y {PROJECT_AUTHORS[-1]}\n\n"
     "---"
 )
+CONTRACT_SUMMARY = (
+    "**Contrato de etiquetas v2.1:** cinco salidas entrenadas: `SEGURO`, "
+    "`RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y "
+    "`CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son "
+    "multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran "
+    "al entrenamiento. Esta combinación, sus umbrales y sus reglas de exclusividad son "
+    "decisiones operativas locales."
+)
 
 
 SETUP = """from pathlib import Path
@@ -362,6 +370,7 @@ consolidation_stats = consolidate_available_transcripts(
     CANONICAL,
     cache_dir=CACHE,
     channel_dir=TRANSCRIPTS_BY_CHANNEL,
+    vtt_dir=VTT_BY_VIDEO if VTT_BY_VIDEO.is_dir() else None,
     include_historical_snapshots=not rebuild_from_zero,
 )
 consolidation_stats['historical_bootstrap_disabled'] = rebuild_from_zero
@@ -884,10 +893,7 @@ def create(
     notebook.cells = [
         nbf.v4.new_markdown_cell(
             f"{PROJECT_COVER}\n\n## {title}\n\n{purpose}\n\n{academic_context}\n\n"
-            "**Contrato v2.1:** `SEGURO` + cuatro daños entrenados, incluida "
-            "`ATAQUE_POR_GENERO_IDENTIDAD`. `SEGURO` es excluyente; los daños son multietiqueta. "
-            "Los casos indeterminados se difieren y no entran al entrenamiento. Esta combinación, "
-            "sus umbrales y sus reglas de exclusividad son decisiones operativas locales."
+            f"{CONTRACT_SUMMARY}"
         ),
         nbf.v4.new_markdown_cell(
             "## Reproducibilidad\n\nEl cuaderno solo orquesta funciones versionadas de `src/moderacion_peru`. "
@@ -1008,7 +1014,9 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "[@ollama2026gemma34b] [@ollama2026structured]. El bootstrap remuestrea videos completos para "
         "preservar la dependencia entre ventanas pareadas [@efron1979bootstrap] "
         "[@field2007clusterbootstrap]; la comparación pareada y las hipótesis predeclaradas siguen "
-        "recomendaciones de evaluación estadística en PLN [@dror2018significance]. La composición del "
+        "recomendaciones de evaluación estadística en PLN [@dror2018significance]. El contraste "
+        "complementario formula explícitamente la hipótesis direccional de no inferioridad "
+        "[@blackwelder1982null]. La composición del "
         "panel enriquecido, las cuotas por daño, los márgenes de no inferioridad, la penalización de "
         "salidas inválidas y la jerarquía de decisión son elecciones locales. Las métricas heterogéneas "
         "nunca se promedian: el perfil clásico selecciona o conserva la longitud; MiniLM examina "
@@ -1022,6 +1030,9 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=False\n"
                 "RUN_CHUNK_LENGTH_ROBUST_TEST=False  # Active solo para reconstruir la etapa clásica\n"
                 "RUN_NEURAL_ROBUST_TEST=True\n"
+                "RUN_MINILM_20_30_NONINFERIORITY_TEST=True\n"
+                "FORCE_NEURAL_ROBUST_RECOMPUTE=False\n"
+                "FORCE_MINILM_20_30_RECOMPUTE=False\n"
                 "CANDIDATE_SECONDS=(15,20,25,30,35)\n"
                 "TOY_MODELS=('complement_nb','sgd_incremental')\n"
                 "TOY_VIDEO_LIMITS={'train':40,'validation':16,'test':16}\n"
@@ -1059,12 +1070,20 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "NEURAL_OLLAMA_BOOTSTRAP_REPLICATES=2000\n"
                 "NEURAL_OLLAMA_NONINFERIORITY_MARGIN=0.02\n"
                 "NEURAL_OLLAMA_MINIMUM_SCHEMA_RATE=0.95\n"
+                "MINILM_NI_PANEL_SIZE=750\n"
+                "MINILM_NI_MIN_DAMAGE_VIDEOS=80\n"
+                "MINILM_NI_FOLDS=5\n"
+                "MINILM_NI_PANEL_SELECTION_SEED=20260831\n"
+                "MINILM_NI_REPEAT_SEEDS=(20260901,20260913,20260925)\n"
+                "MINILM_NI_TRAIN_LIMIT=4000\n"
+                "MINILM_NI_BOOTSTRAP_REPLICATES=5000\n"
+                "MINILM_NI_BOOTSTRAP_SEED=20260907\n"
                 "MANUAL_CHUNK_SECONDS=30.0\n"
                 "USE_ROBUST_RECOMMENDATION=True\n"
                 "APPLY_CHUNK_SELECTION=False\n"
                 "from moderacion_peru.colab import prepare_local_bundle_input\n"
                 "from moderacion_peru.chunk_optimization import activate_chunking_configuration, run_chunk_length_confirmatory_test, run_chunk_length_robust_test, run_chunk_length_smoke_test\n"
-                "from moderacion_peru.neural_chunk_robust import run_neural_chunk_robust_test\n"
+                "from moderacion_peru.neural_chunk_robust import run_minilm_20_30_noninferiority_test, run_neural_chunk_robust_test\n"
                 "from moderacion_peru.incremental import DEFAULT_CHUNKING_CONFIGURATION\n"
                 "import json\n"
                 "def sig2(value):\n"
@@ -1077,14 +1096,16 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "PILOT_ROOT=ROOT/'resultados/pilotos/chunk_length'\n"
                 "ROBUST_ROOT=PILOT_ROOT/'robust_30min'\n"
                 "NEURAL_ROOT=PILOT_ROOT/'neural_robust'\n"
+                "MINILM_NI_ROOT=NEURAL_ROOT/'minilm_20_30_noninferiority'\n"
                 "ROBUST_RESULT_PATH=ROBUST_ROOT/'robust_comparison.json'\n"
                 "NEURAL_RESULT_PATH=NEURAL_ROOT/'neural_robust_comparison.json'\n"
+                "MINILM_NI_RESULT_PATH=MINILM_NI_ROOT/'minilm_20_30_noninferiority.json'\n"
                 "ROBUST_RECOMMENDATION=ROBUST_ROOT/'robust_recommendation.json'\n"
                 "if tuple(CANDIDATE_SECONDS)!=(15,20,25,30,35):\n"
                 "    raise ValueError('Este protocolo exige CANDIDATE_SECONDS=(15,20,25,30,35)')\n"
                 "if RUN_CHUNK_LENGTH_CONFIRMATORY_TEST and RUN_CHUNK_LENGTH_ROBUST_TEST:\n"
                 "    raise ValueError('El perfil robusto ya incluye la confirmación; active solo uno')\n"
-                "show_summary('Secuencia configurada',{'1_clasico_decisorio':RUN_CHUNK_LENGTH_ROBUST_TEST or ROBUST_RESULT_PATH.is_file(),'2_minilm_confirmatorio':RUN_NEURAL_ROBUST_TEST,'3_ollama_confirmatorio':RUN_NEURAL_ROBUST_TEST,'longitudes':CANDIDATE_SECONDS,'panel_validation':NEURAL_PANEL_SIZE,'cohortes_reporte':NEURAL_REPORTING_COHORTS,'respuestas_ollama_previstas':NEURAL_PANEL_SIZE*len(CANDIDATE_SECONDS),'test_usado_para_seleccion':False},tone='neutral')",
+                "show_summary('Secuencia configurada',{'1_clasico_decisorio':RUN_CHUNK_LENGTH_ROBUST_TEST or ROBUST_RESULT_PATH.is_file(),'2_minilm_confirmatorio':RUN_NEURAL_ROBUST_TEST,'3_ollama_confirmatorio':RUN_NEURAL_ROBUST_TEST,'4_minilm_no_inferioridad_20_30':RUN_MINILM_20_30_NONINFERIORITY_TEST,'longitudes_perfil':CANDIDATE_SECONDS,'contraste_complementario':(20,30),'panel_validation':NEURAL_PANEL_SIZE,'panel_crossfit_train':MINILM_NI_PANEL_SIZE,'cohortes_reporte':NEURAL_REPORTING_COHORTS,'respuestas_ollama_previstas':NEURAL_PANEL_SIZE*len(CANDIDATE_SECONDS),'test_usado_para_seleccion':False},tone='neutral')",
             ),
             (
                 "Diagnósticos clásicos opcionales",
@@ -1118,13 +1139,14 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
             ),
             (
                 "Etapas 2 y 3 — perfil neuronal robusto pareado",
-                "if RUN_NEURAL_ROBUST_TEST:\n"
+                "if NEURAL_RESULT_PATH.is_file() and not FORCE_NEURAL_ROBUST_RECOMPUTE:\n"
+                "    neural_result=json.loads(NEURAL_RESULT_PATH.read_text(encoding='utf-8-sig'))\n"
+                "    show_callout('Perfil neuronal cargado','Se leyó el JSON consolidado; no se llamó MiniLM ni Ollama.',tone='success')\n"
+                "elif RUN_NEURAL_ROBUST_TEST:\n"
                 "    if not ROBUST_RESULT_PATH.is_file():\n"
                 "        raise FileNotFoundError('Ejecute primero la etapa clásica robusta')\n"
                 "    show_callout('Perfil neuronal en ejecución','La celda escribe checkpoints durante MiniLM y Ollama. Las tablas aparecen al final; una nueva ejecución reutiliza todo resultado con firma compatible.',tone='neutral')\n"
                 "    neural_result=run_neural_chunk_robust_test(TRANSCRIPTS,CHUNKS,DATASET,ROBUST_ROOT,NEURAL_ROOT,candidate_seconds=CANDIDATE_SECONDS,reference_seconds=ROBUST_REFERENCE_SECONDS,seeds=ROBUST_SEEDS,panel_size=NEURAL_PANEL_SIZE,minimum_damage_anchors_per_label=NEURAL_MIN_DAMAGE_PER_LABEL,max_anchors_per_video=NEURAL_MAX_ANCHORS_PER_VIDEO,reporting_cohorts=NEURAL_REPORTING_COHORTS,panel_selection_seed=NEURAL_PANEL_SELECTION_SEED,minilm_model_id=NEURAL_MINILM_MODEL,minilm_revision=NEURAL_MINILM_REVISION,minilm_train_limit_per_cohort=NEURAL_MINILM_TRAIN_LIMIT,minilm_batch_size=NEURAL_MINILM_BATCH_SIZE,minilm_max_length=NEURAL_MINILM_MAX_LENGTH,minilm_bootstrap_replicates=NEURAL_MINILM_BOOTSTRAP_REPLICATES,minilm_noninferiority_margin=NEURAL_MINILM_NONINFERIORITY_MARGIN,ollama_model=NEURAL_OLLAMA_MODEL,ollama_timeout_seconds=NEURAL_OLLAMA_TIMEOUT_SECONDS,ollama_max_wall_seconds=NEURAL_OLLAMA_MAX_WALL_SECONDS,ollama_retries=NEURAL_OLLAMA_RETRIES,ollama_bootstrap_replicates=NEURAL_OLLAMA_BOOTSTRAP_REPLICATES,ollama_noninferiority_margin=NEURAL_OLLAMA_NONINFERIORITY_MARGIN,ollama_minimum_schema_rate=NEURAL_OLLAMA_MINIMUM_SCHEMA_RATE,confidence_level=ROBUST_CONFIDENCE_LEVEL)\n"
-                "elif NEURAL_RESULT_PATH.is_file():\n"
-                "    neural_result=json.loads(NEURAL_RESULT_PATH.read_text(encoding='utf-8-sig'))\n"
                 "else:\n"
                 "    neural_result=None\n"
                 "if neural_result:\n"
@@ -1147,9 +1169,34 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "    show_callout('Perfil neuronal pendiente','Active RUN_NEURAL_ROBUST_TEST=True después del perfil clásico. El diseño solicita 25 cabezas MiniLM y 500 respuestas Ollama.',tone='neutral')",
             ),
             (
+                "Etapa 4 — no inferioridad MiniLM 20 s frente a 30 s",
+                "# Esta etapa resuelve el resultado MiniLM inconcluso del panel piloto.\n"
+                "# No repite las cinco longitudes: usa predicción fuera de pliegue por video\n"
+                "# sobre train, mantiene test cerrado y conserva 30 s como decisión clásica.\n"
+                "if MINILM_NI_RESULT_PATH.is_file() and not FORCE_MINILM_20_30_RECOMPUTE:\n"
+                "    minilm_ni_result=json.loads(MINILM_NI_RESULT_PATH.read_text(encoding='utf-8-sig'))\n"
+                "    show_callout('Contraste 20 s–30 s cargado','Se leyó el JSON consolidado; no se recalcularon embeddings, ajustes ni bootstrap.',tone='success')\n"
+                "elif RUN_MINILM_20_30_NONINFERIORITY_TEST:\n"
+                "    show_callout('Contraste 20 s–30 s en ejecución','Primera corrida estimada: 12–20 min en CPU. El resultado final y cada pliegue son reanudables por firma.',tone='neutral')\n"
+                "    minilm_ni_result=run_minilm_20_30_noninferiority_test(TRANSCRIPTS,CHUNKS,DATASET,ROBUST_ROOT,MINILM_NI_ROOT,panel_size=MINILM_NI_PANEL_SIZE,minimum_damage_videos_per_label=MINILM_NI_MIN_DAMAGE_VIDEOS,folds=MINILM_NI_FOLDS,panel_selection_seed=MINILM_NI_PANEL_SELECTION_SEED,classical_seeds=ROBUST_SEEDS,repeat_seeds=MINILM_NI_REPEAT_SEEDS,model_id=NEURAL_MINILM_MODEL,revision=NEURAL_MINILM_REVISION,train_limit_per_fit=MINILM_NI_TRAIN_LIMIT,batch_size=NEURAL_MINILM_BATCH_SIZE,max_length=NEURAL_MINILM_MAX_LENGTH,bootstrap_replicates=MINILM_NI_BOOTSTRAP_REPLICATES,confidence_level=ROBUST_CONFIDENCE_LEVEL,noninferiority_margin=NEURAL_MINILM_NONINFERIORITY_MARGIN,bootstrap_seed=MINILM_NI_BOOTSTRAP_SEED)\n"
+                "else:\n"
+                "    minilm_ni_result=None\n"
+                "if minilm_ni_result:\n"
+                "    ni_rows=[{'longitud_s':row['chunk_seconds'],'AP_OOF':sig2(row['ensemble_validation_ap_macro_damage']),'IC95_AP':[sig2(row['bootstrap_ap_ci_low']),sig2(row['bootstrap_ap_ci_high'])],'delta_vs_30s':sig2(row['delta_vs_reference']),'IC95_delta':[sig2(row['delta_vs_reference_ci_low']),sig2(row['delta_vs_reference_ci_high'])],'no_inferior':'Sí' if row['noninferior'] else 'No'} for row in minilm_ni_result['bootstrap']['comparisons']]\n"
+                "    show_table('MiniLM 20 s–30 s: contraste reportable',ni_rows,max_rows=2)\n"
+                "    ni=minilm_ni_result['interpretation']\n"
+                "    show_summary('Conclusión de no inferioridad',{'estado':ni['status'],'hipótesis_nula':ni['null_hypothesis'],'margen':ni['noninferiority_margin'],'delta_AP_20_menos_30':sig2(ni['delta_ap']),'IC95_delta':[sig2(ni['delta_ap_ci_low']),sig2(ni['delta_ap_ci_high'])],'no_inferior':'Sí' if ni['noninferior'] else 'No','superioridad_demostrada':'Sí' if ni['superiority_established'] else 'No','videos':minilm_ni_result['design']['panel_video_clusters'],'pliegues':minilm_ni_result['design']['folds'],'repeticiones':minilm_ni_result['design']['training_repeats'],'test_usado':False,'efecto_decisorio':'Ninguno; 30 s continúa como selección clásica'},tone='success' if ni['noninferior'] else 'warning')\n"
+                "else:\n"
+                "    show_callout('Contraste complementario omitido','El panel neuronal original permanece inconcluso; active RUN_MINILM_20_30_NONINFERIORITY_TEST=True.',tone='warning')",
+            ),
+            (
                 "Lectura académica y límites de aplicación",
                 "if neural_result:\n"
-                "    show_summary('Roles no intercambiables',{'clásico':'decisorio; selecciona o conserva longitud','MiniLM':'confirmatorio; sensibilidad a representación neuronal continua','Ollama':'confirmatorio; sensibilidad semántica y factibilidad de salida estructurada','agregación_entre_familias':'ninguna','política_de_conflicto':'conservar la selección clásica hasta validación humana independiente','artefacto_reportable':NEURAL_RESULT_PATH},tone='neutral')\n"
+                "    show_summary('Roles no intercambiables',{'clásico':'decisorio; selecciona o conserva longitud','MiniLM robusto':'confirmatorio; sensibilidad a representación neuronal continua','MiniLM 20/30 OOF':'complementario; contrasta no inferioridad interna sin cambiar la selección','Ollama':'confirmatorio; sensibilidad semántica y factibilidad de salida estructurada','agregación_entre_familias':'ninguna','política_de_conflicto':'conservar la selección clásica hasta validación humana independiente','artefacto_perfil':NEURAL_RESULT_PATH,'artefacto_no_inferioridad':MINILM_NI_RESULT_PATH},tone='neutral')\n"
+                "    ni_followup=globals().get('minilm_ni_result')\n"
+                "    if ni_followup:\n"
+                "        ni=ni_followup['interpretation']\n"
+                "        show_summary('Conclusión conjunta actualizada',{'otra_longitud_demostró_ser_mejor_que_30s':False,'20s_no_inferior_a_30s_en_MiniLM':'Sí' if ni['noninferior'] else 'No','20s_superior_a_30s_en_MiniLM':'Sí' if ni['superiority_established'] else 'No','selección_principal_s':30,'justificación':'La evidencia complementaria no reemplaza el perfil clásico decisorio.'},tone='success')\n"
                 "    show_callout('Alcance','Los intervalos describen este panel enriquecido de validation. No estiman prevalencia ni desempeño productivo. La confianza declarada por Ollama no se interpreta como probabilidad calibrada.',tone='warning')\n"
                 "else:\n"
                 "    show_callout('Resultados aún no ejecutados','No reporte expectativas como resultados. Ejecute la etapa neuronal y use su artefacto canónico.',tone='neutral')",
@@ -1176,7 +1223,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
     create(
         "flujo/01_datos/01_03_limpieza_troceado_incremental.ipynb",
         "01.03 · Limpieza y troceado incremental",
-        "Activa de forma reversible la configuración elegida y crea chunks deterministas únicamente para transcripciones nuevas o modificadas.",
+        "Recompone la vista canónica desde los checkpoints sincronizados, recupera VTT locales utilizables y crea chunks deterministas únicamente para transcripciones nuevas o modificadas.",
         "La normalización NFKC aplicada al texto sigue las formas de normalización Unicode "
         "[@unicode2025normalization], y las huellas de transcripción, texto e identificadores estables "
         "usan SHA-256 [@nist2015sha]. La longitud, los límites de caracteres, el solapamiento y las reglas "
@@ -1184,12 +1231,12 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "cambiarla mueve los derivados vigentes y volver a una firma restaura sus bytes verificados.",
         [
             (
-                "Configuración activa y archivo reversible",
-                "from moderacion_peru.chunk_optimization import activate_chunking_configuration, load_chunking_configuration\nfrom moderacion_peru.incremental import chunk_records_incrementally\nfrom moderacion_peru.io import append_jsonl_once, read_jsonl\nSOURCE=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/processed/chunks_v2.jsonl'\nVERSION_INDEX=ROOT/'datos/processed/chunking_v2_versions.jsonl'\nCHUNK_CONFIG_PATH=ROOT/'config/chunking.json'\nCHUNK_CONFIG=load_chunking_configuration(CHUNK_CONFIG_PATH)\nactivation=activate_chunking_configuration(ROOT,CHUNK_CONFIG,source='01_03_materialization')\nshow_result('Estado de la configuración de chunks',activation,tone='success')",
+                "Preparación reproducible y consolidación local",
+                "from moderacion_peru.acquisition import consolidate_available_transcripts, materialize_transcripts_by_channel\nfrom moderacion_peru.chunk_optimization import activate_chunking_configuration, load_chunking_configuration\nfrom moderacion_peru.incremental import materialize_chunk_records\nfrom moderacion_peru.io import read_jsonl\nSOURCE=ROOT/'datos/raw/transcripts_raw.jsonl'\nTRANSCRIPTS_BY_CHANNEL=ROOT/'datos/raw/transcripts_by_channel'\nTRANSCRIPTS_CACHE=ROOT/'datos/raw/transcripts_cache'\nVTT_BY_VIDEO=ROOT/'datos/raw/vtt_by_video'\nOUTPUT=ROOT/'datos/processed/chunks_v2.jsonl'\nVERSION_INDEX=ROOT/'datos/processed/chunking_v2_versions.jsonl'\nMATERIALIZATION_MANIFEST=ROOT/'datos/processed/chunk_materialization_manifest.json'\nCHUNK_CONFIG_PATH=ROOT/'config/chunking.json'\nREBUILD_CHUNKS_FROM_ZERO=False  # True: copia recuperable y reconstrucción total; después vuelva a False\nCHUNK_CONFIG=load_chunking_configuration(CHUNK_CONFIG_PATH)\nactivation=activate_chunking_configuration(ROOT,CHUNK_CONFIG,source='01_03_materialization')\nconsolidation=consolidate_available_transcripts(ROOT,SOURCE,cache_dir=TRANSCRIPTS_CACHE,channel_dir=TRANSCRIPTS_BY_CHANNEL,vtt_dir=VTT_BY_VIDEO if VTT_BY_VIDEO.is_dir() else None)\nchannel_checkpoint=materialize_transcripts_by_channel(SOURCE,TRANSCRIPTS_BY_CHANNEL)\nshow_result('Estado de la configuración de chunks',activation,tone='success')\nshow_summary('Cobertura consolidada antes del troceado',{'videos_canónicos':consolidation['canonical_videos'],'VTT_recuperados':consolidation['vtt_added'],'VTT_demasiado_cortos':consolidation['vtt_recovery']['too_short'],'partes_por_canal':channel_checkpoint['total_channel_files'],'canales':channel_checkpoint['total_channels'],'canónico_local':SOURCE,'checkpoint_Git':TRANSCRIPTS_BY_CHANNEL},tone='success')\nif consolidation['vtt_recovery']['too_short_records']:\n    show_table('VTT excluidos por menos de 200 caracteres',consolidation['vtt_recovery']['too_short_records'],max_rows=len(consolidation['vtt_recovery']['too_short_records']))",
             ),
             (
                 "Materialización",
-                "existing=list(read_jsonl(OUTPUT)) if OUTPUT.exists() else []\nversions=list(read_jsonl(VERSION_INDEX)) if VERSION_INDEX.exists() else []\nnew_rows,new_versions,stats=chunk_records_incrementally(read_jsonl(SOURCE) if SOURCE.exists() else [],existing,versions,**CHUNK_CONFIG)\nadded,skipped=append_jsonl_once(OUTPUT,new_rows,id_field='chunk_id')\nversions_added,_=append_jsonl_once(VERSION_INDEX,new_versions,id_field='version_id')\nstats.update({'added':added,'duplicate_ids':skipped,'versions_registered':versions_added,'chunk_configuration':CHUNK_CONFIG})\nshow_result('Resultado de limpieza y troceado', stats, tone='success')",
+                "from tqdm.auto import tqdm\ntranscript_total=consolidation['canonical_videos']\nchunk_progress=tqdm(total=transcript_total,desc='Materializando transcripciones',unit='video')\ndef report_chunk_progress(event):\n    chunk_progress.update(event.get('advance',1))\n    chunk_progress.set_postfix(nuevos=event.get('new_or_changed_videos',0),sin_cambios=event.get('unchanged_videos',0),chunks_video=event.get('generated_chunks_for_video',0))\ntry:\n    materialization=materialize_chunk_records(ROOT,read_jsonl(SOURCE),source_path=SOURCE,output_path=OUTPUT,version_index_path=VERSION_INDEX,manifest_path=MATERIALIZATION_MANIFEST,rebuild=REBUILD_CHUNKS_FROM_ZERO,progress_callback=report_chunk_progress,**CHUNK_CONFIG)\nfinally:\n    chunk_progress.close()\nshow_result('Resultado de limpieza y troceado',materialization['stats'],tone='success')\nshow_summary('Cobertura final reportable',{'transcripciones':materialization['coverage']['transcript_videos'],'videos_con_chunks':materialization['coverage']['videos_with_chunks'],'videos_sin_chunks':materialization['coverage']['videos_without_chunks'],'chunks_totales':materialization['outputs']['chunks']['rows'],'reconstrucción_total':REBUILD_CHUNKS_FROM_ZERO,'respaldo':materialization['backup'],'manifiesto':MATERIALIZATION_MANIFEST},tone='warning' if materialization['coverage']['videos_without_chunks'] else 'success')\nif materialization['coverage']['video_ids_without_chunks']:\n    show_table('Videos evaluados sin chunks materializables',[{'video_id':video_id} for video_id in materialization['coverage']['video_ids_without_chunks']],max_rows=len(materialization['coverage']['video_ids_without_chunks']))",
             ),
         ],
     )
@@ -1223,13 +1270,31 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
             ),
             (
                 "Etiquetado incremental",
+                "from tqdm.auto import tqdm\n"
                 "from moderacion_peru.io import read_jsonl\n"
-                "from moderacion_peru.labeling import annotate_incremental\n"
-                "RUN=False\nLIMIT=20  # Quite el límite solo después del smoke test\n"
+                "from moderacion_peru.labeling import annotate_incremental\n\n"
+                "RUN=False  # Cambie a True después de verificar proveedor, entrada y rutas.\n"
+                "LIMIT=20   # Smoke test: procesa como máximo 20 chunks pendientes.\n"
+                "# Para procesar TODOS los chunks pendientes use LIMIT=None; no deje el valor en blanco.\n"
+                "# Si mantiene LIMIT=20 y vuelve a ejecutar, continuará con los siguientes 20 porque reanuda por chunk_id.\n\n"
+                "label_progress={'bar':None}\n"
+                "def report_label_progress(event):\n"
+                "    if event['status']=='started':\n"
+                "        label_progress['bar']=tqdm(total=event['selected'],desc='Etiquetado incremental',unit='chunk')\n"
+                "        return\n"
+                "    bar=label_progress.get('bar')\n"
+                "    if bar is not None and event.get('advance'):\n"
+                "        bar.update(event['advance'])\n"
+                "        bar.set_postfix(etiquetados=event['labeled'],errores=event['errors'])\n\n"
                 "if RUN:\n"
-                "    show_result('Resultado del etiquetado incremental', annotate_incremental(read_jsonl(SOURCE),provider,OUTPUT,error_path=ERRORS,limit=LIMIT), tone='success')\n"
+                "    try:\n"
+                "        labeling_result=annotate_incremental(read_jsonl(SOURCE),provider,OUTPUT,error_path=ERRORS,limit=LIMIT,progress_callback=report_label_progress)\n"
+                "    finally:\n"
+                "        if label_progress.get('bar') is not None:\n"
+                "            label_progress['bar'].close()\n"
+                "    show_result('Resultado del etiquetado incremental',labeling_result,tone='success')\n"
                 "else:\n"
-                "    show_callout('Preflight completo', 'Cambie RUN=True. La salida reanuda por chunk_id.', tone='neutral')",
+                "    show_callout('Preflight completo','Cambie RUN=True. LIMIT=20 ejecuta el piloto; LIMIT=None procesa todo lo pendiente y conserva la reanudación por chunk_id.',tone='neutral')",
             ),
         ],
         colab_notebook_id="02_01",
@@ -1250,7 +1315,30 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
             ),
             (
                 "Ejecución explícita",
-                "from moderacion_peru.io import read_jsonl\nfrom moderacion_peru.labeling import annotate_incremental\nSOURCE=ROOT/'datos/processed/chunks_v2.jsonl'\nOUTPUT=ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'\nRUN_REMOTE=False\nif RUN_REMOTE:\n    show_result('Resultado del etiquetado remoto', annotate_incremental(read_jsonl(SOURCE),provider,OUTPUT), tone='success')\nelse:\n    show_callout('API remota desactivada', 'No se realizó ninguna llamada comercial.', tone='neutral')",
+                "from tqdm.auto import tqdm\n"
+                "from moderacion_peru.io import read_jsonl\n"
+                "from moderacion_peru.labeling import annotate_incremental\n"
+                "SOURCE=ROOT/'datos/processed/chunks_v2.jsonl'\n"
+                "OUTPUT=ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'\n"
+                "RUN_REMOTE=False\n\n"
+                "remote_progress={'bar':None}\n"
+                "def report_remote_progress(event):\n"
+                "    if event['status']=='started':\n"
+                "        remote_progress['bar']=tqdm(total=event['selected'],desc='Etiquetado remoto',unit='chunk')\n"
+                "        return\n"
+                "    bar=remote_progress.get('bar')\n"
+                "    if bar is not None and event.get('advance'):\n"
+                "        bar.update(event['advance'])\n"
+                "        bar.set_postfix(etiquetados=event['labeled'],errores=event['errors'])\n\n"
+                "if RUN_REMOTE:\n"
+                "    try:\n"
+                "        remote_result=annotate_incremental(read_jsonl(SOURCE),provider,OUTPUT,progress_callback=report_remote_progress)\n"
+                "    finally:\n"
+                "        if remote_progress.get('bar') is not None:\n"
+                "            remote_progress['bar'].close()\n"
+                "    show_result('Resultado del etiquetado remoto',remote_result,tone='success')\n"
+                "else:\n"
+                "    show_callout('API remota desactivada','No se realizó ninguna llamada comercial.',tone='neutral')",
             ),
         ],
     )
@@ -1267,7 +1355,18 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         [
             (
                 "Selección reproducible",
-                "from moderacion_peru.io import read_jsonl\nSOURCE=ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl'\nrows=list(read_jsonl(SOURCE)) if SOURCE.exists() else []\nreview=[r for r in rows if r.get('needs_review') or r.get('score_confianza',1)<0.8]\nreview.sort(key=lambda r:r['chunk_id'])\nshow_summary('Cola de revisión dirigida', {'etiquetados': len(rows), 'requieren_revisión': len(review), 'umbral_confianza': 0.8}, tone='warning' if review else 'success')",
+                "from tqdm.auto import tqdm\n"
+                "from moderacion_peru.io import read_jsonl\n"
+                "SOURCE=ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl'\n"
+                "review=[]\n"
+                "scanned=0\n"
+                "if SOURCE.exists():\n"
+                "    for row in tqdm(read_jsonl(SOURCE),desc='Construyendo cola dirigida',unit='anotación'):\n"
+                "        scanned+=1\n"
+                "        if row.get('needs_review') or row.get('score_confianza',1)<0.8:\n"
+                "            review.append(row)\n"
+                "review.sort(key=lambda row:row['chunk_id'])\n"
+                "show_summary('Cola de revisión dirigida',{'etiquetados':scanned,'requieren_revisión':len(review),'umbral_confianza':0.8},tone='warning' if review else 'success')",
             ),
             (
                 "Siguiente paso",
@@ -1287,7 +1386,37 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         [
             (
                 "Consolidación",
-                "from moderacion_peru.consolidation import consolidate_annotations\nSOURCES=[p for p in [ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl',ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'] if p.exists()]\nCHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\nTRANSCRIPTS=ROOT/'datos/raw/transcripts_raw.jsonl'\nOUTPUT=ROOT/'datos/etiquetado/consolidado/anotaciones_v2.jsonl'\nif SOURCES:\n    show_result('Consolidación de campañas', consolidate_annotations(SOURCES,OUTPUT,chunks_source=CHUNKS,transcripts_source=TRANSCRIPTS), tone='success')\nelse:\n    show_callout('Sin campañas', 'No hay propuestas para consolidar todavía.', tone='warning')",
+                "from tqdm.auto import tqdm\n"
+                "from moderacion_peru.consolidation import consolidate_annotations\n"
+                "SOURCES=[p for p in [ROOT/'datos/etiquetado/local/ollama_qwen35_4b_v2.jsonl',ROOT/'datos/etiquetado/remoto/deepseek_v2.jsonl'] if p.exists()]\n"
+                "CHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\n"
+                "TRANSCRIPTS=ROOT/'datos/raw/transcripts_raw.jsonl'\n"
+                "OUTPUT=ROOT/'datos/etiquetado/consolidado/anotaciones_v2.jsonl'\n"
+                "consolidation_progress={'bar':None}\n"
+                "CONSOLIDATION_PHASES={'loading_annotations':'Leyendo campañas','loading_chunks':'Cargando chunks','loading_transcripts':'Cargando transcripciones','consolidating':'Consolidando propuestas','checking_existing':'Verificando salida existente'}\n"
+                "def report_consolidation_progress(event):\n"
+                "    if event['status']=='phase_started':\n"
+                "        if consolidation_progress.get('bar') is not None:\n"
+                "            consolidation_progress['bar'].close()\n"
+                "        consolidation_progress['bar']=tqdm(total=event.get('total'),desc=CONSOLIDATION_PHASES.get(event['phase'],event['phase']),unit='registro')\n"
+                "        return\n"
+                "    bar=consolidation_progress.get('bar')\n"
+                "    if bar is not None and event.get('advance'):\n"
+                "        bar.update(event['advance'])\n"
+                "        if 'conflicts' in event:\n"
+                "            bar.set_postfix(conflictos=event['conflicts'])\n"
+                "    if event['status']=='finished' and bar is not None:\n"
+                "        bar.close()\n"
+                "        consolidation_progress['bar']=None\n\n"
+                "if SOURCES:\n"
+                "    try:\n"
+                "        consolidation_result=consolidate_annotations(SOURCES,OUTPUT,chunks_source=CHUNKS,transcripts_source=TRANSCRIPTS,progress_callback=report_consolidation_progress)\n"
+                "    finally:\n"
+                "        if consolidation_progress.get('bar') is not None:\n"
+                "            consolidation_progress['bar'].close()\n"
+                "    show_result('Consolidación de campañas',consolidation_result,tone='success')\n"
+                "else:\n"
+                "    show_callout('Sin campañas','No hay propuestas para consolidar todavía.',tone='warning')",
             ),
             (
                 "Frontend",
@@ -1307,18 +1436,49 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         [
             (
                 "Reconciliación append-only",
+                "from tqdm.auto import tqdm\n"
                 "from moderacion_peru.consolidation import reconcile_human_reviews\n"
                 "CONSOLIDATED=ROOT/'datos/etiquetado/consolidado/anotaciones_v2.jsonl'\n"
                 "CHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\n"
                 "REVIEWS=[ROOT/'datos/etiquetado/humano/labeling_events_v2.jsonl']\n"
                 "REVIEWED=ROOT/'datos/etiquetado/consolidado/anotaciones_revisadas_v2.jsonl'\n"
-                "show_result('Reconciliación humana', reconcile_human_reviews(CONSOLIDATED,REVIEWS,REVIEWED,chunks_source=CHUNKS), tone='success')",
+                "stage_progress={'bar':None}\n"
+                "STAGE_PHASES={'loading_chunks':'Cargando chunks','loading_review_events':'Leyendo eventos humanos','reconciling':'Reconciliando decisiones','loading_previous_snapshot':'Leyendo snapshot anterior','preparing_snapshot':'Preparando snapshot','deduplicating_snapshot':'Deduplicando snapshot','validating_video_splits':'Validando splits por video'}\n"
+                "def report_stage_progress(event):\n"
+                "    if event['status']=='phase_started':\n"
+                "        if stage_progress.get('bar') is not None:\n"
+                "            stage_progress['bar'].close()\n"
+                "        stage_progress['bar']=tqdm(total=event.get('total'),desc=STAGE_PHASES.get(event['phase'],event['phase']),unit='registro')\n"
+                "        return\n"
+                "    bar=stage_progress.get('bar')\n"
+                "    if bar is not None and event.get('advance'):\n"
+                "        bar.update(event['advance'])\n"
+                "        details={}\n"
+                "        if 'reviewed' in event:\n"
+                "            details['revisados']=event['reviewed']\n"
+                "        if 'eligible' in event:\n"
+                "            details['elegibles']=event['eligible']\n"
+                "        if details:\n"
+                "            bar.set_postfix(**details)\n"
+                "    if event['status']=='finished' and bar is not None:\n"
+                "        bar.close()\n"
+                "        stage_progress['bar']=None\n"
+                "try:\n"
+                "    reconciliation_result=reconcile_human_reviews(CONSOLIDATED,REVIEWS,REVIEWED,chunks_source=CHUNKS,progress_callback=report_stage_progress)\n"
+                "finally:\n"
+                "    if stage_progress.get('bar') is not None:\n"
+                "        stage_progress['bar'].close()\n"
+                "show_result('Reconciliación humana',reconciliation_result,tone='success')",
             ),
             (
                 "Snapshot versionado",
                 "from moderacion_peru.datasets import materialize_versioned_training_snapshot\n"
                 "DATASET=ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\n"
-                "snapshot=materialize_versioned_training_snapshot(REVIEWED,DATASET)\n"
+                "try:\n"
+                "    snapshot=materialize_versioned_training_snapshot(REVIEWED,DATASET,progress_callback=report_stage_progress)\n"
+                "finally:\n"
+                "    if stage_progress.get('bar') is not None:\n"
+                "        stage_progress['bar'].close()\n"
                 "show_result('Snapshot entrenable', snapshot, tone='success')\n"
                 "show_callout('Idempotencia', 'Sin cambios de entrada, ambas operaciones devuelven status=noop y no reescriben archivos.', tone='neutral')",
             ),
@@ -1426,7 +1586,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         create(
             f"flujo/03_entrenamiento/{filename}",
             f"03 · {subtitle}",
-            "Entrena o audita el contrato v2.1 sin consultar test para seleccionar modelos, épocas o umbrales.",
+            "Entrena o audita el contrato de etiquetas v2.1 sin consultar test para seleccionar modelos, épocas o umbrales.",
             academic_context,
             [
                 ("Restauración reproducible del dataset", DATASET_CHECKPOINT),
@@ -1437,7 +1597,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
     create(
         "flujo/04_produccion/04_01_frontend_produccion.ipynb",
         "04.01 · Frontend de producción supervisada",
-        "Comprueba el registro v2.1 e inicia el demostrador local en modo sombra con texto, subtítulos de YouTube, cinco scores, revisión humana y estadísticas; nunca carga modelos históricos como sustitutos.",
+        "Comprueba el registro del contrato de etiquetas v2.1 e inicia el demostrador local en modo sombra con texto, subtítulos de YouTube, cinco scores, revisión humana y estadísticas; nunca carga modelos históricos como sustitutos.",
         "La moderación algorítmica presenta retos técnicos y de gobernanza que impiden interpretar un "
         "score como decisión autosuficiente [@gorwa2020moderation]. Los sistemas semiautomáticos pueden "
         "integrar revisión humana [@andersen2021rem], y la abstención tiene antecedentes tanto en la "

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 
-from moderacion_peru.consolidation import reconcile_human_reviews
+from moderacion_peru.consolidation import consolidate_annotations, reconcile_human_reviews
 from moderacion_peru.datasets import materialize_versioned_training_snapshot
 from moderacion_peru.experiments import train_classical_experiments
 from moderacion_peru import experiments
@@ -52,7 +52,14 @@ def test_human_events_close_annotation_to_versioned_snapshot_and_noop(tmp_path):
     write_jsonl_atomic(reviews, [event.model_dump(mode="json")])
     reviewed = tmp_path / "reviewed.jsonl"
 
-    first = reconcile_human_reviews(consolidated, [reviews], reviewed, chunks_source=chunks)
+    reconciliation_progress = []
+    first = reconcile_human_reviews(
+        consolidated,
+        [reviews],
+        reviewed,
+        chunks_source=chunks,
+        progress_callback=reconciliation_progress.append,
+    )
     second = reconcile_human_reviews(consolidated, [reviews], reviewed, chunks_source=chunks)
     assert first["status"] == "updated"
     assert second["status"] == "noop"
@@ -61,9 +68,19 @@ def test_human_events_close_annotation_to_versioned_snapshot_and_noop(tmp_path):
     assert row["coarse_labels"] == ["ATAQUE_POR_GENERO_IDENTIDAD"]
     assert row["flags"] == ["humor_encubridor"]
     assert row["label_source"] == "human_modified"
+    assert {event["phase"] for event in reconciliation_progress} >= {
+        "loading_chunks",
+        "loading_review_events",
+        "reconciling",
+        "reconciliation",
+    }
+    assert reconciliation_progress[-1]["status"] == "finished"
 
     canonical = tmp_path / "model_ready" / "dataset_5_salidas.jsonl"
-    snapshot_first = materialize_versioned_training_snapshot(reviewed, canonical)
+    snapshot_progress = []
+    snapshot_first = materialize_versioned_training_snapshot(
+        reviewed, canonical, progress_callback=snapshot_progress.append
+    )
     snapshot_second = materialize_versioned_training_snapshot(reviewed, canonical)
     assert snapshot_first["status"] == "updated"
     assert snapshot_second["status"] == "noop"
@@ -71,6 +88,57 @@ def test_human_events_close_annotation_to_versioned_snapshot_and_noop(tmp_path):
     assert ready.video_id == "video_with_underscore"
     assert ready.flags_reference_only == ["humor_encubridor"]
     assert ready.split in {"train", "validation", "test"}
+    assert {event["phase"] for event in snapshot_progress} >= {
+        "preparing_snapshot",
+        "deduplicating_snapshot",
+        "validating_video_splits",
+        "snapshot",
+    }
+    assert snapshot_progress[-1]["status"] == "finished"
+
+
+def test_annotation_consolidation_reports_each_long_phase(tmp_path):
+    chunks = tmp_path / "chunks.jsonl"
+    write_jsonl_atomic(
+        chunks,
+        [{"chunk_id": "c1", "video_id": "v1", "text": "texto", "start_seconds": 0.0}],
+    )
+    transcripts = tmp_path / "transcripts.jsonl"
+    write_jsonl_atomic(transcripts, [{"video_id": "v1", "title": "Video"}])
+    local = tmp_path / "local.jsonl"
+    write_jsonl_atomic(
+        local,
+        [
+            AnnotationRecord(
+                chunk_id="c1",
+                video_id="v1",
+                text="texto",
+                coarse_labels=["SEGURO"],
+                fine_labels=["seguro"],
+                label_source="ollama_local",
+                annotator_type="llm_local",
+            ).model_dump(mode="json")
+        ],
+    )
+    destination = tmp_path / "consolidated.jsonl"
+    progress = []
+    result = consolidate_annotations(
+        [local],
+        destination,
+        chunks_source=chunks,
+        transcripts_source=transcripts,
+        progress_callback=progress.append,
+    )
+
+    assert result == {"status": "updated", "chunks": 1, "conflicts": 0}
+    assert {event["phase"] for event in progress} >= {
+        "loading_annotations",
+        "loading_chunks",
+        "loading_transcripts",
+        "consolidating",
+        "consolidation",
+    }
+    assert progress[-1]["status"] == "finished"
 
 
 def test_rejected_human_event_is_valid_but_never_trains(tmp_path):

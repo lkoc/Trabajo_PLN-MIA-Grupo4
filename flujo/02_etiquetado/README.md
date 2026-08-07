@@ -8,6 +8,8 @@
 
 ## Etapa 02 · Etiquetado semiautomático
 
+**Contrato de etiquetas v2.1:** cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran al entrenamiento. Esta combinación, sus umbrales y sus reglas de exclusividad son decisiones operativas locales.
+
 ## Orden
 
 1. `02_01_etiquetado_local_ollama.ipynb` — Ollama local oficial o Hugging Face/Qwen sobre Colab L4 como backend opcional.
@@ -17,6 +19,8 @@
 5. `02_05_cierre_humano_snapshot.ipynb` — reaplica el último evento humano, recupera `video_id` desde el chunk fuente y congela el snapshot entrenable.
 
 Cada salida conserva modelo, prompt, taxonomía, confianza, flags y estado de revisión. El proceso reanuda por `chunk_id` y no vuelve a pagar ni recalcular filas completas.
+
+Los cinco cuadernos muestran barras `tqdm` en las operaciones potencialmente largas. `02_01` y `02_02` informan etiquetados y errores; `02_03` muestra el recorrido que construye la cola dirigida; `02_04` separa lectura, carga y consolidación; `02_05` separa eventos humanos, reconciliación, deduplicación y validación de splits. Las etapas instantáneas de preflight no crean barras artificiales.
 
 ```powershell
 modperu serve-labeling --campaign datos/etiquetado/consolidado/anotaciones_v2.jsonl

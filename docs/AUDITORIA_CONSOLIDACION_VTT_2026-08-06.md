@@ -1,5 +1,7 @@
 # Auditoría de consolidación VTT · 2026-08-06
 
+> **Adenda del 7 de agosto de 2026.** Este documento conserva el checkpoint histórico de la sincronización del día 6. La consolidación posterior incorporó todas las partes por canal, cachés y VTT locales disponibles: 5.002 transcripciones, 4.968 VTT sincronizados para 4.952 videos y 166.940 chunks. No se eliminó ni modificó ningún VTT. La metodología, los hashes y la estadística descriptiva vigentes están en [`MATERIALIZACION_TROCEADO.md`](MATERIALIZACION_TROCEADO.md).
+
 ## Versión sincronizada revisada
 
 La rama `main` coincidía con `origin/main` en `b665434`. La serie reciente añadió

@@ -1,12 +1,26 @@
 from __future__ import annotations
 
+import json
 import re
+import shutil
+import statistics
 import unicodedata
-from collections.abc import Iterable
+from collections import Counter
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
-from .io import canonical_json_sha256, sha256_text
+from .io import (
+    append_jsonl_once,
+    canonical_json_sha256,
+    read_jsonl,
+    sha256_file,
+    sha256_text,
+    write_json_atomic,
+    write_jsonl_atomic,
+)
 
 
 CHUNKER_VERSION = "2.2.0"
@@ -222,6 +236,82 @@ def deduplicate_chunks(
     return result
 
 
+def _numeric_summary(values: Iterable[float | int]) -> dict[str, float | int | None]:
+    ordered = sorted(float(value) for value in values)
+    if not ordered:
+        return {
+            "count": 0,
+            "min": None,
+            "p25": None,
+            "median": None,
+            "mean": None,
+            "p75": None,
+            "p90": None,
+            "p95": None,
+            "max": None,
+            "standard_deviation": None,
+        }
+
+    def percentile(probability: float) -> float:
+        position = (len(ordered) - 1) * probability
+        lower = int(position)
+        upper = min(lower + 1, len(ordered) - 1)
+        weight = position - lower
+        return ordered[lower] * (1.0 - weight) + ordered[upper] * weight
+
+    return {
+        "count": len(ordered),
+        "min": ordered[0],
+        "p25": percentile(0.25),
+        "median": percentile(0.50),
+        "mean": statistics.fmean(ordered),
+        "p75": percentile(0.75),
+        "p90": percentile(0.90),
+        "p95": percentile(0.95),
+        "max": ordered[-1],
+        "standard_deviation": statistics.pstdev(ordered),
+    }
+
+
+def describe_chunk_rows(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
+    """Calcula estadística descriptiva reproducible del artefacto de chunks."""
+
+    per_video: Counter[str] = Counter()
+    durations: list[float] = []
+    characters: list[int] = []
+    words: list[int] = []
+    chunk_count = 0
+    for row in rows:
+        chunk_count += 1
+        video_id = str(row.get("video_id") or "").strip()
+        if video_id:
+            per_video[video_id] += 1
+        start = float(row.get("start_seconds", 0.0) or 0.0)
+        end = float(row.get("end_seconds", start) or start)
+        durations.append(max(end - start, 0.0))
+        text = str(row.get("text") or "")
+        characters.append(len(text))
+        words.append(len(text.split()))
+    return {
+        "chunks": chunk_count,
+        "videos": len(per_video),
+        "chunks_per_video": _numeric_summary(per_video.values()),
+        "duration_seconds": {
+            **_numeric_summary(durations),
+            "total": sum(durations),
+            "total_hours": sum(durations) / 3600.0,
+        },
+        "characters_per_chunk": {
+            **_numeric_summary(characters),
+            "total": sum(characters),
+        },
+        "words_per_chunk": {
+            **_numeric_summary(words),
+            "total": sum(words),
+        },
+    }
+
+
 def chunk_records_incrementally(
     transcripts: Iterable[dict[str, Any]],
     existing_rows: Iterable[dict[str, Any]] = (),
@@ -231,6 +321,7 @@ def chunk_records_incrementally(
     max_characters: int = 600,
     min_characters: int = 90,
     overlap_words: int = 12,
+    progress_callback: Callable[[dict[str, Any]], None] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, int]]:
     """Trocea solo versiones de video que no aparecen ya en la salida."""
 
@@ -246,7 +337,7 @@ def chunk_records_incrementally(
     configuration_signature = chunking_signature(configuration)
 
     def row_signature(row: dict[str, Any]) -> str:
-        # Las filas 2.1 no registraban configuración y equivalen al contrato de 30 s.
+        # Las filas del troceador 2.1 no registraban firma y equivalen a 30 s.
         return str(row.get("chunking_signature") or DEFAULT_CHUNKING_SIGNATURE)
 
     known_versions = {
@@ -282,6 +373,16 @@ def chunk_records_incrementally(
         version = (str(video["video_id"]), source_hash, configuration_signature)
         if version in known_versions:
             stats["unchanged_videos"] += 1
+            if progress_callback is not None:
+                progress_callback(
+                    {
+                        "status": "unchanged",
+                        "advance": 1,
+                        "video_id": version[0],
+                        "generated_chunks": 0,
+                        **stats,
+                    }
+                )
             continue
         stats["new_or_changed_videos"] += 1
         video_chunks = [
@@ -310,10 +411,321 @@ def chunk_records_incrementally(
                 "chunk_count": len(video_chunks),
             }
         )
+        if progress_callback is not None:
+            progress_callback(
+                {
+                    "status": "materialized",
+                    "advance": 1,
+                    "video_id": version[0],
+                    "generated_chunks_for_video": len(video_chunks),
+                    **stats,
+                }
+            )
     stats["generated_chunks"] = len(generated)
     new_rows = deduplicate_chunks(generated, existing)
     stats["new_unique_chunks"] = len(new_rows)
+    generated_counts = Counter(str(row.get("video_id")) for row in generated)
+    materialized_counts = Counter(str(row.get("video_id")) for row in new_rows)
+    for row in version_rows:
+        video_id = str(row["video_id"])
+        row["generated_chunk_count"] = generated_counts.get(video_id, 0)
+        row["materialized_chunk_count"] = materialized_counts.get(video_id, 0)
+    stats["videos_with_generated_chunks"] = sum(
+        count > 0 for count in generated_counts.values()
+    )
+    stats["videos_with_new_unique_chunks"] = sum(
+        count > 0 for count in materialized_counts.values()
+    )
+    stats["videos_without_generated_chunks"] = stats["new_or_changed_videos"] - stats[
+        "videos_with_generated_chunks"
+    ]
+    stats["videos_without_new_unique_chunks"] = stats["new_or_changed_videos"] - stats[
+        "videos_with_new_unique_chunks"
+    ]
     return new_rows, version_rows, stats
+
+
+def rebuild_chunk_materialization(
+    project_root: str | Path,
+    transcripts: Iterable[dict[str, Any]],
+    *,
+    source_path: str | Path,
+    output_path: str | Path,
+    version_index_path: str | Path,
+    manifest_path: str | Path | None = None,
+    progress_callback: Callable[[dict[str, Any]], None] | None = None,
+    max_seconds: float = 30.0,
+    max_characters: int = 600,
+    min_characters: int = 90,
+    overlap_words: int = 12,
+) -> dict[str, Any]:
+    """Reconstruye chunks atómicamente y conserva una copia recuperable previa."""
+
+    root = Path(project_root).resolve()
+    source = Path(source_path).resolve()
+    output = Path(output_path).resolve()
+    versions = Path(version_index_path).resolve()
+    manifest = (
+        Path(manifest_path).resolve()
+        if manifest_path is not None
+        else output.with_name("chunk_materialization_manifest.json")
+    )
+    for target in (source, output, versions, manifest):
+        if target != root and root not in target.parents:
+            raise ValueError(f"Ruta fuera del proyecto: {target}")
+    if not source.is_file():
+        raise FileNotFoundError(source)
+    configuration = normalize_chunking_configuration(
+        {
+            "max_seconds": max_seconds,
+            "max_characters": max_characters,
+            "min_characters": min_characters,
+            "overlap_words": overlap_words,
+        }
+    )
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    archive_root = root / "archivo" / "chunk_rebuilds" / timestamp
+    archived = []
+    for previous in (output, versions, manifest):
+        if not previous.is_file():
+            continue
+        relative = previous.relative_to(root)
+        destination = archive_root / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(previous, destination)
+        archived.append(
+            {
+                "source": relative.as_posix(),
+                "archive": destination.relative_to(root).as_posix(),
+                "bytes": previous.stat().st_size,
+                "sha256": sha256_file(previous),
+            }
+        )
+    archive_manifest = {
+        "schema_version": "1.0",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "operation": "backup_before_full_chunk_rebuild",
+        "source_transcripts": source.relative_to(root).as_posix(),
+        "source_sha256": sha256_file(source),
+        "configuration": configuration,
+        "files": archived,
+    }
+    write_json_atomic(archive_root / "backup_manifest.json", archive_manifest)
+
+    rows, version_rows, stats = chunk_records_incrementally(
+        transcripts,
+        max_seconds=configuration["max_seconds"],
+        max_characters=configuration["max_characters"],
+        min_characters=configuration["min_characters"],
+        overlap_words=configuration["overlap_words"],
+        progress_callback=progress_callback,
+    )
+    if stats["transcripts_seen"] == 0:
+        raise ValueError("La reconstrucción no puede reemplazar los chunks con una fuente vacía")
+    write_jsonl_atomic(output, rows)
+    write_jsonl_atomic(versions, version_rows)
+    videos_without_chunks = sorted(
+        str(row["video_id"])
+        for row in version_rows
+        if int(row.get("materialized_chunk_count", 0)) == 0
+    )
+    payload = {
+        "schema_version": "1.0",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "operation": "full_chunk_rebuild",
+        "source": {
+            "path": source.relative_to(root).as_posix(),
+            "bytes": source.stat().st_size,
+            "sha256": sha256_file(source),
+        },
+        "configuration": configuration,
+        "chunker_version": CHUNKER_VERSION,
+        "chunking_signature": chunking_signature(configuration),
+        "stats": stats,
+        "coverage": {
+            "transcript_videos": stats["transcripts_seen"],
+            "videos_with_chunks": stats["videos_with_new_unique_chunks"],
+            "videos_without_chunks": len(videos_without_chunks),
+            "video_ids_without_chunks": videos_without_chunks,
+            "orphan_chunk_videos": [],
+        },
+        "descriptive_statistics": describe_chunk_rows(rows),
+        "outputs": {
+            "chunks": {
+                "path": output.relative_to(root).as_posix(),
+                "rows": len(rows),
+                "bytes": output.stat().st_size,
+                "sha256": sha256_file(output),
+            },
+            "versions": {
+                "path": versions.relative_to(root).as_posix(),
+                "rows": len(version_rows),
+                "bytes": versions.stat().st_size,
+                "sha256": sha256_file(versions),
+            },
+        },
+        "backup": archive_root.relative_to(root).as_posix(),
+    }
+    write_json_atomic(manifest, payload)
+    return payload
+
+
+def materialize_chunk_records(
+    project_root: str | Path,
+    transcripts: Iterable[dict[str, Any]],
+    *,
+    source_path: str | Path,
+    output_path: str | Path,
+    version_index_path: str | Path,
+    manifest_path: str | Path | None = None,
+    rebuild: bool = False,
+    progress_callback: Callable[[dict[str, Any]], None] | None = None,
+    max_seconds: float = 30.0,
+    max_characters: int = 600,
+    min_characters: int = 90,
+    overlap_words: int = 12,
+) -> dict[str, Any]:
+    """Materializa el canónico de forma incremental o mediante reconstrucción total."""
+
+    if rebuild:
+        return rebuild_chunk_materialization(
+            project_root,
+            transcripts,
+            source_path=source_path,
+            output_path=output_path,
+            version_index_path=version_index_path,
+            manifest_path=manifest_path,
+            progress_callback=progress_callback,
+            max_seconds=max_seconds,
+            max_characters=max_characters,
+            min_characters=min_characters,
+            overlap_words=overlap_words,
+        )
+
+    root = Path(project_root).resolve()
+    source = Path(source_path).resolve()
+    output = Path(output_path).resolve()
+    versions = Path(version_index_path).resolve()
+    manifest = (
+        Path(manifest_path).resolve()
+        if manifest_path is not None
+        else output.with_name("chunk_materialization_manifest.json")
+    )
+    for target in (source, output, versions, manifest):
+        if target != root and root not in target.parents:
+            raise ValueError(f"Ruta fuera del proyecto: {target}")
+    if not source.is_file():
+        raise FileNotFoundError(source)
+    previous_manifest = (
+        json.loads(manifest.read_text(encoding="utf-8-sig"))
+        if manifest.is_file()
+        else {}
+    )
+    configuration = normalize_chunking_configuration(
+        {
+            "max_seconds": max_seconds,
+            "max_characters": max_characters,
+            "min_characters": min_characters,
+            "overlap_words": overlap_words,
+        }
+    )
+    existing = list(read_jsonl(output)) if output.is_file() else []
+    processed_versions = list(read_jsonl(versions)) if versions.is_file() else []
+    rows, version_rows, stats = chunk_records_incrementally(
+        transcripts,
+        existing,
+        processed_versions,
+        max_seconds=configuration["max_seconds"],
+        max_characters=configuration["max_characters"],
+        min_characters=configuration["min_characters"],
+        overlap_words=configuration["overlap_words"],
+        progress_callback=progress_callback,
+    )
+    if stats["transcripts_seen"] == 0:
+        raise ValueError("La materialización no puede operar con una fuente vacía")
+    added, skipped = append_jsonl_once(output, rows, id_field="chunk_id")
+    versions_added, versions_skipped = append_jsonl_once(
+        versions,
+        version_rows,
+        id_field="version_id",
+    )
+    transcript_ids = {
+        str(row.get("video_id") or "").strip()
+        for row in read_jsonl(source)
+        if str(row.get("video_id") or "").strip()
+    }
+    chunk_rows = 0
+    chunk_video_ids: set[str] = set()
+    for row in read_jsonl(output):
+        chunk_rows += 1
+        video_id = str(row.get("video_id") or "").strip()
+        if video_id:
+            chunk_video_ids.add(video_id)
+    videos_without_chunks = sorted(transcript_ids - chunk_video_ids)
+    stats.update(
+        {
+            "added": added,
+            "duplicate_ids": skipped,
+            "versions_registered": versions_added,
+            "duplicate_version_ids": versions_skipped,
+        }
+    )
+    payload = {
+        "schema_version": "1.0",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "operation": "incremental_chunk_update",
+        "source": {
+            "path": source.relative_to(root).as_posix(),
+            "bytes": source.stat().st_size,
+            "sha256": sha256_file(source),
+        },
+        "configuration": configuration,
+        "chunker_version": CHUNKER_VERSION,
+        "chunking_signature": chunking_signature(configuration),
+        "stats": stats,
+        "coverage": {
+            "transcript_videos": len(transcript_ids),
+            "videos_with_chunks": len(transcript_ids & chunk_video_ids),
+            "videos_without_chunks": len(videos_without_chunks),
+            "video_ids_without_chunks": videos_without_chunks,
+            "orphan_chunk_videos": sorted(chunk_video_ids - transcript_ids),
+        },
+        "descriptive_statistics": describe_chunk_rows(read_jsonl(output)),
+        "outputs": {
+            "chunks": {
+                "path": output.relative_to(root).as_posix(),
+                "rows": chunk_rows,
+                "bytes": output.stat().st_size,
+                "sha256": sha256_file(output),
+            },
+            "versions": {
+                "path": versions.relative_to(root).as_posix(),
+                "rows": sum(1 for _ in read_jsonl(versions)),
+                "bytes": versions.stat().st_size,
+                "sha256": sha256_file(versions),
+            },
+        },
+        "backup": previous_manifest.get("backup"),
+        "previous_materialization": (
+            {
+                "operation": previous_manifest.get("operation"),
+                "created_at": previous_manifest.get("created_at"),
+                "backup": previous_manifest.get("backup"),
+            }
+            if previous_manifest
+            else None
+        ),
+        "last_full_rebuild": (
+            {
+                "created_at": previous_manifest.get("created_at"),
+                "backup": previous_manifest.get("backup"),
+            }
+            if previous_manifest.get("operation") == "full_chunk_rebuild"
+            else previous_manifest.get("last_full_rebuild")
+        ),
+    }
+    write_json_atomic(manifest, payload)
+    return payload
 
 
 def pending_video_ids(candidate_ids: Iterable[str], processed_ids: Iterable[str]) -> list[str]:

@@ -1288,6 +1288,140 @@ def load_vtt_backfill_candidates(vtt_dir: str | Path) -> list[dict[str, Any]]:
     return list(read_jsonl(Path(vtt_dir) / VTT_MISSING_MANIFEST))
 
 
+def discover_candidate_sources(project_root: str | Path) -> list[Path]:
+    """Localiza inventarios de candidatos que pueden aportar metadatos a un VTT."""
+
+    root = Path(project_root).resolve() / "datos"
+    names = {
+        "video_candidates.jsonl",
+        "videos_candidatos.csv",
+        "directed_candidates_latest.jsonl",
+    }
+    return sorted(
+        (path.resolve() for path in root.rglob("*") if path.is_file() and path.name in names),
+        key=str,
+    )
+
+
+def recover_transcripts_from_vtt(
+    vtt_dir: str | Path,
+    *,
+    existing_video_ids: Iterable[str] = (),
+    candidate_sources: Iterable[str | Path] = (),
+    minimum_transcript_characters: int = DEFAULT_MIN_TRANSCRIPT_CHARACTERS,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Recupera transcripciones completas desde VTT locales que aún no tienen JSON.
+
+    No consulta la red ni modifica los VTT. Cuando existen varias pistas para un
+    video, selecciona determinísticamente la de mayor texto útil y conserva la
+    lista completa de archivos como procedencia. Los VTT demasiado cortos se
+    reportan, pero no se fuerzan al canónico.
+    """
+
+    if minimum_transcript_characters < 1:
+        raise ValueError("minimum_transcript_characters debe ser positivo")
+    source = Path(vtt_dir)
+    candidate_paths = [Path(path) for path in candidate_sources]
+    known = {str(video_id).strip() for video_id in existing_video_ids if str(video_id).strip()}
+    grouped: dict[str, list[Path]] = defaultdict(list)
+    if source.is_dir():
+        for path in sorted(source.rglob("*.vtt")):
+            grouped[vtt_video_id(path)].append(path)
+
+    candidates = merge_candidates(
+        *(load_candidates(path) for path in candidate_paths if path.is_file())
+    )
+    candidate_by_id = {
+        str(candidate["video_id"]).strip(): candidate
+        for candidate in candidates
+        if str(candidate.get("video_id") or "").strip()
+    }
+    recovered: list[dict[str, Any]] = []
+    too_short: list[dict[str, Any]] = []
+    invalid: list[dict[str, Any]] = []
+    already_present = 0
+    for video_id, paths in sorted(grouped.items()):
+        if video_id in known:
+            already_present += 1
+            continue
+        tracks: list[tuple[int, int, str, Path, list[dict[str, Any]]]] = []
+        for path in paths:
+            try:
+                segments = _read_vtt_segments(path)
+            except Exception as exc:  # noqa: BLE001
+                invalid.append(
+                    {"video_id": video_id, "path": path.as_posix(), "error": str(exc)}
+                )
+                continue
+            tracks.append(
+                (
+                    _transcript_characters(segments),
+                    len(segments),
+                    path.as_posix(),
+                    path,
+                    segments,
+                )
+            )
+        if not tracks:
+            continue
+        characters, _, _, selected_path, segments = max(
+            tracks,
+            key=lambda item: (item[0], item[1], item[2]),
+        )
+        if characters < minimum_transcript_characters:
+            too_short.append(
+                {
+                    "video_id": video_id,
+                    "characters": characters,
+                    "selected_vtt": selected_path.as_posix(),
+                }
+            )
+            continue
+        candidate = normalize_category_metadata(dict(candidate_by_id.get(video_id, {})))
+        url = str(
+            candidate.get("url")
+            or candidate.get("source_url")
+            or f"https://www.youtube.com/watch?v={video_id}"
+        )
+        record = {
+            "video_id": video_id,
+            "url": url,
+            "title": candidate.get("title") or candidate.get("video_title"),
+            "channel_id": candidate.get("channel_id"),
+            "channel": candidate.get("channel") or candidate.get("channel_title"),
+            "language": _vtt_language(selected_path),
+            "subtitle_source": "recovered-local-vtt",
+            "vtt_files": [path.name for path in sorted(paths)],
+            "source_vtt": selected_path.resolve().as_posix(),
+            "segments": segments,
+            "transcript_sha256": sha256_text(
+                json.dumps(segments, ensure_ascii=False, sort_keys=True)
+            ),
+            "acquisition_status": "recovered_local_vtt",
+        }
+        if candidate:
+            record["source_candidate"] = candidate
+        recovered.append(_json_safe(record))
+        known.add(video_id)
+
+    return recovered, {
+        "vtt_directory": source.resolve().as_posix(),
+        "vtt_files": sum(len(paths) for paths in grouped.values()),
+        "vtt_videos": len(grouped),
+        "already_present": already_present,
+        "candidate_sources": len(candidate_paths),
+        "recovered": len(recovered),
+        "recovered_with_candidate_metadata": sum(
+            bool(record.get("source_candidate")) for record in recovered
+        ),
+        "too_short": len(too_short),
+        "too_short_records": too_short,
+        "invalid_tracks": len(invalid),
+        "invalid_track_records": invalid,
+        "minimum_transcript_characters": minimum_transcript_characters,
+    }
+
+
 def discover_derived_transcript_sources(project_root: str | Path) -> list[Path]:
     """Localiza datasets/chunks con texto, excluyendo candidatos y fallos."""
 
@@ -1313,6 +1447,9 @@ def consolidate_available_transcripts(
     *,
     cache_dir: str | Path,
     channel_dir: str | Path,
+    vtt_dir: str | Path | None = None,
+    candidate_sources: Iterable[str | Path] | None = None,
+    minimum_transcript_characters: int = DEFAULT_MIN_TRANSCRIPT_CHARACTERS,
     include_historical_snapshots: bool = True,
     verify_partition_hashes: bool = True,
 ) -> dict[str, Any]:
@@ -1393,12 +1530,48 @@ def consolidate_available_transcripts(
         )
         cache_records.append(record)
 
+    known_before_vtt = {
+        str(record["video_id"])
+        for records in (partition_records, existing_records, historical_records, cache_records)
+        for record in records
+        if record.get("video_id")
+    }
+    resolved_candidate_sources = (
+        discover_candidate_sources(root)
+        if candidate_sources is None
+        else [Path(path) for path in candidate_sources]
+    )
+    if vtt_dir is not None:
+        vtt_records, vtt_stats = recover_transcripts_from_vtt(
+            vtt_dir,
+            existing_video_ids=known_before_vtt,
+            candidate_sources=resolved_candidate_sources,
+            minimum_transcript_characters=minimum_transcript_characters,
+        )
+    else:
+        vtt_records = []
+        vtt_stats = {
+            "vtt_directory": None,
+            "vtt_files": 0,
+            "vtt_videos": 0,
+            "already_present": 0,
+            "candidate_sources": len(resolved_candidate_sources),
+            "recovered": 0,
+            "recovered_with_candidate_metadata": 0,
+            "too_short": 0,
+            "too_short_records": [],
+            "invalid_tracks": 0,
+            "invalid_track_records": [],
+            "minimum_transcript_characters": minimum_transcript_characters,
+        }
+
     merged: dict[str, dict[str, Any]] = {}
     for source_records in (
         partition_records,
         existing_records,
         historical_records,
         cache_records,
+        vtt_records,
     ):
         for raw_record in source_records:
             record = normalize_category_metadata(_json_safe(raw_record))
@@ -1432,6 +1605,8 @@ def consolidate_available_transcripts(
         "partitions_verified": partitions_verified,
         "cache_files": len(cache_files),
         "cache_added": len(cache_ids - initial_ids - historical_ids - partition_ids),
+        "vtt_recovery": vtt_stats,
+        "vtt_added": len(vtt_records),
         "canonical_videos": len(merged),
         "canonical_path": canonical.resolve().as_posix(),
     }

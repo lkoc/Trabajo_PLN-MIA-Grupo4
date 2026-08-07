@@ -1,6 +1,6 @@
 # Guia de redaccion y control de evidencia
 
-> **Enmienda de contrato v2 (2026-08-05).** Las métricas existentes describen cuatro daños con `SEGURO` derivado. La implementación activa entrena `SEGURO` y los cuatro daños como cinco salidas; hasta completar el nuevo entrenamiento debe escribirse siempre como resultado pendiente, no como rendimiento demostrado.
+> **Enmienda de contrato v2 (2026-08-05).** Las métricas existentes describen cuatro daños con `SEGURO` derivado. La implementación activa entrena cinco salidas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta. Hasta completar el nuevo entrenamiento debe escribirse siempre como resultado pendiente, no como rendimiento demostrado.
 
 El articulo debe leerse como investigacion aplicada terminada: directo, humano, verificable y prudente. Esta guia complementa la estructura IEEE/DSR y evita que resultados historicos, propuestas o supuestos aparezcan como hechos. La meta editorial es una prosa propia y natural; no se debe prometer que el texto superará detectores de IA ni usar esos detectores como prueba de autoría o ausencia de plagio.
 
@@ -38,7 +38,7 @@ No es obligatorio incluir literalmente todos los componentes. Para este trabajo,
 La introduccion puede cerrar con contribuciones como las siguientes, siempre ajustadas a la evidencia final:
 
 1. un corpus trazable de subtítulos públicos de YouTube peruano con pseudoetiquetado escalonado y revisión final asistida;
-2. una taxonomía multietiqueta con cuatro daños, señales finas/transversales y una implementación v2 que aprende `SEGURO` como quinta salida exclusiva;
+2. una taxonomía multietiqueta con `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`, señales finas/transversales y una implementación v2 que aprende `SEGURO` como quinta salida exclusiva;
 3. una comparacion comun de modelos clasicos, Transformers compactos y Qwen con alternativas planas y jerarquicas;
 4. una politica de seleccion/calibracion basada en validation y una evaluacion final separada en test;
 5. un artefacto reproducible para texto o videos con subtitulos, comparacion/consenso, revision humana y estadisticas reutilizables.

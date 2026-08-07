@@ -6,7 +6,9 @@
 
 ---
 
-## Snapshots v2.1
+## Snapshots del contrato de etiquetas v2.1
+
+**Contrato de etiquetas v2.1:** cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran al entrenamiento.
 
 Cada snapshot se genera, no se edita manualmente. Debe acompañarse de un manifiesto con hashes, conteos, taxonomía, regla de split y fuente. Los archivos grandes permanecen fuera de Git.
 

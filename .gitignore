@@ -9,6 +9,7 @@ __pycache__/
 datos/raw/*
 datos/interim/*
 datos/processed/*
+!datos/processed/chunk_materialization_manifest.json
 datos/etiquetado/*
 modelos/*
 resultados/metricas/*
@@ -16,6 +17,7 @@ resultados/figuras/*
 resultados/logs/*
 resultados/operacion_05/*
 archivo/05_frontend_despliegue/*
+archivo/chunk_rebuilds/
 artefactos/*
 datos/model_ready/v2/*
 resultados/pilotos/*
@@ -34,6 +36,10 @@ resultados/pilotos/chunk_length/neural_robust/*
 !resultados/pilotos/chunk_length/neural_robust/minilm/
 resultados/pilotos/chunk_length/neural_robust/minilm/*
 !resultados/pilotos/chunk_length/neural_robust/minilm/minilm_robust_comparison.json
+!resultados/pilotos/chunk_length/neural_robust/minilm_20_30_noninferiority/
+resultados/pilotos/chunk_length/neural_robust/minilm_20_30_noninferiority/*
+!resultados/pilotos/chunk_length/neural_robust/minilm_20_30_noninferiority/paired_train_crossfit_panel_manifest.json
+!resultados/pilotos/chunk_length/neural_robust/minilm_20_30_noninferiority/minilm_20_30_noninferiority.json
 !resultados/pilotos/chunk_length/neural_robust/ollama/
 resultados/pilotos/chunk_length/neural_robust/ollama/*
 !resultados/pilotos/chunk_length/neural_robust/ollama/ollama_robust_comparison.json

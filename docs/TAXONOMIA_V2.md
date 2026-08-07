@@ -5,6 +5,8 @@ Contrato: `moderacion_peru_5_salidas_v2`
 
 La taxonomía es una decisión de moderación informada por literatura y fuentes institucionales. No constituye una clasificación jurídica ni una taxonomía validada por expertos peruanos.
 
+**Contrato de etiquetas v2.1:** cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran al entrenamiento. Esta combinación, sus umbrales y sus reglas de exclusividad son decisiones operativas locales.
+
 ## Salidas entrenadas
 
 | Salida | Definición breve | Fenómenos finos |
@@ -15,7 +17,7 @@ La taxonomía es una decisión de moderación informada por literatura y fuentes
 | `ACOSO_AMENAZA` | Ataque personal o anuncio plausible de daño | acoso personal; amenaza directa/implícita plausible |
 | `CONTENIDO_SEXUAL` | Sexual explícito, cosificación o sexual no consentido | tres fenómenos |
 
-Los daños son multietiqueta. `SEGURO` es positivo y supervisado, pero excluyente. Un texto sin contexto suficiente queda indeterminado y no se fuerza a `SEGURO`.
+`RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL` son multietiqueta. `SEGURO` es positivo y supervisado, pero excluyente. Un texto sin contexto suficiente queda indeterminado y no se fuerza a `SEGURO`.
 
 ## Correcciones respecto de v1.3
 

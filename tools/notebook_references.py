@@ -228,6 +228,11 @@ REFERENCE_LIBRARY = {
         "the Royal Statistical Society: Series B, vol. 69, no. 3, pp. 369–390, "
         "2007, doi: 10.1111/j.1467-9868.2007.00593.x."
     ),
+    "blackwelder1982null": (
+        'W. C. Blackwelder, "Proving the Null Hypothesis in Clinical Trials," '
+        "Controlled Clinical Trials, vol. 3, no. 4, pp. 345–353, 1982, "
+        "doi: 10.1016/0197-2456(82)90024-1."
+    ),
     "dror2018significance": (
         "R. Dror, G. Baumer, S. Shlomov, et al., \"The Hitchhiker's Guide to Testing "
         'Statistical Significance in Natural Language Processing," in Proc. 56th '

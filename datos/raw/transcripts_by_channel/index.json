@@ -4,11 +4,41 @@
   "format": "jsonl",
   "id_field": "video_id",
   "max_channel_file_bytes": 26214400,
-  "total_channel_files": 320,
-  "total_channels": 317,
-  "total_videos": 4970,
-  "total_bytes": 454168194,
+  "total_channel_files": 339,
+  "total_channels": 336,
+  "total_videos": 5002,
+  "total_bytes": 455104683,
   "files": [
+    {
+      "file": "0ox8hjjm2oq--f618799a8d14--part-0001.jsonl",
+      "channel_key": "video:0oX8HJJM2OQ",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 18435,
+      "sha256": "52df1a13b8129a6ced957cb74c9b99c3009f7233d11beb802cdeaf41d999631c"
+    },
+    {
+      "file": "3t2o3b7kawi--c40f33d1f6a0--part-0001.jsonl",
+      "channel_key": "video:3t2o3B7KaWI",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 45397,
+      "sha256": "16e720e49165e0ca864e5cc8c7dee8d0bd0252b4b03b3fb10f4e11a00134bac3"
+    },
+    {
+      "file": "5dily0rnog0--b7e10533f7c3--part-0001.jsonl",
+      "channel_key": "video:5Dily0RNOg0",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 19831,
+      "sha256": "66b958757a5bdbf94f213a6cf33f6dc53a6520989f4777cde65296d0f3b92aed"
+    },
     {
       "file": "arde-troya-con-juliana-oxenford--98afa5172ba6--part-0001.jsonl",
       "channel_key": "title:arde troya con juliana oxenford",
@@ -32,6 +62,36 @@
       "videos": 52,
       "bytes": 9649533,
       "sha256": "50c7b56895147a2146fac6e5c3d2b35fc89263dbdcf34d492c9350d00519d6fb"
+    },
+    {
+      "file": "att9a53cwnk--13f15f641dd7--part-0001.jsonl",
+      "channel_key": "video:ATt9a53cWNk",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 21654,
+      "sha256": "929ac37838727811093bf5a27a400262efb863981c56ec12346d66d9ade9c463"
+    },
+    {
+      "file": "av4sswpzvbi--8430450a658b--part-0001.jsonl",
+      "channel_key": "video:Av4SSWPZVbI",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 39933,
+      "sha256": "afa3aa7b113d4c3b32b7d0375599b386e4a72f928b814d27248f78b1befa86e5"
+    },
+    {
+      "file": "b8xge3iykqu--d0861d44286f--part-0001.jsonl",
+      "channel_key": "video:b8xge3IYkQU",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 12910,
+      "sha256": "2683ae40fb9cb052a549b564186886989a16e64c9fce55f94b09c3ea60f03460"
     },
     {
       "file": "buen-viaje--b87a3e0df3c7--part-0001.jsonl",
@@ -70,6 +130,16 @@
       "sha256": "0fe2a60b90e783c5262990409c8d455de9c51829e5202034bcc36b5b5934056b"
     },
     {
+      "file": "h8jjfqjkaji--a7af753e2892--part-0001.jsonl",
+      "channel_key": "video:h8JJFQjkajI",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 9556,
+      "sha256": "ea1136f64b4c22e31f3ff0bf089a194044fae86aedb0c5e9fa01b241671ed012"
+    },
+    {
       "file": "instarandula--4edfb959ceb5--part-0001.jsonl",
       "channel_key": "title:instarandula",
       "part": 1,
@@ -80,6 +150,46 @@
       "videos": 42,
       "bytes": 3246131,
       "sha256": "273c7350382180970f973ff82b3f4ab7d999345a82ed0c9ef427e3a87a1cd083"
+    },
+    {
+      "file": "jikhbmdlv4u--d2210acacd67--part-0001.jsonl",
+      "channel_key": "video:jikHBmDlV4U",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 27097,
+      "sha256": "569e1431319e48c61f0aef2f325ad4c087aafe11c169436eb2e65b93fedf1d53"
+    },
+    {
+      "file": "jm5uxdgioi4--4776e9503fed--part-0001.jsonl",
+      "channel_key": "video:jm5UXdGIOI4",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 12070,
+      "sha256": "108743c12f451bd46a57c72d4601cbb8f1ac0f5323968ae693eacd99f2476670"
+    },
+    {
+      "file": "kgwzcero440--9afbb5a0ac47--part-0001.jsonl",
+      "channel_key": "video:KgWzCErO440",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 9511,
+      "sha256": "47d53fdcd302d93396eb1a29e70450c5622c1c5a8ad04020e7422cc1347711e9"
+    },
+    {
+      "file": "kwlkr-_zviw--7243eaa97764--part-0001.jsonl",
+      "channel_key": "video:kWLkr-_zvIw",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 99101,
+      "sha256": "d72fde78dc694f9090f23e531a8c822391590f8d78cb9d00b94cea7859e0db3f"
     },
     {
       "file": "l1max--87064b95434d--part-0001.jsonl",
@@ -154,6 +264,16 @@
       "sha256": "0300e8c576d6e9b3464bf867814c65ba73c8c9b7b250ef804cb411ff860cfc22"
     },
     {
+      "file": "p3dxpn88sn4--16b85b921d93--part-0001.jsonl",
+      "channel_key": "video:P3dXpn88Sn4",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 11609,
+      "sha256": "b87265ad91711e4334a35f1b52ea12376f28a6b2571a2ed8830b48b2583f895e"
+    },
+    {
       "file": "panamericana-noticias--43d1d95cb92f--part-0001.jsonl",
       "channel_key": "title:panamericana noticias",
       "part": 1,
@@ -164,6 +284,16 @@
       "videos": 75,
       "bytes": 6836160,
       "sha256": "8a155bf5e4727e929efc65a66fa65571f91be5daf999b484830ee514b2b2e8a8"
+    },
+    {
+      "file": "s0avvjfhko0--53e02eacfc08--part-0001.jsonl",
+      "channel_key": "video:S0aVVjfhKo0",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 27247,
+      "sha256": "67a626ff2ef7f04f63780df7c681fb379a72fb7e9453d6b1cd537c7e4269045d"
     },
     {
       "file": "sin-guion-con-rosa-maria-palacios--cce7b0d110a6--part-0001.jsonl",
@@ -337,9 +467,9 @@
       "channel_titles": [
         "Reporta Perú"
       ],
-      "videos": 1,
-      "bytes": 50083,
-      "sha256": "34df0427f77301aacd988f04e1c69337be0f33cdbd32615914a3cbc616782434"
+      "videos": 2,
+      "bytes": 86909,
+      "sha256": "d6307810b48afa6ae07f0941386f5a2fa3efa755d6e665bd13e60c9def86c831"
     },
     {
       "file": "uc0r4smsfydurf_vk9zir80a--c0aeb464998b--part-0001.jsonl",
@@ -594,6 +724,20 @@
       "sha256": "e1374fa5a7a404b07723363804eaee25dbeda85818b5ae41e775e9d6a0dc63ec"
     },
     {
+      "file": "uc4fyvtpmnefh2vgrs2esvja--6dd564d8171f--part-0001.jsonl",
+      "channel_key": "id:UC4FyvtPMnefH2VGrS2EsvjA",
+      "part": 1,
+      "channel_ids": [
+        "UC4FyvtPMnefH2VGrS2EsvjA"
+      ],
+      "channel_titles": [
+        "La Experiencia del Abogado Criminalista Alex Cross"
+      ],
+      "videos": 1,
+      "bytes": 23254,
+      "sha256": "5311b96c9e1d604f2377b5f0fa2bddc3db58fe3e139b7c665365ce143370caf4"
+    },
+    {
       "file": "uc4hap99arzdbc0vxhr96nsa--45d49f377008--part-0001.jsonl",
       "channel_key": "id:UC4HaP99ArZDbC0VXHr96NsA",
       "part": 1,
@@ -645,9 +789,9 @@
       "channel_titles": [
         "RPP Noticias"
       ],
-      "videos": 201,
-      "bytes": 13019517,
-      "sha256": "ad2550d8559c58fab902e5b275b7f818b4cb0f73134e71bb9e95bde4fd06b5db"
+      "videos": 203,
+      "bytes": 13089931,
+      "sha256": "0c4200466e4c4e84f3c76ad2b03d26de66b22be4df3288d85109db71a093be15"
     },
     {
       "file": "uc5q2iiiustywaocwij2q9xg--1d282505d288--part-0001.jsonl",
@@ -953,9 +1097,9 @@
       "channel_titles": [
         "Cosmos Televisión"
       ],
-      "videos": 34,
-      "bytes": 537323,
-      "sha256": "f7dc99ea65f949b2c2cb73965309f0d748e52d9416597a65619012192fc88dff"
+      "videos": 35,
+      "bytes": 548708,
+      "sha256": "5c32711a6b651ec5c53d87ffdfba53c63caf0a7b8c26168da87f9bc6a49ca5e6"
     },
     {
       "file": "uc_hmrsenun8c5kdkirm7jea--fda45ec3c5e5--part-0001.jsonl",
@@ -1476,6 +1620,20 @@
       "sha256": "c7eaf3cd71abf0e62f349c319f784fcea2892d6e73c71e3e8497cb00fb0c6303"
     },
     {
+      "file": "ucd4m1bxk2h_0p3ooggomvua--cba4474a45cd--part-0001.jsonl",
+      "channel_key": "id:UCD4M1bxK2h_0P3oOgGoMVuA",
+      "part": 1,
+      "channel_ids": [
+        "UCD4M1bxK2h_0P3oOgGoMVuA"
+      ],
+      "channel_titles": [
+        "Di+TV"
+      ],
+      "videos": 1,
+      "bytes": 8810,
+      "sha256": "4039e050a09604ca2a6f4ee39ddb3860ccb4cc634e26a34dddc0e51e30d681bf"
+    },
+    {
       "file": "ucdezamgekbtu8ticczcw3jg--1f05dfa53a45--part-0001.jsonl",
       "channel_key": "id:UCDEzAmgEkbtU8TICCZcw3Jg",
       "part": 1,
@@ -1821,9 +1979,9 @@
       "channel_titles": [
         "Buenos Días Perú"
       ],
-      "videos": 146,
-      "bytes": 4517833,
-      "sha256": "2da0d67389f1624ce330b95f7d983cefbe29d580e4e0e729c3295c9fb17475eb"
+      "videos": 149,
+      "bytes": 4599979,
+      "sha256": "e5df60d3f611e9e83c2986ef65ea5d1718acc57f42c0db16fbd6e3acfb7e52be"
     },
     {
       "file": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d--part-0001.jsonl",
@@ -2218,6 +2376,20 @@
       "sha256": "583e6fbeaec86c6832cc728e419c9d37f9b39729f9c6f5861a94afcff17ee16d"
     },
     {
+      "file": "uciaepeocqpu8hbhinrgkzra--ac8b84f2c970--part-0001.jsonl",
+      "channel_key": "id:UCiaePeoCqpU8hBHiNrgkzrA",
+      "part": 1,
+      "channel_ids": [
+        "UCiaePeoCqpU8hBHiNrgkzrA"
+      ],
+      "channel_titles": [
+        "eldoce"
+      ],
+      "videos": 1,
+      "bytes": 10029,
+      "sha256": "d6c709a7f58098bea165ddef9c53f518aa392a11d7812c15fc44d9a4c9cc9cde"
+    },
+    {
       "file": "uciejv-6eeemtgbmao1i0n4a--f2bd5d6d4c8d--part-0001.jsonl",
       "channel_key": "id:UCiejV-6eEEmtgBmAo1I0n4A",
       "part": 1,
@@ -2535,9 +2707,9 @@
       "channel_titles": [
         "TVPerú Noticias"
       ],
-      "videos": 89,
-      "bytes": 2212642,
-      "sha256": "9956a4febb7ac997f3884ec9665f6dba43e70248c9f2d2725727046d847b4bf5"
+      "videos": 90,
+      "bytes": 2223073,
+      "sha256": "f515d022827cf39fa1d037a1342c283d5a1f31d5065a9ede0e94ddfd3739220b"
     },
     {
       "file": "uclc7tt-tiwtudueng9cnveq--63a558e07e08--part-0001.jsonl",
@@ -2820,6 +2992,20 @@
       "sha256": "f3bd35f06b692e4e39f41f3985e6e8717fc02b16cd793992ec62acef8c655a6b"
     },
     {
+      "file": "ucneggyajvwemnvfdtjbxasg--d0063fb4ff88--part-0001.jsonl",
+      "channel_key": "id:UCNeGGyajvwEMNVFDTjbxAsg",
+      "part": 1,
+      "channel_ids": [
+        "UCNeGGyajvwEMNVFDTjbxAsg"
+      ],
+      "channel_titles": [
+        "A Quien Corresponda"
+      ],
+      "videos": 1,
+      "bytes": 21642,
+      "sha256": "ccd4e76e9f46eb9f249e80a9c3eb7d9608ff20f51e08ed925c6436116151074e"
+    },
+    {
       "file": "ucnfgffdjqpjxricamh2beaq--f3d739a650a7--part-0001.jsonl",
       "channel_key": "id:UCNFgFfDJqPjXricaMH2beAQ",
       "part": 1,
@@ -3081,9 +3267,9 @@
       "channel_titles": [
         "CDN 37"
       ],
-      "videos": 6,
-      "bytes": 238846,
-      "sha256": "f4f7561487dc91fcf806d8f0dba7dac8a886d49ad9392841bd2ba808d2d4229d"
+      "videos": 7,
+      "bytes": 246276,
+      "sha256": "b8780b4e220639d1f189c7f816a19e499207ad66fa56a7261dedf332931cbe99"
     },
     {
       "file": "ucphm2i2wk4vqjenwhn3px8a--4f34d078feb8--part-0001.jsonl",
@@ -3151,9 +3337,9 @@
       "channel_titles": [
         "Latina Noticias"
       ],
-      "videos": 232,
-      "bytes": 8081378,
-      "sha256": "e03bfee9d71f37e2148768384dbbb929cdf672f010053c6128957e8db64f5ea4"
+      "videos": 236,
+      "bytes": 8372953,
+      "sha256": "35dfefffb7fcc5f6b77694ea649b1f5b5c0f37a0fac5b3df0ec0b7678a245541"
     },
     {
       "file": "ucpxoddoaeicm1_3uukf5k3w--ab2e3235a584--part-0001.jsonl",
@@ -4452,6 +4638,26 @@
       "videos": 100,
       "bytes": 9527565,
       "sha256": "155cfbf20e049281d61c59fd3186f00ff7645a3263c3c953319026b111351e50"
+    },
+    {
+      "file": "yvjcwnlj0wk--cf6a67529795--part-0001.jsonl",
+      "channel_key": "video:yvJCWnLj0Wk",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 3364,
+      "sha256": "549d2448ae13eccfac47d03f4a4e670183231b26adec559b369ce54c15eb393d"
+    },
+    {
+      "file": "z2drwelolyo--17d6b0ba96b5--part-0001.jsonl",
+      "channel_key": "video:Z2drweLOLyo",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [],
+      "videos": 1,
+      "bytes": 4832,
+      "sha256": "6820c7b97781a30430384b69c32a85521ec14bf70fe190dd1a9760287da90b9c"
     }
   ]
 }

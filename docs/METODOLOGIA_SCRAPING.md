@@ -35,13 +35,13 @@ un timeout de socket de 30 segundos por operación. Los límites de backfill y d
 videos nuevos están en `None`, por lo que la ejecución recorre toda la cola y
 puede reanudarse después de una interrupción.
 
-Los índices leídos al actualizar este documento no representan todavía el
-cierre de la corrida: las particiones por canal continúan creciendo y existen
-VTT nuevos aún no incorporados al último `vtt_by_video/index.json`. Ese índice
-anterior registra 3 274 archivos para 3 270 videos y un manifiesto de 983 VTT
-faltantes. Por ello, 983 es un checkpoint de entrada, no el faltante final. La
-cifra consolidada solo debe reportarse después de terminar `01_01`, regenerar
-ambos índices y volver a calcular `missing_vtt.jsonl`.
+El checkpoint local fue reconsolidado antes del troceado: contiene 5.002
+transcripciones, 4.968 VTT sincronizados para 4.952 videos y 57 videos
+canónicos aún sin VTT. La cohorte dirigida tiene 1.043 candidatos: 871 ya
+cuentan con transcripción, 31 registran fallo sin éxito posterior y 141 todavía
+no poseen éxito ni fallo. Por tanto, las 5.002 transcripciones describen todo el
+texto completo disponible localmente en este corte, pero no implican que haya
+terminado la cola de adquisición.
 
 ## 2. Principios operativos
 
@@ -90,8 +90,9 @@ Antes de cualquier descarga, el cuaderno:
 
 1. define `datos/raw/transcripts_raw.jsonl` como vista canónica;
 2. incorpora idempotentemente los snapshots históricos, restaura las
-   particiones sincronizadas por canal y anexa los JSON válidos de caché que
-   todavía falten, salvo que esté activo el reinicio desde cero;
+   particiones sincronizadas por canal, anexa los JSON válidos de caché y
+   recupera desde VTT locales toda transcripción ausente que supere 200
+   caracteres, salvo que esté activo el reinicio desde cero;
 3. vuelve a materializar las particiones por canal desde el canónico ya
    consolidado;
 4. consolida e indexa los VTT locales, calcula por `video_id` el manifiesto
@@ -110,6 +111,11 @@ como derivado. El resumen separa `transcripciones_canónicas_completas`,
 `transcripciones_completas_disponibles`, `videos_solo_en_derivados` y
 `videos_conocidos_globales`. Así, un cero en `ya_canónicos_omitidos` describe
 solo el solapamiento de la cohorte actual y nunca el tamaño total del corpus.
+
+La recuperación local desde VTT es de solo lectura. Ninguna pista se elimina o
+sobrescribe: en la verificación del corte se conservaron los mismos 4.968
+archivos antes y después, con cero cambios de tamaño. Los siete VTT menores de
+200 caracteres también se conservaron y solo quedaron excluidos del canónico.
 
 La barra `Procesando pendientes` representa la cohorte posterior al inventario
 global, no la suma histórica de candidatos. `ingest_incremental` repite
@@ -137,7 +143,8 @@ S_l = \left|\{video\_id : l \in labels(video\_id)\}\right|
 \]
 
 El objetivo operativo de una corrida es el mayor soporte observado entre los
-cuatro daños:
+cuatro daños del contrato activo —`RACISMO_DISCRIMINACION`,
+`ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`—:
 
 \[
 T = \max_l S_l
@@ -430,6 +437,7 @@ sin repetir los canales o consultas exitosos.
 | `datos/raw/vtt_by_video/*.vtt` | Pistas WebVTT consolidadas y sincronizables por video |
 | `datos/raw/vtt_by_video/index.json` | Inventario, procedencia, canal, tamaño, validez y SHA-256 de cada VTT |
 | `datos/raw/vtt_by_video/missing_vtt.jsonl` | Cola exacta y reanudable de transcripciones canónicas sin VTT válido |
+| `datos/processed/chunk_materialization_manifest.json` | Conteos, cobertura, estadística descriptiva, hashes y respaldo del troceado |
 
 La cohorte vigente se sobrescribe atómicamente porque representa una selección
 concreta. El archivo general de candidatos y el canónico son incrementales y se
@@ -456,6 +464,10 @@ las particiones y del bundle, completa el canónico sin borrar filas y
 descomprime atómicamente chunks y dataset. Los cuadernos `03_01`–`03_08`
 ejecutan además una verificación previa del dataset: restauran solo cuando falta
 y se detienen si la copia local existente tiene otro SHA-256.
+
+La consolidación y el troceado cuantitativo posteriores a la adquisición se
+documentan en [Consolidación y materialización reproducible de
+chunks](MATERIALIZACION_TROCEADO.md).
 
 El dataset comprimido actual ocupa cerca de 20,3 MiB frente a 104,2 MiB sin
 comprimir. No se particiona mientras permanezca holgadamente por debajo de 50

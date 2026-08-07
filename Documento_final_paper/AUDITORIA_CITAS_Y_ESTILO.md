@@ -1,6 +1,6 @@
 # Auditoría final de citas, redacción y gráficos
 
-> **Enmienda 2026-08-05.** El cierre descrito abajo acredita la versión publicada del baseline de cuatro daños con `SEGURO` derivado. El contrato activo v2 entrena cinco salidas y conserva ese baseline en `archivo/`; la compilación, la inspección visual y los conteos posteriores a esta enmienda se registran al final de este documento.
+> **Enmienda 2026-08-05.** El cierre descrito abajo acredita la versión publicada del baseline de cuatro daños con `SEGURO` derivado. El contrato activo v2 entrena `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`, y conserva ese baseline en `archivo/`; la compilación, la inspección visual y los conteos posteriores a esta enmienda se registran al final de este documento.
 
 Fecha de cierre: 2026-07-29
 Alcance: artículo IEEE, Beamer, bibliografía, figuras, guías editoriales, contrato v2 y paquete histórico `archivo/taxonomia_v1_3/para_equiquetado_LLM/`.
@@ -64,7 +64,7 @@ Se considera crítico inventar una fuente, dejar una afirmación central sin res
 
 La revisión histórica completa está en `../archivo/taxonomia_v1_3/para_equiquetado_LLM/AUDITORIA_ACADEMICA_TAXONOMIA.md`; el contrato activo está en `../docs/TAXONOMIA_V2.md`. La formulación defendible es **taxonomía operativa multietiqueta informada por literatura y fuentes institucionales pertinentes al Perú**, no taxonomía legal ni validada por un panel experto.
 
-El contrato conserva 14 etiquetas finas: 12 fenómenos de daño y dos estados seguros; además, tres flags transversales. La implementación v2 aprende `SEGURO` y cuatro daños como cinco salidas; `ACOSO_AMENAZA` une ataque personal y amenaza directa para aumentar soporte sin tratarlas como equivalentes semántica o jurídicamente.
+El contrato conserva 14 etiquetas finas: 12 fenómenos de daño y dos estados seguros; además, tres flags transversales. La implementación v2 aprende cinco salidas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; los cuatro daños son multietiqueta. `ACOSO_AMENAZA` une ataque personal y amenaza directa para aumentar soporte sin tratarlas como equivalentes semántica o jurídicamente.
 
 La auditoría también documenta diferencias entre versiones sobre amenaza explícita o implícita, ataque aislado o acoso repetido, humor encubridor, citas de discurso dañino y el caso indeterminado con `contexto_necesario`. El artículo conserva esas reglas como procedencia y las separa de las definiciones académicas.
 
@@ -90,7 +90,7 @@ Las versiones finales usan rutas horizontales/verticales y carriles externos. No
 
 Esta fue una auditoría estructural, bibliográfica y visual. No se usó un detector externo de plagio ni de texto generado por IA; por tanto, no se promete el resultado de esos detectores. La protección aplicable es la trazabilidad de afirmaciones, la paráfrasis propia, la atribución explícita y la declaración de límites.
 
-## Adenda de contrato v2.1 — 2026-08-05
+## Adenda del contrato de etiquetas v2.1 — 2026-08-05
 
 Se auditó el nombre y el sustento de las cuatro categorías de daño contra los PDF locales. La salida de género e identidad pasa a denominarse `ATAQUE_POR_GENERO_IDENTIDAD`: el prefijo expresa daño sin reducir el fenómeno a acoso ni exigir intención de odio. Se verificaron como base peruana los trabajos adjuntos de Albornoz y Flores, la Defensoría del Pueblo, Lovón-Cueva y Lovón-Cueva y Rottenbacher; para racismo y lenguaje se contrastaron Zavala y Almeida, Brañez, Salem y Vich. `ACOSO_AMENAZA` conserva la fusión únicamente como decisión de soporte y `CONTENIDO_SEXUAL` distingue evidencia peruana de no consentimiento/cosificación frente a la frontera de contenido explícito tomada de política de plataforma. La matriz ampliada está en `../docs/MATRIZ_EVIDENCIA_TAXONOMIA.md`.
 

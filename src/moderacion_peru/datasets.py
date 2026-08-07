@@ -4,6 +4,7 @@ import hashlib
 import json
 import shutil
 from collections import Counter
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -11,6 +12,30 @@ from typing import Any, Iterable
 from .io import canonical_json_sha256, read_jsonl, sha256_file, write_json_atomic, write_jsonl_atomic
 from .schemas import ModelReadyRecord
 from .taxonomy import load_taxonomy
+
+
+ProgressCallback = Callable[[dict[str, Any]], None]
+
+
+def _notify_progress(
+    callback: ProgressCallback | None,
+    *,
+    status: str,
+    phase: str,
+    advance: int = 0,
+    total: int | None = None,
+    **details: Any,
+) -> None:
+    if callback is not None:
+        callback(
+            {
+                "status": status,
+                "phase": phase,
+                "advance": advance,
+                "total": total,
+                **details,
+            }
+        )
 
 
 def stable_video_split(video_id: str, seed: int = 20260805) -> str:
@@ -81,17 +106,31 @@ def materialize_training_snapshot(
     return {"rows": len(rows), "videos": len(video_splits), "counts": dict(counts)}
 
 
-def previous_video_assignments(source: str | Path) -> dict[str, str]:
+def previous_video_assignments(
+    source: str | Path,
+    *,
+    progress_callback: ProgressCallback | None = None,
+) -> dict[str, str]:
     path = Path(source)
     if not path.is_file():
         return {}
     assignments: dict[str, str] = {}
-    for row in read_jsonl(path):
+    _notify_progress(
+        progress_callback, status="phase_started", phase="loading_previous_snapshot"
+    )
+    for completed, row in enumerate(read_jsonl(path), 1):
         video_id = str(row["video_id"])
         split = str(row["split"])
         previous = assignments.setdefault(video_id, split)
         if previous != split:
             raise ValueError(f"Snapshot previo contiene fuga para {video_id}")
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="loading_previous_snapshot",
+            advance=1,
+            completed=completed,
+        )
     return assignments
 
 
@@ -101,6 +140,7 @@ def materialize_versioned_training_snapshot(
     *,
     snapshots_dir: str | Path | None = None,
     seed: int = 20260805,
+    progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     """Crea un snapshot inmutable y actualiza la vista canónica solo si cambió.
 
@@ -112,13 +152,34 @@ def materialize_versioned_training_snapshot(
     canonical = Path(canonical_destination)
     if not source_path.is_file():
         raise FileNotFoundError(source_path)
-    assignments = previous_video_assignments(canonical)
+    assignments = previous_video_assignments(
+        canonical, progress_callback=progress_callback
+    )
     prepared_rows: list[dict[str, Any]] = []
     taxonomy = load_taxonomy()
-    for row in read_jsonl(source_path):
+    _notify_progress(
+        progress_callback, status="phase_started", phase="preparing_snapshot"
+    )
+    for completed, row in enumerate(read_jsonl(source_path), 1):
         if not row.get("training_eligible") or row.get("needs_review") or row.get("decision_status") != "resolved":
+            _notify_progress(
+                progress_callback,
+                status="progress",
+                phase="preparing_snapshot",
+                advance=1,
+                completed=completed,
+                eligible=len(prepared_rows),
+            )
             continue
         if not row.get("coarse_labels"):
+            _notify_progress(
+                progress_callback,
+                status="progress",
+                phase="preparing_snapshot",
+                advance=1,
+                completed=completed,
+                eligible=len(prepared_rows),
+            )
             continue
         if not row.get("video_id"):
             raise ValueError(
@@ -145,16 +206,38 @@ def materialize_versioned_training_snapshot(
             migration_warning=row.get("migration_warning"),
         )
         prepared_rows.append(record.model_dump(mode="json"))
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="preparing_snapshot",
+            advance=1,
+            completed=completed,
+            eligible=len(prepared_rows),
+        )
     if not prepared_rows:
         raise ValueError("No existen decisiones resueltas y entrenables para materializar")
     unique: dict[str, dict[str, Any]] = {}
-    for row in prepared_rows:
+    _notify_progress(
+        progress_callback,
+        status="phase_started",
+        phase="deduplicating_snapshot",
+        total=len(prepared_rows),
+    )
+    for completed, row in enumerate(prepared_rows, 1):
         previous = unique.get(row["chunk_id"])
         if previous is not None and canonical_json_sha256(previous) != canonical_json_sha256(row):
             raise ValueError(f"Decisiones entrenables duplicadas para {row['chunk_id']}")
         unique[row["chunk_id"]] = row
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="deduplicating_snapshot",
+            advance=1,
+            total=len(prepared_rows),
+            completed=completed,
+        )
     prepared_rows = sorted(unique.values(), key=lambda row: (row["split"], row["video_id"], row["chunk_id"]))
-    assert_no_video_leakage(prepared_rows)
+    assert_no_video_leakage(prepared_rows, progress_callback=progress_callback)
     content_signature = canonical_json_sha256(prepared_rows)
     snapshot_id = f"v{taxonomy.version}-{content_signature[:16]}"
     snapshot_root = Path(snapshots_dir) if snapshots_dir else canonical.parent / "snapshots"
@@ -194,7 +277,7 @@ def materialize_versioned_training_snapshot(
             temporary.unlink(missing_ok=True)
             raise ValueError("La vista canónica no conserva el SHA-256 del snapshot")
         temporary.replace(canonical)
-    return {
+    result = {
         "status": status if not canonical_changed else "updated",
         "snapshot_id": snapshot_id,
         "snapshot": str(snapshot_path),
@@ -204,6 +287,15 @@ def materialize_versioned_training_snapshot(
         "rows": len(prepared_rows),
         "videos": len({row["video_id"] for row in prepared_rows}),
     }
+    _notify_progress(
+        progress_callback,
+        status="finished",
+        phase="snapshot",
+        result_status=result["status"],
+        rows=result["rows"],
+        videos=result["videos"],
+    )
+    return result
 
 
 def load_split(source: str | Path, split: str) -> list[dict[str, Any]]:
@@ -217,14 +309,33 @@ def load_split(source: str | Path, split: str) -> list[dict[str, Any]]:
     ]
 
 
-def assert_no_video_leakage(rows: Iterable[dict[str, Any]]) -> None:
+def assert_no_video_leakage(
+    rows: Iterable[dict[str, Any]],
+    *,
+    progress_callback: ProgressCallback | None = None,
+) -> None:
     assignments: dict[str, str] = {}
-    for row in rows:
+    materialized = list(rows)
+    _notify_progress(
+        progress_callback,
+        status="phase_started",
+        phase="validating_video_splits",
+        total=len(materialized),
+    )
+    for completed, row in enumerate(materialized, 1):
         video_id = str(row["video_id"])
         split = str(row["split"])
         previous = assignments.setdefault(video_id, split)
         if previous != split:
             raise ValueError(f"El video {video_id} aparece en {previous} y {split}")
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="validating_video_splits",
+            advance=1,
+            total=len(materialized),
+            completed=completed,
+        )
 
 
 def audit_training_snapshot(source: str | Path, destination: str | Path) -> dict[str, Any]:

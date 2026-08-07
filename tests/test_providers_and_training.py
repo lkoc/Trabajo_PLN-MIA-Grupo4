@@ -4,6 +4,8 @@ import json
 
 import pytest
 
+from moderacion_peru.labeling import annotate_incremental
+from moderacion_peru.io import read_jsonl
 from moderacion_peru.io import sha256_file
 from moderacion_peru.providers.base import ProviderError, normalize_payload
 from moderacion_peru.providers.huggingface import HuggingFaceProvider
@@ -25,6 +27,51 @@ def payload(**overrides):
     }
     data.update(overrides)
     return data
+
+
+def test_incremental_labeling_reports_progress_and_none_removes_limit(tmp_path):
+    class FixtureProvider:
+        def annotate(self, chunk):
+            return normalize_payload(
+                payload(chunk_id=chunk["chunk_id"]),
+                text=chunk["text"],
+                source="fixture_local",
+                annotator_type="llm_local",
+                model="fixture",
+            )
+
+    records = [
+        {"chunk_id": f"c{index}", "text": f"texto {index}"}
+        for index in range(3)
+    ]
+    output = tmp_path / "annotations.jsonl"
+    progress = []
+    first = annotate_incremental(
+        records,
+        FixtureProvider(),
+        output,
+        limit=2,
+        progress_callback=progress.append,
+    )
+
+    assert first == {"already_completed": 0, "selected": 2, "labeled": 2, "errors": 0}
+    assert [event["status"] for event in progress] == [
+        "started",
+        "labeled",
+        "labeled",
+        "finished",
+    ]
+    assert sum(event["advance"] for event in progress) == 2
+
+    second = annotate_incremental(records, FixtureProvider(), output, limit=None)
+    assert second == {"already_completed": 2, "selected": 1, "labeled": 1, "errors": 0}
+    assert len(list(read_jsonl(output))) == 3
+
+
+@pytest.mark.parametrize("invalid_limit", [0, -1, True])
+def test_incremental_labeling_rejects_invalid_limits(tmp_path, invalid_limit):
+    with pytest.raises(ValueError, match="None o un entero positivo"):
+        annotate_incremental([], object(), tmp_path / "annotations.jsonl", limit=invalid_limit)
 
 
 def test_provider_requires_explicit_safe_fine_label():

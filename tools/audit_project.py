@@ -31,6 +31,41 @@ PROJECT_AUTHORS = (
     "Herbert Antonio Meléndez García",
     "Dennis Jack Paitán Cano",
 )
+TRAINED_OUTPUTS = (
+    "SEGURO",
+    "RACISMO_DISCRIMINACION",
+    "ATAQUE_POR_GENERO_IDENTIDAD",
+    "ACOSO_AMENAZA",
+    "CONTENIDO_SEXUAL",
+)
+ABBREVIATED_CONTRACT = "`SEGURO` + cuatro daños entrenados, incluida"
+CONTRACT_SUMMARY_DOCUMENTS = (
+    "README.md",
+    "datos/README.md",
+    "datos/model_ready/v2/README.md",
+    "resultados/README.md",
+    "modelos/README.md",
+    "bibliografia/fuentes_base.md",
+    "Planning/PLAN_REORGANIZACION_REPRODUCIBLE.md",
+    "config/prompt_operacional_ollama_v2.md",
+    "docs/TAXONOMIA_V2.md",
+    "docs/CONTRATOS_DATOS.md",
+    "docs/MATRIZ_TRAZABILIDAD.md",
+    "docs/MIGRACION_Y_COMPATIBILIDAD.md",
+    "docs/ORDEN_EJECUCION.md",
+    "docs/OPTIMIZACION_LONGITUD_CHUNKS.md",
+    "docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md",
+    "flujo/01_datos/README.md",
+    "flujo/02_etiquetado/README.md",
+    "flujo/03_entrenamiento/README.md",
+    "flujo/04_produccion/README.md",
+    "Documento_final_paper/README.md",
+    "Documento_final_paper/AUDITORIA_CITAS_Y_ESTILO.md",
+    "Documento_final_paper/guia_estructura_paper_ieee.md",
+    "Documento_final_paper/guia_redaccion_paper_ieee.md",
+    "Documento_final_paper/figuras/README.md",
+    "Presentación_BEAMER/README.md",
+)
 
 
 def markdown_issues() -> list[str]:
@@ -48,6 +83,19 @@ def markdown_issues() -> list[str]:
             resolved = (path.parent / target).resolve()
             if not resolved.exists():
                 issues.append(f"broken_link:{path.relative_to(ROOT)}->{target}")
+    return issues
+
+
+def contract_summary_issues() -> list[str]:
+    issues = []
+    for relative in CONTRACT_SUMMARY_DOCUMENTS:
+        path = ROOT / relative
+        text = path.read_text(encoding="utf-8-sig")
+        for output in TRAINED_OUTPUTS:
+            if output not in text:
+                issues.append(f"incomplete_contract_document:{relative}:{output}")
+        if ABBREVIATED_CONTRACT in text:
+            issues.append(f"abbreviated_contract_document:{relative}")
     return issues
 
 
@@ -120,6 +168,14 @@ def notebook_issues() -> list[str]:
             if observed_entries != list(range(1, len(citation_keys) + 1)):
                 issues.append(f"reference_number_mismatch:{path.relative_to(ROOT)}")
         source = "\n".join(cell.source for cell in notebook.cells)
+        first_source = notebook.cells[0].source if notebook.cells else ""
+        for output in TRAINED_OUTPUTS:
+            if output not in first_source:
+                issues.append(
+                    f"incomplete_contract_summary:{path.relative_to(ROOT)}:{output}"
+                )
+        if ABBREVIATED_CONTRACT in source:
+            issues.append(f"abbreviated_contract_summary:{path.relative_to(ROOT)}")
         for index, cell in enumerate(notebook.cells):
             if cell.cell_type == "code":
                 try:
@@ -225,6 +281,7 @@ def main() -> int:
     taxonomy = load_taxonomy()
     issues = (
         markdown_issues()
+        + contract_summary_issues()
         + notebook_issues()
         + taxonomy_name_issues()
         + branding_issues()

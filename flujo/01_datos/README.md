@@ -8,6 +8,8 @@
 
 ## Etapa 01 · Scraping, limpieza y troceado
 
+**Contrato de etiquetas v2.1:** cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran al entrenamiento. Esta combinación, sus umbrales y sus reglas de exclusividad son decisiones operativas locales.
+
 ## Orden
 
 1. `01_01_scraping_incremental.ipynb`
@@ -16,7 +18,7 @@
 
 Entrada: candidatos con `video_id` y URL, snapshots históricos, transcripciones canónicas y caché local.  
 Salida: transcripciones JSONL y chunks v2 con tiempos, hash de transcripción, versión y firma de configuración del troceador.
-Control: nunca se descarga audio o video; primero se consolidan sin modificarlos los `transcripts_raw.jsonl` ya existentes, después se recuperan los VTT faltantes aunque el JSON ya sea canónico, se reutiliza el caché y solo al final se consulta la red para un `video_id` nuevo. La adquisición recupera la ruta histórica `yt-dlp → VTT`, conserva todas las pistas descargadas, elige la más completa, exige 200 caracteres y usa `youtube-transcript-api` solo como respaldo. La limpieza conserva la eliminación de hasta 12 palabras solapadas en subtítulos rodantes, el cierre a 30 segundos/600 caracteres y el mínimo de 90 caracteres.
+Control: nunca se descarga audio o video; primero se consolidan sin modificarlos los `transcripts_raw.jsonl` ya existentes, después se recuperan los VTT faltantes aunque el JSON ya sea canónico, se reutiliza el caché y solo al final se consulta la red para un `video_id` nuevo. La adquisición recupera la ruta histórica `yt-dlp → VTT`, conserva todas las pistas descargadas, elige la más completa, exige 200 caracteres y usa `youtube-transcript-api` solo como respaldo. `01_03` recompone el canónico desde los JSON por canal y recupera sin red VTT utilizables que aún no tengan JSON; nunca elimina o sobrescribe las pistas. La limpieza conserva la eliminación de hasta 12 palabras solapadas en subtítulos rodantes, el cierre a 30 segundos/600 caracteres y el mínimo de 90 caracteres.
 
 `01_01` reúne el scraping inicial y la antigua ampliación dirigida. Su bloque de controles permite elegir `DISCOVERY_MODE="seed"`, `"directed"` o `"both"`; editar canales y consultas; ampliar la cobertura de búsqueda; y configurar reintentos, lote, pausa y aleatorización. La versión actual continúa la corrida parcial con `DISCOVER_NEW=False`, `FETCH_NEW=True` y `BACKFILL_MISSING_VTT=True`: primero completa VTT conocidos y luego procesa candidatos existentes, sin descubrir fuentes nuevas. `MAX_VTT_BACKFILL=None` y `MAX_NEW_VIDEOS=None` recorren ambas colas completas. `RANDOMIZE_DOWNLOAD_QUEUE=True` crea un orden reproducible con `DOWNLOAD_RANDOM_SEED` e intercala canales. La red usa lotes de 10, 15 segundos entre lotes, pausas internas de 2.5–10 segundos y timeout de 30 segundos por operación. `FETCH_NEW=False` deja la ejecución sin solicitudes de subtítulos.
 
@@ -49,13 +51,33 @@ La ejecución completa obtuvo evidencia inconclusa en MiniLM: 20 s presentó la
 mayor AP puntual, 0.59, pero su intervalo de diferencia frente a 30 s incluyó
 cero. Ollama produjo 474/500 salidas válidas; 15, 20 y 25 s no alcanzaron la
 compuerta estructural de 0.95. Su mayor F1 puntual fue 0.42 para 30 s. La
-síntesis jerárquica mantiene 30 s y no cambia la configuración activa.
+etapa complementaria, activada con
+`RUN_MINILM_20_30_NONINFERIORITY_TEST=True`, cerró el contraste MiniLM sobre
+750 videos y predicciones fuera de pliegue: 20 s obtuvo AP 0.492 frente a 0.468
+para 30 s, con `ΔAP=0.024` e IC bootstrap 95% `[−0.0090, 0.059]`. Se estableció
+no inferioridad con margen 0.01, pero no superioridad. La síntesis jerárquica
+mantiene 30 s y no cambia la configuración activa.
+
+Los controles `FORCE_NEURAL_ROBUST_RECOMPUTE=False` y
+`FORCE_MINILM_20_30_RECOMPUTE=False` hacen que el cuaderno lea primero los JSON
+consolidados. Así puede volver a mostrar las tablas sin ejecutar Ollama,
+embeddings, ajustes ni bootstrap; `RUN_...=True` solo completa una etapa cuyo
+artefacto falte.
 
 Antes de activar otra longitud, los chunks, etiquetas, snapshot, modelos,
 resultados y bundle correspondientes a la firma activa se mueven a
 `archivo/chunking_configurations/<firma>/state/`. No se borran. Volver a esa
 firma verifica y restaura los mismos bytes; `01_03` empieza vacío únicamente
 cuando la longitud nunca fue materializada.
+
+`01_03` muestra una barra por cada una de las transcripciones canónicas. Su modo
+normal compara `(video_id, transcript_sha256, chunking_signature)` y procesa
+solo videos nuevos o modificados. `REBUILD_CHUNKS_FROM_ZERO=True` crea primero
+una copia recuperable bajo `archivo/chunk_rebuilds/` y reemplaza atómicamente
+chunks y versiones; después debe volver a `False`. El corte actual consolidó
+5.002 transcripciones y produjo 166.940 chunks para 4.992 videos. El método, los
+10 videos sin salida y la estadística descriptiva están en
+[`docs/MATERIALIZACION_TROCEADO.md`](../../docs/MATERIALIZACION_TROCEADO.md).
 
 Con `SYNC_TRANSCRIPTS_BY_CHANNEL=True`, el canónico existente se materializa sin
 borrarlo bajo `datos/raw/transcripts_by_channel/`. Después, cada éxito nuevo se
@@ -69,6 +91,9 @@ Con `SYNC_VTT_BY_VIDEO=True`, `01_01` copia sin borrar las pistas históricas a
 `missing_vtt.jsonl`. Una respuesta exclusiva de `youtube-transcript-api` se
 serializa como `*.transcript-api.vtt` y se marca como derivada; no se presenta
 como archivo original de `yt-dlp`.
+
+El checkpoint actual conserva 4.968 VTT para 4.952 videos. La última
+actualización del índice verificó cero pistas eliminadas y cero modificadas.
 
 Tras clonar, ejecute `python tools/restore_synced_checkpoints.py`. Los chunks son
 baratos de reconstruir, aunque su gzip permanece en el bundle por ser entrada

@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "minilm_noninferiority_version": "1.0.0",
+  "run_signature": "98485b784f3f80f2163e1be0bbe0aaacabf11045d3cdca2e6439f56277cb8928",
+  "configuration": {
+    "profile": "minilm_20_30_train_video_crossfit",
+    "transcript_sha256": "6b964fd0d639d8f28f170b9d8775a435877d8b7724b2ac9b0a5acf3c382cf139",
+    "chunks_sha256": "bbf20426e65f6e231dd8b337d71cade121c6a936d5a1bcc999698983bf8c92d0",
+    "dataset_sha256": "daea22bcf5fb0bdff080db0ecabc5d69ad4c097b57b5d5bab3ea92dc40af1b2e",
+    "candidate_seconds": [
+      20.0,
+      30.0
+    ],
+    "panel_size": 750,
+    "minimum_damage_videos_per_label": 80,
+    "anchors_per_video": 1,
+    "folds": 5,
+    "selection_seed": 20260831,
+    "source_split": "train",
+    "window_policy": "same_reference_midpoint_centered_window",
+    "test_used": false
+  },
+  "panel_path": "paired_train_crossfit_panel.jsonl",
+  "panel_sha256": "2d2565b5bdd4e5d5a178a7eab3f648d087c8188357392df8da3175ea72eca5e5",
+  "anchors": 750,
+  "distinct_videos": 750,
+  "anchors_per_video_max": 1,
+  "anchors_per_crossfit_fold": {
+    "1": 150,
+    "3": 150,
+    "2": 150,
+    "4": 150,
+    "5": 150
+  },
+  "label_counts": {
+    "SEGURO": 401,
+    "RACISMO_DISCRIMINACION": 95,
+    "ATAQUE_POR_GENERO_IDENTIDAD": 122,
+    "ACOSO_AMENAZA": 263,
+    "CONTENIDO_SEXUAL": 94
+  },
+  "reference_match": {
+    "chunk_rows": 47449,
+    "dataset_rows": 117244,
+    "matched_references": 36087,
+    "conflicting_keys_excluded": 0,
+    "matched_videos": 1336
+  },
+  "valid_train_references_for_both_windows": 25542,
+  "invalid_or_missing_train_references_excluded": 50,
+  "test_used": false,
+  "limitations": [
+    "El panel está enriquecido y no estima prevalencia natural.",
+    "Las etiquetas son transferencias del contrato vigente, no una nueva anotación humana ciega.",
+    "La evaluación es interna por cross-fit sobre train; no reemplaza validación externa."
+  ]
+}
