@@ -260,6 +260,9 @@ def test_chunk_length_pilot_is_optional_and_materialization_is_separate():
         "sgd_incremental",
         "run_bounded_neural_chunk_comparison",
         "run_chunk_length_robust_test",
+        "Diseño para reporte académico",
+        "Resultados robustos para reporte",
+        "Resultado académico principal",
         "prepare_local_bundle_input('chunks_v2'",
         "prepare_local_bundle_input('dataset_5_salidas'",
     ):
