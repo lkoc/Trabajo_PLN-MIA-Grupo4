@@ -15,6 +15,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+CORE_TEXT_SUFFIXES = {".json", ".py", ".toml", ".txt"}
 
 
 def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
@@ -23,6 +24,15 @@ def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
         while block := handle.read(chunk_size):
             digest.update(block)
     return digest.hexdigest()
+
+
+def core_file_bytes(path: Path) -> bytes:
+    """Normaliza texto a UTF-8/LF para que el core sea idéntico entre SO."""
+    payload = path.read_bytes()
+    if path.suffix.lower() not in CORE_TEXT_SUFFIXES:
+        return payload
+    text = payload.decode("utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
+    return text.encode("utf-8")
 
 
 def bundle_id_for_manifest(manifest: dict[str, object]) -> str:
@@ -137,7 +147,12 @@ def build_core_archive(destination: Path) -> dict[str, object]:
                 info = zipfile.ZipInfo(path.relative_to(ROOT).as_posix(), date_time=(1980, 1, 1, 0, 0, 0))
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.external_attr = 0o644 << 16
-                archive.writestr(info, path.read_bytes(), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
+                archive.writestr(
+                    info,
+                    core_file_bytes(path),
+                    compress_type=zipfile.ZIP_DEFLATED,
+                    compresslevel=9,
+                )
         os.replace(temporary_name, destination)
     finally:
         if os.path.exists(temporary_name):

@@ -91,6 +91,13 @@ cuaderno exige reiniciar el kernel para evitar mezclar versiones. Los modelos se
 descargan al caché efímero `/content/huggingface`; no se sincronizan videos,
 audio, VTT, PDFs, modelos Ollama ni cachés de Hugging Face.
 
+Los modelos Hugging Face configurados son públicos. El bootstrap define
+`HF_HUB_DISABLE_IMPLICIT_TOKEN=1` y `HF_HOME=/content/huggingface` antes de
+importar la biblioteca, evitando que un kernel controlado desde VS Code intente
+consultar el almacén de secretos exclusivo de la interfaz web de Colab. Un
+repositorio privado o restringido requeriría autenticación explícita y segura.
+Consulte las [variables de entorno oficiales de Hugging Face](https://huggingface.co/docs/huggingface_hub/en/package_reference/environment_variables).
+
 Los checkpoints se generan en `/content` y, al activar `PUBLISH_TO_DRIVE=True`,
 se publican como un TAR.GZ verificable bajo:
 

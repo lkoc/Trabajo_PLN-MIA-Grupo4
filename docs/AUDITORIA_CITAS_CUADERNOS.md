@@ -76,7 +76,7 @@ python -m pytest
 python tools/audit_project.py
 ```
 
-Resultado: 101 pruebas aplicables aprobadas; 18/18 cuadernos con celda final; 101/101
+Resultado: 102 pruebas aplicables aprobadas; 18/18 cuadernos con celda final; 101/101
 entradas numeradas y citadas; cero claves ausentes en `referencias.bib`, cero
 entradas finales sin uso, cero números discontinuos y cero incidencias del
 auditor del proyecto. La única comprobación estructural no incluida en esa

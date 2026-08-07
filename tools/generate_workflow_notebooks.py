@@ -196,6 +196,12 @@ COLAB_EXPECTED_CORE_SHA256 = "__EXPECTED_CORE_SHA256__"
 IN_COLAB = importlib.util.find_spec("google.colab") is not None
 COLAB_CONTEXT = None
 
+# Los modelos configurados son públicos. Evita que huggingface_hub intente
+# consultar el vault de secretos, que solo funciona desde la interfaz web de Colab.
+if IN_COLAB:
+    os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"
+    os.environ["HF_HOME"] = "/content/huggingface"
+
 def _sha256(path):
     digest = hashlib.sha256()
     with Path(path).open("rb") as handle:
@@ -358,7 +364,6 @@ if IN_COLAB:
         )
 
     os.environ["MODPERU_ROOT"] = str(ROOT)
-    os.environ["HF_HOME"] = "/content/huggingface"
     importlib.invalidate_caches()
     if str(ROOT / "src") not in sys.path:
         sys.path.insert(0, str(ROOT / "src"))

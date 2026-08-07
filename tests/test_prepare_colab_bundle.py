@@ -60,6 +60,15 @@ def test_bundle_id_ignores_generation_date_and_verifies_every_artifact(tmp_path)
     assert verified["bundle_id"] == manifest["bundle_id"]
 
 
+def test_core_text_normalization_is_independent_of_platform_line_endings(tmp_path):
+    lf = tmp_path / "lf.py"
+    crlf = tmp_path / "crlf.py"
+    lf.write_bytes(b"first\nsecond\n")
+    crlf.write_bytes(b"first\r\nsecond\r\n")
+
+    assert bundle_tools.core_file_bytes(lf) == bundle_tools.core_file_bytes(crlf)
+
+
 def test_publish_drive_release_is_versioned_and_idempotent(tmp_path, monkeypatch):
     local = tmp_path / "local_bundle"
     manifest = _fixture_bundle(local)

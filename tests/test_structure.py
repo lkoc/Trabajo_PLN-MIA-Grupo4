@@ -187,6 +187,8 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
             assert "publish_colab_outputs" in source
             assert "COLAB_REQUIRE_L4 = True" in source
             assert "COLAB_AUTO_UPDATE_BUNDLE = True" in source
+            assert 'os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"' in source
+            assert 'os.environ["HF_HOME"] = "/content/huggingface"' in source
             assert f'COLAB_NOTEBOOK_BUILD_BUNDLE_ID = "{expected_bundle_id}"' in source
             assert "_activate_verified_drive_release" in source
             assert "02_00_preparacion_bundle_colab.ipynb" in source
