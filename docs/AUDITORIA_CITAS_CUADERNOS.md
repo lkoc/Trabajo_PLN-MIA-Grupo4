@@ -1,11 +1,11 @@
 # Auditoría de citas de los cuadernos activos
 
 Versión auditada: `2.1.0`  
-Fecha: 2026-08-06
+Fecha: 2026-08-07
 
 ## Alcance y criterio
 
-Se revisaron los 17 cuadernos activos de `flujo/`. Se aplicó la guía local
+Se revisaron los 18 cuadernos activos de `flujo/`. Se aplicó la guía local
 [`evidencia-citas-y-bibliografia.md`](../Guias_generales/redactar-articulo-ieee-y-presentacion/references/evidencia-citas-y-bibliografia.md):
 
 - cita IEEE numérica junto a la afirmación que respalda;
@@ -25,8 +25,9 @@ cuaderno materializa una lista independiente numerada por primera aparición.
 | Cuaderno | Entradas en la celda final |
 |---|---:|
 | `01_01_scraping_incremental.ipynb` | 7 |
-| `01_02_optimizacion_longitud_chunks.ipynb` | 3 |
+| `01_02_optimizacion_longitud_chunks.ipynb` | 13 |
 | `01_03_limpieza_troceado_incremental.ipynb` | 2 |
+| `02_00_preparacion_bundle_colab.ipynb` | 1 |
 | `02_01_etiquetado_local_ollama.ipynb` | 7 |
 | `02_02_etiquetado_remoto.ipynb` | 2 |
 | `02_03_revision_llm_dirigida.ipynb` | 4 |
@@ -41,9 +42,9 @@ cuaderno materializa una lista independiente numerada por primera aparición.
 | `03_07_comparacion_final.ipynb` | 5 |
 | `03_08_auditoria_finas_flags.ipynb` | 10 |
 | `04_01_frontend_produccion.ipynb` | 5 |
-| **Total materializado** | **89** |
+| **Total materializado** | **100** |
 
-El total corresponde a 89 entradas materializadas en 17 bibliografías y 59
+El total corresponde a 100 entradas materializadas en 18 bibliografías y 64
 claves únicas de la bibliografía maestra. Una misma fuente puede reaparecer en
 cuadernos distintos cuando sustenta componentes distintos del flujo.
 
@@ -75,10 +76,12 @@ python -m pytest
 python tools/audit_project.py
 ```
 
-Resultado: 70 pruebas aprobadas; 17/17 cuadernos con celda final; 89/89
+Resultado: 101 pruebas aplicables aprobadas; 18/18 cuadernos con celda final; 100/100
 entradas numeradas y citadas; cero claves ausentes en `referencias.bib`, cero
 entradas finales sin uso, cero números discontinuos y cero incidencias del
-auditor del proyecto.
+auditor del proyecto. La única comprobación estructural no incluida en esa
+corrida exige cuadernos sin salidas guardadas; `01_03` conserva deliberadamente
+los resultados del usuario y no se limpió durante esta actualización.
 
 El control automático verifica estructura y correspondencia de claves. La
 correspondencia semántica afirmación–fuente se revisó manualmente y conserva los

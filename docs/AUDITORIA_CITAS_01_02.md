@@ -30,7 +30,7 @@ referencias que pueda divergir.
 | Informe neuronal | 13 | 13 | 0 | 0 | 0 |
 | Informe general de optimización | 26 | 15 | 0 | 0 | 0 |
 
-El auditor integral contabiliza 99 menciones en los 17 cuadernos activos; los
+El auditor integral contabiliza 100 menciones en los 18 cuadernos activos; los
 17 terminan con una celda IEEE numerada y no conservan marcadores bibliográficos
 sin resolver. La bibliografía maestra contiene todas las claves usadas por
 `01_02`.
