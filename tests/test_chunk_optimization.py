@@ -5,8 +5,10 @@ import json
 import pytest
 
 from moderacion_peru.chunk_optimization import (
+    _bounded_neural_rows,
     activate_chunking_configuration,
     recommend_chunk_seconds,
+    run_bounded_neural_chunk_comparison,
 )
 from moderacion_peru.incremental import DEFAULT_CHUNKING_CONFIGURATION
 
@@ -79,3 +81,62 @@ def test_corrupt_restore_is_rejected_before_active_state_moves(tmp_path):
     assert chunks.read_bytes() == b"active-25"
     active = json.loads((tmp_path / "datos/processed/chunking_active.json").read_text())
     assert active["configuration"]["max_seconds"] == 25.0
+
+
+def test_bounded_neural_rows_are_deterministic_and_cover_labels():
+    rows = [
+        {
+            "chunk_id": f"chunk-{index}",
+            "split": "validation",
+            "coarse_labels": [label],
+            "text": f"texto {index}",
+        }
+        for index, label in enumerate(
+            [
+                "SEGURO",
+                "RACISMO_DISCRIMINACION",
+                "ATAQUE_POR_GENERO_IDENTIDAD",
+                "ACOSO_AMENAZA",
+                "CONTENIDO_SEXUAL",
+            ]
+        )
+    ]
+    rows.append(
+        {
+            "chunk_id": "train-only",
+            "split": "train",
+            "coarse_labels": ["SEGURO"],
+            "text": "fuera del split",
+        }
+    )
+
+    selected = _bounded_neural_rows(rows, "validation", 5, seed=20260806)
+    repeated = _bounded_neural_rows(rows, "validation", 5, seed=20260806)
+
+    assert [row["chunk_id"] for row in selected] == [
+        row["chunk_id"] for row in repeated
+    ]
+    assert {row["coarse_labels"][0] for row in selected} == {
+        "SEGURO",
+        "RACISMO_DISCRIMINACION",
+        "ATAQUE_POR_GENERO_IDENTIDAD",
+        "ACOSO_AMENAZA",
+        "CONTENIDO_SEXUAL",
+    }
+
+
+def test_bounded_neural_comparison_requires_toggle_and_materialized_cohort(tmp_path):
+    with pytest.raises(ValueError, match="al menos uno"):
+        run_bounded_neural_chunk_comparison(
+            tmp_path,
+            run_hf=False,
+            run_ollama=False,
+        )
+
+    with pytest.raises(FileNotFoundError, match="smoke test CPU"):
+        run_bounded_neural_chunk_comparison(
+            tmp_path,
+            candidate_seconds=(20,),
+            run_hf=True,
+            run_ollama=False,
+        )

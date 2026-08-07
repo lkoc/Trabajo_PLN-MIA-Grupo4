@@ -5,7 +5,7 @@
 | Paso | Cuaderno | Entrada principal | Salida principal | Reanudación/no-op |
 |---:|---|---|---|---|
 | 1 | `01_01_scraping_incremental` | canales/consultas + candidatos + corpus/caché/derivados históricos | canónico consolidado, inventario global, candidatos y transcripciones por canal | restaura raw disponible y excluye todo `video_id` con texto antes de recorrer pendientes |
-| 2 | `01_02_optimizacion_longitud_chunks` | transcripciones + chunks etiquetados + snapshot | comparación opcional 15–35 s | reanuda modelos por firma; no cambia datos sin activación explícita |
+| 2 | `01_02_optimizacion_longitud_chunks` | transcripciones + chunks etiquetados + snapshot | comparación opcional 15–35 s y smoke neuronal MiniLM/Gemma | reanuda modelos por firma; los comparadores neuronales son informativos y no cambian datos |
 | 3 | `01_03_limpieza_troceado_incremental` | transcripciones + configuración activa | chunks v2 | hash de transcripción + firma de configuración + `chunk_id` |
 | 4 | `02_01_etiquetado_local_ollama` | chunks pendientes | anotaciones locales | `chunk_id` |
 | 5 | `02_02_etiquetado_remoto` | muestra opcional | anotaciones remotas | opcional, `chunk_id` y activación comercial explícita |
@@ -27,7 +27,7 @@
 ## Interruptores deliberados
 
 - En `01_01`, seleccione `DISCOVERY_MODE="seed"`, `"directed"` o `"both"`. Los valores `MAX_DIRECTED_CANDIDATES=None` y `MAX_NEW_VIDEOS=None` incluyen toda la cohorte dirigida inédita y toda la cola pendiente. `RANDOMIZE_DOWNLOAD_QUEUE=True` ordena de forma pseudoaleatoria reproducible e intercala canales. `NETWORK_BATCH_SIZE=10` y `NETWORK_BATCH_PAUSE_SECONDS=60` regulan la ejecución sin excluir candidatos; `yt-dlp` añade pausas internas de 5–10 segundos. `directed` calcula déficits sin consultar `test` y usa pesos iguales si todavía no hay datos etiquetados. Use `DISCOVER_NEW=True` y `FETCH_NEW=True` únicamente cuando quiera ampliar el corpus.
-- `01_02` es opcional. `RUN_CHUNK_LENGTH_SMOKE_TEST=True` hace 10 ajustes CPU; `RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=True` hace 45 ajustes cortos en tres cohortes pareadas de 200/80/80 videos. Cada ajuste entrena, calibra e infiere con una sola longitud. `MANUAL_CHUNK_SECONDS` permite elegir directamente. Solo `APPLY_CHUNK_SELECTION=True` cambia la firma activa; por defecto no mueve nada.
+- `01_02` es opcional. `RUN_CHUNK_LENGTH_SMOKE_TEST=True` hace 10 ajustes CPU; después, `RUN_BOUNDED_HF_COMPARISON=True` usa MiniLM congelado sobre 20 s/30 s y `RUN_BOUNDED_OLLAMA_COMPARISON=True` evalúa como máximo seis respuestas estructuradas de `gemma3:4b`, reanudables y con tope de diez minutos. Esos dos perfiles son diagnósticos y no seleccionan longitud. `RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=True` hace 45 ajustes cortos en tres cohortes pareadas de 200/80/80 videos. Cada ajuste supervisado entrena, calibra e infiere con una sola longitud. `MANUAL_CHUNK_SECONDS` permite elegir directamente. Solo `APPLY_CHUNK_SELECTION=True` cambia la firma activa; por defecto no mueve nada.
 - En `02_01`, active `RUN=True`; pruebe primero `LIMIT=20` y después quite el límite para cerrar el lote.
 - `02_02` conserva `RUN_REMOTE=False` salvo decisión explícita de usar la API comercial.
 - En `03_01`–`03_06`, active `RUN_TRAINING=True`. Una segunda ejecución con el mismo snapshot devuelve `status="noop"`.

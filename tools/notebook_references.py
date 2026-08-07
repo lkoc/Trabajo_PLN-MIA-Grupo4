@@ -66,6 +66,10 @@ REFERENCE_LIBRARY = {
         "2a654d98e6fb. [Online]. Available: https://ollama.com/library/qwen3.5:4b. "
         "Accessed: Aug. 5, 2026."
     ),
+    "ollama2026gemma34b": (
+        "Ollama, \"Model Card: gemma3:4b,\" Ollama Model Library, 2026. [Online]. "
+        "Available: https://ollama.com/library/gemma3:4b. Accessed: Aug. 6, 2026."
+    ),
     "qwen2025qwen3": (
         "A. Yang, A. Li, B. Yang, et al., \"Qwen3 Technical Report,\" arXiv:2505.09388, "
         "2025, doi: 10.48550/arXiv.2505.09388."

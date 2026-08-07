@@ -19,6 +19,13 @@ vuelven a trocear, entrenan desde cero, calibran en `validation` e infieren en
 `validation` y `test` para cada longitud; ningún modelo entrenado a 30 s se usa
 para evaluar otra longitud.
 
+El cuaderno también ofrece dos diagnósticos neuronales desactivados por defecto.
+MiniLM multilingüe se usa como encoder congelado con *mean pooling* y una cabeza
+logística pequeña sobre 120/40 filas. `gemma3:4b` procesa tres filas por longitud,
+persiste cada respuesta para reanudar y se detiene al alcanzar diez minutos. Sus
+etiquetas duras no son directamente comparables con la AP continua de MiniLM y
+ninguno de estos diagnósticos modifica la recomendación confirmatoria.
+
 El piloto rápido de una cohorte y dos modelos sugirió 35 s, pero su resultado
 fue inestable y no se acepta como decisión. La confirmación ampliada usó tres
 cohortes pareadas, 200/80/80 videos por split, tres modelos y transferencia de

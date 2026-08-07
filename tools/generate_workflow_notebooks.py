@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from notebook_references import apply_citations
 
 
 ROOT = Path(__file__).resolve().parents[1]
+ONLY_NOTEBOOKS: set[str] | None = None
 
 PROJECT_TITLE = (
     "Moderación semiautomática de videos peruanos de YouTube mediante modelos "
@@ -851,6 +853,8 @@ def create(
     *,
     colab_notebook_id: str | None = None,
 ) -> None:
+    if ONLY_NOTEBOOKS is not None and path not in ONLY_NOTEBOOKS:
+        return
     notebook = nbf.v4.new_notebook()
     notebook.metadata = {
         "authors": [{"name": name} for name in PROJECT_AUTHORS],
@@ -938,7 +942,9 @@ def create(
     nbf.write(notebook, target)
 
 
-def main() -> None:
+def main(*, only_notebooks: set[str] | None = None) -> None:
+    global ONLY_NOTEBOOKS
+    ONLY_NOTEBOOKS = only_notebooks
     create(
         "flujo/01_datos/01_01_scraping_incremental.ipynb",
         "01.01 · Adquisición incremental de subtítulos",
@@ -982,12 +988,18 @@ def main() -> None:
     create(
         "flujo/01_datos/01_02_optimizacion_longitud_chunks.ipynb",
         "01.02 · Piloto opcional de longitud de chunks",
-        "Compara localmente ventanas de 15, 20, 25, 30 y 35 segundos con dos baselines CPU y permite elegir la longitud manualmente o aceptar una recomendación no productiva.",
+        "Compara localmente ventanas de 15, 20, 25, 30 y 35 segundos con baselines CPU y, de forma acotada, con MiniLM y Gemma 3; permite elegir la longitud manualmente o aceptar una recomendación no productiva.",
         "La selección de hiperparámetros usa exclusivamente `validation`; consultar `test` para elegir "
         "introduciría sesgo de selección [@cawley2010selection]. Se promedia *average precision* de los "
         "cuatro daños por ser una medida informativa ante desbalance [@saito2015pr]. ComplementNB y SGD "
         "con TF-IDF reutilizan el mismo entrenador de los cuadernos posteriores y la implementación de "
-        "scikit-learn [@pedregosa2011sklearn]. La transferencia de etiquetas por mayor solapamiento "
+        "scikit-learn [@pedregosa2011sklearn]. El comparador neuronal reutiliza como encoder congelado "
+        "`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` [@hf2026minilmcard] y aplica "
+        "*mean pooling*; no equivale a un ajuste fino. `gemma3:4b`, el LLM de menor tamaño de archivo "
+        "entre los tres modelos Ollama descargados, se limita a tres filas por longitud y salida "
+        "estructurada [@ollama2026gemma34b] [@ollama2026structured]. Sus etiquetas duras y la AP de "
+        "MiniLM no son métricas intercambiables y no intervienen en la recomendación automática. "
+        "La transferencia de etiquetas por mayor solapamiento "
         "temporal, la muestra enriquecida, la tolerancia absoluta de 0.02 AP y el proxy de costo "
         "`filas_train × modelos` son decisiones metodológicas locales. El resultado es orientativo, no "
         "una estimación productiva; `test` se muestra solo después y nunca participa en la recomendación.",
@@ -996,10 +1008,22 @@ def main() -> None:
                 "Controles opcionales y elección manual",
                 "RUN_CHUNK_LENGTH_SMOKE_TEST=False\n"
                 "RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=False\n"
+                "RUN_BOUNDED_HF_COMPARISON=False\n"
+                "RUN_BOUNDED_OLLAMA_COMPARISON=False\n"
                 "CANDIDATE_SECONDS=(15,20,25,30,35)\n"
                 "TOY_MODELS=('complement_nb','sgd_incremental')\n"
                 "TOY_VIDEO_LIMITS={'train':40,'validation':16,'test':16}\n"
                 "TOY_MAX_FEATURES=12000\n"
+                "NEURAL_CANDIDATE_SECONDS=(20,30)\n"
+                "HF_SMOKE_MODEL='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'\n"
+                "HF_SMOKE_REVISION='e8f8c211226b894fcb81acc59f3b34ba3efd5f42'\n"
+                "HF_SMOKE_TRAIN_LIMIT=120\n"
+                "HF_SMOKE_VALIDATION_LIMIT=40\n"
+                "HF_SMOKE_BATCH_SIZE=16\n"
+                "OLLAMA_SMOKE_MODEL='gemma3:4b'\n"
+                "OLLAMA_SMOKE_VALIDATION_LIMIT=3\n"
+                "OLLAMA_SMOKE_TIMEOUT_SECONDS=90.0\n"
+                "OLLAMA_SMOKE_MAX_WALL_SECONDS=600.0\n"
                 "CONFIRMATORY_MODELS=('complement_nb','logistic_regression','sgd_incremental')\n"
                 "CONFIRMATORY_VIDEO_LIMITS={'train':200,'validation':80,'test':80}\n"
                 "CONFIRMATORY_SEEDS=(20260805,20260817,20260829)\n"
@@ -1010,7 +1034,7 @@ def main() -> None:
                 "USE_CONFIRMATORY_RECOMMENDATION=False\n"
                 "APPLY_CHUNK_SELECTION=False  # Si es False, no mueve ningún dataset\n"
                 "from moderacion_peru.colab import prepare_local_bundle_input\n"
-                "from moderacion_peru.chunk_optimization import activate_chunking_configuration, run_chunk_length_confirmatory_test, run_chunk_length_smoke_test\n"
+                "from moderacion_peru.chunk_optimization import activate_chunking_configuration, run_bounded_neural_chunk_comparison, run_chunk_length_confirmatory_test, run_chunk_length_smoke_test\n"
                 "from moderacion_peru.incremental import DEFAULT_CHUNKING_CONFIGURATION\n"
                 "import json\n"
                 "TRANSCRIPTS=ROOT/'datos/raw/transcripts_raw.jsonl'\n"
@@ -1020,7 +1044,7 @@ def main() -> None:
                 "PILOT_ROOT=ROOT/'resultados/pilotos/chunk_length'\n"
                 "RECOMMENDATION=PILOT_ROOT/'recommendation.json'\n"
                 "CONFIRMATORY_RECOMMENDATION=PILOT_ROOT/'confirmatory_recommendation.json'\n"
-                "show_summary('Configuración de pruebas', {'humo_rápido':RUN_CHUNK_LENGTH_SMOKE_TEST,'confirmatoria_corta':RUN_CHUNK_LENGTH_CONFIRMATORY_TEST,'longitudes':CANDIDATE_SECONDS,'dataset':DATASET,'aplicar_selección':APPLY_CHUNK_SELECTION}, tone='neutral')",
+                "show_summary('Configuración de pruebas', {'humo_rápido':RUN_CHUNK_LENGTH_SMOKE_TEST,'minilm_acotado':RUN_BOUNDED_HF_COMPARISON,'gemma_acotado':RUN_BOUNDED_OLLAMA_COMPARISON,'confirmatoria_corta':RUN_CHUNK_LENGTH_CONFIRMATORY_TEST,'longitudes':CANDIDATE_SECONDS,'longitudes_neuronales':NEURAL_CANDIDATE_SECONDS,'dataset':DATASET,'aplicar_selección':APPLY_CHUNK_SELECTION}, tone='neutral')",
             ),
             (
                 "Prueba de humo local de extremo a extremo",
@@ -1030,6 +1054,21 @@ def main() -> None:
                 "    show_table('Comparación por longitud',smoke_result['comparisons'],limit=len(CANDIDATE_SECONDS))\n"
                 "else:\n"
                 "    show_callout('Piloto desactivado','Cambie RUN_CHUNK_LENGTH_SMOKE_TEST=True para entrenar diez baselines CPU pequeños. Los resultados se reanudan por firma.',tone='neutral')",
+            ),
+            (
+                "Comparación neuronal acotada y no selectiva",
+                "if RUN_BOUNDED_HF_COMPARISON or RUN_BOUNDED_OLLAMA_COMPARISON:\n"
+                "    missing_neural_seconds=set(NEURAL_CANDIDATE_SECONDS)-set(CANDIDATE_SECONDS)\n"
+                "    if missing_neural_seconds:\n"
+                "        raise ValueError(f'Incluya estas longitudes neuronales en CANDIDATE_SECONDS: {sorted(missing_neural_seconds)}')\n"
+                "    neural_result=run_bounded_neural_chunk_comparison(PILOT_ROOT,candidate_seconds=NEURAL_CANDIDATE_SECONDS,run_hf=RUN_BOUNDED_HF_COMPARISON,run_ollama=RUN_BOUNDED_OLLAMA_COMPARISON,hf_model_id=HF_SMOKE_MODEL,hf_revision=HF_SMOKE_REVISION,hf_train_limit=HF_SMOKE_TRAIN_LIMIT,hf_validation_limit=HF_SMOKE_VALIDATION_LIMIT,hf_batch_size=HF_SMOKE_BATCH_SIZE,ollama_model=OLLAMA_SMOKE_MODEL,ollama_validation_limit=OLLAMA_SMOKE_VALIDATION_LIMIT,ollama_timeout_seconds=OLLAMA_SMOKE_TIMEOUT_SECONDS,max_ollama_wall_seconds=OLLAMA_SMOKE_MAX_WALL_SECONDS)\n"
+                "    if 'huggingface' in neural_result:\n"
+                "        show_table('MiniLM congelado por longitud',neural_result['huggingface']['comparisons'],limit=len(NEURAL_CANDIDATE_SECONDS))\n"
+                "    if 'ollama' in neural_result:\n"
+                "        show_table('Gemma 3 4B: muestra descriptiva',neural_result['ollama']['comparisons'],limit=len(NEURAL_CANDIDATE_SECONDS))\n"
+                "    show_callout('Interpretación',neural_result['comparability_warning'],tone='warning')\n"
+                "else:\n"
+                "    show_callout('Comparación neuronal desactivada','Primero ejecute el smoke test CPU para materializar 20 s y 30 s. Luego active MiniLM, Gemma o ambos; Gemma procesa como máximo seis filas y dispone de un presupuesto total de diez minutos.',tone='neutral')",
             ),
             (
                 "Confirmación corta pareada",
@@ -1321,4 +1360,12 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--only",
+        nargs="+",
+        metavar="RUTA",
+        help="Regenera únicamente las rutas de cuaderno indicadas, relativas al repositorio.",
+    )
+    arguments = parser.parse_args()
+    main(only_notebooks=set(arguments.only) if arguments.only else None)

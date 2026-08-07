@@ -235,7 +235,13 @@ def test_chunk_length_pilot_is_optional_and_materialization_is_separate():
     for control in (
         "RUN_CHUNK_LENGTH_SMOKE_TEST=False",
         "RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=False",
+        "RUN_BOUNDED_HF_COMPARISON=False",
+        "RUN_BOUNDED_OLLAMA_COMPARISON=False",
         "CANDIDATE_SECONDS=(15,20,25,30,35)",
+        "NEURAL_CANDIDATE_SECONDS=(20,30)",
+        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        "OLLAMA_SMOKE_MODEL='gemma3:4b'",
+        "OLLAMA_SMOKE_MAX_WALL_SECONDS=600.0",
         "CONFIRMATORY_VIDEO_LIMITS={'train':200,'validation':80,'test':80}",
         "CONFIRMATORY_SEEDS=(20260805,20260817,20260829)",
         "MANUAL_CHUNK_SECONDS=30.0",
@@ -244,6 +250,7 @@ def test_chunk_length_pilot_is_optional_and_materialization_is_separate():
         "APPLY_CHUNK_SELECTION=False",
         "complement_nb",
         "sgd_incremental",
+        "run_bounded_neural_chunk_comparison",
         "prepare_local_bundle_input('dataset_5_salidas'",
     ):
         assert control in source

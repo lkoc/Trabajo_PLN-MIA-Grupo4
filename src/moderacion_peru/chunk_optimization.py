@@ -604,6 +604,469 @@ def run_chunk_length_smoke_test(
     return payload
 
 
+def _bounded_neural_rows(
+    rows: Sequence[dict[str, Any]],
+    split: str,
+    limit: int,
+    *,
+    seed: int,
+) -> list[dict[str, Any]]:
+    """Selecciona pocas filas de forma determinista y con cobertura de etiquetas."""
+
+    if limit <= 0:
+        raise ValueError("El límite de filas neuronales debe ser positivo")
+    candidates = [row for row in rows if str(row.get("split")) == split]
+    ordered = sorted(
+        candidates,
+        key=lambda row: hashlib.sha256(
+            f"{seed}|{split}|{row.get('chunk_id', '')}".encode()
+        ).hexdigest(),
+    )
+    taxonomy = load_taxonomy()
+    queues = {
+        label: [row for row in ordered if label in row.get("coarse_labels", [])]
+        for label in taxonomy.target_labels
+    }
+    positions = Counter()
+    selected: list[dict[str, Any]] = []
+    selected_ids: set[str] = set()
+    while len(selected) < min(limit, len(ordered)):
+        added = False
+        for label in taxonomy.target_labels:
+            queue = queues[label]
+            while (
+                positions[label] < len(queue)
+                and str(queue[positions[label]].get("chunk_id")) in selected_ids
+            ):
+                positions[label] += 1
+            if positions[label] < len(queue):
+                row = queue[positions[label]]
+                positions[label] += 1
+                identifier = str(row.get("chunk_id"))
+                selected.append(row)
+                selected_ids.add(identifier)
+                added = True
+                if len(selected) >= limit:
+                    break
+        if not added:
+            break
+    for row in ordered:
+        if len(selected) >= limit:
+            break
+        identifier = str(row.get("chunk_id"))
+        if identifier not in selected_ids:
+            selected.append(row)
+            selected_ids.add(identifier)
+    return selected
+
+
+def _frozen_hf_embeddings(
+    tokenizer: Any,
+    model: Any,
+    texts: Sequence[str],
+    *,
+    device: str,
+    batch_size: int,
+    max_length: int,
+):
+    """Calcula mean pooling normalizado sin ajustar los pesos del encoder."""
+
+    try:
+        import numpy as np
+        import torch
+    except ImportError as exc:
+        raise RuntimeError("Instale PyTorch y NumPy para el smoke test de MiniLM") from exc
+    batches = []
+    model.eval()
+    for start in range(0, len(texts), batch_size):
+        encoded = tokenizer(
+            list(texts[start : start + batch_size]),
+            padding=True,
+            truncation=True,
+            max_length=max_length,
+            return_tensors="pt",
+        )
+        encoded = {key: value.to(device) for key, value in encoded.items()}
+        with torch.inference_mode():
+            hidden = model(**encoded).last_hidden_state
+        mask = encoded["attention_mask"].unsqueeze(-1).type_as(hidden)
+        pooled = (hidden * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
+        pooled = torch.nn.functional.normalize(pooled, p=2, dim=1)
+        batches.append(pooled.float().cpu().numpy())
+    return np.concatenate(batches, axis=0)
+
+
+def run_bounded_neural_chunk_comparison(
+    output_root: str | Path,
+    *,
+    candidate_seconds: Sequence[float] = (20, 30),
+    run_hf: bool = True,
+    run_ollama: bool = True,
+    hf_model_id: str = DEFAULT_CHUNK_SMOKE_HF_MODEL,
+    hf_revision: str = DEFAULT_CHUNK_SMOKE_HF_REVISION,
+    hf_train_limit: int = 120,
+    hf_validation_limit: int = 40,
+    hf_batch_size: int = 16,
+    hf_max_length: int = 128,
+    hf_device: str = "auto",
+    ollama_model: str = DEFAULT_CHUNK_SMOKE_OLLAMA_MODEL,
+    ollama_validation_limit: int = 3,
+    ollama_timeout_seconds: float = 90.0,
+    max_ollama_wall_seconds: float = 600.0,
+    seed: int = 20260806,
+) -> dict[str, Any]:
+    """Compara dos perfiles neuronales acotados sin alterar la recomendación de chunks.
+
+    MiniLM se usa como encoder congelado con una cabeza logística pequeña. Ollama
+    produce etiquetas duras sobre muy pocas filas de validación y sirve únicamente
+    para medir latencia, cumplimiento de esquema y una señal descriptiva. Sus
+    resultados no son métricas equivalentes ni participan en la selección automática.
+    """
+
+    if not run_hf and not run_ollama:
+        raise ValueError("Active al menos uno de los comparadores neuronales")
+    seconds = [float(value) for value in candidate_seconds]
+    if not seconds or any(value <= 0 for value in seconds):
+        raise ValueError("candidate_seconds debe contener longitudes positivas")
+    if hf_batch_size <= 0 or hf_max_length <= 0:
+        raise ValueError("El batch y la longitud máxima de MiniLM deben ser positivos")
+    if ollama_timeout_seconds <= 0 or max_ollama_wall_seconds <= 0:
+        raise ValueError("Los límites temporales de Ollama deben ser positivos")
+
+    output = Path(output_root)
+    datasets: dict[float, tuple[Path, list[dict[str, Any]]]] = {}
+    for chunk_seconds in seconds:
+        dataset = output / f"{chunk_seconds:g}s" / "toy_dataset.jsonl"
+        if not dataset.is_file():
+            raise FileNotFoundError(
+                f"Falta {dataset}. Ejecute primero el smoke test CPU con esta longitud; "
+                "esa etapa materializa las cohortes comparables."
+            )
+        datasets[chunk_seconds] = (dataset, list(read_jsonl(dataset)))
+
+    payload: dict[str, Any] = {
+        "schema_version": "1.0",
+        "profile": "bounded_neural_chunk_comparison",
+        "candidate_seconds": seconds,
+        "selection_effect": "informative_only",
+        "test_used_for_selection": False,
+        "comparability_warning": (
+            "MiniLM produce scores continuos con una cabeza supervisada; Gemma produce "
+            "etiquetas duras sobre una muestra mucho menor. No se deben ordenar juntos."
+        ),
+    }
+
+    if run_hf:
+        try:
+            import numpy as np
+            from sklearn.linear_model import LogisticRegression
+            from sklearn.multiclass import OneVsRestClassifier
+            from transformers import AutoModel, AutoTokenizer
+        except ImportError as exc:
+            raise RuntimeError(
+                "Instale el extra entrenamiento para ejecutar MiniLM congelado"
+            ) from exc
+        from .device import resolve_device, torch_device_name
+        from .training import classification_metrics, encode_targets
+
+        hardware = resolve_device(hf_device)
+        torch_device = torch_device_name(hardware)
+        try:
+            tokenizer = AutoTokenizer.from_pretrained(
+                hf_model_id,
+                revision=hf_revision,
+                local_files_only=True,
+            )
+            encoder = AutoModel.from_pretrained(
+                hf_model_id,
+                revision=hf_revision,
+                local_files_only=True,
+            ).to(torch_device)
+        except OSError as exc:
+            raise FileNotFoundError(
+                f"El checkpoint fijado de {hf_model_id} no está completo en la caché local"
+            ) from exc
+
+        hf_comparisons = []
+        for chunk_seconds in seconds:
+            dataset, rows = datasets[chunk_seconds]
+            train_rows = _bounded_neural_rows(rows, "train", hf_train_limit, seed=seed)
+            validation_rows = _bounded_neural_rows(
+                rows, "validation", hf_validation_limit, seed=seed
+            )
+            if not train_rows or not validation_rows:
+                raise ValueError(
+                    f"La duración {chunk_seconds:g} no tiene train y validation para MiniLM"
+                )
+            configuration = {
+                "dataset_sha256": sha256_file(dataset),
+                "model_id": hf_model_id,
+                "revision": hf_revision,
+                "train_limit": hf_train_limit,
+                "validation_limit": hf_validation_limit,
+                "batch_size": hf_batch_size,
+                "max_length": hf_max_length,
+                "seed": seed,
+            }
+            signature = sha256_text(
+                json.dumps(configuration, ensure_ascii=False, sort_keys=True)
+            )
+            summary_path = (
+                dataset.parent / "neural_smoke" / "hf_minilm_frozen_summary.json"
+            )
+            if summary_path.is_file():
+                cached = json.loads(summary_path.read_text(encoding="utf-8-sig"))
+                if cached.get("run_signature") == signature:
+                    hf_comparisons.append(cached)
+                    continue
+
+            started = time.perf_counter()
+            train_embeddings = _frozen_hf_embeddings(
+                tokenizer,
+                encoder,
+                [str(row["text"]) for row in train_rows],
+                device=torch_device,
+                batch_size=hf_batch_size,
+                max_length=hf_max_length,
+            )
+            validation_embeddings = _frozen_hf_embeddings(
+                tokenizer,
+                encoder,
+                [str(row["text"]) for row in validation_rows],
+                device=torch_device,
+                batch_size=hf_batch_size,
+                max_length=hf_max_length,
+            )
+            classifier = OneVsRestClassifier(
+                LogisticRegression(
+                    max_iter=400,
+                    class_weight="balanced",
+                    random_state=seed,
+                ),
+                n_jobs=1,
+            )
+            classifier.fit(train_embeddings, encode_targets(train_rows))
+            validation_scores = np.asarray(
+                classifier.predict_proba(validation_embeddings), dtype=float
+            )
+            metrics = classification_metrics(
+                encode_targets(validation_rows), validation_scores
+            )
+            summary = {
+                "chunk_seconds": chunk_seconds,
+                "backend": "huggingface_local_cache",
+                "model": hf_model_id,
+                "revision": hf_revision,
+                "profile": "frozen_mean_pooling_plus_logistic",
+                "train_rows": len(train_rows),
+                "validation_rows": len(validation_rows),
+                "validation_ap_macro_damage": metrics[
+                    "average_precision_macro_damage"
+                ],
+                "validation_ap_macro_five": metrics[
+                    "average_precision_macro_five"
+                ],
+                "elapsed_seconds_observed": round(
+                    time.perf_counter() - started, 3
+                ),
+                "hardware": hardware.model_dump(),
+                "run_signature": signature,
+                "selection_effect": "informative_only",
+            }
+            write_json_atomic(summary_path, summary)
+            hf_comparisons.append(summary)
+        payload["huggingface"] = {
+            "model": hf_model_id,
+            "revision": hf_revision,
+            "comparisons": hf_comparisons,
+            "warning": "Encoder congelado; no equivale al fine-tuning de 03_entrenamiento.",
+        }
+
+        del encoder
+        try:
+            import torch
+
+            if hardware.backend in {"cuda", "rocm"}:
+                torch.cuda.empty_cache()
+        except (ImportError, RuntimeError):
+            pass
+
+    if run_ollama:
+        try:
+            import numpy as np
+        except ImportError as exc:
+            raise RuntimeError("NumPy es necesario para evaluar el smoke test Ollama") from exc
+        from .providers import OllamaProvider
+        from .training import classification_metrics, encode_targets
+
+        provider = OllamaProvider(
+            model=ollama_model,
+            timeout=ollama_timeout_seconds,
+            retries=0,
+            think=False,
+        )
+        probe = provider.probe()
+        if not probe.get("model_available"):
+            raise FileNotFoundError(
+                f"Ollama responde, pero {ollama_model} no está descargado"
+            )
+        wall_started = time.perf_counter()
+        ollama_comparisons = []
+        taxonomy = load_taxonomy()
+        thresholds = {label: 0.5 for label in taxonomy.target_labels}
+        stopped_by_wall_clock = False
+        for chunk_seconds in seconds:
+            dataset, rows = datasets[chunk_seconds]
+            validation_rows = _bounded_neural_rows(
+                rows,
+                "validation",
+                ollama_validation_limit,
+                seed=seed,
+            )
+            configuration = {
+                "dataset_sha256": sha256_file(dataset),
+                "model": ollama_model,
+                "model_digest": probe.get("model_digest"),
+                "validation_limit": ollama_validation_limit,
+                "timeout_seconds": ollama_timeout_seconds,
+                "seed": seed,
+            }
+            signature = sha256_text(
+                json.dumps(configuration, ensure_ascii=False, sort_keys=True)
+            )
+            smoke_dir = dataset.parent / "neural_smoke"
+            predictions_path = smoke_dir / "ollama_predictions.jsonl"
+            errors_path = smoke_dir / "ollama_errors.jsonl"
+            existing = {
+                str(row["comparison_id"]): row
+                for row in read_jsonl(predictions_path)
+                if row.get("comparison_id")
+            }
+            expected_ids = []
+            for row in validation_rows:
+                comparison_id = f"{signature[:16]}|{row['chunk_id']}"
+                expected_ids.append(comparison_id)
+                if comparison_id in existing:
+                    continue
+                remaining_wall_seconds = max_ollama_wall_seconds - (
+                    time.perf_counter() - wall_started
+                )
+                if remaining_wall_seconds <= 0:
+                    stopped_by_wall_clock = True
+                    break
+                provider.timeout = min(
+                    ollama_timeout_seconds,
+                    max(1.0, remaining_wall_seconds),
+                )
+                call_started = time.perf_counter()
+                try:
+                    annotation = provider.annotate(row)
+                    record = {
+                        "comparison_id": comparison_id,
+                        "run_signature": signature,
+                        "chunk_seconds": chunk_seconds,
+                        "chunk_id": row["chunk_id"],
+                        "gold_labels": list(row.get("coarse_labels", [])),
+                        "predicted_labels": list(annotation.coarse_labels),
+                        "score_confianza": annotation.score_confianza,
+                        "elapsed_seconds_observed": round(
+                            time.perf_counter() - call_started, 3
+                        ),
+                        "annotation": annotation.model_dump(mode="json"),
+                    }
+                    append_jsonl_once(
+                        predictions_path, [record], id_field="comparison_id"
+                    )
+                    existing[comparison_id] = record
+                except Exception as exc:
+                    append_jsonl_once(
+                        errors_path,
+                        [
+                            {
+                                "comparison_id": comparison_id,
+                                "run_signature": signature,
+                                "chunk_seconds": chunk_seconds,
+                                "chunk_id": row.get("chunk_id"),
+                                "error_type": type(exc).__name__,
+                                "error": str(exc),
+                            }
+                        ],
+                        id_field="comparison_id",
+                    )
+            evaluated = [existing[item] for item in expected_ids if item in existing]
+            error_ids = {
+                str(row["comparison_id"])
+                for row in read_jsonl(errors_path)
+                if row.get("run_signature") == signature
+            }
+            metrics = None
+            exact_match_rate = None
+            if evaluated:
+                truth = encode_targets(
+                    [{"coarse_labels": row["gold_labels"]} for row in evaluated]
+                )
+                scores = np.asarray(
+                    [
+                        [
+                            float(label in row["predicted_labels"])
+                            for label in taxonomy.target_labels
+                        ]
+                        for row in evaluated
+                    ],
+                    dtype=float,
+                )
+                metrics = classification_metrics(truth, scores, thresholds)
+                exact_match_rate = sum(
+                    set(row["gold_labels"]) == set(row["predicted_labels"])
+                    for row in evaluated
+                ) / len(evaluated)
+            attempted = len(set(expected_ids) & (set(existing) | error_ids))
+            summary = {
+                "chunk_seconds": chunk_seconds,
+                "backend": "ollama_http",
+                "model": ollama_model,
+                "model_digest": probe.get("model_digest"),
+                "profile": "bounded_structured_hard_labels",
+                "requested_validation_rows": len(validation_rows),
+                "successful_rows": len(evaluated),
+                "failed_rows": len((set(expected_ids) & error_ids) - set(existing)),
+                "valid_schema_rate": len(evaluated) / max(1, attempted),
+                "exact_label_set_match_rate": exact_match_rate,
+                "validation_hard_ap_macro_damage": (
+                    metrics["average_precision_macro_damage"] if metrics else None
+                ),
+                "validation_hard_f1_macro_damage": (
+                    metrics["f1_macro_damage"] if metrics else None
+                ),
+                "elapsed_seconds_observed_successes": round(
+                    sum(float(row["elapsed_seconds_observed"]) for row in evaluated),
+                    3,
+                ),
+                "run_signature": signature,
+                "selection_effect": "informative_only",
+                "completed": len(evaluated) == len(validation_rows),
+            }
+            write_json_atomic(smoke_dir / "ollama_summary.json", summary)
+            ollama_comparisons.append(summary)
+            if stopped_by_wall_clock:
+                break
+        payload["ollama"] = {
+            "model": ollama_model,
+            "probe": probe,
+            "comparisons": ollama_comparisons,
+            "max_wall_seconds": max_ollama_wall_seconds,
+            "stopped_by_wall_clock": stopped_by_wall_clock,
+            "elapsed_wall_seconds": round(time.perf_counter() - wall_started, 3),
+            "warning": (
+                "Muestra mínima y etiquetas duras; informa costo y cumplimiento, "
+                "pero no selecciona longitud. La salida se reanuda por chunk_id."
+            ),
+        }
+
+    write_json_atomic(output / "neural_smoke_comparison.json", payload)
+    return payload
+
+
 def run_chunk_length_confirmatory_test(
     transcript_path: str | Path,
     chunks_path: str | Path,

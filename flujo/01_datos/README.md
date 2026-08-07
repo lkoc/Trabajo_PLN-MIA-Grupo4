@@ -27,7 +27,11 @@ Para ampliar la muestra, active el modo requerido o agregue filas a `datos/raw/v
 `01_02` no es necesario para cada incremento. Su modo rápido reentrena dos
 modelos para cada longitud y su confirmación corta reentrena tres modelos en
 tres cohortes pareadas; en ambos casos también calibra e infiere con la misma
-longitud. La confirmación vigente conserva 30 s. Una elección manual tiene
+longitud. Después del modo rápido puede ejecutar una comparación neuronal
+acotada: MiniLM multilingüe congelado sobre 120/40 filas y `gemma3:4b` sobre
+solo tres filas de validación por longitud. Gemma reanuda por `chunk_id`, tiene
+un presupuesto total de diez minutos y no interviene en la recomendación
+automática. La confirmación vigente conserva 30 s. Una elección manual tiene
 precedencia y solo se aplica con `APPLY_CHUNK_SELECTION=True`.
 
 Antes de activar otra longitud, los chunks, etiquetas, snapshot, modelos,
