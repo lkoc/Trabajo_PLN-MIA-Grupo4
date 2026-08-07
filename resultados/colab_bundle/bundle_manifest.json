@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-07T17:59:37.488855+00:00",
+  "generated_at": "2026-08-07T18:13:49.907188+00:00",
   "taxonomy_contract": "moderacion_peru_5_salidas_v2",
   "taxonomy_version": "2.1.0",
   "core": {
@@ -83,5 +83,6 @@
     "caché de Hugging Face",
     "modelos Ollama",
     "paper, presentación y frontends"
-  ]
+  ],
+  "bundle_id": "37e063a2ff0f1dc20943f8eef06ea4ce55f28133f398a730a3678e622f371256"
 }

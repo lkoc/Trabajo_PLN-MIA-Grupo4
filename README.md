@@ -100,6 +100,7 @@ Durante `01_01`, primero se consolidan en el canónico todas las transcripciones
 
 | Cuaderno | Función | Control principal |
 |---|---|---|
+| `02_00_preparacion_bundle_colab` | prepara localmente y publica en Drive una versión inmutable para Colab | `RUN_PREPARE_BUNDLE=False`; configure `DRIVE_ROOT` y actívelo antes de `02_01` y después de `02_05` |
 | `02_01_etiquetado_local_ollama` | genera propuestas estructuradas con Ollama o, opcionalmente, Hugging Face en Colab | piloto inicial con `LIMIT=20`; reanuda por `chunk_id` |
 | `02_02_etiquetado_remoto` | ofrece un proveedor DeepSeek remoto intercambiable | `RUN_REMOTE=False` evita llamadas comerciales accidentales |
 | `02_03_revision_llm_dirigida` | prioriza baja confianza, duda o cobertura insuficiente | selección determinista y trazable |
@@ -150,12 +151,12 @@ Presentación_BEAMER/            presentación derivada del artículo
 Planning/                       plan de reorganización ejecutado
 ```
 
-Los 17 cuadernos vigentes se encuentran exclusivamente bajo `flujo/`. Las
+Los 18 cuadernos vigentes se encuentran exclusivamente bajo `flujo/`. Las
 carpetas locales `archivo/03_2_etiquetado_llm_api/` y
 `archivo/05_frontend_despliegue/` pertenecen a implementaciones anteriores y no
 son etapas del recorrido activo.
 
-Los resultados preliminares de los cuadernos se muestran mediante el componente común `src/moderacion_peru/notebook_ui.py`: tarjetas de estado, tablas clave–valor, vistas tabulares limitadas y bloques de comandos. Los 17 cuadernos activos evitan `print()` para mantener una salida legible y homogénea; los artefactos completos permanecen en JSON, JSONL o manifiestos y no dependen de la representación visual.
+Los resultados preliminares de los cuadernos se muestran mediante el componente común `src/moderacion_peru/notebook_ui.py`: tarjetas de estado, tablas clave–valor, vistas tabulares limitadas y bloques de comandos. Los 18 cuadernos activos evitan `print()` para mantener una salida legible y homogénea; los artefactos completos permanecen en JSON, JSONL o manifiestos y no dependen de la representación visual.
 
 ## Reproducción local desde una clonación nueva
 
@@ -248,11 +249,11 @@ Desde VS Code, abra la carpeta clonada, seleccione como kernel el Python de `.ve
 .\.venv\Scripts\jupyter-lab.exe
 ```
 
-El recorrido completo contiene 17 cuadernos:
+El recorrido completo contiene 18 cuadernos:
 
 ```text
 01_01 → 01_02 opcional → 01_03
-→ 02_01 → 02_02 opcional → 02_03 → 02_04 → 02_05
+→ 02_00 local → 02_01 → 02_02 opcional → 02_03 → 02_04 → 02_05 → 02_00 local
 → 03_01 ... 03_06 en ramas comparables
 → 03_07 → 03_08 → 04_01
 ```
@@ -263,6 +264,7 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 |---|---|---|
 | `01_01` | continuación actual: `DISCOVER_NEW=False`, `FETCH_NEW=True`, `BACKFILL_MISSING_VTT=True` | reanuda primero todos los VTT faltantes y después los candidatos; usa lotes de 10, pausas internas de 2.5–10 s y 15 s entre lotes; cambie `FETCH_NEW=False` si solo desea inspeccionar sin red |
 | `01_02` | se reutiliza el clásico; ambos `RUN_...=True`, ambos `FORCE_...=False`, `USE_ROBUST_RECOMMENDATION=True` y `APPLY_CHUNK_SELECTION=False` | prioriza los JSON consolidados y muestra el perfil de cinco longitudes y el cierre MiniLM 20/30 sin recalcular; solo ejecuta una etapa si falta su artefacto |
+| `02_00` | `RUN_PREPARE_BUNDLE=False`, `DRIVE_ROOT=None` | use kernel local, configure la carpeta `ModeracionPeru_Colab` de Google Drive Desktop, active y espere que termine la sincronización |
 | `02_01` | `RUN=False`, `LIMIT=20` | active `RUN=True`, valide el piloto y luego amplíe o retire el límite |
 | `02_02` | `RUN_REMOTE=False` | active solo con autorización para usar la API remota |
 | `03_01`–`03_06` | `RUN_TRAINING=False` | active la familia que se desea entrenar |
@@ -313,7 +315,7 @@ Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guarda
 .\.venv\Scripts\python.exe tools/generate_workflow_notebooks.py
 ```
 
-Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, archivado reversible por longitud, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 17 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
+Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, archivado reversible por longitud, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 18 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
 
 El artículo y la presentación se recompilan de forma independiente:
 
@@ -332,9 +334,10 @@ Para incorporar videos o subtítulos adicionales:
 
 1. añada candidatos con `video_id` y URL a `datos/raw/videos_candidatos.csv` o al JSONL de candidatos;
 2. ejecute nuevamente `01_01` y `01_03`; este último recompone `transcripts_raw.jsonl` desde los JSON por canal y VTT locales, muestra avance por video y procesa solo hashes nuevos o modificados; `01_02` solo se repite si desea reevaluar o cambiar la longitud;
-3. ejecute `02_01`–`02_05` para los chunks pendientes;
-4. active las familias de `03` que desea actualizar;
-5. publique de nuevo solo cuando `03_07` encuentre candidatos completos del snapshot nuevo.
+3. ejecute `02_00` localmente antes de usar el backend Colab de `02_01`, y complete `02_01`–`02_05` para los chunks pendientes;
+4. vuelva a ejecutar `02_00` después de `02_05` para publicar en Drive el snapshot nuevo;
+5. active las familias de `03` que desea actualizar;
+6. publique de nuevo solo cuando `03_07` encuentre candidatos completos del snapshot nuevo.
 
 El flujo omite videos conocidos, reutiliza subtítulos y cachés, y recorre todos los candidatos pendientes por lotes. Cada pista VTT se conserva inmediatamente en `datos/raw/vtt_by_video/` antes de continuar y cada fallo se registra; una interrupción no obliga a repetir los éxitos anteriores. `BACKFILL_MISSING_VTT=True` trata por separado los JSON ya canónicos cuyo VTT falta. `01_03` nunca borra VTT: solo los lee para recuperar representaciones JSON faltantes. Después conserva las asignaciones de split por `video_id` y reanuda anotaciones por `chunk_id`. Una reconstrucción total cambia los IDs heredados si cambia la versión o firma del troceador; en ese caso se debe ejecutar de nuevo `02_01`–`02_05`, no trasladar etiquetas por posición. Un incremento crea otro snapshot inmutable que combina datos anteriores y nuevos. Los modelos neuronales pueden reanudar una interrupción o inicializar el run nuevo desde un candidato compatible anterior; nunca se entrena únicamente con el lote nuevo olvidando el corpus previo.
 
@@ -350,13 +353,13 @@ python tools/restore_synced_checkpoints.py
 
 El comando verifica los SHA-256 de `datos/raw/transcripts_by_channel/index.json`, cada entrada de `datos/raw/vtt_by_video/index.json` y `resultados/colab_bundle/bundle_manifest.json`; reconstruye el canónico de forma idempotente y descomprime atómicamente chunks y dataset en sus rutas esperadas. Los cuadernos `03_01`–`03_08` repiten la verificación del dataset antes de usarlo: si falta, lo restauran; si existe con otro hash, se detienen en vez de sobrescribirlo.
 
-Cuando `02_05` produzca un snapshot nuevo, regenere el bundle con `python tools/prepare_colab_bundle.py --destination resultados/colab_bundle` antes de ejecutar `03`; el error ante hashes distintos evita entrenar accidentalmente con una versión no declarada.
+Cuando `02_05` produzca un snapshot nuevo, vuelva a ejecutar `02_00` con kernel local antes de ejecutar `03`. El cuaderno genera un `bundle_id` estable, publica `bundle_releases/<bundle_id>` en Google Drive, actualiza al final `bundle_releases/latest.json` y no modifica versiones anteriores. El error ante una versión ausente o hashes distintos evita entrenar accidentalmente con un snapshot no declarado.
 
 El dataset actual baja de aproximadamente 104,2 MiB a 20,3 MiB con gzip nivel 9, por lo que un único archivo comprimido es más simple y está holgadamente bajo los límites por archivo. Si una versión futura se aproxima a 45–50 MiB comprimidos, se deberá particionar primero por `split` y luego en partes numeradas, manteniendo un manifiesto único. El repositorio remoto es público: versionar estos checkpoints publica también el texto de los subtítulos y exige revisar licencias, términos de la plataforma y datos personales antes de hacer `push`.
 
 ## Google Colab L4 desde VS Code
 
-Los cuadernos `03_02`–`03_06`, y opcionalmente `02_01`, incluyen dentro de sus propias celdas el puente para una GPU NVIDIA L4. El cuaderno permanece en VS Code. Google Drive transporta únicamente el código mínimo, los chunks o el snapshot comprimido y los resultados finales; no sincroniza videos, audio, PDFs, modelos Ollama ni cachés de Hugging Face.
+Los cuadernos `03_02`–`03_06`, y opcionalmente `02_01`, incluyen dentro de sus propias celdas el puente para una GPU NVIDIA L4. El cuaderno permanece en VS Code. `02_00_preparacion_bundle_colab.ipynb` se ejecuta con kernel local y publica la versión requerida; después, el bootstrap remoto usa exclusivamente Google Drive, resuelve `bundle_releases/latest.json`, verifica el `bundle_id` y todos los SHA-256 y activa la versión antes de importar el proyecto. No sincroniza videos, audio, PDFs, modelos Ollama ni cachés de Hugging Face.
 
 La preparación, verificación SHA-256, reanudación por `COLAB_RUN_ID` y recuperación de resultados se describen en [`docs/COLAB_L4.md`](docs/COLAB_L4.md). El backend L4 falla explícitamente si Colab asigna una GPU distinta cuando `COLAB_REQUIRE_L4=True`.
 

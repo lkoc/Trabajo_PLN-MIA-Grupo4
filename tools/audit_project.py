@@ -108,7 +108,7 @@ def notebook_issues() -> list[str]:
     master_keys = set(MASTER_BIB_ENTRY.findall(master_bib))
     expected_prefixes = {
         "01_datos": ("01_01", "01_02", "01_03"),
-        "02_etiquetado": ("02_01", "02_02", "02_03", "02_04", "02_05"),
+        "02_etiquetado": ("02_00", "02_01", "02_02", "02_03", "02_04", "02_05"),
         "03_entrenamiento": tuple(f"03_{i:02d}" for i in range(1, 9)),
         "04_produccion": ("04_01",),
     }

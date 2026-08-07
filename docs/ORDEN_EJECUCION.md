@@ -9,20 +9,21 @@ Todo el recorrido usa el contrato de etiquetas v2.1 con `SEGURO`, `RACISMO_DISCR
 | 1 | `01_01_scraping_incremental` | canales/consultas + candidatos + JSON/VTT/caché históricos | VTT y JSON por canal consolidados, índices, manifiesto faltante y canónico | procesa primero el backfill VTT; cada éxito se conserva antes de continuar y se omite al reanudar |
 | 2 | `01_02_optimizacion_longitud_chunks` | transcripciones + chunks etiquetados + snapshot | perfil clásico decisorio y perfil neuronal robusto MiniLM/Gemma para 15/20/25/30/35 s | reanuda ajustes y respuestas por firma; la jerarquía no cambia datos sin aplicación explícita |
 | 3 | `01_03_limpieza_troceado_incremental` | JSON por canal + VTT locales + configuración activa | canónico reconstruido, chunks v2 y manifiesto descriptivo | barra por video; hash de transcripción + firma; `REBUILD_CHUNKS_FROM_ZERO` solo para reconstrucción respaldada |
-| 4 | `02_01_etiquetado_local_ollama` | chunks pendientes | anotaciones locales | `chunk_id` |
-| 5 | `02_02_etiquetado_remoto` | muestra opcional | anotaciones remotas | opcional, `chunk_id` y activación comercial explícita |
-| 6 | `02_03_revision_llm_dirigida` | baja confianza/duda | cola priorizada | selección determinista; opcional |
-| 7 | `02_04_consolidacion_validacion_humana` | propuestas LLM + chunks | campaña consolidada + eventos humanos | precedencia, contenido estable y eventos append-only |
-| 8 | `02_05_cierre_humano_snapshot` | consolidado + eventos + chunks | anotaciones revisadas + snapshot inmutable | firma de insumos y SHA-256 del contenido |
-| 9 | `03_01_modelos_clasicos` | snapshot activo | cinco candidatos clásicos completos | firma dataset+configuración |
-| 10 | `03_02_transformers_planos` | mismo snapshot | MiniLM y E5 completos | checkpoint de interrupción, warm start o no-op |
-| 11 | `03_03_transformer_cascada` | mismo snapshot | compuerta + cuatro daños | checkpoint/warm start o no-op |
-| 12 | `03_04_transformer_multitarea` | mismo snapshot | cinco salidas + auxiliares | checkpoint/warm start o no-op |
-| 13 | `03_05_qwen_lora` | mismo snapshot | adaptador LoRA de cinco salidas | checkpoint/warm start o no-op |
-| 14 | `03_06_qwen_estructurado` | mismo snapshot | Qwen con penalización de conflicto | checkpoint/warm start o no-op |
-| 15 | `03_07_comparacion_final` | candidatos del mismo SHA-256 | comparación + registro productivo | no reescribe si la selección no cambia |
-| 16 | `03_08_auditoria_finas_flags` | snapshot activo | auditoría auxiliar | SHA-256 del snapshot |
-| 17 | `04_01_frontend_produccion` | registro validado | demostrador supervisado | caché de subtítulos + eventos append-only |
+| 4 | `02_00_preparacion_bundle_colab` | chunks + snapshot local + carpeta de Drive Desktop | `bundle_releases/<bundle_id>` verificado | no-op si la versión inmutable ya existe; se repite después de `02_05` |
+| 5 | `02_01_etiquetado_local_ollama` | chunks pendientes | anotaciones locales | `chunk_id` |
+| 6 | `02_02_etiquetado_remoto` | muestra opcional | anotaciones remotas | opcional, `chunk_id` y activación comercial explícita |
+| 7 | `02_03_revision_llm_dirigida` | baja confianza/duda | cola priorizada | selección determinista; opcional |
+| 8 | `02_04_consolidacion_validacion_humana` | propuestas LLM + chunks | campaña consolidada + eventos humanos | precedencia, contenido estable y eventos append-only |
+| 9 | `02_05_cierre_humano_snapshot` | consolidado + eventos + chunks | anotaciones revisadas + snapshot inmutable | firma de insumos y SHA-256 del contenido |
+| 10 | `03_01_modelos_clasicos` | snapshot activo | cinco candidatos clásicos completos | firma dataset+configuración |
+| 11 | `03_02_transformers_planos` | mismo snapshot | MiniLM y E5 completos | checkpoint de interrupción, warm start o no-op |
+| 12 | `03_03_transformer_cascada` | mismo snapshot | compuerta + cuatro daños | checkpoint/warm start o no-op |
+| 13 | `03_04_transformer_multitarea` | mismo snapshot | cinco salidas + auxiliares | checkpoint/warm start o no-op |
+| 14 | `03_05_qwen_lora` | mismo snapshot | adaptador LoRA de cinco salidas | checkpoint/warm start o no-op |
+| 15 | `03_06_qwen_estructurado` | mismo snapshot | Qwen con penalización de conflicto | checkpoint/warm start o no-op |
+| 16 | `03_07_comparacion_final` | candidatos del mismo SHA-256 | comparación + registro productivo | no reescribe si la selección no cambia |
+| 17 | `03_08_auditoria_finas_flags` | snapshot activo | auditoría auxiliar | SHA-256 del snapshot |
+| 18 | `04_01_frontend_produccion` | registro validado | demostrador supervisado | caché de subtítulos + eventos append-only |
 
 `03_01`–`03_06` son ramas comparables: no dependen entre sí y pueden omitirse las familias que no se quieran evaluar. `03_07` necesita al menos un candidato completo del snapshot activo. Test nunca participa en la selección; solo informa después de congelar modelo y umbrales con validation.
 
@@ -30,6 +31,7 @@ Todo el recorrido usa el contrato de etiquetas v2.1 con `SEGURO`, `RACISMO_DISCR
 
 - En `01_01`, la continuación actual usa `DISCOVER_NEW=False`, `FETCH_NEW=True` y `BACKFILL_MISSING_VTT=True`: no busca fuentes nuevas, recupera primero los VTT faltantes y después recorre candidatos materializados. `MAX_VTT_BACKFILL=None` y `MAX_NEW_VIDEOS=None` incluyen ambas colas completas. `RANDOMIZE_DOWNLOAD_QUEUE=True` ordena de forma pseudoaleatoria reproducible e intercala canales. `NETWORK_BATCH_SIZE=10` y `NETWORK_BATCH_PAUSE_SECONDS=15` regulan la ejecución; `yt-dlp` añade pausas internas de 2.5–10 segundos y un timeout de 30 segundos por operación. Cambie `FETCH_NEW=False` para una inspección sin red.
 - `01_02` es opcional. `RUN_CHUNK_LENGTH_SMOKE_TEST=True` hace 10 ajustes CPU y `RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=True` hace 45 ajustes en tres cohortes pareadas. El perfil decisorio clásico activa `RUN_CHUNK_LENGTH_ROBUST_TEST=True`: 75 ajustes en cinco cohortes de 300/100/100 videos y 1 000 réplicas bootstrap por `video_id`, con referencia 30 s y margen 0.01 AP. Después, `RUN_NEURAL_ROBUST_TEST=True` compara las mismas cinco longitudes sobre un panel pareado de 100 anclas de `validation`: 25 cabezas MiniLM y hasta 500 respuestas estructuradas de `gemma3:4b`, cinco cohortes de reporte y 2 000 réplicas bootstrap por familia. MiniLM y Ollama son confirmatorios; no se promedian ni cambian automáticamente la longitud. Ante conflicto se conserva la selección clásica hasta validación humana independiente. Solo `APPLY_CHUNK_SELECTION=True` modifica la firma activa.
+- En `02_00`, use kernel local, configure `DRIVE_ROOT` y active `RUN_PREPARE_BUNDLE=True`; espere la sincronización de Drive antes de conectar Colab.
 - En `02_01`, active `RUN=True`; pruebe primero `LIMIT=20` y después quite el límite para cerrar el lote.
 - `02_02` conserva `RUN_REMOTE=False` salvo decisión explícita de usar la API comercial.
 - En `03_01`–`03_06`, active `RUN_TRAINING=True`. Una segunda ejecución con el mismo snapshot devuelve `status="noop"`.
@@ -50,10 +52,9 @@ consume en Colab. El dataset no se considera barato de reconstruir: incorpora
 anotación humana y pseudoetiquetas con procedencia, por lo que su checkpoint
 comprimido sí forma parte del estado sincronizado.
 
-Después de que `02_05` cree un snapshot distinto, ejecute
-`python tools/prepare_colab_bundle.py --destination resultados/colab_bundle`
-antes de iniciar `03`; así el manifiesto y el dataset local vuelven a compartir
-el mismo SHA-256.
+Después de que `02_05` cree un snapshot distinto, vuelva a ejecutar `02_00` con
+kernel local antes de iniciar `03`; así se publica otro `bundle_id` inmutable en
+Drive y los cuadernos Colab activan exactamente el dataset declarado.
 
 ## Qué ocurre cuando crece la muestra
 

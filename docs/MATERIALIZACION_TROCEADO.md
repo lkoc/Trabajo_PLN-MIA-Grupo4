@@ -90,7 +90,7 @@ Los 166.940 chunks contienen 77.890.890 caracteres y 14.238.347 palabras. La sum
 
 `datos/model_ready/v2/dataset_5_salidas.jsonl` conserva 117.244 filas y 3.230 videos del snapshot etiquetado anterior. No debe crecer al ejecutar `01_03`: los chunks nuevos todavía no tienen decisión bajo el contrato de etiquetas v2.1. Además, la reconstrucción homogénea con el troceador v2.2 reemplazó los identificadores heredados, por lo que el snapshot anterior no se une al nuevo artefacto por `chunk_id`.
 
-El siguiente ciclo correcto es `02_01`–`02_05`: generar propuestas para los chunks v2.2, resolver o diferir los casos, adjudicar cuando corresponda y crear un snapshot nuevo e inmutable. Solo entonces debe repetirse entrenamiento. El snapshot anterior se conserva como evidencia histórica, no como etiquetas trasladables automáticamente.
+El siguiente ciclo correcto es ejecutar `02_00` localmente para publicar los chunks requeridos por Colab, completar `02_01`–`02_05` —generar propuestas para los chunks v2.2, resolver o diferir los casos, adjudicar cuando corresponda y crear un snapshot nuevo e inmutable— y repetir `02_00` para publicar ese snapshot antes del entrenamiento remoto. El snapshot anterior se conserva como evidencia histórica, no como etiquetas trasladables automáticamente.
 
 ## Artefactos verificables
 

@@ -50,7 +50,7 @@ CONTRACT_SUMMARY_DOCUMENTS = (
 
 def test_active_notebooks_are_ordered_and_clean():
     notebooks = sorted((ROOT / "flujo").rglob("*.ipynb"))
-    assert len(notebooks) == 17
+    assert len(notebooks) == 18
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
         assert (
@@ -156,6 +156,11 @@ def test_chunk_optimization_notebook_loads_consolidated_results_before_models():
 
 def test_colab_notebooks_embed_reproducible_drive_bootstrap():
     expected = {"02_01", "03_02", "03_03", "03_04", "03_05", "03_06"}
+    manifest = json.loads(
+        (ROOT / "resultados" / "colab_bundle" / "bundle_manifest.json").read_text(encoding="utf-8")
+    )
+    expected_bundle_id = manifest["bundle_id"]
+    expected_core_sha256 = manifest["core"]["sha256"]
     observed = set()
     for path in sorted((ROOT / "flujo").rglob("*.ipynb")):
         notebook = nbformat.read(path, as_version=4)
@@ -167,9 +172,22 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
             assert "prepare_colab_context" in source
             assert "publish_colab_outputs" in source
             assert "COLAB_REQUIRE_L4 = True" in source
+            assert "COLAB_AUTO_UPDATE_BUNDLE = True" in source
+            assert f'COLAB_NOTEBOOK_BUILD_BUNDLE_ID = "{expected_bundle_id}"' in source
+            assert f'COLAB_EXPECTED_CORE_SHA256 = "{expected_core_sha256}"' in source
+            assert "bundle_releases" in source
+            assert "_activate_verified_drive_release" in source
+            assert "latest.json" in source
+            assert "02_00_preparacion_bundle_colab.ipynb" in source
+            assert "raw.githubusercontent" not in source.lower()
+            assert "urllib.request" not in source
+            assert "GITHUB_TOKEN" not in source
             assert 'pip", "install", "-q", "-r"' in source
             assert "git clone" not in source.lower()
-            assert metadata["transport"] == "google_drive_only"
+            assert metadata["transport"] == "google_drive_versioned_releases"
+            assert metadata["build_bundle_id"] == expected_bundle_id
+            assert metadata["bundle_resolution"] == "drive_latest_pointer"
+            assert metadata["expected_core_sha256"] == expected_core_sha256
     assert observed == expected
 
 
@@ -251,7 +269,7 @@ def test_root_readme_summarizes_and_reproduces_the_active_workflow():
     assert "python.exe -m pytest" in source
     for folder, expected_count in {
         "01_datos": 3,
-        "02_etiquetado": 5,
+        "02_etiquetado": 6,
         "03_entrenamiento": 8,
         "04_produccion": 1,
     }.items():
@@ -442,11 +460,17 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
         notebook_sources[path.name] = "\n".join(cell.source for cell in notebook.cells)
         assert "from tqdm.auto import tqdm" in notebook_sources[path.name]
 
+    bundle = notebook_sources["02_00_preparacion_bundle_colab.ipynb"]
+    assert "RUN_PREPARE_BUNDLE=False" in bundle
+    assert "publish_drive_release" in bundle
+    assert "bundle_progress" in bundle
+    assert "bundle_releases" not in bundle  # La función encapsula la ruta versionada.
     local = notebook_sources["02_01_etiquetado_local_ollama.ipynb"]
     assert "LIMIT=20" in local
     assert "LIMIT=None" in local
     assert "no deje el valor en blanco" in local
     assert "progress_callback=report_label_progress" in local
+    assert "inspect.signature(annotate_incremental)" in local
     assert "continuará con los siguientes 20" in local
     assert "progress_callback=report_remote_progress" in notebook_sources[
         "02_02_etiquetado_remoto.ipynb"
