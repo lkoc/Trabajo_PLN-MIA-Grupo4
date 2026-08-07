@@ -178,7 +178,7 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
             if metadata["notebook_id"] == "02_00":
                 assert "raw.githubusercontent.com" in source
                 assert "files.upload()" in source
-                assert "RUN_PUBLISH_BUNDLE=False" in source
+                assert "RUN_PUBLISH_BUNDLE=" in source
                 assert metadata["expected_gpu"] is None
                 assert metadata["transport"] == "github_or_browser_upload_to_google_drive"
                 assert metadata["bundle_resolution"] == "publishes_drive_latest_pointer"
@@ -472,7 +472,9 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
         assert "from tqdm.auto import tqdm" in notebook_sources[path.name]
 
     bundle = notebook_sources["02_00_preparacion_bundle_colab.ipynb"]
-    assert "RUN_PUBLISH_BUNDLE=False" in bundle
+    assert "RUN_PUBLISH_BUNDLE=" in bundle
+    generator = (ROOT / "tools" / "generate_workflow_notebooks.py").read_text(encoding="utf-8")
+    assert '"RUN_PUBLISH_BUNDLE=False' in generator
     assert "BUNDLE_SOURCE='github'" in bundle
     assert "local_upload" in bundle
     assert "raw.githubusercontent.com" in bundle
@@ -487,6 +489,8 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     assert "LIMIT=None" in local
     assert "no deje el valor en blanco" in local
     assert "progress_callback=report_label_progress" in local
+    assert "from tqdm.std import tqdm" in local
+    assert "Texto visible en Colab desde VS Code" in local
     assert "inspect.signature(annotate_incremental)" in local
     assert "continuará con los siguientes 20" in local
     assert "progress_callback=report_remote_progress" in notebook_sources[

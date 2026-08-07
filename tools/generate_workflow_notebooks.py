@@ -1707,7 +1707,10 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
             ),
             (
                 "Etiquetado incremental",
-                "from tqdm.auto import tqdm\n"
+                "if globals().get('IN_COLAB'):\n"
+                "    from tqdm.std import tqdm  # Texto visible en Colab desde VS Code.\n"
+                "else:\n"
+                "    from tqdm.auto import tqdm\n"
                 "import inspect\n"
                 "from moderacion_peru.io import read_jsonl\n"
                 "from moderacion_peru.labeling import annotate_incremental\n\n"
