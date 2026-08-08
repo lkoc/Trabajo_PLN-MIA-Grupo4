@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import math
 import random
 from collections import Counter, defaultdict, deque
@@ -220,13 +221,20 @@ def build_directed_review_queue(
     *,
     confidence_threshold: float,
     safe_control_rate: float = 0.10,
+    max_needs_review: int | None = None,
     seed: int = 42,
     progress_callback=None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Enruta daño, dudas, baja confianza y un control seguro reproducible."""
+    """Enruta daño, dudas priorizadas, baja confianza y un control reproducible."""
 
     if not 0 <= safe_control_rate <= 1:
         raise ValueError("safe_control_rate debe estar entre 0 y 1")
+    if max_needs_review is not None and (
+        isinstance(max_needs_review, bool)
+        or not isinstance(max_needs_review, int)
+        or max_needs_review < 1
+    ):
+        raise ValueError("max_needs_review debe ser None o un entero positivo")
     annotations = {str(row["chunk_id"]): row for row in primary_rows}
     chunk_rows = list(chunks)
     if progress_callback is not None:
@@ -248,6 +256,26 @@ def build_directed_review_queue(
             enriched[str(row["chunk_id"])] = item
 
     rng = random.Random(seed)
+    needs_review_candidates = [
+        (
+            float(annotation.get("score_confianza", 0.0)),
+            hashlib.sha256(
+                f"{seed}:needs_review:{chunk_id}".encode("utf-8")
+            ).hexdigest(),
+            chunk_id,
+        )
+        for chunk_id, annotation in annotations.items()
+        if annotation.get("needs_review") and not _is_damage(annotation)
+    ]
+    needs_review_candidates.sort()
+    prioritized_needs_review = {
+        chunk_id
+        for _, _, chunk_id in (
+            needs_review_candidates
+            if max_needs_review is None
+            else needs_review_candidates[:max_needs_review]
+        )
+    }
     selected: list[dict[str, Any]] = []
     reasons: Counter[str] = Counter()
     for index, chunk in enumerate(chunk_rows, start=1):
@@ -257,8 +285,10 @@ def build_directed_review_queue(
             reason = "missing_primary"
         elif _is_damage(annotation):
             reason = "damage"
-        elif annotation.get("needs_review"):
+        elif annotation.get("needs_review") and chunk_id in prioritized_needs_review:
             reason = "needs_review"
+        elif annotation.get("needs_review"):
+            reason = ""
         elif float(annotation.get("score_confianza", 0.0)) < confidence_threshold:
             reason = "low_confidence"
         elif rng.random() < safe_control_rate:
@@ -290,6 +320,9 @@ def build_directed_review_queue(
         "selected": len(selected),
         "confidence_threshold": confidence_threshold,
         "safe_control_rate": safe_control_rate,
+        "needs_review_candidates": len(needs_review_candidates),
+        "max_needs_review": max_needs_review,
+        "needs_review_priority": "score_confianza_asc_then_seeded_sha256",
         "seed": seed,
         "routing_reasons": dict(reasons),
     }

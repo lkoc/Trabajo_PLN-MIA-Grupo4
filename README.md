@@ -130,6 +130,14 @@ predeclarado no se alcanzó: es acuerdo entre modelos, no exactitud humana. Vea
 la [metodología](docs/METODOLOGIA_ETIQUETADO_CASCADA.md) y el
 [corte cuantitativo con fuentes](resultados/ETIQUETADO_CASCADA_CORTE_2026-08-08.md).
 
+Tras detener Pro, el checkpoint preservó 29 270 revisiones y registró
+US$4.727523 para 14 079 respuestas nuevas. Con US$5.75 de saldo disponible, la
+reanudación presupuestada acepta con mayor frecuencia la salida segura de Flash:
+revisa todo daño, las 36 000 abstenciones de menor confianza y solo seguros por
+debajo de 0.85, más un control seguro aleatorio reproducible del 1 %. Quedan
+40 695 llamadas Pro proyectadas en US$13.66; el cuaderno impone un tope de
+US$14.50.
+
 ### 03 · Entrenamiento, calibración y comparación
 
 | Cuaderno | Familia o decisión | Resultado materializado |
@@ -147,9 +155,9 @@ Cada candidato completa `fit → calibración en validation → evaluación en t
 
 ### 04 · Operación supervisada
 
-`04_01_frontend_produccion` inicia un demostrador local para texto o URL de YouTube. La interfaz muestra las cinco probabilidades, sus umbrales, la evidencia temporal y los motivos que obligan revisión. Un conflicto, una salida vacía o la proximidad a un umbral nunca se convierte automáticamente en `SEGURO`.
+`04_01_frontend_produccion` inicia un demostrador local para texto o URL de YouTube. La interfaz permite consultar el mejor clásico, Transformer o Qwen, comparar sus respuestas o aplicar consenso 2-de-3. Muestra las cinco probabilidades, sus umbrales, la evidencia temporal y los motivos que obligan revisión. Un conflicto, una salida vacía o la proximidad a un umbral nunca se convierte automáticamente en `SEGURO`.
 
-El [frontend humano](flujo/02_etiquetado/frontend/validacion_humana.html) permite revisar campañas, conservar contexto y reanudar el trabajo. El [frontend productivo](flujo/04_produccion/frontend/produccion.html) opera en modo sombra, reutiliza el caché de subtítulos y registra decisiones humanas para análisis o reentrenamiento posterior.
+El [frontend humano](flujo/02_etiquetado/frontend/validacion_humana.html) permite revisar campañas, conservar contexto y reanudar el trabajo. El [frontend productivo](flujo/04_produccion/frontend/produccion.html) opera en modo sombra, reutiliza el caché de subtítulos y registra decisiones humanas para análisis o reentrenamiento posterior. La [matriz de paridad](docs/PARIDAD_FRONTENDS_ACTIVOS.md) contrasta todas las funciones históricas mínimas y delimita las capturas aún pendientes.
 
 ## Estructura del repositorio
 
@@ -326,7 +334,7 @@ Después de entrenar y publicar con `03_07`, el frontend productivo se inicia co
   --registry modelos/registro_modelos_5_salidas.json
 ```
 
-Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guardan en JSONL append-only. El frontend productivo rechaza la inferencia si no existe un registro del contrato de etiquetas v2.1 cuyo checkpoint y hashes puedan verificarse.
+Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guardan en JSONL append-only. El frontend productivo rechaza la inferencia si no existe un registro del contrato de etiquetas v2.1 cuyos checkpoints y hashes puedan verificarse. Fuera de loopback exige `MODERATOR_ACCESS_PASSWORD` y admite `MODERATOR_ACCESS_USER`.
 
 ### 9. Comprobar la reproducción
 
@@ -396,7 +404,7 @@ La preparación, verificación SHA-256, reanudación por `COLAB_RUN_ID` y recupe
 | `datos/etiquetado/**` | propuestas, campañas y eventos humanos |
 | `datos/model_ready/v2/snapshots/<id>/` | datasets entrenables inmutables |
 | `modelos/v2/**/candidate.json` | candidatos con configuración y métricas |
-| `modelos/registro_modelos_5_salidas.json` | único modelo autorizado para el frontend activo |
+| `modelos/registro_modelos_5_salidas.json` y `.<slot>.json` | registro principal y mejores clásico/Transformer/Qwen autorizados para consulta, comparación y consenso |
 | `resultados/**` | comparaciones, auditorías y manifiestos |
 | `resultados/colab_bundle/*.{gz,zip}` | checkpoint comprimido y verificable para restauración/Colab |
 | `archivo/` | contratos, cuadernos y métricas históricas preservadas |

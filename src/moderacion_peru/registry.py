@@ -62,6 +62,68 @@ def _candidate_asset(candidate: dict[str, Any], value: str | Path) -> Path:
     return Path(candidate["candidate_path"]).parent / path
 
 
+def _model_slot(candidate: dict[str, Any]) -> str:
+    family = str(candidate.get("model_family", "")).casefold()
+    if family.startswith("classical:"):
+        return "classical"
+    if family.startswith("qwen"):
+        return "qwen"
+    return "transformer"
+
+
+def _registry_entry(
+    candidate: dict[str, Any],
+    *,
+    dataset_sha: str,
+    comparison_registries: dict[str, Any] | None = None,
+) -> ModelRegistryEntry:
+    taxonomy = load_taxonomy()
+    manifest_path = _candidate_asset(candidate, candidate["checkpoint_manifest"]).resolve()
+    portable_inference = dict(candidate["inference"])
+    for key in ("bundle", "model", "gate_model", "damage_model"):
+        if portable_inference.get(key):
+            portable_inference[key] = relative_to_root(
+                _candidate_asset(candidate, portable_inference[key])
+            )
+    return ModelRegistryEntry(
+        model_id=candidate["candidate_id"],
+        model_family=candidate["model_family"],
+        taxonomy_contract=taxonomy.contract_id,
+        taxonomy_version=taxonomy.version,
+        target_labels=list(taxonomy.target_labels),
+        checkpoint=artifact_reference(manifest_path, "checkpoint_manifest"),
+        thresholds=candidate["thresholds"],
+        metrics_path=relative_to_root(_candidate_asset(candidate, candidate["metrics_path"])),
+        hardware=candidate.get("hardware"),
+        dataset_sha256=dataset_sha,
+        run_signature=candidate["run_signature"],
+        inference=portable_inference,
+        selection_metrics={
+            "false_safe_rate_on_damage": float(
+                candidate["validation_metrics"]["false_safe_rate_on_damage"]
+            ),
+            "f1_macro_damage": float(candidate["validation_metrics"]["f1_macro_damage"]),
+            "average_precision_macro_damage": float(
+                candidate["validation_metrics"]["average_precision_macro_damage"]
+            ),
+            "review_load_rate": float(candidate["validation_metrics"]["review_load_rate"]),
+        },
+        comparison_registries=comparison_registries or {},
+        status="validated",
+    )
+
+
+def _write_registry(path: Path, entry: ModelRegistryEntry) -> str:
+    payload = entry.model_dump(mode="json")
+    if path.is_file():
+        if json.loads(path.read_text(encoding="utf-8")) == payload:
+            return "noop"
+        write_json_atomic(path, payload)
+        return "updated"
+    write_json_atomic(path, payload)
+    return "created"
+
+
 def compare_and_publish_registry(
     dataset_path: str | Path,
     candidate_roots: Iterable[str | Path],
@@ -96,45 +158,31 @@ def compare_and_publish_registry(
     if not eligible:
         raise ValueError("No hay candidatos completos para el SHA-256 del snapshot activo")
     selected = max(eligible, key=_selection_key)
-    manifest_path = _candidate_asset(selected, selected["checkpoint_manifest"]).resolve()
-    portable_inference = dict(selected["inference"])
-    for key in ("bundle", "model", "gate_model", "damage_model"):
-        if portable_inference.get(key):
-            portable_inference[key] = relative_to_root(_candidate_asset(selected, portable_inference[key]))
-    metrics_path = relative_to_root(_candidate_asset(selected, selected["metrics_path"]))
-    entry = ModelRegistryEntry(
-        model_id=selected["candidate_id"],
-        model_family=selected["model_family"],
-        taxonomy_contract=taxonomy.contract_id,
-        taxonomy_version=taxonomy.version,
-        target_labels=list(taxonomy.target_labels),
-        checkpoint=artifact_reference(manifest_path, "checkpoint_manifest"),
-        thresholds=selected["thresholds"],
-        metrics_path=metrics_path,
-        hardware=selected.get("hardware"),
-        dataset_sha256=dataset_sha,
-        run_signature=selected["run_signature"],
-        inference=portable_inference,
-        selection_metrics={
-            "false_safe_rate_on_damage": float(selected["validation_metrics"]["false_safe_rate_on_damage"]),
-            "f1_macro_damage": float(selected["validation_metrics"]["f1_macro_damage"]),
-            "average_precision_macro_damage": float(selected["validation_metrics"]["average_precision_macro_damage"]),
-            "review_load_rate": float(selected["validation_metrics"]["review_load_rate"]),
-        },
-        status="validated",
-    )
     destination = Path(registry_path)
-    payload = entry.model_dump(mode="json")
-    if destination.is_file():
-        current = json.loads(destination.read_text(encoding="utf-8"))
-        if current == payload:
-            status = "noop"
-        else:
-            write_json_atomic(destination, payload)
-            status = "updated"
-    else:
-        write_json_atomic(destination, payload)
-        status = "created"
+    best_by_slot = {
+        slot: max((row for row in eligible if _model_slot(row) == slot), key=_selection_key)
+        for slot in ("classical", "transformer", "qwen")
+        if any(_model_slot(row) == slot for row in eligible)
+    }
+    member_paths: dict[str, Path] = {}
+    member_status: dict[str, str] = {}
+    for slot, candidate in best_by_slot.items():
+        member_path = destination.with_name(f"{destination.stem}.{slot}{destination.suffix}")
+        member_paths[slot] = member_path
+        member_status[slot] = _write_registry(
+            member_path,
+            _registry_entry(candidate, dataset_sha=dataset_sha),
+        )
+    comparison_registries = {
+        slot: artifact_reference(path, f"production_{slot}_registry")
+        for slot, path in member_paths.items()
+    }
+    entry = _registry_entry(
+        selected,
+        dataset_sha=dataset_sha,
+        comparison_registries=comparison_registries,
+    )
+    status = _write_registry(destination, entry)
     ranking = sorted(
         (
             {
@@ -163,6 +211,10 @@ def compare_and_publish_registry(
             "min review_load_rate",
         ],
         "selected": selected["candidate_id"],
+        "selected_by_slot": {
+            slot: candidate["candidate_id"] for slot, candidate in best_by_slot.items()
+        },
+        "consensus_available": set(best_by_slot) == {"classical", "transformer", "qwen"},
         "ranking": ranking,
         "rejected": rejected,
     }
@@ -180,9 +232,15 @@ def compare_and_publish_registry(
     return {
         "status": status,
         "selected": selected["candidate_id"],
+        "selected_by_slot": {
+            slot: candidate["candidate_id"] for slot, candidate in best_by_slot.items()
+        },
+        "consensus_available": set(best_by_slot) == {"classical", "transformer", "qwen"},
         "eligible": len(eligible),
         "rejected": len(rejected),
         "registry": str(destination),
+        "member_registries": {slot: str(path) for slot, path in member_paths.items()},
+        "member_status": member_status,
         "comparison": str(comparison_destination),
     }
 

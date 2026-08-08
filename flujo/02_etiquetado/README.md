@@ -32,8 +32,11 @@ Los seis cuadernos muestran barras `tqdm` en las operaciones potencialmente larg
 3. Calibrar ambos modelos sobre el mismo panel balanceado de 1 000 chunks.
 4. Procesar con Flash solo los `chunk_id` pendientes y persistir cada grupo de
    cinco con `fsync`; se usan hasta 32 solicitudes concurrentes.
-5. Enviar a Pro daño, abstención, baja confianza y una muestra segura de
-   control, con contexto vecino.
+5. Enviar a Pro todo daño, las 36 000 abstenciones Flash de menor confianza y
+   los seguros con confianza `< 0.85`, con contexto vecino. La reanudación
+   presupuestada usa un control seguro aleatorio reproducible del 1 %, conserva
+   toda revisión Pro existente y limita el gasto nuevo a US$14.50; el 0.95 permanece como
+   resultado de calibración diagnóstico.
 6. Consolidar con precedencia Pro→Flash y cerrar mediante decisiones humanas
    append-only; una abstención nunca se convierte automáticamente en `SEGURO`.
 
@@ -61,6 +64,9 @@ El checkpoint documentado del **2026-08-08 13:15:01 (UTC−05)** registró:
 | primera pasada nueva | 14 399/114 696 válidos, 1 error rechazado, 867.279 chunks/min |
 | costo incremental del tramo | US$0.908781; US$0.06311 por 1 000 válidos |
 | caché Flash acumulada | 75.17 % |
+| revisiones Pro ya persistidas | 29 270; nunca se eliminan al reconstruir la cola |
+| cola crítica y control 1 % | 40 695 pendientes; US$13.66 y 90.0 min proyectados |
+| saldo verificado antes de recarga | US$5.75; con US$10 serían aproximadamente US$15.75 |
 
 El acuerdo exacto no alcanzó el criterio predeclarado y el estado de
 calibración es `inconclusive_conservative_threshold`. Estas son comparaciones
@@ -74,7 +80,7 @@ y la [metodología central](../../docs/METODOLOGIA_ETIQUETADO_CASCADA.md).
 modperu serve-labeling --campaign datos/etiquetado/consolidado/anotaciones_v2.jsonl
 ```
 
-La sugerencia LLM permanece oculta hasta que el revisor decide mostrarla. La interfaz impide combinar `SEGURO` con daño y admite aceptar, modificar, diferir o excluir. También recupera de la versión histórica contexto vecino, enlace temporal al video, guía, progreso, filtros, borradores, atajos y exportación, sin incrustar la campaña en el HTML.
+La sugerencia LLM permanece oculta hasta que el revisor decide mostrarla. La interfaz impide combinar `SEGURO` con daño y solo habilita flags cuando existe al menos una categoría de daño. Admite aceptar, modificar, diferir o excluir; un diferido se conserva, pero sigue pendiente hasta recibir una decisión resolutiva. También recupera de la versión histórica contexto vecino, enlace temporal al video, guía, progreso, filtros, borradores, atajos `A`/`R`/`Ctrl+Enter`/flechas y exportación, sin incrustar la campaña en el HTML. Estas invariantes también se validan en el servidor, por lo que no dependen únicamente del navegador. Consulte la [matriz de paridad de los frontends](../../docs/PARIDAD_FRONTENDS_ACTIVOS.md).
 
 Los eventos humanos no alteran el archivo LLM. `02_05` construye una vista derivada por precedencia y después un snapshot inmutable. Si no existen eventos humanos —la revisión es opcional— conserva las decisiones automáticas resueltas; nunca convierte una abstención en `SEGURO`.
 

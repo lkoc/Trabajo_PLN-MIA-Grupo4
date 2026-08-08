@@ -491,7 +491,7 @@
     \node[b,draw=Blue!45,fill=Blue!7] (hist) {\textbf{Recuperación exacta}\\\texttt{video\_id}+texto\\solo coincidencia 1:1};
     \node[b,draw=Teal!45,fill=Teal!7,right=4mm of hist] (cal) {\textbf{Panel pareado}\\1\,000 chunks\\Flash y Pro};
     \node[b,draw=Gold!50,fill=Gold!9,right=4mm of cal] (flash) {\textbf{Flash}\\solo pendientes\\5 por solicitud; 32 concurrentes};
-    \node[b,draw=Purple!45,fill=Purple!7,right=4mm of flash] (pro) {\textbf{Pro dirigido}\\daño, abstención, baja confianza + control};
+    \node[b,draw=Purple!45,fill=Purple!7,right=4mm of flash] (pro) {\textbf{Pro presupuestado}\\daño + 36k abstenciones\\seguro $<0.85$ + control 1\%};
     \node[b,draw=Coral!45,fill=Coral!7,right=4mm of pro] (human) {\textbf{Humano}\\aceptar, modificar, diferir o excluir};
     \draw[a] (hist)--(cal); \draw[a] (cal)--(flash); \draw[a] (flash)--(pro); \draw[a] (pro)--(human);
   \end{tikzpicture}}
@@ -501,7 +501,7 @@
     \begin{column}{.32\textwidth}\pill{Blue}{JSON validado}\;\scriptsize raíz \texttt{annotations}\end{column}
     \begin{column}{.32\textwidth}\pill{Purple}{Reanudable}\;\scriptsize \texttt{fsync}, cuarentena, \texttt{chunk\_id}\end{column}
   \end{columns}
-  \sourceNote{DeepSeek API: catálogo V4 y documentación oficial; metodología de cascada del proyecto. Prompt operacional v2.}
+  \sourceNote{DeepSeek API: catálogo V4 y precios oficiales; regla presupuestada con 29,270 revisiones Pro preservadas, 40,695 pendientes y costo observado proyectado de US\$13.66. Prompt operacional v2.}
 \end{frame}
 
 % 16
@@ -729,10 +729,10 @@
         \draw[-{Stealth[length=1.6mm]}] (q.south) -- (vote.north east);
       \end{tikzpicture}
       \vspace{1mm}
-      \scriptsize Texto o URL; cinco scores y umbrales; chunk e instante; aceptar, rechazar o modificar. No bloquea, elimina ni sanciona.
+      \scriptsize Implementado: texto o URL; consulta individual, comparación y consenso 2/3; cinco scores; revisión; estadísticas y reentrenamiento. No sanciona contenido.
     \end{column}
   \end{columns}
-  \sourceNote{Captura histórica de demostración. El frontend v2.1 está implementado, pero el registro actual se publicará después de \texttt{03\_07}. Ensambles: Dietterich (2000); regla 2/3, decisión local.}
+  \sourceNote{Captura histórica de demostración. El frontend v2.1 ya tiene paridad funcional verificada; la captura actual y los tres registros se materializarán después de \texttt{03\_07}. Ensambles: Dietterich (2000); regla 2/3, decisión local.}
 \end{frame}
 
 \section{6. Resultados}

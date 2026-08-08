@@ -97,6 +97,38 @@ saldo documentada antes de este checkpoint informó **US$19.10 disponibles**.
 El saldo de cuenta y el costo reconstruido pueden diferir por redondeo y
 actualización del proveedor; ambos se conservan como mediciones distintas.
 
+## Reanudación Pro presupuestada
+
+Después de detener manualmente la revisión Pro, el checkpoint más reciente
+conservó **29 270 revisiones únicas**: 15 191 ya estaban presentes al iniciar el
+tramo y se añadieron 14 079 válidas. Ese tramo consumió 13 949 465 tokens de
+entrada y 2 236 040 de salida, con 54.61 % de caché, a un costo estimado de
+**US$4.727523** y una velocidad de **452.415 chunks/min**. La consulta de saldo
+sin corpus del mismo día informó **US$5.75**.
+
+La cola anterior seleccionaba 81 610 chunks y aún dejaba 58 086 sin Pro; al
+costo unitario observado, completarla costaría aproximadamente US$19.50. Incluso
+el conjunto formado por todo daño y toda abstención dejaría 51 673 pendientes y
+costaría aproximadamente US$17.35. Por ello no se afirma que US$15 alcancen para
+la regla conservadora anterior.
+
+La regla presupuestada conserva todas las revisiones existentes y selecciona:
+
+| Prioridad | Total todavía pendiente |
+|---|---:|
+| todo daño Flash | 12 613 |
+| 36 000 abstenciones de menor confianza, descontando las ya revisadas | 27 078 |
+| `SEGURO` con confianza Flash `<0.85` | 145 |
+| control seguro aleatorio reproducible del 1 % | 859 |
+| **total nuevo** | **40 695** |
+
+Usando el costo y la velocidad observados, el punto de planificación es
+**US$13.66** y **90.0 minutos**. `MAX_REVIEW_COST_USD=14.50` deja margen frente
+a un saldo aproximado de US$15.75 después de una recarga de US$10. La proyección
+no garantiza el precio final: longitud de respuesta, caché y superlotes
+concurrentes pueden variar. Si el tope se alcanza, el checkpoint detiene nuevos
+grupos y conserva lo completado.
+
 ## Fuentes y regla de actualización
 
 Las cifras provienen de:

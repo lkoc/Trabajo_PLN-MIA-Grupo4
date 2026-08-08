@@ -1741,12 +1741,14 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "REVIEW_LIMIT=None   # Campaña: TODA y solo la cola dirigida pendiente.\n"
                 "PROCESSING_BATCH_SIZE=160  # 32 solicitudes concurrentes × 5 registros.\n"
                 "MAX_PRIMARY_COST_USD=60.0\n"
-                "MAX_REVIEW_COST_USD=25.0\n"
+                "MAX_REVIEW_COST_USD=14.50  # Tope de esta reanudación; deja margen sobre US$15.75 disponibles tras una recarga de US$10.\n"
                 "BALANCE_REFRESH_SECONDS=60.0  # Consulta de saldo sin corpus durante la ejecución.\n"
                 "LOW_BALANCE_WARNING_USD=2.0\n"
                 "CACHE_ALERT_AFTER_REQUESTS=50\n"
                 "MIN_CACHE_HIT_RATE=0.50\n"
-                "SAFE_CONTROL_RATE=0.10\n\n"
+                "SAFE_CONTROL_RATE=0.01  # Control seguro aleatorio reproducible del 1%.\n"
+                "REVIEW_CONFIDENCE_THRESHOLD=0.85  # Pro revisa seguros Flash < 0.85; el 0.95 sigue siendo solo diagnóstico.\n"
+                "MAX_NEEDS_REVIEW_FOR_PRO=36_000  # Abstenciones Flash de menor confianza; desempate SHA-256 reproducible.\n\n"
                 "primary_provider=DeepSeekProvider(model='deepseek-v4-flash',max_workers=32,records_per_request=5,max_cost_usd=MAX_PRIMARY_COST_USD,label_source='deepseek_remote')\n"
                 "reviewer_provider=DeepSeekProvider(model='deepseek-v4-pro',max_workers=32,records_per_request=5,max_cost_usd=MAX_REVIEW_COST_USD,label_source='llm_remote_review')\n"
                 "primary_probe=primary_provider.probe(); reviewer_probe=reviewer_provider.probe()\n"
@@ -1772,7 +1774,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "        raise RuntimeError('Flash o Pro no aparece disponible en el catálogo de DeepSeek')\n"
                 "    initial_balance=primary_provider.balance_summary()\n"
                 "    show_result('Credencial, modelos y saldo verificados; no se enviaron textos',{'Flash':flash_connection,'Pro':pro_connection,'saldo':initial_balance},tone='success' if initial_balance['is_available'] else 'warning')\n"
-                "show_summary('Rutas y activación',{'entrada':SOURCE,'campaña':CAMPAIGN_ROOT,'recuperación_histórica':RECOVER_HISTORICAL,'checkpoint_drive_automático':bool(COLAB_CONTEXT and AUTO_PUBLISH_CHECKPOINTS),'calibración':RUN_CALIBRATION,'primaria':RUN_PRIMARY,'revisión':RUN_DIRECTED_REVIEW},tone='neutral')",
+                "show_summary('Rutas y activación',{'entrada':SOURCE,'campaña':CAMPAIGN_ROOT,'recuperación_histórica':RECOVER_HISTORICAL,'checkpoint_drive_automático':bool(COLAB_CONTEXT and AUTO_PUBLISH_CHECKPOINTS),'calibración':RUN_CALIBRATION,'primaria':RUN_PRIMARY,'revisión':RUN_DIRECTED_REVIEW,'umbral_seguro_Flash_a_Pro':REVIEW_CONFIDENCE_THRESHOLD,'máximo_abstenciones_Pro':MAX_NEEDS_REVIEW_FOR_PRO,'control_seguro':SAFE_CONTROL_RATE,'tope_reanudación_USD':MAX_REVIEW_COST_USD},tone='neutral')",
             ),
             (
                 "Carga visible del corpus",
@@ -1933,14 +1935,14 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "    queue_progress={'bar':tqdm(total=len(paired_chunks),desc='Construyendo cola Pro',unit='chunk')}\n"
                 "    def report_queue(event):\n"
                 "        if event.get('advance'): queue_progress['bar'].update(event['advance'])\n"
-                "    review_queue,routing=build_directed_review_queue(paired_chunks,primary_rows,confidence_threshold=float(calibration['selected_threshold']),safe_control_rate=SAFE_CONTROL_RATE,seed=42,progress_callback=report_queue)\n"
+                "    review_queue,routing=build_directed_review_queue(paired_chunks,primary_rows,confidence_threshold=REVIEW_CONFIDENCE_THRESHOLD,safe_control_rate=SAFE_CONTROL_RATE,max_needs_review=MAX_NEEDS_REVIEW_FOR_PRO,seed=42,progress_callback=report_queue)\n"
                 "    queue_progress['bar'].close()\n"
                 "    write_jsonl_atomic(REVIEW_QUEUE_PATH,review_queue); write_json_atomic(CAMPAIGN_ROOT/'routing_summary.json',routing)\n"
                 "    REVIEW_PATH,review_result=run_campaign(review_queue,reviewer_provider,'review_pro.jsonl',limit=REVIEW_LIMIT,description='Revisión dirigida Pro')\n"
-                "    show_summary('Enrutamiento histórico actualizado',routing,tone='success')\n"
+                "    show_summary('Enrutamiento operativo actualizado',routing,tone='success')\n"
                 "    show_result('Resultado Pro',review_result,tone='success')\n"
                 "else:\n"
-                "    show_callout('Revisión dirigida desactivada','Active solo después de completar Flash. Se revisan daño, abstención, baja confianza y 10% de controles seguros.',tone='neutral')",
+                "    show_callout('Revisión dirigida desactivada','Active solo después de completar Flash. La regla presupuestada revisa todo daño, las 36 000 abstenciones de menor confianza, seguros con confianza menor que 0.85 y un control seguro aleatorio reproducible del 1%.',tone='neutral')",
             ),
             (
                 "Resultados persistidos y reportables",

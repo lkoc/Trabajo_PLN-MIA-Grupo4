@@ -233,6 +233,28 @@ def test_required_frontends_are_small_templates():
     assert "/api/analyze" in production_source
     assert "/api/stats" in production_source
     assert "youtube.com" in production_source
+    assert "Consenso 2-de-3" in production_source
+    assert "Comparar familias" in production_source
+    assert "Dataset para reentrenar" in production_source
+    assert "event.key.toLowerCase()==='r'" in human_source
+    assert "review.action==='defer'" in human_source
+    assert "updateFlagAvailability" in human_source
+    assert "Diferido · pendiente" in human_source
+
+
+def test_02_01_uses_explicit_operational_review_threshold_without_changing_calibration():
+    notebook = nbformat.read(
+        ROOT / "flujo/02_etiquetado/02_01_etiquetado_local_ollama.ipynb",
+        as_version=4,
+    )
+    source = "\n".join(
+        cell.source for cell in notebook.cells if cell.cell_type == "code"
+    )
+    generator = (ROOT / "tools/generate_workflow_notebooks.py").read_text(encoding="utf-8")
+    for value in (source, generator):
+        assert "REVIEW_CONFIDENCE_THRESHOLD=0.90" in value
+        assert "confidence_threshold=REVIEW_CONFIDENCE_THRESHOLD" in value
+        assert "confidence_threshold=float(calibration['selected_threshold'])" not in value
 
 
 def test_academic_cover_is_present_in_notebooks_frontends_and_readmes():

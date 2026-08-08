@@ -902,3 +902,34 @@ def test_directed_review_routing_is_case_insensitive():
         ("damage", "damage")
     ]
     assert manifest["routing_reasons"] == {"damage": 1}
+
+
+def test_directed_review_can_prioritize_lowest_confidence_abstentions():
+    chunks = [
+        {"chunk_id": f"c{index}", "video_id": f"v{index}", "text": "texto"}
+        for index in range(5)
+    ]
+    scores = [0.95, 0.50, 0.80, 0.60, 0.70]
+    primary = [
+        {
+            **chunk,
+            "coarse_labels": [],
+            "needs_review": True,
+            "score_confianza": score,
+        }
+        for chunk, score in zip(chunks, scores, strict=True)
+    ]
+
+    queue, manifest = build_directed_review_queue(
+        chunks,
+        primary,
+        confidence_threshold=0.85,
+        safe_control_rate=0,
+        max_needs_review=3,
+        seed=42,
+    )
+
+    assert {row["chunk_id"] for row in queue} == {"c1", "c3", "c4"}
+    assert manifest["needs_review_candidates"] == 5
+    assert manifest["max_needs_review"] == 3
+    assert manifest["routing_reasons"] == {"needs_review": 3}

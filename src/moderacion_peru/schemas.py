@@ -175,6 +175,8 @@ class ModelRegistryEntry(BaseModel):
     run_signature: str | None = None
     inference: dict[str, Any] = Field(default_factory=dict)
     selection_metrics: dict[str, float] = Field(default_factory=dict)
+    comparison_registries: dict[str, ArtifactReference] = Field(default_factory=dict)
+    consensus_min_votes: Literal[2] = 2
     status: Literal["candidate", "validated", "shadow_only", "archived"] = "candidate"
 
     @model_validator(mode="after")
@@ -184,6 +186,9 @@ class ModelRegistryEntry(BaseModel):
             raise ValueError("El registro no usa las cinco salidas canónicas en orden")
         if set(self.thresholds) != set(taxonomy.target_labels):
             raise ValueError("Debe existir un umbral para cada salida entrenada")
+        unknown_slots = set(self.comparison_registries) - {"classical", "transformer", "qwen"}
+        if unknown_slots:
+            raise ValueError(f"Slots productivos desconocidos: {sorted(unknown_slots)}")
         return self
 
 
@@ -199,6 +204,7 @@ class ReviewEvent(BaseModel):
     flags: list[str] = Field(default_factory=list)
     reviewer: str = Field(min_length=1)
     model_id: str | None = None
+    source_event_id: str | None = None
     taxonomy_version: str = "2.1.0"
     notes: str = ""
     created_at: datetime = Field(default_factory=utc_now)
@@ -215,6 +221,8 @@ class ReviewEvent(BaseModel):
         unknown_flags = set(self.flags) - set(taxonomy.flags)
         if unknown_flags:
             raise ValueError(f"Flags desconocidos: {sorted(unknown_flags)}")
+        if self.flags and not set(self.final_labels).intersection(taxonomy.damage_labels):
+            raise ValueError("Los flags requieren al menos una categoría final de daño")
         return self
 
 

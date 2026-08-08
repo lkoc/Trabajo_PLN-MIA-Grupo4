@@ -9,6 +9,22 @@ realiza la primera pasada económica y `deepseek-v4-pro` revisa de manera
 dirigida. El fallback local `Qwen/Qwen3-1.7B` queda como diagnóstico separado;
 no se mezclan sus métricas ni sus salidas con la campaña principal.
 
+La decisión operativa presupuestada vigente desde el **2026-08-08** fija
+`REVIEW_CONFIDENCE_THRESHOLD=0.85`, `SAFE_CONTROL_RATE=0.01` y
+`MAX_NEEDS_REVIEW_FOR_PRO=36_000`. Pro conserva todo daño, los 36 000 casos
+`needs_review` de menor confianza —con desempate SHA-256 reproducible— y los
+casos resueltos como `SEGURO` cuya confianza Flash sea menor que 0.85. Se añade
+un control seguro aleatorio reproducible del 1 %. El umbral 0.95 permanece como
+resultado de calibración diagnóstico y no como regla de esta reanudación.
+
+La reducción se decidió después de detener manualmente Pro y verificar el
+saldo, sin eliminar ninguna de las **29 270** revisiones ya persistidas. La cola
+conservadora completa dejaba 58 086 pendientes; al costo observado no cabía en
+unos US$15. La regla presupuestada deja **40 695** revisiones nuevas: 12 613
+daños, 27 078 abstenciones priorizadas, 145 seguros de baja confianza y 859
+controles seguros. Su costo puntual proyectado es **US$13.66** y el tope es
+`MAX_REVIEW_COST_USD=14.50`.
+
 El contrato v2.1 aprende `SEGURO`, `RACISMO_DISCRIMINACION`,
 `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO`
 es excluyente; los cuatro daños pueden coexistir. Una abstención se difiere y no
@@ -138,9 +154,13 @@ son proyecciones tempranas. El corte completo y sus fuentes están en
    paralelo. La barra cuenta chunks, errores, velocidad, caché, costo acumulado
    y saldo periódico. Las respuestas se validan contra el esquema y el orden de
    `chunk_id` antes de persistirse.
-6. **Revisión dirigida.** Pro recibe todo daño, `needs_review`, confianza bajo el
-   umbral calibrado y una muestra reproducible de 10 % de controles seguros.
-   Incluye los chunks vecino anterior y posterior.
+6. **Revisión dirigida presupuestada.** Pro recibe todo daño, las 36 000
+   abstenciones Flash de menor `score_confianza` y los casos resueltos como
+   `SEGURO` con confianza menor que 0.85. Los empates se ordenan mediante SHA-256
+   con semilla 42; además, se toma un control seguro aleatorio reproducible del
+   1 %.
+   Incluye los chunks vecino anterior y posterior. El 0.95 de la tabla de
+   riesgo–cobertura se conserva como resultado diagnóstico.
 7. **Humano final.** La salida Pro precede a Flash solo donde existe revisión.
    La persona revisora puede aceptar, modificar, diferir o rechazar. Las
    abstenciones no se transforman en `SEGURO`.
@@ -166,7 +186,8 @@ en tareas subjetivas ([Schroeder et al., 2025](https://aclanthology.org/2025.fin
   individual.
 - `MAX_PRIMARY_COST_USD` y `MAX_REVIEW_COST_USD` detienen nuevos grupos cuando
   se alcanza el tope; por concurrencia puede existir un sobrepaso acotado al
-  superlote ya iniciado.
+  superlote ya iniciado. Para la reanudación Pro presupuestada, el segundo vale
+  US$14.50.
 - El proveedor informa tokens de entrada con caché, sin caché y de salida. El
   cuaderno muestra saldo aproximadamente cada 60 segundos, advierte bajo
   US$2.00 y señala una tasa de caché inferior a 50 % después de 50 solicitudes.
