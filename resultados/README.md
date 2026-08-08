@@ -12,6 +12,12 @@ Este directorio recibirá únicamente métricas, figuras e informes producidos c
 
 Los resultados ejecutados anteriormente están en `archivo/contrato_4_danos_seguro_derivado/resultados` y no son comparables directamente con el nuevo contrato.
 
-`colab_bundle/` contiene la copia local verificable de los cuatro archivos sincronizados a la carpeta privada `ModeracionPeru_Colab/bundle` de Google Drive. No contiene modelos ni resultados de entrenamiento.
+`colab_bundle/` contiene la copia local verificable de los nueve archivos del bundle reproducible que `02_00` puede publicar como una versión inmutable en la carpeta privada `ModeracionPeru_Colab/bundle_releases` de Google Drive. No contiene modelos ni resultados de entrenamiento.
+
+[`ETIQUETADO_CASCADA_CORTE_2026-08-08.md`](ETIQUETADO_CASCADA_CORTE_2026-08-08.md)
+documenta un checkpoint atómico de la campaña Flash→Pro: recuperación
+histórica, calibración, tiempo, velocidad, caché, costo y límites de la medida de
+acuerdo. Es un corte parcial documentado; los `*.result.json` finales deben
+reemplazar sus proyecciones al concluir `02_01`.
 
 `modelos/comparacion_modelos_5_salidas.json` se crea en `03_07`: documenta el ranking de validation, mantiene test como reporte y señala candidatos rechazados. `auditorias/auditoria_finas_flags_v2.json` registra cobertura auxiliar por SHA-256 sin atribuir métricas predictivas a finas/flags cuando no existen predicciones gold separadas.

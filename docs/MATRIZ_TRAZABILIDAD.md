@@ -16,12 +16,15 @@
 | eventos humanos vuelven al consolidado sin sobrescribir propuestas | requisito de precedencia y trazabilidad | `consolidation.reconcile_human_reviews`, `ReviewEvent` | `02_05` | implementado; último evento por fecha+ID |
 | `video_id` no se infiere desde un `chunk_id` ambiguo | requisito de integridad de grupos | `materialize_versioned_training_snapshot` | `02_05` y split | implementado; ausencia explícita detiene la etapa |
 | aumentar muestra crea snapshot nuevo y ejecución sin cambios es no-op | requisito incremental | firma de insumos, snapshot por contenido y run signature | `02_05`, `03_01`–`03_08` | implementado y probado |
+| la cascada reutiliza solo equivalencias históricas exactas y etiqueta después únicamente pendientes | requisito de continuidad y control de costo | `*.recovery.json`, JSONL por `chunk_id`, firma de campaña y cuarentena | `02_01`, `02_03` | implementado; corte: 52.244 Flash y 9.912 Pro recuperados |
+| Flash y Pro reciben el prompt operacional en modo no razonador y devuelven el contrato JSON validado | contrato de la API DeepSeek y decisión operacional | `DeepSeekProvider`, `AnnotationRecord`, `calibration_*.result.json` | `02_01` | verificado en nube; calibración 1.000+1.000 sin errores |
+| la eficacia de la calibración se expresa como acuerdo entre modelos, no exactitud humana | protocolo de riesgo–cobertura | Wilson unilateral, bootstrap por `video_id` y `calibration_flash_vs_pro.json` | `02_01`, `02_03`, informe cuantitativo | inconcluso para acuerdo exacto; requiere adjudicación humana |
 | todas las ramas completan fit, calibración, test y candidato | protocolo experimental | `experiments.py` | `03_01`–`03_06` | implementado; smoke real clásico y neuronal simulado |
 | selección productiva no consulta test | control de sesgo de selección | `registry.compare_and_publish_registry` | `03_07` | implementado; ranking solo validation |
 | frontend histórico recuperado bajo el contrato de etiquetas v2.1 | requisito funcional | `servers.py` y ambos HTML activos | etapas 02 y 04 | implementado: contexto, YouTube, revisión, estadísticas y exportación |
-| Ollama es la ruta local oficial | documentación de JSON Schema de Ollama | `providers/OllamaProvider` | etapa 02 | implementado |
+| DeepSeek Flash→Pro es la campaña principal; Qwen3-1.7B es un fallback local separado | decisión operacional y contratos de los proveedores | `providers/DeepSeekProvider`, `providers/HuggingFaceProvider` | `02_01`, `02_02` | implementado; no se mezclan campañas |
 | CUDA/ROCm/XPU/CPU | documentación PyTorch | `device.resolve_device` | entrenamiento/manifiestos | implementado |
-| Colab L4 desde VS Code sin duplicar el repositorio | extensión oficial Google Colab y FAQ de Drive/Colab | `config/colab_l4.json`, bundle SHA-256 y `colab.prepare_colab_context` | `02_01`, `03_02`–`03_06` | implementado; Drive-only, sin GitHub |
+| Colab L4 desde VS Code sin duplicar el repositorio | extensión oficial Google Colab y FAQ de Drive/Colab | `config/colab_l4.json`, bundle SHA-256 y `colab.prepare_colab_context` | `02_01`, `03_02`–`03_06` | implementado; bundle desde GitHub o carga local, versiones inmutables en Drive |
 | métricas actuales no pertenecen a v2 | resultados históricos | `archivo/contrato_4_danos_seguro_derivado` | paper/resultados | preservado |
 
 Las cifras editoriales deben añadir artefacto, campo, split y fecha/hash antes de incorporarse al paper.

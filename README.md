@@ -109,6 +109,27 @@ Durante `01_01`, primero se consolidan en el canónico todas las transcripciones
 
 La revisión humana puede aceptar, modificar, diferir o excluir. Una propuesta visible aceptada no se presenta como anotación humana ciega independiente. El frontend impide seleccionar `SEGURO` junto con daño y pseudonimiza al revisor antes de guardar el evento.
 
+#### Estado cuantitativo de la campaña Flash→Pro
+
+Antes de consumir API, `02_01` recuperó por coincidencia exacta y unívoca
+52 244 etiquetas Flash históricas y 9 912 Pro; quedaron 114 696 chunks
+pendientes de primera pasada. El panel pareado de 1 000 completó ambos modelos
+sin errores: Flash tardó 97.250 s (616.969 chunks/min, US$0.073349) y Pro
+122.593 s (489.424 chunks/min, US$0.269223). Sus tasas de caché fueron 64.22 %
+y 53.72 %, con ahorros medidos de 45.53 % y 37.65 % frente al mismo tráfico sin
+caché.
+
+Al checkpoint documentado del 2026-08-08 13:15:01 (UTC−05), Flash había
+etiquetado 14 399 pendientes adicionales válidos a 867.279 chunks/min; una
+respuesta con identificador u orden alterado fue rechazada. Ese tramo costó
+US$0.908781 tras restar la calibración, o US$0.06311 por 1 000 chunks válidos.
+Manteniendo ese régimen, la primera pasada se proyectaba en unas 2 h 12 min y
+US$7.24; no son cifras finales. El acuerdo Flash–Pro a umbral 0.95 fue
+80.41 % exacto y 99.77 % binario daño/seguro, pero el criterio exacto
+predeclarado no se alcanzó: es acuerdo entre modelos, no exactitud humana. Vea
+la [metodología](docs/METODOLOGIA_ETIQUETADO_CASCADA.md) y el
+[corte cuantitativo con fuentes](resultados/ETIQUETADO_CASCADA_CORTE_2026-08-08.md).
+
 ### 03 · Entrenamiento, calibración y comparación
 
 | Cuaderno | Familia o decisión | Resultado materializado |
@@ -219,7 +240,7 @@ ollama list
 
 El adaptador llama a la API HTTP de Ollama y exige JSON conforme al esquema de anotación. Si Ollama, el modelo o la API no están disponibles, la corrida falla de forma explícita y conserva el punto de reanudación.
 
-La campaña activa reproduce el esquema histórico económico Flash→Pro. Configure `DEEPSEEK_API_KEY` fuera del repositorio —o como secreto de Colab— y active cada fase explícitamente en `02_01`. El preflight consulta `/models` sin enviar corpus; las fases de calibración y etiquetado sí transmiten texto al proveedor y muestran costo acumulado. Nunca guarde credenciales en un cuaderno, `.env` versionado o manifiesto. El método, la comparación económica y los artefactos reportables están en [`docs/METODOLOGIA_ETIQUETADO_CASCADA.md`](docs/METODOLOGIA_ETIQUETADO_CASCADA.md).
+La campaña activa reproduce el esquema histórico económico Flash→Pro. Configure `DEEPSEEK_API_KEY` fuera del repositorio —o como secreto de Colab— y active cada fase explícitamente en `02_01`. El preflight consulta `/models` sin enviar corpus; las fases de calibración y etiquetado sí transmiten texto al proveedor. Flash y Pro usan `thinking=disabled`, solicitan JSON, validan el contrato `annotations` y muestran velocidad, caché, costo acumulado y saldo periódico. Nunca guarde credenciales en un cuaderno, `.env` versionado, Drive o manifiesto. El método, la comparación económica y los artefactos reportables están en [`docs/METODOLOGIA_ETIQUETADO_CASCADA.md`](docs/METODOLOGIA_ETIQUETADO_CASCADA.md).
 
 ### 5. Verificar entorno, contrato y artefactos
 
@@ -265,7 +286,7 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 | `01_01` | continuación actual: `DISCOVER_NEW=False`, `FETCH_NEW=True`, `BACKFILL_MISSING_VTT=True` | reanuda primero todos los VTT faltantes y después los candidatos; usa lotes de 10, pausas internas de 2.5–10 s y 15 s entre lotes; cambie `FETCH_NEW=False` si solo desea inspeccionar sin red |
 | `01_02` | se reutiliza el clásico; ambos `RUN_...=True`, ambos `FORCE_...=False`, `USE_ROBUST_RECOMMENDATION=True` y `APPLY_CHUNK_SELECTION=False` | prioriza los JSON consolidados y muestra el perfil de cinco longitudes y el cierre MiniLM 20/30 sin recalcular; solo ejecuta una etapa si falta su artefacto |
 | `02_00` | `RUN_PUBLISH_BUNDLE=False`, `BUNDLE_SOURCE='github'` | ábralo en Colab; use GitHub si el bundle está sincronizado o `'local_upload'` para seleccionar los nueve archivos locales, active y autorice `drive.mount()` |
-| `02_01` | recuperación histórica y checkpoints automáticos activos; cuatro interruptores de API en `False`; panel 1 000, `PRIMARY_LIMIT=300`, `REVIEW_LIMIT=500` | recupera solo coincidencias exactas 1:1, valida `/models`, ejecuta calibración, Flash y Pro sobre pendientes; `Ctrl+C` conserva grupos terminados y publica el run en Drive |
+| `02_01` | recuperación histórica y checkpoints automáticos activos; cuatro interruptores de API controlan cada fase; panel 1 000, `PRIMARY_LIMIT=None`, `REVIEW_LIMIT=None` para la campaña completa | recupera solo coincidencias exactas 1:1, valida `/models`, ejecuta calibración, Flash y Pro sobre pendientes; `Ctrl+C` conserva grupos terminados y publica el run en Drive cuando esa opción está habilitada |
 | `02_02` | `RUN_FALLBACK=False`, `LIMIT=20` | active solo si necesita un diagnóstico local independiente; `None` procesa todos los pendientes |
 | `03_01`–`03_06` | `RUN_TRAINING=False` | active la familia que se desea entrenar |
 | `03_07` | `RUN_PUBLISH=False` | active después de reunir candidatos completos del mismo snapshot |

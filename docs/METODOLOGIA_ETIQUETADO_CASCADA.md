@@ -1,6 +1,6 @@
 # Metodología de etiquetado en cascada Flash→Pro
 
-Última actualización: **2026-08-07**.
+Última actualización: **2026-08-08**.
 
 ## Decisión vigente
 
@@ -12,7 +12,9 @@ no se mezclan sus métricas ni sus salidas con la campaña principal.
 El contrato v2.1 aprende `SEGURO`, `RACISMO_DISCRIMINACION`,
 `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO`
 es excluyente; los cuatro daños pueden coexistir. Una abstención se difiere y no
-entra al entrenamiento.
+entra al entrenamiento. El validador interpreta nombres de etiqueta sin
+distinguir mayúsculas de minúsculas y persiste siempre la forma canónica en
+mayúsculas.
 
 ## Evidencia histórica recuperada
 
@@ -25,13 +27,14 @@ cobertura automática fue **91.24 %**, el acuerdo exacto Flash–Pro **93.19 %**
 el acuerdo binario **96.55 %**. Estas cifras describen acuerdo entre modelos, no
 exactitud frente a verdad humana.
 
-La migración activa conserva `deepseek-v4-flash`→`deepseek-v4-pro`, el preflight
-`/models`, 32 solicitudes, cinco chunks por solicitud, piloto Flash de 300,
-piloto Pro de 500, contexto vecino, reanudación, `notes` de 160 caracteres,
-rescate de flags y reenvío individual de filas inválidas. Amplía el esquema con
-un panel pareado de 1 000, balance por canal/video, Wilson, bootstrap agrupado y
-topes de presupuesto. No modifica el instructivo archivado porque este describe
-una corrida y taxonomía históricas.
+La migración activa conserva `deepseek-v4-flash`→`deepseek-v4-pro`, 32
+solicitudes concurrentes y cinco chunks por solicitud. Añade el preflight
+`/models`, un panel pareado de 1 000, balance por canal/video, Wilson, bootstrap
+agrupado, contexto vecino, reanudación, `notes` de 160 caracteres, rescate de
+flags, reenvío individual de filas inválidas y topes de presupuesto. Los
+límites `PRIMARY_LIMIT` y `REVIEW_LIMIT` están en `None` durante la campaña
+completa; los valores 300/500 pertenecían a la fase de prueba. No se modifica
+el instructivo archivado porque describe una corrida y taxonomía históricas.
 
 El consumo observado fue aproximadamente **8.28 millones de tokens de entrada**
 y **0.724 millones de salida por cada 5 000 chunks**. Es el fundamento de la
@@ -42,13 +45,19 @@ proyección previa; el cuaderno registra después el consumo y costo reales.
 DeepSeek publica para V4 Flash US$0.0028/M tokens de entrada en caché,
 US$0.14/M sin caché y US$0.28/M de salida
 ([tabla oficial](https://api-docs.deepseek.com/quick_start/pricing)). Para los
-**166 940** chunks actuales, el consumo histórico escalado proyecta 276.45 M de
-entrada y 24.17 M de salida:
+**166 940** chunks actuales, el consumo histórico escalado proyectaba 276.45 M
+de entrada y 24.17 M de salida si se reetiquetaba todo:
 
 | Escenario Flash | Costo proyectado |
 |---|---:|
 | toda la entrada como cache miss | US$45.47 |
 | 90 % de entrada en caché | US$11.34 |
+
+La recuperación exacta redujo la primera pasada pagada a **114 696 chunks**.
+Escalando el consumo histórico a ese remanente, la referencia previa es
+US$31.24 sin caché o US$10.77 con el 78.56 % de *cache hit* histórico. El
+checkpoint activo descrito más abajo ofrece ya una proyección observada menor;
+ninguna de estas proyecciones sustituye el resultado final del proveedor.
 
 Como contraste, Groq publica US$0.075/M de entrada y US$0.30/M de salida para
 `openai/gpt-oss-20b`; su Batch API aplica 50 % de descuento
@@ -76,10 +85,47 @@ Se conserva DeepSeek V4 Flash porque combina costo esperado bajo, JSON,
 concurrencia alta y evidencia previa en este contrato. Groq puede compararse en
 un panel independiente, pero no reemplaza la campaña sin calibración propia.
 
+## Resultados cuantitativos disponibles
+
+El corte documentado del **2026-08-08 13:15:01 (UTC−05)** usa un checkpoint
+periódico completo de Flash; la campaña continuaba ejecutándose. La
+recuperación por coincidencia unívoca `(video_id, texto_normalizado)` reutilizó
+52 244 de 69 853 filas Flash históricas (**74.79 %**) y 9 912 de 13 421 filas
+Pro (**73.85 %**), sin trasladar etiquetas por posición ni por similitud.
+
+La calibración pareada completó 1 000 chunks por modelo sin errores de esquema:
+
+| Medición | Flash | Pro |
+|---|---:|---:|
+| tiempo | 97.250 s | 122.593 s |
+| velocidad | 616.969 chunks/min | 489.424 chunks/min |
+| caché de entrada | 64.22 % | 53.72 % |
+| costo estimado | US$0.073349 | US$0.269223 |
+| ahorro frente al mismo tráfico sin caché | 45.53 % | 37.65 % |
+
+Con umbral 0.95, Flash y Pro coincidieron exactamente en **80.41 %** de las 434
+autoaceptaciones evaluables y en la decisión binaria daño/seguro en **99.77 %**.
+Los límites inferiores Wilson fueron 77.10 % y 98.97 %, respectivamente. El
+resultado es `inconclusive_conservative_threshold`: superó el objetivo binario,
+pero no el criterio predeclarado de acuerdo exacto. Es acuerdo entre modelos,
+no exactitud humana; el 43.40 % de cobertura tampoco es cobertura validada por
+personas.
+
+En el checkpoint, Flash había procesado 14 399 de los 114 696 pendientes
+válidos a **867.279 chunks/min**; una respuesta con `chunk_id` u orden alterado
+se rechazó y quedó como error pendiente. Restando su calibración, el tramo costó
+**US$0.908781** (**US$0.06311 por 1 000 chunks**). La tasa de caché Flash
+acumulada fue 75.17 %. Si esas condiciones se mantuvieran, la primera pasada
+completa tardaría unas **2 h 12 min** y costaría aproximadamente **US$7.24**;
+son proyecciones tempranas. El corte completo y sus fuentes están en
+[`resultados/ETIQUETADO_CASCADA_CORTE_2026-08-08.md`](../resultados/ETIQUETADO_CASCADA_CORTE_2026-08-08.md).
+
 ## Protocolo activo
 
 1. **Preflight.** `/models` valida credencial e identificadores sin enviar texto
-   del corpus.
+   del corpus. Flash y Pro deben declarar `thinking=disabled`, aceptar
+   `response_format=json_object` y devolver la raíz `annotations`; también se
+   consulta el saldo sin transmitir chunks.
 2. **Calibración pareada.** Se seleccionan 1 000 chunks balanceados por canal y
    video, máximo uno por video. Flash y Pro reciben exactamente el mismo panel.
 3. **Riesgo–cobertura.** Se evalúan umbrales 0.70–0.95. Solo puede aceptarse
@@ -89,7 +135,9 @@ un panel independiente, pero no reemplaza la campaña sin calibración propia.
 4. **Incertidumbre.** Se generan 1 000 réplicas bootstrap agrupadas por
    `video_id`; no se remuestrean chunks como si fueran independientes.
 5. **Primera pasada.** Flash procesa en grupos de cinco, hasta 32 solicitudes en
-   paralelo. La barra cuenta chunks, errores, velocidad y costo acumulado.
+   paralelo. La barra cuenta chunks, errores, velocidad, caché, costo acumulado
+   y saldo periódico. Las respuestas se validan contra el esquema y el orden de
+   `chunk_id` antes de persistirse.
 6. **Revisión dirigida.** Pro recibe todo daño, `needs_review`, confianza bajo el
    umbral calibrado y una muestra reproducible de 10 % de controles seguros.
    Incluye los chunks vecino anterior y posterior.
@@ -106,6 +154,10 @@ en tareas subjetivas ([Schroeder et al., 2025](https://aclanthology.org/2025.fin
 
 - Cada salida tiene una firma de modelo, prompt, taxonomía y agrupación.
 - La reanudación omite `chunk_id` válidos ya guardados.
+- Cada grupo terminado de cinco respuestas se fuerza a disco con `fsync`; el
+  checkpoint se renueva cada diez ventanas, al cerrar una fase y ante
+  `Ctrl+C`. La recuperación vuelve a contar el JSONL y nunca confía solo en una
+  barra de progreso.
 - Filas incompatibles se respaldan en `*.quarantine-<UTC>.jsonl`, se retiran del
   progreso y vuelven a quedar pendientes.
 - `notes=null` se normaliza a cadena vacía y se limita a 160 caracteres.
@@ -115,6 +167,13 @@ en tareas subjetivas ([Schroeder et al., 2025](https://aclanthology.org/2025.fin
 - `MAX_PRIMARY_COST_USD` y `MAX_REVIEW_COST_USD` detienen nuevos grupos cuando
   se alcanza el tope; por concurrencia puede existir un sobrepaso acotado al
   superlote ya iniciado.
+- El proveedor informa tokens de entrada con caché, sin caché y de salida. El
+  cuaderno muestra saldo aproximadamente cada 60 segundos, advierte bajo
+  US$2.00 y señala una tasa de caché inferior a 50 % después de 50 solicitudes.
+- En Windows se prefiere la variable de proceso cuando es válida; si una sesión
+  heredó una clave inválida, se recupera la variable persistida del usuario. La
+  clave nunca se escribe en JSONL, checkpoints, Drive, Git ni salidas del
+  cuaderno.
 - En Colab, los checkpoints se publican como un archivo verificable en Drive.
 
 ## Artefactos y reporte
@@ -133,8 +192,9 @@ en tareas subjetivas ([Schroeder et al., 2025](https://aclanthology.org/2025.fin
 | `*.result.json` | tiempo, velocidad, errores, tokens y costo |
 
 La última celda de `02_01` y todo `02_03` leen estos archivos y muestran las
-tablas sin repetir llamadas. Los resultados cuantitativos del protocolo nuevo
-permanecen **pendientes de ejecución**; no se sustituyen por las cifras
-históricas. Al finalizar, deben reportarse tamaño del panel, umbral, cobertura,
-acuerdos con intervalos, composición de la cola, errores de esquema, tokens,
-cache hit, costo y decisiones humanas finales.
+tablas sin repetir llamadas. Ya existen resultados parciales medidos de
+recuperación, calibración y primera pasada; el corte documentado se mantiene en
+[`resultados/ETIQUETADO_CASCADA_CORTE_2026-08-08.md`](../resultados/ETIQUETADO_CASCADA_CORTE_2026-08-08.md).
+Al finalizar deben reemplazarse las proyecciones con el tiempo, velocidad,
+tokens, caché, costo y errores de los `*.result.json`, además de la composición
+de la cola Pro y las decisiones humanas finales.

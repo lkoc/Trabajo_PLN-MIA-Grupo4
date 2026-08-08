@@ -13,15 +13,62 @@
 ## Orden
 
 1. `02_00_preparacion_bundle_colab.ipynb` — se ejecuta en Colab, descarga el bundle sincronizado de GitHub o recibe los nueve archivos locales mediante el navegador, verifica identidad y SHA-256 y publica la versión inmutable en Drive. Ejecútelo antes de `02_01` y nuevamente después de `02_05`.
-2. `02_01_etiquetado_local_ollama.ipynb` — nombre conservado por compatibilidad; recupera únicamente equivalencias históricas exactas 1:1 y ejecuta la cascada `deepseek-v4-flash`→`deepseek-v4-pro` sobre pendientes, con persistencia por grupos de 5, checkpoints atómicos en Drive, presupuesto, cuarentena y reanudación.
+2. `02_01_etiquetado_local_ollama.ipynb` — nombre conservado por compatibilidad; recupera únicamente equivalencias históricas exactas 1:1 y ejecuta la cascada `deepseek-v4-flash`→`deepseek-v4-pro` sobre pendientes, con `thinking=disabled`, contrato JSON validado, caché, saldo, persistencia por grupos de 5, checkpoints atómicos, presupuesto, cuarentena y reanudación.
 3. `02_02_etiquetado_remoto.ipynb` — fallback local independiente `Qwen/Qwen3-1.7B`; no se mezcla con la campaña principal.
 4. `02_03_revision_llm_dirigida.ipynb` — recupera y presenta calibración, cobertura y revisión Pro sin repetir API.
 5. `02_04_consolidacion_validacion_humana.ipynb` — precedencia y frontend.
 6. `02_05_cierre_humano_snapshot.ipynb` — reaplica el último evento humano, recupera `video_id` desde el chunk fuente y congela el snapshot entrenable.
 
-Cada salida conserva modelo, prompt, taxonomía, confianza, flags y estado de revisión. El proceso reanuda por `chunk_id`, migra manifiestos anteriores compatibles y no vuelve a pagar ni recalcular filas completas. Ante `Ctrl+C`, termina y guarda las solicitudes ya iniciadas antes de publicar el checkpoint.
+Cada salida conserva modelo, prompt, taxonomía, confianza, flags y estado de revisión. Las etiquetas de entrada se interpretan sin distinguir mayúsculas de minúsculas y se guardan con la forma canónica en mayúsculas. El proceso reanuda por `chunk_id`, migra manifiestos anteriores compatibles y no vuelve a pagar ni recalcular filas completas. Ante `Ctrl+C`, termina y guarda las solicitudes ya iniciadas antes de publicar el checkpoint.
 
-Los seis cuadernos muestran barras `tqdm` en las operaciones potencialmente largas. `02_00` informa descarga y copia a Drive; `02_01` cuenta chunks, errores, velocidad y costo real en calibración, primera pasada y revisión; `02_02` muestra el fallback local; `02_03` informa la lectura de artefactos; `02_04` separa lectura, carga y consolidación; `02_05` separa eventos humanos, reconciliación, deduplicación y validación de splits. El preflight `/models` no envía corpus.
+Los seis cuadernos muestran barras `tqdm` en las operaciones potencialmente largas. `02_00` informa descarga y copia a Drive; `02_01` cuenta chunks, errores, velocidad, caché, costo estimado y saldo periódico en calibración, primera pasada y revisión; `02_02` muestra el fallback local; `02_03` informa la lectura de artefactos; `02_04` separa lectura, carga y consolidación; `02_05` separa eventos humanos, reconciliación, deduplicación y validación de splits. El preflight `/models` y la consulta de saldo no envían corpus.
+
+## Metodología vigente
+
+1. Recuperar solo coincidencias históricas unívocas por
+   `(video_id, texto_normalizado)`; nunca copiar por posición o similitud.
+2. Validar credencial, modelos Flash/Pro, modo no razonador y JSON antes de
+   transmitir texto.
+3. Calibrar ambos modelos sobre el mismo panel balanceado de 1 000 chunks.
+4. Procesar con Flash solo los `chunk_id` pendientes y persistir cada grupo de
+   cinco con `fsync`; se usan hasta 32 solicitudes concurrentes.
+5. Enviar a Pro daño, abstención, baja confianza y una muestra segura de
+   control, con contexto vecino.
+6. Consolidar con precedencia Pro→Flash y cerrar mediante decisiones humanas
+   append-only; una abstención nunca se convierte automáticamente en `SEGURO`.
+
+El prompt operacional y la taxonomía se colocan al principio de cada solicitud
+para que la caché automática de prefijo pueda reutilizarlos. Flash y Pro reciben
+el mismo contrato de raíz `annotations`; se comprueba cantidad, orden de
+`chunk_id`, tipos, exclusividad de `SEGURO` y longitud de `notes` antes de
+guardar. Una fila inválida se reenvía individualmente y no obliga a repetir las
+filas válidas del grupo.
+
+## Corte cuantitativo disponible
+
+El checkpoint documentado del **2026-08-08 13:15:01 (UTC−05)** registró:
+
+| Indicador medido | Resultado |
+|---|---:|
+| recuperación Flash histórica | 52 244/69 853 (74.79 %) |
+| recuperación Pro histórica | 9 912/13 421 (73.85 %) |
+| calibración Flash | 1 000, 0 errores, 97.250 s, 616.969 chunks/min, US$0.073349 |
+| calibración Pro | 1 000, 0 errores, 122.593 s, 489.424 chunks/min, US$0.269223 |
+| caché de entrada Flash / Pro | 64.22 % / 53.72 % |
+| ahorro medido frente a no usar caché | 45.53 % / 37.65 % |
+| acuerdo exacto Flash–Pro a 0.95 | 80.41 %; Wilson inferior 77.10 % |
+| acuerdo binario daño/seguro a 0.95 | 99.77 %; Wilson inferior 98.97 % |
+| primera pasada nueva | 14 399/114 696 válidos, 1 error rechazado, 867.279 chunks/min |
+| costo incremental del tramo | US$0.908781; US$0.06311 por 1 000 válidos |
+| caché Flash acumulada | 75.17 % |
+
+El acuerdo exacto no alcanzó el criterio predeclarado y el estado de
+calibración es `inconclusive_conservative_threshold`. Estas son comparaciones
+entre modelos, **no exactitud humana**. Manteniendo las condiciones iniciales,
+la primera pasada pendiente se proyectaba en unas 2 h 12 min y US$7.24; tiempo
+y costo finales todavía no estaban cerrados. Consulte el
+[corte cuantitativo completo](../../resultados/ETIQUETADO_CASCADA_CORTE_2026-08-08.md)
+y la [metodología central](../../docs/METODOLOGIA_ETIQUETADO_CASCADA.md).
 
 ```powershell
 modperu serve-labeling --campaign datos/etiquetado/consolidado/anotaciones_v2.jsonl

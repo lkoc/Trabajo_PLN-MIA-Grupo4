@@ -6,30 +6,29 @@
 
 ---
 
-## Presentacion Beamer final
+## Presentación Beamer actualizable
 
-> **Estado de contrato (2026-08-05).** Los resultados presentados corresponden al baseline ejecutado de cuatro daños y `SEGURO` derivado. El flujo activo aprende `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente y los cuatro daños son multietiqueta; los casos indeterminados se difieren y no entran al entrenamiento. Sus métricas quedan pendientes de reentrenamiento y no se infieren de las tablas históricas.
+> **Estado de contrato (2026-08-08).** El flujo activo aprende `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente y los cuatro daños son multietiqueta; los casos indeterminados se difieren y no entran al entrenamiento. La presentación incorpora el corpus y el corte cuantitativo vigente del etiquetado Flash→Pro. Los resultados de entrenamiento disponibles pertenecen al baseline histórico de cuatro daños con `SEGURO` derivado y aparecen únicamente con el rótulo **Por actualizar con la última versión**.
 
-Esta carpeta contiene la presentación académica del Grupo 4 para el artículo **Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural**. El Beamer resume visualmente el paper IEEE/DSR y su aporte: moderación semiautomática con modelos compactos, alertas temporales y decisión de un supervisor. No debe conservar lenguaje de propuesta, plan de trabajo o MVP futuro.
+Esta carpeta contiene la presentación académica del Grupo 4 para el artículo **Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural**. El Beamer resume visualmente el diseño IEEE/DSR y su aporte: moderación semiautomática con modelos compactos, alertas temporales y decisión de un supervisor. Las etapas activas pueden aparecer como **En progreso**; una proyección debe distinguirse siempre de un resultado medido.
 
 ## Archivos
 
 - `presentacion_grupo4.tex`: fuente autoritativa en LaTeX Beamer.
 - `presentacion_grupo4.pdf`: salida derivada; debe regenerarse despues de cualquier cambio.
+- `GUIA_REVISION_ACTUALIZACION_2026-08-08.md`: requisitos, jerarquía de fuentes, estructura y lista de control de esta actualización.
 - `Moderador_Contenido_YouTube_PLN.pptx`: formato alternativo no autoritativo. No debe entregarse como equivalente mientras no se regenere y compare diapositiva por diapositiva con el Beamer final.
 
 ## Fuentes de verdad
 
-La presentacion debe concordar con:
+La presentación debe concordar, en este orden, con:
 
-1. `../Documento_final_paper/paper_moderador_contenido_youtube_ieee.tex` y `../Documento_final_paper/referencias.bib`;
-2. `../config/taxonomia_v2.json`, `../docs/TAXONOMIA_V2.md` y `../flujo/` para el contrato activo;
-3. `../archivo/estructura_anterior/Cuadernos/04_MATRIZ_ENTRENAMIENTO_4_ETIQUETAS.md` para el baseline;
-4. `../archivo/contrato_4_danos_seguro_derivado/resultados/metricas/comparacion_final_4/comparacion_todos_modelos_4.csv`;
-5. los informes en `../archivo/contrato_4_danos_seguro_derivado/resultados/`;
-6. `../docs/MATRIZ_TRAZABILIDAD.md` para separar evidencia ejecutada de trabajo pendiente.
+1. manifiestos y artefactos ejecutables vigentes de `../datos/`, `../resultados/`, `../config/` y `../src/`;
+2. `../docs/`, el `README.md` raíz y los `README` de `../flujo/`;
+3. `../Documento_final_paper/referencias.bib` para metadatos bibliográficos y el manuscrito para resultados que ya estén rotulados como históricos;
+4. `../archivo/` únicamente como evidencia histórica preservada, nunca como definición del flujo activo.
 
-No use el PPTX antiguo, salidas aisladas de notebooks ni resultados preliminares de cinco categorías como fuente de la conclusión final.
+No use el PPTX antiguo, salidas aisladas de notebooks ni resultados históricos sin rótulo como fuente de la conclusión final. Ante discrepancias documentales, prevalece el artefacto actual verificable; la cifra anterior se conserva solo si aporta contexto y se identifica como histórica.
 
 ## Compilacion reproducible
 
@@ -47,27 +46,17 @@ latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error presentaci
 
 Antes de entregar, revise `presentacion_grupo4.log`. No se aceptan citas/referencias indefinidas, elementos fuera de pagina ni cajas `Overfull`. El PDF debe usar fuentes vectoriales incrustadas y conservar la relacion 16:9.
 
-## Narrativa recomendada
+## Estructura narrativa vigente
 
 La presentacion debe dedicar una idea principal a cada diapositiva y priorizar diagramas, tablas breves y graficos legibles:
 
-1. portada con proyecto, autores e institucion;
-2. brecha real, subyacente y tecnologica;
-3. problema general, objetivo y artefacto DSR;
-4. iteraciones DSR y pipeline de datos;
-5. corpus, embudo Flash--Pro--revisión final y fuentes de etiqueta;
-6. herramientas y hardware: CPU local, Colab/CUDA y alcance del registro L4;
-7. evolución del baseline de cuatro daños al contrato activo de cinco salidas, con `SEGURO` aprendido;
-8. taxonomía: 12 fenómenos de daño, dos estados seguros y tres flags;
-9. matriz de modelos y arquitecturas;
-10. protocolo train/validation/test y selección sin fuga;
-11. comparación final de clásico, E5 y Qwen;
-12. Qwen: épocas, calibración y costo de revisión;
-13. planos frente a jerárquicos;
-14. frontend 05, consenso 2 de 3 y retroalimentación humana;
-15. conclusiones narrativas que cubren todo lo que el estudio se propuso lograr;
-16. limitaciones y trabajo futuro;
-17. última diapositiva con referencias esenciales, GitHub público y Google Drive de acceso controlado.
+1. Introducción.
+2. Problemática: daño en YouTube, tres niveles, brechas específicas, objetos, unidad de análisis, objetivos y DSR.
+3. Descripción de los datos: canales, descubrimiento, scraping incremental y corpus.
+4. Preprocesamiento y etiquetado: limpieza, selección de longitud, contrato v2.1, cascada Flash→Pro, costo, caché, calibración, frontend humano y snapshot.
+5. Modelamiento y evaluación: seis ramas, fundamentos, protocolo por video, baseline histórico rotulado y ensamble supervisado.
+6. Resultados: productos actuales, en progreso e históricos por actualizar.
+7. Conclusiones, límites y trabajos futuros.
 
 Puede distribuir el contenido en mas de una diapositiva cuando una figura lo requiera, pero debe eliminar listados extensos de canales, estructura del futuro paper y cronogramas ya concluidos.
 
@@ -94,4 +83,4 @@ Las referencias breves de las diapositivas deben usar las mismas claves y fuente
 1. **Cientifico:** contrastar cifras, etiquetas, modelos, seleccion y conclusiones con las fuentes de verdad; verificar que toda limitacion decisiva sea visible.
 2. **Editorial y visual:** leer el PDF proyectado, reducir texto, revisar contraste/escala de grises, fuentes, referencias, ortografia y ausencia de desbordes. En gráficos de pocos modelos o métricas, reducir espacios entre grupos y mantener etiquetas y valores visibles; en diagramas de cajas, ajustar fuente, dimensiones, separación y rutas ortogonales hasta eliminar toda superposición.
 
-El Beamer solo se cierra despues de compilar y revisar la version definitiva del paper.
+El Beamer se considera técnicamente cerrado cuando compila sin cajas `Overfull` ni referencias indefinidas y todas sus diapositivas se revisan visualmente. Los rótulos permiten actualizar cifras y capturas sin confundir el cierre editorial de esta versión con el cierre futuro del etiquetado y entrenamiento.

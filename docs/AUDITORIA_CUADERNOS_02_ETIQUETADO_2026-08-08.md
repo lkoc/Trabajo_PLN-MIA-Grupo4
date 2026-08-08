@@ -32,7 +32,10 @@ Sí corresponde conservar este ajuste. `IN_COLAB` se determina antes mediante `f
 
 - Los seis cuadernos mantienen el contrato `moderacion_peru_5_salidas_v2` y la taxonomía `2.1.0`; el troceador `v2.2.0` no se confunde con una versión de etiquetas.
 - Las rutas siguen la cadena sincronizada: `chunks_v2.jsonl` → cascada Flash–Pro → consolidado → eventos humanos append-only → snapshot de cinco salidas.
-- `02_01` conserva los parámetros históricos 5×32, piloto Flash 300, piloto Pro 500, panel pareado 1 000, reanudación por `chunk_id`, presupuesto y cuarentena.
+- `02_01` conserva los parámetros históricos 5×32, los límites de piloto
+  Flash 300 y Pro 500, panel pareado 1 000, reanudación por `chunk_id`,
+  presupuesto y cuarentena. Tras superar los pilotos, la campaña completa usa
+  `PRIMARY_LIMIT=None` y `REVIEW_LIMIT=None`.
 - `02_02` sigue siendo un fallback independiente y no se mezcla con la cascada principal.
 - `02_00` y el bootstrap verifican identidad y SHA-256 del bundle antes de activarlo; este ajuste no modifica el core sincronizado porque el generador y el notebook no forman parte de `project_core.zip`.
 - Las acciones con costo y la publicación en Drive permanecen desactivadas por defecto.
@@ -41,3 +44,19 @@ Sí corresponde conservar este ajuste. `IN_COLAB` se determina antes mediante `f
 ## Límites del dictamen
 
 No se inventan resultados de la calibración pendiente ni se consideran las cifras históricas como verdad humana. La aprobación es estructural y de coherencia local. Las llamadas reales a DeepSeek/Hugging Face y la publicación/restauración en Colab/Drive requieren credenciales e infraestructura externa; antes de procesar todo el corpus deben realizarse los pilotos documentados y comprobar costo, errores, caché y persistencia.
+
+## Adenda de ejecución posterior al dictamen
+
+La limitación anterior describe el momento de la auditoría estructural. Después
+se verificaron credencial y catálogo contra DeepSeek sin corpus, se completó el
+panel Flash–Pro de 1 000 pares y se inició la primera pasada. El checkpoint
+documentado del 2026-08-08 registró recuperación exacta de 52 244 filas Flash,
+calibración sin errores y 14 399 etiquetas nuevas válidas a 867.279 chunks/min;
+una respuesta fue rechazada por identificador u orden alterado. El
+acuerdo exacto a umbral 0.95 fue 80.41 % y no cumplió el criterio predeclarado;
+el acuerdo binario fue 99.77 %. Estas cifras no convierten la auditoría
+estructural en validación humana.
+
+Tiempo, caché, costo, intervalos y procedencia se documentan en el
+[corte cuantitativo de la campaña](../resultados/ETIQUETADO_CASCADA_CORTE_2026-08-08.md).
+La adenda no cambia el dictamen sobre CPU/L4 ni la importación del secreto.

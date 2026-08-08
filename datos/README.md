@@ -12,7 +12,7 @@
 
 Las nuevas corridas usan `raw/` para candidatos, caché por video y transcripciones; `processed/` para chunks deterministas; `etiquetado/` para salidas append-only; y `model_ready/v2/` para snapshots inmutables agrupados por `video_id`.
 
-El scraping reutiliza primero los `video_id` ya canónicos y luego el caché local. Solo consulta subtítulos para candidatos nuevos: `yt-dlp` escribe VTT sin audio/video, se exige un mínimo de 200 caracteres y toda la cola se recorre en lotes de 10 con una pausa de 60 segundos. La cola pseudoaleatoria es reproducible e intercala canales; un 429 difiere solo el canal afectado. Los JSON de caché y el registro inmediato de fallos permiten reanudar. La migración v2 materializa `SEGURO` únicamente desde una decisión segura explícita; una lista histórica vacía se deriva a revisión.
+El scraping reutiliza primero los `video_id` ya canónicos y luego el caché local. Solo consulta subtítulos para candidatos nuevos: `yt-dlp` escribe VTT sin audio/video, se exige un mínimo de 200 caracteres y toda la cola se recorre en lotes de 10 con una pausa adicional de 15 segundos, además de pausas internas aleatorias de 2.5--10 segundos. La cola pseudoaleatoria es reproducible e intercala canales; un 429 difiere solo el canal afectado. Los JSON de caché y el registro inmediato de fallos permiten reanudar. La migración v2 materializa `SEGURO` únicamente desde una decisión segura explícita; una lista histórica vacía se deriva a revisión.
 
 La vista local `raw/transcripts_raw.jsonl` se conserva, pero Git sincroniza su
 partición idempotente `raw/transcripts_by_channel/`. Cada archivo corresponde a
@@ -59,6 +59,6 @@ Carpeta de trabajo para insumos y datasets generados por los cuadernos.
 
 Las anotaciones se relacionan con el texto mediante `chunk_id`. El cuaderno 03 valida y consolida estas referencias; el cuaderno 04 realiza el cruce con `processed/chunks_para_etiquetar.jsonl` antes de entrenar.
 
-La fase activa `04_201`–`04_208` usa `model_ready/transformer_grueso/dataset_balanceado_4a1_particionado.jsonl` (SHA-256 `df2ac01183271e44b6dcfb9cb4850bd6b1ef1cd11d9fc51c881be944670ef20f`) para comparaciones comunes. Sus splits congelados contienen 24.701 filas de train, 5.324 de validation y 5.290 de test, sin videos compartidos.
+La fase histórica `04_201`–`04_208`, hoy preservada bajo `archivo/`, usó `model_ready/transformer_grueso/dataset_balanceado_4a1_particionado.jsonl` (SHA-256 `df2ac01183271e44b6dcfb9cb4850bd6b1ef1cd11d9fc51c881be944670ef20f`) para comparaciones comunes. Sus splits congelados contienen 24.701 filas de train, 5.324 de validation y 5.290 de test, sin videos compartidos. El entrenamiento activo vive en `flujo/03_entrenamiento/` y solo consume snapshots inmutables del contrato v2.1.
 
 No subir datos sensibles, innecesarios o pesados. Conservar solo lo requerido para reproducibilidad academica.

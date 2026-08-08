@@ -32,10 +32,17 @@ Todo el recorrido usa el contrato de etiquetas v2.1 con `SEGURO`, `RACISMO_DISCR
 - En `01_01`, la continuación actual usa `DISCOVER_NEW=False`, `FETCH_NEW=True` y `BACKFILL_MISSING_VTT=True`: no busca fuentes nuevas, recupera primero los VTT faltantes y después recorre candidatos materializados. `MAX_VTT_BACKFILL=None` y `MAX_NEW_VIDEOS=None` incluyen ambas colas completas. `RANDOMIZE_DOWNLOAD_QUEUE=True` ordena de forma pseudoaleatoria reproducible e intercala canales. `NETWORK_BATCH_SIZE=10` y `NETWORK_BATCH_PAUSE_SECONDS=15` regulan la ejecución; `yt-dlp` añade pausas internas de 2.5–10 segundos y un timeout de 30 segundos por operación. Cambie `FETCH_NEW=False` para una inspección sin red.
 - `01_02` es opcional. `RUN_CHUNK_LENGTH_SMOKE_TEST=True` hace 10 ajustes CPU y `RUN_CHUNK_LENGTH_CONFIRMATORY_TEST=True` hace 45 ajustes en tres cohortes pareadas. El perfil decisorio clásico activa `RUN_CHUNK_LENGTH_ROBUST_TEST=True`: 75 ajustes en cinco cohortes de 300/100/100 videos y 1 000 réplicas bootstrap por `video_id`, con referencia 30 s y margen 0.01 AP. Después, `RUN_NEURAL_ROBUST_TEST=True` compara las mismas cinco longitudes sobre un panel pareado de 100 anclas de `validation`: 25 cabezas MiniLM y hasta 500 respuestas estructuradas de `gemma3:4b`, cinco cohortes de reporte y 2 000 réplicas bootstrap por familia. MiniLM y Ollama son confirmatorios; no se promedian ni cambian automáticamente la longitud. Ante conflicto se conserva la selección clásica hasta validación humana independiente. Solo `APPLY_CHUNK_SELECTION=True` modifica la firma activa.
 - En `02_00`, use Google Colab, mantenga `BUNDLE_SOURCE='github'` si el bundle ya está sincronizado —o use `'local_upload'` para escoger los nueve archivos locales más recientes— y active `RUN_PUBLISH_BUNDLE=True`. La autorización integrada de `drive.mount()` no requiere Google Cloud Console ni Drive Desktop.
-- En `02_01`, deje `RECOVER_HISTORICAL=True`: solo las coincidencias exactas y unívocas por video/texto se marcan completas. Active luego `RUN_API_PREFLIGHT=True`, `RUN_CALIBRATION=True`, `RUN_PRIMARY=True` y finalmente `RUN_DIRECTED_REVIEW=True`. `PRIMARY_LIMIT=300` y `REVIEW_LIMIT=500` son pilotos; `None` procesa todos los pendientes. Cada grupo de cinco se sincroniza a disco y los checkpoints atómicos se publican periódicamente, al cerrar una fase o ante `Ctrl+C`.
+- En `02_01`, deje `RECOVER_HISTORICAL=True`: solo las coincidencias exactas y unívocas por video/texto se marcan completas. Active luego `RUN_API_PREFLIGHT=True`, `RUN_CALIBRATION=True`, `RUN_PRIMARY=True` y finalmente `RUN_DIRECTED_REVIEW=True`. Los pilotos 300/500 ya concluyeron; la campaña completa usa `PRIMARY_LIMIT=None` y `REVIEW_LIMIT=None`. Cada grupo de cinco se sincroniza a disco y los checkpoints atómicos se publican periódicamente, al cerrar una fase o ante `Ctrl+C`.
 - `02_02` conserva `RUN_FALLBACK=False`; su Qwen3-1.7B es un diagnóstico local independiente, no una segunda campaña que deba promediarse.
 - En `03_01`–`03_06`, active `RUN_TRAINING=True`. Una segunda ejecución con el mismo snapshot devuelve `status="noop"`.
 - En `03_07`, active `RUN_PUBLISH=True` después de copiar bajo `modelos/v2` los runs neuronales devueltos por Colab.
+
+El corte documentado del 2026-08-08 recuperó 52 244 filas Flash y 9 912 Pro,
+completó la calibración pareada sin errores y registró 14 399 pendientes nuevos
+válidos a 867.279 chunks/min. El detalle de tiempo, caché, acuerdo y costo está en el
+[corte cuantitativo de la campaña](../resultados/ETIQUETADO_CASCADA_CORTE_2026-08-08.md).
+La campaña seguía activa: al reanudar `02_01` no elimine ni renombre sus JSONL;
+el cuaderno omite automáticamente los `chunk_id` ya válidos.
 
 ## Reanudación después de clonar
 

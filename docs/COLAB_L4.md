@@ -30,11 +30,12 @@ GITHUB_REF="main"
 - `github` descarga `resultados/colab_bundle` desde la rama, etiqueta o commit
   indicado. Es el modo recomendado cuando el bundle local ya fue sincronizado
   con GitHub.
-- `local_upload` abre el selector del navegador. Seleccione simultáneamente
-  `project_core.zip`, `chunks_v2.jsonl.gz`,
-  `dataset_5_salidas.jsonl.gz` y `bundle_manifest.json` desde la carpeta local
-  `resultados/colab_bundle`. Este modo sirve cuando el bundle local es más
-  reciente que GitHub. Colab alojado no puede leer directamente una ruta como
+- `local_upload` abre el selector del navegador. Seleccione simultáneamente los
+  nueve archivos declarados: `project_core.zip`, `chunks_v2.jsonl.gz`,
+  `chunks_deepseek_historicos.jsonl.gz`, los cuatro archivos históricos
+  Flash/Pro, `dataset_5_salidas.jsonl.gz` y `bundle_manifest.json` desde la
+  carpeta local `resultados/colab_bundle`. Este modo sirve cuando el bundle
+  local es más reciente que GitHub. Colab alojado no puede leer directamente una ruta como
   `D:\trabajo_PLN\...`; el navegador es el puente.
 
 En ambos casos se rechaza la publicación si el `bundle_id` no puede
@@ -61,6 +62,11 @@ MyDrive/ModeracionPeru_Colab/
     └── <bundle_id>/
         ├── project_core.zip
         ├── chunks_v2.jsonl.gz
+        ├── chunks_deepseek_historicos.jsonl.gz
+        ├── deepseek_flash_historico.jsonl.gz
+        ├── deepseek_pro_historico_principal.jsonl.gz
+        ├── deepseek_pro_historico_umbral.jsonl.gz
+        ├── deepseek_pro_historico_sospechosos.jsonl.gz
         ├── dataset_5_salidas.jsonl.gz
         └── bundle_manifest.json    # copiado después de los artefactos
 ```
@@ -100,10 +106,10 @@ Consulte las [variables de entorno oficiales de Hugging Face](https://huggingfac
 
 La credencial comercial de `02_01` se configura como secreto de Colab llamado
 `DEEPSEEK_API_KEY`. El cuaderno intenta leerlo únicamente cuando la variable de
-entorno no existe. `RUN_API_PREFLIGHT=True` consulta `/models` sin enviar textos;
-`RUN_CALIBRATION`, `RUN_PRIMARY` y `RUN_DIRECTED_REVIEW` sí transmiten los chunks
-al proveedor. La barra registra costo por tokens y los topes se configuran antes
-de activar cada fase.
+entorno no existe. `RUN_API_PREFLIGHT=True` consulta `/models` y saldo sin enviar
+textos; `RUN_CALIBRATION`, `RUN_PRIMARY` y `RUN_DIRECTED_REVIEW` sí transmiten
+los chunks al proveedor. La barra registra velocidad, caché, costo por tokens y
+saldo periódico; los topes se configuran antes de activar cada fase.
 
 Los checkpoints se generan en `/content` y se publican como un TAR.GZ verificable bajo:
 

@@ -1,12 +1,13 @@
 # Contexto de traspaso a otra instancia o máquina
 
-Actualizado: **2026-08-07**. Este documento no contiene credenciales ni secretos.
+Actualizado: **2026-08-08**. Este documento no contiene credenciales ni secretos.
 
 ## Punto de partida
 
 - Repositorio: `lkoc/Trabajo_PLN-MIA-Grupo4`.
 - Rama base: `main`.
-- Revisión base sincronizada antes de crear este documento: `f4d7ead`.
+- Revisión local al actualizar este documento: `df15b94`. Compruebe la rama
+  remota antes de asumir que este commit ya fue publicado.
 - La raíz del proyecto debe localizarse por `pyproject.toml`; no deben fijarse
   rutas personales como `D:\trabajo_PLN\...` dentro del código.
 - Los cuadernos activos están en `flujo/`. Las carpetas históricas permanecen
@@ -122,14 +123,34 @@ Detalles operativos implementados:
 - solo la fila inválida de un lote se reenvía individualmente;
 - salidas incrementales con `fsync` y reanudación O(n).
 
-Las dos etiquetas y cuatro errores de la corrida parcial reciente de Ollama se
-eliminaron deliberadamente. No se tocaron VTT, datos humanos ni campañas
-históricas.
+La corrida Ollama permanece separada. No se tocaron VTT, datos humanos ni
+campañas históricas.
+
+## Estado de la campaña Flash→Pro
+
+`02_01` ya ejecutó recuperación y calibración, y la primera pasada Flash estaba
+activa al corte. La recuperación exacta reutilizó 52 244/69 853 filas Flash
+(74.79 %) y 9 912/13 421 filas Pro (73.85 %). Quedaron 114 696 pendientes para
+Flash; el resto de los chunks no constituye automáticamente una cola Pro.
+
+La calibración de 1 000 pares terminó sin errores. Flash registró 97.250 s,
+616.969 chunks/min, 64.22 % de caché y US$0.073349; Pro, 122.593 s, 489.424
+chunks/min, 53.72 % y US$0.269223. A umbral 0.95, el acuerdo exacto fue 80.41 %
+y el binario daño/seguro 99.77 %, pero el límite inferior exacto no alcanzó el
+criterio predeclarado. No es una estimación de exactitud humana.
+
+El checkpoint atómico del 2026-08-08 13:15:01 (UTC−05) contenía 14 399
+etiquetas nuevas válidas, un error rechazado y 867.279 chunks/min. Restando la
+calibración Flash, ese tramo costó US$0.908781. A tasa estable, la primera
+pasada completa se proyectaba en 2 h 12 min y US$7.24. Consulte
+[`resultados/ETIQUETADO_CASCADA_CORTE_2026-08-08.md`](resultados/ETIQUETADO_CASCADA_CORTE_2026-08-08.md)
+antes de citar cifras: la campaña continuó después de ese checkpoint.
 
 ## Cómo continuar localmente
 
-DeepSeek se ejecuta localmente; no requiere GPU ni Colab. Sí requiere internet y
-una variable de entorno. No copie la clave a este documento ni a Git.
+El cuaderno se ejecuta localmente y llama a DeepSeek en la nube; no requiere GPU
+ni Colab. Sí requiere internet y una variable de entorno. No copie la clave a
+este documento, a Git ni a Drive.
 
 PowerShell:
 
@@ -138,23 +159,27 @@ $env:DEEPSEEK_API_KEY='sk-...'
 jupyter lab
 ```
 
+En Windows también puede persistirse como variable del usuario. El proveedor
+usa la variable del proceso cuando es válida y recupera la variable persistida
+si el proceso heredó un valor inválido; reinicie el kernel después de cambiarla.
+Nunca muestre ni guarde el valor completo en una celda.
+
 Abra `flujo/02_etiquetado/02_01_etiquetado_local_ollama.ipynb` y ejecute las
-celdas en orden. Primera fase:
+celdas en orden. Para una verificación sin corpus:
 
 ```python
 RUN_API_PREFLIGHT=True
-RUN_CALIBRATION=True
+RUN_CALIBRATION=False
 RUN_PRIMARY=False
 RUN_DIRECTED_REVIEW=False
 ```
 
-Después:
-
-1. ponga `RUN_CALIBRATION=False`;
-2. use `RUN_PRIMARY=True` y `PRIMARY_LIMIT=300`;
-3. si el piloto es correcto, use `PRIMARY_LIMIT=None` para todos los pendientes;
-4. ponga `RUN_PRIMARY=False` y `RUN_DIRECTED_REVIEW=True`;
-5. use primero `REVIEW_LIMIT=500` y luego `REVIEW_LIMIT=None`.
+La calibración y los pilotos ya existen. Para continuar la campaña, conserve
+`RECOVER_HISTORICAL=True`, use `RUN_PRIMARY=True` y `PRIMARY_LIMIT=None`. El
+JSONL válido se reanuda por `chunk_id`; no borre ni renombre los artefactos. Al
+terminar Flash, ponga `RUN_PRIMARY=False`, active `RUN_DIRECTED_REVIEW=True` y
+use `REVIEW_LIMIT=None`. Cada fase que transmite chunks debe habilitarse
+deliberadamente.
 
 Las salidas locales se guardan en
 `datos/etiquetado/cascada_deepseek_v4/`. La última celda de `02_01` y todo
@@ -166,18 +191,18 @@ repetir llamadas.
 
 ## Precios y control de riesgo
 
-Tarifas DeepSeek verificadas el 2026-08-07:
+Tarifas DeepSeek usadas para reconstruir el costo del corte:
 
 - Flash: US$0.0028/M entrada cache hit, US$0.14/M cache miss y US$0.28/M salida;
 - Pro: US$0.003625/M entrada cache hit, US$0.435/M cache miss y US$0.87/M salida.
 
-DeepSeek anuncia un aumento próximo todavía no especificado. Antes de lanzar el
-corpus completo debe revisarse la
-[tabla oficial](https://api-docs.deepseek.com/quick_start/pricing/). Con las
-tarifas actuales, la primera pasada de 166 940 chunks proyecta aproximadamente
-US$45.47 sin caché o US$11.34 con 90 % de cache hit. El cuaderno compara además
-el costo equivalente de Groq batch. El límite interno es una estimación, no un
-tope contractual de la cuenta DeepSeek.
+Antes de iniciar otra campaña debe revisarse la
+[tabla oficial](https://api-docs.deepseek.com/quick_start/pricing/). Tras
+recuperar el histórico, la proyección previa para 114 696 pendientes era
+US$31.24 sin caché o US$10.77 usando 78.56 % de *cache hit* histórico. El tramo
+activo observado redujo la proyección temprana de primera pasada a US$7.24. El
+límite interno es una estimación, no un tope contractual de la cuenta DeepSeek;
+el cuaderno consulta y muestra el saldo por separado.
 
 ## Colab y bundle reproducible
 
@@ -191,8 +216,9 @@ usa Colab:
 
 Bundle actualmente verificado:
 
-- `bundle_id`: `ce0fa584054b7b3a1afa7b09d4bb91507634b335ff25511b6a9f9f2a03f72b09`;
-- core SHA-256: `a58c8cf341c73ceafa06089546eb13942a6b36e3ce69e79c929faa276d3ead1f`.
+- `bundle_id`: `b03ac0357ec959a4ba38869cfc1d0b311366105e7fbc05edb605e7fe8d23fd9b`;
+- core SHA-256: `44b088fe2eacbe6b4ab473f0c535bbde01517791b13a2287430a5717f809f6f1`;
+- manifiesto SHA-256: `70eda720a69429abad7c4e9ae82a0059ffc9d7b36e0e50dad535f3493e199156`.
 
 Los cuadernos `03_02`–`03_06` sí requieren NVIDIA L4.
 
@@ -204,20 +230,21 @@ Los cuadernos `03_02`–`03_06` sí requieren NVIDIA L4.
 - `docs/COLAB_L4.md`;
 - `docs/METODOLOGIA_ETIQUETADO_CASCADA.md`;
 - `docs/AUDITORIA_CITAS_CUADERNOS.md`;
-- `docs/MATERIALIZACION_TROCEADO.md`.
+- `docs/MATERIALIZACION_TROCEADO.md`;
+- `resultados/ETIQUETADO_CASCADA_CORTE_2026-08-08.md`.
 
-La metodología de etiquetado documenta qué cifras son históricas y cuáles están
-pendientes de ejecución. No deben inventarse resultados del nuevo panel.
+La metodología de etiquetado separa cifras históricas, mediciones del checkpoint
+y proyecciones. El acuerdo Flash–Pro no debe describirse como verdad humana.
 
-## Verificación cerrada
+## Verificación documental del corte
 
-La última actualización cerró con:
+La actualización documental cerró con:
 
 ```text
-pytest -q                    108 pruebas aprobadas
 python tools/audit_project.py
                               18/18 cuadernos con referencias
                               101/101 citas válidas
+                              118 archivos Markdown revisados
                               0 incidencias
 ```
 
@@ -227,16 +254,15 @@ salidas obsoletas.
 
 ## Trabajo pendiente
 
-1. Ejecutar la calibración Flash–Pro de 1 000 pares; todavía no existen
-   resultados nuevos.
-2. Revisar cache hit, errores, costo real e intervalos antes de aprobar el corpus
-   completo.
-3. Ejecutar Flash completo y después Pro dirigido.
-4. Auditar las tablas persistidas en `02_03`.
-5. Consolidar en `02_04`, completar la revisión humana y congelar el snapshot en
+1. Dejar terminar o reanudar Flash sobre los pendientes ya materializados, sin
+   borrar el progreso.
+2. Sustituir las proyecciones con `primary_flash.result.json` y revisar caché,
+   errores, costo y saldo.
+3. Ejecutar Pro dirigido y auditar sus tablas persistidas en `02_03`.
+4. Consolidar en `02_04`, completar la revisión humana y congelar el snapshot en
    `02_05`.
-6. Regenerar/publicar el bundle después del snapshot humano antes de entrenar la
+5. Regenerar/publicar el bundle después del snapshot humano antes de entrenar la
    etapa 03.
-7. Retomar los 57 VTT pendientes con `01_01` cuando se decida continuar la
+6. Retomar los 57 VTT pendientes con `01_01` cuando se decida continuar la
    adquisición; no bloquean la campaña actual de los chunks ya materializados.
 
