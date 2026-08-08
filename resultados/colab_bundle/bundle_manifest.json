@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-07T20:43:31.251164+00:00",
+  "generated_at": "2026-08-08T16:09:48.772001+00:00",
   "taxonomy_contract": "moderacion_peru_5_salidas_v2",
   "taxonomy_version": "2.1.0",
   "core": {
     "name": "project_core.zip",
-    "sha256": "a58c8cf341c73ceafa06089546eb13942a6b36e3ce69e79c929faa276d3ead1f",
-    "bytes": 137517,
+    "sha256": "a5e4301aabbb195ff0d1685efc15c5fe51244e6115234c81273a28fe07bad3f3",
+    "bytes": 141408,
     "files": [
       "config/colab_l4.json",
       "config/prompt_operacional_ollama_v2.md",
@@ -58,6 +58,61 @@
       "archive_sha256": "dd39339d355c9cce9aca54c9d20fc1ea4fd3f36c7e9bce1b083b45c9be311ade",
       "archive_bytes": 43159648
     },
+    "chunks_deepseek_historicos": {
+      "source": "datos/processed/chunks_para_etiquetar.jsonl",
+      "archive": "chunks_deepseek_historicos.jsonl.gz",
+      "required_by": [
+        "02_01"
+      ],
+      "source_sha256": "eb90debf66d5e16af72c41c17c3701197e42bdcc78b81e0f914c6a49c56f8ab4",
+      "source_bytes": 63133033,
+      "archive_sha256": "ffd5565cecfd059cd2a4979ba5f73e40508244129f12392a3c590597449066d5",
+      "archive_bytes": 15237072
+    },
+    "deepseek_flash_historico": {
+      "source": "datos/etiquetado/llm_api/deepseek-v4-flash_labeled_chunks_seed42.jsonl",
+      "archive": "deepseek_flash_historico.jsonl.gz",
+      "required_by": [
+        "02_01"
+      ],
+      "source_sha256": "9ee36da617d7700a642358b53d2fb9d311fd64920bd5fc69653d5115cc1409c9",
+      "source_bytes": 29649239,
+      "archive_sha256": "1fc651fea1f7d7b06a52b8a5c0805bf2aeb2646ec8c83c376944deb73df56c74",
+      "archive_bytes": 3367325
+    },
+    "deepseek_pro_historico_principal": {
+      "source": "datos/etiquetado/llm_api/deepseek-v4-pro_revision_de_deepseek-v4-flash_seed42.jsonl",
+      "archive": "deepseek_pro_historico_principal.jsonl.gz",
+      "required_by": [
+        "02_01"
+      ],
+      "source_sha256": "7c6c348d742610f14b0d0c15830998bb953b721a50877ff75b88c6f079d6b4af",
+      "source_bytes": 4772043,
+      "archive_sha256": "bf57d0456a641868e61f615890b01e6bbc8e9fb324fe0b19160a5f66fe104223",
+      "archive_bytes": 665877
+    },
+    "deepseek_pro_historico_umbral": {
+      "source": "datos/etiquetado/llm_api/deepseek-v4-pro_revision_umbral_recalibrado_t090_seed42.jsonl",
+      "archive": "deepseek_pro_historico_umbral.jsonl.gz",
+      "required_by": [
+        "02_01"
+      ],
+      "source_sha256": "88370616e728d1dbd3f588bae5d3d95163b0139bfaa76586e56a6a3e672bfde2",
+      "source_bytes": 727921,
+      "archive_sha256": "2c4f33affd6bcf0a763eba64fabca4ed19eaf8d56d2bfd3f25c8ea36513f21f8",
+      "archive_bytes": 108680
+    },
+    "deepseek_pro_historico_sospechosos": {
+      "source": "datos/etiquetado/llm_api/deepseek-v4-pro_revision_sospechosos_gruesos_seed42.jsonl",
+      "archive": "deepseek_pro_historico_sospechosos.jsonl.gz",
+      "required_by": [
+        "02_01"
+      ],
+      "source_sha256": "745a9dc191482fd0a8609f5ffec3266abcf7a0bd40860d7c7b541f7dac045e34",
+      "source_bytes": 888415,
+      "archive_sha256": "ee7f3fdb89cd060022a507e0dda5cf218bcbd56e400566f703de10d6f30fe965",
+      "archive_bytes": 111945
+    },
     "dataset_5_salidas": {
       "source": "datos/model_ready/v2/dataset_5_salidas.jsonl",
       "archive": "dataset_5_salidas.jsonl.gz",
@@ -86,5 +141,5 @@
     "modelos Ollama",
     "paper, presentación y frontends"
   ],
-  "bundle_id": "ce0fa584054b7b3a1afa7b09d4bb91507634b335ff25511b6a9f9f2a03f72b09"
+  "bundle_id": "9ef0424dae1e9289e33609b5cf830d0aad1e21adc3b1f731847e7988a7c6847a"
 }

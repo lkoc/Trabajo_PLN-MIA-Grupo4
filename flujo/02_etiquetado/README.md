@@ -12,14 +12,14 @@
 
 ## Orden
 
-1. `02_00_preparacion_bundle_colab.ipynb` — se ejecuta en Colab, descarga el bundle sincronizado de GitHub o recibe los cuatro archivos locales mediante el navegador, verifica identidad y SHA-256 y publica la versión inmutable en Drive. Ejecútelo antes de `02_01` y nuevamente después de `02_05`.
-2. `02_01_etiquetado_local_ollama.ipynb` — nombre conservado por compatibilidad; implementa la cascada calibrada `deepseek-v4-flash`→`deepseek-v4-pro`, con panel pareado, bootstrap por video, lotes 5×32, presupuesto, cuarentena y reanudación.
+1. `02_00_preparacion_bundle_colab.ipynb` — se ejecuta en Colab, descarga el bundle sincronizado de GitHub o recibe los nueve archivos locales mediante el navegador, verifica identidad y SHA-256 y publica la versión inmutable en Drive. Ejecútelo antes de `02_01` y nuevamente después de `02_05`.
+2. `02_01_etiquetado_local_ollama.ipynb` — nombre conservado por compatibilidad; recupera únicamente equivalencias históricas exactas 1:1 y ejecuta la cascada `deepseek-v4-flash`→`deepseek-v4-pro` sobre pendientes, con persistencia por grupos de 5, checkpoints atómicos en Drive, presupuesto, cuarentena y reanudación.
 3. `02_02_etiquetado_remoto.ipynb` — fallback local independiente `Qwen/Qwen3-1.7B`; no se mezcla con la campaña principal.
 4. `02_03_revision_llm_dirigida.ipynb` — recupera y presenta calibración, cobertura y revisión Pro sin repetir API.
 5. `02_04_consolidacion_validacion_humana.ipynb` — precedencia y frontend.
 6. `02_05_cierre_humano_snapshot.ipynb` — reaplica el último evento humano, recupera `video_id` desde el chunk fuente y congela el snapshot entrenable.
 
-Cada salida conserva modelo, prompt, taxonomía, confianza, flags y estado de revisión. El proceso reanuda por `chunk_id` y no vuelve a pagar ni recalcular filas completas.
+Cada salida conserva modelo, prompt, taxonomía, confianza, flags y estado de revisión. El proceso reanuda por `chunk_id`, migra manifiestos anteriores compatibles y no vuelve a pagar ni recalcular filas completas. Ante `Ctrl+C`, termina y guarda las solicitudes ya iniciadas antes de publicar el checkpoint.
 
 Los seis cuadernos muestran barras `tqdm` en las operaciones potencialmente largas. `02_00` informa descarga y copia a Drive; `02_01` cuenta chunks, errores, velocidad y costo real en calibración, primera pasada y revisión; `02_02` muestra el fallback local; `02_03` informa la lectura de artefactos; `02_04` separa lectura, carga y consolidación; `02_05` separa eventos humanos, reconciliación, deduplicación y validación de splits. El preflight `/models` no envía corpus.
 

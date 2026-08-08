@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -12,11 +12,221 @@ from .io import (
     append_jsonl_once,
     canonical_json_sha256,
     read_jsonl,
+    sha256_file,
+    sha256_text,
     write_json_atomic,
     write_jsonl_atomic,
 )
+from .incremental import normalize_text
 from .providers.base import AnnotationProvider, ProviderError
 from .schemas import AnnotationRecord
+from .taxonomy import load_taxonomy
+
+
+HISTORICAL_RECOVERY_MAPPING = "exact_unique_video_and_normalized_text_v1"
+
+
+def _historical_text_key(row: dict[str, Any]) -> tuple[str, str] | None:
+    video_id = str(row.get("video_id") or "")
+    text = normalize_text(str(row.get("text") or ""))
+    if not video_id or not text:
+        return None
+    return video_id, sha256_text(text.casefold())
+
+
+def historical_recovery_signature(
+    historical_chunks_path: str | Path,
+    historical_annotation_paths: Sequence[str | Path],
+    *,
+    expected_model: str,
+    historical_prompt_sha256: str,
+) -> dict[str, Any]:
+    """Firma las fuentes antiguas que pueden sembrar una corrida incremental."""
+
+    chunks = Path(historical_chunks_path)
+    annotations = [Path(path) for path in historical_annotation_paths]
+    if not chunks.is_file():
+        raise FileNotFoundError(f"Faltan los chunks históricos: {chunks}")
+    if not annotations:
+        raise ValueError("La recuperación histórica requiere al menos una fuente de anotaciones")
+    missing = [str(path) for path in annotations if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(f"Faltan fuentes históricas: {missing}")
+    if len(historical_prompt_sha256) != 64:
+        raise ValueError("historical_prompt_sha256 debe ser una huella SHA-256")
+    return {
+        "mapping": HISTORICAL_RECOVERY_MAPPING,
+        "expected_model": expected_model,
+        "historical_prompt_sha256": historical_prompt_sha256,
+        "historical_chunks": {
+            "name": chunks.name,
+            "sha256": sha256_file(chunks),
+        },
+        "annotations": [
+            {"name": path.name, "sha256": sha256_file(path)} for path in annotations
+        ],
+    }
+
+
+def recover_historical_annotations(
+    current_records: Sequence[dict[str, Any]],
+    historical_chunks_path: str | Path,
+    historical_annotation_paths: Sequence[str | Path],
+    output_path: str | Path,
+    *,
+    expected_model: str,
+    historical_prompt_sha256: str,
+    run_metadata: dict[str, Any],
+    label_source: str = "deepseek_remote_historical_recovered",
+) -> dict[str, Any]:
+    """Recupera solo equivalencias textuales exactas sin sobrescribir progreso nuevo.
+
+    Los IDs históricos eran secuenciales y no coinciden con los IDs content-addressed
+    actuales. La transferencia se limita a relaciones 1:1 por video y texto
+    normalizado; toda ambigüedad o segmentación distinta permanece pendiente.
+    """
+
+    output = Path(output_path)
+    signature = historical_recovery_signature(
+        historical_chunks_path,
+        historical_annotation_paths,
+        expected_model=expected_model,
+        historical_prompt_sha256=historical_prompt_sha256,
+    )
+    manifest_path = _ensure_labeling_run_manifest(output, run_metadata)
+    existing_rows, quarantine_path = _load_and_quarantine_progress(
+        output,
+        quarantine_invalid=True,
+    )
+    existing_by_id = {str(row["chunk_id"]): row for row in existing_rows}
+
+    historical_by_id: dict[str, tuple[dict[str, Any], str]] = {}
+    for raw_path in historical_annotation_paths:
+        annotation_path = Path(raw_path)
+        for row in read_jsonl(annotation_path):
+            chunk_id = str(row.get("chunk_id") or "")
+            if not chunk_id:
+                raise ValueError(f"{annotation_path} contiene una fila sin chunk_id")
+            if str(row.get("annotator_model") or "") != expected_model:
+                raise ValueError(
+                    f"{annotation_path} mezcla un modelo distinto de {expected_model}: {chunk_id}"
+                )
+            if chunk_id in historical_by_id:
+                raise ValueError(f"chunk_id histórico duplicado entre fuentes: {chunk_id}")
+            historical_by_id[chunk_id] = (row, annotation_path.name)
+
+    historical_keys: dict[tuple[str, str], list[str]] = {}
+    historical_chunks_seen: set[str] = set()
+    for chunk in read_jsonl(historical_chunks_path):
+        chunk_id = str(chunk.get("chunk_id") or "")
+        if chunk_id not in historical_by_id:
+            continue
+        if chunk_id in historical_chunks_seen:
+            raise ValueError(f"chunk_id duplicado en chunks históricos: {chunk_id}")
+        historical_chunks_seen.add(chunk_id)
+        key = _historical_text_key(chunk)
+        if key is not None:
+            historical_keys.setdefault(key, []).append(chunk_id)
+
+    missing_historical_chunks = set(historical_by_id) - historical_chunks_seen
+    if missing_historical_chunks:
+        example = sorted(missing_historical_chunks)[:5]
+        raise ValueError(
+            "Las anotaciones históricas no pertenecen al archivo de chunks declarado; "
+            f"faltan {len(missing_historical_chunks)} IDs, por ejemplo {example}"
+        )
+
+    current_keys: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    current_ids: set[str] = set()
+    for record in current_records:
+        chunk_id = str(record.get("chunk_id") or "")
+        if not chunk_id:
+            raise ValueError("El corpus actual contiene una fila sin chunk_id")
+        if chunk_id in current_ids:
+            raise ValueError(f"chunk_id duplicado en el corpus actual: {chunk_id}")
+        current_ids.add(chunk_id)
+        key = _historical_text_key(record)
+        if key is not None:
+            current_keys.setdefault(key, []).append(record)
+
+    taxonomy = load_taxonomy()
+    recovered: list[dict[str, Any]] = []
+    matched_historical_ids: set[str] = set()
+    ambiguous_keys = 0
+    already_present_matches = 0
+    for key in sorted(set(historical_keys).intersection(current_keys)):
+        old_ids = historical_keys[key]
+        new_rows = current_keys[key]
+        if len(old_ids) != 1 or len(new_rows) != 1:
+            ambiguous_keys += 1
+            continue
+        historical_id = old_ids[0]
+        current = new_rows[0]
+        current_id = str(current["chunk_id"])
+        matched_historical_ids.add(historical_id)
+        if current_id in existing_by_id:
+            already_present_matches += 1
+            continue
+        historical, source_name = historical_by_id[historical_id]
+        fine_labels = list(dict.fromkeys(historical.get("labels") or []))
+        coarse_labels = list(taxonomy.derive_categories(fine_labels))
+        needs_review = bool(historical.get("needs_review")) or not coarse_labels
+        source_record_sha256 = str(current.get("text_sha256") or "") or sha256_text(
+            str(current["text"])
+        )
+        record = AnnotationRecord(
+            chunk_id=current_id,
+            video_id=str(current.get("video_id") or "") or None,
+            start_seconds=current.get("start_seconds"),
+            end_seconds=current.get("end_seconds"),
+            video_title=current.get("video_title") or current.get("title"),
+            channel_title=current.get("channel_title") or current.get("channel"),
+            source_url=current.get("source_url") or current.get("url"),
+            cohort=current.get("cohort"),
+            text=str(current["text"]),
+            coarse_labels=coarse_labels,
+            fine_labels=fine_labels,
+            flags=list(dict.fromkeys(historical.get("flags") or [])),
+            needs_review=needs_review,
+            training_eligible=not needs_review,
+            decision_status="needs_review" if needs_review else "resolved",
+            score_confianza=historical.get("score_confianza"),
+            notes=str(historical.get("notes") or ""),
+            justification=str(historical.get("justificacion") or ""),
+            label_source=label_source,
+            annotator_type="llm_remote",
+            annotator_model=expected_model,
+            prompt_sha256=historical_prompt_sha256,
+            source_record_sha256=source_record_sha256,
+            consolidated_sources=[f"{source_name}:{historical_id}"],
+            consolidation_warning="historical_id_rekeyed_by_exact_normalized_text",
+            created_at=historical.get("annotated_at"),
+        )
+        recovered.append(record.model_dump(mode="json"))
+
+    if recovered:
+        write_jsonl_atomic(output, [*existing_rows, *recovered])
+    completed_current = (set(existing_by_id) | {str(row["chunk_id"]) for row in recovered}) & current_ids
+    report = {
+        "schema_version": "1.0.0",
+        "operation": "recover_historical_annotations",
+        "signature": signature,
+        "current_rows": len(current_ids),
+        "historical_rows": len(historical_by_id),
+        "exact_unique_matches": len(matched_historical_ids),
+        "recovered_new": len(recovered),
+        "already_present_matches": already_present_matches,
+        "ambiguous_keys_excluded": ambiguous_keys,
+        "historical_not_reusable": len(historical_by_id) - len(matched_historical_ids),
+        "completed_current_after_recovery": len(completed_current),
+        "pending_current_after_recovery": len(current_ids) - len(completed_current),
+        "output_rows": len(existing_rows) + len(recovered),
+        "run_manifest": str(manifest_path) if manifest_path else None,
+        "quarantined_progress": str(quarantine_path) if quarantine_path else None,
+        "safety_rule": "only exact, unique (video_id, normalized_text) matches are reused",
+    }
+    write_json_atomic(output.with_suffix(output.suffix + ".recovery.json"), report)
+    return report
 
 
 def annotate_incremental(
@@ -92,9 +302,50 @@ def _ensure_labeling_run_manifest(
     if manifest_path.exists():
         existing = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
         if existing.get("run_signature") != signature:
-            raise ValueError(
-                "La salida existente pertenece a otro modelo, prompt o configuración; "
-                "use un archivo nuevo para no mezclar campañas."
+            existing_metadata = {
+                key: value
+                for key, value in existing.items()
+                if key
+                not in {
+                    "schema_version",
+                    "run_signature",
+                    "compatible_predecessor_run_signature",
+                    "manifest_upgraded_at",
+                }
+            }
+
+            def compatibility_projection(metadata: dict[str, Any]) -> dict[str, Any]:
+                projected = json.loads(json.dumps(metadata, ensure_ascii=False, default=str))
+                provider = projected.get("provider")
+                if isinstance(provider, dict):
+                    thinking = provider.get("thinking")
+                    if thinking in (None, {"type": "disabled"}):
+                        provider.pop("thinking", None)
+                    provider.pop("historical_recovery", None)
+                return projected
+
+            compatible = (
+                compatibility_projection(existing_metadata)
+                == compatibility_projection(run_metadata)
+            )
+            provider_metadata = run_metadata.get("provider")
+            safe_thinking = not isinstance(provider_metadata, dict) or provider_metadata.get(
+                "thinking", {"type": "disabled"}
+            ) == {"type": "disabled"}
+            if not compatible or not safe_thinking:
+                raise ValueError(
+                    "La salida existente pertenece a otro modelo, prompt o configuración; "
+                    "use un archivo nuevo para no mezclar campañas."
+                )
+            write_json_atomic(
+                manifest_path,
+                {
+                    "schema_version": "1.0.0",
+                    "run_signature": signature,
+                    "compatible_predecessor_run_signature": existing.get("run_signature"),
+                    "manifest_upgraded_at": datetime.now(timezone.utc).isoformat(),
+                    **run_metadata,
+                },
             )
     elif output_path.exists() and output_path.stat().st_size:
         raise ValueError(
@@ -293,6 +544,7 @@ def annotate_batched_incremental(
         "labeled": 0,
         "errors": 0,
         "batches": 0,
+        "request_groups": 0,
     }
     if progress_callback is not None:
         progress_callback({"status": "started", "advance": 0, **counters})
@@ -309,71 +561,144 @@ def annotate_batched_incremental(
 
     started = time.perf_counter()
     error_mode = "a" if errors is not None else None
-    with output.open("a", encoding="utf-8", newline="\n") as output_handle:
-        error_handle = errors.open(error_mode, encoding="utf-8", newline="\n") if errors else None
-        try:
-            for start in range(0, len(pending), processing_batch_size):
-                batch = pending[start : start + processing_batch_size]
-                results = provider.annotate_batch(batch)
-                if len(results) != len(batch):
-                    raise RuntimeError(
-                        f"El proveedor devolvió {len(results)} resultados para {len(batch)} entradas"
-                    )
-                batch_labeled = batch_errors = 0
-                for record, result in zip(batch, results):
-                    chunk_id = str(record["chunk_id"])
-                    if isinstance(result, Exception):
-                        counters["errors"] += 1
-                        batch_errors += 1
-                        if error_handle is not None and chunk_id not in error_ids:
-                            error_handle.write(
-                                json.dumps(
-                                    {"chunk_id": chunk_id, "error": str(result)},
-                                    ensure_ascii=False,
-                                )
-                                + "\n"
-                            )
-                            error_ids.add(chunk_id)
-                        continue
-                    if result.chunk_id != chunk_id:
+    try:
+        with output.open("a", encoding="utf-8", newline="\n") as output_handle:
+            error_handle = (
+                errors.open(error_mode, encoding="utf-8", newline="\n") if errors else None
+            )
+            try:
+                def persist_results(
+                    group_records: list[dict[str, Any]],
+                    group_results: list[AnnotationRecord | Exception],
+                    *,
+                    status: str,
+                ) -> dict[str, Any]:
+                    if len(group_results) != len(group_records):
                         raise RuntimeError(
-                            f"El proveedor cambió chunk_id: esperado={chunk_id}, recibido={result.chunk_id}"
+                            f"El proveedor devolvió {len(group_results)} resultados "
+                            f"para {len(group_records)} entradas"
                         )
-                    output_handle.write(
-                        json.dumps(result.model_dump(mode="json"), ensure_ascii=False) + "\n"
-                    )
-                    completed.add(chunk_id)
-                    counters["labeled"] += 1
-                    batch_labeled += 1
-                output_handle.flush()
-                os.fsync(output_handle.fileno())
+                    group_labeled = group_errors = 0
+                    for record, result in zip(group_records, group_results):
+                        chunk_id = str(record["chunk_id"])
+                        if isinstance(result, Exception):
+                            counters["errors"] += 1
+                            group_errors += 1
+                            if error_handle is not None and chunk_id not in error_ids:
+                                error_handle.write(
+                                    json.dumps(
+                                        {"chunk_id": chunk_id, "error": str(result)},
+                                        ensure_ascii=False,
+                                    )
+                                    + "\n"
+                                )
+                                error_ids.add(chunk_id)
+                            continue
+                        if result.chunk_id != chunk_id:
+                            raise RuntimeError(
+                                f"El proveedor cambió chunk_id: esperado={chunk_id}, "
+                                f"recibido={result.chunk_id}"
+                            )
+                        output_handle.write(
+                            json.dumps(result.model_dump(mode="json"), ensure_ascii=False) + "\n"
+                        )
+                        completed.add(chunk_id)
+                        counters["labeled"] += 1
+                        group_labeled += 1
+                    output_handle.flush()
+                    os.fsync(output_handle.fileno())
+                    if error_handle is not None:
+                        error_handle.flush()
+                        os.fsync(error_handle.fileno())
+                    counters["request_groups"] += 1
+                    elapsed = time.perf_counter() - started
+                    event = {
+                        "status": status,
+                        "advance": len(group_records),
+                        "batch_labeled": group_labeled,
+                        "batch_errors": group_errors,
+                        "elapsed_seconds": elapsed,
+                        "chunks_per_minute": 60
+                        * (counters["labeled"] + counters["errors"])
+                        / elapsed,
+                        **counters,
+                    }
+                    usage_summary = getattr(provider, "usage_summary", None)
+                    if callable(usage_summary):
+                        event["provider_usage"] = usage_summary()
+                    if progress_callback is not None:
+                        progress_callback(event)
+                    return event
+
+                for start in range(0, len(pending), processing_batch_size):
+                    batch = pending[start : start + processing_batch_size]
+                    last_event: dict[str, Any] | None = None
+                    incremental_iterator = getattr(provider, "iter_annotate_batch", None)
+                    if callable(incremental_iterator):
+                        observed_positions: set[int] = set()
+                        for completed_group in incremental_iterator(batch):
+                            positions = [int(index) for index, _ in completed_group]
+                            if (
+                                any(index < 0 or index >= len(batch) for index in positions)
+                                or observed_positions.intersection(positions)
+                            ):
+                                raise RuntimeError("El proveedor devolvió índices de grupo inválidos")
+                            observed_positions.update(positions)
+                            group_records = [batch[index] for index in positions]
+                            group_results = [result for _, result in completed_group]
+                            last_event = persist_results(
+                                group_records,
+                                group_results,
+                                status="request_group_finished",
+                            )
+                        if observed_positions != set(range(len(batch))):
+                            raise RuntimeError("El proveedor no completó todos los índices del lote")
+                    else:
+                        results = provider.annotate_batch(batch)
+                        last_event = persist_results(
+                            batch,
+                            results,
+                            status="batch_finished",
+                        )
+                    counters["batches"] += 1
+                    if (
+                        checkpoint_callback is not None
+                        and counters["batches"] % checkpoint_every_batches == 0
+                    ):
+                        checkpoint_callback(
+                            {
+                                **(last_event or {}),
+                                "status": "periodic_checkpoint",
+                                "advance": 0,
+                                **counters,
+                            }
+                        )
+            finally:
                 if error_handle is not None:
-                    error_handle.flush()
-                    os.fsync(error_handle.fileno())
-                counters["batches"] += 1
-                elapsed = time.perf_counter() - started
-                event = {
-                    "status": "batch_finished",
-                    "advance": len(batch),
-                    "batch_labeled": batch_labeled,
-                    "batch_errors": batch_errors,
-                    "elapsed_seconds": elapsed,
-                    "chunks_per_minute": 60 * (counters["labeled"] + counters["errors"]) / elapsed,
-                    **counters,
-                }
-                usage_summary = getattr(provider, "usage_summary", None)
-                if callable(usage_summary):
-                    event["provider_usage"] = usage_summary()
-                if progress_callback is not None:
-                    progress_callback(event)
-                if (
-                    checkpoint_callback is not None
-                    and counters["batches"] % checkpoint_every_batches == 0
-                ):
-                    checkpoint_callback(event)
-        finally:
-            if error_handle is not None:
-                error_handle.close()
+                    error_handle.close()
+    except KeyboardInterrupt:
+        elapsed = time.perf_counter() - started
+        interrupted_result = {
+            **counters,
+            "status": "interrupted_checkpoint",
+            "advance": 0,
+            "interrupted": True,
+            "elapsed_seconds": round(elapsed, 3),
+            "chunks_per_minute": round(
+                60 * (counters["labeled"] + counters["errors"]) / elapsed,
+                3,
+            ),
+            "run_manifest": str(manifest_path) if manifest_path else None,
+            "quarantined_progress": str(quarantine_path) if quarantine_path else None,
+        }
+        usage_summary = getattr(provider, "usage_summary", None)
+        if callable(usage_summary):
+            interrupted_result["provider_usage"] = usage_summary()
+        if checkpoint_callback is not None:
+            checkpoint_callback(interrupted_result)
+        if progress_callback is not None:
+            progress_callback(interrupted_result)
+        raise
 
     elapsed = time.perf_counter() - started
     result = {

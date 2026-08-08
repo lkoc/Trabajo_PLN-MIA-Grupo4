@@ -4,7 +4,8 @@ import json
 import os
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
+from collections.abc import Iterator
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,7 @@ _PRICE_USD_PER_MILLION = {
     "deepseek-v4-flash": {"cache_hit": 0.0028, "cache_miss": 0.14, "output": 0.28},
     "deepseek-v4-pro": {"cache_hit": 0.003625, "cache_miss": 0.435, "output": 0.87},
 }
+_THINKING_TYPE = "disabled"
 
 
 class DeepSeekProvider(AnnotationProvider):
@@ -108,6 +110,7 @@ class DeepSeekProvider(AnnotationProvider):
             "operational_prompt_path": str(self.operational_prompt_path),
             "operational_prompt_sha256": self.operational_prompt_sha256,
             "prompt_sha256": self.prompt_sha256,
+            "thinking": {"type": _THINKING_TYPE},
             "official_price_usd_per_million": _PRICE_USD_PER_MILLION.get(self.model),
         }
 
@@ -240,7 +243,7 @@ class DeepSeekProvider(AnnotationProvider):
             ],
             "temperature": 0,
             "response_format": {"type": "json_object"},
-            "thinking": {"type": "disabled"},
+            "thinking": {"type": _THINKING_TYPE},
         }
         last_error: Exception | None = None
         for attempt in range(self.retries + 1):
@@ -303,6 +306,74 @@ class DeepSeekProvider(AnnotationProvider):
             raise ProviderError(str(result))
         return result
 
+    def _request_group_with_recovery(
+        self, group: list[dict[str, Any]]
+    ) -> list[AnnotationRecord | Exception]:
+        try:
+            first_pass = list(self._request_group(group))
+        except (ProviderError, ValueError, RuntimeError):
+            first_pass = [ProviderError("falló la solicitud agrupada")] * len(group)
+        recovered: list[AnnotationRecord | Exception] = []
+        for chunk, result in zip(group, first_pass):
+            if not isinstance(result, Exception):
+                recovered.append(result)
+                continue
+            try:
+                recovered.append(self.annotate(chunk))
+            except (ProviderError, ValueError, RuntimeError) as exc:
+                recovered.append(exc)
+        return recovered
+
+    def iter_annotate_batch(
+        self, chunks: list[dict[str, Any]]
+    ) -> Iterator[list[tuple[int, AnnotationRecord | Exception]]]:
+        """Entrega cada grupo terminado para que el llamador lo persista de inmediato.
+
+        Si llega Ctrl+C, deja de aceptar trabajo nuevo, espera las solicitudes ya
+        iniciadas y entrega sus resultados antes de propagar KeyboardInterrupt.
+        """
+
+        if not chunks:
+            return
+        indexed_groups = [
+            (start, chunks[start : start + self.records_per_request])
+            for start in range(0, len(chunks), self.records_per_request)
+        ]
+        executor = ThreadPoolExecutor(max_workers=min(self.max_workers, len(indexed_groups)))
+        futures: dict[Future[list[AnnotationRecord | Exception]], tuple[int, int]] = {
+            executor.submit(self._request_group_with_recovery, group): (start, len(group))
+            for start, group in indexed_groups
+        }
+        yielded: set[Future[list[AnnotationRecord | Exception]]] = set()
+        interrupted = False
+        try:
+            try:
+                for future in as_completed(futures):
+                    start, size = futures[future]
+                    results = future.result()
+                    if len(results) != size:
+                        raise RuntimeError(
+                            f"DeepSeek devolvió {len(results)} resultados para un grupo de {size}"
+                        )
+                    yielded.add(future)
+                    yield list(zip(range(start, start + size), results))
+            except KeyboardInterrupt:
+                interrupted = True
+                for future, (start, size) in futures.items():
+                    if future in yielded or future.cancel():
+                        continue
+                    results = future.result()
+                    if len(results) != size:
+                        raise RuntimeError(
+                            f"DeepSeek devolvió {len(results)} resultados para un grupo de {size}"
+                        )
+                    yielded.add(future)
+                    yield list(zip(range(start, start + size), results))
+        finally:
+            executor.shutdown(wait=True, cancel_futures=interrupted)
+        if interrupted:
+            raise KeyboardInterrupt
+
     def annotate_batch(
         self, chunks: list[dict[str, Any]]
     ) -> list[AnnotationRecord | Exception]:
@@ -310,27 +381,10 @@ class DeepSeekProvider(AnnotationProvider):
 
         if not chunks:
             return []
-        groups = [
-            chunks[start : start + self.records_per_request]
-            for start in range(0, len(chunks), self.records_per_request)
-        ]
-
-        def run(group: list[dict[str, Any]]) -> list[AnnotationRecord | Exception]:
-            try:
-                first_pass = list(self._request_group(group))
-            except (ProviderError, ValueError, RuntimeError):
-                first_pass = [ProviderError("falló la solicitud agrupada")] * len(group)
-            recovered: list[AnnotationRecord | Exception] = []
-            for chunk, result in zip(group, first_pass):
-                if not isinstance(result, Exception):
-                    recovered.append(result)
-                    continue
-                try:
-                    recovered.append(self.annotate(chunk))
-                except (ProviderError, ValueError, RuntimeError) as exc:
-                    recovered.append(exc)
-            return recovered
-
-        with ThreadPoolExecutor(max_workers=min(self.max_workers, len(groups))) as executor:
-            nested = list(executor.map(run, groups))
-        return [result for group_results in nested for result in group_results]
+        ordered: list[AnnotationRecord | Exception | None] = [None] * len(chunks)
+        for completed_group in self.iter_annotate_batch(chunks):
+            for index, result in completed_group:
+                ordered[index] = result
+        if any(result is None for result in ordered):
+            raise RuntimeError("DeepSeek no devolvió todos los grupos solicitados")
+        return [result for result in ordered if result is not None]

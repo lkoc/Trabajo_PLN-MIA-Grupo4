@@ -15,6 +15,31 @@
       "archive": "chunks_v2.jsonl.gz",
       "required_by": ["02_01"]
     },
+    "chunks_deepseek_historicos": {
+      "source": "datos/processed/chunks_para_etiquetar.jsonl",
+      "archive": "chunks_deepseek_historicos.jsonl.gz",
+      "required_by": ["02_01"]
+    },
+    "deepseek_flash_historico": {
+      "source": "datos/etiquetado/llm_api/deepseek-v4-flash_labeled_chunks_seed42.jsonl",
+      "archive": "deepseek_flash_historico.jsonl.gz",
+      "required_by": ["02_01"]
+    },
+    "deepseek_pro_historico_principal": {
+      "source": "datos/etiquetado/llm_api/deepseek-v4-pro_revision_de_deepseek-v4-flash_seed42.jsonl",
+      "archive": "deepseek_pro_historico_principal.jsonl.gz",
+      "required_by": ["02_01"]
+    },
+    "deepseek_pro_historico_umbral": {
+      "source": "datos/etiquetado/llm_api/deepseek-v4-pro_revision_umbral_recalibrado_t090_seed42.jsonl",
+      "archive": "deepseek_pro_historico_umbral.jsonl.gz",
+      "required_by": ["02_01"]
+    },
+    "deepseek_pro_historico_sospechosos": {
+      "source": "datos/etiquetado/llm_api/deepseek-v4-pro_revision_sospechosos_gruesos_seed42.jsonl",
+      "archive": "deepseek_pro_historico_sospechosos.jsonl.gz",
+      "required_by": ["02_01"]
+    },
     "dataset_5_salidas": {
       "source": "datos/model_ready/v2/dataset_5_salidas.jsonl",
       "archive": "dataset_5_salidas.jsonl.gz",
@@ -26,7 +51,14 @@
       "colab_mode": "optional_deepseek_api",
       "requires_cuda": false,
       "expected_gpu": null,
-      "input_keys": ["chunks_v2"],
+      "input_keys": [
+        "chunks_v2",
+        "chunks_deepseek_historicos",
+        "deepseek_flash_historico",
+        "deepseek_pro_historico_principal",
+        "deepseek_pro_historico_umbral",
+        "deepseek_pro_historico_sospechosos"
+      ],
       "reason": "Cascada calibrada Flash-Pro por API; funciona con runtime CPU y no reserva una GPU innecesaria."
     },
     "03_02": {

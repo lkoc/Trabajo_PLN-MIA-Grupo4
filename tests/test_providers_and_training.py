@@ -4,14 +4,18 @@ import json
 
 import pytest
 
-from moderacion_peru.labeling import annotate_batched_incremental, annotate_incremental
+from moderacion_peru.labeling import (
+    annotate_batched_incremental,
+    annotate_incremental,
+    recover_historical_annotations,
+)
 from moderacion_peru.labeling_calibration import (
     build_directed_review_queue,
     calibrate_primary_against_reviewer,
     select_calibration_panel,
 )
 from moderacion_peru.io import read_jsonl
-from moderacion_peru.io import sha256_file
+from moderacion_peru.io import sha256_file, sha256_text
 from moderacion_peru.providers.base import ProviderError, normalize_payload
 from moderacion_peru.providers.deepseek import DeepSeekProvider
 from moderacion_peru.providers.huggingface import HuggingFaceProvider
@@ -130,11 +134,13 @@ def test_deepseek_batches_and_retries_only_invalid_row(monkeypatch):
     )
 
     assert len(calls) == 2
+    assert all(call["thinking"] == {"type": "disabled"} for call in calls)
     assert [result.chunk_id for result in results] == ["c1", "c2"]
     assert results[0].notes == ""
     assert results[0].flags == ["humor_encubridor"]
     assert provider.usage_summary()["requests"] == 2
     assert provider.usage_summary()["estimated_cost_usd"] > 0
+    assert provider.probe()["thinking"] == {"type": "disabled"}
 
 
 def test_deepseek_preflight_sends_no_corpus(monkeypatch):
@@ -488,6 +494,252 @@ def test_batched_incremental_is_resumable_and_signed(tmp_path):
             output,
             run_metadata={"model": "different", "prompt": "v1"},
         )
+
+
+def test_historical_recovery_rekeys_only_exact_unique_text_and_labels_pending(tmp_path):
+    historical_chunks = tmp_path / "legacy_chunks.jsonl"
+    historical_annotations = tmp_path / "legacy_flash.jsonl"
+    historical_chunks.write_text(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "chunk_id": "old-1",
+                        "video_id": "v1",
+                        "text": "Texto  exacto",
+                        "start_seconds": 0,
+                        "end_seconds": 30,
+                    }
+                ),
+                json.dumps(
+                    {
+                        "chunk_id": "old-2",
+                        "video_id": "v2",
+                        "text": "Segmentación histórica distinta",
+                        "start_seconds": 0,
+                        "end_seconds": 35,
+                    }
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    historical_annotations.write_text(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "chunk_id": "old-1",
+                        "labels": ["seguro"],
+                        "flags": [],
+                        "needs_review": False,
+                        "score_confianza": 0.95,
+                        "notes": "",
+                        "justificacion": "Histórica",
+                        "annotator_model": "deepseek-v4-flash",
+                        "annotated_at": "2026-07-25T21:25:13-05:00",
+                    }
+                ),
+                json.dumps(
+                    {
+                        "chunk_id": "old-2",
+                        "labels": ["amenaza_directa"],
+                        "flags": [],
+                        "needs_review": False,
+                        "score_confianza": 0.9,
+                        "notes": "",
+                        "justificacion": "Histórica",
+                        "annotator_model": "deepseek-v4-flash",
+                        "annotated_at": "2026-07-25T21:25:14-05:00",
+                    }
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    current = [
+        {
+            "chunk_id": "new-1",
+            "video_id": "v1",
+            "text": "texto exacto",
+            "text_sha256": sha256_text("texto exacto"),
+            "start_seconds": 0,
+            "end_seconds": 30,
+        },
+        {
+            "chunk_id": "new-2",
+            "video_id": "v2",
+            "text": "Segmentación nueva",
+            "text_sha256": sha256_text("Segmentación nueva"),
+            "start_seconds": 0,
+            "end_seconds": 30,
+        },
+    ]
+    output = tmp_path / "primary.jsonl"
+    run_metadata = {"provider": {"model": "deepseek-v4-flash", "history": "fixture"}}
+    first = recover_historical_annotations(
+        current,
+        historical_chunks,
+        [historical_annotations],
+        output,
+        expected_model="deepseek-v4-flash",
+        historical_prompt_sha256="a" * 64,
+        run_metadata=run_metadata,
+    )
+    second = recover_historical_annotations(
+        current,
+        historical_chunks,
+        [historical_annotations],
+        output,
+        expected_model="deepseek-v4-flash",
+        historical_prompt_sha256="a" * 64,
+        run_metadata=run_metadata,
+    )
+
+    recovered = list(read_jsonl(output))
+    assert first["recovered_new"] == 1
+    assert first["historical_not_reusable"] == 1
+    assert first["pending_current_after_recovery"] == 1
+    assert second["recovered_new"] == 0
+    assert second["already_present_matches"] == 1
+    assert recovered[0]["chunk_id"] == "new-1"
+    assert recovered[0]["coarse_labels"] == ["SEGURO"]
+    assert recovered[0]["consolidated_sources"] == ["legacy_flash.jsonl:old-1"]
+
+    class PendingProvider:
+        def annotate_batch(self, chunks):
+            return [
+                normalize_payload(
+                    payload(chunk_id=chunk["chunk_id"]),
+                    text=chunk["text"],
+                    source="current",
+                    annotator_type="llm_remote",
+                    model="deepseek-v4-flash",
+                    source_record_sha256=chunk["text_sha256"],
+                )
+                for chunk in chunks
+            ]
+
+    resumed = annotate_batched_incremental(
+        current,
+        PendingProvider(),
+        output,
+        run_metadata=run_metadata,
+    )
+    assert resumed["already_completed"] == 1
+    assert resumed["labeled"] == 1
+    assert {row["chunk_id"] for row in read_jsonl(output)} == {"new-1", "new-2"}
+
+
+def test_incremental_stream_checkpoint_survives_keyboard_interrupt(tmp_path):
+    records = [
+        {
+            "chunk_id": f"c{index}",
+            "video_id": f"v{index}",
+            "text": f"texto {index}",
+            "text_sha256": sha256_text(f"texto {index}"),
+        }
+        for index in range(3)
+    ]
+
+    def annotation(chunk):
+        return normalize_payload(
+            payload(chunk_id=chunk["chunk_id"]),
+            text=chunk["text"],
+            source="fixture",
+            annotator_type="llm_remote",
+            model="fixture",
+            source_record_sha256=chunk["text_sha256"],
+        )
+
+    class InterruptedProvider:
+        def iter_annotate_batch(self, chunks):
+            yield [(0, annotation(chunks[0]))]
+            raise KeyboardInterrupt
+
+    class ResumeProvider:
+        def annotate_batch(self, chunks):
+            return [annotation(chunk) for chunk in chunks]
+
+    output = tmp_path / "interrupted.jsonl"
+    checkpoints = []
+    with pytest.raises(KeyboardInterrupt):
+        annotate_batched_incremental(
+            records,
+            InterruptedProvider(),
+            output,
+            processing_batch_size=3,
+            checkpoint_callback=checkpoints.append,
+            run_metadata={"model": "fixture"},
+        )
+    assert [row["chunk_id"] for row in read_jsonl(output)] == ["c0"]
+    assert checkpoints[-1]["status"] == "interrupted_checkpoint"
+    assert checkpoints[-1]["labeled"] == 1
+
+    resumed = annotate_batched_incremental(
+        records,
+        ResumeProvider(),
+        output,
+        processing_batch_size=3,
+        run_metadata={"model": "fixture"},
+    )
+    assert resumed["already_completed"] == 1
+    assert resumed["labeled"] == 2
+    assert {row["chunk_id"] for row in read_jsonl(output)} == {"c0", "c1", "c2"}
+
+
+def test_run_manifest_safely_upgrades_non_thinking_and_historical_provenance(tmp_path):
+    record = {
+        "chunk_id": "c1",
+        "video_id": "v1",
+        "text": "texto",
+        "text_sha256": sha256_text("texto"),
+    }
+
+    class Provider:
+        def annotate_batch(self, chunks):
+            return [
+                normalize_payload(
+                    payload(chunk_id=chunk["chunk_id"]),
+                    text=chunk["text"],
+                    source="fixture",
+                    annotator_type="llm_remote",
+                    model="deepseek-v4-flash",
+                    source_record_sha256=chunk["text_sha256"],
+                )
+                for chunk in chunks
+            ]
+
+    output = tmp_path / "campaign.jsonl"
+    old_metadata = {
+        "provider": {"model": "deepseek-v4-flash", "prompt_sha256": "a" * 64},
+        "taxonomy_version": "2.1.0",
+    }
+    annotate_batched_incremental([record], Provider(), output, run_metadata=old_metadata)
+    old_manifest = json.loads(
+        output.with_suffix(".jsonl.run.json").read_text(encoding="utf-8")
+    )
+    new_metadata = {
+        "provider": {
+            "model": "deepseek-v4-flash",
+            "prompt_sha256": "a" * 64,
+            "thinking": {"type": "disabled"},
+            "historical_recovery": {"mapping": "fixture"},
+        },
+        "taxonomy_version": "2.1.0",
+    }
+    result = annotate_batched_incremental(
+        [record], Provider(), output, run_metadata=new_metadata
+    )
+    upgraded = json.loads(output.with_suffix(".jsonl.run.json").read_text(encoding="utf-8"))
+
+    assert result["already_completed"] == 1
+    assert result["labeled"] == 0
+    assert upgraded["compatible_predecessor_run_signature"] == old_manifest["run_signature"]
+    assert upgraded["provider"]["thinking"] == {"type": "disabled"}
+    assert upgraded["provider"]["historical_recovery"] == {"mapping": "fixture"}
 
 
 def test_calibration_and_historical_routing_policy():

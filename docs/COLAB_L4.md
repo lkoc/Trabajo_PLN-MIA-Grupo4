@@ -105,14 +105,20 @@ entorno no existe. `RUN_API_PREFLIGHT=True` consulta `/models` sin enviar textos
 al proveedor. La barra registra costo por tokens y los topes se configuran antes
 de activar cada fase.
 
-Los checkpoints se generan en `/content` y, al activar `PUBLISH_TO_DRIVE=True`,
-se publican como un TAR.GZ verificable bajo:
+Los checkpoints se generan en `/content` y se publican como un TAR.GZ verificable bajo:
 
 ```text
 MyDrive/ModeracionPeru_Colab/runs/<notebook_id>/<run_id>/
 ├── run_outputs.tar.gz
 └── run_manifest.json
 ```
+
+En `02_01`, `AUTO_PUBLISH_CHECKPOINTS=True` publica automáticamente después de
+la recuperación histórica, cada diez ventanas de procesamiento, al cerrar una
+fase y ante `Ctrl+C`. Cada grupo de cinco respuestas se fuerza antes a disco con
+`fsync`, por lo que la siguiente ejecución restaura el TAR.GZ y omite todos los
+`chunk_id` ya válidos. Los demás cuadernos conservan la publicación manual con
+`PUBLISH_TO_DRIVE=True`.
 
 `03_01` y `03_07`–`03_08` siguen siendo adecuados para CPU local. Activar Colab
 no inventa una corrida: los interruptores de entrenamiento permanecen en

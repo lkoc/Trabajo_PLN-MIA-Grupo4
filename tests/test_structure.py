@@ -495,6 +495,9 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     assert "bundle_releases" in bundle
     assert "latest.json" in bundle
     assert "published_to_drive" in bundle
+    colab_config = json.loads((ROOT / "config/colab_l4.json").read_text(encoding="utf-8"))
+    assert all(specification["archive"] in bundle for specification in colab_config["inputs"].values())
+    assert "Seleccione nueve archivos" in bundle
     local = notebook_sources["02_01_etiquetado_local_ollama.ipynb"]
     assert "PRIMARY_LIMIT=300" in local
     assert "None para TODOS los pendientes" in local
@@ -503,6 +506,14 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     assert "from tqdm.std import tqdm" in local
     assert "Salida textual visible también desde VS Code" in local
     assert "validate_connection()" in local
+    assert "expected_thinking={'type':'disabled'}" in local
+    assert "02_01 exige DeepSeek V4 en modo non-thinking para Flash y Pro" in local
+    assert "'thinking':probe['thinking']" in local
+    assert "recover_historical_annotations" in local
+    assert "RECOVER_HISTORICAL=True" in local
+    assert "AUTO_PUBLISH_CHECKPOINTS=True" in local
+    assert "checkpoint_callback=checkpoint_callback_for(output)" in local
+    assert "interrupted_checkpoint" in local
     assert "PROCESSING_BATCH_SIZE=160" in local
     assert "estimated_cost_usd" in local
     assert "quarantine_invalid_progress=True" in local
@@ -527,6 +538,11 @@ def test_synced_checkpoint_rules_preserve_hashes_and_exclude_rebuildable_working
     assert "!datos/raw/vtt_by_video/**" in ignore
     assert "!datos/raw/video_candidates.jsonl" in ignore
     assert "!resultados/colab_bundle/dataset_5_salidas.jsonl.gz" in ignore
+    config = json.loads((ROOT / "config/colab_l4.json").read_text(encoding="utf-8"))
+    assert all(
+        f"!resultados/colab_bundle/{specification['archive']}" in ignore
+        for specification in config["inputs"].values()
+    )
     assert "datos/raw/transcripts_raw.jsonl" in ignore
     assert "datos/raw/transcripts_cache/" in ignore
     assert "datos/processed/*" in ignore

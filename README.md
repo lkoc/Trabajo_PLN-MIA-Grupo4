@@ -101,7 +101,7 @@ Durante `01_01`, primero se consolidan en el canónico todas las transcripciones
 | Cuaderno | Función | Control principal |
 |---|---|---|
 | `02_00_preparacion_bundle_colab` | en Colab descarga el bundle sincronizado de GitHub —o recibe el local por navegador—, lo verifica y publica una versión inmutable en Drive | `RUN_PUBLISH_BUNDLE=False`; `BUNDLE_SOURCE='github'` o `'local_upload'` |
-| `02_01_etiquetado_local_ollama` | nombre histórico conservado; ejecuta la cascada calibrada DeepSeek Flash→Pro con prompt compacto, cohortes, bootstrap por video, costo y reanudación | active en orden `RUN_API_PREFLIGHT`, `RUN_CALIBRATION`, `RUN_PRIMARY` y `RUN_DIRECTED_REVIEW`; use `None` para todos los pendientes |
+| `02_01_etiquetado_local_ollama` | recupera 1:1 etiquetas históricas compatibles y ejecuta la cascada calibrada DeepSeek Flash→Pro con checkpoints atómicos | active en orden `RUN_API_PREFLIGHT`, `RUN_CALIBRATION`, `RUN_PRIMARY` y `RUN_DIRECTED_REVIEW`; use `None` para todos los pendientes |
 | `02_02_etiquetado_remoto` | fallback local independiente con `Qwen/Qwen3-1.7B` | `RUN_FALLBACK=False`; no se mezcla con la campaña principal |
 | `02_03_revision_llm_dirigida` | recupera calibración, enrutamiento y resultados Flash/Pro sin repetir llamadas | tablas reportables y límite inferencial explícito |
 | `02_04_consolidacion_validacion_humana` | consolida proveedores y sirve la campaña humana | precedencia explícita, propuesta ocultable y eventos append-only |
@@ -264,8 +264,8 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 |---|---|---|
 | `01_01` | continuación actual: `DISCOVER_NEW=False`, `FETCH_NEW=True`, `BACKFILL_MISSING_VTT=True` | reanuda primero todos los VTT faltantes y después los candidatos; usa lotes de 10, pausas internas de 2.5–10 s y 15 s entre lotes; cambie `FETCH_NEW=False` si solo desea inspeccionar sin red |
 | `01_02` | se reutiliza el clásico; ambos `RUN_...=True`, ambos `FORCE_...=False`, `USE_ROBUST_RECOMMENDATION=True` y `APPLY_CHUNK_SELECTION=False` | prioriza los JSON consolidados y muestra el perfil de cinco longitudes y el cierre MiniLM 20/30 sin recalcular; solo ejecuta una etapa si falta su artefacto |
-| `02_00` | `RUN_PUBLISH_BUNDLE=False`, `BUNDLE_SOURCE='github'` | ábralo en Colab; use GitHub si el bundle está sincronizado o `'local_upload'` para seleccionar los cuatro archivos locales, active y autorice `drive.mount()` |
-| `02_01` | cuatro interruptores en `False`; panel 1 000, `PRIMARY_LIMIT=300`, `REVIEW_LIMIT=500` | valide `/models`, ejecute calibración, piloto Flash y revisión; use `None` para todo. Reanuda, pone en cuarentena progreso inválido y detiene nuevos lotes al alcanzar el presupuesto |
+| `02_00` | `RUN_PUBLISH_BUNDLE=False`, `BUNDLE_SOURCE='github'` | ábralo en Colab; use GitHub si el bundle está sincronizado o `'local_upload'` para seleccionar los nueve archivos locales, active y autorice `drive.mount()` |
+| `02_01` | recuperación histórica y checkpoints automáticos activos; cuatro interruptores de API en `False`; panel 1 000, `PRIMARY_LIMIT=300`, `REVIEW_LIMIT=500` | recupera solo coincidencias exactas 1:1, valida `/models`, ejecuta calibración, Flash y Pro sobre pendientes; `Ctrl+C` conserva grupos terminados y publica el run en Drive |
 | `02_02` | `RUN_FALLBACK=False`, `LIMIT=20` | active solo si necesita un diagnóstico local independiente; `None` procesa todos los pendientes |
 | `03_01`–`03_06` | `RUN_TRAINING=False` | active la familia que se desea entrenar |
 | `03_07` | `RUN_PUBLISH=False` | active después de reunir candidatos completos del mismo snapshot |

@@ -16,7 +16,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_colab_config_syncs_only_declared_inputs_and_keeps_api_on_cpu():
     config = json.loads((ROOT / "config" / "colab_l4.json").read_text(encoding="utf-8"))
-    assert set(config["inputs"]) == {"chunks_v2", "dataset_5_salidas"}
+    assert set(config["inputs"]) == {
+        "chunks_v2",
+        "chunks_deepseek_historicos",
+        "deepseek_flash_historico",
+        "deepseek_pro_historico_principal",
+        "deepseek_pro_historico_umbral",
+        "deepseek_pro_historico_sospechosos",
+        "dataset_5_salidas",
+    }
+    assert set(config["notebooks"]["02_01"]["input_keys"]) == set(config["inputs"]) - {
+        "dataset_5_salidas"
+    }
     assert set(config["notebooks"]) == {"02_01", "03_02", "03_03", "03_04", "03_05", "03_06"}
     assert "datos/raw/transcripts_raw.jsonl" in config["excluded_from_drive"]
     assert config["notebooks"]["02_01"]["requires_cuda"] is False
