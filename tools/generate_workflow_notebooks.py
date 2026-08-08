@@ -296,24 +296,36 @@ if IN_COLAB:
     BUNDLE_DIR = DRIVE_ROOT / "bundle"
     RELEASES_DIR = DRIVE_ROOT / "bundle_releases"
     latest_pointer_path = RELEASES_DIR / "latest.json"
-    if not latest_pointer_path.is_file():
-        raise FileNotFoundError(
-            "Falta bundle_releases/latest.json. Ejecute 02_00_preparacion_bundle_colab.ipynb "
-            "directamente en Colab y confirme la publicación en Drive."
-        )
-    latest_pointer = _read_manifest(latest_pointer_path)
+    latest_pointer = _read_manifest(latest_pointer_path) if latest_pointer_path.is_file() else {}
     latest_bundle_id = str(latest_pointer.get("bundle_id") or "")
-    if len(latest_bundle_id) != 64:
-        raise ValueError("bundle_releases/latest.json no contiene un bundle_id válido")
-    if latest_pointer.get("core_sha256") != COLAB_EXPECTED_CORE_SHA256:
-        raise RuntimeError(
-            "Drive contiene una versión de código distinta de la esperada por este notebook. "
-            "Regénere los cuadernos desde la misma versión local que publicó 02_00 y vuelva a abrirlos."
-        )
-    RELEASE_DIR = RELEASES_DIR / latest_bundle_id
+    latest_matches_notebook = (
+        len(latest_bundle_id) == 64
+        and latest_bundle_id == COLAB_NOTEBOOK_BUILD_BUNDLE_ID
+        and latest_pointer.get("core_sha256") == COLAB_EXPECTED_CORE_SHA256
+    )
+    if latest_matches_notebook:
+        release_source = "latest_pointer"
+        RELEASE_DIR = RELEASES_DIR / latest_bundle_id
+        expected_manifest_sha256 = latest_pointer.get("manifest_sha256")
+    else:
+        # Un cuaderno reproducible puede activar su release inmutable exacto aunque
+        # latest todavía apunte a otra versión; jamás mezcla código e inputs.
+        release_source = "notebook_pinned_release"
+        latest_bundle_id = COLAB_NOTEBOOK_BUILD_BUNDLE_ID
+        RELEASE_DIR = RELEASES_DIR / latest_bundle_id
+        pinned_manifest_path = RELEASE_DIR / "bundle_manifest.json"
+        if not _bundle_is_current(RELEASE_DIR, pinned_manifest_path, latest_bundle_id):
+            raise RuntimeError(
+                "Drive no contiene ni latest compatible ni el release inmutable fijado por este "
+                "cuaderno. Ejecute 02_00_preparacion_bundle_colab.ipynb y publique el bundle exacto."
+            )
+        pinned_manifest = _read_manifest(pinned_manifest_path)
+        if pinned_manifest.get("core", {}).get("sha256") != COLAB_EXPECTED_CORE_SHA256:
+            raise RuntimeError("El release fijado por el cuaderno contiene un core inesperado")
+        expected_manifest_sha256 = _sha256(pinned_manifest_path)
     release_manifest_path = RELEASE_DIR / "bundle_manifest.json"
-    if not release_manifest_path.is_file() or _sha256(release_manifest_path) != latest_pointer.get("manifest_sha256"):
-        raise RuntimeError("El manifiesto de la versión latest de Drive falta o no coincide con su puntero")
+    if not release_manifest_path.is_file() or _sha256(release_manifest_path) != expected_manifest_sha256:
+        raise RuntimeError("El manifiesto del release de Drive falta o no coincide con su referencia")
     manifest_path = BUNDLE_DIR / "bundle_manifest.json"
     bundle_activated = False
     modules_loaded_before_update = any(
@@ -383,6 +395,7 @@ if IN_COLAB:
         'estado': 'activado_desde_drive' if bundle_activated else 'ya_estaba_actualizado',
         'bundle_id': manifest['bundle_id'],
         'bundle_del_notebook_al_generarse': COLAB_NOTEBOOK_BUILD_BUNDLE_ID,
+        'origen_del_release': release_source,
         'core_sha256': expected_core,
         'generado': manifest.get('generated_at'),
         'versión_inmutable_drive': RELEASE_DIR,
@@ -1859,6 +1872,8 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "            publish_colab_outputs(COLAB_CONTEXT)\n"
                 "    return callback\n\n"
                 "def run_campaign(rows,provider,output_name,*,limit,description):\n"
+                "    if not provider.probe()['credential_configured']:\n"
+                "        raise RuntimeError('Falta DEEPSEEK_API_KEY: configúrela como variable local o secreto privado de Colab antes de etiquetar')\n"
                 "    output=CAMPAIGN_ROOT/output_name\n"
                 "    run_metadata=PRIMARY_RUN_METADATA if output_name=='primary_flash.jsonl' else REVIEW_RUN_METADATA if output_name=='review_pro.jsonl' else provider_run_metadata(provider)\n"
                 "    result=annotate_batched_incremental(rows,provider,output,error_path=output.with_suffix('.errors.jsonl'),limit=limit,processing_batch_size=PROCESSING_BATCH_SIZE,progress_callback=labeling_progress(description,provider),checkpoint_callback=checkpoint_callback_for(output),checkpoint_every_batches=DRIVE_CHECKPOINT_EVERY_BATCHES,run_metadata=run_metadata,quarantine_invalid_progress=True)\n"

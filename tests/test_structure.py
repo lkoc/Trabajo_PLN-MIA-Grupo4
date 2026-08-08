@@ -179,6 +179,8 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
             assert f'COLAB_EXPECTED_CORE_SHA256 = "{expected_core_sha256}"' in source
             assert "bundle_releases" in source
             assert "latest.json" in source
+            if metadata["notebook_id"] != "02_00":
+                assert "notebook_pinned_release" in source
             assert metadata["build_bundle_id"] == expected_bundle_id
             assert metadata["expected_core_sha256"] == expected_core_sha256
             if metadata["notebook_id"] == "02_00":
@@ -514,6 +516,7 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     assert "automatic_prefix" in local
     assert "prompt_cache_hit_tokens" in local
     assert "balance_summary()" in local
+    assert "Falta DEEPSEEK_API_KEY: configúrela como variable local o secreto privado de Colab antes de etiquetar" in local
     assert "BALANCE_REFRESH_SECONDS=60.0" in local
     assert "Saldo DeepSeek bajo" in local
     assert "'thinking':probe['thinking']" in local
