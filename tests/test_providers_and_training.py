@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 import pytest
+import requests
 
 from moderacion_peru.labeling import (
     annotate_batched_incremental,
@@ -167,6 +168,35 @@ def test_deepseek_preflight_sends_no_corpus(monkeypatch):
     assert observed["url"].endswith("/models")
     assert result["model_available"] is True
     assert result["status"] == "credential_and_models_verified_no_corpus_sent"
+
+
+def test_deepseek_recovers_persisted_user_key_when_inherited_key_is_invalid(monkeypatch):
+    persisted = "fixture-persisted-deepseek-key-12345"
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "x")
+    monkeypatch.setattr(
+        "moderacion_peru.providers.deepseek._windows_user_api_key",
+        lambda: persisted,
+    )
+
+    provider = DeepSeekProvider()
+
+    assert provider.api_key == persisted
+
+
+def test_deepseek_preflight_explains_rejected_credential(monkeypatch):
+    class Response:
+        status_code = 400
+
+        def raise_for_status(self):
+            raise requests.HTTPError("400", response=self)
+
+    monkeypatch.setattr(
+        "moderacion_peru.providers.deepseek.requests.get",
+        lambda *args, **kwargs: Response(),
+    )
+
+    with pytest.raises(ProviderError, match="Reinicie el kernel"):
+        DeepSeekProvider(api_key="fixture").validate_connection()
 
 
 def test_deepseek_balance_reports_usd_without_sending_corpus(monkeypatch):

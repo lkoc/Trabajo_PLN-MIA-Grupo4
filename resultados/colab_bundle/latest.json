@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
-  "bundle_id": "4b4c75970c816f18b3abdc233d496efa4853b6158392d99ac9d2160cd9e5b3bb",
-  "core_sha256": "1aedd910a8c78df205f16381b77518ea496a3e8f485e00c9cfc0a291c4003245",
-  "manifest_sha256": "baf19ff5d8aab81c257698274769935058fb91dce5729e93c10b86d1cf41530e",
-  "published_at": "2026-08-08T17:32:07.2866435Z"
+  "bundle_id": "b03ac0357ec959a4ba38869cfc1d0b311366105e7fbc05edb605e7fe8d23fd9b",
+  "core_sha256": "44b088fe2eacbe6b4ab473f0c535bbde01517791b13a2287430a5717f809f6f1",
+  "manifest_sha256": "70eda720a69429abad7c4e9ae82a0059ffc9d7b36e0e50dad535f3493e199156",
+  "published_at": "2026-08-08T17:48:11.1659343Z"
 }
