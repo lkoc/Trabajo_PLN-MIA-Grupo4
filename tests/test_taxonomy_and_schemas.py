@@ -43,6 +43,23 @@ def test_safe_is_explicit_and_exclusive():
         annotation(coarse_labels=["SEGURO", "ACOSO_AMENAZA"])
 
 
+def test_labels_are_case_insensitive_and_serialized_canonically():
+    taxonomy = load_taxonomy()
+    assert taxonomy.normalize_categories(["acoso_amenaza", "Racismo_Discriminacion"]) == (
+        "RACISMO_DISCRIMINACION",
+        "ACOSO_AMENAZA",
+    )
+    assert taxonomy.derive_categories(["ACOSO_PERSONAL", "Amenaza_Directa"]) == (
+        "ACOSO_AMENAZA",
+    )
+    assert taxonomy.migrate_legacy_categories(["acoso_genero_identidad"]) == (
+        "ATAQUE_POR_GENERO_IDENTIDAD",
+    )
+    record = annotation(coarse_labels=["seguro"], fine_labels=["Seguro"])
+    assert record.coarse_labels == ["SEGURO"]
+    assert record.fine_labels == ["seguro"]
+
+
 def test_empty_decision_is_review_not_safe():
     record = annotation(
         coarse_labels=[],

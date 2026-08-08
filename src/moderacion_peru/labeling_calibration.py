@@ -76,8 +76,11 @@ def select_calibration_panel(
 
 
 def _is_damage(row: dict[str, Any]) -> bool:
-    labels = set(row.get("coarse_labels") or row.get("labels") or [])
-    return bool(labels - {SAFE_LABEL})
+    labels = {
+        str(label).casefold()
+        for label in (row.get("coarse_labels") or row.get("labels") or [])
+    }
+    return bool(labels - {SAFE_LABEL.casefold()})
 
 
 def _wilson_lower(successes: int, total: int, z: float = 1.6448536269514722) -> float:

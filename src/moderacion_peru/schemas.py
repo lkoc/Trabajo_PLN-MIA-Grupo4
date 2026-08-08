@@ -53,10 +53,8 @@ class AnnotationRecord(BaseModel):
     def validate_semantics(self) -> "AnnotationRecord":
         taxonomy = load_taxonomy()
         self.coarse_labels = list(taxonomy.normalize_categories(self.coarse_labels))
-        unknown_fine = set(self.fine_labels) - set(taxonomy.fine_labels)
+        self.fine_labels = list(taxonomy.normalize_fine_labels(self.fine_labels))
         unknown_flags = set(self.flags) - set(taxonomy.flags)
-        if unknown_fine:
-            raise ValueError(f"Etiquetas finas desconocidas: {sorted(unknown_fine)}")
         if unknown_flags:
             raise ValueError(f"Flags desconocidos: {sorted(unknown_flags)}")
         if not self.coarse_labels:
@@ -105,10 +103,8 @@ class ModelReadyRecord(BaseModel):
     def validate_training_row(self) -> "ModelReadyRecord":
         taxonomy = load_taxonomy()
         self.coarse_labels = list(taxonomy.normalize_categories(self.coarse_labels))
-        unknown_fine = set(self.fine_labels) - set(taxonomy.fine_labels)
+        self.fine_labels = list(taxonomy.normalize_fine_labels(self.fine_labels))
         unknown_flags = set(self.flags_reference_only) - set(taxonomy.flags)
-        if unknown_fine:
-            raise ValueError(f"Etiquetas finas desconocidas: {sorted(unknown_fine)}")
         if unknown_flags:
             raise ValueError(f"Flags desconocidos: {sorted(unknown_flags)}")
         if self.training_eligible and (not self.coarse_labels or self.needs_review):

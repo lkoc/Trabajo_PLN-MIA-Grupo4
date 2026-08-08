@@ -797,3 +797,36 @@ def test_calibration_and_historical_routing_policy():
         "damage": 1,
         "low_confidence": 1,
     }
+
+
+def test_directed_review_routing_is_case_insensitive():
+    chunks = [
+        {"chunk_id": "safe", "video_id": "v1", "text": "neutral"},
+        {"chunk_id": "damage", "video_id": "v2", "text": "ataque"},
+    ]
+    primary = [
+        {
+            **chunks[0],
+            "coarse_labels": ["seguro"],
+            "needs_review": False,
+            "score_confianza": 0.99,
+        },
+        {
+            **chunks[1],
+            "coarse_labels": ["acoso_amenaza"],
+            "needs_review": False,
+            "score_confianza": 0.99,
+        },
+    ]
+
+    queue, manifest = build_directed_review_queue(
+        chunks,
+        primary,
+        confidence_threshold=0.90,
+        safe_control_rate=0,
+    )
+
+    assert [(row["chunk_id"], row["routing_reason"]) for row in queue] == [
+        ("damage", "damage")
+    ]
+    assert manifest["routing_reasons"] == {"damage": 1}

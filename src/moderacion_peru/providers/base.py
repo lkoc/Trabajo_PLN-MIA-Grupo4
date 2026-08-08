@@ -42,7 +42,7 @@ def normalize_payload(
 ) -> AnnotationRecord:
     contract = taxonomy or load_taxonomy()
     parsed = LLMAnnotationPayload.model_validate(payload)
-    fine = tuple(dict.fromkeys(parsed.fine_labels))
+    fine = contract.normalize_fine_labels(parsed.fine_labels)
     coarse = contract.normalize_categories(parsed.coarse_labels)
     if fine:
         derived = contract.derive_categories(fine)
