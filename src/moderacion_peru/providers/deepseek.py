@@ -26,6 +26,29 @@ _RESPONSE_FORMAT = {"type": "json_object"}
 _OUTPUT_ROOT_KEY = "annotations"
 
 
+def _windows_user_api_key() -> str:
+    """Lee la variable persistente del usuario sin imprimir ni registrar su valor."""
+
+    if os.name != "nt":
+        return ""
+    try:
+        import winreg
+
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as key:
+            value, _ = winreg.QueryValueEx(key, "DEEPSEEK_API_KEY")
+    except (FileNotFoundError, OSError):
+        return ""
+    return str(value or "").strip()
+
+
+def _environment_api_key() -> str:
+    inherited = os.getenv("DEEPSEEK_API_KEY", "").strip()
+    if len(inherited) >= 20:
+        return inherited
+    persisted = _windows_user_api_key()
+    return persisted if len(persisted) >= 20 else inherited
+
+
 class DeepSeekProvider(AnnotationProvider):
     """DeepSeek V4 con lotes compactos, concurrencia, costo y reanudación externa."""
 
@@ -47,7 +70,7 @@ class DeepSeekProvider(AnnotationProvider):
     ) -> None:
         super().__init__(model, taxonomy)
         self.base_url = (base_url or os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")).rstrip("/")
-        self.api_key = api_key or os.getenv("DEEPSEEK_API_KEY", "")
+        self.api_key = api_key or _environment_api_key()
         self.timeout = float(timeout)
         self.retries = int(retries)
         if max_workers < 1 or records_per_request < 1:
@@ -136,7 +159,17 @@ class DeepSeekProvider(AnnotationProvider):
         response = requests.get(
             f"{self.base_url}/models", headers=self.headers, timeout=min(self.timeout, 60)
         )
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as exc:
+            status = getattr(response, "status_code", None)
+            if status in {400, 401, 403}:
+                raise ProviderError(
+                    "DeepSeek rechazó la credencial. Reinicie el kernel para descartar una "
+                    "DEEPSEEK_API_KEY heredada y verifique la variable de usuario o el secreto de Colab "
+                    f"(HTTP {status})."
+                ) from exc
+            raise
         model_ids = sorted(
             str(row.get("id"))
             for row in response.json().get("data", [])
