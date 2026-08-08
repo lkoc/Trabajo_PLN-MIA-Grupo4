@@ -188,6 +188,9 @@ en tareas subjetivas ([Schroeder et al., 2025](https://aclanthology.org/2025.fin
   se alcanza el tope; por concurrencia puede existir un sobrepaso acotado al
   superlote ya iniciado. Para la reanudación Pro presupuestada, el segundo vale
   US$14.50.
+- Antes de enviar el primer chunk de la reanudación, el cuaderno reconstruye la
+  cola, descuenta los IDs ya revisados, muestra el costo proyectado y exige al
+  menos US$15.00 de saldo. Con un saldo menor se detiene sin enviar corpus.
 - El proveedor informa tokens de entrada con caché, sin caché y de salida. El
   cuaderno muestra saldo aproximadamente cada 60 segundos, advierte bajo
   US$2.00 y señala una tasa de caché inferior a 50 % después de 50 solicitudes.

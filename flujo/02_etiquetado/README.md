@@ -40,6 +40,16 @@ Los seis cuadernos muestran barras `tqdm` en las operaciones potencialmente larg
 6. Consolidar con precedencia Pro→Flash y cerrar mediante decisiones humanas
    append-only; una abstención nunca se convierte automáticamente en `SEGURO`.
 
+### Reanudación manual exclusivamente Pro
+
+Después de recargar, reinicie el kernel y ejecute las celdas en orden hasta
+**“Enrutamiento y revisión dirigida con Pro”**. Los parámetros activos dejan
+`RUN_CALIBRATION=False`, `RUN_PRIMARY=False` y `RUN_DIRECTED_REVIEW=True`, por
+lo que no se repiten calibración ni llamadas Flash. La última celda reconstruye
+la cola, descuenta los `chunk_id` ya presentes en `review_pro.jsonl` y muestra
+la previsión antes de transmitir corpus. Si el saldo es menor que US$15.00 o la
+proyección supera US$14.50, se detiene antes de iniciar Pro.
+
 El prompt operacional y la taxonomía se colocan al principio de cada solicitud
 para que la caché automática de prefijo pueda reutilizarlos. Flash y Pro reciben
 el mismo contrato de raíz `annotations`; se comprueba cantidad, orden de

@@ -252,8 +252,15 @@ def test_02_01_uses_explicit_operational_review_threshold_without_changing_calib
     )
     generator = (ROOT / "tools/generate_workflow_notebooks.py").read_text(encoding="utf-8")
     for value in (source, generator):
-        assert "REVIEW_CONFIDENCE_THRESHOLD=0.90" in value
+        assert "REVIEW_CONFIDENCE_THRESHOLD=0.85" in value
+        assert "SAFE_CONTROL_RATE=0.01" in value
+        assert "MAX_NEEDS_REVIEW_FOR_PRO=36_000" in value
+        assert "MAX_REVIEW_COST_USD=14.50" in value
+        assert "REQUIRED_REVIEW_START_BALANCE_USD=15.00" in value
+        assert "RUN_PRIMARY=False" in value
+        assert "RUN_DIRECTED_REVIEW=True" in value
         assert "confidence_threshold=REVIEW_CONFIDENCE_THRESHOLD" in value
+        assert "max_needs_review=MAX_NEEDS_REVIEW_FOR_PRO" in value
         assert "confidence_threshold=float(calibration['selected_threshold'])" not in value
 
 
