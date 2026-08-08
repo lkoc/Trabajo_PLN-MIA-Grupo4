@@ -499,16 +499,25 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     assert all(specification["archive"] in bundle for specification in colab_config["inputs"].values())
     assert "Seleccione nueve archivos" in bundle
     local = notebook_sources["02_01_etiquetado_local_ollama.ipynb"]
-    assert "PRIMARY_LIMIT=300" in local
-    assert "None para TODOS los pendientes" in local
+    assert "PRIMARY_LIMIT=None" in local
+    assert "REVIEW_LIMIT=None" in local
+    assert "None para TODOS y solo los pendientes" in local
     assert "Nunca lo deje en blanco" in local
     assert "progress_callback=labeling_progress" in local
     assert "from tqdm.std import tqdm" in local
     assert "Salida textual visible también desde VS Code" in local
     assert "validate_connection()" in local
     assert "expected_thinking={'type':'disabled'}" in local
+    assert "expected_response_format={'type':'json_object'}" in local
     assert "02_01 exige DeepSeek V4 en modo non-thinking para Flash y Pro" in local
+    assert "02_01 exige JSON object con raíz annotations para Flash y Pro" in local
+    assert "automatic_prefix" in local
+    assert "prompt_cache_hit_tokens" in local
+    assert "balance_summary()" in local
+    assert "BALANCE_REFRESH_SECONDS=60.0" in local
+    assert "Saldo DeepSeek bajo" in local
     assert "'thinking':probe['thinking']" in local
+    assert "'context_cache':probe['context_cache']" in local
     assert "recover_historical_annotations" in local
     assert "RECOVER_HISTORICAL=True" in local
     assert "AUTO_PUBLISH_CHECKPOINTS=True" in local
@@ -516,6 +525,7 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     assert "interrupted_checkpoint" in local
     assert "PROCESSING_BATCH_SIZE=160" in local
     assert "estimated_cost_usd" in local
+    assert "pending_current_after_recovery" in local
     assert "quarantine_invalid_progress=True" in local
     assert "progress_callback=report_local_progress" in notebook_sources[
         "02_02_etiquetado_remoto.ipynb"

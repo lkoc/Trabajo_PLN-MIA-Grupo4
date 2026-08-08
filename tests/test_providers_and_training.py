@@ -141,6 +141,9 @@ def test_deepseek_batches_and_retries_only_invalid_row(monkeypatch):
     assert provider.usage_summary()["requests"] == 2
     assert provider.usage_summary()["estimated_cost_usd"] > 0
     assert provider.probe()["thinking"] == {"type": "disabled"}
+    assert provider.probe()["response_format"] == {"type": "json_object"}
+    assert provider.probe()["output_contract"]["root_key"] == "annotations"
+    assert provider.probe()["context_cache"]["mode"] == "automatic_prefix"
 
 
 def test_deepseek_preflight_sends_no_corpus(monkeypatch):
@@ -164,6 +167,45 @@ def test_deepseek_preflight_sends_no_corpus(monkeypatch):
     assert observed["url"].endswith("/models")
     assert result["model_available"] is True
     assert result["status"] == "credential_and_models_verified_no_corpus_sent"
+
+
+def test_deepseek_balance_reports_usd_without_sending_corpus(monkeypatch):
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "is_available": True,
+                "balance_infos": [
+                    {
+                        "currency": "USD",
+                        "total_balance": "20.25",
+                        "granted_balance": "0.25",
+                        "topped_up_balance": "20.00",
+                    }
+                ],
+            }
+
+    observed = {}
+
+    def fake_get(url, *, headers, timeout):
+        observed.update({"url": url, "headers": headers, "timeout": timeout})
+        return Response()
+
+    monkeypatch.setattr("moderacion_peru.providers.deepseek.requests.get", fake_get)
+    provider = DeepSeekProvider(api_key="fixture")
+    result = provider.balance_summary()
+
+    assert observed["url"].endswith("/user/balance")
+    assert result == {
+        "status": "balance_verified_no_corpus_sent",
+        "is_available": True,
+        "currency": "USD",
+        "total_balance_usd": 20.25,
+        "granted_balance_usd": 0.25,
+        "topped_up_balance_usd": 20.0,
+    }
 
 
 def test_provider_requires_explicit_safe_fine_label():

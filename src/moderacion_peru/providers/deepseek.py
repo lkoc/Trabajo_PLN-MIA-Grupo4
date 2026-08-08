@@ -22,6 +22,8 @@ _PRICE_USD_PER_MILLION = {
     "deepseek-v4-pro": {"cache_hit": 0.003625, "cache_miss": 0.435, "output": 0.87},
 }
 _THINKING_TYPE = "disabled"
+_RESPONSE_FORMAT = {"type": "json_object"}
+_OUTPUT_ROOT_KEY = "annotations"
 
 
 class DeepSeekProvider(AnnotationProvider):
@@ -111,6 +113,20 @@ class DeepSeekProvider(AnnotationProvider):
             "operational_prompt_sha256": self.operational_prompt_sha256,
             "prompt_sha256": self.prompt_sha256,
             "thinking": {"type": _THINKING_TYPE},
+            "response_format": dict(_RESPONSE_FORMAT),
+            "output_contract": {
+                "root_key": _OUTPUT_ROOT_KEY,
+                "records_must_match_input_count_and_order": True,
+                "record_schema": "LLMAnnotationPayload",
+            },
+            "context_cache": {
+                "mode": "automatic_prefix",
+                "static_prefix_sha256": self.prompt_sha256,
+                "verified_from_usage_fields": [
+                    "prompt_cache_hit_tokens",
+                    "prompt_cache_miss_tokens",
+                ],
+            },
             "official_price_usd_per_million": _PRICE_USD_PER_MILLION.get(self.model),
         }
 
@@ -131,6 +147,44 @@ class DeepSeekProvider(AnnotationProvider):
             "configured_model": self.model,
             "model_available": self.model in model_ids,
             "available_models": model_ids,
+        }
+
+    def balance_summary(self) -> dict[str, Any]:
+        """Consulta el saldo USD sin enviar ningún texto del corpus."""
+
+        response = requests.get(
+            f"{self.base_url}/user/balance",
+            headers=self.headers,
+            timeout=min(self.timeout, 60),
+        )
+        response.raise_for_status()
+        payload = response.json()
+        balance_infos = payload.get("balance_infos")
+        if not isinstance(balance_infos, list):
+            raise ProviderError("DeepSeek devolvió una respuesta de saldo inválida")
+        usd_balances = [
+            row
+            for row in balance_infos
+            if isinstance(row, dict) and str(row.get("currency") or "").upper() == "USD"
+        ]
+        if not usd_balances:
+            raise ProviderError("DeepSeek no devolvió un saldo denominado en USD")
+
+        def total(field: str) -> float:
+            try:
+                return round(sum(float(row.get(field) or 0) for row in usd_balances), 6)
+            except (TypeError, ValueError) as exc:
+                raise ProviderError(
+                    f"DeepSeek devolvió un valor inválido para {field}"
+                ) from exc
+
+        return {
+            "status": "balance_verified_no_corpus_sent",
+            "is_available": bool(payload.get("is_available")),
+            "currency": "USD",
+            "total_balance_usd": total("total_balance"),
+            "granted_balance_usd": total("granted_balance"),
+            "topped_up_balance_usd": total("topped_up_balance"),
         }
 
     def usage_summary(self) -> dict[str, Any]:
@@ -242,7 +296,7 @@ class DeepSeekProvider(AnnotationProvider):
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0,
-            "response_format": {"type": "json_object"},
+            "response_format": dict(_RESPONSE_FORMAT),
             "thinking": {"type": _THINKING_TYPE},
         }
         last_error: Exception | None = None
@@ -258,7 +312,7 @@ class DeepSeekProvider(AnnotationProvider):
                 response_json = response.json()
                 self._record_usage(response_json.get("usage") or {})
                 payload = json.loads(response_json["choices"][0]["message"]["content"])
-                raw_annotations = payload.get("annotations") if isinstance(payload, dict) else None
+                raw_annotations = payload.get(_OUTPUT_ROOT_KEY) if isinstance(payload, dict) else None
                 if raw_annotations is None and len(chunks) == 1 and isinstance(payload, dict):
                     raw_annotations = [payload]
                 if not isinstance(raw_annotations, list) or len(raw_annotations) != len(chunks):
