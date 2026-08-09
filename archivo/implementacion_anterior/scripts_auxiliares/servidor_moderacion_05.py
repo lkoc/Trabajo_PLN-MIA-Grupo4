@@ -1047,7 +1047,7 @@ class _Server(ThreadingHTTPServer):
 
 class _Handler(BaseHTTPRequestHandler):
     service: ModerationService
-    html: bytes
+    html_path: Path
     auth_user: str | None
     auth_password: str | None
 
@@ -1097,12 +1097,13 @@ class _Handler(BaseHTTPRequestHandler):
         if path != "/api/health" and not self._require_authorization():
             return
         if path in {"/", "/index.html"}:
+            html = self.html_path.read_bytes()
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(self.html)))
+            self.send_header("Content-Length", str(len(html)))
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
-            self.wfile.write(self.html)
+            self.wfile.write(html)
         elif path == "/api/config":
             self._json(self.service.public_config())
         elif path == "/api/stats":
@@ -1183,7 +1184,7 @@ def start_server(
         (_Handler,),
         {
             "service": service,
-            "html": HTML_PATH.read_bytes(),
+            "html_path": HTML_PATH,
             "auth_user": auth_user,
             "auth_password": auth_password,
         },

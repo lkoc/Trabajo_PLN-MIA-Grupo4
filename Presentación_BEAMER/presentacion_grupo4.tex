@@ -14,6 +14,7 @@
 \usepackage{tikz}
 \usepackage{pgfplots}
 \usepackage{amsmath}
+\usepackage{cite}
 \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric}
 \pgfplotsset{compat=1.18}
 
@@ -63,7 +64,10 @@
   }%
 }
 
-\newcommand{\sourceNote}[1]{\par\vspace{.8mm}{\color{Muted}\tiny Fuente: #1\par}}
+\newcommand{\externalNote}[1]{\par\vspace{.8mm}{\color{Muted}\tiny Evidencia externa: #1\par}}
+\newcommand{\resultNote}[1]{\par\vspace{.8mm}{\color{Muted}\tiny Resultado propio: #1\par}}
+\newcommand{\mixedNote}[2]{\par\vspace{.8mm}{\color{Muted}\tiny Evidencia externa: #1\quad\textbar\quad Resultado propio: #2\par}}
+\newcommand{\decisionNote}[1]{\par\vspace{.8mm}{\color{Muted}\tiny Decisión del artefacto: #1\par}}
 \newcommand{\takeaway}[1]{%
   \begin{beamercolorbox}[wd=\textwidth,sep=1.5mm,rounded=true]{block body}%
     \color{Navy}\small\textbf{Lectura clave:} #1
@@ -190,7 +194,7 @@
   \end{columns}
   \vspace{4mm}
   \takeaway{El problema no es solo clasificar texto: es priorizar sin perder contexto, incertidumbre, procedencia ni responsabilidad humana.}
-  \sourceNote{Gorwa, Binns y Katzenbach (2020); Waseem, Davidson, Warmsley y Weber (2017); Banko et al. (2020); Defensoría del Pueblo (2021).}
+  \externalNote{Moderación y responsabilidad~\cite{gorwa2020moderation}; tipologías de abuso y daño~\cite{waseem2017abuse,banko2020taxonomy}; contexto institucional peruano~\cite{defensoria2021violenciaenlinea}.}
 \end{frame}
 
 % 4
@@ -201,7 +205,7 @@
   \begin{beamercolorbox}[wd=\textwidth,sep=2mm,rounded=true]{block body}
     \small\textbf{Problema general.} Existe la necesidad de construir y evaluar un artefacto reproducible que transforme subtítulos públicos en alertas temporales trazables y mantenga la decisión bajo supervisión humana.
   \end{beamercolorbox}
-  \sourceNote{Moderación: Gorwa et al. (2020). DSR: Hevner et al. (2004) y Peffers et al. (2007).}
+  \externalNote{Moderación de contenido~\cite{gorwa2020moderation}; diseño y evaluación del artefacto mediante DSR~\cite{hevner2004dsr,peffers2007dsrm}.}
 \end{frame}
 
 \begin{frame}{Las brechas específicas delimitan la construcción}
@@ -238,7 +242,7 @@
   \end{columns}
   \vspace{3mm}
   \takeaway{El sistema observa texto, no imagen ni audio; una ausencia de daño cubierto no demuestra seguridad universal.}
-  \sourceNote{Contrato activo: taxonomía v2.1.0 y contrato de datos del proyecto.}
+  \decisionNote{Contrato v2.1.0: fragmento temporal, cinco salidas, etiquetas finas y flags; alcance restringido a texto.}
 \end{frame}
 
 % 6
@@ -259,30 +263,97 @@
   \begin{beamercolorbox}[wd=\textwidth,sep=1.7mm,rounded=true]{block body}
     \small\textbf{Objetivo general.} Diseñar y evaluar el artefacto completo; la metodología DSR explica cómo construir, demostrar, medir y rediseñar cada producto.
   \end{beamercolorbox}
-  \sourceNote{Hevner et al. (2004); Peffers et al. (2007); guía IEEE/DSR del proyecto.}
+  \externalNote{Ciencia del diseño y proceso DSR~\cite{hevner2004dsr,peffers2007dsrm}. La cadena concreta de productos es diseño local.}
 \end{frame}
 
 % 7
-\begin{frame}{La taxonomía se informa con evidencia general y peruana}
+\begin{frame}{La taxonomía traduce conocimiento experto en reglas auditables}
   \centering
-  \begin{tikzpicture}[node distance=3mm,
-    b/.style={draw,rounded corners=3pt,text width=78mm,minimum height=13mm,align=left,inner sep=2.5mm,font=\scriptsize},
-    r/.style={draw,rounded corners=3pt,text width=42mm,minimum height=19mm,align=center,inner sep=3mm,font=\small},
+  \resizebox{.98\textwidth}{!}{%
+  \begin{tikzpicture}[node distance=4mm,
+    b/.style={draw,rounded corners=3pt,text width=47mm,minimum height=22mm,align=left,inner sep=2.7mm,font=\scriptsize},
     a/.style={-{Stealth[length=1.8mm]},thick,draw=Muted}]
-    \node[b,draw=Blue!45,fill=Blue!7] (g) {\textbf{Tipologías generales:} blanco individual o grupal; daño explícito o implícito; identidad, insulto, amenaza y agresión sexual.};
-    \node[b,draw=Coral!45,fill=Coral!7,below=of g] (p) {\textbf{Evidencia peruana e institucional:} racialización por lengua, origen y clase; violencia de género en línea; prejuicio por orientación e identidad.};
-    \node[b,draw=Purple!45,fill=Purple!7,below=of p] (l) {\textbf{Decisiones operativas locales:} unión acoso--amenaza, \texttt{SEGURO} aprendido y excluyente, flags y reglas de revisión.};
-    \node[r,draw=Teal!50,fill=Teal!8,right=7mm of p] (t) {\textbf{Taxonomía v2.1}\\[1mm]5 salidas gruesas\\14 etiquetas finas\\3 flags};
-    \draw[a] (g.east) -- (t.west); \draw[a] (p.east) -- (t.west); \draw[a] (l.east) -- (t.west);
-  \end{tikzpicture}
-  \vspace{2mm}
-  \begin{beamercolorbox}[wd=\textwidth,sep=1.3mm,rounded=true]{block body}
-    \centering\scriptsize Taxonomía operativa informada por literatura y fuentes institucionales; \textbf{no} es clasificación legal ni validación por un panel experto peruano.
+    \node[b,draw=Blue!45,fill=Blue!7] (general) {\textbf{Tipologías computacionales}\\Blanco individual/grupal y abuso explícito/implícito: Waseem et al.~\cite{waseem2017abuse}. Criterios y excepciones por tipo de daño: Banko et al.~\cite{banko2020taxonomy}.};
+    \node[b,draw=Coral!45,fill=Coral!7,right=5mm of general] (peru) {\textbf{Investigación pertinente al Perú}\\Racialización lingüística y encubierta~\cite{almeida2022motoso,vich2018dinamicas}; violencia de género en línea~\cite{albornoz2018conocer,defensoria2021violenciaenlinea}.};
+    \node[b,draw=Purple!45,fill=Purple!7,right=5mm of peru] (local) {\textbf{Operacionalización local}\\Cinco salidas, 14 etiquetas finas, tres flags, exclusividad de \texttt{SEGURO}, fusión acoso--amenaza y reglas de abstención.};
+    \draw[a] (general)--(peru); \draw[a] (peru)--(local);
+  \end{tikzpicture}}
+  \vspace{4mm}
+  \begin{beamercolorbox}[wd=.96\textwidth,sep=2mm,rounded=true]{block body}
+    \centering\small Las publicaciones aportan conceptos y límites; el equipo define su codificación. \textbf{No hubo panel experto peruano ni validación jurídica de la taxonomía.}
   \end{beamercolorbox}
-  \sourceNote{Waseem et al. (2017); Banko et al. (2020); Zavala y Almeida (2022); Albornoz y Flores (2018); Defensoría del Pueblo (2021); matriz de evidencia v2.1.}
+  \externalNote{Fuentes primarias y estudios institucionales citados junto a cada aporte. La combinación final es una decisión local pendiente de doble anotación independiente.}
 \end{frame}
 
 % 8
+\begin{frame}{Racismo/discriminación exige leer racialización, no palabras aisladas}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.47\textwidth}
+      \begin{beamercolorbox}[wd=\linewidth,sep=2.7mm,rounded=true]{epoch2}
+        \pill{Blue}{Marco general}\par\smallskip
+        \scriptsize
+        \textbf{Waseem et al.} distinguen blanco individual o grupal y abuso explícito o implícito~\cite{waseem2017abuse}.\par\smallskip
+        \textbf{Banko et al.} separan ataque por identidad, insulto y otras modalidades con criterios y excepciones~\cite{banko2020taxonomy}.
+      \end{beamercolorbox}
+    \end{column}
+    \begin{column}{.51\textwidth}
+      \begin{beamercolorbox}[wd=\linewidth,sep=2.7mm,rounded=true]{epoch3}
+        \pill{Coral}{Aportes sobre el Perú}\par\smallskip
+        \scriptsize
+        \textbf{Zavala y Almeida:} ``motoso/terruco'' y racialización política en redes~\cite{almeida2022motoso}.\par
+        \textbf{Brañez y Salem:} ortografía, clase, ``amixer'', parodia e ironía como jerarquización~\cite{branez2012amixer,salem2016amixer}.\par
+        \textbf{Vich:} inferiorización y exclusión pueden operar sin declaración racial literal~\cite{vich2018dinamicas}.
+      \end{beamercolorbox}
+    \end{column}
+  \end{columns}
+  \vspace{4mm}
+  \takeaway{La salida local cubre etnia, lengua, procedencia y clase racializada; una identidad, variedad lingüística o región mencionada neutralmente no activa daño.}
+  \decisionNote{Cinco fenómenos finos conservan la diferencia entre insulto explícito, racismo lingüístico, clasismo racializado, discriminación regional y forma encubierta.}
+\end{frame}
+
+% 9
+\begin{frame}{El ataque por género o identidad se define por el blanco del daño}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \begin{beamercolorbox}[wd=\linewidth,sep=2.7mm,rounded=true]{epoch2}
+        \pill{Blue}{Conceptos computacionales}\par\smallskip
+        \scriptsize
+        \textbf{Zeinert et al.} distinguen blanco, acoso, descrédito, estereotipo y cosificación en misoginia~\cite{zeinert2021misogyny}.\par\smallskip
+        \textbf{Chakravarthi} modela homofobia y transfobia en comentarios de YouTube~\cite{chakravarthi2024homotrans}.
+      \end{beamercolorbox}
+    \end{column}
+    \begin{column}{.50\textwidth}
+      \begin{beamercolorbox}[wd=\linewidth,sep=2.7mm,rounded=true]{epoch3}
+        \pill{Coral}{Evidencia peruana}\par\smallskip
+        \scriptsize
+        \textbf{Albornoz--Flores y Defensoría:} ataques, hostigamiento, amenazas y violencia sexual mediada por tecnología~\cite{albornoz2018conocer,defensoria2021violenciaenlinea}.\par
+        \textbf{Lovón--Cueva y Rottenbacher:} lesbofobia en foros peruanos y prejuicio hacia grupos trans en una muestra de Lima~\cite{lovon2022lesbofobia,rottenbacher2012homofobia}.
+      \end{beamercolorbox}
+    \end{column}
+  \end{columns}
+  \vspace{4mm}
+  \takeaway{\texttt{ATAQUE\_POR\_GENERO\_IDENTIDAD} explicita que debe existir degradación, exclusión o ataque por género, orientación, identidad o expresión; la mera mención es neutral.}
+  \decisionNote{La categoría puede coexistir con acoso/amenaza o contenido sexual; cada salida exige evidencia propia.}
+\end{frame}
+
+% 10
+\begin{frame}{Acoso, amenaza y sexualidad conservan fronteras distintas}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.18}
+  \begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{32mm}X>{\raggedright\arraybackslash}p{50mm}}
+    \toprule
+    Fenómeno & Base experta externa & Frontera operacional local \\
+    \midrule
+    Ataque personal & Wulczyn et al. estudian ataques personales a escala; Waseem et al. separan abuso dirigido y generalizado~\cite{wulczyn2017exmachina,waseem2017abuse}. & Un ataque aislado grave puede entrar; no se presume reiteración desde un chunk. \\
+    Amenaza & Banko et al. distinguen amenaza de violencia de insulto y otras conductas~\cite{banko2020taxonomy}; Defensoría documenta modalidades coexistentes en Perú~\cite{defensoria2021violenciaenlinea}. & Una amenaza implícita requiere blanco, daño plausible y contexto; si falta evidencia, se difiere. \\
+    Sexual & Zeinert et al. fundamentan cosificación~\cite{zeinert2021misogyny}; Defensoría e Hiperderecho documentan material íntimo no consentido~\cite{defensoria2021violenciaenlinea,albornoz2018conocer}. & Sexual explícito sigue la frontera y excepciones de la política de YouTube~\cite{youtube2026sexualpolicy}; el texto no permite inferir desnudez visual ni delito. \\
+    \bottomrule
+  \end{tabularx}
+  \vspace{3mm}
+  \takeaway{\texttt{ACOSO\_AMENAZA} une soporte para entrenar, no equivalencia semántica o jurídica; \texttt{CONTENIDO\_SEXUAL} es riesgo de moderación, no condena de toda sexualidad.}
+\end{frame}
+
+% 11
 \begin{frame}{DSR convierte la brecha técnica en iteraciones evaluables}
   \centering
   \resizebox{.98\textwidth}{!}{%
@@ -308,7 +379,7 @@
   \end{tikzpicture}}
   \vspace{3mm}
   \takeaway{Una evaluación inconclusa no se oculta: conserva la referencia, delimita el aprendizaje y motiva la siguiente iteración.}
-  \sourceNote{Hevner et al. (2004); Peffers et al. (2007).}
+  \externalNote{Hevner et al. y Peffers et al.~\cite{hevner2004dsr,peffers2007dsrm}.}
 \end{frame}
 
 \section{3. Descripción de los datos}
@@ -336,7 +407,7 @@
   \begin{beamercolorbox}[wd=\textwidth,sep=1.5mm,rounded=true]{block body}
     \centering\scriptsize \texttt{target\_category} explica por qué se buscó un video; nunca se copia como etiqueta verdadera.
   \end{beamercolorbox}
-  \sourceNote{Metodología de scraping; aprendizaje activo desbalanceado como antecedente general: Settles (2009). Índice vigente: 336 canales, 339 archivos por canal y 5\,002 videos.}
+  \mixedNote{Aprendizaje activo como antecedente general~\cite{settles2009active}.}{Índice vigente: 336 canales, 339 archivos por canal y 5\,002 videos.}
 \end{frame}
 
 % 10
@@ -360,7 +431,7 @@
     \begin{column}{.24\textwidth}\metriccard{Gold}{2.5--10 s}{pausas internas}{timeout 30 s}\end{column}
     \begin{column}{.24\textwidth}\metriccard{Coral}{1 canal}{aislado por 429}{los demás continúan}\end{column}
   \end{columns}
-  \sourceNote{\texttt{yt-dlp} (documentación oficial); YouTube Transcript API; metodología de scraping del proyecto. No se descarga audio/video ni se ejecuta ASR.}
+  \mixedNote{Documentación oficial de \texttt{yt-dlp} y YouTube Transcript API~\cite{ytdlp2026,depoix2026transcript}; términos de YouTube~\cite{youtube2023terms}.}{Arquitectura incremental: no descarga audio/video ni ejecuta ASR; umbrales, pausas y recuperación son configuración local.}
 \end{frame}
 
 % 11
@@ -394,7 +465,7 @@
       \end{beamercolorbox}
     \end{column}
   \end{columns}
-  \sourceNote{\texttt{chunk\_materialization\_manifest.json}, 7 de agosto de 2026.}
+  \resultNote{Manifiesto de materialización del corpus, corte del 7 de agosto de 2026.}
 \end{frame}
 
 \section{4. Preprocesamiento y etiquetado}
@@ -415,7 +486,7 @@
   \end{tikzpicture}}
   \vspace{4mm}
   \takeaway{Una reconstrucción total crea respaldo; el modo normal recalcula solo transcripciones nuevas o modificadas.}
-  \sourceNote{Unicode Standard Annex 15; NIST FIPS 180-4; materialización y contrato del troceador v2.2.0.}
+  \mixedNote{Normalización Unicode~\cite{unicode2025normalization} y hash SHA--256~\cite{nist2015sha}.}{Troceador v2.2.0: ventana, solapamiento, ID y reconstrucción incremental.}
 \end{frame}
 
 % 13
@@ -442,24 +513,42 @@
       \end{beamercolorbox}
     \end{column}
   \end{columns}
-  \sourceNote{Salton y Buckley (1988); Rennie et al. (2003); Wang et al. (2020); tarjeta Gemma 3 4B; Efron (1979); Field y Welsh (2007); informes de optimización de longitud.}
+  \mixedNote{TF--IDF~\cite{sparckjones1972idf,salton1988tfidf}, ComplementNB~\cite{rennie2003cnb}, MiniLM~\cite{wang2020minilm,reimers2020multilingual}, Gemma 3~\cite{gemma2025gemma3,ollama2026gemma34b} y bootstrap~\cite{efron1979bootstrap,field2007clusterbootstrap}.}{Experimentos de longitud y regla predeclarada de no inferioridad.}
 \end{frame}
 
 % 14
+\begin{frame}{Tres arquitecturas prueban si la decisión de 30 s es robusta}
+  \centering
+  \resizebox{.98\textwidth}{!}{%
+  \begin{tikzpicture}[font=\scriptsize,
+    b/.style={draw,rounded corners=3pt,text width=43mm,minimum height=26mm,align=center,inner sep=2.4mm},
+    a/.style={-{Stealth[length=1.7mm]},thick,draw=Muted}]
+    \node[b,draw=Blue!45,fill=Blue!7] (classic) {\textbf{Perfil decisorio CPU}\\TF--IDF uni/bi~\cite{sparckjones1972idf,salton1988tfidf}\\$\downarrow$\\One-vs-Rest: ComplementNB, logística y SGD~\cite{rennie2003cnb,cox1958logistic,bottou2010sgd}\\$\downarrow$ AP continua};
+    \node[b,draw=Teal!45,fill=Teal!7,right=5mm of classic] (minilm) {\textbf{Sensibilidad MiniLM}\\encoder multilingüe L12 destilado~\cite{wang2020minilm,reimers2020multilingual}\\$\downarrow$\\mean pooling, encoder congelado\\$\downarrow$ logística One-vs-Rest y AP};
+    \node[b,draw=Purple!45,fill=Purple!7,right=5mm of minilm] (gemma) {\textbf{Sensibilidad generativa}\\Gemma 3 4B en Ollama~\cite{gemma2025gemma3,ollama2026gemma34b}\\$\downarrow$\\prompt + esquema JSON~\cite{ollama2026structured}\\$\downarrow$ etiquetas duras, F1 y Hamming};
+    \node[draw=Gold!55,fill=Gold!9,rounded corners=3pt,text width=74mm,minimum height=13mm,align=center,inner sep=2mm,below=7mm of minilm] (boot) {Videos comunes $\rightarrow$ bootstrap pareado por \texttt{video\_id}~\cite{efron1979bootstrap,field2007clusterbootstrap} $\rightarrow$ regla local de no inferioridad};
+    \draw[a] (classic.south) |- (boot.west); \draw[a] (minilm.south)--(boot.north); \draw[a] (gemma.south) |- (boot.east);
+  \end{tikzpicture}}
+  \vspace{2mm}
+  \takeaway{Las métricas no se promedian: el perfil clásico decide; MiniLM y Gemma intentan refutar la elección con representaciones y salidas diferentes.}
+  \resultNote{75 ajustes clásicos, 25 cabezas MiniLM, 500 respuestas Gemma y seguimiento 20/30 con 750 videos fuera de pliegue.}
+\end{frame}
+
+% 15
 \begin{frame}{Cinco salidas gruesas y señales que obligan revisión}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{.61\textwidth}
       \scriptsize
       \renewcommand{\arraystretch}{1.13}
-      \begin{tabularx}{\linewidth}{>{\bfseries\raggedright\arraybackslash}p{40mm}X}
+      \begin{tabularx}{\linewidth}{>{\bfseries\raggedright\arraybackslash}p{40mm}>{\raggedright\arraybackslash}X}
         \toprule
         Salida & Criterio operacional breve \\
         \midrule
         SEGURO & Evaluable sin ninguno de los cuatro daños; excluyente. \\
-        \shortstack[l]{RACISMO\_\\DISCRIMINACION} & Ataque/exclusión por racialización, etnia, lengua, origen o clase racializada. \\
-        \shortstack[l]{ATAQUE\_POR\_GENERO\_\\IDENTIDAD} & Daño dirigido por género, orientación, identidad o expresión. \\
-        ACOSO\_AMENAZA & Ataque personal, hostigamiento o anuncio plausible de daño. \\
-        CONTENIDO\_SEXUAL & Sexual explícito cubierto, cosificación o material no consentido. \\
+        \shortstack[l]{RACISMO\_\\DISCRIMINACION} & Ataque/exclusión por racialización, etnia, lengua, origen o clase racializada~\cite{waseem2017abuse,almeida2022motoso}. \\
+        \shortstack[l]{ATAQUE\_POR\_GENERO\_\\IDENTIDAD} & Daño dirigido por género, orientación, identidad o expresión~\cite{zeinert2021misogyny,defensoria2021violenciaenlinea}. \\
+        ACOSO\_AMENAZA & Ataque personal, hostigamiento o anuncio plausible de daño~\cite{wulczyn2017exmachina,banko2020taxonomy}. \\
+        CONTENIDO\_SEXUAL & Sexual explícito cubierto, cosificación o material no consentido~\cite{zeinert2021misogyny,youtube2026sexualpolicy}. \\
         \bottomrule
       \end{tabularx}
     \end{column}
@@ -477,7 +566,7 @@
   \end{columns}
   \vspace{2mm}
   \takeaway{Las etiquetas se aceptan sin distinguir mayúsculas/minúsculas y se almacenan en forma canónica; una abstención no se fuerza a SEGURO.}
-  \sourceNote{Taxonomía operativa v2.1.0 y matriz de evidencia de categorías.}
+  \decisionNote{Contrato v2.1.0: cuatro daños multietiqueta; \texttt{SEGURO} aprendido y excluyente; etiquetas canónicas insensibles a mayúsculas/minúsculas; abstención fuera del entrenamiento.}
 \end{frame}
 
 % 15
@@ -501,10 +590,34 @@
     \begin{column}{.32\textwidth}\pill{Blue}{JSON validado}\;\scriptsize raíz \texttt{annotations}\end{column}
     \begin{column}{.32\textwidth}\pill{Purple}{Reanudable}\;\scriptsize \texttt{fsync}, cuarentena, \texttt{chunk\_id}\end{column}
   \end{columns}
-  \sourceNote{DeepSeek API: catálogo V4 y precios oficiales; regla presupuestada con 29,270 revisiones Pro preservadas, 40,695 pendientes y costo observado proyectado de US\$13.66. Prompt operacional v2.}
+  \mixedNote{DeepSeek V4 Flash/Pro, modo no razonador, JSON y caché~\cite{deepseek2026v4,deepseek2026thinking,deepseek2026json,deepseek2026cache,deepseek2026pricing}.}{Regla presupuestada: revisiones Pro previas preservadas, selección crítica y control aleatorio del 1\%; prompt, umbrales y precedencia son locales.}
 \end{frame}
 
 % 16
+\begin{frame}{Flash y Pro comparten arquitectura, pero cumplen roles distintos}
+  \centering
+  \resizebox{.98\textwidth}{!}{%
+  \begin{tikzpicture}[font=\scriptsize,
+    b/.style={draw,rounded corners=3pt,text width=30mm,minimum height=23mm,align=center,inner sep=2.2mm},
+    a/.style={-{Stealth[length=1.7mm]},thick,draw=Muted}]
+    \node[b,draw=Blue!45,fill=Blue!7] (prompt) {\textbf{Prefijo común}\\prompt + taxonomía\\esquema JSON\\caché de contexto~\cite{deepseek2026json,deepseek2026cache}};
+    \node[b,draw=Teal!50,fill=Teal!8,right=4mm of prompt] (flash) {\textbf{V4-Flash}\\MoE: 284B totales\\13B activos\\DSA + compresión\\no razonador~\cite{deepseek2026v4,deepseek2026thinking}};
+    \node[b,draw=Gold!50,fill=Gold!9,right=4mm of flash] (valid) {\textbf{Validador local}\\JSON $\rightarrow$ contrato\\ID y orden exactos\\inválido $\rightarrow$ cuarentena};
+    \node[b,draw=Purple!45,fill=Purple!7,right=4mm of valid] (pro) {\textbf{V4-Pro}\\MoE: 1.6T totales\\49B activos\\DSA + compresión\\solo cola crítica~\cite{deepseek2026v4}};
+    \node[b,draw=Coral!45,fill=Coral!7,right=4mm of pro] (human) {\textbf{Supervisor}\\contexto temporal\\acepta/modifica\\difiere/excluye};
+    \draw[a] (prompt)--(flash); \draw[a] (flash)--(valid); \draw[a] (valid)--(pro); \draw[a] (pro)--(human);
+  \end{tikzpicture}}
+  \vspace{4mm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.32\textwidth}\metriccard{Teal}{5}{chunks/solicitud}{amortiza el prefijo común}\end{column}
+    \begin{column}{.32\textwidth}\metriccard{Blue}{32}{solicitudes}{concurrencia Flash local}\end{column}
+    \begin{column}{.32\textwidth}\metriccard{Purple}{dirigida}{revisión Pro}{daño, abstención, baja confianza, 1\%}\end{column}
+  \end{columns}
+  \takeaway{La economía proviene de reutilizar el prefijo y reservar Pro para incertidumbre o riesgo; Pro sigue siendo pseudoetiqueta, no verdad humana.}
+  \externalNote{Parámetros y arquitectura declarados por DeepSeek~\cite{deepseek2026v4}; formato y operación de la API~\cite{deepseek2026json,deepseek2026thinking,deepseek2026cache}.}
+\end{frame}
+
+% 17
 \begin{frame}{El etiquetado activo mide rapidez, caché y costo}
   \statusbadge{Gold}{En progreso}
   \begin{columns}[T,onlytextwidth]
@@ -539,7 +652,7 @@
       \end{beamercolorbox}
     \end{column}
   \end{columns}
-  \sourceNote{Corte documentado de la campaña Flash$\rightarrow$Pro, 8 de agosto de 2026. Tarifas: DeepSeek, tabla oficial de precios.}
+  \mixedNote{Tarifas y caché de DeepSeek~\cite{deepseek2026pricing,deepseek2026cache}.}{Corte de la campaña Flash$\rightarrow$Pro, 8 de agosto de 2026; tiempos, velocidades, tasas y costos proceden de registros de ejecución.}
 \end{frame}
 
 % 17
@@ -557,7 +670,7 @@
   \end{beamercolorbox}
   \vspace{2mm}
   \takeaway{Pro es una referencia operacional más fuerte, no un \emph{gold standard}. La exactitud, cobertura y eficacia humanas requieren adjudicación independiente.}
-  \sourceNote{Wilson (1927); Efron (1979); Field y Welsh (2007); Schroeder, Roy y Kabbara (2025); artefacto \texttt{calibration\_flash\_vs\_pro.json}.}
+  \mixedNote{Intervalo de Wilson~\cite{wilson1927probable}, bootstrap~\cite{efron1979bootstrap,field2007clusterbootstrap} y riesgo de influencia LLM en anotación~\cite{schroeder2025llmassisted}.}{Panel pareado y registro de calibración Flash--Pro.}
 \end{frame}
 
 % 18
@@ -578,7 +691,7 @@
       sugerencia ocultable, eventos append-only y reanudación
     \end{column}
   \end{columns}
-  \sourceNote{Captura de la interfaz histórica ejecutada. El HTML activo ya implementa el contrato v2.1, pero la captura y los conteos se reemplazarán al materializar la campaña de \texttt{02\_04}.}
+  \resultNote{Captura de la interfaz histórica ejecutada. El HTML activo implementa el contrato v2.1; la imagen y los conteos se reemplazarán al materializar la campaña humana actual.}
 \end{frame}
 
 % 19
@@ -599,7 +712,7 @@
     \centering\Large\bfseries Tamaño y distribución v2.1: En progreso\par
     \smallskip\scriptsize Se completarán con \texttt{02\_05}; los diferidos y rechazados no entrarán al entrenamiento.
   \end{beamercolorbox}
-  \sourceNote{Contratos de datos, etapa 02 y cierre humano del flujo activo.}
+  \decisionNote{Precedencia humano $>$ Pro $>$ Flash; diferidos y rechazados quedan fuera. El tamaño y los splits se reportarán desde el snapshot cerrado.}
 \end{frame}
 
 \section{5. Modelamiento y evaluación}
@@ -610,54 +723,141 @@
   \centering
   \small
   \renewcommand{\arraystretch}{1.16}
-  \begin{tabularx}{.98\textwidth}{>{\bfseries\raggedright\arraybackslash}p{33mm}>{\raggedright\arraybackslash}p{43mm}X}
+  \begin{tabularx}{.98\textwidth}{>{\bfseries\raggedright\arraybackslash}p{33mm}>{\raggedright\arraybackslash}p{43mm}>{\raggedright\arraybackslash}X}
     \toprule
     Rama & Modelos exactos & Propósito y salida \\
     \midrule
-    Clásicos TF--IDF & Dummy, ComplementNB, regresión logística, SVM lineal, SGD logístico & Baseline ligero; cinco candidatos calibrados. \\
-    Transformers planos & MiniLM-L12-v2 y multilingual-e5-small & Contexto semántico compacto; cinco scores directos. \\
-    Cascada Transformer & E5: compuerta de daño + cuatro salidas & Separar detección general de tipificación. \\
-    Multitarea & E5: cinco gruesas + 14 finas + 3 flags & Compartir representación y auditar fenómenos. \\
-    Qwen LoRA & Qwen3-0.6B-Base, adaptadores rango 8 & Ajuste eficiente de un modelo generativo compacto como clasificador. \\
-    Qwen estructurado & Qwen3 con penalización SEGURO+daño & Incorporar la exclusividad al objetivo local. \\
+    Clásicos TF--IDF & Dummy, ComplementNB, logística, SVM lineal y SGD~\cite{sparckjones1972idf,rennie2003cnb,cox1958logistic,cortes1995svm,bottou2010sgd} & Baseline ligero; cinco candidatos calibrados. \\
+    Transformers planos & MiniLM-L12-v2 y multilingual-e5-small~\cite{wang2020minilm,reimers2020multilingual,wang2024e5} & Contexto semántico compacto; cinco scores directos. \\
+    Cascada Transformer & E5: compuerta de daño + cuatro salidas~\cite{silla2011hierarchical} & Separar detección general de tipificación. \\
+    Multitarea & E5: cinco gruesas + 14 finas + 3 flags~\cite{caruana1997multitask,tsoumakas2007multilabel} & Compartir representación y auditar fenómenos. \\
+    Qwen LoRA & Qwen3-0.6B-Base, adaptadores rango 8~\cite{qwen2025qwen3,hu2022lora} & Ajuste eficiente de un decoder compacto como clasificador. \\
+    Qwen estructurado & Qwen3 con penalización SEGURO+daño~\cite{qwen2025qwen3} & Incorporar la exclusividad al objetivo local. \\
     \bottomrule
   \end{tabularx}
-  \sourceNote{Implementación v2.1: \texttt{experiments.py} y cuadernos \texttt{03\_01--03\_06}. Checkpoints fijados en los manifiestos.}
+  \decisionNote{Las seis ramas, sus cabezas, pérdidas, umbrales y comparación común pertenecen al artefacto v2.1; cada familia y checkpoint conserva su referencia externa.}
 \end{frame}
 
 % 21
-\begin{frame}{Cada familia responde a una necesidad distinta}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{.32\textwidth}
-      \begin{beamercolorbox}[wd=\linewidth,sep=2.7mm,rounded=true]{epoch2}
-        \pill{Blue}{TF--IDF + lineales}\par\smallskip
-        \scriptsize\textbf{Fundamento:} pesos léxicos y fronteras lineales.\par
-        \textbf{Ventaja:} velocidad, CPU, inspección.\par
-        \textbf{Límite:} contexto y lenguaje implícito.
-      \end{beamercolorbox}
-    \end{column}
-    \begin{column}{.32\textwidth}
-      \begin{beamercolorbox}[wd=\linewidth,sep=2.7mm,rounded=true]{epoch3}
-        \pill{Teal}{MiniLM / E5}\par\smallskip
-        \scriptsize\textbf{Fundamento:} atención y representación multilingüe.\par
-        \textbf{Ventaja:} semántica compacta.\par
-        \textbf{Límite:} fine-tuning, GPU y deriva.
-      \end{beamercolorbox}
-    \end{column}
-    \begin{column}{.32\textwidth}
-      \begin{beamercolorbox}[wd=\linewidth,sep=2.7mm,rounded=true]{epoch2}
-        \pill{Purple}{Qwen3 + LoRA}\par\smallskip
-        \scriptsize\textbf{Fundamento:} adaptadores de bajo rango.\par
-        \textbf{Ventaja:} capacidad con pocos parámetros ajustables.\par
-        \textbf{Límite:} mayor costo y variación entre semillas.
-      \end{beamercolorbox}
-    \end{column}
-  \end{columns}
+\begin{frame}{La rama clásica convierte texto disperso en cinco fronteras binarias}
+  \centering
+  \resizebox{.98\textwidth}{!}{\begin{tikzpicture}[font=\scriptsize,
+    b/.style={draw,rounded corners=3pt,text width=30mm,minimum height=22mm,align=center,inner sep=2.3mm},
+    a/.style={-{Stealth[length=1.8mm]},thick,draw=Muted}]
+    \node[b,draw=Blue!45,fill=Blue!7] (text) {Texto del chunk};
+    \node[b,draw=Gold!50,fill=Gold!9,right=5mm of text] (tfidf) {Unigramas + bigramas\\TF sublineal $\times$ IDF\\hasta 150k rasgos~\cite{sparckjones1972idf,salton1988tfidf}};
+    \node[b,draw=Teal!45,fill=Teal!7,right=5mm of tfidf] (ovr) {One-vs-Rest\\cinco problemas binarios~\cite{tsoumakas2007multilabel}};
+    \node[b,draw=Purple!45,fill=Purple!7,right=5mm of ovr] (models) {Dummy~\cite{pedregosa2011sklearn}\\ComplementNB~\cite{rennie2003cnb}\\logística~\cite{cox1958logistic}\\SVM~\cite{cortes1995svm} / SGD~\cite{bottou2010sgd}};
+    \node[b,draw=Coral!45,fill=Coral!7,right=5mm of models] (out) {Cinco scores\\$\downarrow$\\umbrales elegidos en validation};
+    \draw[a] (text)--(tfidf); \draw[a] (tfidf)--(ovr); \draw[a] (ovr)--(models); \draw[a] (models)--(out);
+  \end{tikzpicture}}
   \vspace{4mm}
-  \sourceNote{Salton y Buckley (1988); Cortes y Vapnik (1995); Vaswani et al. (2017); Wang et al. (2020); Reimers y Gurevych (2020); Wang et al. (2024); Hu et al. (2022); Yang et al. (2025).}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.49\textwidth}\scriptsize\textcolor{Teal}{\textbf{Ventaja:}} rápida, reproducible, apta para CPU e inspeccionable.\end{column}
+    \begin{column}{.49\textwidth}\scriptsize\textcolor{Coral}{\textbf{Límite:}} depende de evidencia léxica; capta peor el contexto implícito.\end{column}
+  \end{columns}
+  \externalNote{Fundamentos y autores indicados en cada bloque; el ensamble de rasgos, One-vs-Rest y cinco umbrales es la implementación local.}
 \end{frame}
 
 % 22
+\begin{frame}{MiniLM y E5 usan encoders Transformer compactos}
+  \centering
+  \resizebox{.94\textwidth}{!}{%
+  \begin{tikzpicture}[font=\scriptsize,
+    b/.style={draw,rounded corners=3pt,text width=32mm,minimum height=22mm,align=center,inner sep=2.4mm},
+    a/.style={-{Stealth[length=1.8mm]},thick,draw=Muted}]
+    \node[b,draw=Blue!45,fill=Blue!7] (tok) {Subpalabras + posiciones};
+    \node[b,draw=Teal!45,fill=Teal!7,right=5mm of tok] (enc) {Encoder bidireccional\\autoatención multi-cabeza + FFN~\cite{vaswani2017attention,devlin2019bert}};
+    \node[b,draw=Gold!50,fill=Gold!9,right=5mm of enc] (head) {Representación contextual\\$\downarrow$\\cabeza de 5 logits};
+    \node[b,draw=Coral!45,fill=Coral!7,right=5mm of head] (out) {Sigmoid por salida\\$\downarrow$\\umbrales validation};
+    \draw[a] (tok)--(enc); \draw[a] (enc)--(head); \draw[a] (head)--(out);
+  \end{tikzpicture}}
+  \vspace{3mm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.49\textwidth}
+      \begin{beamercolorbox}[wd=\linewidth,sep=2mm,rounded=true]{epoch2}
+        \pill{Blue}{MiniLM-L12-v2}\par\smallskip
+        \scriptsize Wang et al. comprimen autoatención mediante destilación~\cite{wang2020minilm}; Reimers--Gurevych transfieren embeddings entre idiomas~\cite{reimers2020multilingual}. Checkpoint exacto~\cite{hf2026minilmcard}.
+      \end{beamercolorbox}
+    \end{column}
+    \begin{column}{.49\textwidth}
+      \begin{beamercolorbox}[wd=\linewidth,sep=2mm,rounded=true]{epoch3}
+        \pill{Teal}{multilingual-e5-small}\par\smallskip
+        \scriptsize Wang et al. preentrenan embeddings contrastivos multilingües con pares de texto y luego ajustan con datos etiquetados~\cite{wang2022e5,wang2024e5}. Checkpoint exacto~\cite{hf2026e5card}.
+      \end{beamercolorbox}
+    \end{column}
+  \end{columns}
+  \vspace{1mm}
+  {\scriptsize\color{Navy}\textbf{Lectura clave:} ambos aprenden cinco salidas directamente; MiniLM prioriza compacidad y E5 una representación contrastiva multilingüe.\par}
+\end{frame}
+
+% 23
+\begin{frame}{Cascada y multitarea cambian la cabeza, no la evidencia de entrada}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.49\textwidth}
+      \centering\pill{Blue}{Cascada E5}\par\vspace{.5mm}
+      \begin{tikzpicture}[node distance=1.5mm,font=\scriptsize,
+        b/.style={draw,rounded corners=3pt,text width=.78\linewidth,minimum height=9mm,align=center,inner sep=1.4mm},
+        a/.style={-{Stealth[length=1.6mm]},thick}]
+        \node[b,draw=Teal!45,fill=Teal!7] (e) {Encoder E5};
+        \node[b,draw=Gold!50,fill=Gold!9,below=of e] (g) {Compuerta $g=P(\text{algún daño})$};
+        \node[b,draw=Purple!45,fill=Purple!7,below=of g] (d) {Segundo E5: cuatro scores $d_k$};
+        \node[b,draw=Coral!45,fill=Coral!7,below=of d] (o) {$P(\texttt{SEGURO})=1-g$\\$P(k)=g\,d_k$};
+        \draw[a] (e)--(g); \draw[a] (g)--(d); \draw[a] (d)--(o);
+      \end{tikzpicture}
+      \par\vspace{.4mm}
+      \parbox{.94\linewidth}{\centering\tiny Jerarquía como antecedente~\cite{silla2011hierarchical}; compuerta y multiplicación locales.}
+    \end{column}
+    \begin{column}{.49\textwidth}
+      \centering\pill{Purple}{Multitarea E5}\par\vspace{.5mm}
+      \begin{tikzpicture}[node distance=1.5mm,font=\scriptsize,
+        b/.style={draw,rounded corners=3pt,text width=.78\linewidth,minimum height=9mm,align=center,inner sep=1.4mm},
+        a/.style={-{Stealth[length=1.6mm]},thick}]
+        \node[b,draw=Teal!45,fill=Teal!7] (e) {Encoder E5 compartido};
+        \node[b,draw=Gold!50,fill=Gold!9,below=of e] (h) {Una cabeza: 22 logits};
+        \node[b,draw=Blue!45,fill=Blue!7,below=of h] (o) {5 gruesas + 14 finas + 3 flags};
+        \node[b,draw=Coral!45,fill=Coral!7,below=of o] (l) {BCE ponderada: $1.0/0.3/0.2$};
+        \draw[a] (e)--(h); \draw[a] (h)--(o); \draw[a] (o)--(l);
+      \end{tikzpicture}
+      \par\vspace{.4mm}
+      \parbox{.94\linewidth}{\centering\tiny Representación compartida: Caruana~\cite{caruana1997multitask}; salida multietiqueta~\cite{tsoumakas2007multilabel}.}
+    \end{column}
+  \end{columns}
+  \vspace{1.5mm}
+  {\scriptsize\color{Navy}\textbf{Lectura clave:} la cascada separa detección y tipificación; la multitarea usa señales finas y flags como supervisión auxiliar. Ambas deben vencer al plano bajo el mismo snapshot.\par}
+\end{frame}
+
+% 24
+\begin{frame}{Qwen3 se adapta como clasificador mediante LoRA o pérdida estructurada}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.36\textwidth}
+      \begin{beamercolorbox}[wd=\linewidth,sep=2.6mm,rounded=true]{epoch2}
+        \pill{Purple}{Backbone exacto}\par\smallskip
+        \scriptsize \textbf{Qwen Team / Yang et al.}: Qwen3-0.6B-Base, decoder causal denso~\cite{qwen2025qwen3,hf2026qwen06bcard}.\par\smallskip
+        28 capas; 0.6B parámetros; GQA 16 cabezas Q / 8 KV; contexto 32,768~\cite{hf2026qwen06bcard}.
+      \end{beamercolorbox}
+    \end{column}
+    \begin{column}{.30\textwidth}
+      \begin{beamercolorbox}[wd=\linewidth,sep=2.6mm,rounded=true]{epoch3}
+        \pill{Teal}{Rama LoRA}\par\smallskip
+        \scriptsize Hu et al. aproximan la actualización como matrices de bajo rango~\cite{hu2022lora}.\par\smallskip
+        Local: $r=8$, $\alpha=16$, dropout 0.05 sobre $q,k,v,o$; cabeza de cinco logits.
+      \end{beamercolorbox}
+    \end{column}
+    \begin{column}{.30\textwidth}
+      \begin{beamercolorbox}[wd=\linewidth,sep=2.6mm,rounded=true]{epoch2}
+        \pill{Coral}{Rama estructurada}\par\smallskip
+        \scriptsize Ajuste del clasificador Qwen con BCE y penalización local de conflicto:\par\smallskip
+        $\mathcal L=\mathrm{BCE}+0.2\,p_{\mathrm{seg}}\max_k p_{\text{daño},k}$.
+      \end{beamercolorbox}
+    \end{column}
+  \end{columns}
+  \vspace{5mm}
+  \takeaway{LoRA reduce parámetros entrenables; la pérdida estructurada incorpora exclusividad. Ninguna ventaja se asume: ambas se seleccionan en validation.}
+  \externalNote{Arquitectura Qwen3~\cite{qwen2025qwen3}, checkpoint exacto~\cite{hf2026qwen06bcard} y LoRA~\cite{hu2022lora}. Rangos, módulos, cabeza y penalización son decisiones locales.}
+\end{frame}
+
+% 25
 \begin{frame}{La comparación separa ajuste, selección y reporte}
   \statusbadge{Gold}{En progreso}
   \centering
@@ -679,7 +879,7 @@
   \end{columns}
   \vspace{2mm}
   \takeaway{El split se agrupa por \texttt{video\_id}; bootstrap y comparaciones pareadas también respetan esa dependencia.}
-  \sourceNote{Saito y Rehmsmeier (2015); Cawley y Talbot (2010); Dror et al. (2018); Field y Welsh (2007).}
+  \externalNote{Curvas precisión--recobrado~\cite{saito2015pr}; sesgo de selección~\cite{cawley2010selection}; significancia en NLP~\cite{dror2018significance}; bootstrap por conglomerados~\cite{field2007clusterbootstrap}.}
 \end{frame}
 
 % 23
@@ -703,7 +903,7 @@
   \end{beamercolorbox}
   \vspace{2mm}
   \takeaway{Históricamente Qwen lideró AP/F1 y E5 el recobrado binario; falta comprobar si ese patrón persiste en el snapshot actual.}
-  \sourceNote{CSV histórico \texttt{comparacion\_todos\_modelos\_4.csv}; paper, comparación final. Estimaciones puntuales, sin prueba formal entre familias.}
+  \resultNote{Comparación histórica ejecutada sobre 5\,290 chunks del test enriquecido 4:1; estimaciones puntuales sin prueba formal entre familias.}
 \end{frame}
 
 % 24
@@ -732,7 +932,7 @@
       \scriptsize Implementado: texto o URL; consulta individual, comparación y consenso 2/3; cinco scores; revisión; estadísticas y reentrenamiento. No sanciona contenido.
     \end{column}
   \end{columns}
-  \sourceNote{Captura histórica de demostración. El frontend v2.1 ya tiene paridad funcional verificada; la captura actual y los tres registros se materializarán después de \texttt{03\_07}. Ensambles: Dietterich (2000); regla 2/3, decisión local.}
+  \mixedNote{Diversidad de ensambles como antecedente~\cite{dietterich2000ensemble}.}{Captura histórica ejecutada y paridad funcional v2.1 verificada; mayoría 2/3 y derivación al supervisor son decisiones locales aún pendientes de evaluación prospectiva.}
 \end{frame}
 
 \section{6. Resultados}
@@ -784,7 +984,7 @@
   \begin{beamercolorbox}[wd=\textwidth,sep=3mm,rounded=true]{block body}
     \centering\small\textbf{Aún no disponible:} tamaño final por salida v2.1, desempeño train/validation/test de las seis ramas, comparación estadística final, carga humana real y eficacia prospectiva.
   \end{beamercolorbox}
-  \sourceNote{Informes de optimización de longitud y corte de etiquetado del 8 de agosto de 2026.}
+  \resultNote{Experimentos de longitud y registros de la campaña de etiquetado, corte del 8 de agosto de 2026.}
 \end{frame}
 
 \section{7. Conclusiones y trabajos futuros}
@@ -841,24 +1041,25 @@
       \end{itemize}
     \end{column}
   \end{columns}
-  \sourceNote{Artstein y Poesio (2008); Röttger et al. (2021); Cawley y Talbot (2010); Gorwa et al. (2020); AoIR (2020).}
+  \externalNote{Acuerdo entre anotadores~\cite{artstein2008agreement}; pruebas conductuales~\cite{rottger2021hatecheck}; selección de modelos~\cite{cawley2010selection}; gobernanza de moderación~\cite{gorwa2020moderation}; ética de investigación en Internet~\cite{aoir2020ethics}.}
 \end{frame}
 
-% 29
-\begin{frame}{Referencias y recursos reproducibles}
+% Cierre
+\begin{frame}{Las fuentes externas y los resultados propios quedan separados}
   \begin{columns}[T,onlytextwidth]
-    \begin{column}{.58\textwidth}
-      {\small\bfseries Fuentes esenciales}\par\smallskip
-      {\scriptsize
-      \textbf{DSR y moderación:} Hevner et al. (2004); Peffers et al. (2007); Gorwa et al. (2020).\par\smallskip
-      \textbf{Taxonomía/contexto:} Waseem et al. (2017); Banko et al. (2020); Zavala y Almeida (2022); Albornoz y Flores (2018); Defensoría del Pueblo (2021).\par\smallskip
-      \textbf{Datos:} \texttt{yt-dlp}; YouTube Transcript API; Unicode UAX 15; NIST FIPS 180-4.\par\smallskip
-      \textbf{Modelos:} Salton y Buckley (1988); Cortes y Vapnik (1995); Vaswani et al. (2017); Wang et al. (2020, 2024); Reimers y Gurevych (2020); Hu et al. (2022); Yang et al. (2025).\par\smallskip
-      \textbf{Evaluación:} Saito y Rehmsmeier (2015); Efron (1979); Field y Welsh (2007); Cawley y Talbot (2010).\par\smallskip
-      \textbf{Servicios de etiquetado:} documentación oficial DeepSeek V4, precios y formato JSON.\par\smallskip
-      {\tiny Metadatos completos, DOI, URL y revisiones de checkpoints: bibliografía y cuadernos del proyecto.}}
+    \begin{column}{.49\textwidth}
+      \begin{beamercolorbox}[wd=\linewidth,sep=3mm,rounded=true]{epoch2}
+        \pill{Blue}{Conocimiento externo}\par\smallskip
+        \small Definiciones, contexto peruano, arquitecturas, algoritmos, métricas, software y políticas llevan citas IEEE junto a la afirmación.\par\smallskip
+        \scriptsize Las diapositivas siguientes contienen los metadatos completos, DOI y URL de las fuentes citadas.
+      \end{beamercolorbox}
+      \vspace{3mm}
+      \begin{beamercolorbox}[wd=\linewidth,sep=3mm,rounded=true]{epoch3}
+        \pill{Teal}{Resultados propios}\par\smallskip
+        \small Conteos, tiempos, costos, métricas, capturas y decisiones se trazan a manifiestos y registros ejecutados; no se convierten en autorreferencias bibliográficas.
+      \end{beamercolorbox}
     \end{column}
-    \begin{column}{.38\textwidth}
+    \begin{column}{.47\textwidth}
       \begin{beamercolorbox}[wd=\linewidth,sep=3mm,rounded=true]{epoch2}
         \pill{Blue}{GitHub público}\par\smallskip
         {\scriptsize Código, cuadernos, documentación, manifiestos y artefactos autorizados.}\par\smallskip
@@ -869,10 +1070,19 @@
         \pill{Teal}{Drive controlado}\par\smallskip
         {\scriptsize Bundles y resultados con acceso autorizado; no contiene claves API.}
       \end{beamercolorbox}
-      \vspace{3mm}
-      \centering{\color{Navy}\Large\bfseries Gracias}
+      \vspace{5mm}
+      \centering{\color{Navy}\Large\bfseries Gracias}\par
+      \small Preguntas y demostración en modo sombra
     \end{column}
   \end{columns}
+\end{frame}
+
+\section*{Referencias externas}
+\setbeamertemplate{bibliography item}[text]
+\begin{frame}[allowframebreaks]{Referencias externas citadas}
+  \tiny
+  \bibliographystyle{IEEEtran}
+  \bibliography{../Documento_final_paper/referencias}
 \end{frame}
 
 \end{document}

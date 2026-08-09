@@ -78,6 +78,15 @@ Puede distribuir el contenido en mas de una diapositiva cuando una figura lo req
 
 Las referencias breves de las diapositivas deben usar las mismas claves y fuentes verificadas que el paper. Si la bibliografia no cabe, divida las referencias o deje la lista completa en el paper; nunca permita texto recortado.
 
+La presentación aplica una separación estricta de procedencia: toda definición,
+taxonomía, afirmación contextual, arquitectura, algoritmo, métrica, software o
+política se cita mediante una fuente externa primaria, fundacional u oficial.
+Los documentos internos no se usan para fundamentar conocimiento ajeno; solo
+trazan resultados propios —conteos, tiempos, costos, métricas, capturas y
+decisiones ejecutadas— y se identifican como tales. Las citas numéricas aparecen
+junto a la afirmación y las referencias externas completas se generan al final
+con estilo IEEE desde `../Documento_final_paper/referencias.bib`.
+
 ## Revision en dos pases
 
 1. **Cientifico:** contrastar cifras, etiquetas, modelos, seleccion y conclusiones con las fuentes de verdad; verificar que toda limitacion decisiva sea visible.

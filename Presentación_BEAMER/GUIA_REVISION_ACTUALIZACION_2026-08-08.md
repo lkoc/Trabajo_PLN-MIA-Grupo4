@@ -35,6 +35,12 @@ No se afirmará moderación autónoma, validez jurídica ni eficacia productiva.
 7. Toda cifra debe conservar una ruta a su artefacto; toda idea, algoritmo,
    arquitectura, modelo base o limitación externa debe citar su fuente primaria
    o técnica pertinente.
+   - Una referencia interna solo puede documentar un resultado propio ejecutado.
+     No sustituye la fuente externa de una definición, categoría, arquitectura,
+     algoritmo, métrica, herramienta o política.
+   - La cita se coloca junto a la afirmación que respalda y su entrada completa
+     se presenta en la bibliografía IEEE; no se admiten listas decorativas de
+     autores sin correspondencia proposición--fuente.
 8. La presentación debe compilar sin referencias indefinidas ni cajas
    `Overfull` y revisarse visualmente diapositiva por diapositiva.
 
