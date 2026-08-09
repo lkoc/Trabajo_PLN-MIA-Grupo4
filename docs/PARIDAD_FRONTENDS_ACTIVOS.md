@@ -22,7 +22,7 @@ revisión obligatoria prevalecen.
 | propuesta y categorías/flags | propuesta LLM visible y controles derivados de la taxonomía | implementado; la visibilidad inicial es una decisión operativa con riesgo de anclaje documentado |
 | aceptar, modificar, diferir y excluir | botones explícitos “Aceptar sugerencia”, “Guardar mi decisión”, “Revisar después” y “Excluir del dataset”; ayuda contextual; excluir exige confirmación | implementado |
 | aceptar, clasificar o excluir por video/canal | diálogo con vista previa; permite conservar cada propuesta, asignar la misma combinación humana de `SEGURO`/daños/flags o excluir; exige confirmación | implementado; la clasificación común puede cubrir también los ya resueltos y cada evento registra alcance/lote |
-| progreso, colas, cohorte y siguiente pendiente | botones directos Urgentes, Prioritarios Pro y Todos; filtro de cohorte en diálogo y navegación circular; un diferido sigue pendiente | implementado; 2.705, 44.617 y 166.940 casos en el corte vigente |
+| progreso, colas, filtros y navegación | botones directos Urgentes, Prioritarios Pro, Todos y Excluidos; filtros combinables de cohorte, categorías, flags, estado y completitud; navegación circular | implementado; incluye Sin etiqueta/Con etiqueta; los bloques se cruzan con AND y categorías/flags admiten OR o AND |
 | guía, exportación y reanudación | diálogo, JSONL y lectura de eventos previos | implementado |
 | borradores locales | `localStorage` por `chunk_id` | implementado |
 | atajos A/R/Ctrl+Enter/flechas | se conservan; D añade diferimiento | implementado y cubierto por prueba estructural |
@@ -41,7 +41,10 @@ máximas incompatibles que la consolidación no resolvió automáticamente.
 vigente son 35.385 casos Pro sin resolver y 10.891 con daño; su unión es 44.617
 porque 1.659 cumplen ambas condiciones. La confianza autodeclarada no se usa
 como umbral adicional, pues la calibración disponible fue inconclusa.
-**Todos** conserva acceso a la campaña completa.
+**Todos** conserva acceso a la campaña completa. **Excluidos** reúne los chunks
+cuya decisión efectiva es `reject` —o cuyo estado base es `excluded` si no hay
+revisión posterior—. No constituye una sexta categoría semántica: es un estado
+de elegibilidad para entrenamiento y puede revertirse con una nueva decisión.
 
 La acción masiva deriva el video o canal desde el chunk activo. Para canales sin
 `channel_id`, usa coincidencia normalizada del título; el diálogo muestra el

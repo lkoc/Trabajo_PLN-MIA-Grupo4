@@ -12,6 +12,7 @@ from moderacion_peru.servers import (
     _labeling_campaign_page,
     _labeling_progress,
     _labeling_scope_rows,
+    _is_labeling_excluded,
     _is_labeling_priority,
     _is_labeling_urgent,
     _production_feedback,
@@ -50,6 +51,7 @@ def test_labeling_campaign_is_paged_and_uses_latest_review_state():
         "resolved": 1,
         "deferred": 1,
         "pending": 2,
+        "excluded_total": 0,
         "progress_pct": pytest.approx(100 / 3),
     }
 
@@ -101,6 +103,157 @@ def test_labeling_urgent_and_pro_priority_queues_are_distinct():
     ]
     assert _labeling_progress(rows, {}, urgent_only=True)["total"] == 1
     assert _labeling_progress(rows, {}, priority_only=True)["total"] == 2
+
+
+def test_labeling_excluded_queue_uses_latest_effective_decision():
+    rows = [
+        {"chunk_id": "human-reject", "decision_status": "resolved"},
+        {"chunk_id": "base-excluded", "decision_status": "excluded"},
+        {"chunk_id": "restored", "decision_status": "excluded"},
+        {"chunk_id": "pending", "decision_status": "needs_review"},
+    ]
+    reviews = {
+        "human-reject": {"chunk_id": "human-reject", "action": "reject"},
+        "restored": {"chunk_id": "restored", "action": "modify"},
+    }
+
+    assert [_is_labeling_excluded(row, reviews) for row in rows] == [
+        True,
+        True,
+        False,
+        False,
+    ]
+    page = _labeling_campaign_page(
+        rows,
+        reviews,
+        offset=0,
+        limit=10,
+        only_pending=True,
+        excluded_only=True,
+    )
+    assert [row["chunk_id"] for row in page["rows"]] == [
+        "human-reject",
+        "base-excluded",
+    ]
+    assert page["total"] == 2
+    assert _labeling_progress(rows, reviews, excluded_only=True) == {
+        "total": 2,
+        "reviewed": 1,
+        "resolved": 2,
+        "deferred": 0,
+        "pending": 0,
+        "excluded_total": 2,
+        "progress_pct": 100.0,
+    }
+
+
+def test_labeling_filters_combine_categories_flags_and_review_status():
+    rows = [
+        {
+            "chunk_id": "pending-safe",
+            "decision_status": "needs_review",
+            "needs_review": True,
+            "coarse_labels": ["SEGURO"],
+            "flags": [],
+        },
+        {
+            "chunk_id": "human-sexual",
+            "decision_status": "needs_review",
+            "coarse_labels": ["SEGURO"],
+            "flags": [],
+        },
+        {
+            "chunk_id": "excluded-acoso",
+            "decision_status": "resolved",
+            "coarse_labels": ["ACOSO_AMENAZA"],
+            "flags": ["contexto_necesario"],
+        },
+        {
+            "chunk_id": "multi-damage",
+            "decision_status": "needs_review",
+            "coarse_labels": [],
+            "flags": [],
+        },
+        {
+            "chunk_id": "unlabeled",
+            "decision_status": "needs_review",
+            "needs_review": True,
+            "coarse_labels": [],
+            "flags": [],
+        },
+    ]
+    reviews = {
+        "human-sexual": {
+            "chunk_id": "human-sexual",
+            "action": "modify",
+            "final_labels": ["CONTENIDO_SEXUAL"],
+            "flags": ["contexto_necesario"],
+        },
+        "excluded-acoso": {
+            "chunk_id": "excluded-acoso",
+            "action": "reject",
+            "final_labels": [],
+            "flags": [],
+        },
+        "multi-damage": {
+            "chunk_id": "multi-damage",
+            "action": "modify",
+            "final_labels": ["ACOSO_AMENAZA", "CONTENIDO_SEXUAL"],
+            "flags": ["humor_encubridor", "contexto_necesario"],
+        },
+    }
+
+    sexual_resolved = _labeling_campaign_page(
+        rows,
+        reviews,
+        offset=0,
+        limit=10,
+        filter_labels={"CONTENIDO_SEXUAL"},
+        filter_statuses={"resolved"},
+    )
+    assert [row["chunk_id"] for row in sexual_resolved["rows"]] == [
+        "human-sexual",
+        "multi-damage",
+    ]
+
+    excluded_with_reference = _labeling_campaign_page(
+        rows,
+        reviews,
+        offset=0,
+        limit=10,
+        filter_labels={"ACOSO_AMENAZA"},
+        filter_statuses={"excluded"},
+        filter_flags={"contexto_necesario"},
+    )
+    assert [row["chunk_id"] for row in excluded_with_reference["rows"]] == [
+        "excluded-acoso"
+    ]
+
+    all_categories_and_flags = _labeling_progress(
+        rows,
+        reviews,
+        filter_labels={"ACOSO_AMENAZA", "CONTENIDO_SEXUAL"},
+        filter_flags={"humor_encubridor", "contexto_necesario"},
+        match_all=True,
+    )
+    assert all_categories_and_flags["total"] == 1
+
+    unlabeled = _labeling_campaign_page(
+        rows,
+        reviews,
+        offset=0,
+        limit=10,
+        filter_labeling={"unlabeled"},
+    )
+    assert [row["chunk_id"] for row in unlabeled["rows"]] == ["unlabeled"]
+
+    unlabeled_pending = _labeling_progress(
+        rows,
+        reviews,
+        filter_labeling={"unlabeled"},
+        filter_statuses={"pending"},
+    )
+    assert unlabeled_pending["total"] == 1
 
 
 def test_labeling_bulk_scope_uses_video_and_channel_title_fallback():

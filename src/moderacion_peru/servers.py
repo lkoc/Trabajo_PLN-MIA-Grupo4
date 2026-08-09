@@ -59,6 +59,72 @@ def _is_labeling_urgent(row: dict[str, Any]) -> bool:
     return str(row.get("consolidation_warning") or "") == LABELING_URGENT_WARNING
 
 
+def _is_labeling_excluded(
+    row: dict[str, Any], latest_reviews: dict[str, dict[str, Any]]
+) -> bool:
+    """Indica si la decisión vigente mantiene el chunk fuera del dataset."""
+
+    review = latest_reviews.get(str(row.get("chunk_id")))
+    if review is not None:
+        return str(review.get("action") or "") == "reject"
+    return str(row.get("decision_status") or "") == "excluded"
+
+
+def _labeling_filter_values(
+    row: dict[str, Any], latest_reviews: dict[str, dict[str, Any]]
+) -> tuple[set[str], set[str], str]:
+    """Devuelve categorías, flags y estado efectivos para filtros combinables."""
+
+    review = latest_reviews.get(str(row.get("chunk_id")))
+    action = str((review or {}).get("action") or "")
+    if action == "reject" or (review is None and row.get("decision_status") == "excluded"):
+        status = "excluded"
+    elif action == "defer":
+        status = "deferred"
+    elif action in {"accept", "modify"}:
+        status = "resolved"
+    elif bool(row.get("needs_review")) or row.get("decision_status") == "needs_review":
+        status = "pending"
+    else:
+        status = "resolved"
+
+    if action in {"accept", "modify"}:
+        labels = {str(value) for value in (review or {}).get("final_labels", [])}
+        flags = {str(value) for value in (review or {}).get("flags", [])}
+    else:
+        # Un diferimiento o una exclusión no borra la propuesta útil para auditar.
+        labels = {str(value) for value in (row.get("coarse_labels") or [])}
+        flags = {str(value) for value in (row.get("flags") or [])}
+    return labels, flags, status
+
+
+def _matches_labeling_filters(
+    row: dict[str, Any],
+    latest_reviews: dict[str, dict[str, Any]],
+    *,
+    filter_labels: set[str] | None = None,
+    filter_flags: set[str] | None = None,
+    filter_statuses: set[str] | None = None,
+    filter_labeling: set[str] | None = None,
+    match_all: bool = False,
+) -> bool:
+    labels, flags, status = _labeling_filter_values(row, latest_reviews)
+    if filter_labels:
+        if match_all and not filter_labels.issubset(labels):
+            return False
+        if not match_all and labels.isdisjoint(filter_labels):
+            return False
+    if filter_flags:
+        if match_all and not filter_flags.issubset(flags):
+            return False
+        if not match_all and flags.isdisjoint(filter_flags):
+            return False
+    labeling_state = "labeled" if labels else "unlabeled"
+    return (not filter_statuses or status in filter_statuses) and (
+        not filter_labeling or labeling_state in filter_labeling
+    )
+
+
 def _labeling_campaign_page(
     campaign_rows: list[dict[str, Any]],
     latest_reviews: dict[str, dict[str, Any]],
@@ -69,6 +135,12 @@ def _labeling_campaign_page(
     only_pending: bool = False,
     priority_only: bool = False,
     urgent_only: bool = False,
+    excluded_only: bool = False,
+    filter_labels: set[str] | None = None,
+    filter_flags: set[str] | None = None,
+    filter_statuses: set[str] | None = None,
+    filter_labeling: set[str] | None = None,
+    match_all: bool = False,
 ) -> dict[str, Any]:
     """Pagina la campaña sin copiar el corpus completo para cada solicitud."""
 
@@ -81,14 +153,31 @@ def _labeling_campaign_page(
         row_cohort = str(row.get("cohort") or row.get("label_source") or "sin_cohorte")
         if cohort and cohort != "all" and row_cohort != cohort:
             continue
+        review = latest_reviews.get(str(row.get("chunk_id")))
+        if excluded_only and not _is_labeling_excluded(row, latest_reviews):
+            continue
+        if not _matches_labeling_filters(
+            row,
+            latest_reviews,
+            filter_labels=filter_labels,
+            filter_flags=filter_flags,
+            filter_statuses=filter_statuses,
+            filter_labeling=filter_labeling,
+            match_all=match_all,
+        ):
+            continue
         if urgent_only and not _is_labeling_urgent(row):
             continue
         if priority_only and not urgent_only and not _is_labeling_priority(row):
             continue
         current_view_position = view_position
         view_position += 1
-        review = latest_reviews.get(str(row.get("chunk_id")))
-        if only_pending and review is not None and review.get("action") != "defer":
+        if (
+            only_pending
+            and not excluded_only
+            and review is not None
+            and review.get("action") != "defer"
+        ):
             continue
         if offset <= matching < offset + limit:
             page_indices.append(index)
@@ -115,7 +204,13 @@ def _labeling_progress(
     *,
     priority_only: bool = False,
     urgent_only: bool = False,
+    excluded_only: bool = False,
     cohort: str = "",
+    filter_labels: set[str] | None = None,
+    filter_flags: set[str] | None = None,
+    filter_statuses: set[str] | None = None,
+    filter_labeling: set[str] | None = None,
+    match_all: bool = False,
 ) -> dict[str, Any]:
     cohort_rows = [
         row
@@ -124,8 +219,21 @@ def _labeling_progress(
         or cohort == "all"
         or str(row.get("cohort") or row.get("label_source") or "sin_cohorte")
         == cohort
+        if _matches_labeling_filters(
+            row,
+            latest_reviews,
+            filter_labels=filter_labels,
+            filter_flags=filter_flags,
+            filter_statuses=filter_statuses,
+            filter_labeling=filter_labeling,
+            match_all=match_all,
+        )
     ]
-    if urgent_only:
+    if excluded_only:
+        selected_rows = [
+            row for row in cohort_rows if _is_labeling_excluded(row, latest_reviews)
+        ]
+    elif urgent_only:
         selected_rows = [row for row in cohort_rows if _is_labeling_urgent(row)]
     elif priority_only:
         selected_rows = [row for row in cohort_rows if _is_labeling_priority(row)]
@@ -138,6 +246,19 @@ def _labeling_progress(
         for chunk_id, event in latest_reviews.items()
         if str(chunk_id) in selected_ids
     ]
+    excluded_total = sum(
+        _is_labeling_excluded(row, latest_reviews) for row in campaign_rows
+    )
+    if excluded_only:
+        return {
+            "total": total,
+            "reviewed": len(events),
+            "resolved": total,
+            "deferred": 0,
+            "pending": 0,
+            "excluded_total": excluded_total,
+            "progress_pct": 100.0 if total else 0.0,
+        }
     resolved = sum(event.get("action") != "defer" for event in events)
     deferred = sum(event.get("action") == "defer" for event in events)
     return {
@@ -146,6 +267,7 @@ def _labeling_progress(
         "resolved": resolved,
         "deferred": deferred,
         "pending": max(0, total - resolved),
+        "excluded_total": excluded_total,
         "progress_pct": 100 * resolved / max(1, total),
     }
 
@@ -855,6 +977,10 @@ def serve(
                     "campaign_total": len(campaign_rows),
                     "campaign_priority_total": labeling_priority_total,
                     "campaign_urgent_total": labeling_urgent_total,
+                    "campaign_excluded_total": sum(
+                        _is_labeling_excluded(row, labeling_reviews)
+                        for row in campaign_rows
+                    ),
                     "campaign_pro_unresolved_total": labeling_pro_unresolved_total,
                     "campaign_pro_damage_total": labeling_pro_damage_total,
                     "campaign_priority_rule": (
@@ -864,6 +990,10 @@ def serve(
                     "campaign_urgent_rule": (
                         "Conflicto entre propuestas de máxima prioridad que la "
                         "consolidación no pudo resolver automáticamente."
+                    ),
+                    "campaign_excluded_rule": (
+                        "Chunks cuya decisión vigente los deja fuera del dataset "
+                        "entrenable; pueden abrirse y reclasificarse."
                     ),
                     "campaign_cohorts": labeling_cohorts if mode == "labeling" else [],
                     "registry_available": registry_available,
@@ -892,6 +1022,16 @@ def serve(
                     or query.get("priority", ["0"])[0] == "1"
                 )
                 urgent_only = queue == "urgent"
+                excluded_only = queue == "excluded"
+                filter_labels = {value for value in query.get("label", []) if value}
+                filter_flags = {value for value in query.get("flag", []) if value}
+                filter_statuses = {
+                    value for value in query.get("status", []) if value
+                }
+                filter_labeling = {
+                    value for value in query.get("labeling", []) if value
+                }
+                match_all = query.get("match", ["any"])[0] == "all"
                 with persistence_lock:
                     page = _labeling_campaign_page(
                         campaign_rows,
@@ -902,6 +1042,12 @@ def serve(
                         only_pending=only_pending,
                         priority_only=priority_only,
                         urgent_only=urgent_only,
+                        excluded_only=excluded_only,
+                        filter_labels=filter_labels,
+                        filter_flags=filter_flags,
+                        filter_statuses=filter_statuses,
+                        filter_labeling=filter_labeling,
+                        match_all=match_all,
                     )
                 self.send_json(page)
                 return
@@ -928,14 +1074,30 @@ def serve(
                     or query.get("priority", ["0"])[0] == "1"
                 )
                 urgent_only = queue == "urgent"
+                excluded_only = queue == "excluded"
                 cohort = query.get("cohort", [""])[0]
+                filter_labels = {value for value in query.get("label", []) if value}
+                filter_flags = {value for value in query.get("flag", []) if value}
+                filter_statuses = {
+                    value for value in query.get("status", []) if value
+                }
+                filter_labeling = {
+                    value for value in query.get("labeling", []) if value
+                }
+                match_all = query.get("match", ["any"])[0] == "all"
                 with persistence_lock:
                     progress = _labeling_progress(
                         campaign_rows,
                         labeling_reviews,
                         priority_only=priority_only,
                         urgent_only=urgent_only,
+                        excluded_only=excluded_only,
                         cohort=cohort,
+                        filter_labels=filter_labels,
+                        filter_flags=filter_flags,
+                        filter_statuses=filter_statuses,
+                        filter_labeling=filter_labeling,
+                        match_all=match_all,
                     )
                 self.send_json(progress)
                 return

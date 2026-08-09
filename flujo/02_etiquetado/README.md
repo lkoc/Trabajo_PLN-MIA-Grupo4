@@ -90,13 +90,19 @@ y la [metodología central](../../docs/METODOLOGIA_ETIQUETADO_CASCADA.md).
 modperu serve-labeling --campaign datos/etiquetado/consolidado/anotaciones_v2.jsonl
 ```
 
-La barra superior identifica el proyecto y ofrece tres colas calculadas desde
+La barra superior identifica el proyecto y ofrece cuatro vistas calculadas desde
 la campaña: **Urgentes** (2.705 conflictos de consolidación), **Prioritarios
 Pro** (44.617 salidas Pro con `needs_review=true` o alguna categoría de daño,
-sin duplicar su intersección) y **Todos** (166.940 chunks). Los conteos no están
-fijados en el HTML y se actualizan al reiniciar el servidor con otra campaña.
+sin duplicar su intersección), **Todos** (166.940 chunks) y **Excluidos**
+(decisión vigente `reject` o estado de origen `excluded`). Esta última vista
+permite auditar y revertir una exclusión mediante una nueva decisión. Los
+conteos no están fijados en el HTML y se actualizan desde la API.
 
-La sugerencia LLM se muestra desde el inicio junto al chunk para acelerar la revisión, sin presentarla como verdad humana. La vista de escritorio cabe en una sola altura: contexto anterior/posterior, detalle de propuesta, notas, guía e información del proyecto se abren en diálogos. La interfaz impide combinar `SEGURO` con daño y solo habilita flags cuando existe al menos una categoría de daño. Admite aceptar, modificar, diferir o excluir; un diferido se conserva, pero sigue pendiente hasta recibir una decisión resolutiva. Las acciones masivas pueden aceptar la propuesta propia de cada chunk, aplicar una misma clasificación humana (`SEGURO` o una combinación de daños y flags) o excluir por video/canal. Muestran el número afectado y exigen confirmación; “Clasificar todo igual” incluye inicialmente los ya resueltos para abarcar todo el alcance, aunque puede limitarse a pendientes. También conserva enlace temporal al video, progreso, filtros, borradores, atajos `A`/`R`/`Ctrl+Enter`/flechas y exportación, sin incrustar la campaña en el HTML. Estas invariantes también se validan en el servidor, por lo que no dependen únicamente del navegador. Consulte la [matriz de paridad de los frontends](../../docs/PARIDAD_FRONTENDS_ACTIVOS.md).
+La sugerencia LLM se muestra desde el inicio junto al chunk para acelerar la revisión, sin presentarla como verdad humana. La vista de escritorio cabe en una sola altura: contexto anterior/posterior, detalle de propuesta, notas, guía e información del proyecto se abren en diálogos. La interfaz impide combinar `SEGURO` con daño y solo habilita flags cuando existe al menos una categoría de daño. Admite aceptar, modificar, diferir o excluir; un diferido se conserva, pero sigue pendiente hasta recibir una decisión resolutiva. Las acciones masivas pueden aceptar la propuesta propia de cada chunk, aplicar una misma clasificación humana (`SEGURO` o una combinación de daños y flags) o excluir por video/canal. Muestran el número afectado y exigen confirmación; “Clasificar todo igual” incluye inicialmente los ya resueltos para abarcar todo el alcance, aunque puede limitarse a pendientes. El diálogo de filtros combina cola, cohorte, categorías, flags y estado de etiquetado; entre bloques usa AND y permite exigir cualquiera o todas las selecciones dentro de categorías y flags. También conserva enlace temporal al video, progreso, borradores, atajos `A`/`R`/`Ctrl+Enter`/flechas y exportación, sin incrustar la campaña en el HTML. Estas invariantes también se validan en el servidor, por lo que no dependen únicamente del navegador. Consulte la [matriz de paridad de los frontends](../../docs/PARIDAD_FRONTENDS_ACTIVOS.md).
+
+El filtro de completitud añade **Sin etiqueta** y **Con etiqueta**. El primero
+selecciona chunks sin ninguna categoría efectiva y no debe confundirse con
+**Pendiente**, que puede conservar una sugerencia automática.
 
 Los botones distinguen cuatro efectos: **Aceptar sugerencia** confirma exactamente la propuesta automática; **Guardar mi decisión** guarda las categorías y flags seleccionados por la persona revisora cuando discrepa del modelo; **Revisar después (diferir)** deja el chunk pendiente y fuera del entrenamiento hasta una decisión final; **Excluir del dataset** descarta el chunk del conjunto entrenable sin convertirlo en `SEGURO`. La misma explicación está disponible en el diálogo “¿Qué hace cada botón?”.
 
