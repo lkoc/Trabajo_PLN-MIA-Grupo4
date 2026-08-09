@@ -168,7 +168,11 @@ def recover_historical_annotations(
             already_present_matches += 1
             continue
         historical, source_name = historical_by_id[historical_id]
-        fine_labels = list(dict.fromkeys(historical.get("labels") or []))
+        fine_labels = list(
+            dict.fromkeys(
+                historical.get("fine_labels") or historical.get("labels") or []
+            )
+        )
         coarse_labels = list(taxonomy.derive_categories(fine_labels))
         needs_review = bool(historical.get("needs_review")) or not coarse_labels
         source_record_sha256 = str(current.get("text_sha256") or "") or sha256_text(
@@ -192,15 +196,28 @@ def recover_historical_annotations(
             decision_status="needs_review" if needs_review else "resolved",
             score_confianza=historical.get("score_confianza"),
             notes=str(historical.get("notes") or ""),
-            justification=str(historical.get("justificacion") or ""),
+            justification=str(
+                historical.get("justification")
+                or historical.get("justificacion")
+                or ""
+            ),
             label_source=label_source,
             annotator_type="llm_remote",
             annotator_model=expected_model,
-            prompt_sha256=historical_prompt_sha256,
+            prompt_sha256=str(
+                historical.get("prompt_sha256") or historical_prompt_sha256
+            ),
             source_record_sha256=source_record_sha256,
-            consolidated_sources=[f"{source_name}:{historical_id}"],
+            consolidated_sources=list(
+                dict.fromkeys(
+                    [
+                        *(historical.get("consolidated_sources") or []),
+                        f"{source_name}:{historical_id}",
+                    ]
+                )
+            ),
             consolidation_warning="historical_id_rekeyed_by_exact_normalized_text",
-            created_at=historical.get("annotated_at"),
+            created_at=historical.get("created_at") or historical.get("annotated_at"),
         )
         recovered.append(record.model_dump(mode="json"))
 

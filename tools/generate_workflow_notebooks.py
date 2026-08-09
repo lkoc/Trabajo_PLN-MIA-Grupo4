@@ -14,6 +14,7 @@ from notebook_references import apply_citations
 ROOT = Path(__file__).resolve().parents[1]
 ONLY_NOTEBOOKS: set[str] | None = None
 _COLAB_BUNDLE_IDENTITY: dict[str, str] | None = None
+OPERATIONAL_PROMPT_RELATIVE = "config/prompt_operacional_ollama_v3_2.md"
 
 PROJECT_TITLE = (
     "Moderación semiautomática de videos peruanos de YouTube mediante modelos "
@@ -84,7 +85,10 @@ ROOT = find_root()
 if str(ROOT / 'src') not in sys.path:
     sys.path.insert(0, str(ROOT / 'src'))
 from moderacion_peru.notebook_ui import show_callout, show_command, show_result, show_summary, show_table
-show_summary('Entorno del proyecto', {'raíz': ROOT, 'backend': 'local'}, tone='success')
+OPERATIONAL_PROMPT=ROOT/'config/prompt_operacional_ollama_v3_2.md'
+if not OPERATIONAL_PROMPT.is_file():
+    raise FileNotFoundError(f'Falta el prompt operacional vigente: {OPERATIONAL_PROMPT}')
+show_summary('Entorno del proyecto', {'raíz': ROOT, 'backend': 'local', 'prompt_operacional': OPERATIONAL_PROMPT}, tone='success')
 """
 
 
@@ -435,6 +439,10 @@ else:
         sys.path.insert(0, str(ROOT / "src"))
     from moderacion_peru.notebook_ui import show_callout, show_command, show_result, show_summary, show_table
     show_summary('Entorno del proyecto', {'raíz': ROOT, 'backend': 'local'}, tone='success')
+OPERATIONAL_PROMPT=ROOT/'config/prompt_operacional_ollama_v3_2.md'
+if not OPERATIONAL_PROMPT.is_file():
+    raise FileNotFoundError(f'Falta el prompt operacional vigente: {OPERATIONAL_PROMPT}')
+show_summary('Prompt operacional vigente', {'ruta': OPERATIONAL_PROMPT, 'versión': '3.2.0'}, tone='success')
 """
 
 
@@ -1984,7 +1992,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "su familia se fundamenta en destilación y representaciones multilingües [@wang2020minilm] "
         "[@reimers2020multilingual], y el checkpoint queda fijado por su tarjeta [@hf2026minilmcard]. "
         "Ollama usa `gemma3:4b`, salida estructurada y el prompt operativo vigente en "
-        "`config/prompt_operacional_ollama_v2.md` "
+        "`config/prompt_operacional_ollama_v3_2.md` "
         "[@ollama2026gemma34b] [@ollama2026structured]. El bootstrap remuestrea videos completos para "
         "preservar la dependencia entre ventanas pareadas [@efron1979bootstrap] "
         "[@field2007clusterbootstrap]; la comparación pareada y las hipótesis predeclaradas siguen "
@@ -2331,7 +2339,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         colab_publisher=True,
     )
     create(
-        "flujo/02_etiquetado/02_01_etiquetado_local_ollama.ipynb",
+        "flujo/02_etiquetado/02_01_etiquetado_deepseek_flash_pro.ipynb",
         "02.01 · Cascada de etiquetado calibrada",
         "Reproduce el patrón histórico Flash→Pro: calibra una primera pasada económica, etiqueta el corpus por lotes y dirige los casos riesgosos a un revisor más capaz.",
         "La procedencia de `deepseek-v4-flash` y `deepseek-v4-pro` está documentada por el proveedor "
@@ -2359,21 +2367,23 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "HISTORICAL_FLASH_SOURCES=(COLAB_CONTEXT.input('deepseek_flash_historico'),) if COLAB_CONTEXT else (ROOT/'datos/etiquetado/llm_api/deepseek-v4-flash_labeled_chunks_seed42.jsonl',)\n"
                 "HISTORICAL_PRO_SOURCES=(COLAB_CONTEXT.input('deepseek_pro_historico_principal'),COLAB_CONTEXT.input('deepseek_pro_historico_umbral'),COLAB_CONTEXT.input('deepseek_pro_historico_sospechosos')) if COLAB_CONTEXT else (ROOT/'datos/etiquetado/llm_api/deepseek-v4-pro_revision_de_deepseek-v4-flash_seed42.jsonl',ROOT/'datos/etiquetado/llm_api/deepseek-v4-pro_revision_umbral_recalibrado_t090_seed42.jsonl',ROOT/'datos/etiquetado/llm_api/deepseek-v4-pro_revision_sospechosos_gruesos_seed42.jsonl')\n"
                 "HISTORICAL_PROMPT_SHA256='52d4fec14ad433d35ec20de5f51a6954aad69dcedd1422059419dcecc2f9e778'\n"
-                "PRIMARY_PATH=CAMPAIGN_ROOT/'primary_flash.jsonl'\n"
-                "REVIEW_PATH=CAMPAIGN_ROOT/'review_pro.jsonl'\n"
+                "PREVIOUS_PRIMARY_PATH=CAMPAIGN_ROOT/'primary_flash.jsonl'\n"
+                "PREVIOUS_REVIEW_PATH=CAMPAIGN_ROOT/'review_pro.jsonl'\n"
+                "PRIMARY_PATH=CAMPAIGN_ROOT/'primary_flash_v3_2.jsonl'\n"
+                "REVIEW_PATH=CAMPAIGN_ROOT/'review_pro_v3_2.jsonl'\n"
                 "RECOVER_HISTORICAL=True  # Recupera solo coincidencias exactas 1:1; nunca transfiere segmentos distintos.\n"
                 "AUTO_PUBLISH_CHECKPOINTS=True  # En Colab publica TAR.GZ atómico al recuperar, periódicamente y al interrumpir.\n"
-                "DRIVE_CHECKPOINT_EVERY_BATCHES=10  # 10 ventanas × 160 chunks; cada grupo de 5 ya queda fsync local.\n"
+                "DRIVE_CHECKPOINT_EVERY_BATCHES=3  # 3 ventanas × 640 chunks; cada grupo de 5 ya queda fsync local.\n"
                 "RUN_API_PREFLIGHT=True  # Consulta /models y /user/balance sin enviar textos ni consumir tokens de etiquetado.\n"
                 "RUN_CALIBRATION=False  # Primero: panel pareado Flash–Pro. Costo esperado muy bajo.\n"
-                "RUN_PRIMARY=False  # Flash ya está completo; esta reanudación no envía solicitudes Flash.\n"
+                "RUN_PRIMARY=True  # Procesa únicamente los chunk_id nuevos o todavía pendientes en Flash.\n"
                 "RUN_DIRECTED_REVIEW=True  # Reanuda Pro únicamente sobre la cola presupuestada pendiente.\n"
                 "CALIBRATION_PANEL_SIZE=1000  # Aún breve; permite evaluar LI95%≈0.95 con potencia útil.\n"
                 "PRIMARY_LIMIT=None  # None para TODOS y solo los pendientes; use 20 únicamente para un smoke test. Nunca lo deje en blanco.\n"
                 "REVIEW_LIMIT=None   # Campaña: TODA y solo la cola dirigida pendiente.\n"
-                "PROCESSING_BATCH_SIZE=160  # 32 solicitudes concurrentes × 5 registros.\n"
+                "PROCESSING_BATCH_SIZE=640  # Ventana persistible: 128 solicitudes de 5; Pro limita el fan-out a 64.\n"
                 "MAX_PRIMARY_COST_USD=60.0\n"
-                "MAX_REVIEW_COST_USD=14.50  # Tope de esta reanudación; deja margen sobre US$15.75 disponibles tras una recarga de US$10.\n"
+                "MAX_REVIEW_COST_USD=None  # Sin bloqueo artificial: el saldo real y los checkpoints gobiernan la reanudación.\n"
                 "BALANCE_REFRESH_SECONDS=60.0  # Consulta de saldo sin corpus durante la ejecución.\n"
                 "LOW_BALANCE_WARNING_USD=2.0\n"
                 "CACHE_ALERT_AFTER_REQUESTS=50\n"
@@ -2382,9 +2392,9 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "REVIEW_CONFIDENCE_THRESHOLD=0.85  # Pro revisa seguros Flash < 0.85; el 0.95 sigue siendo solo diagnóstico.\n"
                 "MAX_NEEDS_REVIEW_FOR_PRO=36_000  # Abstenciones Flash de menor confianza; desempate SHA-256 reproducible.\n\n"
                 "OBSERVED_REVIEW_COST_PER_1000_USD=0.335785  # Tramo Pro medido: US$4.727523 / 14 079 respuestas.\n"
-                "REQUIRED_REVIEW_START_BALANCE_USD=15.00  # Falla antes de enviar corpus si el saldo es menor.\n\n"
-                "primary_provider=DeepSeekProvider(model='deepseek-v4-flash',max_workers=32,records_per_request=5,max_cost_usd=MAX_PRIMARY_COST_USD,label_source='deepseek_remote')\n"
-                "reviewer_provider=DeepSeekProvider(model='deepseek-v4-pro',max_workers=32,records_per_request=5,max_cost_usd=MAX_REVIEW_COST_USD,label_source='llm_remote_review')\n"
+                "RECOMMENDED_REVIEW_START_BALANCE_USD=15.00  # Solo advertencia; no bloquea una corrida con saldo menor.\n\n"
+                "primary_provider=DeepSeekProvider(model='deepseek-v4-flash',max_workers=128,records_per_request=5,cache_warmup_requests=1,max_cost_usd=MAX_PRIMARY_COST_USD,label_source='deepseek_remote',operational_prompt_path=OPERATIONAL_PROMPT)\n"
+                "reviewer_provider=DeepSeekProvider(model='deepseek-v4-pro',max_workers=64,records_per_request=5,cache_warmup_requests=1,max_cost_usd=MAX_REVIEW_COST_USD,label_source='llm_remote_review',operational_prompt_path=OPERATIONAL_PROMPT)\n"
                 "primary_probe=primary_provider.probe(); reviewer_probe=reviewer_provider.probe()\n"
                 "expected_thinking={'type':'disabled'}\n"
                 "expected_response_format={'type':'json_object'}\n"
@@ -2401,7 +2411,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "    show_callout('Falta credencial','Defina DEEPSEEK_API_KEY en el entorno o como secreto de Colab. El preflight no consume crédito.',tone='warning')\n"
                 "show_result('Primera pasada',primary_probe,tone='success')\n"
                 "show_result('Revisor dirigido',reviewer_probe,tone='success')\n"
-                "show_summary('Modo DeepSeek verificado',{'Flash':primary_probe['thinking'],'Pro':reviewer_probe['thinking'],'JSON_Flash':primary_probe['response_format'],'JSON_Pro':reviewer_probe['response_format'],'contrato_salida':primary_probe['output_contract'],'caché_Flash':primary_probe['context_cache'],'caché_Pro':reviewer_probe['context_cache']},tone='success')\n"
+                "show_summary('Modo DeepSeek verificado',{'Flash':primary_probe['thinking'],'Pro':reviewer_probe['thinking'],'JSON_Flash':primary_probe['response_format'],'JSON_Pro':reviewer_probe['response_format'],'contrato_salida':primary_probe['output_contract'],'caché_Flash':primary_probe['context_cache'],'caché_Pro':reviewer_probe['context_cache'],'lote':5,'concurrencia_Flash':primary_probe['max_workers'],'concurrencia_Pro':reviewer_probe['max_workers']},tone='success')\n"
                 "if RUN_API_PREFLIGHT and primary_probe['credential_configured']:\n"
                 "    flash_connection=primary_provider.validate_connection(); pro_connection=reviewer_provider.validate_connection()\n"
                 "    if not flash_connection['model_available'] or not pro_connection['model_available']:\n"
@@ -2484,14 +2494,20 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "    signature={'model':probe['model'],'thinking':probe['thinking'],'response_format':probe['response_format'],'output_contract':probe['output_contract'],'context_cache':probe['context_cache'],'prompt_sha256':probe['prompt_sha256'],'operational_prompt_sha256':probe['operational_prompt_sha256'],'records_per_request':probe['records_per_request'],'label_source':probe['label_source']}\n"
                 "    if historical_recovery is not None: signature['historical_recovery']=historical_recovery\n"
                 "    return {'provider':signature,'taxonomy':'moderacion_peru_5_salidas_v2','taxonomy_version':'2.1.0'}\n\n"
-                "FLASH_HISTORY_SIGNATURE=historical_recovery_signature(HISTORICAL_CHUNKS,HISTORICAL_FLASH_SOURCES,expected_model='deepseek-v4-flash',historical_prompt_sha256=HISTORICAL_PROMPT_SHA256) if RECOVER_HISTORICAL else None\n"
-                "PRO_HISTORY_SIGNATURE=historical_recovery_signature(HISTORICAL_CHUNKS,HISTORICAL_PRO_SOURCES,expected_model='deepseek-v4-pro',historical_prompt_sha256=HISTORICAL_PROMPT_SHA256) if RECOVER_HISTORICAL else None\n"
+                "FLASH_RECOVERY_CHUNKS=SOURCE if PREVIOUS_PRIMARY_PATH.is_file() else HISTORICAL_CHUNKS\n"
+                "FLASH_RECOVERY_SOURCES=(PREVIOUS_PRIMARY_PATH,) if PREVIOUS_PRIMARY_PATH.is_file() else HISTORICAL_FLASH_SOURCES\n"
+                "FLASH_RECOVERY_PROMPT='preserve_prompt_sha256_per_record' if PREVIOUS_PRIMARY_PATH.is_file() else HISTORICAL_PROMPT_SHA256\n"
+                "PRO_RECOVERY_CHUNKS=SOURCE if PREVIOUS_REVIEW_PATH.is_file() else HISTORICAL_CHUNKS\n"
+                "PRO_RECOVERY_SOURCES=(PREVIOUS_REVIEW_PATH,) if PREVIOUS_REVIEW_PATH.is_file() else HISTORICAL_PRO_SOURCES\n"
+                "PRO_RECOVERY_PROMPT='preserve_prompt_sha256_per_record' if PREVIOUS_REVIEW_PATH.is_file() else HISTORICAL_PROMPT_SHA256\n"
+                "FLASH_HISTORY_SIGNATURE=historical_recovery_signature(FLASH_RECOVERY_CHUNKS,FLASH_RECOVERY_SOURCES,expected_model='deepseek-v4-flash',historical_prompt_sha256=FLASH_RECOVERY_PROMPT) if RECOVER_HISTORICAL else None\n"
+                "PRO_HISTORY_SIGNATURE=historical_recovery_signature(PRO_RECOVERY_CHUNKS,PRO_RECOVERY_SOURCES,expected_model='deepseek-v4-pro',historical_prompt_sha256=PRO_RECOVERY_PROMPT) if RECOVER_HISTORICAL else None\n"
                 "PRIMARY_RUN_METADATA=provider_run_metadata(primary_provider,FLASH_HISTORY_SIGNATURE)\n"
                 "REVIEW_RUN_METADATA=provider_run_metadata(reviewer_provider,PRO_HISTORY_SIGNATURE)\n"
                 "if RECOVER_HISTORICAL:\n"
-                "    primary_recovery=recover_historical_annotations(CHUNKS,HISTORICAL_CHUNKS,HISTORICAL_FLASH_SOURCES,PRIMARY_PATH,expected_model='deepseek-v4-flash',historical_prompt_sha256=HISTORICAL_PROMPT_SHA256,run_metadata=PRIMARY_RUN_METADATA)\n"
-                "    review_recovery=recover_historical_annotations(CHUNKS,HISTORICAL_CHUNKS,HISTORICAL_PRO_SOURCES,REVIEW_PATH,expected_model='deepseek-v4-pro',historical_prompt_sha256=HISTORICAL_PROMPT_SHA256,run_metadata=REVIEW_RUN_METADATA,label_source='llm_remote_review_historical_recovered')\n"
-                "    show_result('Recuperación histórica exacta',{'Flash':primary_recovery,'Pro':review_recovery},tone='success')\n"
+                "    primary_recovery=recover_historical_annotations(CHUNKS,FLASH_RECOVERY_CHUNKS,FLASH_RECOVERY_SOURCES,PRIMARY_PATH,expected_model='deepseek-v4-flash',historical_prompt_sha256=FLASH_RECOVERY_PROMPT,run_metadata=PRIMARY_RUN_METADATA)\n"
+                "    review_recovery=recover_historical_annotations(CHUNKS,PRO_RECOVERY_CHUNKS,PRO_RECOVERY_SOURCES,REVIEW_PATH,expected_model='deepseek-v4-pro',historical_prompt_sha256=PRO_RECOVERY_PROMPT,run_metadata=REVIEW_RUN_METADATA,label_source='llm_remote_review_historical_recovered')\n"
+                "    show_result('Recuperación exacta de opiniones previas',{'Flash':primary_recovery,'Pro':review_recovery,'salida_Flash_vigente':PRIMARY_PATH,'salida_Pro_vigente':REVIEW_PATH,'regla_prompt':'se conserva el prompt_sha256 original de cada opinión; solo los pendientes usan 3.2.0'},tone='success')\n"
                 "    if COLAB_CONTEXT is not None and AUTO_PUBLISH_CHECKPOINTS and (primary_recovery['recovered_new'] or review_recovery['recovered_new']):\n"
                 "        show_result('Checkpoint histórico publicado en Drive',publish_colab_outputs(COLAB_CONTEXT),tone='success')\n\n"
                 "primary_pending=primary_recovery['pending_current_after_recovery'] if RECOVER_HISTORICAL else len(CHUNKS)\n"
@@ -2551,7 +2567,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
             (
                 "Primera pasada completa con Flash",
                 "if RUN_PRIMARY:\n"
-                "    PRIMARY_PATH,primary_result=run_campaign(CHUNKS,primary_provider,'primary_flash.jsonl',limit=PRIMARY_LIMIT,description='Primera pasada Flash')\n"
+                "    PRIMARY_PATH,primary_result=run_campaign(CHUNKS,primary_provider,'primary_flash_v3_2.jsonl',limit=PRIMARY_LIMIT,description='Primera pasada Flash')\n"
                 "    show_result('Resultado Flash',primary_result,tone='success')\n"
                 "else:\n"
                 "    show_callout('Primera pasada desactivada','PRIMARY_LIMIT=None procesa todos y solo los pendientes; use 20 únicamente para un smoke mínimo. La salida reanuda por chunk_id y muestra costo, caché y saldo reales.',tone='neutral')",
@@ -2576,12 +2592,10 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "    pending_review_count=sum(row['chunk_id'] not in reviewed_ids for row in review_queue)\n"
                 "    projected_review_cost=pending_review_count*OBSERVED_REVIEW_COST_PER_1000_USD/1000\n"
                 "    budget_balance=reviewer_provider.balance_summary()\n"
-                "    show_summary('Previsión antes de enviar corpus a Pro',{'revisiones_Pro_preservadas':len(reviewed_ids),'cola_nueva_pendiente':pending_review_count,'controles_seguros_seleccionados':routing['routing_reasons'].get('safe_control',0),'costo_puntual_proyectado_USD':round(projected_review_cost,2),'tope_ejecución_USD':MAX_REVIEW_COST_USD,'saldo_actual_USD':budget_balance['total_balance_usd']},tone='success' if budget_balance['total_balance_usd']>=REQUIRED_REVIEW_START_BALANCE_USD and projected_review_cost<=MAX_REVIEW_COST_USD else 'warning')\n"
-                "    if projected_review_cost > MAX_REVIEW_COST_USD:\n"
-                "        raise RuntimeError(f'La cola proyecta US${projected_review_cost:.2f}, por encima del tope US${MAX_REVIEW_COST_USD:.2f}; ajuste la regla antes de enviar corpus.')\n"
-                "    if budget_balance['total_balance_usd'] < REQUIRED_REVIEW_START_BALANCE_USD:\n"
-                "        raise RuntimeError(f\"Saldo Pro US${budget_balance['total_balance_usd']:.2f}; se requieren al menos US${REQUIRED_REVIEW_START_BALANCE_USD:.2f}. Recargue y vuelva a ejecutar solo esta celda. No se envió corpus.\")\n"
-                "    REVIEW_PATH,review_result=run_campaign(review_queue,reviewer_provider,'review_pro.jsonl',limit=REVIEW_LIMIT,description='Revisión dirigida Pro')\n"
+                "    show_summary('Previsión antes de enviar corpus a Pro',{'revisiones_Pro_preservadas':len(reviewed_ids),'cola_nueva_pendiente':pending_review_count,'controles_seguros_seleccionados':routing['routing_reasons'].get('safe_control',0),'costo_puntual_proyectado_USD':round(projected_review_cost,2),'tope_artificial_USD':MAX_REVIEW_COST_USD,'saldo_actual_USD':budget_balance['total_balance_usd'],'saldo_recomendado_no_bloqueante_USD':RECOMMENDED_REVIEW_START_BALANCE_USD},tone='success' if budget_balance['total_balance_usd']>=projected_review_cost else 'warning')\n"
+                "    if budget_balance['total_balance_usd'] < RECOMMENDED_REVIEW_START_BALANCE_USD:\n"
+                "        show_callout('Saldo menor que la recomendación',f\"Saldo Pro US${budget_balance['total_balance_usd']:.2f}; la referencia conservadora es US${RECOMMENDED_REVIEW_START_BALANCE_USD:.2f}, pero esto no bloquea la ejecución. El proveedor se detendrá si se agota el saldo y la reanudación continuará por chunk_id.\",tone='warning')\n"
+                "    REVIEW_PATH,review_result=run_campaign(review_queue,reviewer_provider,'review_pro_v3_2.jsonl',limit=REVIEW_LIMIT,description='Revisión dirigida Pro')\n"
                 "    show_summary('Enrutamiento operativo actualizado',routing,tone='success')\n"
                 "    show_result('Resultado Pro',review_result,tone='success')\n"
                 "else:\n"
@@ -2605,45 +2619,106 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         colab_requires_gpu=False,
     )
     create(
-        "flujo/02_etiquetado/02_02_etiquetado_remoto.ipynb",
-        "02.02 · Alternativa local ligera y diagnóstico",
-        "Mantiene una ruta sin costo de API con Qwen3-1.7B y el mismo prompt compacto; es un fallback, no se mezcla con la campaña principal Flash→Pro.",
-        "Qwen3 es una familia multilingüe de pesos abiertos [@qwen2025qwen3]. La revisión exacta de "
-        "`Qwen/Qwen3-1.7B` se fija mediante su tarjeta oficial [@hf2026qwen17bcard]. Esta ruta reduce "
-        "memoria respecto de 4B, pero su calidad debe calibrarse por separado y sus propuestas no son "
-        "*ground truth* [@schroeder2025llmassisted].",
+        "flujo/02_etiquetado/02_02_etiquetado_hf_qwen_colab.ipynb",
+        "02.02 · Cascada HF–Qwen en Colab",
+        "Ejecuta sin costo de API una primera pasada Qwen3-1.7B y dirige daño, dudas y controles a Qwen3-4B; es una alternativa experimental independiente de DeepSeek.",
+        "Qwen3 es una familia multilingüe de pesos abiertos [@qwen2025qwen3]. Las revisiones exactas "
+        "de `Qwen/Qwen3-1.7B` y `Qwen/Qwen3-4B` se fijan mediante sus tarjetas oficiales "
+        "[@hf2026qwen17bcard] [@hf2026qwen4bcard]. La cascada carga los modelos secuencialmente en una "
+        "NVIDIA L4: 1.7B aporta cobertura y 4B revisa daño, abstenciones, baja confianza y un control "
+        "seguro. Esta política de enrutamiento es una decisión local que debe compararse con una pasada "
+        "4B y con referencias humanas; las propuestas no son *ground truth* [@schroeder2025llmassisted].",
         [
             (
-                "Proveedor local ligero",
+                "Configuración Colab y contrato JSON",
                 "from moderacion_peru.providers import HuggingFaceProvider\n"
-                "from moderacion_peru.io import read_jsonl\n"
-                "provider=HuggingFaceProvider(model='Qwen/Qwen3-1.7B',revision='70d244cc86ccca08cf5af4e1e306ecf908b1ad5e',device='auto',records_per_request=5,inference_batch_size=4,max_new_tokens=256)\n"
-                "SOURCE=ROOT/'datos/processed/chunks_v2.jsonl'\n"
-                "OUTPUT=ROOT/'datos/etiquetado/fallback_hf/qwen3_1_7b_v2.jsonl'\n"
-                "ERRORS=OUTPUT.with_suffix('.errors.jsonl')\n"
-                "show_result('Estado del fallback',provider.probe(),tone='neutral')",
+                "from moderacion_peru.io import read_jsonl,write_json_atomic,write_jsonl_atomic\n\n"
+                "SOURCE=COLAB_CONTEXT.input('chunks_v2') if COLAB_CONTEXT else ROOT/'datos/processed/chunks_v2.jsonl'\n"
+                "CAMPAIGN_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'datos/etiquetado/cascada_qwen_hf'\n"
+                "CAMPAIGN_ROOT.mkdir(parents=True,exist_ok=True)\n"
+                "PRIMARY=CAMPAIGN_ROOT/'qwen3_1_7b_primary_v3_2.jsonl'\n"
+                "REVIEW=CAMPAIGN_ROOT/'qwen3_4b_review_v3_2.jsonl'\n"
+                "QUEUE=CAMPAIGN_ROOT/'qwen3_4b_review_queue_v3_2.jsonl'\n"
+                "RUN_PRIMARY=False\n"
+                "RUN_REVIEW=False\n"
+                "PRIMARY_LIMIT=20  # Smoke reanudable; use None para todos los pendientes.\n"
+                "REVIEW_LIMIT=20   # Smoke reanudable; use None para toda la cola dirigida.\n"
+                "REVIEW_CONFIDENCE_THRESHOLD=0.85\n"
+                "SAFE_CONTROL_RATE=0.05\n"
+                "MAX_NEEDS_REVIEW_FOR_QWEN4B=None\n\n"
+                "primary_provider=HuggingFaceProvider(model='Qwen/Qwen3-1.7B',revision='70d244cc86ccca08cf5af4e1e306ecf908b1ad5e',device='auto',records_per_request=5,inference_batch_size=4,max_new_tokens=256,operational_prompt_path=OPERATIONAL_PROMPT,label_source='qwen_hf_colab_primary')\n"
+                "reviewer_provider=HuggingFaceProvider(model='Qwen/Qwen3-4B',revision='1cfa9a7208912126459214e8b04321603b3df60c',device='auto',records_per_request=5,inference_batch_size=2,max_new_tokens=256,operational_prompt_path=OPERATIONAL_PROMPT,label_source='qwen_hf_colab_review')\n"
+                "primary_probe=primary_provider.probe(); reviewer_probe=reviewer_provider.probe()\n"
+                "for role,probe in [('primario',primary_probe),('revisor',reviewer_probe)]:\n"
+                "    if probe['response_format']!={'type':'json_object'} or probe['output_contract']['root_key']!='annotations':\n"
+                "        raise RuntimeError(f'El proveedor {role} no garantiza el wrapper JSON annotations')\n"
+                "    if Path(probe['operational_prompt_path']).resolve()!=OPERATIONAL_PROMPT.resolve():\n"
+                "        raise RuntimeError(f'El proveedor {role} no usa el prompt operacional vigente')\n"
+                "show_result('Qwen3-1.7B primario',primary_probe,tone='success')\n"
+                "show_result('Qwen3-4B revisor',reviewer_probe,tone='success')\n"
+                "show_callout('Optimización correcta','02_02 no llama a DeepSeek y no genera cargos ni aciertos de caché de su API. Agrupa 5 chunks por prompt y aprovecha la L4 con lotes GPU de 4 prompts para 1.7B y 2 para 4B; subirlos exige medir memoria antes.',tone='neutral')\n"
+                "show_callout('Contrato verificado','Ambos modelos reciben el prompt operacional 3.2.0 y solo se persisten objetos validados con raíz annotations, orden y chunk_id exactos.',tone='success')",
             ),
             (
-                "Ejecución por lotes y avance",
+                "Primera pasada Qwen3-1.7B",
                 "from tqdm.auto import tqdm\n"
-                "from moderacion_peru.labeling import annotate_batched_incremental\n"
-                "RUN_FALLBACK=False\n"
-                "LIMIT=20  # Use None para todos los pendientes después del smoke test.\n"
-                "local_progress={'bar':None}\n"
-                "def report_local_progress(event):\n"
-                "    if event['status']=='started':\n"
-                "        local_progress['bar']=tqdm(total=event['selected'],desc='Fallback Qwen3-1.7B',unit='chunk'); return\n"
-                "    bar=local_progress.get('bar')\n"
-                "    if bar is not None and event.get('advance'):\n"
-                "        bar.update(event['advance']); bar.set_postfix(ok=event['labeled'],errores=event['errors'])\n"
-                "    if event['status']=='finished' and bar is not None: bar.close(); local_progress['bar']=None\n"
-                "if RUN_FALLBACK:\n"
-                "    fallback_result=annotate_batched_incremental(read_jsonl(SOURCE),provider,OUTPUT,error_path=ERRORS,limit=LIMIT,processing_batch_size=20,progress_callback=report_local_progress,run_metadata={'provider':provider.probe(),'role':'independent_fallback'})\n"
-                "    show_result('Resultado local',fallback_result,tone='success')\n"
+                "from moderacion_peru.labeling import annotate_batched_incremental\n\n"
+                "progress={'bar':None,'description':''}\n"
+                "def qwen_progress(description):\n"
+                "    progress['description']=description\n"
+                "    def callback(event):\n"
+                "        if event['status']=='started':\n"
+                "            progress['bar']=tqdm(total=event['selected'],desc=description,unit='chunk'); return\n"
+                "        bar=progress.get('bar')\n"
+                "        if bar is not None and event.get('advance'):\n"
+                "            bar.update(event['advance']); bar.set_postfix(ok=event['labeled'],errores=event['errors'])\n"
+                "        if event['status'] in {'finished','interrupted_checkpoint'} and bar is not None:\n"
+                "            bar.close(); progress['bar']=None\n"
+                "    return callback\n\n"
+                "if RUN_PRIMARY:\n"
+                "    try:\n"
+                "        primary_result=annotate_batched_incremental(read_jsonl(SOURCE),primary_provider,PRIMARY,error_path=PRIMARY.with_suffix('.errors.jsonl'),limit=PRIMARY_LIMIT,processing_batch_size=20,progress_callback=qwen_progress('Qwen3-1.7B'),run_metadata={'provider':primary_probe,'role':'qwen_primary','prompt_version':'3.2.0'})\n"
+                "    finally:\n"
+                "        primary_provider.unload()\n"
+                "    show_result('Primera pasada persistida',primary_result,tone='success')\n"
                 "else:\n"
-                "    show_callout('Fallback desactivado','La campaña principal se ejecuta completa en 02_01. Active esta ruta solo para un diagnóstico independiente.',tone='neutral')",
+                "    primary_provider.unload()\n"
+                "    show_callout('Primera pasada desactivada','Use 20 para el smoke y después None; la salida reanuda por chunk_id.',tone='neutral')",
+            ),
+            (
+                "Enrutamiento reproducible hacia Qwen3-4B",
+                "from moderacion_peru.labeling_calibration import build_directed_review_queue\n\n"
+                "if PRIMARY.is_file():\n"
+                "    primary_rows=list(read_jsonl(PRIMARY))\n"
+                "    primary_ids={row['chunk_id'] for row in primary_rows}\n"
+                "    paired_chunks=[row for row in read_jsonl(SOURCE) if row['chunk_id'] in primary_ids]\n"
+                "    review_queue,routing=build_directed_review_queue(paired_chunks,primary_rows,confidence_threshold=REVIEW_CONFIDENCE_THRESHOLD,safe_control_rate=SAFE_CONTROL_RATE,max_needs_review=MAX_NEEDS_REVIEW_FOR_QWEN4B,seed=42)\n"
+                "    write_jsonl_atomic(QUEUE,review_queue)\n"
+                "    write_json_atomic(CAMPAIGN_ROOT/'qwen_routing_summary_v3_2.json',routing)\n"
+                "    show_result('Cola Qwen3-4B',routing,tone='success')\n"
+                "else:\n"
+                "    review_queue=[]\n"
+                "    show_callout('Falta primera pasada','Ejecute Qwen3-1.7B antes de construir la cola 4B.',tone='warning')",
+            ),
+            (
+                "Revisión dirigida Qwen3-4B y checkpoint",
+                "if RUN_REVIEW:\n"
+                "    if not QUEUE.is_file(): raise FileNotFoundError('Falta la cola dirigida Qwen3-4B')\n"
+                "    try:\n"
+                "        review_result=annotate_batched_incremental(read_jsonl(QUEUE),reviewer_provider,REVIEW,error_path=REVIEW.with_suffix('.errors.jsonl'),limit=REVIEW_LIMIT,processing_batch_size=10,progress_callback=qwen_progress('Qwen3-4B'),run_metadata={'provider':reviewer_probe,'role':'qwen_directed_review','prompt_version':'3.2.0'})\n"
+                "    finally:\n"
+                "        reviewer_provider.unload()\n"
+                "    show_result('Revisión 4B persistida',review_result,tone='success')\n"
+                "    if COLAB_CONTEXT is not None:\n"
+                "        from moderacion_peru.colab import publish_colab_outputs\n"
+                "        show_result('Checkpoint publicado en Drive',publish_colab_outputs(COLAB_CONTEXT),tone='success')\n"
+                "else:\n"
+                "    reviewer_provider.unload()\n"
+                "    show_callout('Revisión 4B desactivada','La cola incluye daño, abstenciones, confianza menor que 0.85 y un control seguro reproducible del 5%.',tone='neutral')",
             ),
         ],
+        colab_notebook_id="02_02",
+        colab_requires_gpu=True,
     )
     create(
         "flujo/02_etiquetado/02_03_revision_llm_dirigida.ipynb",

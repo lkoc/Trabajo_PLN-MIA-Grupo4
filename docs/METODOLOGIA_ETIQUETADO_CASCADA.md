@@ -22,8 +22,9 @@ saldo, sin eliminar ninguna de las **29 270** revisiones ya persistidas. La cola
 conservadora completa dejaba 58 086 pendientes; al costo observado no cabía en
 unos US$15. La regla presupuestada deja **40 695** revisiones nuevas: 12 613
 daños, 27 078 abstenciones priorizadas, 145 seguros de baja confianza y 859
-controles seguros. Su costo puntual proyectado es **US$13.66** y el tope es
-`MAX_REVIEW_COST_USD=14.50`.
+controles seguros. Su costo puntual proyectado histórico fue **US$13.66**. La
+configuración actual usa `MAX_REVIEW_COST_USD=None`: no bloquea por una cifra
+arbitraria y conserva US$15.00 únicamente como advertencia presupuestaria.
 
 El contrato v2.1 aprende `SEGURO`, `RACISMO_DISCRIMINACION`,
 `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO`
@@ -184,13 +185,13 @@ en tareas subjetivas ([Schroeder et al., 2025](https://aclanthology.org/2025.fin
 - Un flag transversal mal ubicado se mueve a `flags`.
 - Si una sola fila de un lote es inválida, solo esa fila se reenvía de forma
   individual.
-- `MAX_PRIMARY_COST_USD` y `MAX_REVIEW_COST_USD` detienen nuevos grupos cuando
-  se alcanza el tope; por concurrencia puede existir un sobrepaso acotado al
-  superlote ya iniciado. Para la reanudación Pro presupuestada, el segundo vale
-  US$14.50.
+- `MAX_PRIMARY_COST_USD` conserva un freno amplio para Flash. Pro usa
+  `MAX_REVIEW_COST_USD=None`: el saldo de la cuenta y los checkpoints gobiernan
+  la reanudación, sin un bloqueo artificial de US$15.
 - Antes de enviar el primer chunk de la reanudación, el cuaderno reconstruye la
-  cola, descuenta los IDs ya revisados, muestra el costo proyectado y exige al
-  menos US$15.00 de saldo. Con un saldo menor se detiene sin enviar corpus.
+  cola, descuenta los IDs ya revisados y muestra el costo proyectado. Conserva
+  US$15.00 como recomendación no bloqueante: con un saldo menor se advierte y
+  la corrida puede continuar; si el crédito se agota, reanuda por `chunk_id`.
 - El proveedor informa tokens de entrada con caché, sin caché y de salida. El
   cuaderno muestra saldo aproximadamente cada 60 segundos, advierte bajo
   US$2.00 y señala una tasa de caché inferior a 50 % después de 50 solicitudes.

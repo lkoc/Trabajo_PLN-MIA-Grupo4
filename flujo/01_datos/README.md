@@ -46,7 +46,7 @@ mismas cinco longitudes. Construye un panel enriquecido y pareado de 100 anclas
 de `validation`, dividido por video en cinco cohortes de reporte. MiniLM queda
 congelado y alimenta 25 cabezas logísticas —cinco longitudes por cinco cohortes
 de entrenamiento—; `gemma3:4b` procesa hasta 500 combinaciones ancla–longitud
-con [`config/prompt_operacional_ollama_v2.md`](../../config/prompt_operacional_ollama_v2.md).
+con [`config/prompt_operacional_ollama_v3_2.md`](../../config/prompt_operacional_ollama_v3_2.md).
 Cada familia usa 2 000 réplicas bootstrap agrupadas por video. MiniLM produce AP
 continua y Ollama etiquetas duras; sus métricas no se promedian. Son análisis
 confirmatorios de sensibilidad y factibilidad, no un segundo selector. Si

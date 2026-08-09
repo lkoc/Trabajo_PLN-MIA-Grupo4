@@ -28,8 +28,8 @@ cuaderno materializa una lista independiente numerada por primera aparición.
 | `01_02_optimizacion_longitud_chunks.ipynb` | 13 |
 | `01_03_limpieza_troceado_incremental.ipynb` | 2 |
 | `02_00_preparacion_bundle_colab.ipynb` | 2 |
-| `02_01_etiquetado_local_ollama.ipynb` | 6 |
-| `02_02_etiquetado_remoto.ipynb` | 3 |
+| `02_01_etiquetado_deepseek_flash_pro.ipynb` | 6 |
+| `02_02_etiquetado_hf_qwen_colab.ipynb` | 4 |
 | `02_03_revision_llm_dirigida.ipynb` | 4 |
 | `02_04_consolidacion_validacion_humana.ipynb` | 3 |
 | `02_05_cierre_humano_snapshot.ipynb` | 3 |

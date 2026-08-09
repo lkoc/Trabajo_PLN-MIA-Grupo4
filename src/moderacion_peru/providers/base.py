@@ -11,7 +11,9 @@ class ProviderError(RuntimeError):
     pass
 
 
-SYSTEM_PROMPT = """Eres un anotador de fragmentos de subtítulos peruanos. Aplica exclusivamente el contrato entregado. Las únicas salidas gruesas son SEGURO, RACISMO_DISCRIMINACION, ATAQUE_POR_GENERO_IDENTIDAD, ACOSO_AMENAZA y CONTENIDO_SEXUAL. SEGURO es una categoría explícita y nunca puede coexistir con daño. RACISMO_DISCRIMINACION, ATAQUE_POR_GENERO_IDENTIDAD, ACOSO_AMENAZA y CONTENIDO_SEXUAL pueden coexistir. Las etiquetas gruesas deben coincidir exactamente con las derivadas de las etiquetas finas. SEGURO exige `seguro` o `seguro_ironia_marcada` como estado fino. `score_confianza` debe ser un número decimal entre 0.0 y 1.0. Si falta contexto para decidir, devuelve coarse_labels vacío, needs_review=true y contexto_necesario; no fuerces SEGURO. Distingue discurso citado, condenado, informativo o ficticio del ataque respaldado por el hablante. Conserva exactamente el chunk_id recibido y devuelve únicamente JSON conforme al esquema, sin razonamiento ni texto adicional."""
+SYSTEM_PROMPT = """Eres un anotador de fragmentos de subtítulos peruanos. Aplica exclusivamente el contrato entregado. Las únicas salidas gruesas son SEGURO, RACISMO_DISCRIMINACION, ATAQUE_POR_GENERO_IDENTIDAD, ACOSO_AMENAZA y CONTENIDO_SEXUAL. SEGURO es una categoría explícita y nunca puede coexistir con daño. RACISMO_DISCRIMINACION, ATAQUE_POR_GENERO_IDENTIDAD, ACOSO_AMENAZA y CONTENIDO_SEXUAL pueden coexistir. Las etiquetas gruesas deben coincidir exactamente con las derivadas de las etiquetas finas. SEGURO exige `seguro` o `seguro_ironia_marcada` como estado fino. Siempre debes emitir por lo menos una etiqueta fina y una gruesa: si hay duda, elige la hipótesis mejor respaldada, reduce `score_confianza`, activa `needs_review` y usa los flags aplicables; nunca respondas con listas de etiquetas vacías. `score_confianza` estima la corrección del conjunto completo de etiquetas, no la intensidad del daño: por debajo de 0.85 requiere revisión y con `contexto_necesario` o `ironia_ambigua` no puede superar 0.65. Distingue discurso citado, condenado, informativo o ficticio del ataque respaldado por el hablante. Conserva exactamente el chunk_id recibido y devuelve únicamente JSON conforme al esquema, sin razonamiento ni texto adicional."""
+
+SELF_REVIEW_CONFIDENCE_THRESHOLD = 0.85
 
 
 def taxonomy_prompt(taxonomy: TaxonomyContract) -> str:
@@ -44,17 +46,25 @@ def normalize_payload(
     parsed = LLMAnnotationPayload.model_validate(payload)
     fine = contract.normalize_fine_labels(parsed.fine_labels)
     coarse = contract.normalize_categories(parsed.coarse_labels)
+    if coarse == (contract.safe_label,) and not set(fine).intersection(
+        contract.categories[contract.safe_label].fine_labels
+    ):
+        raise ProviderError("SEGURO requiere un estado fino seguro explícito")
+    if not fine or not coarse:
+        raise ProviderError(
+            f"La respuesta LLM para {parsed.chunk_id} debe incluir su mejor etiqueta fina y gruesa"
+        )
     if fine:
         derived = contract.derive_categories(fine)
         if coarse != derived:
             raise ProviderError(
                 f"Inconsistencia fina→gruesa para {parsed.chunk_id}: {fine} -> {derived}, recibió {coarse}"
             )
-    if coarse == (contract.safe_label,) and not set(fine).intersection(
-        contract.categories[contract.safe_label].fine_labels
-    ):
-        raise ProviderError("SEGURO requiere un estado fino seguro explícito")
-    needs_review = parsed.needs_review or not coarse
+    needs_review = (
+        parsed.needs_review
+        or bool(parsed.flags)
+        or parsed.score_confianza < SELF_REVIEW_CONFIDENCE_THRESHOLD
+    )
     metadata = chunk_metadata or {}
     return AnnotationRecord(
         chunk_id=parsed.chunk_id,

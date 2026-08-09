@@ -13,7 +13,7 @@
     "chunks_v2": {
       "source": "datos/processed/chunks_v2.jsonl",
       "archive": "chunks_v2.jsonl.gz",
-      "required_by": ["02_01"]
+      "required_by": ["02_01", "02_02"]
     },
     "chunks_deepseek_historicos": {
       "source": "datos/processed/chunks_para_etiquetar.jsonl",
@@ -60,6 +60,13 @@
         "deepseek_pro_historico_sospechosos"
       ],
       "reason": "Cascada calibrada Flash-Pro por API; funciona con runtime CPU y no reserva una GPU innecesaria."
+    },
+    "02_02": {
+      "colab_mode": "recommended",
+      "requires_cuda": true,
+      "expected_gpu": "NVIDIA L4",
+      "input_keys": ["chunks_v2"],
+      "reason": "Cascada Hugging Face Qwen3-1.7B a Qwen3-4B; carga los modelos secuencialmente para limitar la memoria GPU."
     },
     "03_02": {
       "colab_mode": "recommended",

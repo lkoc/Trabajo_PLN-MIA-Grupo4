@@ -1,15 +1,15 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-08T17:48:11.100204+00:00",
+  "generated_at": "2026-08-09T21:23:58.270022+00:00",
   "taxonomy_contract": "moderacion_peru_5_salidas_v2",
   "taxonomy_version": "2.1.0",
   "core": {
     "name": "project_core.zip",
-    "sha256": "44b088fe2eacbe6b4ab473f0c535bbde01517791b13a2287430a5717f809f6f1",
-    "bytes": 142526,
+    "sha256": "ef1451ac947eea8352055663b5be7d3fec59703137e390371d5cf1ae577facf3",
+    "bytes": 170102,
     "files": [
       "config/colab_l4.json",
-      "config/prompt_operacional_ollama_v2.md",
+      "config/prompt_operacional_ollama_v3_2.md",
       "config/taxonomia_v2.json",
       "pyproject.toml",
       "requirements/colab-l4.txt",
@@ -51,12 +51,13 @@
       "source": "datos/processed/chunks_v2.jsonl",
       "archive": "chunks_v2.jsonl.gz",
       "required_by": [
-        "02_01"
+        "02_01",
+        "02_02"
       ],
-      "source_sha256": "2506123ed7a9d78fcf466e1af8875d96a70651ae8b4c22a1e8e13ccd1c542828",
-      "source_bytes": 182547658,
-      "archive_sha256": "dd39339d355c9cce9aca54c9d20fc1ea4fd3f36c7e9bce1b083b45c9be311ade",
-      "archive_bytes": 43159648
+      "source_sha256": "08660348a1515d98f1e934cd00925ff7cfe5df64c99cd80c2e15ba9ea404236d",
+      "source_bytes": 199666415,
+      "archive_sha256": "11a0b4a4efc01faf1b30e44be0081f88829a3be7be0e7ce71b05fbbd000cf636",
+      "archive_bytes": 47238042
     },
     "chunks_deepseek_historicos": {
       "source": "datos/processed/chunks_para_etiquetar.jsonl",
@@ -126,10 +127,10 @@
         "03_07",
         "03_08"
       ],
-      "source_sha256": "daea22bcf5fb0bdff080db0ecabc5d69ad4c097b57b5d5bab3ea92dc40af1b2e",
-      "source_bytes": 109299843,
-      "archive_sha256": "eefa9ece5d2a1468af7df24463327a6e2c82a3b0a902ae14b913de34f80c5e76",
-      "archive_bytes": 21201195
+      "source_sha256": "d9261b5afe35f2753ec838708398a8152ce1d9113e78ee3f5ec1af6a6f5dc0f6",
+      "source_bytes": 153240990,
+      "archive_sha256": "b56e455c0c71f100184b3bd4dec6542c3a324b691b3b39ed02e7576c47714dd4",
+      "archive_bytes": 32261835
     }
   },
   "excluded_from_drive": [
@@ -141,5 +142,5 @@
     "modelos Ollama",
     "paper, presentación y frontends"
   ],
-  "bundle_id": "b03ac0357ec959a4ba38869cfc1d0b311366105e7fbc05edb605e7fe8d23fd9b"
+  "bundle_id": "0a1f9de6a84bb8f7fc17329a362e55180d5a9732f8769e0044e2d70bd3d20dd4"
 }

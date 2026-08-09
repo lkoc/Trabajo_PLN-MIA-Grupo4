@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
-  "created_at": "2026-08-07T17:24:19.244176+00:00",
+  "created_at": "2026-08-09T20:41:57.866427+00:00",
   "operation": "incremental_chunk_update",
   "source": {
     "path": "datos/raw/transcripts_raw.jsonl",
-    "bytes": 455104683,
-    "sha256": "a1c68fdefb36733e8202d33fffaa6493f2ae8879a85e06d2e785f165685c44b6"
+    "bytes": 498952538,
+    "sha256": "5fd709d65d93a95f96714f005d439295dc18ff20ce1fc64bfd667bec8f566015"
   },
   "configuration": {
     "max_seconds": 30.0,
@@ -16,23 +16,23 @@
   "chunker_version": "2.2.0",
   "chunking_signature": "cb4f8eefae6a2ee1baeca642cf20703ddd9a55684444cafd687f8543f08ac111",
   "stats": {
-    "transcripts_seen": 5002,
+    "transcripts_seen": 5395,
     "unchanged_videos": 5002,
-    "new_or_changed_videos": 0,
-    "generated_chunks": 0,
-    "new_unique_chunks": 0,
-    "videos_with_generated_chunks": 0,
-    "videos_with_new_unique_chunks": 0,
+    "new_or_changed_videos": 393,
+    "generated_chunks": 15820,
+    "new_unique_chunks": 15521,
+    "videos_with_generated_chunks": 393,
+    "videos_with_new_unique_chunks": 393,
     "videos_without_generated_chunks": 0,
     "videos_without_new_unique_chunks": 0,
-    "added": 0,
+    "added": 15521,
     "duplicate_ids": 0,
-    "versions_registered": 0,
+    "versions_registered": 393,
     "duplicate_version_ids": 0
   },
   "coverage": {
-    "transcript_videos": 5002,
-    "videos_with_chunks": 4992,
+    "transcript_videos": 5395,
+    "videos_with_chunks": 5385,
     "videos_without_chunks": 10,
     "video_ids_without_chunks": [
       "0gZaIyxBANk",
@@ -49,79 +49,79 @@
     "orphan_chunk_videos": []
   },
   "descriptive_statistics": {
-    "chunks": 166940,
-    "videos": 4992,
+    "chunks": 182461,
+    "videos": 5385,
     "chunks_per_video": {
-      "count": 4992,
+      "count": 5385,
       "min": 1.0,
-      "p25": 6.0,
+      "p25": 7.0,
       "median": 18.0,
-      "mean": 33.44150641025641,
-      "p75": 35.0,
-      "p90": 86.0,
-      "p95": 158.0,
+      "mean": 33.883194057567316,
+      "p75": 36.0,
+      "p90": 89.0,
+      "p95": 155.0,
       "max": 767.0,
-      "standard_deviation": 46.798233978430844
+      "standard_deviation": 46.32755993447426
     },
     "duration_seconds": {
-      "count": 166940,
-      "min": 4.009999999999991,
-      "p25": 30.47999999999996,
-      "median": 31.158999999999992,
-      "mean": 31.293905756559244,
-      "p75": 31.958999999999833,
-      "p90": 32.89000000000033,
-      "p95": 33.950000000000045,
+      "count": 182461,
+      "min": 0.30000000000000027,
+      "p25": 30.479999999999563,
+      "median": 31.15000000000009,
+      "mean": 31.24099445360926,
+      "p75": 31.930000000000007,
+      "p90": 32.88000000000011,
+      "p95": 33.92099999999982,
       "max": 263.2600000000001,
-      "standard_deviation": 3.8932906243604517,
-      "total": 5224204.627,
-      "total_hours": 1451.1679519444444
+      "standard_deviation": 4.047724050483863,
+      "total": 5700263.089,
+      "total_hours": 1583.406413611111
     },
     "characters_per_chunk": {
-      "count": 166940,
+      "count": 182461,
       "min": 90.0,
-      "p25": 408.0,
-      "median": 483.0,
-      "mean": 466.58014855636753,
-      "p75": 545.0,
-      "p90": 598.0,
-      "p95": 613.0,
+      "p25": 409.0,
+      "median": 485.0,
+      "mean": 468.37217816410083,
+      "p75": 547.0,
+      "p90": 600.0,
+      "p95": 614.0,
       "max": 816.0,
-      "standard_deviation": 107.81596494354301,
-      "total": 77890890
+      "standard_deviation": 108.03220172981771,
+      "total": 85459656
     },
     "words_per_chunk": {
-      "count": 166940,
+      "count": 182461,
       "min": 10.0,
-      "p25": 73.0,
-      "median": 87.0,
-      "mean": 85.29020606205822,
-      "p75": 100.0,
-      "p90": 110.0,
+      "p25": 74.0,
+      "median": 88.0,
+      "mean": 85.90144195197878,
+      "p75": 101.0,
+      "p90": 111.0,
       "p95": 116.0,
       "max": 170.0,
-      "standard_deviation": 20.6120412400416,
-      "total": 14238347
+      "standard_deviation": 20.796062483339465,
+      "total": 15673663
     }
   },
   "outputs": {
     "chunks": {
       "path": "datos/processed/chunks_v2.jsonl",
-      "rows": 166940,
-      "bytes": 182547658,
-      "sha256": "2506123ed7a9d78fcf466e1af8875d96a70651ae8b4c22a1e8e13ccd1c542828"
+      "rows": 182461,
+      "bytes": 199666415,
+      "sha256": "08660348a1515d98f1e934cd00925ff7cfe5df64c99cd80c2e15ba9ea404236d"
     },
     "versions": {
       "path": "datos/processed/chunking_v2_versions.jsonl",
-      "rows": 5002,
-      "bytes": 2512255,
-      "sha256": "8d60210f8c01fe690c2b1d20819c9de475b85a615949ee63a9aee34f22549d69"
+      "rows": 5395,
+      "bytes": 2709900,
+      "sha256": "6b805b4d930d7d2cfcd0f9d87038a0de53c817f3d7625ddee1813c689e48e328"
     }
   },
   "backup": "archivo/chunk_rebuilds/20260807T165807714288Z",
   "previous_materialization": {
     "operation": "incremental_chunk_update",
-    "created_at": "2026-08-07T17:00:59.478686+00:00",
+    "created_at": "2026-08-07T17:24:19.244176+00:00",
     "backup": "archivo/chunk_rebuilds/20260807T165807714288Z"
   },
   "last_full_rebuild": {

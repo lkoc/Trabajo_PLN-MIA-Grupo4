@@ -5,6 +5,7 @@ from pathlib import Path
 
 
 ROOT_MARKER = "pyproject.toml"
+LATEST_OPERATIONAL_PROMPT = Path("config") / "prompt_operacional_ollama_v3_2.md"
 
 
 def find_project_root(start: str | Path | None = None) -> Path:
@@ -29,6 +30,12 @@ def artifact_root(project_root: str | Path | None = None) -> Path:
     if override:
         return Path(override).expanduser().resolve()
     return find_project_root(project_root) / "artefactos"
+
+
+def operational_prompt_path(project_root: str | Path | None = None) -> Path:
+    """Devuelve la única versión operativa vigente para nuevas inferencias."""
+
+    return find_project_root(project_root) / LATEST_OPERATIONAL_PROMPT
 
 
 def relative_to_root(path: str | Path, root: str | Path | None = None) -> str:

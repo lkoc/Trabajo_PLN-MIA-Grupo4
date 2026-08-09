@@ -28,7 +28,16 @@ def test_colab_config_syncs_only_declared_inputs_and_keeps_api_on_cpu():
     assert set(config["notebooks"]["02_01"]["input_keys"]) == set(config["inputs"]) - {
         "dataset_5_salidas"
     }
-    assert set(config["notebooks"]) == {"02_01", "03_02", "03_03", "03_04", "03_05", "03_06"}
+    assert config["notebooks"]["02_02"]["input_keys"] == ["chunks_v2"]
+    assert set(config["notebooks"]) == {
+        "02_01",
+        "02_02",
+        "03_02",
+        "03_03",
+        "03_04",
+        "03_05",
+        "03_06",
+    }
     assert "datos/raw/transcripts_raw.jsonl" in config["excluded_from_drive"]
     assert config["notebooks"]["02_01"]["requires_cuda"] is False
     assert config["notebooks"]["02_01"]["expected_gpu"] is None

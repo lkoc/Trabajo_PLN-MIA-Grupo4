@@ -12,7 +12,7 @@ from typing import Any
 import requests
 
 from ..io import sha256_file, sha256_text
-from ..paths import find_project_root
+from ..paths import operational_prompt_path as default_operational_prompt_path
 from ..schemas import AnnotationRecord, LLMAnnotationPayload
 from .base import SYSTEM_PROMPT, AnnotationProvider, ProviderError, normalize_payload, taxonomy_prompt
 
@@ -62,6 +62,7 @@ class DeepSeekProvider(AnnotationProvider):
         retries: int = 1,
         max_workers: int = 32,
         records_per_request: int = 5,
+        cache_warmup_requests: int = 1,
         max_cost_usd: float | None = None,
         label_source: str = "deepseek_remote",
         annotator_type: str = "llm_remote",
@@ -75,17 +76,21 @@ class DeepSeekProvider(AnnotationProvider):
         self.retries = int(retries)
         if max_workers < 1 or records_per_request < 1:
             raise ValueError("max_workers y records_per_request deben ser positivos")
+        if cache_warmup_requests < 0:
+            raise ValueError("cache_warmup_requests no puede ser negativo")
         if max_cost_usd is not None and max_cost_usd <= 0:
             raise ValueError("max_cost_usd debe ser positivo o None")
         self.max_workers = int(max_workers)
         self.records_per_request = int(records_per_request)
+        self.cache_warmup_requests = int(cache_warmup_requests)
+        self._cache_warmup_completed = 0
         self.max_cost_usd = float(max_cost_usd) if max_cost_usd is not None else None
         self.label_source = label_source
         self.annotator_type = annotator_type
         self.operational_prompt_path = (
             Path(operational_prompt_path)
             if operational_prompt_path
-            else find_project_root() / "config" / "prompt_operacional_ollama_v2.md"
+            else default_operational_prompt_path()
         )
         if not self.operational_prompt_path.is_file():
             raise FileNotFoundError(
@@ -130,6 +135,7 @@ class DeepSeekProvider(AnnotationProvider):
             "network_called": False,
             "max_workers": self.max_workers,
             "records_per_request": self.records_per_request,
+            "cache_warmup_requests": self.cache_warmup_requests,
             "max_cost_usd": self.max_cost_usd,
             "label_source": self.label_source,
             "operational_prompt_path": str(self.operational_prompt_path),
@@ -144,6 +150,8 @@ class DeepSeekProvider(AnnotationProvider):
             },
             "context_cache": {
                 "mode": "automatic_prefix",
+                "warmup": "sequential_before_parallel_fanout",
+                "warmup_requests": self.cache_warmup_requests,
                 "static_prefix_sha256": self.prompt_sha256,
                 "verified_from_usage_fields": [
                     "prompt_cache_hit_tokens",
@@ -426,6 +434,21 @@ class DeepSeekProvider(AnnotationProvider):
             (start, chunks[start : start + self.records_per_request])
             for start in range(0, len(chunks), self.records_per_request)
         ]
+        remaining_warmup = max(
+            0, self.cache_warmup_requests - self._cache_warmup_completed
+        )
+        warmup_groups = indexed_groups[:remaining_warmup]
+        indexed_groups = indexed_groups[remaining_warmup:]
+        for start, group in warmup_groups:
+            results = self._request_group_with_recovery(group)
+            if len(results) != len(group):
+                raise RuntimeError(
+                    f"DeepSeek devolvió {len(results)} resultados para un grupo de {len(group)}"
+                )
+            self._cache_warmup_completed += 1
+            yield list(zip(range(start, start + len(group)), results))
+        if not indexed_groups:
+            return
         executor = ThreadPoolExecutor(max_workers=min(self.max_workers, len(indexed_groups)))
         futures: dict[Future[list[AnnotationRecord | Exception]], tuple[int, int]] = {
             executor.submit(self._request_group_with_recovery, group): (start, len(group))

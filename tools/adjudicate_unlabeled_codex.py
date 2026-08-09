@@ -33,7 +33,7 @@ from moderacion_peru.schemas import ReviewEvent
 ROOT = find_project_root()
 CASCADE = ROOT / "datos" / "etiquetado" / "cascada_deepseek_v4"
 CAMPAIGN = ROOT / "datos" / "etiquetado" / "consolidado" / "anotaciones_v2.jsonl"
-PROMPT_V31 = ROOT / "config" / "prompt_operacional_ollama_v3_1.md"
+PROMPT_LATEST = ROOT / "config" / "prompt_operacional_ollama_v3_2.md"
 V3 = CASCADE / "codex_unlabeled_prompt_v3_flash.jsonl"
 HARD = CASCADE / "codex_unlabeled_prompt_v3_1_pro_hard.jsonl"
 STANCE = CASCADE / "codex_unlabeled_prompt_v3_1_pro_stance.jsonl"
@@ -239,7 +239,7 @@ def run_broad(max_cost_usd: float) -> None:
         max_cost_usd=max_cost_usd,
         label_source="llm_remote_review",
         annotator_type="llm_remote",
-        operational_prompt_path=PROMPT_V31,
+        operational_prompt_path=PROMPT_LATEST,
     )
     run_path = BROAD.with_suffix(BROAD.suffix + ".run.json")
     errors_path = BROAD.with_suffix(".errors.jsonl")
@@ -249,8 +249,8 @@ def run_broad(max_cost_usd: float) -> None:
         "method": "prompt_v3_1_broad_attribution_audit",
         "selection": "remaining_v3_harm_with_broad_narrative_or_attribution_signal",
         "selected": len(selected),
-        "prompt_path": str(PROMPT_V31.relative_to(ROOT)).replace("\\", "/"),
-        "prompt_sha256": sha256_file(PROMPT_V31),
+        "prompt_path": str(PROMPT_LATEST.relative_to(ROOT)).replace("\\", "/"),
+        "prompt_sha256": sha256_file(PROMPT_LATEST),
         "model": provider.model,
     }
     signature_payload["run_signature"] = hashlib.sha256(
@@ -355,7 +355,7 @@ def run_low_risk_sample(sample_size: int, max_cost_usd: float) -> None:
         max_cost_usd=max_cost_usd,
         label_source="deepseek_remote",
         annotator_type="llm_remote",
-        operational_prompt_path=PROMPT_V31,
+        operational_prompt_path=PROMPT_LATEST,
     )
     run_path = LOW_RISK_SAMPLE.with_suffix(LOW_RISK_SAMPLE.suffix + ".run.json")
     errors_path = LOW_RISK_SAMPLE.with_suffix(".errors.jsonl")
@@ -366,8 +366,8 @@ def run_low_risk_sample(sample_size: int, max_cost_usd: float) -> None:
         "selection": "unlabeled_nonexcluded_without_prior_label_or_directed_risk_signal",
         "selected": len(selected),
         "population": 27187,
-        "prompt_path": str(PROMPT_V31.relative_to(ROOT)).replace("\\", "/"),
-        "prompt_sha256": sha256_file(PROMPT_V31),
+        "prompt_path": str(PROMPT_LATEST.relative_to(ROOT)).replace("\\", "/"),
+        "prompt_sha256": sha256_file(PROMPT_LATEST),
         "model": provider.model,
     }
     metadata["run_signature"] = hashlib.sha256(
@@ -437,7 +437,7 @@ def run_low_risk_hard(max_cost_usd: float) -> None:
         max_cost_usd=max_cost_usd,
         label_source="llm_remote_review",
         annotator_type="llm_remote",
-        operational_prompt_path=PROMPT_V31,
+        operational_prompt_path=PROMPT_LATEST,
     )
     run_path = LOW_RISK_HARD.with_suffix(LOW_RISK_HARD.suffix + ".run.json")
     errors_path = LOW_RISK_HARD.with_suffix(".errors.jsonl")
@@ -447,8 +447,8 @@ def run_low_risk_hard(max_cost_usd: float) -> None:
         "method": "prompt_v3_1_1_low_risk_hard_adjudication",
         "selection": "low_risk_sample_harm_or_abstention",
         "selected": len(selected),
-        "prompt_path": str(PROMPT_V31.relative_to(ROOT)).replace("\\", "/"),
-        "prompt_sha256": sha256_file(PROMPT_V31),
+        "prompt_path": str(PROMPT_LATEST.relative_to(ROOT)).replace("\\", "/"),
+        "prompt_sha256": sha256_file(PROMPT_LATEST),
         "model": provider.model,
     }
     metadata["run_signature"] = hashlib.sha256(
@@ -662,8 +662,8 @@ def finalize(*, apply: bool) -> None:
         "reviews_sha256_before": before_hash,
         "event_snapshot": str(EVENT_SNAPSHOT.relative_to(ROOT)).replace("\\", "/"),
         "event_snapshot_sha256": sha256_file(EVENT_SNAPSHOT),
-        "operational_prompt": str(PROMPT_V31.relative_to(ROOT)).replace("\\", "/"),
-        "operational_prompt_sha256": sha256_file(PROMPT_V31),
+        "operational_prompt": str(PROMPT_LATEST.relative_to(ROOT)).replace("\\", "/"),
+        "operational_prompt_sha256": sha256_file(PROMPT_LATEST),
         "remote_evidence": [
             {
                 "path": str(path.relative_to(ROOT)).replace("\\", "/"),

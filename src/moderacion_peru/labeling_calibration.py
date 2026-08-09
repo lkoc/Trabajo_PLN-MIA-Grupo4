@@ -287,10 +287,10 @@ def build_directed_review_queue(
             reason = "damage"
         elif annotation.get("needs_review") and chunk_id in prioritized_needs_review:
             reason = "needs_review"
-        elif annotation.get("needs_review"):
-            reason = ""
         elif float(annotation.get("score_confianza", 0.0)) < confidence_threshold:
             reason = "low_confidence"
+        elif annotation.get("needs_review"):
+            reason = ""
         elif rng.random() < safe_control_rate:
             reason = "safe_control"
         else:

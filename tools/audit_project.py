@@ -47,7 +47,7 @@ CONTRACT_SUMMARY_DOCUMENTS = (
     "modelos/README.md",
     "bibliografia/fuentes_base.md",
     "Planning/PLAN_REORGANIZACION_REPRODUCIBLE.md",
-    "config/prompt_operacional_ollama_v2.md",
+    "config/prompt_operacional_ollama_v3_2.md",
     "docs/TAXONOMIA_V2.md",
     "docs/CONTRATOS_DATOS.md",
     "docs/MATRIZ_TRAZABILIDAD.md",

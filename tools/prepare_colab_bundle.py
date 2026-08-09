@@ -134,7 +134,7 @@ def build_core_archive(destination: Path) -> dict[str, object]:
         ROOT / "pyproject.toml",
         ROOT / "config" / "taxonomia_v2.json",
         ROOT / "config" / "colab_l4.json",
-        ROOT / "config" / "prompt_operacional_ollama_v2.md",
+        ROOT / "config" / "prompt_operacional_ollama_v3_2.md",
         ROOT / "requirements" / "colab-l4.txt",
         *(ROOT / "src" / "moderacion_peru").rglob("*.py"),
     ]

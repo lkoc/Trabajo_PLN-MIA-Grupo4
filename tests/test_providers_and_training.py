@@ -40,6 +40,28 @@ def payload(**overrides):
     return data
 
 
+def test_llm_payload_always_has_labels_and_low_confidence_forces_review():
+    with pytest.raises(ProviderError, match="mejor etiqueta"):
+        normalize_payload(
+            payload(coarse_labels=[], fine_labels=[], score_confianza=0.40),
+            text="fragmento incompleto",
+            source="fixture_local",
+            annotator_type="llm_local",
+            model="fixture",
+        )
+
+    record = normalize_payload(
+        payload(score_confianza=0.70, needs_review=False),
+        text="fragmento ambiguo",
+        source="fixture_local",
+        annotator_type="llm_local",
+        model="fixture",
+    )
+    assert record.coarse_labels == ["SEGURO"]
+    assert record.needs_review is True
+    assert record.training_eligible is False
+
+
 def test_incremental_labeling_reports_progress_and_none_removes_limit(tmp_path):
     class FixtureProvider:
         def annotate(self, chunk):
@@ -433,9 +455,9 @@ def test_ollama_probe_records_exact_model_digest(monkeypatch):
         OllamaProvider().operational_prompt_path
     )
     assert result["operational_prompt_path"].endswith(
-        "config\\prompt_operacional_ollama_v2.md"
+        "config\\prompt_operacional_ollama_v3_2.md"
     ) or result["operational_prompt_path"].endswith(
-        "config/prompt_operacional_ollama_v2.md"
+        "config/prompt_operacional_ollama_v3_2.md"
     )
     assert result["seed"] == 20260805
 
@@ -481,7 +503,8 @@ def test_huggingface_provider_batches_wrapped_annotations():
         def __call__(self, prompts, **kwargs):
             outputs = []
             for prompt_text in prompts:
-                ids = [part.split('"')[0] for part in prompt_text.split('"chunk_id": "')[1:]]
+                records_text = prompt_text.split("REGISTROS: ", 1)[1].rsplit("\nJSON:", 1)[0]
+                ids = [row["chunk_id"] for row in json.loads(records_text)]
                 annotations = [payload(chunk_id=chunk_id) for chunk_id in ids]
                 outputs.append([{"generated_text": json.dumps({"annotations": annotations})}])
             return outputs
@@ -499,7 +522,10 @@ def test_huggingface_provider_batches_wrapped_annotations():
     )
 
     assert [row.chunk_id for row in rows] == ["c1", "c2", "c3"]
-    assert provider.probe()["records_per_request"] == 2
+    probe = provider.probe()
+    assert probe["records_per_request"] == 2
+    assert probe["response_format"] == {"type": "json_object"}
+    assert probe["output_contract"]["root_key"] == "annotations"
     assert len(provider.probe()["operational_prompt_sha256"]) == 64
 
 
@@ -603,14 +629,15 @@ def test_historical_recovery_rekeys_only_exact_unique_text_and_labels_pending(tm
                 json.dumps(
                     {
                         "chunk_id": "old-1",
-                        "labels": ["seguro"],
+                        "fine_labels": ["seguro"],
                         "flags": [],
                         "needs_review": False,
                         "score_confianza": 0.95,
                         "notes": "",
                         "justificacion": "Histórica",
                         "annotator_model": "deepseek-v4-flash",
-                        "annotated_at": "2026-07-25T21:25:13-05:00",
+                        "prompt_sha256": "b" * 64,
+                        "created_at": "2026-07-25T21:25:13-05:00",
                     }
                 ),
                 json.dumps(
@@ -678,6 +705,7 @@ def test_historical_recovery_rekeys_only_exact_unique_text_and_labels_pending(tm
     assert second["already_present_matches"] == 1
     assert recovered[0]["chunk_id"] == "new-1"
     assert recovered[0]["coarse_labels"] == ["SEGURO"]
+    assert recovered[0]["prompt_sha256"] == "b" * 64
     assert recovered[0]["consolidated_sources"] == ["legacy_flash.jsonl:old-1"]
 
     class PendingProvider:
@@ -929,7 +957,7 @@ def test_directed_review_can_prioritize_lowest_confidence_abstentions():
         seed=42,
     )
 
-    assert {row["chunk_id"] for row in queue} == {"c1", "c3", "c4"}
+    assert {row["chunk_id"] for row in queue} == {"c1", "c2", "c3", "c4"}
     assert manifest["needs_review_candidates"] == 5
     assert manifest["max_needs_review"] == 3
-    assert manifest["routing_reasons"] == {"needs_review": 3}
+    assert manifest["routing_reasons"] == {"needs_review": 3, "low_confidence": 1}

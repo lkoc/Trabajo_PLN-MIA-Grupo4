@@ -1,9 +1,20 @@
 # Consolidación y materialización reproducible de chunks
 
-**Fecha de corte:** 7 de agosto de 2026  
+**Fecha de corte vigente:** 9 de agosto de 2026  
 **Cuaderno:** `flujo/01_datos/01_03_limpieza_troceado_incremental.ipynb`  
 **Configuración activa:** 30 s, 600 caracteres, mínimo de 90 caracteres y eliminación de hasta 12 palabras solapadas  
-**Resultado:** 166.940 chunks correspondientes a 4.992 videos
+**Resultado vigente:** 182.461 chunks correspondientes a 5.385 videos con chunks, sobre 5.395 transcripciones canónicas
+
+La actualización incremental posterior a la ampliación dirigida procesó 393
+videos nuevos o modificados y añadió 15.521 chunks únicos, sin duplicados de
+identificador. Diez videos canónicos quedaron sin chunks y no existen chunks
+huérfanos. El artefacto vigente tiene SHA-256
+`08660348a1515d98f1e934cd00925ff7cfe5df64c99cd80c2e15ba9ea404236d`;
+la transcripción canónica tiene SHA-256
+`5fd709d65d93a95f96714f005d439295dc18ff20ce1fc64bfd667bec8f566015`.
+Las secciones que describen la reconstrucción completa de 166.940 chunks se
+conservan como corte histórico del 7 de agosto; los conteos vigentes anteriores
+prevalecen para nuevas corridas.
 
 En este documento, `v2.2` designa la familia actual del troceador (`chunker_version=2.2.0`). El contrato de etiquetas continúa en `v2.1`; ambos números tienen alcance y ciclo de vida independientes.
 

@@ -10,6 +10,7 @@ import requests
 
 from ..io import sha256_file, sha256_text
 from ..paths import find_project_root
+from ..paths import operational_prompt_path as default_operational_prompt_path
 from ..schemas import AnnotationRecord, LLMAnnotationPayload
 from .base import (
     SYSTEM_PROMPT,
@@ -48,7 +49,7 @@ class OllamaProvider(AnnotationProvider):
         self.operational_prompt_path = (
             Path(operational_prompt_path)
             if operational_prompt_path
-            else find_project_root() / "config" / "prompt_operacional_ollama_v2.md"
+            else default_operational_prompt_path()
         )
         if not self.operational_prompt_path.is_file():
             raise FileNotFoundError(

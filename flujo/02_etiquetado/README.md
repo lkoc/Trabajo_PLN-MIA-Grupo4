@@ -13,8 +13,8 @@
 ## Orden
 
 1. `02_00_preparacion_bundle_colab.ipynb` — se ejecuta en Colab, descarga el bundle sincronizado de GitHub o recibe los nueve archivos locales mediante el navegador, verifica identidad y SHA-256 y publica la versión inmutable en Drive. Ejecútelo antes de `02_01` y nuevamente después de `02_05`.
-2. `02_01_etiquetado_local_ollama.ipynb` — nombre conservado por compatibilidad; recupera únicamente equivalencias históricas exactas 1:1 y ejecuta la cascada `deepseek-v4-flash`→`deepseek-v4-pro` sobre pendientes, con `thinking=disabled`, contrato JSON validado, caché, saldo, persistencia por grupos de 5, checkpoints atómicos, presupuesto, cuarentena y reanudación.
-3. `02_02_etiquetado_remoto.ipynb` — fallback local independiente `Qwen/Qwen3-1.7B`; no se mezcla con la campaña principal.
+2. `02_01_etiquetado_deepseek_flash_pro.ipynb` — recupera únicamente equivalencias históricas exactas 1:1 y ejecuta por API la cascada `deepseek-v4-flash`→`deepseek-v4-pro` sobre pendientes, con `thinking=disabled`, contrato JSON validado, prompt 3.2.0, caché, saldo, persistencia por grupos de 5, checkpoints atómicos, presupuesto, cuarentena y reanudación.
+3. `02_02_etiquetado_hf_qwen_colab.ipynb` — alternativa independiente en Colab: primera pasada `Qwen/Qwen3-1.7B` y revisión dirigida `Qwen/Qwen3-4B` mediante Hugging Face, con carga secuencial en la GPU y sin mezclarse automáticamente con la campaña DeepSeek.
 4. `02_03_revision_llm_dirigida.ipynb` — recupera y presenta calibración, cobertura y revisión Pro sin repetir API.
 5. `02_04_consolidacion_validacion_humana.ipynb` — precedencia y frontend.
 6. `02_05_cierre_humano_snapshot.ipynb` — reaplica el último evento humano, recupera `video_id` desde el chunk fuente y congela el snapshot entrenable.
@@ -44,11 +44,14 @@ Los seis cuadernos muestran barras `tqdm` en las operaciones potencialmente larg
 
 Después de recargar, reinicie el kernel y ejecute las celdas en orden hasta
 **“Enrutamiento y revisión dirigida con Pro”**. Los parámetros activos dejan
-`RUN_CALIBRATION=False`, `RUN_PRIMARY=False` y `RUN_DIRECTED_REVIEW=True`, por
-lo que no se repiten calibración ni llamadas Flash. La última celda reconstruye
+`RUN_CALIBRATION=False`, `RUN_PRIMARY=True` y `RUN_DIRECTED_REVIEW=True`, por
+lo que Flash procesa únicamente los `chunk_id` nuevos o pendientes y no repite
+los ya persistidos. La última celda reconstruye
 la cola, descuenta los `chunk_id` ya presentes en `review_pro.jsonl` y muestra
-la previsión antes de transmitir corpus. Si el saldo es menor que US$15.00 o la
-proyección supera US$14.50, se detiene antes de iniciar Pro.
+la previsión antes de transmitir corpus. Un saldo menor que US$15.00 genera una
+advertencia, pero no bloquea la corrida; solo una proyección superior al tope
+configurado de US$14.50 impide iniciar Pro. Si el saldo se agota, el progreso
+persistido se conserva y la siguiente ejecución continúa por `chunk_id`.
 
 El prompt operacional y la taxonomía se colocan al principio de cada solicitud
 para que la caché automática de prefijo pueda reutilizarlos. Flash y Pro reciben

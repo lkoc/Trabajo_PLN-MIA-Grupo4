@@ -26,7 +26,7 @@ CONTRACT_SUMMARY_DOCUMENTS = (
     "modelos/README.md",
     "bibliografia/fuentes_base.md",
     "Planning/PLAN_REORGANIZACION_REPRODUCIBLE.md",
-    "config/prompt_operacional_ollama_v2.md",
+    "config/prompt_operacional_ollama_v3_2.md",
     "docs/TAXONOMIA_V2.md",
     "docs/CONTRATOS_DATOS.md",
     "docs/MATRIZ_TRAZABILIDAD.md",
@@ -53,7 +53,7 @@ def test_active_notebooks_are_ordered_and_clean():
     executed_reporting_notebooks = {
         "01_03_limpieza_troceado_incremental.ipynb",
         "02_00_preparacion_bundle_colab.ipynb",
-        "02_01_etiquetado_local_ollama.ipynb",
+        "02_01_etiquetado_deepseek_flash_pro.ipynb",
         "02_03_revision_llm_dirigida.ipynb",
         "02_04_consolidacion_validacion_humana.ipynb",
     }
@@ -170,7 +170,15 @@ def test_chunk_optimization_notebook_loads_consolidated_results_before_models():
 
 
 def test_colab_notebooks_embed_reproducible_drive_bootstrap():
-    expected_consumers = {"02_01", "03_02", "03_03", "03_04", "03_05", "03_06"}
+    expected_consumers = {
+        "02_01",
+        "02_02",
+        "03_02",
+        "03_03",
+        "03_04",
+        "03_05",
+        "03_06",
+    }
     expected = {"02_00", *expected_consumers}
     manifest = json.loads(
         (ROOT / "resultados" / "colab_bundle" / "bundle_manifest.json").read_text(
@@ -297,7 +305,7 @@ def test_required_frontends_are_small_templates():
 
 def test_02_01_uses_explicit_operational_review_threshold_without_changing_calibration():
     notebook = nbformat.read(
-        ROOT / "flujo/02_etiquetado/02_01_etiquetado_local_ollama.ipynb",
+        ROOT / "flujo/02_etiquetado/02_01_etiquetado_deepseek_flash_pro.ipynb",
         as_version=4,
     )
     source = "\n".join(
@@ -310,15 +318,54 @@ def test_02_01_uses_explicit_operational_review_threshold_without_changing_calib
         assert "REVIEW_CONFIDENCE_THRESHOLD=0.85" in value
         assert "SAFE_CONTROL_RATE=0.01" in value
         assert "MAX_NEEDS_REVIEW_FOR_PRO=36_000" in value
-        assert "MAX_REVIEW_COST_USD=14.50" in value
-        assert "REQUIRED_REVIEW_START_BALANCE_USD=15.00" in value
-        assert "RUN_PRIMARY=False" in value
+        assert "MAX_REVIEW_COST_USD=None" in value
+        assert "RECOMMENDED_REVIEW_START_BALANCE_USD=15.00" in value
+        assert "por encima del tope" not in value
+        assert "esto no bloquea la ejecución" in value
+        assert "raise RuntimeError(f\"Saldo Pro" not in value
+        assert "RUN_PRIMARY=True" in value
         assert "RUN_DIRECTED_REVIEW=True" in value
         assert "confidence_threshold=REVIEW_CONFIDENCE_THRESHOLD" in value
         assert "max_needs_review=MAX_NEEDS_REVIEW_FOR_PRO" in value
         assert (
             "confidence_threshold=float(calibration['selected_threshold'])" not in value
         )
+
+
+def test_latest_operational_prompt_is_used_and_covers_peruvian_edge_cases():
+    prompt_path = ROOT / "config/prompt_operacional_ollama_v3_2.md"
+    prompt = prompt_path.read_text(encoding="utf-8")
+    for expression in (
+        "hijo de puta",
+        "concha de tu madre",
+        "cholo de mierda",
+        "maricón de mierda",
+        "maldito perro",
+        "Regla semántica peruana para *poto*",
+        "0.85–0.94",
+        "Nunca devuelvas `fine_labels` ni `coarse_labels` vacíos",
+    ):
+        assert expression in prompt
+
+    active = (
+        "flujo/01_datos/01_01_scraping_incremental.ipynb",
+        "flujo/01_datos/01_02_optimizacion_longitud_chunks.ipynb",
+        "flujo/02_etiquetado/02_01_etiquetado_deepseek_flash_pro.ipynb",
+        "flujo/02_etiquetado/02_02_etiquetado_hf_qwen_colab.ipynb",
+    )
+    for relative in active:
+        notebook = nbformat.read(ROOT / relative, as_version=4)
+        source = "\n".join(cell.source for cell in notebook.cells)
+        assert "config/prompt_operacional_ollama_v3_2.md" in source
+
+    qwen = nbformat.read(
+        ROOT / "flujo/02_etiquetado/02_02_etiquetado_hf_qwen_colab.ipynb",
+        as_version=4,
+    )
+    qwen_source = "\n".join(cell.source for cell in qwen.cells)
+    assert "Qwen/Qwen3-1.7B" in qwen_source
+    assert "Qwen/Qwen3-4B" in qwen_source
+    assert "root_key']!='annotations'" in qwen_source
 
 
 def test_academic_cover_is_present_in_notebooks_frontends_and_readmes():
@@ -661,7 +708,7 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
         for specification in colab_config["inputs"].values()
     )
     assert "Seleccione nueve archivos" in bundle
-    local = notebook_sources["02_01_etiquetado_local_ollama.ipynb"]
+    local = notebook_sources["02_01_etiquetado_deepseek_flash_pro.ipynb"]
     assert "PRIMARY_LIMIT=None" in local
     assert "REVIEW_LIMIT=None" in local
     assert "None para TODOS y solo los pendientes" in local
@@ -690,13 +737,15 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     assert "AUTO_PUBLISH_CHECKPOINTS=True" in local
     assert "checkpoint_callback=checkpoint_callback_for(output)" in local
     assert "interrupted_checkpoint" in local
-    assert "PROCESSING_BATCH_SIZE=160" in local
+    assert "PROCESSING_BATCH_SIZE=640" in local
+    assert "max_workers=128,records_per_request=5,cache_warmup_requests=1" in local
+    assert "max_workers=64,records_per_request=5,cache_warmup_requests=1" in local
     assert "estimated_cost_usd" in local
     assert "pending_current_after_recovery" in local
     assert "quarantine_invalid_progress=True" in local
     assert (
-        "progress_callback=report_local_progress"
-        in notebook_sources["02_02_etiquetado_remoto.ipynb"]
+        "progress_callback=qwen_progress"
+        in notebook_sources["02_02_etiquetado_hf_qwen_colab.ipynb"]
     )
     assert "Leyendo {name}" in notebook_sources["02_03_revision_llm_dirigida.ipynb"]
     assert (

@@ -37,7 +37,7 @@ taxonomía a v2.2: **v2.2.0 corresponde al troceador**, no al contrato de
 etiquetas.
 
 La guía generativa activa es
-`config/prompt_operacional_ollama_v2.md`. Aunque conserva “ollama” en el nombre
+`config/prompt_operacional_ollama_v3_2.md`. Aunque conserva “ollama” en el nombre
 por compatibilidad histórica, también es la autoridad compacta usada por
 DeepSeek y Hugging Face.
 
@@ -95,7 +95,7 @@ salida por cada 5 000 chunks.
 ## Flujo de etiquetado implementado
 
 El cuaderno principal es
-`flujo/02_etiquetado/02_01_etiquetado_local_ollama.ipynb`. El nombre se conserva
+`flujo/02_etiquetado/02_01_etiquetado_deepseek_flash_pro.ipynb`. El nombre describe
 por compatibilidad, pero ahora implementa una cascada completa y reanudable:
 
 1. preflight `/models` sin enviar corpus;
@@ -164,7 +164,7 @@ usa la variable del proceso cuando es válida y recupera la variable persistida
 si el proceso heredó un valor inválido; reinicie el kernel después de cambiarla.
 Nunca muestre ni guarde el valor completo en una celda.
 
-Abra `flujo/02_etiquetado/02_01_etiquetado_local_ollama.ipynb` y ejecute las
+Abra `flujo/02_etiquetado/02_01_etiquetado_deepseek_flash_pro.ipynb` y ejecute las
 celdas en orden. Para una verificación sin corpus:
 
 ```python
@@ -186,8 +186,10 @@ Las salidas locales se guardan en
 `02_03_revision_llm_dirigida.ipynb` muestran los resultados guardados sin
 repetir llamadas.
 
-`02_02_etiquetado_remoto.ipynb` quedó como fallback local independiente con
-`Qwen/Qwen3-1.7B`. No debe mezclarse ni promediarse con la campaña Flash–Pro.
+`02_02_etiquetado_hf_qwen_colab.ipynb` quedó como alternativa Colab independiente:
+`Qwen/Qwen3-1.7B` cubre la primera pasada y `Qwen/Qwen3-4B` revisa daño,
+confianza baja, abstenciones y controles. Los modelos se cargan secuencialmente
+en la L4. La campaña no se mezcla ni promedia automáticamente con Flash–Pro.
 
 ## Precios y control de riesgo
 

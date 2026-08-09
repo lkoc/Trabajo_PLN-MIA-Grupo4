@@ -124,7 +124,7 @@ réplicas bootstrap pareadas por video [8], [9]. `test` permanece cerrado.
 Ollama procesa las mismas 100 anclas y cinco longitudes: 500 respuestas
 solicitadas. Se usa temperatura cero, semilla fija, timeout configurado de 90 s,
 un reintento correctivo y el prompt vigente
-[`config/prompt_operacional_ollama_v2.md`](../config/prompt_operacional_ollama_v2.md).
+[`config/prompt_operacional_ollama_v3_2.md`](../config/prompt_operacional_ollama_v3_2.md).
 Las duraciones rotan entre anclas para que una detención temporal no favorezca
 siempre a la misma longitud.
 

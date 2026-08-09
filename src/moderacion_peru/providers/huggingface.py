@@ -6,8 +6,8 @@ from typing import Any
 
 from ..device import resolve_device, torch_device_name
 from ..io import sha256_file, sha256_text
-from ..paths import find_project_root
-from ..schemas import AnnotationRecord, LLMAnnotationPayload
+from ..paths import operational_prompt_path as default_operational_prompt_path
+from ..schemas import AnnotationRecord
 from .base import SYSTEM_PROMPT, AnnotationProvider, ProviderError, normalize_payload, taxonomy_prompt
 
 
@@ -41,7 +41,7 @@ class HuggingFaceProvider(AnnotationProvider):
         self.operational_prompt_path = (
             Path(operational_prompt_path)
             if operational_prompt_path
-            else find_project_root() / "config" / "prompt_operacional_ollama_v2.md"
+            else default_operational_prompt_path()
         )
         if not self.operational_prompt_path.is_file():
             raise FileNotFoundError(
@@ -69,6 +69,14 @@ class HuggingFaceProvider(AnnotationProvider):
             "inference_batch_size": self.inference_batch_size,
             "operational_prompt_path": str(self.operational_prompt_path),
             "operational_prompt_sha256": self.operational_prompt_sha256,
+            "thinking": {"type": "disabled"},
+            "response_format": {"type": "json_object"},
+            "output_contract": {
+                "root_key": "annotations",
+                "preserves_order": True,
+                "preserves_chunk_id": True,
+                "validated_with": "LLMAnnotationPayload",
+            },
             "label_source": self.label_source,
         }
 
