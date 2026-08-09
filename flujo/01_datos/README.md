@@ -29,6 +29,11 @@ Para ampliar la muestra general, active el modo requerido o agregue filas a `dat
 
 El corte posterior a la materialización de la prevalencia Pro deja en `train` 1.826 ejemplos de racismo/discriminación y 1.568 de ataque por género/identidad; los déficits hacia 2.000 son 174 y 432. `01_015` evalúa el catálogo PE curado con el rendimiento histórico del mismo tipo de canales. En el corte actual selecciona Hablando Huevadas, Goblinciano y Juanito y Richard como núcleo, añade Nunca MAS como margen y estima 239 videos de `train` más 36/36 de `validation`/`test`; los otros canales PE curados funcionan como reserva de disponibilidad. Si la ejecución se interrumpe, una firma de ronda permite retomar la misma selección y descartar sus videos ya consolidados, sin volver a cubrir los éxitos. Solo una deuda de descubrimiento pendiente puede rellenarse con candidatos PE inéditos. Cuando cambia la firma, los pendientes que no caben en la nueva cohorte se conservan en `datos/raw/directed_candidates_carryover.jsonl`; esta cola se fusiona con la vigente por `video_id`. El canónico, el JSON por video y los VTT locales recuperables se consolidan antes del filtrado, y `ingest_incremental` vuelve a comprobar canónico y caché antes de cada consulta de red. El cálculo se repite como una ronda nueva después de etiquetar: si la cuota real no alcanza 2.000, se vuelve a estimar y adquirir. Si el descubrimiento no reúne todo el presupuesto, el cuaderno procesa el lote parcial y conserva el faltante por split en `directed_plan_latest.json` en vez de detenerse. El canal o la consulta son solo criterios de recuperación: no transfieren automáticamente una categoría de daño al video ni al chunk.
 
+La publicación de `transcripts_by_channel` está serializada entre kernels y
+procesos. Las particiones idénticas se reutilizan sin reemplazarlas y los
+bloqueos transitorios de Windows se reintentan antes de fallar; una segunda
+corrida debe esperar y reanudar, no borrar particiones ni VTT.
+
 `01_02` no es necesario para cada incremento. Su modo rápido y la confirmación
 corta permanecen como diagnósticos opcionales. El perfil robusto clásico es la
 etapa decisoria: cinco cohortes de 300/100/100 videos, 75 ajustes y 1 000

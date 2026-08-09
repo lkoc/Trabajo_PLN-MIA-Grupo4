@@ -1287,7 +1287,122 @@ def _summarize_channel_shard(
     }
 
 
+def _retry_permission_error(
+    operation: Callable[[], Any],
+    *,
+    target: Path,
+    timeout_seconds: float = 20.0,
+) -> Any:
+    """Reintenta bloqueos transitorios de Windows sin ocultar fallos persistentes."""
+
+    deadline = time.monotonic() + timeout_seconds
+    delay = 0.05
+    while True:
+        try:
+            return operation()
+        except PermissionError as exc:
+            if time.monotonic() >= deadline:
+                raise PermissionError(
+                    f"No se pudo publicar {target} después de {timeout_seconds:g} s. "
+                    "Otra ejecución, el antivirus o una vista previa mantiene el "
+                    "archivo abierto; cierre solo la segunda ejecución y reintente."
+                ) from exc
+            time.sleep(delay)
+            delay = min(1.0, delay * 1.8)
+
+
+def _publish_channel_shard(source: Path, target: Path) -> bool:
+    """Publica una partición; devuelve False si ya era idéntica."""
+
+    if target.is_file() and source.stat().st_size == target.stat().st_size:
+        try:
+            if sha256_file(source) == sha256_file(target):
+                source.unlink()
+                return False
+        except PermissionError:
+            # El reintento de reemplazo producirá un diagnóstico más útil si el
+            # bloqueo persiste; una lectura bloqueada no prueba desigualdad.
+            pass
+    _retry_permission_error(
+        lambda: os.replace(source, target),
+        target=target,
+    )
+    return True
+
+
+def _acquire_channel_materialization_lock(
+    target: Path,
+    *,
+    timeout_seconds: float = 30.0,
+) -> Any:
+    """Serializa la publicación de particiones entre kernels o procesos."""
+
+    lock_path = target.parent / f".{target.name}.materialization.lock"
+    handle = lock_path.open("a+b")
+    handle.seek(0, os.SEEK_END)
+    if handle.tell() == 0:
+        handle.write(b"0")
+        handle.flush()
+    deadline = time.monotonic() + timeout_seconds
+    while True:
+        try:
+            handle.seek(0)
+            if os.name == "nt":
+                import msvcrt
+
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return handle
+        except OSError as exc:
+            if time.monotonic() >= deadline:
+                handle.close()
+                raise TimeoutError(
+                    "Otra ejecución sigue publicando transcripts_by_channel; "
+                    "espere a que termine y vuelva a ejecutar la celda."
+                ) from exc
+            time.sleep(0.25)
+
+
+def _release_channel_materialization_lock(handle: Any) -> None:
+    try:
+        handle.seek(0)
+        if os.name == "nt":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+    finally:
+        handle.close()
+
+
 def materialize_transcripts_by_channel(
+    canonical_path: str | Path,
+    output_dir: str | Path,
+    *,
+    max_channel_file_bytes: int = DEFAULT_MAX_CHANNEL_SHARD_BYTES,
+) -> dict[str, Any]:
+    """Serializa y materializa el canónico por canal de forma reentrante."""
+
+    target = Path(output_dir)
+    target.mkdir(parents=True, exist_ok=True)
+    publication_lock = _acquire_channel_materialization_lock(target)
+    try:
+        return _materialize_transcripts_by_channel_unlocked(
+            canonical_path,
+            target,
+            max_channel_file_bytes=max_channel_file_bytes,
+        )
+    finally:
+        _release_channel_materialization_lock(publication_lock)
+
+
+def _materialize_transcripts_by_channel_unlocked(
     canonical_path: str | Path,
     output_dir: str | Path,
     *,
@@ -1310,8 +1425,20 @@ def materialize_transcripts_by_channel(
         payload = _channel_index_payload(
             [], max_channel_file_bytes=max_channel_file_bytes
         )
-        write_json_atomic(target / CHANNEL_TRANSCRIPT_INDEX, payload)
-        return {**payload, "canonical_exists": False, "output_dir": target.as_posix()}
+        index_path = target / CHANNEL_TRANSCRIPT_INDEX
+        _retry_permission_error(
+            lambda: write_json_atomic(index_path, payload),
+            target=index_path,
+        )
+        return {
+            **payload,
+            "canonical_exists": False,
+            "output_dir": target.as_posix(),
+            "channel_files_replaced": 0,
+            "channel_files_reused_unchanged": 0,
+            "stale_files_removed": 0,
+            "stale_files_deferred": 0,
+        }
 
     title_ids: dict[str, set[str]] = defaultdict(set)
     for record in read_jsonl(canonical):
@@ -1373,12 +1500,31 @@ def materialize_transcripts_by_channel(
             max_channel_file_bytes=max_channel_file_bytes,
         )
         new_filenames = {entry["file"] for entry in entries}
+        replaced = reused_unchanged = 0
         for path in sorted(staging.glob("*.jsonl")):
-            os.replace(path, target / path.name)
-        write_json_atomic(target / CHANNEL_TRANSCRIPT_INDEX, payload)
+            if _publish_channel_shard(path, target / path.name):
+                replaced += 1
+            else:
+                reused_unchanged += 1
+        index_path = target / CHANNEL_TRANSCRIPT_INDEX
+        _retry_permission_error(
+            lambda: write_json_atomic(index_path, payload),
+            target=index_path,
+        )
+        stale_removed = stale_deferred = 0
         for stale in target.glob("*.jsonl"):
             if stale.name not in new_filenames:
-                stale.unlink()
+                try:
+                    _retry_permission_error(
+                        stale.unlink,
+                        target=stale,
+                        timeout_seconds=5.0,
+                    )
+                    stale_removed += 1
+                except PermissionError:
+                    # El índice ya excluye la partición obsoleta. Se conserva
+                    # temporalmente para no invalidar una corrida completa.
+                    stale_deferred += 1
     finally:
         shutil.rmtree(staging, ignore_errors=True)
     return {
@@ -1387,10 +1533,36 @@ def materialize_transcripts_by_channel(
         "canonical_bytes": canonical.stat().st_size,
         "canonical_sha256": sha256_file(canonical),
         "output_dir": target.as_posix(),
+        "channel_files_replaced": replaced,
+        "channel_files_reused_unchanged": reused_unchanged,
+        "stale_files_removed": stale_removed,
+        "stale_files_deferred": stale_deferred,
     }
 
 
 def append_transcripts_by_channel(
+    output_dir: str | Path,
+    rows: Iterable[dict[str, Any]],
+    *,
+    max_channel_file_bytes: int | None = None,
+) -> dict[str, int]:
+    """Añade checkpoints por canal bajo el mismo bloqueo de materialización."""
+
+    materialized = list(rows)
+    target = Path(output_dir)
+    target.mkdir(parents=True, exist_ok=True)
+    publication_lock = _acquire_channel_materialization_lock(target)
+    try:
+        return _append_transcripts_by_channel_unlocked(
+            target,
+            materialized,
+            max_channel_file_bytes=max_channel_file_bytes,
+        )
+    finally:
+        _release_channel_materialization_lock(publication_lock)
+
+
+def _append_transcripts_by_channel_unlocked(
     output_dir: str | Path,
     rows: Iterable[dict[str, Any]],
     *,
@@ -1500,7 +1672,11 @@ def append_transcripts_by_channel(
             existing_ids.add(video_id)
             added += 1
         for pending_filename, pending in pending_by_file.items():
-            _append_jsonl_checkpoint(target / pending_filename, pending)
+            pending_path = target / pending_filename
+            _retry_permission_error(
+                lambda: _append_jsonl_checkpoint(pending_path, pending),
+                target=pending_path,
+            )
             touched_files.add(pending_filename)
             pending_part = int(
                 re.search(r"--part-(\d{4})\.jsonl$", pending_filename).group(1)
@@ -1514,7 +1690,10 @@ def append_transcripts_by_channel(
         entries_by_file.values(),
         max_channel_file_bytes=shard_limit,
     )
-    write_json_atomic(index_path, payload)
+    _retry_permission_error(
+        lambda: write_json_atomic(index_path, payload),
+        target=index_path,
+    )
     return {
         "added": added,
         "already_partitioned": skipped,

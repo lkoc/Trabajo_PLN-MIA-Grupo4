@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from collections import Counter
 from pathlib import Path
@@ -800,6 +801,58 @@ def test_channel_partitions_preserve_canonical_and_restore_idempotently(tmp_path
         "v4",
         "v5",
     }
+
+
+def test_channel_partition_publication_retries_windows_permission_error(
+    monkeypatch, tmp_path
+):
+    canonical = tmp_path / "raw" / "transcripts_raw.jsonl"
+    canonical.parent.mkdir()
+    partitions = tmp_path / "raw" / "transcripts_by_channel"
+    rows = [
+        {
+            "video_id": "v1",
+            "channel_id": "channel-a",
+            "segments": [{"text": "primera versión"}],
+        },
+        {
+            "video_id": "v2",
+            "channel_id": "channel-b",
+            "segments": [{"text": "sin cambios"}],
+        },
+    ]
+    canonical.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+    materialize_transcripts_by_channel(canonical, partitions)
+    rows[0]["segments"][0]["text"] = "segunda versión"
+    canonical.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+    real_replace = os.replace
+    blocked_attempts = 0
+
+    def transient_permission_error(source, target):
+        nonlocal blocked_attempts
+        destination = Path(target)
+        if (
+            destination.parent == partitions
+            and destination.suffix == ".jsonl"
+            and blocked_attempts < 2
+        ):
+            blocked_attempts += 1
+            raise PermissionError(5, "bloqueo transitorio simulado", str(destination))
+        return real_replace(source, target)
+
+    monkeypatch.setattr(os, "replace", transient_permission_error)
+    result = materialize_transcripts_by_channel(canonical, partitions)
+
+    assert blocked_attempts == 2
+    assert result["channel_files_replaced"] == 1
+    assert result["channel_files_reused_unchanged"] == 1
+    assert {row["video_id"] for row in read_jsonl(canonical)} == {"v1", "v2"}
 
 
 def test_large_channel_is_split_into_bounded_numbered_parts(tmp_path):
