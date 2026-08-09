@@ -177,6 +177,7 @@ def consolidate_annotations(
             "start_seconds": ("start_seconds",),
             "end_seconds": ("end_seconds",),
             "video_title": ("video_title", "title"),
+            "channel_id": ("channel_id",),
             "channel_title": ("channel_title", "channel"),
             "source_url": ("source_url", "url"),
             "cohort": ("cohort",),

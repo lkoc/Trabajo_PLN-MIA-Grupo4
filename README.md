@@ -104,7 +104,7 @@ Durante `01_01`, primero se consolidan en el canónico todas las transcripciones
 | `02_01_etiquetado_local_ollama` | recupera 1:1 etiquetas históricas compatibles y ejecuta la cascada calibrada DeepSeek Flash→Pro con checkpoints atómicos | active en orden `RUN_API_PREFLIGHT`, `RUN_CALIBRATION`, `RUN_PRIMARY` y `RUN_DIRECTED_REVIEW`; use `None` para todos los pendientes |
 | `02_02_etiquetado_remoto` | fallback local independiente con `Qwen/Qwen3-1.7B` | `RUN_FALLBACK=False`; no se mezcla con la campaña principal |
 | `02_03_revision_llm_dirigida` | recupera calibración, enrutamiento y resultados Flash/Pro sin repetir llamadas | tablas reportables y límite inferencial explícito |
-| `02_04_consolidacion_validacion_humana` | consolida proveedores y sirve la campaña humana | precedencia explícita, propuesta ocultable y eventos append-only |
+| `02_04_consolidacion_validacion_humana` | consolida proveedores y sirve la campaña humana | propuesta visible, revisión compacta, acciones masivas confirmadas y eventos append-only |
 | `02_05_cierre_humano_snapshot` | aplica la última decisión humana y congela el dataset | excluye diferidos/rechazados y conserva `video_id`, flags, split y procedencia |
 
 La revisión humana puede aceptar, modificar, diferir o excluir. Una propuesta visible aceptada no se presenta como anotación humana ciega independiente. El frontend impide seleccionar `SEGURO` junto con daño y pseudonimiza al revisor antes de guardar el evento.
@@ -415,7 +415,7 @@ Los resultados históricos siguen disponibles como línea base ejecutada, pero n
 
 ## Alcance ético y operativo
 
-El sistema procesa texto de subtítulos públicos y puede exponer al revisor a contenido sensible. El flujo minimiza datos, pseudonimiza revisores y mantiene control humano. La sugerencia LLM puede ocultarse hasta la primera decisión para reducir anclaje. El acceso público a un video no implica permiso universal para redistribuir sus subtítulos; código, corpus, modelos base, adaptadores y recursos visuales conservan condiciones separadas.
+El sistema procesa texto de subtítulos públicos y puede exponer al revisor a contenido sensible. El flujo minimiza datos, pseudonimiza revisores y mantiene control humano. Por decisión operativa, la sugerencia LLM se muestra desde el inicio para acelerar la revisión; esta elección aumenta el riesgo de anclaje y no convierte la propuesta en verdad humana. Las acciones masivas muestran el alcance, exigen confirmación y dejan eventos trazables por video o canal. El acceso público a un video no implica permiso universal para redistribuir sus subtítulos; código, corpus, modelos base, adaptadores y recursos visuales conservan condiciones separadas.
 
 El uso defendible es investigación aplicada, demostración local o modo sombra. La validación del frontend demuestra integración y trazabilidad, no eficacia para moderación autónoma ni validez jurídica.
 

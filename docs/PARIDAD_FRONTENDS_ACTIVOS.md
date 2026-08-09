@@ -17,10 +17,11 @@ revisión obligatoria prevalecen.
 
 | Función histórica mínima | Implementación activa | Estado |
 |---|---|---|
-| texto y contexto anterior/posterior | panel de tres fragmentos | implementado |
+| texto y contexto anterior/posterior | chunk principal fijo y contexto vecino en diálogos | implementado; evita desplazamiento de página |
 | enlace al segundo del video | enlace temporal por `video_id` | implementado |
-| propuesta y categorías/flags | propuesta LLM revelable y controles derivados de la taxonomía | implementado; se oculta inicialmente para reducir anclaje |
-| aceptar, modificar, diferir y excluir | eventos `accept`, `modify`, `defer` y `reject`; excluir exige confirmación | implementado |
+| propuesta y categorías/flags | propuesta LLM visible y controles derivados de la taxonomía | implementado; la visibilidad inicial es una decisión operativa con riesgo de anclaje documentado |
+| aceptar, modificar, diferir y excluir | botones explícitos “Aceptar sugerencia”, “Guardar mi decisión”, “Revisar después” y “Excluir del dataset”; ayuda contextual; excluir exige confirmación | implementado |
+| aceptar o excluir por video/canal | diálogo con vista previa de alcance, preservación predeterminada de resueltos y confirmación | implementado; cada chunk aceptado conserva su propia propuesta y cada evento registra alcance/lote |
 | progreso, cohorte y siguiente pendiente | barra, filtro y navegación circular; un diferido sigue pendiente hasta una decisión resolutiva | implementado y probado en navegador |
 | guía, exportación y reanudación | diálogo, JSONL y lectura de eventos previos | implementado |
 | borradores locales | `localStorage` por `chunk_id` | implementado |
@@ -32,6 +33,12 @@ solicitud y recupera los eventos previos. Por ello una recarga no borra lo
 revisado y una campaña grande no obliga a incrustar datos sensibles en el
 frontend. Una decisión `defer` se conserva en el historial, pero no cuenta como
 resuelta ni desaparece del conjunto pendiente.
+
+La acción masiva deriva el video o canal desde el chunk activo. Para canales sin
+`channel_id`, usa coincidencia normalizada del título; el diálogo muestra el
+alcance antes de habilitar la confirmación. Por defecto solo afecta pendientes y
+diferidos. Incluir resueltos crea nuevos eventos de precedencia, nunca reescribe
+ni elimina el historial anterior. Un reintento del mismo lote es idempotente.
 
 ## Producción supervisada
 

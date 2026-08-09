@@ -32,6 +32,24 @@ RETRAIN_MINIMUM_TOTAL = 500
 RETRAIN_MINIMUM_SAFE = 200
 RETRAIN_MINIMUM_PER_DAMAGE = 100
 MAX_REQUEST_BYTES = 2 * 1024 * 1024
+LABELING_BULK_SCOPES = {"video", "channel"}
+LABELING_BULK_ACTIONS = {"accept", "reject"}
+
+
+def _is_labeling_priority(row: dict[str, Any]) -> bool:
+    """Prioriza las salidas Pro todavía inciertas o con alguna etiqueta de daño."""
+
+    model = str(row.get("annotator_model") or "").casefold()
+    if "pro" not in model:
+        return False
+    unresolved = bool(row.get("needs_review")) or str(
+        row.get("decision_status") or ""
+    ) == "needs_review"
+    has_damage = any(
+        str(label).upper() != "SEGURO"
+        for label in (row.get("coarse_labels") or [])
+    )
+    return unresolved or has_damage
 
 
 def _labeling_campaign_page(
@@ -42,27 +60,36 @@ def _labeling_campaign_page(
     limit: int,
     cohort: str = "",
     only_pending: bool = False,
+    priority_only: bool = False,
 ) -> dict[str, Any]:
     """Pagina la campaña sin copiar el corpus completo para cada solicitud."""
 
     page_indices: list[int] = []
+    view_positions: list[int] = []
     page_rows: list[dict[str, Any]] = []
     matching = 0
+    view_position = 0
     for index, row in enumerate(campaign_rows):
         row_cohort = str(row.get("cohort") or row.get("label_source") or "sin_cohorte")
         if cohort and cohort != "all" and row_cohort != cohort:
             continue
+        if priority_only and not _is_labeling_priority(row):
+            continue
+        current_view_position = view_position
+        view_position += 1
         review = latest_reviews.get(str(row.get("chunk_id")))
         if only_pending and review is not None and review.get("action") != "defer":
             continue
         if offset <= matching < offset + limit:
             page_indices.append(index)
+            view_positions.append(current_view_position)
             page_rows.append(row)
         matching += 1
     return {
         "total": matching,
         "offset": offset,
         "indices": page_indices,
+        "view_positions": view_positions,
         "rows": page_rows,
         "reviews": {
             str(row["chunk_id"]): latest_reviews[str(row["chunk_id"])]
@@ -75,9 +102,21 @@ def _labeling_campaign_page(
 def _labeling_progress(
     campaign_rows: list[dict[str, Any]],
     latest_reviews: dict[str, dict[str, Any]],
+    *,
+    priority_only: bool = False,
 ) -> dict[str, Any]:
-    total = len(campaign_rows)
-    events = list(latest_reviews.values())
+    selected_rows = (
+        [row for row in campaign_rows if _is_labeling_priority(row)]
+        if priority_only
+        else campaign_rows
+    )
+    selected_ids = {str(row.get("chunk_id")) for row in selected_rows}
+    total = len(selected_rows)
+    events = [
+        event
+        for chunk_id, event in latest_reviews.items()
+        if str(chunk_id) in selected_ids
+    ]
     resolved = sum(event.get("action") != "defer" for event in events)
     deferred = sum(event.get("action") == "defer" for event in events)
     return {
@@ -88,6 +127,173 @@ def _labeling_progress(
         "pending": max(0, total - resolved),
         "progress_pct": 100 * resolved / max(1, total),
     }
+
+
+def _normalised_scope_text(value: Any) -> str:
+    return " ".join(str(value or "").casefold().split())
+
+
+def _labeling_scope_rows(
+    campaign_rows: list[dict[str, Any]],
+    latest_reviews: dict[str, dict[str, Any]],
+    *,
+    anchor_chunk_id: str,
+    scope: str,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Resuelve un video/canal desde un chunk y resume su estado revisable."""
+
+    if scope not in LABELING_BULK_SCOPES:
+        raise ValueError("El alcance debe ser video o channel")
+    anchor = next(
+        (
+            row
+            for row in campaign_rows
+            if str(row.get("chunk_id")) == str(anchor_chunk_id)
+        ),
+        None,
+    )
+    if anchor is None:
+        raise ValueError("El chunk de referencia no pertenece a la campaña")
+
+    if scope == "video":
+        raw_key = str(anchor.get("video_id") or "").strip()
+        if not raw_key:
+            raise ValueError("El chunk no tiene video_id; no se puede aplicar una acción masiva")
+        scope_key = f"video:{raw_key}"
+        display_name = str(anchor.get("video_title") or raw_key)
+        rows = [
+            row
+            for row in campaign_rows
+            if str(row.get("video_id") or "").strip() == raw_key
+        ]
+    else:
+        channel_id = str(anchor.get("channel_id") or "").strip()
+        channel_title = str(anchor.get("channel_title") or "").strip()
+        normalised_title = _normalised_scope_text(channel_title)
+        if not channel_id and not normalised_title:
+            raise ValueError(
+                "El chunk no tiene canal identificable; no se puede aplicar una acción masiva"
+            )
+        scope_key = (
+            f"channel-id:{channel_id}"
+            if channel_id
+            else f"channel-title:{normalised_title}"
+        )
+        display_name = channel_title or channel_id
+
+        def same_channel(row: dict[str, Any]) -> bool:
+            row_channel_id = str(row.get("channel_id") or "").strip()
+            row_title = _normalised_scope_text(row.get("channel_title"))
+            if channel_id and row_channel_id:
+                return row_channel_id == channel_id
+            return bool(normalised_title and row_title == normalised_title)
+
+        rows = [row for row in campaign_rows if same_channel(row)]
+
+    deferred = resolved = pending = acceptable_pending = acceptable_total = 0
+    for row in rows:
+        acceptable_total += int(bool(row.get("coarse_labels")))
+        review = latest_reviews.get(str(row.get("chunk_id")))
+        if review is None or review.get("action") == "defer":
+            pending += 1
+            deferred += int(review is not None and review.get("action") == "defer")
+            acceptable_pending += int(bool(row.get("coarse_labels")))
+        else:
+            resolved += 1
+    summary = {
+        "scope": scope,
+        "scope_key": scope_key,
+        "display_name": display_name,
+        "total": len(rows),
+        "pending": pending,
+        "resolved": resolved,
+        "deferred": deferred,
+        "acceptable_total": acceptable_total,
+        "acceptable_pending": acceptable_pending,
+        "without_proposal_total": len(rows) - acceptable_total,
+        "without_proposal_pending": pending - acceptable_pending,
+    }
+    return summary, rows
+
+
+def _labeling_bulk_events(
+    campaign_rows: list[dict[str, Any]],
+    latest_reviews: dict[str, dict[str, Any]],
+    *,
+    anchor_chunk_id: str,
+    scope: str,
+    action: str,
+    include_resolved: bool,
+    reviewer: str,
+    notes: str,
+    batch_id: str,
+) -> tuple[dict[str, Any], list[ReviewEvent]]:
+    """Construye eventos idempotentes para una revisión masiva trazable."""
+
+    if action not in LABELING_BULK_ACTIONS:
+        raise ValueError("La acción masiva debe ser accept o reject")
+    clean_batch_id = str(batch_id).strip()
+    if not clean_batch_id or len(clean_batch_id) > 128:
+        raise ValueError("batch_id debe contener entre 1 y 128 caracteres")
+    summary, scoped_rows = _labeling_scope_rows(
+        campaign_rows,
+        latest_reviews,
+        anchor_chunk_id=anchor_chunk_id,
+        scope=scope,
+    )
+    selected_rows = [
+        row
+        for row in scoped_rows
+        if include_resolved
+        or latest_reviews.get(str(row.get("chunk_id"))) is None
+        or latest_reviews[str(row.get("chunk_id"))].get("action") == "defer"
+    ]
+    events: list[ReviewEvent] = []
+    skipped_without_proposal = 0
+    skipped_invalid: list[dict[str, str]] = []
+    for row in selected_rows:
+        proposed_labels = list(row.get("coarse_labels") or [])
+        if action == "accept" and not proposed_labels:
+            skipped_without_proposal += 1
+            continue
+        event_id = str(
+            uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                f"moderacion-peru|{clean_batch_id}|{scope}|{action}|{row['chunk_id']}",
+            )
+        )
+        try:
+            events.append(
+                ReviewEvent(
+                    event_id=event_id,
+                    chunk_id=str(row["chunk_id"]),
+                    action=action,
+                    proposed_labels=proposed_labels,
+                    final_labels=proposed_labels if action == "accept" else [],
+                    flags=list(row.get("flags") or []) if action == "accept" else [],
+                    reviewer=reviewer,
+                    model_id=row.get("annotator_model"),
+                    notes=notes,
+                    decision_scope=scope,
+                    decision_scope_key=summary["scope_key"],
+                    batch_id=clean_batch_id,
+                    batch_target_count=len(selected_rows),
+                )
+            )
+        except (KeyError, ValueError, ValidationError) as exc:
+            skipped_invalid.append(
+                {"chunk_id": str(row.get("chunk_id") or ""), "error": str(exc)}
+            )
+    summary = {
+        **summary,
+        "include_resolved": include_resolved,
+        "selected": len(selected_rows),
+        "events_ready": len(events),
+        "skipped_without_proposal": skipped_without_proposal,
+        "skipped_invalid": skipped_invalid[:20],
+        "skipped_invalid_count": len(skipped_invalid),
+    }
+    return summary, events
 
 
 def _model_slot(model_family: str) -> str:
@@ -391,6 +597,23 @@ def serve(
             for row in campaign_rows
         }
     )
+    labeling_priority_total = sum(_is_labeling_priority(row) for row in campaign_rows)
+    labeling_pro_unresolved_total = sum(
+        "pro" in str(row.get("annotator_model") or "").casefold()
+        and (
+            bool(row.get("needs_review"))
+            or str(row.get("decision_status") or "") == "needs_review"
+        )
+        for row in campaign_rows
+    )
+    labeling_pro_damage_total = sum(
+        "pro" in str(row.get("annotator_model") or "").casefold()
+        and any(
+            str(label).upper() != "SEGURO"
+            for label in (row.get("coarse_labels") or [])
+        )
+        for row in campaign_rows
+    )
 
     def registry_state() -> tuple[dict[str, Any], dict[str, Path]]:
         if not registry_path.is_file():
@@ -574,6 +797,13 @@ def serve(
                     "taxonomy": taxonomy.model_dump(),
                     "campaign_available": bool(campaign_path and campaign_path.is_file()),
                     "campaign_total": len(campaign_rows),
+                    "campaign_priority_total": labeling_priority_total,
+                    "campaign_pro_unresolved_total": labeling_pro_unresolved_total,
+                    "campaign_pro_damage_total": labeling_pro_damage_total,
+                    "campaign_priority_rule": (
+                        "Salida de DeepSeek Pro con needs_review=true o con al menos "
+                        "una categoría de daño; la unión no duplica casos."
+                    ),
                     "campaign_cohorts": labeling_cohorts if mode == "labeling" else [],
                     "registry_available": registry_available,
                     "registry": registry_payload,
@@ -595,6 +825,7 @@ def serve(
                 limit = min(1000, max(1, int(query.get("limit", [50])[0])))
                 cohort = query.get("cohort", [""])[0]
                 only_pending = query.get("pending", ["0"])[0] == "1"
+                priority_only = query.get("priority", ["0"])[0] == "1"
                 with persistence_lock:
                     page = _labeling_campaign_page(
                         campaign_rows,
@@ -603,12 +834,34 @@ def serve(
                         limit=limit,
                         cohort=cohort,
                         only_pending=only_pending,
+                        priority_only=priority_only,
                     )
                 self.send_json(page)
                 return
+            if parsed.path == "/api/review-scope" and mode == "labeling":
+                query = urllib.parse.parse_qs(parsed.query)
+                try:
+                    with persistence_lock:
+                        summary, _ = _labeling_scope_rows(
+                            campaign_rows,
+                            labeling_reviews,
+                            anchor_chunk_id=str(query.get("chunk_id", [""])[0]),
+                            scope=str(query.get("scope", ["video"])[0]),
+                        )
+                except ValueError as exc:
+                    self.send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+                    return
+                self.send_json(summary)
+                return
             if parsed.path == "/api/progress" and mode == "labeling":
+                query = urllib.parse.parse_qs(parsed.query)
+                priority_only = query.get("priority", ["0"])[0] == "1"
                 with persistence_lock:
-                    progress = _labeling_progress(campaign_rows, labeling_reviews)
+                    progress = _labeling_progress(
+                        campaign_rows,
+                        labeling_reviews,
+                        priority_only=priority_only,
+                    )
                 self.send_json(progress)
                 return
             if parsed.path == "/api/reviews" and mode == "labeling":
@@ -642,6 +895,7 @@ def serve(
                 body = html_path.read_bytes()
                 self.send_response(200)
                 self.send_header("Content-Type", mimetypes.guess_type(html_path.name)[0] + "; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
@@ -777,6 +1031,61 @@ def serve(
                         )
                 except (FileNotFoundError, ValueError, RuntimeError, ImportError) as exc:
                     self.send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+                return
+            if request_path == "/api/review/bulk" and mode == "labeling":
+                try:
+                    if payload.get("confirm") is not True:
+                        raise ValueError("La acción masiva requiere confirmación explícita")
+                    include_resolved = payload.get("include_resolved", False)
+                    if not isinstance(include_resolved, bool):
+                        raise ValueError("include_resolved debe ser booleano")
+                    reviewer = str(payload.get("reviewer", "ANON")).strip() or "ANON"
+                    salt = os.getenv("MODPERU_REVIEW_SALT", taxonomy.contract_id)
+                    pseudonym = "reviewer-" + hashlib.sha256(
+                        f"{salt}|{reviewer}".encode("utf-8")
+                    ).hexdigest()[:16]
+                    with persistence_lock:
+                        summary, events = _labeling_bulk_events(
+                            campaign_rows,
+                            labeling_reviews,
+                            anchor_chunk_id=str(payload.get("chunk_id", "")),
+                            scope=str(payload.get("scope", "")),
+                            action=str(payload.get("action", "")),
+                            include_resolved=include_resolved,
+                            reviewer=pseudonym,
+                            notes=str(payload.get("notes", "")).strip(),
+                            batch_id=str(payload.get("batch_id", "")),
+                        )
+                        if events:
+                            event_rows = [event.model_dump(mode="json") for event in events]
+                            added, skipped = append_jsonl_once(
+                                review_path, event_rows, id_field="event_id"
+                            )
+                            if skipped:
+                                labeling_reviews.clear()
+                                labeling_reviews.update(
+                                    {
+                                        row["chunk_id"]: row
+                                        for row in read_jsonl(review_path)
+                                    }
+                                )
+                            else:
+                                labeling_reviews.update(
+                                    {row["chunk_id"]: row for row in event_rows}
+                                )
+                        else:
+                            added = skipped = 0
+                except (KeyError, ValueError, ValidationError) as exc:
+                    self.send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+                    return
+                self.send_json(
+                    {
+                        "saved": added,
+                        "duplicates": skipped,
+                        "batch_id": str(payload.get("batch_id", "")),
+                        "summary": summary,
+                    }
+                )
                 return
             if request_path != "/api/review":
                 self.send_error(HTTPStatus.NOT_FOUND)

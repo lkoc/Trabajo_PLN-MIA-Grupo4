@@ -221,8 +221,8 @@ def test_required_frontends_are_small_templates():
     assert human.stat().st_size < 100_000
     assert production.stat().st_size < 100_000
     human_source = human.read_text(encoding="utf-8")
-    assert "t.safe_label" in human_source
-    assert "event.target.value===t.safe_label" in human_source
+    assert "taxonomy.safe_label" in human_source
+    assert "event.target.value===taxonomy.safe_label" in human_source
     assert "/api/progress" in human_source
     assert "pending:'1'" in human_source
     assert "previous_text" in human_source
@@ -241,6 +241,20 @@ def test_required_frontends_are_small_templates():
     assert "review.action==='defer'" in human_source
     assert "updateFlagAvailability" in human_source
     assert "Diferido · pendiente" in human_source
+    assert "Sugerencia automática" in human_source
+    assert "revealBtn" not in human_source
+    assert '<dialog id="contextDialog"' in human_source
+    assert '<dialog id="proposalDialog"' in human_source
+    assert '<dialog id="bulkDialog"' in human_source
+    assert "/api/review-scope" in human_source
+    assert "/api/review/bulk" in human_source
+    assert "bulkIncludeResolved" in human_source
+    assert "Acción masiva por video o canal" in human_source
+    assert "Guardar mi decisión" in human_source
+    assert "Revisar después" in human_source
+    assert "Excluir del dataset" in human_source
+    assert '<dialog id="actionsDialog"' in human_source
+    assert "¿Qué hace cada botón?" in human_source
 
 
 def test_02_01_uses_explicit_operational_review_threshold_without_changing_calibration():

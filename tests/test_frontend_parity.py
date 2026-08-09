@@ -8,8 +8,10 @@ from moderacion_peru.registry import compare_and_publish_registry
 from moderacion_peru.schemas import ReviewEvent
 from moderacion_peru.servers import (
     _consensus_result,
+    _labeling_bulk_events,
     _labeling_campaign_page,
     _labeling_progress,
+    _labeling_scope_rows,
     _production_feedback,
     _production_registry_paths,
 )
@@ -48,6 +50,144 @@ def test_labeling_campaign_is_paged_and_uses_latest_review_state():
         "pending": 2,
         "progress_pct": pytest.approx(100 / 3),
     }
+
+
+def test_labeling_bulk_scope_uses_video_and_channel_title_fallback():
+    taxonomy = load_taxonomy()
+    rows = [
+        {
+            "chunk_id": "v1-1",
+            "video_id": "v1",
+            "video_title": "Video uno",
+            "channel_id": None,
+            "channel_title": "Canal Perú",
+            "coarse_labels": [taxonomy.safe_label],
+        },
+        {
+            "chunk_id": "v1-2",
+            "video_id": "v1",
+            "video_title": "Video uno",
+            "channel_id": None,
+            "channel_title": "  CANAL   PERÚ ",
+            "coarse_labels": [taxonomy.damage_labels[0]],
+        },
+        {
+            "chunk_id": "v2-1",
+            "video_id": "v2",
+            "video_title": "Video dos",
+            "channel_id": None,
+            "channel_title": "Canal Perú",
+            "coarse_labels": [],
+        },
+        {
+            "chunk_id": "other-1",
+            "video_id": "other",
+            "channel_title": "Otro canal",
+            "coarse_labels": [taxonomy.safe_label],
+        },
+    ]
+    reviews = {
+        "v1-1": {"chunk_id": "v1-1", "action": "accept"},
+        "v1-2": {"chunk_id": "v1-2", "action": "defer"},
+    }
+
+    video_summary, video_rows = _labeling_scope_rows(
+        rows, reviews, anchor_chunk_id="v1-2", scope="video"
+    )
+    channel_summary, channel_rows = _labeling_scope_rows(
+        rows, reviews, anchor_chunk_id="v1-2", scope="channel"
+    )
+
+    assert [row["chunk_id"] for row in video_rows] == ["v1-1", "v1-2"]
+    assert video_summary == {
+        "scope": "video",
+        "scope_key": "video:v1",
+        "display_name": "Video uno",
+        "total": 2,
+        "pending": 1,
+        "resolved": 1,
+        "deferred": 1,
+        "acceptable_total": 2,
+        "acceptable_pending": 1,
+        "without_proposal_total": 0,
+        "without_proposal_pending": 0,
+    }
+    assert [row["chunk_id"] for row in channel_rows] == ["v1-1", "v1-2", "v2-1"]
+    assert channel_summary["scope_key"] == "channel-title:canal perú"
+    assert channel_summary["pending"] == 2
+    assert channel_summary["without_proposal_pending"] == 1
+
+
+def test_labeling_bulk_events_are_idempotent_and_preserve_each_proposal():
+    taxonomy = load_taxonomy()
+    rows = [
+        {
+            "chunk_id": "c1",
+            "video_id": "v1",
+            "video_title": "Video",
+            "channel_title": "Canal",
+            "coarse_labels": [taxonomy.safe_label],
+            "flags": [],
+            "annotator_model": "modelo-a",
+        },
+        {
+            "chunk_id": "c2",
+            "video_id": "v1",
+            "video_title": "Video",
+            "channel_title": "Canal",
+            "coarse_labels": [taxonomy.damage_labels[0]],
+            "flags": [taxonomy.flags[0]],
+            "annotator_model": "modelo-b",
+        },
+        {
+            "chunk_id": "c3",
+            "video_id": "v1",
+            "video_title": "Video",
+            "channel_title": "Canal",
+            "coarse_labels": [],
+            "flags": [],
+        },
+    ]
+    reviews = {"c1": {"chunk_id": "c1", "action": "accept"}}
+    arguments = {
+        "anchor_chunk_id": "c2",
+        "scope": "video",
+        "action": "accept",
+        "include_resolved": False,
+        "reviewer": "reviewer-test",
+        "notes": "confianza revisada",
+        "batch_id": "batch-test-1",
+    }
+
+    summary, events = _labeling_bulk_events(rows, reviews, **arguments)
+    repeated_summary, repeated_events = _labeling_bulk_events(rows, reviews, **arguments)
+
+    assert summary["selected"] == 2
+    assert summary["events_ready"] == 1
+    assert summary["skipped_without_proposal"] == 1
+    assert [event.chunk_id for event in events] == ["c2"]
+    assert events[0].final_labels == [taxonomy.damage_labels[0]]
+    assert events[0].flags == [taxonomy.flags[0]]
+    assert events[0].decision_scope == "video"
+    assert events[0].decision_scope_key == "video:v1"
+    assert events[0].batch_target_count == 2
+    assert [event.event_id for event in repeated_events] == [event.event_id for event in events]
+    assert repeated_summary == summary
+
+    reject_summary, rejected = _labeling_bulk_events(
+        rows,
+        reviews,
+        **{
+            **arguments,
+            "scope": "channel",
+            "action": "reject",
+            "include_resolved": True,
+            "batch_id": "batch-test-2",
+        },
+    )
+    assert reject_summary["selected"] == 3
+    assert len(rejected) == 3
+    assert all(event.action == "reject" and not event.final_labels for event in rejected)
 
 
 def _candidate(root: Path, dataset: Path, family: str, identifier: str, score: float) -> None:

@@ -205,6 +205,10 @@ class ReviewEvent(BaseModel):
     reviewer: str = Field(min_length=1)
     model_id: str | None = None
     source_event_id: str | None = None
+    decision_scope: Literal["chunk", "video", "channel"] = "chunk"
+    decision_scope_key: str | None = None
+    batch_id: str | None = None
+    batch_target_count: int | None = Field(default=None, ge=1)
     taxonomy_version: str = "2.1.0"
     notes: str = ""
     created_at: datetime = Field(default_factory=utc_now)

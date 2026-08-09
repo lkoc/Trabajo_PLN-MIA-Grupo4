@@ -2048,8 +2048,8 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "[@settles2009active], mientras que el balance puede aumentar la atención sobre clases raras "
         "[@fairstein2024balancing]. En lenguaje abusivo, el contexto conversacional puede cambiar la "
         "interpretación del fragmento [@bourgeade2024context]. Como una sugerencia LLM puede influir en "
-        "la decisión humana [@choi2024llmeffect], el ordenamiento, el umbral 0.8 y la posibilidad de ocultar "
-        "la sugerencia se tratan como decisiones locales que deben auditarse.",
+        "la decisión humana [@choi2024llmeffect], el ordenamiento, el umbral 0.8 y la visualización inicial "
+        "de la sugerencia se tratan como decisiones locales que deben auditarse.",
         [
             (
                 "Resultados persistidos de la cascada",
@@ -2085,8 +2085,9 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "El acuerdo entre codificadores requiere definir unidad, categorías y medida, no solo contar "
         "coincidencias [@artstein2008agreement]. La intervención humana tampoco garantiza por sí sola "
         "calidad en tareas subjetivas asistidas por LLM [@schroeder2025llmassisted], y mostrar primero la "
-        "sugerencia puede producir influencia o anclaje [@choi2024llmeffect]. La precedencia humana, la "
-        "adjudicación y el guardado *append-only* son reglas operativas locales.",
+        "sugerencia puede producir influencia o anclaje [@choi2024llmeffect]. Mostrarla desde el inicio, "
+        "usar diálogos compactos y permitir lotes confirmados por video/canal son decisiones operativas; "
+        "la precedencia humana, la adjudicación y el guardado *append-only* permanecen obligatorios.",
         [
             (
                 "Consolidación",
@@ -2136,7 +2137,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 ")\n"
                 "show_command('Preparación inicial (solo la primera vez)',setup_command,description='Ejecute este bloque en PowerShell si todavía no existe .venv.')\n"
                 "show_command('Iniciar validación humana',start_command,description='Ejecute este bloque en PowerShell y mantenga la terminal abierta.')\n"
-                "show_callout('Abrir el frontend','Visite http://127.0.0.1:8765. Para detener el servidor, vuelva a PowerShell y presione Ctrl+C.',tone='info')",
+                "show_callout('Abrir o reiniciar el frontend','Visite http://127.0.0.1:8765. Si el servidor ya estaba abierto antes de una actualización, presione Ctrl+C y ejecute otra vez el bloque de inicio; recargar el navegador no actualiza el código Python del servidor.',tone='warning')",
             ),
         ],
     )
