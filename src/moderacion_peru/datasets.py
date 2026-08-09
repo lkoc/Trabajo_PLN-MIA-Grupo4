@@ -9,10 +9,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from .io import canonical_json_sha256, read_jsonl, sha256_file, write_json_atomic, write_jsonl_atomic
-from .schemas import ModelReadyRecord
+from .io import (
+    canonical_json_sha256,
+    read_jsonl,
+    sha256_file,
+    write_json_atomic,
+    write_jsonl_atomic,
+)
+from .schemas import ModelReadyRecord, ReviewEvent
 from .taxonomy import load_taxonomy
-
 
 ProgressCallback = Callable[[dict[str, Any]], None]
 
@@ -39,12 +44,99 @@ def _notify_progress(
 
 
 def stable_video_split(video_id: str, seed: int = 20260805) -> str:
-    value = int(hashlib.sha256(f"{seed}|{video_id}".encode()).hexdigest()[:16], 16) / 16**16
+    value = (
+        int(hashlib.sha256(f"{seed}|{video_id}".encode()).hexdigest()[:16], 16) / 16**16
+    )
     if value < 0.70:
         return "train"
     if value < 0.85:
         return "validation"
     return "test"
+
+
+def project_effective_training_rows(
+    consolidated_rows: Iterable[dict[str, Any]],
+    review_rows: Iterable[dict[str, Any]],
+    previous_snapshot_rows: Iterable[dict[str, Any]] = (),
+    *,
+    seed: int = 20260805,
+) -> list[dict[str, Any]]:
+    """Proyecta el próximo snapshot sin escribir archivos.
+
+    Aplica el último evento por ``chunk_id``, conserva las asignaciones históricas
+    por video y excluye rechazos, diferimientos y propuestas aún no resueltas.
+    Sirve para planificar adquisición antes de materializar formalmente ``02_05``.
+    """
+
+    taxonomy = load_taxonomy()
+    assignments: dict[str, str] = {}
+    for row in previous_snapshot_rows:
+        video_id = str(row.get("video_id") or "").strip()
+        split = str(row.get("split") or "").strip()
+        if not video_id or split not in {"train", "validation", "test"}:
+            continue
+        previous = assignments.setdefault(video_id, split)
+        if previous != split:
+            raise ValueError(f"Snapshot previo contiene fuga para {video_id}")
+
+    latest: dict[str, ReviewEvent] = {}
+    for raw in review_rows:
+        event = ReviewEvent.model_validate(raw)
+        previous = latest.get(event.chunk_id)
+        if previous is None or (event.created_at, event.event_id) > (
+            previous.created_at,
+            previous.event_id,
+        ):
+            latest[event.chunk_id] = event
+
+    projected: list[dict[str, Any]] = []
+    seen_chunks: set[str] = set()
+    for raw in consolidated_rows:
+        row = dict(raw)
+        chunk_id = str(row.get("chunk_id") or "").strip()
+        if not chunk_id:
+            raise ValueError("La campaña contiene un chunk sin chunk_id")
+        if chunk_id in seen_chunks:
+            raise ValueError(f"Chunk duplicado en campaña: {chunk_id}")
+        seen_chunks.add(chunk_id)
+        event = latest.get(chunk_id)
+        if event is not None:
+            if event.action in {"reject", "defer"}:
+                continue
+            labels = taxonomy.normalize_categories(event.final_labels)
+            label_source = (
+                "human_accepted" if event.action == "accept" else "human_modified"
+            )
+        else:
+            if (
+                not row.get("training_eligible")
+                or row.get("needs_review")
+                or row.get("decision_status") != "resolved"
+            ):
+                continue
+            labels = taxonomy.normalize_categories(row.get("coarse_labels") or ())
+            label_source = str(row.get("label_source") or "unknown")
+        if not labels:
+            continue
+        video_id = str(row.get("video_id") or "").strip()
+        if not video_id:
+            raise ValueError(f"Falta video_id explícito en {chunk_id}")
+        split = assignments.get(video_id) or stable_video_split(video_id, seed)
+        projected.append(
+            {
+                "chunk_id": chunk_id,
+                "video_id": video_id,
+                "channel_title": row.get("channel_title"),
+                "coarse_labels": list(labels),
+                "split": split,
+                "label_source": label_source,
+                "training_eligible": True,
+                "needs_review": False,
+                "decision_status": "resolved",
+            }
+        )
+    projected.sort(key=lambda row: (row["split"], row["video_id"], row["chunk_id"]))
+    return projected
 
 
 def materialize_training_snapshot(
@@ -75,7 +167,11 @@ def materialize_training_snapshot(
             counts["duplicates"] += 1
             continue
         seen_chunks.add(chunk_id)
-        split = assignments.get(video_id) or row.get("split") or stable_video_split(video_id, seed)
+        split = (
+            assignments.get(video_id)
+            or row.get("split")
+            or stable_video_split(video_id, seed)
+        )
         if video_id in video_splits and video_splits[video_id] != split:
             raise ValueError(f"Fuga de video detectada para {video_id}")
         video_splits[video_id] = split
@@ -85,7 +181,9 @@ def materialize_training_snapshot(
             text=str(row["text"]),
             coarse_labels=list(labels),
             fine_labels=list(row.get("fine_labels", [])),
-            flags_reference_only=list(row.get("flags_reference_only", row.get("flags", []))),
+            flags_reference_only=list(
+                row.get("flags_reference_only", row.get("flags", []))
+            ),
             label_source=str(row.get("label_source") or "unknown"),
             sample_weight=float(row.get("sample_weight", 1.0)),
             campaign=row.get("campaign"),
@@ -161,7 +259,11 @@ def materialize_versioned_training_snapshot(
         progress_callback, status="phase_started", phase="preparing_snapshot"
     )
     for completed, row in enumerate(read_jsonl(source_path), 1):
-        if not row.get("training_eligible") or row.get("needs_review") or row.get("decision_status") != "resolved":
+        if (
+            not row.get("training_eligible")
+            or row.get("needs_review")
+            or row.get("decision_status") != "resolved"
+        ):
             _notify_progress(
                 progress_callback,
                 status="progress",
@@ -193,7 +295,9 @@ def materialize_versioned_training_snapshot(
             text=str(row["text"]),
             coarse_labels=list(taxonomy.normalize_categories(row["coarse_labels"])),
             fine_labels=list(row.get("fine_labels", [])),
-            flags_reference_only=list(row.get("flags", row.get("flags_reference_only", []))),
+            flags_reference_only=list(
+                row.get("flags", row.get("flags_reference_only", []))
+            ),
             label_source=str(row.get("label_source") or "unknown"),
             sample_weight=float(row.get("sample_weight", 1.0)),
             campaign=row.get("campaign"),
@@ -215,7 +319,9 @@ def materialize_versioned_training_snapshot(
             eligible=len(prepared_rows),
         )
     if not prepared_rows:
-        raise ValueError("No existen decisiones resueltas y entrenables para materializar")
+        raise ValueError(
+            "No existen decisiones resueltas y entrenables para materializar"
+        )
     unique: dict[str, dict[str, Any]] = {}
     _notify_progress(
         progress_callback,
@@ -225,8 +331,12 @@ def materialize_versioned_training_snapshot(
     )
     for completed, row in enumerate(prepared_rows, 1):
         previous = unique.get(row["chunk_id"])
-        if previous is not None and canonical_json_sha256(previous) != canonical_json_sha256(row):
-            raise ValueError(f"Decisiones entrenables duplicadas para {row['chunk_id']}")
+        if previous is not None and canonical_json_sha256(
+            previous
+        ) != canonical_json_sha256(row):
+            raise ValueError(
+                f"Decisiones entrenables duplicadas para {row['chunk_id']}"
+            )
         unique[row["chunk_id"]] = row
         _notify_progress(
             progress_callback,
@@ -236,21 +346,31 @@ def materialize_versioned_training_snapshot(
             total=len(prepared_rows),
             completed=completed,
         )
-    prepared_rows = sorted(unique.values(), key=lambda row: (row["split"], row["video_id"], row["chunk_id"]))
+    prepared_rows = sorted(
+        unique.values(),
+        key=lambda row: (row["split"], row["video_id"], row["chunk_id"]),
+    )
     assert_no_video_leakage(prepared_rows, progress_callback=progress_callback)
     content_signature = canonical_json_sha256(prepared_rows)
     snapshot_id = f"v{taxonomy.version}-{content_signature[:16]}"
-    snapshot_root = Path(snapshots_dir) if snapshots_dir else canonical.parent / "snapshots"
+    snapshot_root = (
+        Path(snapshots_dir) if snapshots_dir else canonical.parent / "snapshots"
+    )
     snapshot_path = snapshot_root / snapshot_id / canonical.name
     manifest_path = snapshot_path.with_name("snapshot_manifest.json")
     if snapshot_path.is_file():
-        if json.loads(manifest_path.read_text(encoding="utf-8"))["content_signature"] != content_signature:
+        if (
+            json.loads(manifest_path.read_text(encoding="utf-8"))["content_signature"]
+            != content_signature
+        ):
             raise ValueError(f"Colisión o snapshot alterado: {snapshot_path}")
         status = "noop"
     else:
         write_jsonl_atomic(snapshot_path, prepared_rows)
         counts = Counter(row["split"] for row in prepared_rows)
-        label_counts = Counter(label for row in prepared_rows for label in row["coarse_labels"])
+        label_counts = Counter(
+            label for row in prepared_rows for label in row["coarse_labels"]
+        )
         manifest = {
             "schema_version": "2.1.0",
             "snapshot_id": snapshot_id,
@@ -263,12 +383,19 @@ def materialize_versioned_training_snapshot(
             "dataset_sha256": sha256_file(snapshot_path),
             "content_signature": content_signature,
             "split_policy": f"preserve previous; otherwise sha256(video_id, seed={seed}), grouped 70/15/15",
-            "counts": {"rows": len(prepared_rows), "videos": len({row['video_id'] for row in prepared_rows}), **{f"split:{key}": value for key, value in counts.items()}, **{f"label:{key}": value for key, value in label_counts.items()}},
+            "counts": {
+                "rows": len(prepared_rows),
+                "videos": len({row["video_id"] for row in prepared_rows}),
+                **{f"split:{key}": value for key, value in counts.items()},
+                **{f"label:{key}": value for key, value in label_counts.items()},
+            },
         }
         write_json_atomic(manifest_path, manifest)
         status = "created"
     snapshot_sha = sha256_file(snapshot_path)
-    canonical_changed = not canonical.is_file() or sha256_file(canonical) != snapshot_sha
+    canonical_changed = (
+        not canonical.is_file() or sha256_file(canonical) != snapshot_sha
+    )
     if canonical_changed:
         canonical.parent.mkdir(parents=True, exist_ok=True)
         temporary = canonical.with_name(f".{canonical.name}.{snapshot_id}.partial")
@@ -338,7 +465,9 @@ def assert_no_video_leakage(
         )
 
 
-def audit_training_snapshot(source: str | Path, destination: str | Path) -> dict[str, Any]:
+def audit_training_snapshot(
+    source: str | Path, destination: str | Path
+) -> dict[str, Any]:
     """Audita cobertura fina/flags y coherencia con las cinco salidas, sin usar GPU."""
 
     source_path = Path(source)
@@ -373,7 +502,9 @@ def audit_training_snapshot(source: str | Path, destination: str | Path) -> dict
         "dataset_sha256": dataset_sha,
         "rows": len(rows),
         "splits": dict(split_counts),
-        "fine_label_counts": {label: fine_counts[label] for label in taxonomy.fine_labels},
+        "fine_label_counts": {
+            label: fine_counts[label] for label in taxonomy.fine_labels
+        },
         "flag_counts": {flag: flag_counts[flag] for flag in taxonomy.flags},
         "rows_without_fine_reference": sum(not row.get("fine_labels") for row in rows),
         "fine_to_coarse_inconsistencies": len(inconsistencies),

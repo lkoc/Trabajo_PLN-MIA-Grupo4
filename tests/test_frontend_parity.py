@@ -3,18 +3,24 @@ from pathlib import Path
 
 import pytest
 
-from moderacion_peru.io import read_jsonl, sha256_file, write_json_atomic, write_jsonl_atomic
+from moderacion_peru.io import (
+    read_jsonl,
+    sha256_file,
+    write_json_atomic,
+    write_jsonl_atomic,
+)
 from moderacion_peru.registry import compare_and_publish_registry
 from moderacion_peru.schemas import ReviewEvent
 from moderacion_peru.servers import (
     _consensus_result,
-    _labeling_bulk_events,
-    _labeling_campaign_page,
-    _labeling_progress,
-    _labeling_scope_rows,
     _is_labeling_excluded,
     _is_labeling_priority,
     _is_labeling_urgent,
+    _labeling_bulk_events,
+    _labeling_campaign_page,
+    _labeling_dashboard,
+    _labeling_progress,
+    _labeling_scope_rows,
     _production_feedback,
     _production_registry_paths,
 )
@@ -89,12 +95,8 @@ def test_labeling_urgent_and_pro_priority_queues_are_distinct():
 
     assert [_is_labeling_urgent(row) for row in rows] == [True, False, False, False]
     assert [_is_labeling_priority(row) for row in rows] == [False, True, True, False]
-    urgent = _labeling_campaign_page(
-        rows, {}, offset=0, limit=10, urgent_only=True
-    )
-    priority = _labeling_campaign_page(
-        rows, {}, offset=0, limit=10, priority_only=True
-    )
+    urgent = _labeling_campaign_page(rows, {}, offset=0, limit=10, urgent_only=True)
+    priority = _labeling_campaign_page(rows, {}, offset=0, limit=10, priority_only=True)
 
     assert [row["chunk_id"] for row in urgent["rows"]] == ["urgent-flash"]
     assert [row["chunk_id"] for row in priority["rows"]] == [
@@ -103,6 +105,31 @@ def test_labeling_urgent_and_pro_priority_queues_are_distinct():
     ]
     assert _labeling_progress(rows, {}, urgent_only=True)["total"] == 1
     assert _labeling_progress(rows, {}, priority_only=True)["total"] == 2
+
+    higher_reviews = {
+        "pro-unresolved": {
+            "chunk_id": "pro-unresolved",
+            "action": "accept",
+            "final_labels": ["SEGURO"],
+        },
+        "pro-safe": {
+            "chunk_id": "pro-safe",
+            "action": "modify",
+            "final_labels": ["ATAQUE_POR_GENERO_IDENTIDAD"],
+        },
+    }
+    effective_priority = _labeling_campaign_page(
+        rows,
+        higher_reviews,
+        offset=0,
+        limit=10,
+        priority_only=True,
+    )
+    assert [row["chunk_id"] for row in effective_priority["rows"]] == [
+        "pro-damage",
+        "pro-safe",
+    ]
+    assert _labeling_progress(rows, higher_reviews, priority_only=True)["total"] == 2
 
 
 def test_labeling_excluded_queue_uses_latest_effective_decision():
@@ -256,6 +283,156 @@ def test_labeling_filters_combine_categories_flags_and_review_status():
     assert unlabeled_pending["total"] == 1
 
 
+def test_labeling_dashboard_uses_effective_decisions_and_audit_metrics():
+    taxonomy = load_taxonomy()
+    rows = [
+        {
+            "chunk_id": "safe",
+            "decision_status": "resolved",
+            "coarse_labels": ["SEGURO"],
+            "annotator_model": "deepseek-v4-flash",
+            "channel_title": "Canal A",
+            "video_id": "v1",
+        },
+        {
+            "chunk_id": "harm",
+            "decision_status": "resolved",
+            "coarse_labels": ["ACOSO_AMENAZA"],
+            "annotator_model": "deepseek-v4-pro",
+            "channel_title": "Canal A",
+            "video_id": "v1",
+        },
+        {
+            "chunk_id": "unlabeled",
+            "decision_status": "needs_review",
+            "needs_review": True,
+            "coarse_labels": [],
+            "annotator_model": "deepseek-v4-pro",
+            "channel_title": "Canal B",
+            "video_id": "v2",
+        },
+        {
+            "chunk_id": "excluded",
+            "decision_status": "resolved",
+            "coarse_labels": ["SEGURO"],
+            "annotator_model": "deepseek-v4-flash",
+            "channel_title": "Canal B",
+            "video_id": "v2",
+        },
+        {
+            "chunk_id": "modified",
+            "decision_status": "resolved",
+            "coarse_labels": ["SEGURO"],
+            "annotator_model": "deepseek-v4-pro",
+            "channel_title": "Canal B",
+            "video_id": "v2",
+        },
+        {
+            "chunk_id": "deferred",
+            "decision_status": "resolved",
+            "coarse_labels": ["SEGURO"],
+            "annotator_model": "deepseek-v4-flash",
+            "channel_title": "Canal C",
+            "video_id": "v3",
+        },
+    ]
+    reviews = {
+        "excluded": {
+            "chunk_id": "excluded",
+            "action": "reject",
+            "reviewer": "CODEX",
+            "created_at": "2026-08-09T10:10:00+00:00",
+        },
+        "modified": {
+            "chunk_id": "modified",
+            "action": "modify",
+            "final_labels": ["RACISMO_DISCRIMINACION", "CONTENIDO_SEXUAL"],
+            "flags": ["contexto_necesario"],
+            "reviewer": "CODEX",
+            "created_at": "2026-08-09T11:10:00+00:00",
+        },
+        "deferred": {
+            "chunk_id": "deferred",
+            "action": "defer",
+            "reviewer": "LKG",
+            "created_at": "2026-08-09T11:15:00+00:00",
+        },
+    }
+    audit = {
+        "generated_by": "test",
+        "sample": {"size": 100},
+        "reference": {"warning": "Referencia interna."},
+        "systems": {
+            "cascada_flash_pro_consolidada": {
+                "answered": 90,
+                "coverage_over_sample": 0.9,
+                "abstention_over_sample": 0.1,
+                "point": {
+                    "exact_agreement": 0.95,
+                    "binary_f1": 0.9,
+                    "binary_mcc": 0.88,
+                    "multilabel_micro_f1": 0.87,
+                    "hamming_loss": 0.02,
+                },
+                "exact_agreement_wilson_95": [0.9, 0.98],
+                "confidence": {
+                    "mean": 0.92,
+                    "brier_for_exact_correctness": 0.04,
+                    "ece_10_equal_width": 0.03,
+                },
+            }
+        },
+        "paired_flash_vs_pro_on_common_answered": {
+            "n": 50,
+            "pro_minus_flash_exact_agreement": 0.2,
+        },
+        "inference": {"bootstrap_replicates": 2000},
+    }
+
+    result = _labeling_dashboard(rows, reviews, taxonomy, audit_metrics=audit)
+    corpus = result["live"]["corpus"]
+
+    assert corpus == {
+        "total": 6,
+        "eligible": 5,
+        "excluded": 1,
+        "excluded_pct": pytest.approx(100 / 6),
+        "safe": 2,
+        "harm": 2,
+        "unlabeled": 1,
+        "labeled": 4,
+        "coverage_pct": 80.0,
+        "harm_prevalence_pct": 40.0,
+        "channels": 3,
+        "videos": 3,
+        "avg_chunks_per_channel": pytest.approx(5 / 3),
+        "median_chunks_per_channel": 2.0,
+        "avg_chunks_per_video": pytest.approx(5 / 3),
+        "median_chunks_per_video": 2.0,
+        "multilabel_assignments": 3,
+        "invalid_safe_harm": 0,
+        "intermediate_pro_needs_review": 1,
+        "intermediate_review_overridden": 0,
+        "final_pending": 1,
+    }
+    labels = {row["id"]: row["count"] for row in result["live"]["labels"]}
+    assert labels == {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0,
+        "ACOSO_AMENAZA": 1,
+        "CONTENIDO_SEXUAL": 1,
+    }
+    assert result["live"]["queues"]["priority"]["total"] == 3
+    assert result["live"]["actions"][0] == {
+        "id": "reject",
+        "label": "Excluido",
+        "count": 1,
+    }
+    assert result["audit"]["available"] is True
+    assert result["audit"]["systems"][0]["exact_agreement"] == 0.95
+    assert any("Flash/Pro" in insight["title"] for insight in result["insights"])
+
+
 def test_labeling_bulk_scope_uses_video_and_channel_title_fallback():
     taxonomy = load_taxonomy()
     rows = [
@@ -364,7 +541,9 @@ def test_labeling_bulk_events_are_idempotent_and_preserve_each_proposal():
     }
 
     summary, events = _labeling_bulk_events(rows, reviews, **arguments)
-    repeated_summary, repeated_events = _labeling_bulk_events(rows, reviews, **arguments)
+    repeated_summary, repeated_events = _labeling_bulk_events(
+        rows, reviews, **arguments
+    )
 
     assert summary["selected"] == 2
     assert summary["events_ready"] == 1
@@ -375,7 +554,9 @@ def test_labeling_bulk_events_are_idempotent_and_preserve_each_proposal():
     assert events[0].decision_scope == "video"
     assert events[0].decision_scope_key == "video:v1"
     assert events[0].batch_target_count == 2
-    assert [event.event_id for event in repeated_events] == [event.event_id for event in events]
+    assert [event.event_id for event in repeated_events] == [
+        event.event_id for event in events
+    ]
     assert repeated_summary == summary
 
     modify_summary, modified = _labeling_bulk_events(
@@ -430,16 +611,23 @@ def test_labeling_bulk_events_are_idempotent_and_preserve_each_proposal():
     )
     assert reject_summary["selected"] == 3
     assert len(rejected) == 3
-    assert all(event.action == "reject" and not event.final_labels for event in rejected)
+    assert all(
+        event.action == "reject" and not event.final_labels for event in rejected
+    )
 
 
-def _candidate(root: Path, dataset: Path, family: str, identifier: str, score: float) -> None:
+def _candidate(
+    root: Path, dataset: Path, family: str, identifier: str, score: float
+) -> None:
     taxonomy = load_taxonomy()
     directory = root / identifier
     directory.mkdir(parents=True)
     write_json_atomic(directory / "checkpoint_manifest.json", {"files": []})
     write_json_atomic(directory / "metrics.json", {"fixture": True})
-    write_json_atomic(directory / "inference.json", {"type": "sklearn_joblib", "model": "unused.joblib"})
+    write_json_atomic(
+        directory / "inference.json",
+        {"type": "sklearn_joblib", "model": "unused.joblib"},
+    )
     write_json_atomic(
         directory / "candidate.json",
         {
@@ -486,10 +674,15 @@ def test_registry_publishes_best_member_of_each_historical_frontend_slot(tmp_pat
         member = Path(reference["path"])
         assert member.is_file()
         assert sha256_file(member) == reference["sha256"]
-        assert json.loads(member.read_text(encoding="utf-8"))["model_id"] == result["selected_by_slot"][slot]
+        assert (
+            json.loads(member.read_text(encoding="utf-8"))["model_id"]
+            == result["selected_by_slot"][slot]
+        )
 
 
-def _model_event(event_id: str, slot: str, labels: list[str], text: str = "texto uno") -> dict:
+def _model_event(
+    event_id: str, slot: str, labels: list[str], text: str = "texto uno"
+) -> dict:
     taxonomy = load_taxonomy()
     return {
         "event_id": event_id,
@@ -522,7 +715,9 @@ def test_consensus_is_two_of_three_and_routes_disagreement_to_review():
     assert "desacuerdo_entre_modelos" in result["review_reasons"]
 
 
-def test_production_feedback_is_append_only_linked_deduplicated_and_conflict_safe(tmp_path):
+def test_production_feedback_is_append_only_linked_deduplicated_and_conflict_safe(
+    tmp_path,
+):
     taxonomy = load_taxonomy()
     inference_path = tmp_path / "inferences.jsonl"
     review_path = tmp_path / "reviews.jsonl"
@@ -534,10 +729,46 @@ def test_production_feedback_is_append_only_linked_deduplicated_and_conflict_saf
         _model_event("e4", "consensus", [taxonomy.damage_labels[1]], text="texto dos"),
     ]
     reviews = [
-        {"event_id": "r1", "source_event_id": "e1", "chunk_id": "chunk-1", "model_id": "model-classical", "reviewer": "h1", "action": "accept", "final_labels": [taxonomy.safe_label], "flags": []},
-        {"event_id": "r2", "source_event_id": "e2", "chunk_id": "chunk-1", "model_id": "model-transformer", "reviewer": "h2", "action": "accept", "final_labels": [taxonomy.safe_label], "flags": []},
-        {"event_id": "r3", "source_event_id": "e3", "chunk_id": "chunk-1", "model_id": "model-qwen", "reviewer": "h3", "action": "modify", "final_labels": [taxonomy.damage_labels[0]], "flags": []},
-        {"event_id": "r4", "source_event_id": "e4", "chunk_id": "chunk-2", "model_id": "model-consensus", "reviewer": "h1", "action": "accept", "final_labels": [taxonomy.damage_labels[1]], "flags": []},
+        {
+            "event_id": "r1",
+            "source_event_id": "e1",
+            "chunk_id": "chunk-1",
+            "model_id": "model-classical",
+            "reviewer": "h1",
+            "action": "accept",
+            "final_labels": [taxonomy.safe_label],
+            "flags": [],
+        },
+        {
+            "event_id": "r2",
+            "source_event_id": "e2",
+            "chunk_id": "chunk-1",
+            "model_id": "model-transformer",
+            "reviewer": "h2",
+            "action": "accept",
+            "final_labels": [taxonomy.safe_label],
+            "flags": [],
+        },
+        {
+            "event_id": "r3",
+            "source_event_id": "e3",
+            "chunk_id": "chunk-1",
+            "model_id": "model-qwen",
+            "reviewer": "h3",
+            "action": "modify",
+            "final_labels": [taxonomy.damage_labels[0]],
+            "flags": [],
+        },
+        {
+            "event_id": "r4",
+            "source_event_id": "e4",
+            "chunk_id": "chunk-2",
+            "model_id": "model-consensus",
+            "reviewer": "h1",
+            "action": "accept",
+            "final_labels": [taxonomy.damage_labels[1]],
+            "flags": [],
+        },
     ]
     write_jsonl_atomic(inference_path, inferences)
     write_jsonl_atomic(review_path, reviews)

@@ -8,15 +8,15 @@ from types import SimpleNamespace
 
 import pytest
 
-from moderacion_peru.datasets import assert_no_video_leakage, stable_video_split
 from moderacion_peru.acquisition import (
+    VIDEO_DATASET_RESET_CONFIRMATION,
     append_transcripts_by_channel,
     backfill_missing_vtt,
     bootstrap_canonical_from_existing,
-    collect_project_video_inventory,
-    consolidate_available_transcripts,
     build_directed_sampling_plan,
     classify_acquisition_error,
+    collect_project_video_inventory,
+    consolidate_available_transcripts,
     discover_youtube_candidates,
     expand_directed_channel_sources,
     fetch_youtube_subtitles,
@@ -32,7 +32,11 @@ from moderacion_peru.acquisition import (
     restore_canonical_from_channel_transcripts,
     select_directed_candidates,
     select_directed_search_queries,
-    VIDEO_DATASET_RESET_CONFIRMATION,
+)
+from moderacion_peru.datasets import (
+    assert_no_video_leakage,
+    project_effective_training_rows,
+    stable_video_split,
 )
 from moderacion_peru.incremental import (
     TranscriptSegment,
@@ -78,10 +82,18 @@ def test_directed_plan_falls_back_to_equal_damage_weights_without_prior_data():
 
 def test_directed_plan_uses_development_video_deficits_and_excludes_test():
     dataset = [
-        {"video_id": "v1", "split": "train", "coarse_labels": ["RACISMO_DISCRIMINACION"]},
+        {
+            "video_id": "v1",
+            "split": "train",
+            "coarse_labels": ["RACISMO_DISCRIMINACION"],
+        },
         {"video_id": "v2", "split": "train", "coarse_labels": ["ACOSO_AMENAZA"]},
         {"video_id": "v3", "split": "validation", "coarse_labels": ["ACOSO_AMENAZA"]},
-        {"video_id": "v4", "split": "validation", "coarse_labels": ["CONTENIDO_SEXUAL"]},
+        {
+            "video_id": "v4",
+            "split": "validation",
+            "coarse_labels": ["CONTENIDO_SEXUAL"],
+        },
         {
             "video_id": "test-only",
             "split": "test",
@@ -114,6 +126,136 @@ def test_directed_plan_uses_development_video_deficits_and_excludes_test():
     assert {row["channel_id"] for row in plan["channel_profiles"]} == {"c1", "c2"}
 
 
+def test_directed_plan_can_target_chunk_support_in_train_only():
+    dataset = [
+        {
+            "video_id": "r1",
+            "split": "train",
+            "coarse_labels": ["RACISMO_DISCRIMINACION"],
+        },
+        {
+            "video_id": "r1",
+            "split": "train",
+            "coarse_labels": ["RACISMO_DISCRIMINACION"],
+        },
+        {
+            "video_id": "g1",
+            "split": "train",
+            "coarse_labels": ["ATAQUE_POR_GENERO_IDENTIDAD"],
+        },
+        {"video_id": "a1", "split": "train", "coarse_labels": ["ACOSO_AMENAZA"]},
+        {"video_id": "a2", "split": "train", "coarse_labels": ["ACOSO_AMENAZA"]},
+        {"video_id": "a3", "split": "train", "coarse_labels": ["ACOSO_AMENAZA"]},
+        {
+            "video_id": "s1",
+            "split": "validation",
+            "coarse_labels": ["CONTENIDO_SEXUAL"],
+        },
+    ]
+
+    plan = build_directed_sampling_plan(
+        dataset,
+        [],
+        eligible_splits=("train",),
+        target_chunks_per_label=3,
+    )
+
+    assert plan["strategy"] == "target_chunk_deficit_weighted"
+    assert plan["support_chunks"] == {
+        "RACISMO_DISCRIMINACION": 2,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1,
+        "ACOSO_AMENAZA": 3,
+        "CONTENIDO_SEXUAL": 0,
+    }
+    assert plan["deficit_chunks"] == {
+        "RACISMO_DISCRIMINACION": 1,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 2,
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 3,
+    }
+    assert plan["weights"] == {
+        "RACISMO_DISCRIMINACION": pytest.approx(1 / 6),
+        "ATAQUE_POR_GENERO_IDENTIDAD": pytest.approx(2 / 6),
+        "ACOSO_AMENAZA": 0.0,
+        "CONTENIDO_SEXUAL": pytest.approx(3 / 6),
+    }
+
+
+def test_directed_candidate_selection_can_reserve_a_stable_split():
+    plan = build_directed_sampling_plan([], [])
+    candidates = [
+        {
+            "video_id": f"candidate-{index}",
+            "target_category": "RACISMO_DISCRIMINACION",
+            "discovery_source": "fuente",
+        }
+        for index in range(100)
+    ]
+
+    selected = select_directed_candidates(
+        candidates,
+        (),
+        plan,
+        max_candidates=10,
+        required_split="train",
+        split_seed=20260805,
+    )
+
+    assert len(selected) == 10
+    assert {row["planned_split"] for row in selected} == {"train"}
+    assert all(
+        stable_video_split(row["video_id"], 20260805) == "train" for row in selected
+    )
+
+
+def test_effective_projection_gives_higher_review_precedence_over_needs_review():
+    campaign = [
+        {
+            "chunk_id": "accepted-pro",
+            "video_id": "v1",
+            "coarse_labels": ["RACISMO_DISCRIMINACION"],
+            "training_eligible": False,
+            "needs_review": True,
+            "decision_status": "needs_review",
+        },
+        {
+            "chunk_id": "still-pending",
+            "video_id": "v2",
+            "coarse_labels": ["ACOSO_AMENAZA"],
+            "training_eligible": False,
+            "needs_review": True,
+            "decision_status": "needs_review",
+        },
+        {
+            "chunk_id": "base-resolved",
+            "video_id": "v3",
+            "coarse_labels": ["SEGURO"],
+            "training_eligible": True,
+            "needs_review": False,
+            "decision_status": "resolved",
+        },
+    ]
+    reviews = [
+        {
+            "event_id": "review-1",
+            "chunk_id": "accepted-pro",
+            "action": "accept",
+            "proposed_labels": ["RACISMO_DISCRIMINACION"],
+            "final_labels": ["RACISMO_DISCRIMINACION"],
+            "reviewer": "CODEX",
+            "created_at": "2026-08-09T10:00:00Z",
+        }
+    ]
+
+    projected = project_effective_training_rows(campaign, reviews)
+
+    assert {row["chunk_id"] for row in projected} == {"accepted-pro", "base-resolved"}
+    accepted = next(row for row in projected if row["chunk_id"] == "accepted-pro")
+    assert accepted["decision_status"] == "resolved"
+    assert accepted["needs_review"] is False
+    assert accepted["training_eligible"] is True
+
+
 def test_directed_queries_expansion_and_selection_follow_deficit_weights():
     plan = build_directed_sampling_plan([], [])
     queries = select_directed_search_queries(
@@ -126,7 +268,12 @@ def test_directed_queries_expansion_and_selection_follow_deficit_weights():
         ],
         max_queries=4,
     )
-    assert {row["query"] for row in queries} == {"racismo", "género", "amenaza", "sexual"}
+    assert {row["query"] for row in queries} == {
+        "racismo",
+        "género",
+        "amenaza",
+        "sexual",
+    }
 
     search_candidates = [
         {
@@ -145,8 +292,16 @@ def test_directed_queries_expansion_and_selection_follow_deficit_weights():
     cohort = select_directed_candidates(
         [
             {"video_id": "old", "target_category": "CONTENIDO_SEXUAL"},
-            {"video_id": "v1", "target_category": "CONTENIDO_SEXUAL", "discovery_source": "a"},
-            {"video_id": "v2", "target_category": "RACISMO_DISCRIMINACION", "discovery_source": "b"},
+            {
+                "video_id": "v1",
+                "target_category": "CONTENIDO_SEXUAL",
+                "discovery_source": "a",
+            },
+            {
+                "video_id": "v2",
+                "target_category": "RACISMO_DISCRIMINACION",
+                "discovery_source": "b",
+            },
             {"video_id": "general"},
         ],
         {"old"},
@@ -168,9 +323,11 @@ def test_video_dataset_reset_is_confirmed_scoped_and_recoverable(tmp_path):
     channel_readme = root / "datos/raw/transcripts_by_channel/README.md"
     channel_readme.write_text("documentación\n", encoding="utf-8")
     (root / "datos/raw/transcripts_by_channel/canal--part-0001.jsonl").write_text(
-        '{}\n', encoding="utf-8"
+        "{}\n", encoding="utf-8"
     )
-    (root / "datos/raw/transcripts_by_channel/index.json").write_text("{}", encoding="utf-8")
+    (root / "datos/raw/transcripts_by_channel/index.json").write_text(
+        "{}", encoding="utf-8"
+    )
     historical = root / "datos/ampliacion/historico/transcripts_raw.jsonl"
     historical.write_text("{}\n", encoding="utf-8")
 
@@ -218,7 +375,12 @@ def test_chunk_deduplication_uses_normalized_text_hash():
 
 
 def test_incremental_chunking_skips_unchanged_video_version():
-    transcripts = [{"video_id": "v1", "segments": [{"start": 0, "duration": 30, "text": "x " * 60}]}]
+    transcripts = [
+        {
+            "video_id": "v1",
+            "segments": [{"start": 0, "duration": 30, "text": "x " * 60}],
+        }
+    ]
     first, versions, first_stats = chunk_records_incrementally(transcripts)
     second, _, second_stats = chunk_records_incrementally(transcripts, first, versions)
     assert first_stats["new_or_changed_videos"] == 1
@@ -228,8 +390,14 @@ def test_incremental_chunking_skips_unchanged_video_version():
 
 def test_incremental_chunking_reports_one_progress_event_per_transcript():
     transcripts = [
-        {"video_id": "v1", "segments": [{"start": 0, "duration": 30, "text": "x " * 60}]},
-        {"video_id": "v2", "segments": [{"start": 0, "duration": 30, "text": "y " * 60}]},
+        {
+            "video_id": "v1",
+            "segments": [{"start": 0, "duration": 30, "text": "x " * 60}],
+        },
+        {
+            "video_id": "v2",
+            "segments": [{"start": 0, "duration": 30, "text": "y " * 60}],
+        },
     ]
     progress = []
 
@@ -259,20 +427,29 @@ def test_incremental_chunking_reprocesses_same_transcript_for_another_length():
     )
     assert stats["new_or_changed_videos"] == 1
     assert changed
-    assert changed_versions[0]["chunking_signature"] != versions[0]["chunking_signature"]
+    assert (
+        changed_versions[0]["chunking_signature"] != versions[0]["chunking_signature"]
+    )
 
 
 def test_append_jsonl_is_idempotent(tmp_path):
     path = tmp_path / "rows.jsonl"
-    assert append_jsonl_once(path, [{"chunk_id": "c1", "x": 1}], id_field="chunk_id") == (1, 0)
-    assert append_jsonl_once(path, [{"chunk_id": "c1", "x": 2}], id_field="chunk_id") == (0, 1)
+    assert append_jsonl_once(
+        path, [{"chunk_id": "c1", "x": 1}], id_field="chunk_id"
+    ) == (1, 0)
+    assert append_jsonl_once(
+        path, [{"chunk_id": "c1", "x": 2}], id_field="chunk_id"
+    ) == (0, 1)
     assert list(read_jsonl(path)) == [{"chunk_id": "c1", "x": 1}]
 
 
 def test_existing_transcripts_are_reused_without_touching_source(tmp_path):
     source = tmp_path / "snapshot" / "transcripts_raw.jsonl"
     source.parent.mkdir()
-    source.write_text('{"video_id":"v1","segments":[{"text":"hola"}],"view_count":NaN}\n', encoding="utf-8")
+    source.write_text(
+        '{"video_id":"v1","segments":[{"text":"hola"}],"view_count":NaN}\n',
+        encoding="utf-8",
+    )
     original = source.read_bytes()
     canonical = tmp_path / "canonical" / "transcripts_raw.jsonl"
 
@@ -366,9 +543,11 @@ def test_full_chunk_rebuild_is_atomic_and_keeps_recoverable_backup(tmp_path):
     assert result["outputs"]["chunks"]["rows"] >= 1
     backup = root / result["backup"]
     assert (backup / "backup_manifest.json").is_file()
-    assert (backup / "datos/processed/chunks_v2.jsonl").read_text(
-        encoding="utf-8"
-    ).startswith('{"chunk_id":"anterior"')
+    assert (
+        (backup / "datos/processed/chunks_v2.jsonl")
+        .read_text(encoding="utf-8")
+        .startswith('{"chunk_id":"anterior"')
+    )
 
 
 def test_all_available_transcripts_and_derived_video_ids_are_consolidated(tmp_path):
@@ -498,7 +677,13 @@ def test_channel_partitions_preserve_canonical_and_restore_idempotently(tmp_path
     assert first["added"] == 5
     assert second["added"] == 0
     assert second["already_canonical"] == 5
-    assert {row["video_id"] for row in read_jsonl(restored)} == {"v1", "v2", "v3", "v4", "v5"}
+    assert {row["video_id"] for row in read_jsonl(restored)} == {
+        "v1",
+        "v2",
+        "v3",
+        "v4",
+        "v5",
+    }
 
 
 def test_large_channel_is_split_into_bounded_numbered_parts(tmp_path):
@@ -538,7 +723,9 @@ def test_large_channel_is_split_into_bounded_numbered_parts(tmp_path):
 
 def test_candidates_accept_csv_and_jsonl(tmp_path):
     csv_path = tmp_path / "candidates.csv"
-    csv_path.write_text("video_id,url\nv1,https://example.invalid/v1\n", encoding="utf-8")
+    csv_path.write_text(
+        "video_id,url\nv1,https://example.invalid/v1\n", encoding="utf-8"
+    )
     assert load_candidates(csv_path)[0]["video_id"] == "v1"
 
 
@@ -553,7 +740,9 @@ def test_members_only_video_is_logged_and_does_not_stop_batch(tmp_path):
 
     def fetcher(candidate):
         if candidate["video_id"] == "members":
-            raise RuntimeError("Join this channel to get access to members-only content")
+            raise RuntimeError(
+                "Join this channel to get access to members-only content"
+            )
         return {
             "video_id": candidate["video_id"],
             "segments": [{"start": 0.0, "duration": 1.0, "text": "texto público"}],
@@ -614,7 +803,9 @@ def test_new_video_limit_counts_network_attempts_and_defers_remainder(tmp_path):
     assert stats["deferred_by_limit"] == 1
 
 
-def test_network_batches_cover_all_candidates_and_pause_between_batches(tmp_path, monkeypatch):
+def test_network_batches_cover_all_candidates_and_pause_between_batches(
+    tmp_path, monkeypatch
+):
     candidates = [{"video_id": f"v{index}"} for index in range(5)]
     fetched = []
     pauses = []
@@ -653,7 +844,9 @@ def test_network_batches_cover_all_candidates_and_pause_between_batches(tmp_path
     assert stats["batch_pauses"] == 2
     assert stats["deferred_by_limit"] == 0
     assert checkpoint_sizes == [2, 4]
-    assert [event["advance"] for event in progress if event["status"] == "batch_pause"] == [0, 0]
+    assert [
+        event["advance"] for event in progress if event["status"] == "batch_pause"
+    ] == [0, 0]
 
 
 def test_download_order_is_seeded_complete_and_interleaved_by_channel():
@@ -721,13 +914,17 @@ def test_subtitle_fetch_restores_historical_ytdlp_vtt_route(monkeypatch, tmp_pat
     assert captured["sleep_interval_requests"] == 0
     assert record["subtitle_source"] == "manual-yt-dlp-vtt"
     assert record["vtt_files"] == ["v1.es.vtt"]
-    assert (tmp_path / "vtt_by_video" / "v1.es.vtt").read_text(encoding="utf-8").startswith(
-        "WEBVTT"
+    assert (
+        (tmp_path / "vtt_by_video" / "v1.es.vtt")
+        .read_text(encoding="utf-8")
+        .startswith("WEBVTT")
     )
     assert record["segments"][0]["text"].startswith("Esta es una transcripción")
 
 
-def test_vtt_checkpoint_consolidates_sources_and_lists_only_missing_transcripts(tmp_path):
+def test_vtt_checkpoint_consolidates_sources_and_lists_only_missing_transcripts(
+    tmp_path,
+):
     main = tmp_path / "datos/raw/subtitulos"
     expansion = tmp_path / "datos/ampliacion/lote/raw/subtitulos"
     main.mkdir(parents=True)
@@ -746,20 +943,29 @@ def test_vtt_checkpoint_consolidates_sources_and_lists_only_missing_transcripts(
         {"video_id": "v3", "channel_id": "c3", "channel_title": "Canal 3"},
     ]
 
-    result = materialize_vtt_checkpoint(tmp_path, tmp_path / "datos/raw/vtt_by_video", records)
+    result = materialize_vtt_checkpoint(
+        tmp_path, tmp_path / "datos/raw/vtt_by_video", records
+    )
 
     assert result["total_files"] == 2
     assert result["total_videos"] == 2
     assert result["transcript_videos"] == 3
     assert result["missing_vtt_videos"] == 1
     assert load_vtt_backfill_candidates(tmp_path / "datos/raw/vtt_by_video") == [
-        {"video_id": "v3", "channel_id": "c3", "channel_title": "Canal 3", "previous_subtitle_source": None}
+        {
+            "video_id": "v3",
+            "channel_id": "c3",
+            "channel_title": "Canal 3",
+            "previous_subtitle_source": None,
+        }
     ]
     assert main.joinpath("v1.es.vtt").is_file()
     assert expansion.joinpath("v2.es-419.vtt").is_file()
 
 
-def test_transcript_api_fallback_is_saved_as_provenance_marked_vtt(monkeypatch, tmp_path):
+def test_transcript_api_fallback_is_saved_as_provenance_marked_vtt(
+    monkeypatch, tmp_path
+):
     class FakeYoutubeDL:
         def __init__(self, _options):
             pass
@@ -878,9 +1084,18 @@ def test_rate_limit_without_channel_identity_does_not_block_other_candidates(tmp
 
 
 def test_acquisition_error_categories_cover_expected_youtube_failures():
-    assert classify_acquisition_error(RuntimeError("members-only content")) == "members_only"
-    assert classify_acquisition_error(RuntimeError("video unavailable")) == "unavailable_or_private"
-    assert classify_acquisition_error(RuntimeError("no tiene subtítulos")) == "no_spanish_subtitles"
+    assert (
+        classify_acquisition_error(RuntimeError("members-only content"))
+        == "members_only"
+    )
+    assert (
+        classify_acquisition_error(RuntimeError("video unavailable"))
+        == "unavailable_or_private"
+    )
+    assert (
+        classify_acquisition_error(RuntimeError("no tiene subtítulos"))
+        == "no_spanish_subtitles"
+    )
     assert classify_acquisition_error(RuntimeError("subtítulos insuficientes")) == (
         "subtitle_too_short"
     )
@@ -1087,9 +1302,12 @@ def test_migration_materializes_grouped_model_ready_rows(tmp_path):
     validated = ModelReadyRecord.model_validate(row)
     assert validated.coarse_labels == ["ATAQUE_POR_GENERO_IDENTIDAD"]
     assert validated.split in {"train", "validation", "test"}
-    assert json.loads(manifest.read_text(encoding="utf-8"))["counters"][
-        f"split:{validated.split}"
-    ] == 1
+    assert (
+        json.loads(manifest.read_text(encoding="utf-8"))["counters"][
+            f"split:{validated.split}"
+        ]
+        == 1
+    )
 
 
 def test_migration_never_guesses_video_id_from_chunk_id(tmp_path):
@@ -1112,7 +1330,9 @@ def test_migration_never_guesses_video_id_from_chunk_id(tmp_path):
 def test_video_split_is_stable_and_no_leakage():
     assert stable_video_split("v1") == stable_video_split("v1")
     split = stable_video_split("v1")
-    assert_no_video_leakage([
-        {"video_id": "v1", "split": split},
-        {"video_id": "v1", "split": split},
-    ])
+    assert_no_video_leakage(
+        [
+            {"video_id": "v1", "split": split},
+            {"video_id": "v1", "split": split},
+        ]
+    )

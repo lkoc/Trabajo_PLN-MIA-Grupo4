@@ -7,7 +7,6 @@ from pathlib import Path
 
 import nbformat
 
-
 ROOT = Path(__file__).resolve().parents[1]
 BODY_CITATION = re.compile(r"\[(\d+)\]")
 REFERENCE_ENTRY = re.compile(r"^\[(\d+)\]\s", re.MULTILINE)
@@ -50,7 +49,14 @@ CONTRACT_SUMMARY_DOCUMENTS = (
 
 def test_active_notebooks_are_ordered_and_clean():
     notebooks = sorted((ROOT / "flujo").rglob("*.ipynb"))
-    assert len(notebooks) == 18
+    assert len(notebooks) == 19
+    executed_reporting_notebooks = {
+        "01_03_limpieza_troceado_incremental.ipynb",
+        "02_00_preparacion_bundle_colab.ipynb",
+        "02_01_etiquetado_local_ollama.ipynb",
+        "02_03_revision_llm_dirigida.ipynb",
+        "02_04_consolidacion_validacion_humana.ipynb",
+    }
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
         assert (
@@ -63,9 +69,9 @@ def test_active_notebooks_are_ordered_and_clean():
             for cell in notebook.cells
             if cell.cell_type == "code" and cell.get("outputs")
         ]
-        if path.name == "01_03_limpieza_troceado_incremental.ipynb":
-            # El resultado descriptivo ejecutado pertenece al usuario y se conserva
-            # deliberadamente para reporting; ningún otro cuaderno activo guarda salida.
+        if path.name in executed_reporting_notebooks:
+            # Estas salidas ejecutadas pertenecen al usuario y constituyen evidencia
+            # operativa; se conservan en lugar de reescribir sus cuadernos.
             assert output_cells
         else:
             assert not output_cells
@@ -164,7 +170,9 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
     expected_consumers = {"02_01", "03_02", "03_03", "03_04", "03_05", "03_06"}
     expected = {"02_00", *expected_consumers}
     manifest = json.loads(
-        (ROOT / "resultados" / "colab_bundle" / "bundle_manifest.json").read_text(encoding="utf-8")
+        (ROOT / "resultados" / "colab_bundle" / "bundle_manifest.json").read_text(
+            encoding="utf-8"
+        )
     )
     expected_bundle_id = manifest["bundle_id"]
     expected_core_sha256 = manifest["core"]["sha256"]
@@ -188,7 +196,9 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
                 assert "files.upload()" in source
                 assert "RUN_PUBLISH_BUNDLE=" in source
                 assert metadata["expected_gpu"] is None
-                assert metadata["transport"] == "github_or_browser_upload_to_google_drive"
+                assert (
+                    metadata["transport"] == "github_or_browser_upload_to_google_drive"
+                )
                 assert metadata["bundle_resolution"] == "publishes_drive_latest_pointer"
                 continue
             assert "prepare_colab_context" in source
@@ -217,10 +227,13 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
 
 def test_required_frontends_are_small_templates():
     human = ROOT / "flujo/02_etiquetado/frontend/validacion_humana.html"
+    dashboard = ROOT / "flujo/02_etiquetado/frontend/dashboard_etiquetado.html"
     production = ROOT / "flujo/04_produccion/frontend/produccion.html"
     assert human.stat().st_size < 100_000
+    assert dashboard.stat().st_size < 100_000
     assert production.stat().st_size < 100_000
     human_source = human.read_text(encoding="utf-8")
+    dashboard_source = dashboard.read_text(encoding="utf-8")
     assert "taxonomy.safe_label" in human_source
     assert "event.target.value===taxonomy.safe_label" in human_source
     assert "/api/progress" in human_source
@@ -264,6 +277,19 @@ def test_required_frontends_are_small_templates():
     assert 'data-mode="all"' in human_source
     assert '<dialog id="filterDialog"' in human_source
     assert "Acerca de" in human_source
+    assert "@media(max-width:1420px)" in human_source
+    assert "@media(max-width:720px)" in human_source
+    assert ".top-controls{order:2;display:grid" in human_source
+    assert 'id="intermediateCount"' in human_source
+    assert "needs_review Pro intermedio" in human_source
+    assert "Pro pendientes finales" in human_source
+    assert 'href="/dashboard"' in human_source
+    assert 'fetch("/api/dashboard"' in dashboard_source
+    assert 'href="/"' in dashboard_source
+    assert "setInterval" in dashboard_source
+    assert "Calidad de la auditoría" in dashboard_source
+    assert "Confianza y calibración" in dashboard_source
+    assert "Lectura cualitativa" in dashboard_source
 
 
 def test_02_01_uses_explicit_operational_review_threshold_without_changing_calibration():
@@ -274,7 +300,9 @@ def test_02_01_uses_explicit_operational_review_threshold_without_changing_calib
     source = "\n".join(
         cell.source for cell in notebook.cells if cell.cell_type == "code"
     )
-    generator = (ROOT / "tools/generate_workflow_notebooks.py").read_text(encoding="utf-8")
+    generator = (ROOT / "tools/generate_workflow_notebooks.py").read_text(
+        encoding="utf-8"
+    )
     for value in (source, generator):
         assert "REVIEW_CONFIDENCE_THRESHOLD=0.85" in value
         assert "SAFE_CONTROL_RATE=0.01" in value
@@ -285,7 +313,9 @@ def test_02_01_uses_explicit_operational_review_threshold_without_changing_calib
         assert "RUN_DIRECTED_REVIEW=True" in value
         assert "confidence_threshold=REVIEW_CONFIDENCE_THRESHOLD" in value
         assert "max_needs_review=MAX_NEEDS_REVIEW_FOR_PRO" in value
-        assert "confidence_threshold=float(calibration['selected_threshold'])" not in value
+        assert (
+            "confidence_threshold=float(calibration['selected_threshold'])" not in value
+        )
 
 
 def test_academic_cover_is_present_in_notebooks_frontends_and_readmes():
@@ -308,6 +338,7 @@ def test_academic_cover_is_present_in_notebooks_frontends_and_readmes():
         for path in ROOT.rglob("README.md")
         if "archivo" not in path.parts
         and "modelos" not in path.parts
+        and ".venv" not in path.parts
         and ".git" not in path.parts
         and ".pytest_cache" not in path.parts
     ]
@@ -345,7 +376,7 @@ def test_root_readme_summarizes_and_reproduces_the_active_workflow():
     assert "modperu.exe preflight" in source
     assert "python.exe -m pytest" in source
     for folder, expected_count in {
-        "01_datos": 3,
+        "01_datos": 4,
         "02_etiquetado": 6,
         "03_entrenamiento": 8,
         "04_produccion": 1,
@@ -416,6 +447,27 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
         / "flujo_reorganizado_v2"
         / "01_03_ampliacion_dirigida_reemplazado.ipynb"
     ).is_file()
+
+
+def test_minority_scraping_notebook_targets_two_thousand_train_chunks_per_damage():
+    path = ROOT / "flujo/01_datos/01_015_ampliacion_dirigida_minorias.ipynb"
+    notebook = nbformat.read(path, as_version=4)
+    source = "\n".join(cell.source for cell in notebook.cells)
+
+    assert "TARGET_TRAIN_CHUNKS_PER_DAMAGE = 2_000" in source
+    assert (
+        'DIRECTED_SPLIT_BUDGET = {"train": 450, "validation": 80, "test": 80}' in source
+    )
+    assert "project_effective_training_rows" in source
+    assert "eligible_splits=('train',)" in source
+    assert "target_chunks_per_label=TARGET_TRAIN_CHUNKS_PER_DAMAGE" in source
+    assert "required_split=planned_split" in source
+    assert "split_seed=SPLIT_SEED" in source
+    assert "de Pro es un estado intermedio" in source
+    assert "Hablando Huevadas" in source
+    assert "Goblinciano" in source
+    assert "Nunca MAS" in source
+    assert "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD" in source
 
 
 def test_chunk_length_pilot_is_optional_and_materialization_is_separate():
@@ -539,7 +591,9 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
 
     bundle = notebook_sources["02_00_preparacion_bundle_colab.ipynb"]
     assert "RUN_PUBLISH_BUNDLE=" in bundle
-    generator = (ROOT / "tools" / "generate_workflow_notebooks.py").read_text(encoding="utf-8")
+    generator = (ROOT / "tools" / "generate_workflow_notebooks.py").read_text(
+        encoding="utf-8"
+    )
     assert '"RUN_PUBLISH_BUNDLE=False' in generator
     assert "BUNDLE_SOURCE='github'" in bundle
     assert "local_upload" in bundle
@@ -550,8 +604,13 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     assert "bundle_releases" in bundle
     assert "latest.json" in bundle
     assert "published_to_drive" in bundle
-    colab_config = json.loads((ROOT / "config/colab_l4.json").read_text(encoding="utf-8"))
-    assert all(specification["archive"] in bundle for specification in colab_config["inputs"].values())
+    colab_config = json.loads(
+        (ROOT / "config/colab_l4.json").read_text(encoding="utf-8")
+    )
+    assert all(
+        specification["archive"] in bundle
+        for specification in colab_config["inputs"].values()
+    )
     assert "Seleccione nueve archivos" in bundle
     local = notebook_sources["02_01_etiquetado_local_ollama.ipynb"]
     assert "PRIMARY_LIMIT=None" in local
@@ -569,7 +628,10 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     assert "automatic_prefix" in local
     assert "prompt_cache_hit_tokens" in local
     assert "balance_summary()" in local
-    assert "Falta DEEPSEEK_API_KEY: configúrela como variable local o secreto privado de Colab antes de etiquetar" in local
+    assert (
+        "Falta DEEPSEEK_API_KEY: configúrela como variable local o secreto privado de Colab antes de etiquetar"
+        in local
+    )
     assert "BALANCE_REFRESH_SECONDS=60.0" in local
     assert "Saldo DeepSeek bajo" in local
     assert "'thinking':probe['thinking']" in local
@@ -583,15 +645,15 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     assert "estimated_cost_usd" in local
     assert "pending_current_after_recovery" in local
     assert "quarantine_invalid_progress=True" in local
-    assert "progress_callback=report_local_progress" in notebook_sources[
-        "02_02_etiquetado_remoto.ipynb"
-    ]
-    assert "Leyendo {name}" in notebook_sources[
-        "02_03_revision_llm_dirigida.ipynb"
-    ]
-    assert "progress_callback=report_consolidation_progress" in notebook_sources[
-        "02_04_consolidacion_validacion_humana.ipynb"
-    ]
+    assert (
+        "progress_callback=report_local_progress"
+        in notebook_sources["02_02_etiquetado_remoto.ipynb"]
+    )
+    assert "Leyendo {name}" in notebook_sources["02_03_revision_llm_dirigida.ipynb"]
+    assert (
+        "progress_callback=report_consolidation_progress"
+        in notebook_sources["02_04_consolidacion_validacion_humana.ipynb"]
+    )
     closure = notebook_sources["02_05_cierre_humano_snapshot.ipynb"]
     assert "progress_callback=report_stage_progress" in closure
     assert "Deduplicando snapshot" in closure

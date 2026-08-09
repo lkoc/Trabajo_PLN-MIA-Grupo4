@@ -13,8 +13,9 @@
 ## Orden
 
 1. `01_01_scraping_incremental.ipynb`
-2. `01_02_optimizacion_longitud_chunks.ipynb` — opcional
-3. `01_03_limpieza_troceado_incremental.ipynb`
+2. `01_015_ampliacion_dirigida_minorias.ipynb` — opcional, solo para balancear daños en train
+3. `01_02_optimizacion_longitud_chunks.ipynb` — opcional
+4. `01_03_limpieza_troceado_incremental.ipynb`
 
 Entrada: candidatos con `video_id` y URL, snapshots históricos, transcripciones canónicas y caché local.  
 Salida: transcripciones JSONL y chunks v2 con tiempos, hash de transcripción, versión y firma de configuración del troceador.
@@ -24,7 +25,9 @@ Control: nunca se descarga audio o video; primero se consolidan sin modificarlos
 
 La opción comentada `RESET_VIDEO_DATASET = "ARCHIVAR_Y_REINICIAR_DATASET_VIDEOS"` mueve los artefactos activos a `archivo/reinicios_dataset_videos/` y bloquea la reimportación automática de snapshots históricos. Es recuperable e idempotente; no borra código ni el archivo histórico.
 
-Para ampliar la muestra, active el modo requerido o agregue filas a `datos/raw/video_candidates.jsonl` o `datos/raw/videos_candidatos.csv` y vuelva a ejecutar `01_01`. El corpus previo permanece intacto. `BACKFILL_MISSING_VTT=True` consume `datos/raw/vtt_by_video/missing_vtt.jsonl`; `MAX_VTT_BACKFILL=None` recorre toda esa cola. Cada éxito guarda el VTT antes de avanzar y cada fallo se anexa de forma idempotente; al reanudar no se repiten los videos consolidados. Los videos exclusivos para miembros, privados, retirados, sin subtítulos o con menos de 200 caracteres se registran sin detener el lote.
+Para ampliar la muestra general, active el modo requerido o agregue filas a `datos/raw/video_candidates.jsonl` o `datos/raw/videos_candidatos.csv` y vuelva a ejecutar `01_01`. Para la meta específica de al menos 2.000 chunks por daño en `train`, use `01_015` sin modificar `01_01`: parte de la decisión efectiva posterior a CODEX–Sol-EH, calcula el déficit por chunks y reserva candidatos mediante split estable. El corpus previo permanece intacto. `BACKFILL_MISSING_VTT=True` consume `datos/raw/vtt_by_video/missing_vtt.jsonl`; `MAX_VTT_BACKFILL=None` recorre toda esa cola. Cada éxito guarda el VTT antes de avanzar y cada fallo se anexa de forma idempotente; al reanudar no se repiten los videos consolidados. Los videos exclusivos para miembros, privados, retirados, sin subtítulos o con menos de 200 caracteres se registran sin detener el lote.
+
+El corte posterior a la materialización de la prevalencia Pro deja en `train` 1.826 ejemplos de racismo/discriminación y 1.568 de ataque por género/identidad; los déficits hacia 2.000 son 174 y 432. `01_015` prioriza Hablando Huevadas, Goblinciano, Juanito y Richard, Nunca MAS, PBO, Magaly, Arde Troya y Todo Good según rendimiento histórico y diversidad de fuente. El canal o la consulta son solo criterios de recuperación: no transfieren automáticamente una categoría de daño al video ni al chunk.
 
 `01_02` no es necesario para cada incremento. Su modo rápido y la confirmación
 corta permanecen como diagnósticos opcionales. El perfil robusto clásico es la

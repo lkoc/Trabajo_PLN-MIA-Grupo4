@@ -9,9 +9,7 @@ import tempfile
 from pathlib import Path
 
 import nbformat as nbf
-
 from notebook_references import apply_citations
-
 
 ROOT = Path(__file__).resolve().parents[1]
 ONLY_NOTEBOOKS: set[str] | None = None
@@ -459,8 +457,13 @@ def colab_bundle_identity() -> dict[str, str]:
         )
     computed_bundle_id = bundle_id_for_manifest(manifest)
     if manifest.get("bundle_id") != computed_bundle_id:
-        raise RuntimeError("bundle_manifest.json no tiene un bundle_id válido; regenere el bundle")
-    _COLAB_BUNDLE_IDENTITY = {"bundle_id": computed_bundle_id, "core_sha256": declared_core}
+        raise RuntimeError(
+            "bundle_manifest.json no tiene un bundle_id válido; regenere el bundle"
+        )
+    _COLAB_BUNDLE_IDENTITY = {
+        "bundle_id": computed_bundle_id,
+        "core_sha256": declared_core,
+    }
     return _COLAB_BUNDLE_IDENTITY
 
 
@@ -475,10 +478,9 @@ def colab_setup(notebook_id: str) -> str:
 
 def colab_publisher_setup() -> str:
     identity = colab_bundle_identity()
-    return (
-        COLAB_PUBLISHER_SETUP.replace("__EXPECTED_BUNDLE_ID__", identity["bundle_id"])
-        .replace("__EXPECTED_CORE_SHA256__", identity["core_sha256"])
-    )
+    return COLAB_PUBLISHER_SETUP.replace(
+        "__EXPECTED_BUNDLE_ID__", identity["bundle_id"]
+    ).replace("__EXPECTED_CORE_SHA256__", identity["core_sha256"])
 
 
 DATASET_CHECKPOINT = """from moderacion_peru.colab import prepare_local_bundle_input
@@ -1178,6 +1180,207 @@ if SYNC_VTT_BY_VIDEO:
 """
 
 
+def _replace_required(source: str, old: str, new: str) -> str:
+    if old not in source:
+        raise ValueError(f"No se encontró el bloque esperado: {old[:80]!r}")
+    return source.replace(old, new, 1)
+
+
+SCRAPING_MINORITY_PARAMETERS = SCRAPING_PARAMETERS
+for _old, _new in (
+    (
+        "DISCOVER_NEW = False          # True: consulta canales/búsquedas y guarda candidatos",
+        "DISCOVER_NEW = True           # Esta campaña descubre fuentes nuevas dirigidas",
+    ),
+    (
+        "BACKFILL_MISSING_VTT = True   # True: recupera VTT aunque el JSON del video ya exista",
+        "BACKFILL_MISSING_VTT = False  # El backfill general permanece en 01_01",
+    ),
+    (
+        'DISCOVERY_MODE = "directed"   # "seed", "directed" o "both"',
+        'DISCOVERY_MODE = "directed"   # Fijo: ampliación de daños minoritarios',
+    ),
+    (
+        "MAX_VIDEOS_PER_CHANNEL = 75   # candidatos recientes inspeccionados por canal",
+        "MAX_VIDEOS_PER_CHANNEL = 400  # inspección amplia; no implica descargar todos",
+    ),
+    (
+        "MAX_RESULTS_PER_QUERY = 30    # candidatos inspeccionados por consulta dirigida",
+        "MAX_RESULTS_PER_QUERY = 80    # candidatos inspeccionados por consulta dirigida",
+    ),
+    (
+        "MAX_DIRECTED_CANDIDATES = None # None: conserva toda la cohorte dirigida inédita",
+        "MAX_DIRECTED_CANDIDATES = 610 # 450 train + 80 validation + 80 test",
+    ),
+    (
+        "MAX_EXPANDED_CHANNELS = 20    # canales nuevos inferidos desde búsquedas temáticas",
+        "MAX_EXPANDED_CHANNELS = 16    # canales nuevos inferidos desde búsquedas temáticas",
+    ),
+    (
+        "MAX_VIDEOS_PER_EXPANDED_CHANNEL = 30",
+        "MAX_VIDEOS_PER_EXPANDED_CHANNEL = 150",
+    ),
+):
+    SCRAPING_MINORITY_PARAMETERS = _replace_required(
+        SCRAPING_MINORITY_PARAMETERS, _old, _new
+    )
+SCRAPING_MINORITY_PARAMETERS = _replace_required(
+    SCRAPING_MINORITY_PARAMETERS,
+    'DISCOVERY_MODE = "directed"   # Fijo: ampliación de daños minoritarios\n\n',
+    'DISCOVERY_MODE = "directed"   # Fijo: ampliación de daños minoritarios\n'
+    "TARGET_TRAIN_CHUNKS_PER_DAMAGE = 2_000\n"
+    "SPLIT_SEED = 20260805\n"
+    'DIRECTED_SPLIT_BUDGET = {"train": 450, "validation": 80, "test": 80}\n\n',
+)
+SCRAPING_MINORITY_PARAMETERS = _replace_required(
+    SCRAPING_MINORITY_PARAMETERS,
+    'if DISCOVERY_MODE not in {"seed", "directed", "both"}:\n',
+    "if TARGET_TRAIN_CHUNKS_PER_DAMAGE < 1:\n"
+    '    raise ValueError("TARGET_TRAIN_CHUNKS_PER_DAMAGE debe ser positivo")\n'
+    'if set(DIRECTED_SPLIT_BUDGET) != {"train", "validation", "test"}:\n'
+    '    raise ValueError("DIRECTED_SPLIT_BUDGET debe declarar train, validation y test")\n'
+    "if any(value < 0 for value in DIRECTED_SPLIT_BUDGET.values()):\n"
+    '    raise ValueError("Los presupuestos por split no pueden ser negativos")\n'
+    "if (MAX_DIRECTED_CANDIDATES is not None\n"
+    "        and sum(DIRECTED_SPLIT_BUDGET.values()) > MAX_DIRECTED_CANDIDATES):\n"
+    '    raise ValueError("El presupuesto por split supera MAX_DIRECTED_CANDIDATES")\n'
+    'if DISCOVERY_MODE not in {"seed", "directed", "both"}:\n',
+)
+SCRAPING_MINORITY_PARAMETERS = _replace_required(
+    SCRAPING_MINORITY_PARAMETERS,
+    '    "discovery_mode": DISCOVERY_MODE,\n',
+    '    "discovery_mode": DISCOVERY_MODE,\n'
+    '    "target_train_chunks_per_damage": TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n'
+    '    "split_seed": SPLIT_SEED,\n'
+    '    "directed_split_budget": DIRECTED_SPLIT_BUDGET,\n',
+)
+
+
+SCRAPING_MINORITY_SOURCES = """# Fuentes priorizadas por rendimiento histórico en train.
+# Las cuotas son máximos de candidatos inspeccionados y nunca etiquetas automáticas.
+SEED_CHANNELS = []
+SEED_SEARCH_QUERIES = []
+DIRECTED_CHANNEL_CATALOG = [
+    {"name": "Hablando Huevadas", "url": "https://www.youtube.com/@HablandoHuevadasOficial", "quota": 350, "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD"},
+    {"name": "Goblinciano", "url": "https://www.youtube.com/@Goblinciano", "quota": 350, "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD"},
+    {"name": "Juanito y Richard", "url": "https://www.youtube.com/@JuanitoyRichard", "quota": 250, "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD"},
+    {"name": "Nunca MAS", "url": "https://www.youtube.com/channel/UCFqwxsa2Wp6Y5FkUAcGShGA", "quota": 200, "target_category": "ATAQUE_POR_GENERO_IDENTIDAD"},
+    {"name": "PBO", "url": "https://www.youtube.com/channel/UCgR0st4ZLABi-LQcWNu3wnQ", "quota": 150, "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD"},
+    {"name": "Magaly TV La Firme", "url": "https://www.youtube.com/@MagalyTVLaFirmeATV", "quota": 150, "target_category": "ATAQUE_POR_GENERO_IDENTIDAD"},
+    {"name": "Arde Troya con Juliana Oxenford", "url": "https://www.youtube.com/@ardetroyalr", "quota": 150, "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD"},
+    {"name": "Todo Good", "url": "https://www.youtube.com/@todogoodpe", "quota": 150, "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD"},
+]
+DIRECTED_QUERY_CATALOG = [
+    {"query": "podcast peruano insulto cholo serrano indio clasismo", "target_category": "RACISMO_DISCRIMINACION"},
+    {"query": "comediante peruano racismo clasismo broma", "target_category": "RACISMO_DISCRIMINACION"},
+    {"query": "streaming peruano burla regional conero provinciano", "target_category": "RACISMO_DISCRIMINACION"},
+    {"query": "podcast Perú ataque por género identidad burla", "target_category": "ATAQUE_POR_GENERO_IDENTIDAD"},
+    {"query": "streaming peruano burla machista misógina homofóbica", "target_category": "ATAQUE_POR_GENERO_IDENTIDAD"},
+    {"query": "comediante peruano ataque machista homofóbico", "target_category": "ATAQUE_POR_GENERO_IDENTIDAD"},
+]
+"""
+
+
+SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
+    SCRAPING_REUSE_AND_PLAN,
+    "from moderacion_peru.io import read_jsonl\n",
+    "from moderacion_peru.datasets import project_effective_training_rows\n"
+    "from moderacion_peru.io import read_jsonl\n",
+)
+SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
+    SCRAPING_MINORITY_REUSE_AND_PLAN,
+    "DIRECTED_DATASET = ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\n",
+    "DIRECTED_DATASET = ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\n"
+    "DIRECTED_CAMPAIGN = ROOT/'datos/etiquetado/consolidado/anotaciones_v2.jsonl'\n"
+    "DIRECTED_REVIEWS = ROOT/'datos/etiquetado/humano/labeling_events_v2.jsonl'\n"
+    "previous_snapshot_rows = list(read_jsonl(DIRECTED_DATASET)) if DIRECTED_DATASET.exists() else []\n"
+    "if DIRECTED_CAMPAIGN.exists():\n"
+    "    DIRECTED_TRAINING_ROWS = project_effective_training_rows(\n"
+    "        read_jsonl(DIRECTED_CAMPAIGN),\n"
+    "        read_jsonl(DIRECTED_REVIEWS) if DIRECTED_REVIEWS.exists() else [],\n"
+    "        previous_snapshot_rows,\n"
+    "        seed=SPLIT_SEED,\n"
+    "    )\n"
+    "else:\n"
+    "    DIRECTED_TRAINING_ROWS = previous_snapshot_rows\n",
+)
+SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
+    SCRAPING_MINORITY_REUSE_AND_PLAN,
+    "        read_jsonl(DIRECTED_DATASET) if DIRECTED_DATASET.exists() else [],\n"
+    "        read_jsonl(CANONICAL) if CANONICAL.exists() else [],\n"
+    "        damage_labels=taxonomy.damage_labels,\n",
+    "        DIRECTED_TRAINING_ROWS,\n"
+    "        read_jsonl(CANONICAL) if CANONICAL.exists() else [],\n"
+    "        damage_labels=taxonomy.damage_labels,\n"
+    "        eligible_splits=('train',),\n"
+    "        target_chunks_per_label=TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n",
+)
+SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
+    SCRAPING_MINORITY_REUSE_AND_PLAN,
+    "        'soporte_videos_train_validation': directed_plan['support_videos'],\n"
+    "        'déficit_videos': directed_plan['deficit_videos'],\n",
+    "        'objetivo_chunks_por_daño_train': directed_plan['target_chunks_per_label'],\n"
+    "        'soporte_chunks_train': directed_plan['support_chunks'],\n"
+    "        'déficit_chunks_train': directed_plan['deficit_chunks'],\n"
+    "        'adquisición_necesaria': directed_plan['acquisition_needed'],\n",
+)
+
+
+_DEFAULT_SELECTION = """            directed_selection = select_directed_candidates(
+                directed_pool,
+                KNOWN_VIDEO_IDS,
+                directed_plan,
+                max_candidates=(
+                    len(directed_pool)
+                    if MAX_DIRECTED_CANDIDATES is None
+                    else MAX_DIRECTED_CANDIDATES
+                ),
+            )
+"""
+_MINORITY_SELECTION = """            selection_limit = (
+                len(directed_pool)
+                if MAX_DIRECTED_CANDIDATES is None
+                else MAX_DIRECTED_CANDIDATES
+            )
+            directed_selection = []
+            remaining_selection = selection_limit
+            for planned_split, requested in DIRECTED_SPLIT_BUDGET.items():
+                split_selection = select_directed_candidates(
+                    directed_pool,
+                    KNOWN_VIDEO_IDS,
+                    directed_plan,
+                    max_candidates=min(requested, remaining_selection),
+                    required_split=planned_split,
+                    split_seed=SPLIT_SEED,
+                )
+                directed_selection = merge_candidates(directed_selection, split_selection)
+                remaining_selection -= len(split_selection)
+            directed_selection = [
+                {**candidate, 'directed_selection_rank': index}
+                for index, candidate in enumerate(directed_selection, 1)
+            ]
+            directed_split_counts = dict(Counter(
+                candidate.get('planned_split') for candidate in directed_selection
+            ))
+"""
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_DISCOVERY, _DEFAULT_SELECTION, _MINORITY_SELECTION
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    "                'directed_candidates_selected': len(directed_selection),\n",
+    "                'directed_candidates_selected': len(directed_selection),\n"
+    "                'directed_split_counts': directed_split_counts,\n"
+    "                'target_train_chunks_per_damage': TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n",
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    '        "directed_cohort": len(directed_selection),\n',
+    '        "directed_cohort": len(directed_selection),\n'
+    '        "directed_split_counts": (directed_split_counts if directed_plan is not None else {}),\n',
+)
+
+
 def create(
     path: str,
     title: str,
@@ -1192,7 +1395,9 @@ def create(
     if ONLY_NOTEBOOKS is not None and path not in ONLY_NOTEBOOKS:
         return
     if colab_notebook_id is not None and colab_publisher:
-        raise ValueError("Un cuaderno no puede ser consumidor y publicador Colab a la vez")
+        raise ValueError(
+            "Un cuaderno no puede ser consumidor y publicador Colab a la vez"
+        )
     colab_eligible = colab_notebook_id is not None or colab_publisher
     bundle_identity = colab_bundle_identity() if colab_eligible else None
     metadata_notebook_id = colab_notebook_id or ("02_00" if colab_publisher else None)
@@ -1220,16 +1425,24 @@ def create(
                 "transport": (
                     "github_or_browser_upload_to_google_drive"
                     if colab_publisher
-                    else "google_drive_versioned_releases" if colab_notebook_id else None
+                    else (
+                        "google_drive_versioned_releases" if colab_notebook_id else None
+                    )
                 ),
-                "expected_gpu": "NVIDIA L4" if colab_notebook_id and colab_requires_gpu else None,
-                "build_bundle_id": bundle_identity["bundle_id"] if bundle_identity else None,
+                "expected_gpu": (
+                    "NVIDIA L4" if colab_notebook_id and colab_requires_gpu else None
+                ),
+                "build_bundle_id": (
+                    bundle_identity["bundle_id"] if bundle_identity else None
+                ),
                 "bundle_resolution": (
                     "publishes_drive_latest_pointer"
                     if colab_publisher
                     else "drive_latest_pointer" if bundle_identity else None
                 ),
-                "expected_core_sha256": bundle_identity["core_sha256"] if bundle_identity else None,
+                "expected_core_sha256": (
+                    bundle_identity["core_sha256"] if bundle_identity else None
+                ),
             },
         },
     }
@@ -1365,6 +1578,48 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 SCRAPING_REUSE_AND_PLAN,
             ),
             ("Descubrimiento general o ampliación dirigida", SCRAPING_DISCOVERY),
+            ("Cohorte activa y caché", SCRAPING_CANDIDATES),
+            ("Ejecución controlada y tolerante a fallos", SCRAPING_EXECUTION),
+        ],
+    )
+    create(
+        "flujo/01_datos/01_015_ampliacion_dirigida_minorias.ipynb",
+        "01.015 · Ampliación dirigida de categorías minoritarias",
+        "Descubre y adquiere videos peruanos nuevos para llevar cada categoría de daño a por lo menos 2.000 chunks en train, sin modificar el cuaderno 01_01 de scraping inicial.",
+        "La selección usa el snapshot efectivo después de las decisiones CODEX–Sol-EH y mide el "
+        "déficit exclusivamente en `train`. El muestreo dirigido adapta principios de aprendizaje "
+        "activo ante desbalance y clasificación multietiqueta de cola larga "
+        "[@fairstein2024balancing] [@huang2021balancing]. Los candidatos reciben un split estable por "
+        "`video_id` antes de descargar y etiquetar; la búsqueda no consulta etiquetas de validation o "
+        "test para decidir la meta. Se reserva una fracción de adquisición para ambos holdouts, pero "
+        "solo los chunks nuevos cuyo hash corresponde a train cuentan hacia el objetivo de 2.000. "
+        "La adquisición escribe VTT mediante `yt-dlp` sin descargar audio o video [@ytdlp2026] y "
+        "mantiene `youtube-transcript-api` como respaldo [@depoix2026transcript]. Las consultas y "
+        "`target_category` son mecanismos de recuperación, nunca etiquetas: todo chunk nuevo debe pasar "
+        "por el prompt operativo y la jerarquía de revisión. Las transcripciones automáticas pueden "
+        "contener sesgos dialectales [@tatman2017captions], y el uso de la plataforma debe respetar sus "
+        "términos y el análisis ético contextual [@youtube2023terms] [@aoir2020ethics].",
+        [
+            (
+                "Preflight",
+                "from moderacion_peru.artifacts import artifact_status\nshow_result('Disponibilidad de artefactos', artifact_status(ROOT), tone='neutral')",
+            ),
+            ("Parámetros de la meta train ≥ 2.000", SCRAPING_MINORITY_PARAMETERS),
+            ("Canales y consultas para daños minoritarios", SCRAPING_MINORITY_SOURCES),
+            (
+                "Snapshot efectivo y déficit por chunks de train\n\n"
+                "`needs_review` de Pro es un estado intermedio. Una decisión posterior CODEX–Sol-EH "
+                "o humana lo sustituye; si CODEX no cambió una propuesta Pro no vacía, prevalece Pro. "
+                "El plan usa la última decisión efectiva, conserva el split histórico por video y "
+                "calcula cuánto falta para 2.000 asignaciones en cada daño de train. Los canales se "
+                "ordenan por rendimiento histórico, pero se combinan varias fuentes para evitar que "
+                "una clase aprenda únicamente el estilo de un canal.",
+                SCRAPING_MINORITY_REUSE_AND_PLAN,
+            ),
+            (
+                "Descubrimiento y cohorte separada por split",
+                SCRAPING_MINORITY_DISCOVERY,
+            ),
             ("Cohorte activa y caché", SCRAPING_CANDIDATES),
             ("Ejecución controlada y tolerante a fallos", SCRAPING_EXECUTION),
         ],

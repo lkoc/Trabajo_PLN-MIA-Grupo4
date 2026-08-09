@@ -1,0 +1,113 @@
+{
+  "schema_version": "1.0.0",
+  "created_at": "2026-08-09T15:58:51.774670+00:00",
+  "method": "latest_effective_review_then_stable_video_split",
+  "split_seed": 20260805,
+  "target_train_chunks_per_damage": 2000,
+  "final_status": {
+    "resolved": 157719,
+    "excluded": 9221,
+    "pending": 0,
+    "deferred": 0
+  },
+  "full_corpus": {
+    "rows": 157719,
+    "safe": 144834,
+    "at_least_one_damage": 12885,
+    "damage_labels": {
+      "RACISMO_DISCRIMINACION": 2506,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 2185,
+      "ACOSO_AMENAZA": 7237,
+      "CONTENIDO_SEXUAL": 3662
+    },
+    "max_min_ratio": 3.312128146453089,
+    "coefficient_of_variation": 0.5143771234969453,
+    "normalized_shannon_entropy": 0.913046642904727
+  },
+  "snapshot_id": "v2.1.0-05854b628c1a3b4d",
+  "dataset_sha256": "d9261b5afe35f2753ec838708398a8152ce1d9113e78ee3f5ec1af6a6f5dc0f6",
+  "materialized_train": {
+    "rows": 111723,
+    "safe": 102467,
+    "at_least_one_damage": 9256,
+    "damage_labels": {
+      "RACISMO_DISCRIMINACION": 1826,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 1568,
+      "ACOSO_AMENAZA": 5255,
+      "CONTENIDO_SEXUAL": 2568
+    },
+    "deficit_to_target": {
+      "RACISMO_DISCRIMINACION": 174,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 432,
+      "ACOSO_AMENAZA": 0,
+      "CONTENIDO_SEXUAL": 0
+    },
+    "deficit_weights": {
+      "RACISMO_DISCRIMINACION": 0.2871287128712871,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 0.7128712871287128,
+      "ACOSO_AMENAZA": 0.0,
+      "CONTENIDO_SEXUAL": 0.0
+    },
+    "max_min_ratio": 3.35140306122449,
+    "coefficient_of_variation": 0.5212753143322741,
+    "normalized_shannon_entropy": 0.9112890248538845
+  },
+  "materialized_validation": {
+    "rows": 25200,
+    "safe": 23251,
+    "at_least_one_damage": 1949,
+    "damage_labels": {
+      "RACISMO_DISCRIMINACION": 379,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 346,
+      "ACOSO_AMENAZA": 1028,
+      "CONTENIDO_SEXUAL": 590
+    }
+  },
+  "materialized_test": {
+    "rows": 20796,
+    "safe": 19116,
+    "at_least_one_damage": 1680,
+    "damage_labels": {
+      "RACISMO_DISCRIMINACION": 301,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 271,
+      "ACOSO_AMENAZA": 954,
+      "CONTENIDO_SEXUAL": 504
+    }
+  },
+  "precedence_materialization": {
+    "batch_id": "CODEX-PRO-PRECEDENCE-20260809",
+    "events": 1641,
+    "split_counts": {
+      "train": 1243,
+      "validation": 247,
+      "test": 151
+    },
+    "semantic_label_changes": 0,
+    "rule": "a falta de cambio superior, prevalece la propuesta no vacía de Pro"
+  },
+  "acquisition": {
+    "notebook": "flujo/01_datos/01_015_ampliacion_dirigida_minorias.ipynb",
+    "candidate_budget": {
+      "train": 450,
+      "validation": 80,
+      "test": 80
+    },
+    "priority_channels": [
+      "Hablando Huevadas",
+      "Goblinciano",
+      "Juanito y Richard",
+      "Nunca MAS",
+      "PBO",
+      "Magaly TV La Firme",
+      "Arde Troya con Juliana Oxenford",
+      "Todo Good"
+    ],
+    "guardrails": [
+      "target_category is retrieval metadata and never a label",
+      "assign split by stable hash before labeling",
+      "recalculate effective train deficits after each labeled increment",
+      "stop targeted acquisition when every train damage label reaches 2000",
+      "preserve channel diversity to limit source-style concentration"
+    ]
+  }
+}

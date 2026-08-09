@@ -1,30 +1,38 @@
 from __future__ import annotations
 
 import base64
-import json
 import hashlib
 import hmac
+import json
+import math
 import mimetypes
 import os
 import threading
 import urllib.parse
 import uuid
+from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from statistics import median
 from typing import Any
 
 from pydantic import ValidationError
 
-from .io import append_jsonl_once, read_jsonl, sha256_file, write_json_atomic, write_jsonl_atomic
 from .incremental import TranscriptSegment, chunk_transcript
+from .io import (
+    append_jsonl_once,
+    read_jsonl,
+    sha256_file,
+    write_json_atomic,
+    write_jsonl_atomic,
+)
 from .paths import find_project_root
-from .schemas import ModelRegistryEntry, ReviewEvent
 from .registry import ProductionPredictor
+from .schemas import ModelRegistryEntry, ReviewEvent
 from .taxonomy import load_taxonomy
 from .training import resolve_prediction
-
 
 PRODUCTION_SLOTS = ("classical", "transformer", "qwen")
 PRODUCTION_MODES = (*PRODUCTION_SLOTS, "compare", "consensus")
@@ -37,19 +45,31 @@ LABELING_BULK_ACTIONS = {"accept", "modify", "reject"}
 LABELING_URGENT_WARNING = "conflicting_top_priority_decisions"
 
 
-def _is_labeling_priority(row: dict[str, Any]) -> bool:
-    """Prioriza las salidas Pro todavía inciertas o con alguna etiqueta de daño."""
+def _is_labeling_priority(
+    row: dict[str, Any], latest_review: dict[str, Any] | None = None
+) -> bool:
+    """Prioriza salidas Pro efectivamente pendientes o con daño vigente."""
 
     model = str(row.get("annotator_model") or "").casefold()
     if "pro" not in model:
         return False
-    unresolved = bool(row.get("needs_review")) or str(
-        row.get("decision_status") or ""
-    ) == "needs_review"
-    has_damage = any(
-        str(label).upper() != "SEGURO"
-        for label in (row.get("coarse_labels") or [])
-    )
+
+    action = str((latest_review or {}).get("action") or "")
+    if action == "reject" or (
+        latest_review is None and str(row.get("decision_status") or "") == "excluded"
+    ):
+        return False
+    if action in {"accept", "modify"}:
+        unresolved = False
+        labels = (latest_review or {}).get("final_labels", [])
+    else:
+        unresolved = (
+            action == "defer"
+            or bool(row.get("needs_review"))
+            or str(row.get("decision_status") or "") == "needs_review"
+        )
+        labels = row.get("coarse_labels") or []
+    has_damage = any(str(label).upper() != "SEGURO" for label in labels)
     return unresolved or has_damage
 
 
@@ -77,7 +97,9 @@ def _labeling_filter_values(
 
     review = latest_reviews.get(str(row.get("chunk_id")))
     action = str((review or {}).get("action") or "")
-    if action == "reject" or (review is None and row.get("decision_status") == "excluded"):
+    if action == "reject" or (
+        review is None and row.get("decision_status") == "excluded"
+    ):
         status = "excluded"
     elif action == "defer":
         status = "deferred"
@@ -168,7 +190,7 @@ def _labeling_campaign_page(
             continue
         if urgent_only and not _is_labeling_urgent(row):
             continue
-        if priority_only and not urgent_only and not _is_labeling_priority(row):
+        if priority_only and not urgent_only and not _is_labeling_priority(row, review):
             continue
         current_view_position = view_position
         view_position += 1
@@ -217,8 +239,7 @@ def _labeling_progress(
         for row in campaign_rows
         if not cohort
         or cohort == "all"
-        or str(row.get("cohort") or row.get("label_source") or "sin_cohorte")
-        == cohort
+        or str(row.get("cohort") or row.get("label_source") or "sin_cohorte") == cohort
         if _matches_labeling_filters(
             row,
             latest_reviews,
@@ -236,7 +257,11 @@ def _labeling_progress(
     elif urgent_only:
         selected_rows = [row for row in cohort_rows if _is_labeling_urgent(row)]
     elif priority_only:
-        selected_rows = [row for row in cohort_rows if _is_labeling_priority(row)]
+        selected_rows = [
+            row
+            for row in cohort_rows
+            if _is_labeling_priority(row, latest_reviews.get(str(row.get("chunk_id"))))
+        ]
     else:
         selected_rows = cohort_rows
     selected_ids = {str(row.get("chunk_id")) for row in selected_rows}
@@ -272,6 +297,417 @@ def _labeling_progress(
     }
 
 
+def _labeling_dashboard(
+    campaign_rows: list[dict[str, Any]],
+    latest_reviews: dict[str, dict[str, Any]],
+    taxonomy: Any,
+    *,
+    audit_metrics: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Resume el estado efectivo del etiquetado para el dashboard operativo."""
+
+    total = len(campaign_rows)
+    safe_label = str(taxonomy.safe_label)
+    damage_labels = tuple(str(label) for label in taxonomy.damage_labels)
+    damage_set = set(damage_labels)
+    label_counts: Counter[str] = Counter({label: 0 for label in damage_labels})
+    flag_counts: Counter[str] = Counter({str(flag): 0 for flag in taxonomy.flags})
+    status_counts: Counter[str] = Counter()
+    model_counts: Counter[str] = Counter()
+    channel_counts: Counter[str] = Counter()
+    channel_harm: Counter[str] = Counter()
+    video_counts: Counter[str] = Counter()
+    action_counts: Counter[str] = Counter()
+    reviewer_counts: Counter[str] = Counter()
+    activity: dict[str, Counter[str]] = defaultdict(Counter)
+    queue_counts: dict[str, Counter[str]] = {
+        queue: Counter() for queue in ("urgent", "priority", "all", "excluded")
+    }
+    valid_flags = {str(flag) for flag in taxonomy.flags}
+    excluded = safe = harm = unlabeled = invalid_safe_harm = assignments = 0
+    intermediate_pro_needs_review = intermediate_overridden = 0
+
+    for row in campaign_rows:
+        chunk_id = str(row.get("chunk_id"))
+        review = latest_reviews.get(chunk_id)
+        model = str(row.get("annotator_model") or "Modelo no indicado").strip()
+        is_intermediate_pro_review = "pro" in model.casefold() and (
+            bool(row.get("needs_review"))
+            or str(row.get("decision_status") or "") == "needs_review"
+        )
+        if is_intermediate_pro_review:
+            intermediate_pro_needs_review += 1
+            intermediate_overridden += int(
+                str((review or {}).get("action") or "")
+                in {"accept", "modify", "reject"}
+            )
+        labels, flags, status = _labeling_filter_values(row, latest_reviews)
+        status_counts[status] += 1
+        selected_queues = ["all"]
+        if _is_labeling_urgent(row):
+            selected_queues.append("urgent")
+        if _is_labeling_priority(row, review):
+            selected_queues.append("priority")
+        if status == "excluded":
+            selected_queues.append("excluded")
+        for queue in selected_queues:
+            queue_counts[queue]["total"] += 1
+            if review is not None:
+                queue_counts[queue]["reviewed"] += 1
+                if str(review.get("action") or "") == "defer":
+                    queue_counts[queue]["deferred"] += 1
+                else:
+                    queue_counts[queue]["resolved"] += 1
+
+        if review is not None:
+            action = str(review.get("action") or "sin_accion")
+            action_counts[action] += 1
+            reviewer = str(review.get("reviewer") or "Sin iniciales").strip()
+            reviewer_counts[reviewer or "Sin iniciales"] += 1
+            created_at = str(review.get("created_at") or "")
+            if len(created_at) >= 13:
+                hour = created_at[:13] + ":00Z"
+                activity[hour]["total"] += 1
+                activity[hour][action] += 1
+
+        if status == "excluded":
+            excluded += 1
+            continue
+
+        known_damage = labels & damage_set
+        if safe_label in labels and known_damage:
+            invalid_safe_harm += 1
+        if known_damage:
+            harm += 1
+            label_counts.update(known_damage)
+            assignments += len(known_damage)
+        elif safe_label in labels:
+            safe += 1
+        else:
+            unlabeled += 1
+        flag_counts.update(flags & valid_flags)
+
+        model_counts[model or "Modelo no indicado"] += 1
+        channel = str(
+            row.get("channel_title") or row.get("channel_id") or "Canal no indicado"
+        ).strip()
+        channel_counts[channel] += 1
+        channel_harm[channel] += bool(known_damage)
+        video_id = str(row.get("video_id") or "").strip()
+        video_title = str(row.get("video_title") or "Video no indicado").strip()
+        video_key = video_id or f"{channel}\u241f{video_title}"
+        video_counts[video_key] += 1
+
+    eligible = max(0, total - excluded)
+    labeled = safe + harm
+    channels = len(channel_counts)
+    videos = len(video_counts)
+    category_values = [label_counts[label] for label in damage_labels]
+    category_mean = sum(category_values) / max(1, len(category_values))
+    category_cv = (
+        math.sqrt(
+            sum((value - category_mean) ** 2 for value in category_values)
+            / max(1, len(category_values))
+        )
+        / category_mean
+        if category_mean
+        else 0.0
+    )
+    category_total = sum(category_values)
+    normalized_entropy = (
+        -sum(
+            (value / category_total) * math.log(value / category_total)
+            for value in category_values
+            if value
+        )
+        / math.log(len(category_values))
+        if category_total and len(category_values) > 1
+        else 0.0
+    )
+    positive_values = [value for value in category_values if value]
+    ratio = max(positive_values) / min(positive_values) if positive_values else 0.0
+    display_names = {
+        label: str(taxonomy.categories[label].display_name)
+        for label in taxonomy.target_labels
+    }
+
+    def pct(value: float, denominator: float) -> float:
+        return 100.0 * value / denominator if denominator else 0.0
+
+    def queue_payload(queue: str) -> dict[str, Any]:
+        counts = queue_counts[queue]
+        queue_total = counts["total"]
+        if queue == "excluded":
+            return {
+                "total": queue_total,
+                "reviewed": counts["reviewed"],
+                "resolved": queue_total,
+                "deferred": 0,
+                "pending": 0,
+                "excluded_total": excluded,
+                "progress_pct": 100.0 if queue_total else 0.0,
+            }
+        resolved = counts["resolved"]
+        return {
+            "total": queue_total,
+            "reviewed": counts["reviewed"],
+            "resolved": resolved,
+            "deferred": counts["deferred"],
+            "pending": max(0, queue_total - resolved),
+            "excluded_total": excluded,
+            "progress_pct": pct(resolved, queue_total),
+        }
+
+    status_names = {
+        "resolved": "Resuelto",
+        "pending": "Pendiente",
+        "deferred": "Diferido",
+        "excluded": "Excluido",
+    }
+    action_names = {
+        "accept": "Sugerencia aceptada",
+        "modify": "Decisi\u00f3n ajustada",
+        "reject": "Excluido",
+        "defer": "Diferido",
+        "sin_accion": "Sin acci\u00f3n",
+    }
+
+    channel_rows = [
+        {
+            "name": name,
+            "chunks": count,
+            "harm": channel_harm[name],
+            "harm_pct": pct(channel_harm[name], count),
+        }
+        for name, count in channel_counts.items()
+    ]
+    top_volume = sorted(
+        channel_rows, key=lambda item: (-item["chunks"], item["name"].casefold())
+    )[:10]
+    top_harm = sorted(
+        (item for item in channel_rows if item["chunks"] >= 20),
+        key=lambda item: (-item["harm_pct"], -item["harm"], item["name"].casefold()),
+    )[:10]
+
+    audit_payload: dict[str, Any] = {"available": False}
+    if audit_metrics:
+        system_names = {
+            "cascada_flash_pro_consolidada": "Cascada Flash/Pro",
+            "deepseek_v4_flash": "DeepSeek V4 Flash",
+            "deepseek_v4_pro": "DeepSeek V4 Pro",
+        }
+        audit_systems: list[dict[str, Any]] = []
+        for system_id in (
+            "cascada_flash_pro_consolidada",
+            "deepseek_v4_flash",
+            "deepseek_v4_pro",
+        ):
+            system = (audit_metrics.get("systems") or {}).get(system_id)
+            if not isinstance(system, dict):
+                continue
+            point = system.get("point") or {}
+            confidence = system.get("confidence") or {}
+            audit_systems.append(
+                {
+                    "id": system_id,
+                    "label": system_names[system_id],
+                    "answered": system.get("answered", 0),
+                    "coverage": system.get("coverage_over_sample", 0.0),
+                    "abstention": system.get("abstention_over_sample", 0.0),
+                    "exact_agreement": point.get("exact_agreement"),
+                    "exact_ci95": system.get("exact_agreement_wilson_95", []),
+                    "binary_f1": point.get("binary_f1"),
+                    "binary_mcc": point.get("binary_mcc"),
+                    "micro_f1": point.get("multilabel_micro_f1"),
+                    "hamming_loss": point.get("hamming_loss"),
+                    "mean_confidence": confidence.get("mean"),
+                    "brier": confidence.get("brier_for_exact_correctness"),
+                    "ece": confidence.get("ece_10_equal_width"),
+                    "confidence_bands": confidence.get("bands", []),
+                    "per_label": system.get("per_label", {}),
+                }
+            )
+        audit_payload = {
+            "available": True,
+            "generated_by": audit_metrics.get("generated_by"),
+            "sample": audit_metrics.get("sample", {}),
+            "reference": audit_metrics.get("reference", {}),
+            "systems": audit_systems,
+            "paired": audit_metrics.get("paired_flash_vs_pro_on_common_answered", {}),
+            "inference": audit_metrics.get("inference", {}),
+        }
+
+    insights = [
+        {
+            "tone": "success" if unlabeled == 0 else "warning",
+            "title": "Cobertura efectiva",
+            "body": (
+                f"{pct(labeled, eligible):.2f}% de los chunks elegibles tiene una "
+                f"decisi\u00f3n gruesa; quedan {unlabeled:,} sin etiqueta."
+            ),
+        },
+        {
+            "tone": "info",
+            "title": "Prevalencia de da\u00f1o",
+            "body": (
+                f"{harm:,} chunks ({pct(harm, eligible):.2f}% de los elegibles) "
+                "tienen al menos una categor\u00eda de da\u00f1o vigente."
+            ),
+        },
+        {
+            "tone": "success" if status_counts["pending"] == 0 else "warning",
+            "title": "Jerarqu\u00eda de decisi\u00f3n",
+            "body": (
+                f"{intermediate_overridden:,} de {intermediate_pro_needs_review:,} "
+                "estados intermedios needs_review de Pro tienen una decisi\u00f3n "
+                f"superior materializada; quedan {status_counts['pending']:,} "
+                "decisiones finales pendientes."
+            ),
+        },
+        {
+            "tone": "warning" if ratio >= 2 else "info",
+            "title": "Balance entre da\u00f1os",
+            "body": (
+                f"La raz\u00f3n m\u00e1ximo/m\u00ednimo es {ratio:.2f}\u00d7 y el CV es "
+                f"{category_cv:.3f}; conviene vigilar las clases menos representadas."
+            ),
+        },
+        {
+            "tone": "info",
+            "title": "Lectura cualitativa",
+            "body": (
+                "La auditor\u00eda mantiene vigilancia dirigida sobre citas o denuncias "
+                "sin respaldo del narrador, usos sexuales peruanos (p. ej., cachar), "
+                "humor amistoso y condescendencia que puede encubrir clasismo, racismo "
+                "o sexismo."
+            ),
+        },
+    ]
+    paired = audit_payload.get("paired") or {}
+    if paired:
+        difference = float(paired.get("pro_minus_flash_exact_agreement") or 0.0)
+        insights.append(
+            {
+                "tone": "success" if difference > 0 else "warning",
+                "title": "Comparaci\u00f3n pareada Flash/Pro",
+                "body": (
+                    f"En {int(paired.get('n') or 0):,} respuestas comunes, Pro supera "
+                    f"a Flash en {difference * 100:.2f} puntos porcentuales de acuerdo "
+                    "exacto; el panel es dirigido y no representa una muestra aleatoria."
+                ),
+            }
+        )
+
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "live": {
+            "corpus": {
+                "total": total,
+                "eligible": eligible,
+                "excluded": excluded,
+                "excluded_pct": pct(excluded, total),
+                "safe": safe,
+                "harm": harm,
+                "unlabeled": unlabeled,
+                "labeled": labeled,
+                "coverage_pct": pct(labeled, eligible),
+                "harm_prevalence_pct": pct(harm, eligible),
+                "channels": channels,
+                "videos": videos,
+                "avg_chunks_per_channel": eligible / channels if channels else 0.0,
+                "median_chunks_per_channel": (
+                    float(median(channel_counts.values())) if channels else 0.0
+                ),
+                "avg_chunks_per_video": eligible / videos if videos else 0.0,
+                "median_chunks_per_video": (
+                    float(median(video_counts.values())) if videos else 0.0
+                ),
+                "multilabel_assignments": assignments,
+                "invalid_safe_harm": invalid_safe_harm,
+                "intermediate_pro_needs_review": intermediate_pro_needs_review,
+                "intermediate_review_overridden": intermediate_overridden,
+                "final_pending": status_counts["pending"],
+            },
+            "labels": [
+                {
+                    "id": label,
+                    "label": display_names[label],
+                    "count": label_counts[label],
+                    "pct_eligible": pct(label_counts[label], eligible),
+                    "pct_harm": pct(label_counts[label], harm),
+                }
+                for label in damage_labels
+            ],
+            "flags": [
+                {
+                    "id": flag,
+                    "label": flag.replace("_", " ").capitalize(),
+                    "count": flag_counts[flag],
+                    "pct_eligible": pct(flag_counts[flag], eligible),
+                }
+                for flag in taxonomy.flags
+            ],
+            "status": [
+                {
+                    "id": status,
+                    "label": status_names[status],
+                    "count": status_counts[status],
+                    "pct_total": pct(status_counts[status], total),
+                }
+                for status in ("resolved", "pending", "deferred", "excluded")
+            ],
+            "models": [
+                {
+                    "id": model,
+                    "label": model,
+                    "count": count,
+                    "pct_eligible": pct(count, eligible),
+                }
+                for model, count in model_counts.most_common()
+            ],
+            "queues": {
+                queue: queue_payload(queue)
+                for queue in ("urgent", "priority", "all", "excluded")
+            },
+            "imbalance": {
+                "max_min_ratio": ratio,
+                "coefficient_of_variation": category_cv,
+                "normalized_shannon_entropy": normalized_entropy,
+                "most_represented": (
+                    damage_labels[category_values.index(max(category_values))]
+                    if category_values
+                    else None
+                ),
+                "least_represented": (
+                    damage_labels[category_values.index(min(category_values))]
+                    if category_values
+                    else None
+                ),
+            },
+            "top_channels_volume": top_volume,
+            "top_channels_harm": top_harm,
+            "actions": [
+                {
+                    "id": action,
+                    "label": action_names.get(action, action),
+                    "count": count,
+                }
+                for action, count in action_counts.most_common()
+            ],
+            "reviewers": [
+                {"reviewer": reviewer, "count": count}
+                for reviewer, count in reviewer_counts.most_common(10)
+            ],
+            "activity": [
+                {"hour": hour, **dict(activity[hour])}
+                for hour in sorted(activity)[-24:]
+            ],
+        },
+        "audit": audit_payload,
+        "insights": insights,
+    }
+
+
 def _normalised_scope_text(value: Any) -> str:
     return " ".join(str(value or "").casefold().split())
 
@@ -301,7 +737,9 @@ def _labeling_scope_rows(
     if scope == "video":
         raw_key = str(anchor.get("video_id") or "").strip()
         if not raw_key:
-            raise ValueError("El chunk no tiene video_id; no se puede aplicar una acción masiva")
+            raise ValueError(
+                "El chunk no tiene video_id; no se puede aplicar una acción masiva"
+            )
         scope_key = f"video:{raw_key}"
         display_name = str(anchor.get("video_title") or raw_key)
         rows = [
@@ -418,16 +856,12 @@ def _labeling_bulk_events(
         event_labels = (
             proposed_labels
             if action == "accept"
-            else common_labels
-            if action == "modify"
-            else []
+            else common_labels if action == "modify" else []
         )
         event_flags = (
             list(row.get("flags") or [])
             if action == "accept"
-            else common_flags
-            if action == "modify"
-            else []
+            else common_flags if action == "modify" else []
         )
         event_id = str(
             uuid.uuid5(
@@ -482,7 +916,9 @@ def _model_slot(model_family: str) -> str:
     return "transformer"
 
 
-def _production_registry_paths(registry_path: Path, root: Path) -> tuple[dict[str, Any], dict[str, Path]]:
+def _production_registry_paths(
+    registry_path: Path, root: Path
+) -> tuple[dict[str, Any], dict[str, Path]]:
     payload = ModelRegistryEntry.model_validate_json(
         registry_path.read_text(encoding="utf-8")
     ).model_dump(mode="json")
@@ -492,7 +928,9 @@ def _production_registry_paths(registry_path: Path, root: Path) -> tuple[dict[st
         path = Path(reference["path"])
         path = path if path.is_absolute() else root / path
         if not path.is_file() or sha256_file(path) != reference["sha256"]:
-            raise ValueError(f"Registro productivo ausente o alterado para {slot}: {path}")
+            raise ValueError(
+                f"Registro productivo ausente o alterado para {slot}: {path}"
+            )
         paths[slot] = path
     if not paths:
         paths[_model_slot(str(payload.get("model_family", "")))] = registry_path
@@ -509,10 +947,14 @@ def _production_feedback(
     taxonomy = load_taxonomy()
     inferences = list(read_jsonl(inference_path)) if inference_path.is_file() else []
     reviews = list(read_jsonl(review_path)) if review_path.is_file() else []
-    by_event = {str(row.get("event_id")): row for row in inferences if row.get("event_id")}
+    by_event = {
+        str(row.get("event_id")): row for row in inferences if row.get("event_id")
+    }
     by_chunk_model: dict[tuple[str, str], dict[str, Any]] = {}
     for row in inferences:
-        by_chunk_model[(str(row.get("chunk_id", "")), str(row.get("model_id", "")))] = row
+        by_chunk_model[(str(row.get("chunk_id", "")), str(row.get("model_id", "")))] = (
+            row
+        )
 
     linked: list[tuple[dict[str, Any], dict[str, Any]]] = []
     for review in reviews:
@@ -531,7 +973,9 @@ def _production_feedback(
         if review.get("source_event_id")
     }
     for event in inferences:
-        slot = str(event.get("model_slot") or _model_slot(str(event.get("model_family", ""))))
+        slot = str(
+            event.get("model_slot") or _model_slot(str(event.get("model_family", "")))
+        )
         bucket = by_model.setdefault(
             slot,
             {
@@ -569,12 +1013,19 @@ def _production_feedback(
         identity_payload = "|".join(
             [
                 str(inference.get("video_id") or ""),
-                str(inference.get("start_seconds") if inference.get("start_seconds") is not None else ""),
+                str(
+                    inference.get("start_seconds")
+                    if inference.get("start_seconds") is not None
+                    else ""
+                ),
                 " ".join(str(inference.get("text", "")).casefold().split()),
             ]
         )
         identity = hashlib.sha256(identity_payload.encode("utf-8")).hexdigest()
-        decisions.setdefault(identity, {})[str(review.get("reviewer", ""))] = (review, inference)
+        decisions.setdefault(identity, {})[str(review.get("reviewer", ""))] = (
+            review,
+            inference,
+        )
 
     records: list[dict[str, Any]] = []
     conflicts: list[str] = []
@@ -589,7 +1040,8 @@ def _production_feedback(
             {
                 "schema_version": "2.1.0",
                 "chunk_id": f"prod_{identity[:24]}",
-                "video_id": inference.get("video_id") or f"production_text_{identity[:16]}",
+                "video_id": inference.get("video_id")
+                or f"production_text_{identity[:16]}",
                 "text": inference["text"],
                 "coarse_labels": list(next(iter(label_sets))),
                 "flags": review.get("flags", []),
@@ -735,15 +1187,33 @@ def serve(
             "Escuchar fuera de loopback requiere MODERATOR_ACCESS_PASSWORD; "
             "use 127.0.0.1 para operación exclusivamente local"
         )
-    html_path = root / "flujo" / ("02_etiquetado" if mode == "labeling" else "04_produccion") / "frontend" / ("validacion_humana.html" if mode == "labeling" else "produccion.html")
+    html_path = (
+        root
+        / "flujo"
+        / ("02_etiquetado" if mode == "labeling" else "04_produccion")
+        / "frontend"
+        / ("validacion_humana.html" if mode == "labeling" else "produccion.html")
+    )
+    dashboard_path = (
+        root / "flujo" / "02_etiquetado" / "frontend" / "dashboard_etiquetado.html"
+    )
+    audit_metrics_path = (
+        root / "docs" / "artefactos" / "auditoria_16k_flash_pro_sol_eh_metrics.json"
+    )
     campaign_path = Path(campaign).resolve() if campaign else None
     if reviews:
         review_path = Path(reviews).resolve()
     elif mode == "labeling":
-        review_path = root / "datos" / "etiquetado" / "humano" / "labeling_events_v2.jsonl"
+        review_path = (
+            root / "datos" / "etiquetado" / "humano" / "labeling_events_v2.jsonl"
+        )
     else:
         review_path = root / "datos" / "produccion" / "review_events_v2.jsonl"
-    registry_path = Path(registry).resolve() if registry else root / "modelos" / "registro_modelos_5_salidas.json"
+    registry_path = (
+        Path(registry).resolve()
+        if registry
+        else root / "modelos" / "registro_modelos_5_salidas.json"
+    )
     predictors: dict[str, ProductionPredictor] = {}
     prediction_lock = threading.Lock()
     persistence_lock = threading.RLock()
@@ -757,12 +1227,24 @@ def serve(
         if retraining
         else root / "datos" / "produccion" / "retraining_ready_v2.jsonl"
     )
-    campaign_rows = list(read_jsonl(campaign_path)) if campaign_path and campaign_path.is_file() else []
+    campaign_rows = (
+        list(read_jsonl(campaign_path))
+        if campaign_path and campaign_path.is_file()
+        else []
+    )
     for index, row in enumerate(campaign_rows):
         previous = campaign_rows[index - 1] if index else None
         following = campaign_rows[index + 1] if index + 1 < len(campaign_rows) else None
-        row["previous_text"] = previous.get("text") if previous and previous.get("video_id") == row.get("video_id") else None
-        row["next_text"] = following.get("text") if following and following.get("video_id") == row.get("video_id") else None
+        row["previous_text"] = (
+            previous.get("text")
+            if previous and previous.get("video_id") == row.get("video_id")
+            else None
+        )
+        row["next_text"] = (
+            following.get("text")
+            if following and following.get("video_id") == row.get("video_id")
+            else None
+        )
     labeling_reviews = (
         {row["chunk_id"]: row for row in read_jsonl(review_path)}
         if mode == "labeling" and review_path.is_file()
@@ -774,9 +1256,12 @@ def serve(
             for row in campaign_rows
         }
     )
-    labeling_priority_total = sum(_is_labeling_priority(row) for row in campaign_rows)
+    labeling_priority_total = sum(
+        _is_labeling_priority(row, labeling_reviews.get(str(row.get("chunk_id"))))
+        for row in campaign_rows
+    )
     labeling_urgent_total = sum(_is_labeling_urgent(row) for row in campaign_rows)
-    labeling_pro_unresolved_total = sum(
+    labeling_pro_intermediate_total = sum(
         "pro" in str(row.get("annotator_model") or "").casefold()
         and (
             bool(row.get("needs_review"))
@@ -784,11 +1269,17 @@ def serve(
         )
         for row in campaign_rows
     )
+    labeling_pro_unresolved_total = sum(
+        "pro" in str(row.get("annotator_model") or "").casefold()
+        and _labeling_filter_values(row, labeling_reviews)[2] == "pending"
+        for row in campaign_rows
+    )
     labeling_pro_damage_total = sum(
         "pro" in str(row.get("annotator_model") or "").casefold()
+        and _labeling_filter_values(row, labeling_reviews)[2] != "excluded"
         and any(
             str(label).upper() != "SEGURO"
-            for label in (row.get("coarse_labels") or [])
+            for label in _labeling_filter_values(row, labeling_reviews)[0]
         )
         for row in campaign_rows
     )
@@ -901,7 +1392,9 @@ def serve(
             if self.authorized():
                 return True
             self.send_response(HTTPStatus.UNAUTHORIZED)
-            self.send_header("WWW-Authenticate", 'Basic realm="Moderación Perú", charset="UTF-8"')
+            self.send_header(
+                "WWW-Authenticate", 'Basic realm="Moderación Perú", charset="UTF-8"'
+            )
             self.send_header("Cache-Control", "no-store")
             self.send_header("Content-Length", "0")
             self.end_headers()
@@ -935,7 +1428,9 @@ def serve(
             if parsed.path != "/api/health" and not self.require_authorization():
                 return
             if parsed.path == "/api/health":
-                self.send_json({"status": "ok", "mode": mode, "taxonomy": taxonomy.contract_id})
+                self.send_json(
+                    {"status": "ok", "mode": mode, "taxonomy": taxonomy.contract_id}
+                )
                 return
             if parsed.path == "/favicon.ico":
                 self.send_response(HTTPStatus.NO_CONTENT)
@@ -965,51 +1460,65 @@ def serve(
                             HTTPStatus.CONFLICT,
                         )
                         return
-                    available_modes = [slot for slot in PRODUCTION_SLOTS if slot in registry_paths]
+                    available_modes = [
+                        slot for slot in PRODUCTION_SLOTS if slot in registry_paths
+                    ]
                     if len(registry_paths) >= 2:
                         available_modes.append("compare")
                     if set(registry_paths) == set(PRODUCTION_SLOTS):
                         available_modes.append("consensus")
-                self.send_json({
-                    "mode": mode,
-                    "taxonomy": taxonomy.model_dump(),
-                    "campaign_available": bool(campaign_path and campaign_path.is_file()),
-                    "campaign_total": len(campaign_rows),
-                    "campaign_priority_total": labeling_priority_total,
-                    "campaign_urgent_total": labeling_urgent_total,
-                    "campaign_excluded_total": sum(
-                        _is_labeling_excluded(row, labeling_reviews)
-                        for row in campaign_rows
-                    ),
-                    "campaign_pro_unresolved_total": labeling_pro_unresolved_total,
-                    "campaign_pro_damage_total": labeling_pro_damage_total,
-                    "campaign_priority_rule": (
-                        "Salida de DeepSeek Pro con needs_review=true o con al menos "
-                        "una categoría de daño; la unión no duplica casos."
-                    ),
-                    "campaign_urgent_rule": (
-                        "Conflicto entre propuestas de máxima prioridad que la "
-                        "consolidación no pudo resolver automáticamente."
-                    ),
-                    "campaign_excluded_rule": (
-                        "Chunks cuya decisión vigente los deja fuera del dataset "
-                        "entrenable; pueden abrirse y reclasificarse."
-                    ),
-                    "campaign_cohorts": labeling_cohorts if mode == "labeling" else [],
-                    "registry_available": registry_available,
-                    "registry": registry_payload,
-                    "models": registry_models,
-                    "available_modes": available_modes,
-                    "default_production_mode": (
-                        "consensus" if "consensus" in available_modes
-                        else available_modes[0] if available_modes else None
-                    ),
-                    "reviews": str(review_path),
-                })
+                self.send_json(
+                    {
+                        "mode": mode,
+                        "taxonomy": taxonomy.model_dump(),
+                        "campaign_available": bool(
+                            campaign_path and campaign_path.is_file()
+                        ),
+                        "campaign_total": len(campaign_rows),
+                        "campaign_priority_total": labeling_priority_total,
+                        "campaign_urgent_total": labeling_urgent_total,
+                        "campaign_excluded_total": sum(
+                            _is_labeling_excluded(row, labeling_reviews)
+                            for row in campaign_rows
+                        ),
+                        "campaign_pro_unresolved_total": labeling_pro_unresolved_total,
+                        "campaign_pro_intermediate_total": labeling_pro_intermediate_total,
+                        "campaign_pro_damage_total": labeling_pro_damage_total,
+                        "campaign_priority_rule": (
+                            "Salida de DeepSeek Pro cuya decisión efectiva sigue pendiente "
+                            "o conserva al menos una categoría de daño; un needs_review "
+                            "histórico superado por CODEX o por una persona no cuenta como "
+                            "pendiente final."
+                        ),
+                        "campaign_urgent_rule": (
+                            "Conflicto entre propuestas de máxima prioridad que la "
+                            "consolidación no pudo resolver automáticamente."
+                        ),
+                        "campaign_excluded_rule": (
+                            "Chunks cuya decisión vigente los deja fuera del dataset "
+                            "entrenable; pueden abrirse y reclasificarse."
+                        ),
+                        "campaign_cohorts": (
+                            labeling_cohorts if mode == "labeling" else []
+                        ),
+                        "registry_available": registry_available,
+                        "registry": registry_payload,
+                        "models": registry_models,
+                        "available_modes": available_modes,
+                        "default_production_mode": (
+                            "consensus"
+                            if "consensus" in available_modes
+                            else available_modes[0] if available_modes else None
+                        ),
+                        "reviews": str(review_path),
+                    }
+                )
                 return
             if parsed.path == "/api/campaign":
                 if not campaign_path or not campaign_path.is_file():
-                    self.send_json({"error": "campaign_not_available"}, HTTPStatus.NOT_FOUND)
+                    self.send_json(
+                        {"error": "campaign_not_available"}, HTTPStatus.NOT_FOUND
+                    )
                     return
                 query = urllib.parse.parse_qs(parsed.query)
                 offset = max(0, int(query.get("offset", [0])[0]))
@@ -1018,16 +1527,13 @@ def serve(
                 only_pending = query.get("pending", ["0"])[0] == "1"
                 queue = query.get("queue", ["all"])[0]
                 priority_only = (
-                    queue == "priority"
-                    or query.get("priority", ["0"])[0] == "1"
+                    queue == "priority" or query.get("priority", ["0"])[0] == "1"
                 )
                 urgent_only = queue == "urgent"
                 excluded_only = queue == "excluded"
                 filter_labels = {value for value in query.get("label", []) if value}
                 filter_flags = {value for value in query.get("flag", []) if value}
-                filter_statuses = {
-                    value for value in query.get("status", []) if value
-                }
+                filter_statuses = {value for value in query.get("status", []) if value}
                 filter_labeling = {
                     value for value in query.get("labeling", []) if value
                 }
@@ -1070,17 +1576,14 @@ def serve(
                 query = urllib.parse.parse_qs(parsed.query)
                 queue = query.get("queue", ["all"])[0]
                 priority_only = (
-                    queue == "priority"
-                    or query.get("priority", ["0"])[0] == "1"
+                    queue == "priority" or query.get("priority", ["0"])[0] == "1"
                 )
                 urgent_only = queue == "urgent"
                 excluded_only = queue == "excluded"
                 cohort = query.get("cohort", [""])[0]
                 filter_labels = {value for value in query.get("label", []) if value}
                 filter_flags = {value for value in query.get("flag", []) if value}
-                filter_statuses = {
-                    value for value in query.get("status", []) if value
-                }
+                filter_statuses = {value for value in query.get("status", []) if value}
                 filter_labeling = {
                     value for value in query.get("labeling", []) if value
                 }
@@ -1105,14 +1608,38 @@ def serve(
                 rows = list(read_jsonl(review_path)) if review_path.is_file() else []
                 self.send_json({"total": len(rows), "rows": rows})
                 return
+            if parsed.path == "/api/dashboard" and mode == "labeling":
+                audit_metrics: dict[str, Any] | None = None
+                if audit_metrics_path.is_file():
+                    try:
+                        audit_metrics = json.loads(
+                            audit_metrics_path.read_text(encoding="utf-8")
+                        )
+                    except (OSError, json.JSONDecodeError):
+                        audit_metrics = None
+                with persistence_lock:
+                    dashboard = _labeling_dashboard(
+                        campaign_rows,
+                        labeling_reviews,
+                        taxonomy,
+                        audit_metrics=audit_metrics,
+                    )
+                self.send_json(dashboard)
+                return
             if parsed.path == "/api/stats" and mode == "production":
                 with persistence_lock:
-                    statistics = _production_feedback(inference_path, review_path, ready_path)
+                    statistics = _production_feedback(
+                        inference_path, review_path, ready_path
+                    )
                 self.send_json(statistics)
                 return
             if parsed.path == "/api/export":
                 query = urllib.parse.parse_qs(parsed.query)
-                export_path = ready_path if query.get("kind", [""])[0] == "retraining" else review_path
+                export_path = (
+                    ready_path
+                    if query.get("kind", [""])[0] == "retraining"
+                    else review_path
+                )
                 if export_path == ready_path:
                     with persistence_lock:
                         _production_feedback(inference_path, review_path, ready_path)
@@ -1120,18 +1647,40 @@ def serve(
                     body = export_path.read_bytes() if export_path.is_file() else b""
                 self.send_response(200)
                 self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
-                self.send_header("Content-Disposition", f'attachment; filename="{export_path.name}"')
+                self.send_header(
+                    "Content-Disposition", f'attachment; filename="{export_path.name}"'
+                )
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            if parsed.path in {"/dashboard", "/dashboard.html"} and mode == "labeling":
+                if not dashboard_path.is_file():
+                    self.send_json(
+                        {"error": f"frontend_missing:{dashboard_path}"},
+                        HTTPStatus.NOT_FOUND,
+                    )
+                    return
+                body = dashboard_path.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
                 return
             if parsed.path in {"/", "/index.html"}:
                 if not html_path.is_file():
-                    self.send_json({"error": f"frontend_missing:{html_path}"}, HTTPStatus.NOT_FOUND)
+                    self.send_json(
+                        {"error": f"frontend_missing:{html_path}"}, HTTPStatus.NOT_FOUND
+                    )
                     return
                 body = html_path.read_bytes()
                 self.send_response(200)
-                self.send_header("Content-Type", mimetypes.guess_type(html_path.name)[0] + "; charset=utf-8")
+                self.send_header(
+                    "Content-Type",
+                    mimetypes.guess_type(html_path.name)[0] + "; charset=utf-8",
+                )
                 self.send_header("Cache-Control", "no-store")
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
@@ -1160,7 +1709,12 @@ def serve(
                         metadata={"chunk_id": f"production-text-{uuid.uuid4()}"},
                     )
                     self.send_json({"mode": mode_name, "results": events})
-                except (FileNotFoundError, ValueError, RuntimeError, ImportError) as exc:
+                except (
+                    FileNotFoundError,
+                    ValueError,
+                    RuntimeError,
+                    ImportError,
+                ) as exc:
                     self.send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
             if request_path == "/api/analyze" and mode == "production":
@@ -1173,19 +1727,40 @@ def serve(
                     if forced == "youtube" and not video_id:
                         raise ValueError("No se reconoció un enlace de YouTube")
                     max_chunks = min(1000, max(1, int(payload.get("max_chunks", 300))))
-                    mode_name = str(payload.get("mode") or default_production_mode()).casefold().strip()
+                    mode_name = (
+                        str(payload.get("mode") or default_production_mode())
+                        .casefold()
+                        .strip()
+                    )
                     if video_id:
                         from .acquisition import fetch_youtube_subtitles
 
-                        cache_path = root / "datos" / "produccion" / "transcript_cache" / f"{video_id}.json"
+                        cache_path = (
+                            root
+                            / "datos"
+                            / "produccion"
+                            / "transcript_cache"
+                            / f"{video_id}.json"
+                        )
                         if cache_path.is_file():
-                            transcript = json.loads(cache_path.read_text(encoding="utf-8"))
+                            transcript = json.loads(
+                                cache_path.read_text(encoding="utf-8")
+                            )
                             subtitle_status = "reused_cache"
                         else:
-                            transcript = fetch_youtube_subtitles({"video_id": video_id, "url": value})
+                            transcript = fetch_youtube_subtitles(
+                                {"video_id": video_id, "url": value}
+                            )
                             write_json_atomic(cache_path, transcript)
                             subtitle_status = "fetched_subtitles_only"
-                        segments = [TranscriptSegment(float(item["start"]), float(item["duration"]), str(item["text"])) for item in transcript["segments"]]
+                        segments = [
+                            TranscriptSegment(
+                                float(item["start"]),
+                                float(item["duration"]),
+                                str(item["text"]),
+                            )
+                            for item in transcript["segments"]
+                        ]
                         chunks = chunk_transcript(video_id, segments)
                         if len(chunks) > max_chunks:
                             raise ValueError(
@@ -1195,14 +1770,14 @@ def serve(
                         results = []
                         for chunk in chunks:
                             metadata = {
-                                    "chunk_id": chunk.chunk_id,
-                                    "video_id": video_id,
-                                    "video_title": transcript.get("title"),
-                                    "channel_title": transcript.get("channel"),
-                                    "source_url": transcript.get("url"),
-                                    "start_seconds": chunk.start_seconds,
-                                    "end_seconds": chunk.end_seconds,
-                                }
+                                "chunk_id": chunk.chunk_id,
+                                "video_id": video_id,
+                                "video_title": transcript.get("title"),
+                                "channel_title": transcript.get("channel"),
+                                "source_url": transcript.get("url"),
+                                "start_seconds": chunk.start_seconds,
+                                "end_seconds": chunk.end_seconds,
+                            }
                             results.append(
                                 {
                                     **metadata,
@@ -1218,7 +1793,8 @@ def serve(
                             any(
                                 event["labels"] != [taxonomy.safe_label]
                                 for event in chunk["results"]
-                                if mode_name == "compare" or event["model_slot"] == mode_name
+                                if mode_name == "compare"
+                                or event["model_slot"] == mode_name
                             )
                             for chunk in results
                         )
@@ -1236,7 +1812,11 @@ def serve(
                                     "chunks": len(results),
                                     "alert_chunks": alert_chunks,
                                     "models_executed": sorted(
-                                        {event["model_slot"] for chunk in results for event in chunk["results"]}
+                                        {
+                                            event["model_slot"]
+                                            for chunk in results
+                                            for event in chunk["results"]
+                                        }
                                     ),
                                 },
                             }
@@ -1249,42 +1829,67 @@ def serve(
                             metadata={"chunk_id": chunk_id},
                         )
                         relevant = [
-                            event for event in events
-                            if mode_name == "compare" or event["model_slot"] == mode_name
+                            event
+                            for event in events
+                            if mode_name == "compare"
+                            or event["model_slot"] == mode_name
                         ]
                         self.send_json(
                             {
                                 "mode": mode_name,
                                 "input_type": "text",
-                                "chunks": [{"chunk_id": chunk_id, "text": value, "results": events}],
+                                "chunks": [
+                                    {
+                                        "chunk_id": chunk_id,
+                                        "text": value,
+                                        "results": events,
+                                    }
+                                ],
                                 "summary": {
                                     "chunks": 1,
                                     "alert_chunks": int(
-                                        any(event["labels"] != [taxonomy.safe_label] for event in relevant)
+                                        any(
+                                            event["labels"] != [taxonomy.safe_label]
+                                            for event in relevant
+                                        )
                                     ),
-                                    "models_executed": [event["model_slot"] for event in events],
+                                    "models_executed": [
+                                        event["model_slot"] for event in events
+                                    ],
                                 },
                             }
                         )
-                except (FileNotFoundError, ValueError, RuntimeError, ImportError) as exc:
+                except (
+                    FileNotFoundError,
+                    ValueError,
+                    RuntimeError,
+                    ImportError,
+                ) as exc:
                     self.send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
             if request_path == "/api/review/bulk" and mode == "labeling":
                 try:
                     if payload.get("confirm") is not True:
-                        raise ValueError("La acción masiva requiere confirmación explícita")
+                        raise ValueError(
+                            "La acción masiva requiere confirmación explícita"
+                        )
                     include_resolved = payload.get("include_resolved", False)
                     if not isinstance(include_resolved, bool):
                         raise ValueError("include_resolved debe ser booleano")
                     final_labels = payload.get("final_labels", [])
                     flags = payload.get("flags", [])
-                    if not isinstance(final_labels, list) or not isinstance(flags, list):
+                    if not isinstance(final_labels, list) or not isinstance(
+                        flags, list
+                    ):
                         raise ValueError("final_labels y flags deben ser listas")
                     reviewer = str(payload.get("reviewer", "ANON")).strip() or "ANON"
                     salt = os.getenv("MODPERU_REVIEW_SALT", taxonomy.contract_id)
-                    pseudonym = "reviewer-" + hashlib.sha256(
-                        f"{salt}|{reviewer}".encode("utf-8")
-                    ).hexdigest()[:16]
+                    pseudonym = (
+                        "reviewer-"
+                        + hashlib.sha256(
+                            f"{salt}|{reviewer}".encode("utf-8")
+                        ).hexdigest()[:16]
+                    )
                     with persistence_lock:
                         summary, events = _labeling_bulk_events(
                             campaign_rows,
@@ -1300,7 +1905,9 @@ def serve(
                             flags=flags,
                         )
                         if events:
-                            event_rows = [event.model_dump(mode="json") for event in events]
+                            event_rows = [
+                                event.model_dump(mode="json") for event in events
+                            ]
                             added, skipped = append_jsonl_once(
                                 review_path, event_rows, id_field="event_id"
                             )
@@ -1336,7 +1943,12 @@ def serve(
             try:
                 reviewer = str(payload.get("reviewer", "ANON")).strip() or "ANON"
                 salt = os.getenv("MODPERU_REVIEW_SALT", taxonomy.contract_id)
-                pseudonym = "reviewer-" + hashlib.sha256(f"{salt}|{reviewer}".encode("utf-8")).hexdigest()[:16]
+                pseudonym = (
+                    "reviewer-"
+                    + hashlib.sha256(f"{salt}|{reviewer}".encode("utf-8")).hexdigest()[
+                        :16
+                    ]
+                )
                 final_labels = payload.get("final_labels", [])
                 if mode == "production" and payload.get("action") == "reject":
                     final_labels = [taxonomy.safe_label]
@@ -1354,7 +1966,9 @@ def serve(
                 )
                 with persistence_lock:
                     added, skipped = append_jsonl_once(
-                        review_path, [event.model_dump(mode="json")], id_field="event_id"
+                        review_path,
+                        [event.model_dump(mode="json")],
+                        id_field="event_id",
                     )
                     if mode == "production":
                         _production_feedback(inference_path, review_path, ready_path)
@@ -1363,7 +1977,13 @@ def serve(
             except (KeyError, ValueError, ValidationError) as exc:
                 self.send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
-            self.send_json({"saved": bool(added), "duplicate": bool(skipped), "event": event.model_dump(mode="json")})
+            self.send_json(
+                {
+                    "saved": bool(added),
+                    "duplicate": bool(skipped),
+                    "event": event.model_dump(mode="json"),
+                }
+            )
 
         def log_message(self, format: str, *args: object) -> None:
             print(f"[{self.log_date_time_string()}] {format % args}")

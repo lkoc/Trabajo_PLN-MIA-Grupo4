@@ -83,6 +83,7 @@ Las definiciones, inclusiones, exclusiones, contraejemplos y fuentes se encuentr
 | Cuaderno | Entrada | Proceso y salida | Repetición |
 |---|---|---|---|
 | `01_01_scraping_incremental` | snapshots, particiones por canal, VTT locales, caché y candidatos con `video_id` | consolida JSON/VTT, calcula los VTT faltantes, ejecuta primero su backfill y después adquiere candidatos nuevos con `yt-dlp` | cada VTT y JSON por canal es un checkpoint reanudable; la versión actual usa `DISCOVER_NEW=False`, `FETCH_NEW=True` y `BACKFILL_MISSING_VTT=True` |
+| `01_015_ampliacion_dirigida_minorias` | campaña consolidada, eventos superiores, snapshot previo y rendimiento histórico por canal | proyecta la última decisión efectiva y busca videos para superar 2.000 chunks por daño en `train` | campaña opcional separada; reserva candidatos por split estable y nunca modifica el estatus de `01_01` como scraping inicial |
 | `01_02_optimizacion_longitud_chunks` | chunks etiquetados, transcripciones y snapshot entrenable | compara 15/20/25/30/35 s mediante un perfil clásico decisorio y un perfil neuronal robusto pareado con MiniLM congelado y Gemma 3 4B | opcional y reanudable; las familias neuronales son confirmatorias, nunca se promedian entre sí ni cambian datos si `APPLY_CHUNK_SELECTION=False` |
 | `01_03_limpieza_troceado_incremental` | partes JSONL por canal, VTT locales + `config/chunking.json` | recompone el canónico, recupera VTT sin JSON y crea chunks temporales deterministas con barra por video | compara transcripción y firma completa; el modo normal es incremental y `REBUILD_CHUNKS_FROM_ZERO=True` crea respaldo antes de reconstruir |
 
@@ -93,6 +94,8 @@ El versionado no es global: `v2.1` identifica el contrato de etiquetas de cinco 
 `01_02` está separado de la materialización porque elegir longitud es selección de hiperparámetros. El smoke test y la confirmación corta permanecen como diagnósticos opcionales. La decisión principal corresponde al perfil clásico: 300/100/100 videos por cohorte, cinco cohortes, 75 ajustes y 1 000 réplicas bootstrap agrupadas por `video_id`. Compara las cinco longitudes contra la referencia predeclarada de 30 s con margen de no inferioridad de 0.01 AP y reserva `test` para descripción. El perfil neuronal, activado con `RUN_NEURAL_ROBUST_TEST=True`, conserva exactamente `CANDIDATE_SECONDS=(15,20,25,30,35)`: ajusta 25 cabezas logísticas sobre MiniLM congelado y solicita 500 respuestas de `gemma3:4b` con [`config/prompt_operacional_ollama_v2.md`](config/prompt_operacional_ollama_v2.md). Ambas familias usan el mismo panel pareado de 100 anclas de `validation`, cinco cohortes de reporte y 2 000 réplicas bootstrap por video. MiniLM aporta AP continua; Ollama aporta F1 con etiquetas duras y una compuerta de validez de esquema. Esas métricas no se promedian ni sustituyen la selección clásica. El panel MiniLM inicial fue inconcluso y Ollama produjo 474/500 salidas válidas, con 15, 20 y 25 s bajo la compuerta de 0.95. El contraste complementario `RUN_MINILM_20_30_NONINFERIORITY_TEST=True` usó 750 videos con predicción fuera de pliegue y estableció no inferioridad de 20 s —AP 0.492 frente a 0.468; `ΔAP=0.024`, IC 95% `[−0.0090, 0.059]`—, pero no superioridad. La síntesis conserva 30 s. El perfil clásico vigente obtuvo AP `0.1233`, IC bootstrap 95% `[0.1099, 0.1446]`, y dejó 30 s como única alternativa no inferior. La metodología clásica está en [Informe de selección de longitud](docs/OPTIMIZACION_LONGITUD_CHUNKS.md), la triangulación en [Robustez neuronal de la longitud](docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md) y el cierre bibliográfico en [Auditoría de citas de 01_02](docs/AUDITORIA_CITAS_01_02.md).
 
 Durante `01_01`, primero se consolidan en el canónico todas las transcripciones completas disponibles en snapshots, particiones por canal, cachés y VTT locales recuperables. También se regenera el índice VTT y se calcula la diferencia exacta por `video_id`: el backfill de VTT conocidos se procesa antes que los candidatos nuevos. Los datasets y chunks históricos con texto no se presentan como raw, pero sus `video_id` se excluyen para impedir descargas duplicadas. El checkpoint actual registra 5.002 transcripciones, 4.968 VTT para 4.952 videos y 57 videos canónicos todavía sin VTT; la cohorte dirigida mantiene 141 candidatos sin éxito ni fallo, por lo que adquisición disponible y cola descubierta no son el mismo conteo. Una barra muestra la fuente actual y avanza al terminar cada canal o consulta; otras informan el backfill y los candidatos. El descubrimiento aplica un timeout HTTP configurable de 30 segundos por operación y guarda atómicamente cada fuente terminada en `datos/raw/manifests/discovery_<modo>_checkpoint.json`. Al reanudar, reutiliza las fuentes exitosas sin red y vuelve a intentar únicamente las fallidas. El modo `directed` calcula déficits por videos etiquetados de `train+validation`, estima rendimiento histórico por canal, expande canales desde búsquedas temáticas y materializa una cohorte vigente con *round-robin* ponderado; si no hay datos previos, reparte la adquisición por igual entre los cuatro daños. Con `MAX_DIRECTED_CANDIDATES=None`, `MAX_VTT_BACKFILL=None` y `MAX_NEW_VIDEOS=None` se recorren las colas completas. La cola de descarga usa una prioridad pseudoaleatoria reproducible e intercala un video por canal. La red se regula en lotes de 10, con una pausa adicional de 15 segundos entre lotes y pausas internas de 2.5–10 segundos en `yt-dlp`. El detalle queda en `datos/raw/fallos_descubrimiento_ultima_ejecucion.json`, `datos/raw/fallos_vtt_backfill.jsonl` y `datos/raw/fallos_adquisicion.jsonl`.
+
+`01_015` es una campaña aparte para corregir el desbalance observado después de la revisión. El snapshot vigente deja en `train` 1.826 chunks de `RACISMO_DISCRIMINACION`, 1.568 de `ATAQUE_POR_GENERO_IDENTIDAD`, 5.255 de `ACOSO_AMENAZA` y 2.568 de `CONTENIDO_SEXUAL`; faltan, por tanto, 174 y 432 en las dos clases minoritarias. El cuaderno pondera esos déficits, prioriza varios canales con rendimiento histórico y selecciona hasta 450 videos cuyo hash corresponde a `train`, además de 80 para `validation` y 80 para `test`. La consulta o el canal solo deciden qué recuperar: las etiquetas se asignan posteriormente con el prompt operativo.
 
 `yt-dlp` gestiona cabeceras, sesión HTTP, pausas y reintentos. No existe un cortacircuito global: si un video devuelve 429, se excluye únicamente su canal durante esa ejecución, se difieren sus videos posteriores y se continúa con todos los demás canales. Si falta identidad de canal, solo falla ese video. La aleatorización no corrige un bloqueo general de la IP; 429 simultáneos en numerosos canales requieren detener y reanudar más tarde. Éxitos y fallos tienen checkpoints inmediatos, por lo que la siguiente corrida reanuda la cola. La selección, sus fórmulas, los artefactos, el reinicio recuperable y las limitaciones del muestreo se documentan en [Metodología de scraping y adquisición de subtítulos](docs/METODOLOGIA_SCRAPING.md).
 
@@ -180,12 +183,12 @@ Presentación_BEAMER/            presentación derivada del artículo
 Planning/                       plan de reorganización ejecutado
 ```
 
-Los 18 cuadernos vigentes se encuentran exclusivamente bajo `flujo/`. Las
+Los 19 cuadernos vigentes se encuentran exclusivamente bajo `flujo/`. Las
 carpetas locales `archivo/03_2_etiquetado_llm_api/` y
 `archivo/05_frontend_despliegue/` pertenecen a implementaciones anteriores y no
 son etapas del recorrido activo.
 
-Los resultados preliminares de los cuadernos se muestran mediante el componente común `src/moderacion_peru/notebook_ui.py`: tarjetas de estado, tablas clave–valor, vistas tabulares limitadas y bloques de comandos. Los 18 cuadernos activos evitan `print()` para mantener una salida legible y homogénea; los artefactos completos permanecen en JSON, JSONL o manifiestos y no dependen de la representación visual.
+Los resultados preliminares de los cuadernos se muestran mediante el componente común `src/moderacion_peru/notebook_ui.py`: tarjetas de estado, tablas clave–valor, vistas tabulares limitadas y bloques de comandos. Los 19 cuadernos activos evitan `print()` para mantener una salida legible y homogénea; los artefactos completos permanecen en JSON, JSONL o manifiestos y no dependen de la representación visual.
 
 ## Reproducción local desde una clonación nueva
 
@@ -278,10 +281,10 @@ Desde VS Code, abra la carpeta clonada, seleccione como kernel el Python de `.ve
 .\.venv\Scripts\jupyter-lab.exe
 ```
 
-El recorrido completo contiene 18 cuadernos:
+El recorrido completo contiene 19 cuadernos:
 
 ```text
-01_01 → 01_02 opcional → 01_03
+01_01 → 01_015 ampliación minoritaria opcional → 01_02 opcional → 01_03
 → 02_00 en Colab → 02_01 (calibración→Flash→Pro) → 02_02 fallback opcional → 02_03 auditoría → 02_04 → 02_05 → 02_00 en Colab
 → 03_01 ... 03_06 en ramas comparables
 → 03_07 → 03_08 → 04_01
@@ -292,6 +295,7 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 | Cuaderno | Interruptor inicial | Acción para ejecutar |
 |---|---|---|
 | `01_01` | continuación actual: `DISCOVER_NEW=False`, `FETCH_NEW=True`, `BACKFILL_MISSING_VTT=True` | reanuda primero todos los VTT faltantes y después los candidatos; usa lotes de 10, pausas internas de 2.5–10 s y 15 s entre lotes; cambie `FETCH_NEW=False` si solo desea inspeccionar sin red |
+| `01_015` | `DISCOVER_NEW=True`, `FETCH_NEW=True`, objetivo 2.000 por daño en `train` | descubre y descarga la cohorte dirigida separada por split; repita después de etiquetar el lote si el déficit efectivo no llegó a cero |
 | `01_02` | se reutiliza el clásico; ambos `RUN_...=True`, ambos `FORCE_...=False`, `USE_ROBUST_RECOMMENDATION=True` y `APPLY_CHUNK_SELECTION=False` | prioriza los JSON consolidados y muestra el perfil de cinco longitudes y el cierre MiniLM 20/30 sin recalcular; solo ejecuta una etapa si falta su artefacto |
 | `02_00` | `RUN_PUBLISH_BUNDLE=False`, `BUNDLE_SOURCE='github'` | ábralo en Colab; use GitHub si el bundle está sincronizado o `'local_upload'` para seleccionar los nueve archivos locales, active y autorice `drive.mount()` |
 | `02_01` | recuperación histórica y checkpoints automáticos activos; cuatro interruptores de API controlan cada fase; panel 1 000, `PRIMARY_LIMIT=None`, `REVIEW_LIMIT=None` para la campaña completa | recupera solo coincidencias exactas 1:1, valida `/models`, ejecuta calibración, Flash y Pro sobre pendientes; `Ctrl+C` conserva grupos terminados y publica el run en Drive cuando esa opción está habilitada |
@@ -327,6 +331,13 @@ Después de `02_04`, el frontend humano puede iniciarse con la campaña consolid
   --campaign datos/etiquetado/consolidado/anotaciones_v2.jsonl
 ```
 
+Abra <http://127.0.0.1:8765/> para revisar chunks o
+<http://127.0.0.1:8765/dashboard> para consultar el dashboard vivo de cobertura,
+categorías, exclusiones, colas, canales, desbalance, actividad y métricas de la
+auditoría estratificada. Ambas páginas pertenecen al mismo proceso y comparten
+la última decisión efectiva; el dashboard también está enlazado desde la
+cabecera de validación.
+
 Después de entrenar y publicar con `03_07`, el frontend productivo se inicia con:
 
 ```powershell
@@ -334,7 +345,7 @@ Después de entrenar y publicar con `03_07`, el frontend productivo se inicia co
   --registry modelos/registro_modelos_5_salidas.json
 ```
 
-Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guardan en JSONL append-only. El frontend productivo rechaza la inferencia si no existe un registro del contrato de etiquetas v2.1 cuyos checkpoints y hashes puedan verificarse. Fuera de loopback exige `MODERATOR_ACCESS_PASSWORD` y admite `MODERATOR_ACCESS_USER`.
+Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guardan en JSONL append-only. Después de actualizar el código del servidor debe reiniciarse el proceso; la persistencia append-only evita perder decisiones. El frontend productivo rechaza la inferencia si no existe un registro del contrato de etiquetas v2.1 cuyos checkpoints y hashes puedan verificarse. Fuera de loopback exige `MODERATOR_ACCESS_PASSWORD` y admite `MODERATOR_ACCESS_USER`.
 
 ### 9. Comprobar la reproducción
 
@@ -344,7 +355,7 @@ Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guarda
 .\.venv\Scripts\python.exe tools/generate_workflow_notebooks.py
 ```
 
-Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, archivado reversible por longitud, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 18 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
+Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, archivado reversible por longitud, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 19 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
 
 El artículo y la presentación se recompilan de forma independiente:
 
@@ -362,7 +373,7 @@ Una compilación correcta no sustituye la revisión visual del PDF A4 ni de las 
 Para incorporar videos o subtítulos adicionales:
 
 1. añada candidatos con `video_id` y URL a `datos/raw/videos_candidatos.csv` o al JSONL de candidatos;
-2. ejecute nuevamente `01_01` y `01_03`; este último recompone `transcripts_raw.jsonl` desde los JSON por canal y VTT locales, muestra avance por video y procesa solo hashes nuevos o modificados; `01_02` solo se repite si desea reevaluar o cambiar la longitud;
+2. ejecute nuevamente `01_01` y `01_03`; si el objetivo es elevar daños minoritarios, ejecute `01_015` antes de `01_03`; este último recompone `transcripts_raw.jsonl` desde los JSON por canal y VTT locales, muestra avance por video y procesa solo hashes nuevos o modificados; `01_02` solo se repite si desea reevaluar o cambiar la longitud;
 3. sincronice el bundle con GitHub —o elija `local_upload`— y ejecute `02_00` en Colab antes de `02_01`; después complete la calibración y cascada Flash→Pro, audítela en `02_03` y cierre `02_04`–`02_05` para los chunks pendientes;
 4. regenere el bundle y vuelva a ejecutar `02_00` en Colab después de `02_05` para publicar en Drive el snapshot nuevo;
 5. active las familias de `03` que desea actualizar;

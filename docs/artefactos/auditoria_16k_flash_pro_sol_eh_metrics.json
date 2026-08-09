@@ -1,0 +1,548 @@
+{
+  "generated_by": "tools/report_audit_comparison.py",
+  "sample": {
+    "seed_text": "CODEX-AUDIT-20260809-CLEAN",
+    "sha_key": "sha256(seed_text|chunk_id)",
+    "size": 16694,
+    "eligible_population": 157719,
+    "fraction_of_eligible": 0.10584647379199716,
+    "strata": 35,
+    "initial_effective_composition": {
+      "AL_MENOS_UN_DANO": 1155,
+      "PENDIENTE": 4353,
+      "SEGURO": 11186
+    },
+    "final_reference_composition": {
+      "AL_MENOS_UN_DANO": 1319,
+      "SEGURO": 15375
+    },
+    "initial_damage_label_assignments": {
+      "ACOSO_AMENAZA": 679,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 217,
+      "CONTENIDO_SEXUAL": 298,
+      "RACISMO_DISCRIMINACION": 236
+    },
+    "final_damage_label_assignments": {
+      "ACOSO_AMENAZA": 725,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 218,
+      "CONTENIDO_SEXUAL": 379,
+      "RACISMO_DISCRIMINACION": 273
+    },
+    "final_harm_prevalence": 0.07901042290643345,
+    "final_harm_prevalence_wilson_95": [
+      0.07501458210909805,
+      0.0831999670789428
+    ],
+    "registered_sample_corrections_recovered": 62
+  },
+  "reference": {
+    "name": "CODEX–Sol-EH supervisado / adjudicación híbrida final",
+    "warning": "Referencia interna no independiente: los acuerdos conservaron la decisión previa y 4.327 casos inicialmente pendientes se resolvieron con una jerarquía Flash/Pro/CODEX.",
+    "numeric_sol_confidence_available": false,
+    "provenance": {
+      "adjudicacion_hibrida_final": 4327,
+      "cambio_dirigido_alta_confianza": 47,
+      "cambio_muestral_alta_confianza": 62,
+      "evento_manual_otro": 2,
+      "modelo_base_conservado": 11968,
+      "revision_prioritaria_pre_muestra": 288
+    },
+    "unlabeled_batch_methods_in_sample": {
+      "codex_attribution_or_contract_override": 8,
+      "codex_conservative_safe_after_abstention": 71,
+      "codex_low_risk_safe_after_abstention": 2563,
+      "codex_partial_contract_override": 2,
+      "flash_v2_prior_safe_low_risk": 184,
+      "flash_v3_1_1_low_risk_sample": 295,
+      "flash_v3_risk": 1037,
+      "pro_v3_1_1_low_risk_hard": 12,
+      "pro_v3_1_broad_stance": 21,
+      "pro_v3_1_hard": 72,
+      "pro_v3_1_stance": 62
+    }
+  },
+  "systems": {
+    "cascada_flash_pro_consolidada": {
+      "system": "cascada_flash_pro_consolidada",
+      "sample_total": 16694,
+      "records_available": 16694,
+      "answered": 12050,
+      "coverage_over_sample": 0.721816221396909,
+      "abstention_over_sample": 0.27818377860309096,
+      "reference_harm": 1074,
+      "predicted_harm": 1126,
+      "point": {
+        "exact_agreement": 0.9932780082987552,
+        "binary_f1": 0.9654545454545455,
+        "binary_mcc": 0.9623119093048207,
+        "multilabel_micro_f1": 0.9641288433382138,
+        "hamming_loss": 0.002033195020746888,
+        "tp": 1062,
+        "tn": 10912,
+        "fp": 64,
+        "fn": 12,
+        "multilabel_micro_precision": 0.9420600858369099,
+        "multilabel_micro_recall": 0.987256371814093,
+        "multilabel_macro_precision": 0.9459980983557928,
+        "multilabel_macro_recall": 0.9858574701358207,
+        "multilabel_macro_f1": 0.9652602939216304,
+        "sample_jaccard": 0.9934923928077454,
+        "binary_precision": 0.9431616341030196,
+        "binary_recall_sensitivity": 0.9888268156424581,
+        "binary_specificity": 0.9941690962099126,
+        "binary_balanced_accuracy": 0.9914979559261854,
+        "binary_cohen_kappa": 0.9619863592545574
+      },
+      "exact_agreement_wilson_95": [
+        0.991653645695942,
+        0.9945879637206697
+      ],
+      "stratified_bootstrap_percentile_95": {
+        "exact_agreement": [
+          0.9918672199170124,
+          0.9946058091286307
+        ],
+        "binary_f1": [
+          0.9575526589421944,
+          0.9728997289972899
+        ],
+        "binary_mcc": [
+          0.9537595366548728,
+          0.9703324469420873
+        ],
+        "multilabel_micro_f1": [
+          0.955881398013751,
+          0.9718880630145537
+        ],
+        "hamming_loss": [
+          0.0015975103734439833,
+          0.0024896265560165973
+        ]
+      },
+      "confidence": {
+        "n_with_confidence": 12050,
+        "mean": 0.93634356846473,
+        "median": 0.95,
+        "q1": 0.95,
+        "q3": 0.95,
+        "empirical_exact_agreement": 0.9932780082987552,
+        "brier_for_exact_correctness": 0.01102134439834025,
+        "ece_10_equal_width": 0.0569344398340251,
+        "bands": [
+          {
+            "lower": 0.0,
+            "upper": 0.7,
+            "n": 107,
+            "mean_confidence": 0.6420560747663553,
+            "exact_agreement": 0.9813084112149533,
+            "exact_agreement_wilson_95": [
+              0.9343961469302772,
+              0.9948590351638246
+            ]
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.85,
+            "n": 65,
+            "mean_confidence": 0.7815384615384615,
+            "exact_agreement": 1.0,
+            "exact_agreement_wilson_95": [
+              0.9441984686771432,
+              1.0
+            ]
+          },
+          {
+            "lower": 0.85,
+            "upper": 0.95,
+            "n": 2130,
+            "mean_confidence": 0.8909577464788734,
+            "exact_agreement": 0.9751173708920188,
+            "exact_agreement_wilson_95": [
+              0.9675978016279709,
+              0.9809262752819414
+            ]
+          },
+          {
+            "lower": 0.95,
+            "upper": 1.0,
+            "n": 9748,
+            "mean_confidence": 0.9505231842429214,
+            "exact_agreement": 0.9973327862125564,
+            "exact_agreement_wilson_95": [
+              0.9960946425874619,
+              0.9981791098052017
+            ]
+          }
+        ]
+      },
+      "per_label": {
+        "ACOSO_AMENAZA": {
+          "reference_support": 630,
+          "predicted_support": 675,
+          "precision": 0.9318518518518518,
+          "recall": 0.9984126984126984,
+          "f1": 0.963984674329502,
+          "cohen_kappa": 0.961925410511101
+        },
+        "CONTENIDO_SEXUAL": {
+          "reference_support": 291,
+          "predicted_support": 288,
+          "precision": 0.9548611111111112,
+          "recall": 0.9450171821305842,
+          "f1": 0.9499136442141624,
+          "cohen_kappa": 0.9486807373525811
+        },
+        "RACISMO_DISCRIMINACION": {
+          "reference_support": 220,
+          "predicted_support": 228,
+          "precision": 0.9649122807017544,
+          "recall": 1.0,
+          "f1": 0.9821428571428571,
+          "cohen_kappa": 0.9818047292604113
+        },
+        "ATAQUE_POR_GENERO_IDENTIDAD": {
+          "reference_support": 193,
+          "predicted_support": 207,
+          "precision": 0.9323671497584541,
+          "recall": 1.0,
+          "f1": 0.965,
+          "cohen_kappa": 0.9644100185270431
+        }
+      }
+    },
+    "deepseek_v4_flash": {
+      "system": "deepseek_v4_flash",
+      "sample_total": 16694,
+      "records_available": 16694,
+      "answered": 11537,
+      "coverage_over_sample": 0.6910866179465677,
+      "abstention_over_sample": 0.30891338205343233,
+      "reference_harm": 1110,
+      "predicted_harm": 1895,
+      "point": {
+        "exact_agreement": 0.9038744907688308,
+        "binary_f1": 0.7148086522462562,
+        "binary_mcc": 0.7074105811160986,
+        "multilabel_micro_f1": 0.6311592138991741,
+        "hamming_loss": 0.02806188783912629,
+        "tp": 1074,
+        "tn": 9606,
+        "fp": 821,
+        "fn": 36,
+        "multilabel_micro_precision": 0.5132005558128764,
+        "multilabel_micro_recall": 0.8195266272189349,
+        "multilabel_macro_precision": 0.5307213847119879,
+        "multilabel_macro_recall": 0.8012016344412034,
+        "multilabel_macro_f1": 0.6325788935396066,
+        "sample_jaccard": 0.9117549334026755,
+        "binary_precision": 0.566754617414248,
+        "binary_recall_sensitivity": 0.9675675675675676,
+        "binary_specificity": 0.9212621079888751,
+        "binary_balanced_accuracy": 0.9444148377782213,
+        "binary_cohen_kappa": 0.6754225335120709
+      },
+      "exact_agreement_wilson_95": [
+        0.8983606015495117,
+        0.9091195144586209
+      ],
+      "stratified_bootstrap_percentile_95": {
+        "exact_agreement": [
+          0.9001473519979197,
+          0.9075149518939065
+        ],
+        "binary_f1": [
+          0.7018940043520807,
+          0.7274544312824789
+        ],
+        "binary_mcc": [
+          0.6950522132220595,
+          0.7194703572117436
+        ],
+        "multilabel_micro_f1": [
+          0.6163373993140667,
+          0.6460431887343379
+        ],
+        "hamming_loss": [
+          0.026913409031810696,
+          0.02925424720464592
+        ]
+      },
+      "confidence": {
+        "n_with_confidence": 11537,
+        "mean": 0.923350091011528,
+        "median": 0.95,
+        "q1": 0.9,
+        "q3": 0.95,
+        "empirical_exact_agreement": 0.9038744907688308,
+        "brier_for_exact_correctness": 0.07055618445003035,
+        "ece_10_equal_width": 0.06119528473606679,
+        "bands": [
+          {
+            "lower": 0.0,
+            "upper": 0.7,
+            "n": 235,
+            "mean_confidence": 0.6457446808510641,
+            "exact_agreement": 0.39574468085106385,
+            "exact_agreement_wilson_95": [
+              0.3353817917605625,
+              0.45946119637917315
+            ]
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.85,
+            "n": 615,
+            "mean_confidence": 0.775609756097561,
+            "exact_agreement": 0.4097560975609756,
+            "exact_agreement_wilson_95": [
+              0.37156534666572866,
+              0.4490672266406411
+            ]
+          },
+          {
+            "lower": 0.85,
+            "upper": 0.95,
+            "n": 2049,
+            "mean_confidence": 0.8844997559785261,
+            "exact_agreement": 0.7437774524158126,
+            "exact_agreement_wilson_95": [
+              0.7244314796992989,
+              0.7622110691967569
+            ]
+          },
+          {
+            "lower": 0.95,
+            "upper": 1.0,
+            "n": 8638,
+            "mean_confidence": 0.9506367214633015,
+            "exact_agreement": 0.9908543644362121,
+            "exact_agreement_wilson_95": [
+              0.9886173014524474,
+              0.9926550396808763
+            ]
+          }
+        ]
+      },
+      "per_label": {
+        "ACOSO_AMENAZA": {
+          "reference_support": 600,
+          "predicted_support": 1090,
+          "precision": 0.4706422018348624,
+          "recall": 0.855,
+          "f1": 0.6071005917159763,
+          "cohen_kappa": 0.5788473918787347
+        },
+        "CONTENIDO_SEXUAL": {
+          "reference_support": 326,
+          "predicted_support": 373,
+          "precision": 0.6890080428954424,
+          "recall": 0.7883435582822086,
+          "f1": 0.7353361945636624,
+          "cohen_kappa": 0.7271065814091426
+        },
+        "RACISMO_DISCRIMINACION": {
+          "reference_support": 236,
+          "predicted_support": 424,
+          "precision": 0.5,
+          "recall": 0.8983050847457628,
+          "f1": 0.6424242424242425,
+          "cohen_kappa": 0.6327724885936512
+        },
+        "ATAQUE_POR_GENERO_IDENTIDAD": {
+          "reference_support": 190,
+          "predicted_support": 272,
+          "precision": 0.4632352941176471,
+          "recall": 0.6631578947368421,
+          "f1": 0.5454545454545454,
+          "cohen_kappa": 0.5364657929789425
+        }
+      }
+    },
+    "deepseek_v4_pro": {
+      "system": "deepseek_v4_pro",
+      "sample_total": 16694,
+      "records_available": 7083,
+      "answered": 3910,
+      "coverage_over_sample": 0.23421588594704684,
+      "abstention_over_sample": 0.7657841140529531,
+      "reference_harm": 1095,
+      "predicted_harm": 1227,
+      "point": {
+        "exact_agreement": 0.9613810741687979,
+        "binary_f1": 0.9405684754521964,
+        "binary_mcc": 0.9185830984773015,
+        "multilabel_micro_f1": 0.9326424870466321,
+        "hamming_loss": 0.012468030690537084,
+        "tp": 1092,
+        "tn": 2680,
+        "fp": 135,
+        "fn": 3,
+        "multilabel_micro_precision": 0.878334417696812,
+        "multilabel_micro_recall": 0.9941089837997055,
+        "multilabel_macro_precision": 0.8700898845894809,
+        "multilabel_macro_recall": 0.9936329819877047,
+        "multilabel_macro_f1": 0.9275422111391072,
+        "sample_jaccard": 0.9630647911338448,
+        "binary_precision": 0.8899755501222494,
+        "binary_recall_sensitivity": 0.9972602739726028,
+        "binary_specificity": 0.9520426287744227,
+        "binary_balanced_accuracy": 0.9746514513735127,
+        "binary_cohen_kappa": 0.9155836536611237
+      },
+      "exact_agreement_wilson_95": [
+        0.9548746369149923,
+        0.966981814850213
+      ],
+      "stratified_bootstrap_percentile_95": {
+        "exact_agreement": [
+          0.9557544757033248,
+          0.9667519181585678
+        ],
+        "binary_f1": [
+          0.9310912910039196,
+          0.9493747529189445
+        ],
+        "binary_mcc": [
+          0.906305371399137,
+          0.9304464065197129
+        ],
+        "multilabel_micro_f1": [
+          0.921907262677308,
+          0.9423210562890896
+        ],
+        "hamming_loss": [
+          0.010676150895140664,
+          0.014450127877237852
+        ]
+      },
+      "confidence": {
+        "n_with_confidence": 3910,
+        "mean": 0.9105575447570332,
+        "median": 0.95,
+        "q1": 0.9,
+        "q3": 0.95,
+        "empirical_exact_agreement": 0.9613810741687979,
+        "brier_for_exact_correctness": 0.03614332480818414,
+        "ece_10_equal_width": 0.05082352941176473,
+        "bands": [
+          {
+            "lower": 0.0,
+            "upper": 0.7,
+            "n": 175,
+            "mean_confidence": 0.6425714285714287,
+            "exact_agreement": 0.6971428571428572,
+            "exact_agreement_wilson_95": [
+              0.6254320793031422,
+              0.7603845006721933
+            ]
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.85,
+            "n": 83,
+            "mean_confidence": 0.7789156626506023,
+            "exact_agreement": 0.8554216867469879,
+            "exact_agreement_wilson_95": [
+              0.7640819877833326,
+              0.9153170089771919
+            ]
+          },
+          {
+            "lower": 0.85,
+            "upper": 0.95,
+            "n": 1371,
+            "mean_confidence": 0.8870897155361053,
+            "exact_agreement": 0.9533187454412837,
+            "exact_agreement_wilson_95": [
+              0.9408294602399998,
+              0.9632747853987778
+            ]
+          },
+          {
+            "lower": 0.95,
+            "upper": 1.0,
+            "n": 2281,
+            "mean_confidence": 0.9500131521262605,
+            "exact_agreement": 0.9903551074090311,
+            "exact_agreement_wilson_95": [
+              0.9854393454189873,
+              0.9936220206832423
+            ]
+          }
+        ]
+      },
+      "per_label": {
+        "ACOSO_AMENAZA": {
+          "reference_support": 634,
+          "predicted_support": 707,
+          "precision": 0.8953323903818954,
+          "recall": 0.998422712933754,
+          "f1": 0.9440715883668904,
+          "cohen_kappa": 0.9325371063169194
+        },
+        "CONTENIDO_SEXUAL": {
+          "reference_support": 293,
+          "predicted_support": 324,
+          "precision": 0.8827160493827161,
+          "recall": 0.9761092150170648,
+          "f1": 0.9270664505672609,
+          "cohen_kappa": 0.9208361715931659
+        },
+        "RACISMO_DISCRIMINACION": {
+          "reference_support": 228,
+          "predicted_support": 263,
+          "precision": 0.8669201520912547,
+          "recall": 1.0,
+          "f1": 0.9287169042769857,
+          "cohen_kappa": 0.9239672378522592
+        },
+        "ATAQUE_POR_GENERO_IDENTIDAD": {
+          "reference_support": 203,
+          "predicted_support": 243,
+          "precision": 0.8353909465020576,
+          "recall": 1.0,
+          "f1": 0.9103139013452914,
+          "cohen_kappa": 0.9049356857091104
+        }
+      }
+    }
+  },
+  "paired_flash_vs_pro_on_common_answered": {
+    "n": 2252,
+    "flash_exact_agreement": 0.7357904085257548,
+    "pro_exact_agreement": 0.9391651865008881,
+    "pro_minus_flash_exact_agreement": 0.2033747779751332,
+    "stratified_bootstrap_percentile_95": [
+      0.1869449378330373,
+      0.21980461811722912
+    ],
+    "flash_only_correct": 41,
+    "pro_only_correct": 499,
+    "mcnemar_exact_two_sided_p": 4.0643897882758776e-101,
+    "selection_warning": "El panel común pertenece a la cola dirigida a Pro; no es una comparación aleatoria de toda la muestra."
+  },
+  "flash_vs_pro_on_all_pro_routed_in_sample": {
+    "n": 7083,
+    "exact_agreement_including_joint_abstention": 0.5619087957080333,
+    "binary_harm_agreement_treating_abstention_as_no_harm": 0.8384865170125653,
+    "warning": "La segunda cifra mezcla SEGURO y abstención en el polo no-daño."
+  },
+  "inference": {
+    "bootstrap": "percentile, resampling within the 35 frozen strata",
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 20260809,
+    "proportion_interval": "Wilson score, 95%",
+    "calibration_bins": "10 equal-width bins"
+  },
+  "software": {
+    "numpy": "2.2.4",
+    "scipy": "1.15.2",
+    "scikit_learn": "1.6.1"
+  },
+  "inputs_sha256": {
+    "datos\\etiquetado\\consolidado\\anotaciones_v2.jsonl": "256acc8b66d5e8c84b729c039cc21d1a449821d4ccd7ff2c34b68ac5fef04b3f",
+    "datos\\etiquetado\\humano\\labeling_events_v2.jsonl": "a4f07a6addddd9424f41f3f12e1191032084fea7576ffbb413a24cc84ec84aaf",
+    "datos\\etiquetado\\cascada_deepseek_v4\\primary_flash.jsonl": "2dca7362ea4b8ba7484096f5387bae8fca64223cfdbc53db94188a2381c103af",
+    "datos\\etiquetado\\cascada_deepseek_v4\\review_pro.jsonl": "7fd1f551d7e4ed7af55b1c99c4b5ee7e4debd031e9cd59556cb332d68e984d15"
+  }
+}

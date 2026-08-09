@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard de etiquetado · Moderación Perú</title>
+  <style>
+    :root{--navy:#102038;--navy2:#182d4a;--ink:#15243a;--muted:#68768b;--line:#dfe6ef;--surface:#fff;--canvas:#f4f7fb;--blue:#2b5dd7;--mint:#2bcf9a;--amber:#f0ae32;--red:#dc5661;--violet:#7868df;--cyan:#269ec4;--shadow:0 12px 32px rgba(18,39,69,.08)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--canvas);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;font-variant-numeric:tabular-nums}button,a{font:inherit}.top{position:sticky;z-index:20;top:0;display:flex;align-items:center;gap:24px;min-height:64px;padding:10px clamp(18px,3vw,46px);color:#fff;background:linear-gradient(110deg,#0c1a30,#172c49);box-shadow:0 4px 18px rgba(6,20,39,.16)}.brand{display:flex;align-items:center;gap:12px;min-width:max-content}.brand-mark{display:grid;width:36px;height:36px;place-items:center;border-radius:11px;background:linear-gradient(145deg,#3d72f0,#2bcf9a);font-weight:900;box-shadow:0 6px 16px rgba(43,93,215,.3)}.brand strong{display:block;font-size:15px}.brand small{color:#b9c7d9}.top-meta{display:flex;align-items:center;gap:12px;margin-left:auto;color:#c5d0de;font-size:12px}.live{display:inline-flex;align-items:center;gap:7px}.live::before{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 4px rgba(43,207,154,.14);content:""}.top a,.top button{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;background:rgba(255,255,255,.07);text-decoration:none;cursor:pointer}.top button:hover,.top a:hover{background:rgba(255,255,255,.15)}.top button:disabled{opacity:.55;cursor:wait}
+    main{width:min(1500px,calc(100% - 36px));margin:24px auto 56px}.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:20px}.eyebrow{margin:0 0 6px;color:var(--blue);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.hero h1{margin:0;font-size:clamp(26px,3vw,40px);line-height:1.08;letter-spacing:-.035em}.hero p{max-width:760px;margin:10px 0 0;color:var(--muted);font-size:15px}.scope-note{flex:none;padding:10px 14px;border:1px solid #cfdaf0;border-radius:12px;background:#edf3ff;color:#234b9b;font-weight:700}
+    .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:16px}.kpi,.card{border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:var(--shadow)}.kpi{position:relative;min-height:116px;padding:17px;overflow:hidden}.kpi::after{position:absolute;right:-18px;bottom:-24px;width:74px;height:74px;border-radius:50%;background:var(--accent,#2b5dd7);opacity:.07;content:""}.kpi-label{color:var(--muted);font-size:12px;font-weight:700}.kpi-value{display:block;margin-top:8px;font-size:clamp(24px,2.2vw,34px);font-weight:800;letter-spacing:-.04em}.kpi-detail{display:block;margin-top:2px;color:var(--muted);font-size:11px}.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}.card{padding:20px}.span-4{grid-column:span 4}.span-5{grid-column:span 5}.span-7{grid-column:span 7}.span-8{grid-column:span 8}.span-12{grid-column:span 12}.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}.card-head h2{margin:0;font-size:17px;letter-spacing:-.015em}.card-head p{margin:4px 0 0;color:var(--muted);font-size:12px}.pill{display:inline-flex;padding:5px 9px;border-radius:999px;background:#edf3ff;color:#2853ae;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}.pill.live-pill{background:#e9fbf5;color:#0d7f5b}
+    .composition{display:grid;grid-template-columns:190px 1fr;align-items:center;gap:22px}.donut{position:relative;width:176px;height:176px;border-radius:50%;background:conic-gradient(var(--mint) 0 var(--p-safe),var(--red) var(--p-safe) var(--p-harm),var(--amber) var(--p-harm) var(--p-unlabeled),#aeb9c9 var(--p-unlabeled) 100%)}.donut::after{position:absolute;inset:25px;display:grid;place-items:center;border-radius:50%;background:#fff;content:""}.donut-center{position:absolute;z-index:1;inset:0;display:grid;align-content:center;text-align:center}.donut-center strong{font-size:25px}.donut-center span{color:var(--muted);font-size:11px}.legend{display:grid;gap:11px}.legend-row{display:grid;grid-template-columns:10px 1fr auto;align-items:center;gap:9px}.dot{width:9px;height:9px;border-radius:50%;background:var(--color)}.legend-row span{color:var(--muted)}.legend-row strong{font-size:13px}.microfacts{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:17px}.microfact{padding:10px;border-radius:10px;background:#f5f7fb}.microfact strong{display:block;font-size:15px}.microfact span{color:var(--muted);font-size:10px}
+    .bars{display:grid;gap:15px}.bar-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:5px}.bar-head span{font-size:12px;font-weight:650}.bar-head small{color:var(--muted)}.track{height:9px;overflow:hidden;border-radius:999px;background:#edf1f6}.fill{height:100%;min-width:2px;border-radius:inherit;background:var(--bar-color,var(--blue));transition:width .45s ease}.balance{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}.balance div{padding:9px;border:1px solid var(--line);border-radius:10px;text-align:center}.balance strong{display:block}.balance span{color:var(--muted);font-size:10px}
+    .table-wrap{overflow-x:auto}.metrics{width:100%;border-collapse:collapse;white-space:nowrap}.metrics th,.metrics td{padding:11px 10px;border-bottom:1px solid #e9edf3;text-align:right}.metrics th:first-child,.metrics td:first-child{text-align:left}.metrics th{color:var(--muted);font-size:10px;letter-spacing:.05em;text-transform:uppercase}.metrics tbody tr:hover{background:#f7f9fc}.metrics tbody tr:last-child td{border-bottom:0}.system-name{font-weight:750}.system-name small{display:block;color:var(--muted);font-size:10px;font-weight:500}.best{color:#087e58;font-weight:800}.method{margin-top:14px;padding:12px 14px;border-left:3px solid var(--blue);border-radius:0 10px 10px 0;background:#f1f5fd;color:#46566c;font-size:11px}.paired{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.paired div{padding:12px;border-radius:11px;background:#f5f7fb}.paired span{display:block;color:var(--muted);font-size:10px}.paired strong{font-size:17px}
+    .quality-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.quality{min-width:0;padding:10px;border:1px solid var(--line);border-radius:13px;overflow:hidden}.quality h3{margin:0 0 9px;font-size:11px}.quality-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.quality-grid div{min-width:0;padding:6px;border-radius:9px;background:#f6f8fb}.quality-grid span{display:block;color:var(--muted);font-size:8px;overflow-wrap:anywhere;text-transform:uppercase}.quality-grid strong{font-size:12px}.calibration{margin-top:10px}.calibration-head{display:flex;justify-content:space-between;gap:5px;color:var(--muted);font-size:9px}.calibration-head span{min-width:0;overflow-wrap:anywhere}.calibration-head b{flex:none}.calibration .track{height:6px;margin-top:5px}.definitions{margin:14px 0 0;padding:12px 14px;border-radius:10px;background:#fff8e9;color:#65522f;font-size:11px}
+    .queues{display:grid;gap:13px}.queue-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px}.queue-head strong{font-size:12px}.queue-head span{color:var(--muted);font-size:11px}.queue-track{height:7px;border-radius:999px;background:#e9eef5;overflow:hidden}.queue-track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--blue),var(--mint))}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.action{padding:8px 10px;border-radius:9px;background:#f3f6fa}.action strong{margin-right:5px}.reviewers{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.reviewer{padding:5px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:10px}
+    .channel-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.channel-grid h3{margin:0 0 8px;font-size:12px}.channel-table{width:100%;border-collapse:collapse}.channel-table td{padding:8px 5px;border-bottom:1px solid #edf0f4;font-size:11px}.channel-table td:first-child{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.channel-table td:not(:first-child){text-align:right}.risk{display:inline-flex;min-width:48px;justify-content:center;padding:3px 6px;border-radius:999px;background:#fff0f1;color:#a9313d;font-weight:750}
+    .activity-chart{display:flex;align-items:flex-end;gap:4px;height:150px;padding-top:12px;border-bottom:1px solid var(--line)}.activity-bar{position:relative;flex:1;min-width:5px;height:var(--height);border-radius:5px 5px 0 0;background:linear-gradient(180deg,var(--violet),#b1a9f4);cursor:help}.activity-bar:hover{filter:saturate(1.4)}.activity-labels{display:flex;justify-content:space-between;margin-top:7px;color:var(--muted);font-size:9px}.empty{display:grid;min-height:100px;place-items:center;color:var(--muted);text-align:center}.insights{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.insight{position:relative;padding:14px 14px 14px 17px;border:1px solid var(--line);border-radius:12px;background:#fff}.insight::before{position:absolute;top:13px;bottom:13px;left:0;width:3px;border-radius:0 3px 3px 0;background:var(--tone,var(--blue));content:""}.insight h3{margin:0 0 6px;font-size:12px}.insight p{margin:0;color:var(--muted);font-size:10px;line-height:1.5}.insight.success{--tone:var(--mint)}.insight.warning{--tone:var(--amber)}.insight.info{--tone:var(--blue)}
+    .error{display:none;margin-bottom:14px;padding:12px 15px;border:1px solid #f1bec4;border-radius:10px;background:#fff0f1;color:#912d38}.error.show{display:block}.skeleton{height:20px;border-radius:7px;background:linear-gradient(90deg,#edf0f4 25%,#f8fafc 45%,#edf0f4 65%);background-size:300% 100%;animation:load 1.2s infinite}@keyframes load{to{background-position:-100% 0}}abbr[title]{text-decoration:underline dotted;cursor:help}footer{margin-top:22px;color:var(--muted);font-size:10px;text-align:center}
+    @media(max-width:1150px){.kpis{grid-template-columns:repeat(3,1fr)}.span-4,.span-5,.span-7,.span-8{grid-column:span 6}.insights{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:760px){.top{position:relative;flex-wrap:wrap;gap:10px}.top-meta{width:100%;margin:0;flex-wrap:wrap}.hero{align-items:flex-start;flex-direction:column}.kpis{grid-template-columns:repeat(2,1fr)}.span-4,.span-5,.span-7,.span-8,.span-12{grid-column:span 12}.composition{grid-template-columns:1fr;justify-items:center}.legend{width:100%}.quality-cards,.channel-grid{grid-template-columns:1fr}.paired{grid-template-columns:1fr}.insights{grid-template-columns:1fr 1fr}}
+    @media(max-width:440px){main{width:min(100% - 22px,1500px)}.kpis{grid-template-columns:1fr}.insights{grid-template-columns:1fr}.card{padding:16px}.scope-note{width:100%}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="brand-mark">MP</span><span><strong>Moderación Perú</strong><small>Observatorio de etiquetado</small></span></div>
+    <div class="top-meta">
+      <span class="live" id="liveState">Datos vivos</span>
+      <span id="updated">Actualizando…</span>
+      <button id="refresh" type="button">Actualizar</button>
+      <a href="/">← Validación</a>
+    </div>
+  </header>
+  <main>
+    <div class="hero">
+      <div><p class="eyebrow">Estado cuantitativo y cualitativo</p><h1>Dashboard de etiquetado</h1><p>Lectura en tiempo real de las decisiones vigentes y síntesis inferencial de la auditoría estratificada CODEX–Sol-EH.</p></div>
+      <div class="scope-note">Corpus efectivo · excluidos separados</div>
+    </div>
+    <div class="error" id="error" role="alert"></div>
+    <section class="kpis" aria-label="Indicadores principales">
+      <article class="kpi" style="--accent:var(--blue)"><span class="kpi-label">Chunks totales</span><strong class="kpi-value" id="kTotal">—</strong><small class="kpi-detail" id="kTotalDetail">Cargando corpus</small></article>
+      <article class="kpi" style="--accent:var(--mint)"><span class="kpi-label">Cobertura elegible</span><strong class="kpi-value" id="kCoverage">—</strong><small class="kpi-detail" id="kCoverageDetail">Con etiqueta gruesa</small></article>
+      <article class="kpi" style="--accent:var(--red)"><span class="kpi-label">Con daño</span><strong class="kpi-value" id="kHarm">—</strong><small class="kpi-detail" id="kHarmDetail">Al menos una categoría</small></article>
+      <article class="kpi" style="--accent:var(--mint)"><span class="kpi-label">Seguro</span><strong class="kpi-value" id="kSafe">—</strong><small class="kpi-detail" id="kSafeDetail">Sin daño respaldado</small></article>
+      <article class="kpi" style="--accent:#aeb9c9"><span class="kpi-label">Excluidos</span><strong class="kpi-value" id="kExcluded">—</strong><small class="kpi-detail" id="kExcludedDetail">Fuera del dataset elegible</small></article>
+      <article class="kpi" style="--accent:var(--amber)"><span class="kpi-label">Sin etiqueta</span><strong class="kpi-value" id="kUnlabeled">—</strong><small class="kpi-detail">Solo chunks no excluidos</small></article>
+    </section>
+
+    <div class="grid">
+      <section class="card span-5">
+        <div class="card-head"><div><h2>Composición efectiva</h2><p>Última decisión por chunk</p></div><span class="pill live-pill">En vivo</span></div>
+        <div class="composition">
+          <div class="donut" id="donut"><div class="donut-center"><strong id="eligibleCenter">—</strong><span>elegibles</span></div></div>
+          <div><div class="legend" id="compositionLegend"></div><div class="microfacts"><div class="microfact"><strong id="channels">—</strong><span>canales</span></div><div class="microfact"><strong id="videos">—</strong><span>videos</span></div><div class="microfact"><strong id="avgChannel">—</strong><span>chunks/canal promedio</span></div><div class="microfact"><strong id="avgVideo">—</strong><span>chunks/video promedio</span></div><div class="microfact"><strong id="intermediateReview">—</strong><span>needs_review Pro intermedios</span></div><div class="microfact"><strong id="finalPending">—</strong><span>decisiones finales pendientes</span></div></div></div>
+        </div>
+      </section>
+
+      <section class="card span-7">
+        <div class="card-head"><div><h2>Categorías de daño</h2><p>Conteos multietiqueta sobre chunks elegibles</p></div><span class="pill" id="assignmentsPill">— asignaciones</span></div>
+        <div class="bars" id="labelBars"></div>
+        <div class="balance"><div><strong id="ratio">—</strong><span>Razón máx./mín.</span></div><div><strong id="cv">—</strong><span>Coef. de variación</span></div><div><strong id="entropy">—</strong><span>Entropía normalizada</span></div></div>
+      </section>
+
+      <section class="card span-8">
+        <div class="card-head"><div><h2>Calidad de la auditoría</h2><p>Muestra estratificada fija comparada con la referencia supervisada</p></div><span class="pill" id="samplePill">Auditoría</span></div>
+        <div class="table-wrap"><table class="metrics"><thead><tr><th>Sistema</th><th><abbr title="Fracción de la muestra con una decisión válida">Cobertura</abbr></th><th><abbr title="Coincidencia del conjunto completo de etiquetas">Acuerdo exacto</abbr></th><th><abbr title="Media armónica de precisión y exhaustividad para daño/no daño">F1 daño</abbr></th><th><abbr title="Correlación de Matthews; robusta ante desbalance">MCC</abbr></th><th><abbr title="F1 micro sobre las cuatro categorías de daño">F1 micro</abbr></th><th><abbr title="Proporción de etiquetas binarias erróneas; menor es mejor">Hamming ↓</abbr></th></tr></thead><tbody id="qualityBody"><tr><td colspan="7"><div class="skeleton"></div></td></tr></tbody></table></div>
+        <div class="paired" id="paired"></div>
+        <div class="method" id="auditMethod">Las cifras inferenciales se cargarán desde el artefacto reproducible de auditoría.</div>
+      </section>
+
+      <section class="card span-4">
+        <div class="card-head"><div><h2>Confianza y calibración</h2><p>La confianza declarada no equivale a exactitud</p></div><span class="pill">Menor ECE/Brier es mejor</span></div>
+        <div class="quality-cards" id="calibrationCards"></div>
+        <p class="definitions"><strong>ECE</strong> resume la distancia entre confianza y acierto observado; <strong>Brier</strong> penaliza probabilidades alejadas del resultado. No se calcula confianza numérica para la referencia CODEX–Sol-EH.</p>
+      </section>
+
+      <section class="card span-4">
+        <div class="card-head"><div><h2>Flujo de revisión</h2><p>Avance humano por cola operativa</p></div><span class="pill live-pill">Vigente</span></div>
+        <div class="queues" id="queues"></div><div class="actions" id="actions"></div><div class="reviewers" id="reviewers"></div>
+      </section>
+
+      <section class="card span-8">
+        <div class="card-head"><div><h2>Canales y concentración</h2><p>Volumen y proporción de chunks con daño; tasa de daño solo para canales con ≥20 chunks</p></div><span class="pill" id="channelPill">— canales</span></div>
+        <div class="channel-grid"><div><h3>Mayor volumen elegible</h3><div id="topVolume"></div></div><div><h3>Mayor proporción de daño</h3><div id="topHarm"></div></div></div>
+      </section>
+
+      <section class="card span-5">
+        <div class="card-head"><div><h2>Actividad reciente</h2><p>Última decisión vigente por chunk, agrupada por hora</p></div><span class="pill">24 horas activas</span></div>
+        <div id="activity"></div>
+      </section>
+
+      <section class="card span-7">
+        <div class="card-head"><div><h2>Lectura cualitativa</h2><p>Hallazgos y precauciones para interpretar el resultado</p></div><span class="pill">Human-in-the-loop</span></div>
+        <div class="insights" id="insights"></div>
+      </section>
+    </div>
+    <footer>
+      Actualización automática cada 15 segundos · Las métricas de estado usan la última decisión efectiva; la comparación inferencial conserva la muestra congelada documentada.
+      <details><summary>Créditos académicos</summary><p><strong>Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural</strong><br>Trabajo final del curso de Procesamiento de Lenguaje Natural (PLN) de la Maestría en Inteligencia Artificial de la Universidad Nacional de Ingeniería (UNI) — Semestre 2026-1<br>Luis Enrique Koc Góngora · Alex Felipe Mancilla Antay · Herbert Antonio Meléndez García · Dennis Jack Paitán Cano</p></details>
+    </footer>
+  </main>
+  <script>
+    "use strict";
+    const $=id=>document.getElementById(id), nf=new Intl.NumberFormat("es-PE"), df=new Intl.DateTimeFormat("es-PE",{dateStyle:"medium",timeStyle:"medium"});
+    const colors=["#2b5dd7","#7868df","#dc5661","#269ec4"];
+    const esc=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+    const num=value=>nf.format(Number(value||0));
+    const dec=(value,digits=2)=>Number(value||0).toLocaleString("es-PE",{minimumFractionDigits:digits,maximumFractionDigits:digits});
+    const pc100=value=>`${dec(value)}%`, pc1=value=>`${dec(Number(value||0)*100)}%`;
+    const metric=value=>value===null||value===undefined?"—":dec(value,3);
+
+    function renderKpis(c){
+      $("kTotal").textContent=num(c.total); $("kTotalDetail").textContent=`${num(c.eligible)} elegibles`;
+      $("kCoverage").textContent=pc100(c.coverage_pct); $("kCoverageDetail").textContent=`${num(c.labeled)} con decisión gruesa`;
+      $("kHarm").textContent=num(c.harm); $("kHarmDetail").textContent=`${pc100(c.harm_prevalence_pct)} de elegibles`;
+      $("kSafe").textContent=num(c.safe); $("kSafeDetail").textContent=`${pc100(100-c.harm_prevalence_pct-(c.unlabeled/c.eligible*100||0))} de elegibles`;
+      $("kExcluded").textContent=num(c.excluded); $("kExcludedDetail").textContent=`Reducción de ${pc100(c.excluded_pct)}`;
+      $("kUnlabeled").textContent=num(c.unlabeled); $("eligibleCenter").textContent=num(c.eligible);
+      $("channels").textContent=num(c.channels); $("videos").textContent=num(c.videos); $("avgChannel").textContent=dec(c.avg_chunks_per_channel,1); $("avgVideo").textContent=dec(c.avg_chunks_per_video,1); $("intermediateReview").textContent=num(c.intermediate_pro_needs_review); $("finalPending").textContent=num(c.final_pending);
+      const total=Math.max(1,c.total), pSafe=c.safe/total*100, pHarm=(c.safe+c.harm)/total*100, pUnlabeled=(c.safe+c.harm+c.unlabeled)/total*100;
+      $("donut").style.setProperty("--p-safe",`${pSafe}%`); $("donut").style.setProperty("--p-harm",`${pHarm}%`); $("donut").style.setProperty("--p-unlabeled",`${pUnlabeled}%`);
+      const parts=[["Seguro",c.safe,"var(--mint)"],["Con daño",c.harm,"var(--red)"],["Sin etiqueta",c.unlabeled,"var(--amber)"],["Excluido",c.excluded,"#aeb9c9"]];
+      $("compositionLegend").innerHTML=parts.map(([label,count,color])=>`<div class="legend-row"><i class="dot" style="--color:${color}"></i><span>${label}</span><strong>${num(count)} · ${pc100(count/total*100)}</strong></div>`).join("");
+    }
+
+    function renderLabels(live){
+      const max=Math.max(1,...live.labels.map(x=>x.count));
+      $("labelBars").innerHTML=live.labels.map((x,i)=>`<div><div class="bar-head"><span>${esc(x.label)}</span><small>${num(x.count)} · ${pc100(x.pct_eligible)} elegibles</small></div><div class="track"><div class="fill" style="--bar-color:${colors[i%colors.length]};width:${x.count/max*100}%"></div></div></div>`).join("");
+      $("assignmentsPill").textContent=`${num(live.corpus.multilabel_assignments)} asignaciones`;
+      $("ratio").textContent=`${dec(live.imbalance.max_min_ratio)}×`; $("cv").textContent=dec(live.imbalance.coefficient_of_variation,3); $("entropy").textContent=dec(live.imbalance.normalized_shannon_entropy,3);
+    }
+
+    function renderAudit(audit){
+      if(!audit.available){$("qualityBody").innerHTML='<tr><td colspan="7">No se encontró el artefacto de auditoría.</td></tr>';$("calibrationCards").innerHTML='<div class="empty">Métricas no disponibles</div>';return}
+      $("samplePill").textContent=`n = ${num(audit.sample.size)}`;
+      const best=Math.max(...audit.systems.map(s=>Number(s.exact_agreement||0)));
+      $("qualityBody").innerHTML=audit.systems.map(s=>{const ci=s.exact_ci95||[];return `<tr><td><span class="system-name">${esc(s.label)}<small>n=${num(s.answered)}</small></span></td><td>${pc1(s.coverage)}</td><td class="${s.exact_agreement===best?'best':''}" title="IC 95%: ${ci.length?`${pc1(ci[0])}–${pc1(ci[1])}`:'no disponible'}">${pc1(s.exact_agreement)}</td><td>${pc1(s.binary_f1)}</td><td>${metric(s.binary_mcc)}</td><td>${pc1(s.micro_f1)}</td><td>${pc1(s.hamming_loss)}</td></tr>`}).join("");
+      const p=audit.paired||{}, ci=p.stratified_bootstrap_percentile_95||[];
+      $("paired").innerHTML=p.n?`<div><span>Panel común</span><strong>n=${num(p.n)}</strong></div><div><span>Ventaja Pro − Flash</span><strong>${pc1(p.pro_minus_flash_exact_agreement)}</strong></div><div><span>IC bootstrap 95%</span><strong>${ci.length?`${pc1(ci[0])}–${pc1(ci[1])}`:'—'}</strong></div>`:"";
+      const ref=audit.reference||{}, inf=audit.inference||{};
+      $("auditMethod").innerHTML=`<strong>Alcance:</strong> ${esc(ref.warning||"")} Intervalos Wilson al 95%; bootstrap estratificado con ${num(inf.bootstrap_replicates)} réplicas. El acuerdo mide concordancia con una referencia interna supervisada, no una verdad independiente.`;
+      $("calibrationCards").innerHTML=audit.systems.map(s=>{const gap=Math.min(100,Math.abs(Number(s.mean_confidence||0)-Number(s.exact_agreement||0))*100);return `<article class="quality"><h3>${esc(s.label)}</h3><div class="quality-grid"><div><span>Confianza media</span><strong>${pc1(s.mean_confidence)}</strong></div><div><span>Acuerdo</span><strong>${pc1(s.exact_agreement)}</strong></div><div><span>ECE</span><strong>${metric(s.ece)}</strong></div><div><span>Brier</span><strong>${metric(s.brier)}</strong></div></div><div class="calibration"><div class="calibration-head"><span>Brecha confianza/acuerdo</span><b>${dec(gap)} pp</b></div><div class="track"><div class="fill" style="--bar-color:${gap>8?'var(--red)':'var(--mint)'};width:${gap}%"></div></div></div></article>`}).join("");
+    }
+
+    function renderQueues(live){
+      const names={urgent:"Urgentes",priority:"Prioritarios Pro",all:"Todos",excluded:"Excluidos"};
+      $("queues").innerHTML=Object.entries(live.queues).map(([id,q])=>`<div><div class="queue-head"><strong>${names[id]}</strong><span>${num(q.resolved)}/${num(q.total)} · ${num(q.deferred)} diferidos</span></div><div class="queue-track"><i style="width:${Math.min(100,q.progress_pct)}%"></i></div></div>`).join("");
+      $("actions").innerHTML=live.actions.map(x=>`<span class="action"><strong>${num(x.count)}</strong>${esc(x.label)}</span>`).join("")||'<span class="empty">Sin decisiones registradas</span>';
+      $("reviewers").innerHTML=live.reviewers.map(x=>`<span class="reviewer">${esc(x.reviewer)} · ${num(x.count)}</span>`).join("");
+    }
+
+    function channelTable(rows){
+      if(!rows.length)return '<div class="empty">Sin canales suficientes</div>';
+      return `<table class="channel-table"><tbody>${rows.map(x=>`<tr><td title="${esc(x.name)}">${esc(x.name)}</td><td>${num(x.chunks)}</td><td><span class="risk">${pc100(x.harm_pct)}</span></td></tr>`).join("")}</tbody></table>`;
+    }
+    function renderChannels(live){$("channelPill").textContent=`${num(live.corpus.channels)} canales`;$("topVolume").innerHTML=channelTable(live.top_channels_volume);$("topHarm").innerHTML=channelTable(live.top_channels_harm)}
+    function renderActivity(rows){
+      if(!rows.length){$("activity").innerHTML='<div class="empty">No hay actividad fechada en las decisiones vigentes.</div>';return}
+      const max=Math.max(1,...rows.map(x=>x.total||0));
+      $("activity").innerHTML=`<div class="activity-chart">${rows.map(x=>`<i class="activity-bar" style="--height:${Math.max(3,x.total/max*100)}%" title="${esc(x.hour)} · ${num(x.total)} decisiones"></i>`).join("")}</div><div class="activity-labels"><span>${esc(rows[0].hour.slice(5,13).replace("T"," "))}</span><span>${num(rows.reduce((a,x)=>a+x.total,0))} decisiones vigentes</span><span>${esc(rows.at(-1).hour.slice(5,13).replace("T"," "))}</span></div>`;
+    }
+    function renderInsights(rows){$("insights").innerHTML=rows.map(x=>`<article class="insight ${esc(x.tone)}"><h3>${esc(x.title)}</h3><p>${esc(x.body)}</p></article>`).join("")}
+
+    async function load(){
+      const button=$("refresh");button.disabled=true;$("liveState").textContent="Actualizando";$("error").classList.remove("show");
+      try{const response=await fetch("/api/dashboard",{cache:"no-store"});if(!response.ok)throw new Error(`HTTP ${response.status}`);const data=await response.json();renderKpis(data.live.corpus);renderLabels(data.live);renderAudit(data.audit);renderQueues(data.live);renderChannels(data.live);renderActivity(data.live.activity);renderInsights(data.insights);$("updated").textContent=`Actualizado ${df.format(new Date(data.generated_at))}`;$("liveState").textContent="Datos vivos"}
+      catch(error){$("error").textContent=`No se pudo actualizar el dashboard: ${error.message}`;$("error").classList.add("show");$("liveState").textContent="Sin conexión"}
+      finally{button.disabled=false}
+    }
+    $("refresh").addEventListener("click",load);load();setInterval(()=>{if(!document.hidden)load()},15000);
+  </script>
+</body>
+</html>

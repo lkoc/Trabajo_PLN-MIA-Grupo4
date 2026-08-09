@@ -87,16 +87,35 @@ y costo finales todavía no estaban cerrados. Consulte el
 y la [metodología central](../../docs/METODOLOGIA_ETIQUETADO_CASCADA.md).
 
 ```powershell
-modperu serve-labeling --campaign datos/etiquetado/consolidado/anotaciones_v2.jsonl
+.\.venv\Scripts\modperu.exe serve-labeling `
+  --campaign datos/etiquetado/consolidado/anotaciones_v2.jsonl
 ```
+
+Ejecute el bloque desde la raíz del repositorio y mantenga esa terminal abierta.
+La revisión queda en <http://127.0.0.1:8765/> y el dashboard en
+<http://127.0.0.1:8765/dashboard>. La cabecera de la revisión también contiene
+el enlace **Dashboard**. Si el servidor estaba abierto antes de incorporar una
+nueva versión del código, deténgalo con `Ctrl+C` y vuelva a ejecutar el bloque;
+no es necesario regenerar la campaña.
+
+El dashboard consulta `/api/dashboard` cada 15 segundos. Los conteos de corpus,
+decisiones, exclusiones, colas, canales, desbalance y actividad se calculan sobre
+el último evento efectivo conservado en memoria. Las métricas de calidad e
+inferencia provienen del artefacto reproducible
+`docs/artefactos/auditoria_16k_flash_pro_sol_eh_metrics.json`: se presentan
+separadas porque corresponden a la muestra estratificada congelada, no a una
+estimación instantánea recalculada después de cada clic.
 
 La barra superior identifica el proyecto y ofrece cuatro vistas calculadas desde
 la campaña: **Urgentes** (2.705 conflictos de consolidación), **Prioritarios
-Pro** (44.617 salidas Pro con `needs_review=true` o alguna categoría de daño,
-sin duplicar su intersección), **Todos** (166.940 chunks) y **Excluidos**
+Pro** (12.671 salidas Pro cuya decisión efectiva conserva daño o sigue
+pendiente), **Todos** (166.940 chunks) y **Excluidos**
 (decisión vigente `reject` o estado de origen `excluded`). Esta última vista
 permite auditar y revertir una exclusión mediante una nueva decisión. Los
-conteos no están fijados en el HTML y se actualizan desde la API.
+conteos no están fijados en el HTML y se actualizan desde la API. Los 35.385
+`needs_review` históricos de Pro se muestran aparte como estado intermedio; una
+decisión posterior CODEX–Sol-EH o humana lo supera y, por tanto, no permanece
+pendiente.
 
 La sugerencia LLM se muestra desde el inicio junto al chunk para acelerar la revisión, sin presentarla como verdad humana. La vista de escritorio cabe en una sola altura: contexto anterior/posterior, detalle de propuesta, notas, guía e información del proyecto se abren en diálogos. La interfaz impide combinar `SEGURO` con daño y solo habilita flags cuando existe al menos una categoría de daño. Admite aceptar, modificar, diferir o excluir; un diferido se conserva, pero sigue pendiente hasta recibir una decisión resolutiva. Las acciones masivas pueden aceptar la propuesta propia de cada chunk, aplicar una misma clasificación humana (`SEGURO` o una combinación de daños y flags) o excluir por video/canal. Muestran el número afectado y exigen confirmación; “Clasificar todo igual” incluye inicialmente los ya resueltos para abarcar todo el alcance, aunque puede limitarse a pendientes. El diálogo de filtros combina cola, cohorte, categorías, flags y estado de etiquetado; entre bloques usa AND y permite exigir cualquiera o todas las selecciones dentro de categorías y flags. También conserva enlace temporal al video, progreso, borradores, atajos `A`/`R`/`Ctrl+Enter`/flechas y exportación, sin incrustar la campaña en el HTML. Estas invariantes también se validan en el servidor, por lo que no dependen únicamente del navegador. Consulte la [matriz de paridad de los frontends](../../docs/PARIDAD_FRONTENDS_ACTIVOS.md).
 

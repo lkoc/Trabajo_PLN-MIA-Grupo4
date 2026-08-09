@@ -11,11 +11,12 @@ import shutil
 import tempfile
 import time
 import unicodedata
-from collections import defaultdict, deque
+from collections import Counter, defaultdict, deque
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
+from .datasets import stable_video_split
 from .io import (
     append_jsonl_once,
     read_jsonl,
@@ -24,7 +25,6 @@ from .io import (
     write_json_atomic,
     write_jsonl_atomic,
 )
-
 
 TranscriptFetcher = Callable[[dict[str, Any]], dict[str, Any]]
 ProgressCallback = Callable[[dict[str, Any]], None]
@@ -107,7 +107,9 @@ def merge_candidates(*groups: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
         for candidate in group:
             video_id = str(candidate.get("video_id", "")).strip()
             if video_id:
-                candidates_by_id.setdefault(video_id, normalize_category_metadata(candidate))
+                candidates_by_id.setdefault(
+                    video_id, normalize_category_metadata(candidate)
+                )
     return list(candidates_by_id.values())
 
 
@@ -132,6 +134,7 @@ def build_directed_sampling_plan(
     *,
     damage_labels: Iterable[str] = DEFAULT_DAMAGE_LABELS,
     eligible_splits: Iterable[str] = ("train", "validation"),
+    target_chunks_per_label: int | None = None,
 ) -> dict[str, Any]:
     """Calcula déficits por video y rendimiento histórico por canal.
 
@@ -141,12 +144,20 @@ def build_directed_sampling_plan(
     de los videos nuevos.
     """
 
-    labels = tuple(dict.fromkeys(str(label).strip() for label in damage_labels if str(label).strip()))
+    labels = tuple(
+        dict.fromkeys(
+            str(label).strip() for label in damage_labels if str(label).strip()
+        )
+    )
     if not labels:
         raise ValueError("Se requiere al menos una categoría de daño")
     allowed_splits = {str(split) for split in eligible_splits}
+    if target_chunks_per_label is not None and target_chunks_per_label < 1:
+        raise ValueError("target_chunks_per_label debe ser positivo")
     labeled_video_ids: set[str] = set()
     video_labels: dict[str, set[str]] = defaultdict(set)
+    video_label_chunks: dict[str, Counter[str]] = defaultdict(Counter)
+    support_chunks: Counter[str] = Counter({label: 0 for label in labels})
     labeled_rows = 0
     for row in dataset_rows:
         if allowed_splits and str(row.get("split")) not in allowed_splits:
@@ -157,7 +168,11 @@ def build_directed_sampling_plan(
             continue
         labeled_rows += 1
         labeled_video_ids.add(video_id)
-        video_labels[video_id].update(label for label in coarse if label in labels)
+        for label in coarse:
+            if label in labels:
+                video_labels[video_id].add(label)
+                video_label_chunks[video_id][label] += 1
+                support_chunks[label] += 1
 
     support = {
         label: sum(label in video_labels[video_id] for video_id in labeled_video_ids)
@@ -165,14 +180,31 @@ def build_directed_sampling_plan(
     }
     target_support = max(support.values(), default=0)
     deficits = {label: max(target_support - support[label], 0) for label in labels}
-    total_deficit = sum(deficits.values())
-    if not labeled_video_ids or not target_support or not total_deficit:
-        strategy = "fallback_equal"
-        weights = {label: 1.0 / len(labels) for label in labels}
-        deficits = {label: 1 for label in labels}
+    deficit_chunks = {
+        label: (
+            max(target_chunks_per_label - support_chunks[label], 0)
+            if target_chunks_per_label is not None
+            else 0
+        )
+        for label in labels
+    }
+    if target_chunks_per_label is not None:
+        total_deficit = sum(deficit_chunks.values())
+        if total_deficit:
+            strategy = "target_chunk_deficit_weighted"
+            weights = {label: deficit_chunks[label] / total_deficit for label in labels}
+        else:
+            strategy = "target_reached"
+            weights = {label: 0.0 for label in labels}
     else:
-        strategy = "deficit_weighted"
-        weights = {label: deficits[label] / total_deficit for label in labels}
+        total_deficit = sum(deficits.values())
+        if not labeled_video_ids or not target_support or not total_deficit:
+            strategy = "fallback_equal"
+            weights = {label: 1.0 / len(labels) for label in labels}
+            deficits = {label: 1 for label in labels}
+        else:
+            strategy = "deficit_weighted"
+            weights = {label: deficits[label] / total_deficit for label in labels}
 
     channel_accumulator: dict[str, dict[str, Any]] = {}
     for transcript in transcript_rows:
@@ -200,11 +232,13 @@ def build_directed_sampling_plan(
                 "channel_title": channel_title or channel_id,
                 "video_ids": set(),
                 "positive_video_ids": {label: set() for label in labels},
+                "positive_chunks": Counter({label: 0 for label in labels}),
             },
         )
         profile["video_ids"].add(video_id)
         for label in video_labels[video_id]:
             profile["positive_video_ids"][label].add(video_id)
+            profile["positive_chunks"][label] += video_label_chunks[video_id][label]
 
     channel_profiles = []
     for profile in channel_accumulator.values():
@@ -212,19 +246,30 @@ def build_directed_sampling_plan(
         positive_counts = {
             label: len(profile["positive_video_ids"][label]) for label in labels
         }
+        positive_chunk_counts = {
+            label: int(profile["positive_chunks"][label]) for label in labels
+        }
         channel_profiles.append(
             {
                 "channel_id": profile["channel_id"],
                 "channel_title": profile["channel_title"],
                 "labeled_videos": video_count,
                 "positive_videos": positive_counts,
+                "positive_chunks": positive_chunk_counts,
+                "positive_chunks_per_video": {
+                    label: positive_chunk_counts[label] / video_count
+                    for label in labels
+                },
                 "positive_rate": {
                     label: positive_counts[label] / video_count for label in labels
                 },
             }
         )
     channel_profiles.sort(
-        key=lambda profile: (-profile["labeled_videos"], profile["channel_title"].casefold())
+        key=lambda profile: (
+            -profile["labeled_videos"],
+            profile["channel_title"].casefold(),
+        )
     )
     return {
         "strategy": strategy,
@@ -233,8 +278,12 @@ def build_directed_sampling_plan(
         "labeled_rows": labeled_rows,
         "labeled_videos": len(labeled_video_ids),
         "support_videos": support,
+        "support_chunks": dict(support_chunks),
         "target_video_support": target_support,
         "deficit_videos": deficits,
+        "target_chunks_per_label": target_chunks_per_label,
+        "deficit_chunks": deficit_chunks,
+        "acquisition_needed": any(value > 0 for value in weights.values()),
         "weights": weights,
         "channel_profiles": channel_profiles,
     }
@@ -261,13 +310,18 @@ def select_directed_seed_channels(
             continue
         label_scores = {}
         for label in labels:
-            positives = int(profile.get("positive_videos", {}).get(label, 0))
+            if plan.get("target_chunks_per_label") is not None:
+                positives = int(profile.get("positive_chunks", {}).get(label, 0))
+            else:
+                positives = int(profile.get("positive_videos", {}).get(label, 0))
             if positives and weights[label] > 0:
                 smoothed_yield = (positives + 0.5) / (total + 2.0)
                 label_scores[label] = weights[label] * smoothed_yield
         if not label_scores:
             continue
-        target_labels = sorted(label_scores, key=lambda label: (-label_scores[label], labels.index(label)))
+        target_labels = sorted(
+            label_scores, key=lambda label: (-label_scores[label], labels.index(label))
+        )
         reliability = total / (total + 5.0)
         score = sum(label_scores.values()) * reliability
         ranked.append(
@@ -279,7 +333,8 @@ def select_directed_seed_channels(
                 "reason": (
                     f"preclasificación histórica: {total} videos; "
                     + ", ".join(
-                        f"{label}={profile['positive_videos'][label]}" for label in target_labels
+                        f"{label}={profile['positive_videos'][label]}"
+                        for label in target_labels
                     )
                 ),
                 "sampling_mode": "directed",
@@ -298,7 +353,9 @@ def select_directed_seed_channels(
         score = sum(weights[label] for label in active_targets)
         source.update(
             {
-                "target_category": "|".join(label for label in labels if label in active_targets),
+                "target_category": "|".join(
+                    label for label in labels if label in active_targets
+                ),
                 "sampling_mode": "directed",
                 "priority_weight": score,
                 "_targets": active_targets,
@@ -308,14 +365,23 @@ def select_directed_seed_channels(
         source.setdefault("reason", "semilla curada para ampliación dirigida")
         ranked.append(source)
 
-    ranked.sort(key=lambda source: (-float(source["_score"]), str(source.get("name", "")).casefold()))
+    ranked.sort(
+        key=lambda source: (
+            -float(source["_score"]),
+            str(source.get("name", "")).casefold(),
+        )
+    )
     selected: list[dict[str, Any]] = []
     selected_keys: set[str] = set()
 
     def add(source: dict[str, Any]) -> bool:
         keys = {
             str(value).strip().casefold()
-            for value in (source.get("channel_id"), source.get("name"), source.get("url"))
+            for value in (
+                source.get("channel_id"),
+                source.get("name"),
+                source.get("url"),
+            )
             if str(value or "").strip()
         }
         if keys & selected_keys or len(selected) >= max_channels:
@@ -362,16 +428,23 @@ def select_directed_search_queries(
         score = sum(weights[label] for label in active)
         query.update(
             {
-                "target_category": "|".join(label for label in labels if label in active),
+                "target_category": "|".join(
+                    label for label in labels if label in active
+                ),
                 "sampling_mode": "directed",
                 "priority_weight": score,
-                "quota": min(int(query.get("quota", max_results_per_query)), max_results_per_query),
+                "quota": min(
+                    int(query.get("quota", max_results_per_query)),
+                    max_results_per_query,
+                ),
                 "_targets": active,
                 "_score": score,
             }
         )
         ranked.append(query)
-    ranked.sort(key=lambda query: (-float(query["_score"]), str(query["query"]).casefold()))
+    ranked.sort(
+        key=lambda query: (-float(query["_score"]), str(query["query"]).casefold())
+    )
     selected: list[dict[str, Any]] = []
     selected_queries: set[str] = set()
 
@@ -389,7 +462,10 @@ def select_directed_search_queries(
             add(match)
     for query in ranked:
         add(query)
-    return [{key: value for key, value in query.items() if not key.startswith("_")} for query in selected]
+    return [
+        {key: value for key, value in query.items() if not key.startswith("_")}
+        for query in selected
+    ]
 
 
 def expand_directed_channel_sources(
@@ -408,7 +484,11 @@ def expand_directed_channel_sources(
         return []
     labels = tuple(plan["damage_labels"])
     weights = {label: float(plan["weights"].get(label, 0.0)) for label in labels}
-    known = {str(channel_id).strip() for channel_id in known_channel_ids if str(channel_id).strip()}
+    known = {
+        str(channel_id).strip()
+        for channel_id in known_channel_ids
+        if str(channel_id).strip()
+    }
     groups: dict[str, dict[str, Any]] = {}
     for candidate in search_candidates:
         if candidate.get("discovery_type") != "search":
@@ -432,14 +512,22 @@ def expand_directed_channel_sources(
         )
         group["targets"].update(targets)
         group["hits"] += 1
-        group["best_rank"] = min(group["best_rank"], int(candidate.get("discovery_rank") or 10**9))
+        group["best_rank"] = min(
+            group["best_rank"], int(candidate.get("discovery_rank") or 10**9)
+        )
     ranked = []
     for group in groups.values():
         score = sum(weights[label] for label in group["targets"])
         score *= 1.0 + 0.1 * min(group["hits"] - 1, 4)
         score /= 1.0 + 0.02 * max(group["best_rank"] - 1, 0)
         ranked.append((score, group))
-    ranked.sort(key=lambda item: (-item[0], item[1]["best_rank"], str(item[1]["name"]).casefold()))
+    ranked.sort(
+        key=lambda item: (
+            -item[0],
+            item[1]["best_rank"],
+            str(item[1]["name"]).casefold(),
+        )
+    )
     output = []
     for score, group in ranked[:max_channels]:
         ordered_targets = [label for label in labels if label in group["targets"]]
@@ -464,6 +552,8 @@ def select_directed_candidates(
     plan: dict[str, Any],
     *,
     max_candidates: int | None = 500,
+    required_split: str | None = None,
+    split_seed: int = 20260805,
 ) -> list[dict[str, Any]]:
     """Crea una cohorte inédita con round-robin ponderado por déficit."""
 
@@ -471,6 +561,8 @@ def select_directed_candidates(
         raise ValueError("max_candidates no puede ser negativo")
     if max_candidates == 0:
         return []
+    if required_split not in {None, "train", "validation", "test"}:
+        raise ValueError("required_split debe ser train, validation, test o None")
     labels = tuple(plan["damage_labels"])
     weights = {label: float(plan["weights"].get(label, 0.0)) for label in labels}
     processed = {str(video_id).strip() for video_id in processed_ids}
@@ -479,7 +571,14 @@ def select_directed_candidates(
         candidate = normalize_category_metadata(dict(raw))
         video_id = str(candidate.get("video_id", "")).strip()
         targets = set(_category_tokens(candidate.get("target_category"))) & set(labels)
-        if video_id and video_id not in processed and targets:
+        planned_split = stable_video_split(video_id, split_seed) if video_id else None
+        if (
+            video_id
+            and video_id not in processed
+            and targets
+            and (required_split is None or planned_split == required_split)
+        ):
+            candidate["planned_split"] = planned_split
             unique.setdefault(video_id, candidate)
 
     queues: dict[str, deque[dict[str, Any]]] = {}
@@ -489,10 +588,19 @@ def select_directed_candidates(
         by_source: dict[str, list[dict[str, Any]]] = defaultdict(list)
         for candidate in unique.values():
             if label in _category_tokens(candidate.get("target_category")):
-                source = str(candidate.get("discovery_source") or candidate.get("channel_id") or "")
+                source = str(
+                    candidate.get("discovery_source")
+                    or candidate.get("channel_id")
+                    or ""
+                )
                 by_source[source].append(candidate)
         for group in by_source.values():
-            group.sort(key=lambda row: (int(row.get("discovery_rank") or 10**9), str(row["video_id"])))
+            group.sort(
+                key=lambda row: (
+                    int(row.get("discovery_rank") or 10**9),
+                    str(row["video_id"]),
+                )
+            )
         source_cycle = deque(sorted(by_source))
         ordered: list[dict[str, Any]] = []
         while source_cycle:
@@ -577,7 +685,10 @@ def reset_active_video_dataset(
     )
     channel_partition_dir = root / "datos" / "raw" / "transcripts_by_channel"
     channel_partition_targets = (
-        [path.relative_to(root) for path in sorted(channel_partition_dir.glob("*.jsonl"))]
+        [
+            path.relative_to(root)
+            for path in sorted(channel_partition_dir.glob("*.jsonl"))
+        ]
         + [Path("datos/raw/transcripts_by_channel/index.json")]
         if channel_partition_dir.is_dir()
         else []
@@ -655,7 +766,9 @@ def bootstrap_canonical_from_existing(
             record.setdefault(
                 "transcript_sha256",
                 sha256_text(
-                    json.dumps(record.get("segments", []), ensure_ascii=False, sort_keys=True)
+                    json.dumps(
+                        record.get("segments", []), ensure_ascii=False, sort_keys=True
+                    )
                 ),
             )
             rows.append(record)
@@ -698,7 +811,9 @@ def bootstrap_canonical_from_cache(
             record.setdefault(
                 "transcript_sha256",
                 sha256_text(
-                    json.dumps(record.get("segments", []), ensure_ascii=False, sort_keys=True)
+                    json.dumps(
+                        record.get("segments", []), ensure_ascii=False, sort_keys=True
+                    )
                 ),
             )
             stats["valid_records"] += 1
@@ -733,7 +848,9 @@ def _transcript_channel_fields(record: dict[str, Any]) -> tuple[str, str]:
 
 
 def _safe_channel_slug(value: str) -> str:
-    ascii_value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    ascii_value = (
+        unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    )
     slug = re.sub(r"[^A-Za-z0-9._-]+", "-", ascii_value).strip("-._").lower()
     return slug[:64] or "canal"
 
@@ -744,7 +861,9 @@ def _channel_shard_descriptor(
     title_aliases: dict[str, str] | None = None,
 ) -> tuple[str, str]:
     channel_id, channel_title = _transcript_channel_fields(record)
-    alias = (title_aliases or {}).get(channel_title.casefold()) if channel_title else None
+    alias = (
+        (title_aliases or {}).get(channel_title.casefold()) if channel_title else None
+    )
     if channel_id:
         key = f"id:{channel_id}"
         basename = channel_id
@@ -838,7 +957,9 @@ def materialize_transcripts_by_channel(
     target = Path(output_dir)
     if not canonical.is_file():
         target.mkdir(parents=True, exist_ok=True)
-        payload = _channel_index_payload([], max_channel_file_bytes=max_channel_file_bytes)
+        payload = _channel_index_payload(
+            [], max_channel_file_bytes=max_channel_file_bytes
+        )
         write_json_atomic(target / CHANNEL_TRANSCRIPT_INDEX, payload)
         return {**payload, "canonical_exists": False, "output_dir": target.as_posix()}
 
@@ -873,7 +994,8 @@ def materialize_transcripts_by_channel(
             part = channel_parts[channel_key]
             if (
                 channel_part_bytes[(channel_key, part)]
-                and channel_part_bytes[(channel_key, part)] + encoded_bytes > max_channel_file_bytes
+                and channel_part_bytes[(channel_key, part)] + encoded_bytes
+                > max_channel_file_bytes
             ):
                 part += 1
                 channel_parts[channel_key] = part
@@ -882,7 +1004,9 @@ def materialize_transcripts_by_channel(
             if previous_key != channel_key:
                 raise ValueError(f"Colisión de particiones para {filename}")
             file_parts[filename] = part
-            with (staging / filename).open("a", encoding="utf-8", newline="\n") as handle:
+            with (staging / filename).open(
+                "a", encoding="utf-8", newline="\n"
+            ) as handle:
                 handle.write(encoded)
             channel_part_bytes[(channel_key, part)] += encoded_bytes
 
@@ -939,7 +1063,9 @@ def append_transcripts_by_channel(
     )
     if shard_limit < 1024:
         raise ValueError("max_channel_file_bytes debe ser al menos 1024")
-    entries_by_file = {str(entry["file"]): dict(entry) for entry in index.get("files", [])}
+    entries_by_file = {
+        str(entry["file"]): dict(entry) for entry in index.get("files", [])
+    }
 
     id_keys: dict[str, set[str]] = defaultdict(set)
     title_keys: dict[str, set[str]] = defaultdict(set)
@@ -999,7 +1125,9 @@ def append_transcripts_by_channel(
             if channel_entries
             else _channel_part_filename(file_stems[channel_key], part)
         )
-        current_bytes = (target / filename).stat().st_size if (target / filename).is_file() else 0
+        current_bytes = (
+            (target / filename).stat().st_size if (target / filename).is_file() else 0
+        )
         pending_by_file: dict[str, list[dict[str, Any]]] = defaultdict(list)
         for record in group:
             video_id = str(record.get("video_id") or "").strip()
@@ -1009,7 +1137,9 @@ def append_transcripts_by_channel(
                 skipped += 1
                 continue
             encoded_bytes = len(
-                (json.dumps(record, ensure_ascii=False, default=str) + "\n").encode("utf-8")
+                (json.dumps(record, ensure_ascii=False, default=str) + "\n").encode(
+                    "utf-8"
+                )
             )
             if current_bytes and current_bytes + encoded_bytes > shard_limit:
                 part += 1
@@ -1022,7 +1152,9 @@ def append_transcripts_by_channel(
         for pending_filename, pending in pending_by_file.items():
             _append_jsonl_checkpoint(target / pending_filename, pending)
             touched_files.add(pending_filename)
-            pending_part = int(re.search(r"--part-(\d{4})\.jsonl$", pending_filename).group(1))
+            pending_part = int(
+                re.search(r"--part-(\d{4})\.jsonl$", pending_filename).group(1)
+            )
             entries_by_file[pending_filename] = _summarize_channel_shard(
                 target / pending_filename,
                 channel_key=channel_key,
@@ -1151,8 +1283,8 @@ def _vtt_backfill_candidate(record: dict[str, Any]) -> dict[str, Any]:
         if record.get(key) is not None:
             candidate.setdefault(key, record[key])
     candidate["video_id"] = str(record["video_id"])
-    candidate["previous_subtitle_source"] = (
-        record.get("subtitle_source") or record.get("fuente_subs")
+    candidate["previous_subtitle_source"] = record.get("subtitle_source") or record.get(
+        "fuente_subs"
     )
     return normalize_category_metadata(_json_safe(candidate))
 
@@ -1194,9 +1326,15 @@ def materialize_vtt_checkpoint(
         for path in sorted((root / "datos").rglob("*.vtt"))
         if path.is_file() and target not in path.resolve().parents
     ]
-    existing_hashes = {
-        path.name: sha256_file(path) for path in target.glob("*.vtt") if path.is_file()
-    } if target.is_dir() else {}
+    existing_hashes = (
+        {
+            path.name: sha256_file(path)
+            for path in target.glob("*.vtt")
+            if path.is_file()
+        }
+        if target.is_dir()
+        else {}
+    )
     copied_sources: dict[str, list[str]] = defaultdict(list)
     copied = reused = 0
     for source in source_paths:
@@ -1218,7 +1356,9 @@ def materialize_vtt_checkpoint(
     invalid_files = 0
     for path in sorted(target.glob("*.vtt"), key=lambda item: item.name.casefold()):
         payload = path.read_bytes()
-        valid_webvtt = payload.lstrip(b"\xef\xbb\xbf").startswith(b"WEBVTT") and b"-->" in payload
+        valid_webvtt = (
+            payload.lstrip(b"\xef\xbb\xbf").startswith(b"WEBVTT") and b"-->" in payload
+        )
         video_id = vtt_video_id(path)
         if valid_webvtt:
             valid_video_ids.add(video_id)
@@ -1263,7 +1403,9 @@ def materialize_vtt_checkpoint(
         "total_files": len(entries),
         "total_videos": len({entry["video_id"] for entry in entries}),
         "total_bytes": sum(int(entry["bytes"]) for entry in entries),
-        "original_vtt_files": sum(entry["origin"] == "original_ytdlp_vtt" for entry in entries),
+        "original_vtt_files": sum(
+            entry["origin"] == "original_ytdlp_vtt" for entry in entries
+        ),
         "transcript_api_vtt_files": sum(
             entry["origin"] == "generated_from_transcript_api" for entry in entries
         ),
@@ -1298,7 +1440,11 @@ def discover_candidate_sources(project_root: str | Path) -> list[Path]:
         "directed_candidates_latest.jsonl",
     }
     return sorted(
-        (path.resolve() for path in root.rglob("*") if path.is_file() and path.name in names),
+        (
+            path.resolve()
+            for path in root.rglob("*")
+            if path.is_file() and path.name in names
+        ),
         key=str,
     )
 
@@ -1322,7 +1468,11 @@ def recover_transcripts_from_vtt(
         raise ValueError("minimum_transcript_characters debe ser positivo")
     source = Path(vtt_dir)
     candidate_paths = [Path(path) for path in candidate_sources]
-    known = {str(video_id).strip() for video_id in existing_video_ids if str(video_id).strip()}
+    known = {
+        str(video_id).strip()
+        for video_id in existing_video_ids
+        if str(video_id).strip()
+    }
     grouped: dict[str, list[Path]] = defaultdict(list)
     if source.is_dir():
         for path in sorted(source.rglob("*.vtt")):
@@ -1430,7 +1580,9 @@ def discover_derived_transcript_sources(project_root: str | Path) -> list[Path]:
     for relative in (Path("datos/model_ready"), Path("datos/processed")):
         base = root / relative
         if base.is_dir():
-            sources.update(path.resolve() for path in base.rglob("*.jsonl") if path.is_file())
+            sources.update(
+                path.resolve() for path in base.rglob("*.jsonl") if path.is_file()
+            )
     expansion_root = root / "datos" / "ampliacion"
     if expansion_root.is_dir():
         sources.update(
@@ -1489,7 +1641,9 @@ def consolidate_available_transcripts(
             record.setdefault(
                 "transcript_sha256",
                 sha256_text(
-                    json.dumps(record.get("segments", []), ensure_ascii=False, sort_keys=True)
+                    json.dumps(
+                        record.get("segments", []), ensure_ascii=False, sort_keys=True
+                    )
                 ),
             )
             historical_records.append(record)
@@ -1510,7 +1664,9 @@ def consolidate_available_transcripts(
         partitions_verified = verify_partition_hashes
 
     cache_records: list[dict[str, Any]] = []
-    cache_files = sorted(Path(cache_dir).glob("*.json")) if Path(cache_dir).is_dir() else []
+    cache_files = (
+        sorted(Path(cache_dir).glob("*.json")) if Path(cache_dir).is_dir() else []
+    )
     for path in cache_files:
         payload = json.loads(path.read_text(encoding="utf-8-sig"))
         if not isinstance(payload, dict):
@@ -1518,21 +1674,30 @@ def consolidate_available_transcripts(
         record = normalize_category_metadata(_json_safe(payload))
         video_id = str(record.get("video_id") or "").strip()
         if not video_id or path.stem != video_id:
-            raise ValueError(f"El caché {path} no corresponde a {video_id or 'un video_id vacío'}")
+            raise ValueError(
+                f"El caché {path} no corresponde a {video_id or 'un video_id vacío'}"
+            )
         record["video_id"] = video_id
         record.setdefault("acquisition_status", "reused_existing_cache")
         record.setdefault("source_cache", path.resolve().as_posix())
         record.setdefault(
             "transcript_sha256",
             sha256_text(
-                json.dumps(record.get("segments", []), ensure_ascii=False, sort_keys=True)
+                json.dumps(
+                    record.get("segments", []), ensure_ascii=False, sort_keys=True
+                )
             ),
         )
         cache_records.append(record)
 
     known_before_vtt = {
         str(record["video_id"])
-        for records in (partition_records, existing_records, historical_records, cache_records)
+        for records in (
+            partition_records,
+            existing_records,
+            historical_records,
+            cache_records,
+        )
         for record in records
         if record.get("video_id")
     }
@@ -1582,12 +1747,18 @@ def consolidate_available_transcripts(
     write_jsonl_atomic(canonical, merged.values())
 
     historical_ids = {
-        str(record["video_id"]) for record in historical_records if record.get("video_id")
+        str(record["video_id"])
+        for record in historical_records
+        if record.get("video_id")
     }
     partition_ids = {
-        str(record["video_id"]) for record in partition_records if record.get("video_id")
+        str(record["video_id"])
+        for record in partition_records
+        if record.get("video_id")
     }
-    cache_ids = {str(record["video_id"]) for record in cache_records if record.get("video_id")}
+    cache_ids = {
+        str(record["video_id"]) for record in cache_records if record.get("video_id")
+    }
     refreshed = sum(
         video_id in initial_by_id and partition_record != initial_by_id[video_id]
         for video_id, partition_record in {
@@ -1628,9 +1799,7 @@ def collect_project_video_inventory(
 
     root = Path(project_root).resolve()
     canonical_ids = processed_video_ids(canonical_path)
-    cache_ids = {
-        path.stem for path in Path(cache_dir).glob("*.json") if path.is_file()
-    }
+    cache_ids = {path.stem for path in Path(cache_dir).glob("*.json") if path.is_file()}
     historical_ids: set[str] = set()
     historical_sources = (
         discover_existing_transcript_sources(root, canonical_path=canonical_path)
@@ -1754,9 +1923,17 @@ def classify_acquisition_error(error: BaseException) -> str:
     message = str(error).casefold()
     if "http error 404" in message or "does not have a videos tab" in message:
         return "stale_channel_or_no_videos_tab"
-    if "members-only" in message or "join this channel" in message or "miembros" in message:
+    if (
+        "members-only" in message
+        or "join this channel" in message
+        or "miembros" in message
+    ):
         return "members_only"
-    if "private video" in message or "video unavailable" in message or "not available" in message:
+    if (
+        "private video" in message
+        or "video unavailable" in message
+        or "not available" in message
+    ):
         return "unavailable_or_private"
     if "subtítulos insuficientes" in message or "subtitulos insuficientes" in message:
         return "subtitle_too_short"
@@ -1798,7 +1975,9 @@ def discover_youtube_candidates(
     try:
         import yt_dlp
     except ImportError as exc:
-        raise RuntimeError("Instale moderacion-peru[datos] para descubrir videos") from exc
+        raise RuntimeError(
+            "Instale moderacion-peru[datos] para descubrir videos"
+        ) from exc
 
     base_options = _youtube_options(
         retries=retries,
@@ -1814,7 +1993,9 @@ def discover_youtube_candidates(
     if checkpoint_target is not None and checkpoint_target.is_file():
         loaded = json.loads(checkpoint_target.read_text(encoding="utf-8-sig"))
         if not isinstance(loaded, dict) or not isinstance(loaded.get("sources"), dict):
-            raise ValueError(f"Checkpoint de descubrimiento inválido: {checkpoint_target}")
+            raise ValueError(
+                f"Checkpoint de descubrimiento inválido: {checkpoint_target}"
+            )
         checkpoint = loaded
 
     def notify(
@@ -2036,14 +2217,18 @@ def discover_youtube_candidates(
         source = dict(raw_source)
         source["discovery_type"] = "channel"
         url = str(source.get("url", "")).strip()
-        quota = min(max_videos_per_channel, int(source.get("quota", max_videos_per_channel)))
+        quota = min(
+            max_videos_per_channel, int(source.get("quota", max_videos_per_channel))
+        )
         collect(_normalise_channel_videos_url(url) if url else "", source, quota)
 
     for raw_query in search_queries:
         source = {"query": raw_query} if isinstance(raw_query, str) else dict(raw_query)
         source["discovery_type"] = "search"
         query = str(source.get("query", "")).strip()
-        quota = min(max_results_per_query, int(source.get("quota", max_results_per_query)))
+        quota = min(
+            max_results_per_query, int(source.get("quota", max_results_per_query))
+        )
         collect(f"ytsearch{quota}:{query}" if query else "", source, quota)
 
     return list(candidates_by_id.values()), failures
@@ -2075,7 +2260,11 @@ def _vtt_timestamp(seconds: float) -> str:
 def _segments_to_vtt_bytes(segments: Iterable[dict[str, Any]]) -> bytes:
     """Serializa la respuesta cruda de transcript-api con procedencia explícita."""
 
-    lines = ["WEBVTT", "NOTE generated from youtube-transcript-api; not an original yt-dlp file", ""]
+    lines = [
+        "WEBVTT",
+        "NOTE generated from youtube-transcript-api; not an original yt-dlp file",
+        "",
+    ]
     cue = 0
     for segment in segments:
         text = str(segment.get("text") or "").strip()
@@ -2156,7 +2345,11 @@ def _transcript_api_fallback(
         for row in transcript.fetch().to_raw_data()
         if str(row.get("text") or "").strip()
     ]
-    source = "automatic-transcript-api" if transcript.is_generated else "manual-transcript-api"
+    source = (
+        "automatic-transcript-api"
+        if transcript.is_generated
+        else "manual-transcript-api"
+    )
     return segments, transcript.language_code, source
 
 
@@ -2177,10 +2370,14 @@ def fetch_youtube_subtitles(
     try:
         import yt_dlp
     except ImportError as exc:
-        raise RuntimeError("Instale moderacion-peru[datos] para adquirir subtítulos nuevos") from exc
+        raise RuntimeError(
+            "Instale moderacion-peru[datos] para adquirir subtítulos nuevos"
+        ) from exc
     video_id = str(candidate["video_id"])
     url = str(candidate.get("url") or f"https://www.youtube.com/watch?v={video_id}")
-    language_priority = tuple(dict.fromkeys(str(value) for value in languages if str(value).strip()))
+    language_priority = tuple(
+        dict.fromkeys(str(value) for value in languages if str(value).strip())
+    )
     if not language_priority:
         raise ValueError("Se requiere al menos un idioma de subtítulos")
     if minimum_transcript_characters < 1:
@@ -2246,10 +2443,12 @@ def fetch_youtube_subtitles(
         and _transcript_characters(best_segments) < minimum_transcript_characters
     ):
         try:
-            fallback_segments, fallback_language, fallback_source = _transcript_api_fallback(
-                video_id, language_priority
+            fallback_segments, fallback_language, fallback_source = (
+                _transcript_api_fallback(video_id, language_priority)
             )
-            if _transcript_characters(fallback_segments) > _transcript_characters(best_segments):
+            if _transcript_characters(fallback_segments) > _transcript_characters(
+                best_segments
+            ):
                 best_segments = fallback_segments
                 selected_language = fallback_language
                 subtitle_source = fallback_source
@@ -2261,14 +2460,20 @@ def fetch_youtube_subtitles(
     character_count = _transcript_characters(best_segments)
     if character_count < minimum_transcript_characters:
         if primary_error is not None:
-            detail = f"; fallback: {fallback_error}" if fallback_error is not None else ""
-            raise RuntimeError(f"yt-dlp no pudo obtener subtítulos de {video_id}: {primary_error}{detail}")
+            detail = (
+                f"; fallback: {fallback_error}" if fallback_error is not None else ""
+            )
+            raise RuntimeError(
+                f"yt-dlp no pudo obtener subtítulos de {video_id}: {primary_error}{detail}"
+            )
         if character_count:
             raise RuntimeError(
                 f"{video_id} devolvió subtítulos insuficientes: "
                 f"{character_count} < {minimum_transcript_characters} caracteres"
             )
-        raise RuntimeError(f"{video_id} no tiene subtítulos en los idiomas {language_priority}")
+        raise RuntimeError(
+            f"{video_id} no tiene subtítulos en los idiomas {language_priority}"
+        )
 
     persisted_vtt_files: list[str] = []
     if vtt_output_dir is not None:
@@ -2366,9 +2571,7 @@ def order_candidates_for_acquisition(
         channel_key = _candidate_channel_key(candidate) or f"video:{video_id}"
         buckets[channel_key].append(candidate)
     for group in buckets.values():
-        group.sort(
-            key=lambda row: sha256_text(f"{seed}\0video\0{row['video_id']}")
-        )
+        group.sort(key=lambda row: sha256_text(f"{seed}\0video\0{row['video_id']}"))
 
     channels = deque(
         sorted(
@@ -2681,7 +2884,9 @@ def backfill_missing_vtt(
                 and b"-->" in path.read_bytes()
             ]
             if not persisted:
-                raise RuntimeError(f"La descarga de {video_id} no conservó ningún VTT válido")
+                raise RuntimeError(
+                    f"La descarga de {video_id} no conservó ningún VTT válido"
+                )
         except Exception as exc:
             counters["failed"] += 1
             failure = _failure_record(candidate, exc)
