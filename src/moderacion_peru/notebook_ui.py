@@ -17,6 +17,18 @@ _PALETTE = {
     "neutral": ("#334155", "#f8fafc", "#cbd5e1"),
 }
 
+_COPY_COMMAND_HANDLER = (
+    "const text=this.parentElement.nextElementSibling.innerText.trim();"
+    "const done=()=>{this.textContent='Copiado';"
+    "setTimeout(()=>{this.textContent='Copiar';},1200);};"
+    "const fallback=()=>{const area=document.createElement('textarea');"
+    "area.value=text;document.body.appendChild(area);area.select();"
+    "document.execCommand('copy');area.remove();done();};"
+    "if(navigator.clipboard && window.isSecureContext){"
+    "navigator.clipboard.writeText(text).then(done).catch(fallback);"
+    "}else{fallback();}"
+)
+
 
 def _normalise(value: Any) -> Any:
     if isinstance(value, Path):
@@ -154,7 +166,7 @@ def show_result(title: str, value: Any, *, tone: str = "info") -> None:
 
 
 def show_command(title: str, command: str, *, description: str | None = None) -> None:
-    """Presenta un comando copiable sin confundirlo con una ejecución realizada."""
+    """Presenta un comando con copia de un clic sin confundirlo con una ejecución."""
 
     explanation = (
         f'<div style="margin-bottom:8px;line-height:1.4">{html.escape(description)}</div>'
@@ -163,7 +175,12 @@ def show_command(title: str, command: str, *, description: str | None = None) ->
     )
     code = html.escape(command)
     body = explanation + (
-        '<code style="display:block;background:#0f172a;color:#e2e8f0;padding:10px 12px;'
-        f'border-radius:6px;overflow-x:auto;white-space:pre">{code}</code>'
+        '<div style="display:flex;justify-content:flex-end;margin-bottom:6px">'
+        '<button type="button" aria-label="Copiar comando" '
+        f'onclick="{html.escape(_COPY_COMMAND_HANDLER, quote=True)}" '
+        'style="border:1px solid #94a3b8;background:#fff;color:#0f172a;border-radius:6px;'
+        'padding:5px 10px;cursor:pointer;font-weight:600">Copiar</button></div>'
+        '<pre style="margin:0;background:#0f172a;color:#e2e8f0;padding:10px 12px;'
+        f'border-radius:6px;overflow-x:auto;white-space:pre"><code>{code}</code></pre>'
     )
     _display(_card(title, body, tone="neutral"), f"{title}: {command}")

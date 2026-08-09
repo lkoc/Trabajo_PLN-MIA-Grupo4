@@ -43,6 +43,33 @@ CONTRACT_SUMMARY = (
     "decisiones operativas locales."
 )
 
+LABELING_FRONTEND_GUIDE = r"""Ejecute los comandos siguientes en una terminal **PowerShell** abierta en la raíz del repositorio, no dentro de una celda Python. Cada bloque incluye un botón **Copiar**; la celda Python que aparece después solo presenta los comandos y no los ejecuta.
+
+### Preparación inicial
+
+Este bloque solo es necesario la primera vez (o si se eliminó `.venv`):
+
+<div style="margin:8px 0 18px">
+<button type="button" onclick="const code=this.nextElementSibling.innerText.trim(); navigator.clipboard.writeText(code); this.textContent='Copiado'; setTimeout(() => { this.textContent='Copiar'; }, 1200);" style="float:right;margin:6px;border:1px solid #94a3b8;background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font-weight:600">Copiar</button>
+<pre style="clear:both;overflow-x:auto"><code>
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -e ".[datos,etiquetado,cuadernos,dev]"
+</code></pre>
+</div>
+
+### Inicio del frontend
+
+<div style="margin:8px 0 18px">
+<button type="button" onclick="const code=this.nextElementSibling.innerText.trim(); navigator.clipboard.writeText(code); this.textContent='Copiado'; setTimeout(() => { this.textContent='Copiar'; }, 1200);" style="float:right;margin:6px;border:1px solid #94a3b8;background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font-weight:600">Copiar</button>
+<pre style="clear:both;overflow-x:auto"><code>
+.\.venv\Scripts\modperu.exe serve-labeling `
+  --campaign datos/etiquetado/consolidado/anotaciones_v2.jsonl
+</code></pre>
+</div>
+
+Mantenga esa terminal abierta y visite <http://127.0.0.1:8765>. Para detener el servidor, vuelva a la terminal y presione `Ctrl+C`. En ejecuciones posteriores basta con repetir el bloque de inicio."""
+
 
 SETUP = """from pathlib import Path
 import sys
@@ -2096,8 +2123,20 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "    show_callout('Sin campañas','No hay propuestas para consolidar todavía.',tone='warning')",
             ),
             (
-                "Frontend",
-                "show_command('Iniciar validación humana', f'modperu serve-labeling --campaign {OUTPUT}', description='Ejecute este comando en una terminal del entorno virtual.')",
+                f"Frontend\n\n{LABELING_FRONTEND_GUIDE}",
+                "setup_command=(\n"
+                "    f'Set-Location \"{ROOT}\"\\n'\n"
+                "    'py -3.12 -m venv .venv\\n'\n"
+                "    '.\\\\.venv\\\\Scripts\\\\python.exe -m pip install --upgrade pip\\n'\n"
+                "    '.\\\\.venv\\\\Scripts\\\\python.exe -m pip install -e \".[datos,etiquetado,cuadernos,dev]\"'\n"
+                ")\n"
+                "start_command=(\n"
+                "    f'Set-Location \"{ROOT}\"\\n'\n"
+                "    f'.\\\\.venv\\\\Scripts\\\\modperu.exe serve-labeling `\\n  --campaign \"{OUTPUT}\"'\n"
+                ")\n"
+                "show_command('Preparación inicial (solo la primera vez)',setup_command,description='Ejecute este bloque en PowerShell si todavía no existe .venv.')\n"
+                "show_command('Iniciar validación humana',start_command,description='Ejecute este bloque en PowerShell y mantenga la terminal abierta.')\n"
+                "show_callout('Abrir el frontend','Visite http://127.0.0.1:8765. Para detener el servidor, vuelva a PowerShell y presione Ctrl+C.',tone='info')",
             ),
         ],
     )
