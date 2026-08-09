@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "created_at": "2026-08-09T15:58:51.774670+00:00",
-  "method": "latest_effective_review_then_stable_video_split",
+  "method": "latest_effective_review_then_peru_only_historical_channel_yield_budget_then_stable_video_split",
   "split_seed": 20260805,
   "target_train_chunks_per_damage": 2000,
   "final_status": {
@@ -87,24 +87,37 @@
   },
   "acquisition": {
     "notebook": "flujo/01_datos/01_015_ampliacion_dirigida_minorias.ipynb",
-    "candidate_budget": {
-      "train": 450,
-      "validation": 80,
-      "test": 80
+    "country_scope": "PE_only_strict",
+    "budget_method": {
+      "historical_unit": "positive_damage_chunks_per_video_within_curated_directed_peruvian_channels",
+      "historical_reliability_shrinkage": "labeled_videos / (labeled_videos + 10)",
+      "yield_discount": 0.5,
+      "deficit_safety_factor": 1.5,
+      "minimum_channels": 3,
+      "channel_margin_fraction": 0.25
     },
-    "priority_channels": [
+    "candidate_budget": {
+      "train": 239,
+      "validation": 36,
+      "test": 36
+    },
+    "candidate_budget_total": 311,
+    "core_channels": [
       "Hablando Huevadas",
       "Goblinciano",
-      "Juanito y Richard",
-      "Nunca MAS",
-      "PBO",
-      "Magaly TV La Firme",
-      "Arde Troya con Juliana Oxenford",
-      "Todo Good"
+      "Juanito y Richard"
     ],
+    "margin_channels": [
+      "Nunca MAS"
+    ],
+    "budget_is_recalculated_at_runtime": true,
     "guardrails": [
+      "reject explicit non-PE country before download",
+      "reject unverified channel origin even when the query mentions Peru",
+      "write every scope rejection to directed_non_peru_excluded_latest.jsonl",
       "target_category is retrieval metadata and never a label",
       "assign split by stable hash before labeling",
+      "abort before download if verified PE candidates do not fill the computed split budget",
       "recalculate effective train deficits after each labeled increment",
       "stop targeted acquisition when every train damage label reaches 2000",
       "preserve channel diversity to limit source-style concentration"

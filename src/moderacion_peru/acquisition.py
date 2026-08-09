@@ -71,6 +71,103 @@ def normalize_category_metadata(value: Any) -> Any:
     return value
 
 
+def _scope_token(value: Any) -> str:
+    normalized = unicodedata.normalize("NFKD", str(value or ""))
+    without_marks = "".join(
+        character for character in normalized if not unicodedata.combining(character)
+    )
+    return re.sub(r"[^a-z0-9]+", "", without_marks.casefold())
+
+
+def filter_peru_candidates(
+    candidates: Iterable[dict[str, Any]],
+    *,
+    allowed_channel_ids: Iterable[str] = (),
+    allowed_channel_titles: Iterable[str] = (),
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Aplica una compuerta PE estricta antes de descargar candidatos.
+
+    Se acepta únicamente un canal con país PE explícito, marcado como verificado
+    por la curación del proyecto o presente en la lista de canales peruanos ya
+    validada. Un país explícito diferente siempre prevalece y causa exclusión.
+    La ausencia de evidencia también excluye: una consulta que menciona Perú no
+    basta para inferir el origen del canal.
+    """
+
+    allowed_ids = {
+        str(channel_id).strip()
+        for channel_id in allowed_channel_ids
+        if str(channel_id or "").strip()
+    }
+    allowed_titles = {
+        _scope_token(title)
+        for title in allowed_channel_titles
+        if str(title or "").strip()
+    }
+    peru_tokens = {"pe", "per", "peru"}
+    accepted: list[dict[str, Any]] = []
+    excluded: list[dict[str, Any]] = []
+
+    for raw in candidates:
+        candidate = normalize_category_metadata(dict(raw))
+        channel_id = str(candidate.get("channel_id") or "").strip()
+        channel_title = str(
+            candidate.get("channel_title") or candidate.get("channel") or ""
+        ).strip()
+        observed_countries = {
+            key: candidate.get(key)
+            for key in ("country_code", "channel_country", "uploader_country")
+            if str(candidate.get(key) or "").strip()
+        }
+        country_tokens = {_scope_token(value) for value in observed_countries.values()}
+        verified_value = candidate.get("peru_scope_verified")
+        explicitly_verified = verified_value is True or _scope_token(
+            verified_value
+        ) in {"1", "true", "si", "yes"}
+        known_channel = channel_id in allowed_ids or (
+            not channel_id
+            and bool(channel_title)
+            and _scope_token(channel_title) in allowed_titles
+        )
+
+        if country_tokens - peru_tokens:
+            reason = "explicit_non_peru_country"
+        elif country_tokens & peru_tokens:
+            reason = ""
+            evidence = "explicit_country_pe"
+        elif explicitly_verified:
+            reason = ""
+            evidence = str(
+                candidate.get("scope_evidence") or "curated_peruvian_channel"
+            )
+        elif known_channel:
+            reason = ""
+            evidence = "validated_peruvian_channel_allowlist"
+        else:
+            reason = "unverified_channel_origin"
+
+        if reason:
+            excluded.append(
+                {
+                    **candidate,
+                    "scope_status": "excluded_non_peru_or_unverified",
+                    "scope_exclusion_reason": reason,
+                    "observed_country": observed_countries,
+                }
+            )
+            continue
+        accepted.append(
+            {
+                **candidate,
+                "country_code": "PE",
+                "peru_scope_verified": True,
+                "scope_status": "verified_peru",
+                "scope_evidence": evidence,
+            }
+        )
+    return accepted, excluded
+
+
 def _json_safe(value: Any) -> Any:
     """Normaliza NaN históricos para producir JSON estricto sin alterar fuentes."""
 
@@ -289,12 +386,262 @@ def build_directed_sampling_plan(
     }
 
 
+def estimate_directed_video_budget(
+    plan: dict[str, Any],
+    selected_channels: Iterable[dict[str, Any]],
+    *,
+    safety_factor: float = 1.5,
+    yield_discount: float = 0.5,
+    minimum_train_videos: int = 50,
+    validation_fraction: float = 0.15,
+    test_fraction: float = 0.15,
+    expected_train_fraction: float = 0.70,
+    minimum_channels: int = 3,
+    channel_margin_fraction: float = 0.25,
+) -> dict[str, Any]:
+    """Estima canales y videos hasta cubrir el déficit de chunks con margen.
+
+    Para cada canal dirigido estima chunks positivos por video a partir del
+    histórico del mismo canal, descuenta ese rendimiento y combina canales hasta
+    cubrir cada déficit inflado por ``safety_factor``. Luego agrega canales de
+    margen y calcula videos. Como un video puede aportar varias etiquetas, el
+    presupuesto de train es el máximo por categoría, no la suma. El objetivo se
+    recalcula después de etiquetar cada ronda.
+    """
+
+    if safety_factor < 1:
+        raise ValueError("safety_factor debe ser al menos 1")
+    if not 0 < yield_discount <= 1:
+        raise ValueError("yield_discount debe estar en (0, 1]")
+    if minimum_train_videos < 1:
+        raise ValueError("minimum_train_videos debe ser positivo")
+    if validation_fraction < 0 or test_fraction < 0:
+        raise ValueError("Las fracciones de holdout no pueden ser negativas")
+    if not 0 < expected_train_fraction <= 1:
+        raise ValueError("expected_train_fraction debe estar en (0, 1]")
+    if minimum_channels < 1 or channel_margin_fraction < 0:
+        raise ValueError("El mínimo y margen de canales no son válidos")
+
+    sources = [dict(source) for source in selected_channels]
+    profiles = list(plan.get("channel_profiles", []))
+
+    def source_key(source: dict[str, Any]) -> str:
+        channel_id = str(source.get("channel_id") or "").strip()
+        if channel_id:
+            return f"id:{channel_id}"
+        title = source.get("name") or source.get("channel_title") or source.get("url")
+        return f"title:{_scope_token(title)}"
+
+    channel_estimates = []
+    for source in sources:
+        channel_id = str(source.get("channel_id") or "").strip()
+        channel_title = _scope_token(source.get("name") or source.get("channel_title"))
+        matching = [
+            profile
+            for profile in profiles
+            if (
+                channel_id
+                and str(profile.get("channel_id") or "").strip() == channel_id
+            )
+            or (
+                channel_title
+                and _scope_token(profile.get("channel_title")) == channel_title
+            )
+        ]
+        historical_videos = sum(
+            int(profile.get("labeled_videos") or 0) for profile in matching
+        )
+        historical_reliability = historical_videos / (historical_videos + 10.0)
+        quota = max(1, int(source.get("quota") or 1))
+        train_capacity = max(1, math.floor(quota * expected_train_fraction))
+        yields = {}
+        expected_chunks = {}
+        for label in plan.get("deficit_chunks") or {}:
+            positives = sum(
+                int((profile.get("positive_chunks") or {}).get(label) or 0)
+                for profile in matching
+            )
+            observed_yield = positives / historical_videos if historical_videos else 0.0
+            conservative_yield = max(
+                0.25,
+                observed_yield * historical_reliability * yield_discount,
+            )
+            yields[str(label)] = {
+                "observed_positive_chunks_per_video": observed_yield,
+                "historical_reliability": historical_reliability,
+                "conservative_positive_chunks_per_video": conservative_yield,
+            }
+            expected_chunks[str(label)] = conservative_yield * train_capacity
+        channel_estimates.append(
+            {
+                "key": source_key(source),
+                "name": source.get("name") or source.get("channel_title"),
+                "channel_id": source.get("channel_id"),
+                "quota": quota,
+                "expected_train_video_capacity": train_capacity,
+                "historical_labeled_videos": historical_videos,
+                "yield_by_label": yields,
+                "expected_conservative_chunks_by_label": expected_chunks,
+            }
+        )
+
+    deficits = {
+        str(label): max(0, int(value))
+        for label, value in (plan.get("deficit_chunks") or {}).items()
+    }
+    per_label: dict[str, dict[str, Any]] = {}
+    required_channel_keys: set[str] = set()
+    for label, deficit in deficits.items():
+        ranked_channels = sorted(
+            channel_estimates,
+            key=lambda row: (
+                -float(row["expected_conservative_chunks_by_label"][label]),
+                str(row["name"] or "").casefold(),
+            ),
+        )
+        selected_for_label = []
+        expected_coverage = 0.0
+        coverage_target = deficit * safety_factor
+        for channel in ranked_channels:
+            if deficit <= 0 or expected_coverage >= coverage_target:
+                break
+            selected_for_label.append(channel["key"])
+            required_channel_keys.add(channel["key"])
+            expected_coverage += float(
+                channel["expected_conservative_chunks_by_label"][label]
+            )
+        best_observed = max(
+            (
+                float(
+                    row["yield_by_label"][label]["observed_positive_chunks_per_video"]
+                )
+                for row in channel_estimates
+            ),
+            default=0.0,
+        )
+        conservative_yield = max(
+            (
+                float(
+                    row["yield_by_label"][label][
+                        "conservative_positive_chunks_per_video"
+                    ]
+                )
+                for row in channel_estimates
+            ),
+            default=0.25,
+        )
+        required = (
+            math.ceil(deficit * safety_factor / conservative_yield) if deficit else 0
+        )
+        per_label[label] = {
+            "deficit_chunks": deficit,
+            "best_observed_positive_chunks_per_video": best_observed,
+            "conservative_positive_chunks_per_video": conservative_yield,
+            "estimated_train_videos": required,
+            "coverage_target_with_margin_chunks": coverage_target,
+            "expected_chunks_from_required_channels": expected_coverage,
+            "expected_capacity_shortfall_chunks": max(
+                0.0, coverage_target - expected_coverage
+            ),
+            "required_channel_keys": selected_for_label,
+        }
+
+    active = any(deficit > 0 for deficit in deficits.values())
+    overall_ranked = sorted(
+        channel_estimates,
+        key=lambda row: (
+            -sum(
+                float(value)
+                for label, value in row["expected_conservative_chunks_by_label"].items()
+                if deficits.get(label, 0) > 0
+            ),
+            str(row["name"] or "").casefold(),
+        ),
+    )
+    core_target = min(len(channel_estimates), minimum_channels) if active else 0
+    for channel in overall_ranked:
+        if len(required_channel_keys) >= core_target:
+            break
+        required_channel_keys.add(channel["key"])
+    core_channel_keys = set(required_channel_keys)
+    core_channel_count = len(required_channel_keys)
+    margin_channels = (
+        max(1, math.ceil(core_channel_count * channel_margin_fraction))
+        if active and len(channel_estimates) > core_channel_count
+        else 0
+    )
+    recommended_count = min(
+        len(channel_estimates), core_channel_count + margin_channels
+    )
+    for channel in overall_ranked:
+        if len(required_channel_keys) >= recommended_count:
+            break
+        required_channel_keys.add(channel["key"])
+
+    active_requirements = [
+        row["estimated_train_videos"]
+        for row in per_label.values()
+        if row["deficit_chunks"] > 0
+    ]
+    train_videos = (
+        max(minimum_train_videos, max(active_requirements))
+        if active_requirements
+        else 0
+    )
+    split_budget = {
+        "train": train_videos,
+        "validation": math.ceil(train_videos * validation_fraction),
+        "test": math.ceil(train_videos * test_fraction),
+    }
+    return {
+        "strategy": "conservative_historical_chunk_yield",
+        "target_chunks_per_label": plan.get("target_chunks_per_label"),
+        "safety_factor": safety_factor,
+        "yield_discount": yield_discount,
+        "minimum_train_videos": minimum_train_videos,
+        "validation_fraction": validation_fraction,
+        "test_fraction": test_fraction,
+        "expected_train_fraction": expected_train_fraction,
+        "minimum_channels": minimum_channels,
+        "channel_margin_fraction": channel_margin_fraction,
+        "core_channel_count": core_channel_count,
+        "core_channel_names": [
+            str(row["name"])
+            for row in channel_estimates
+            if row["key"] in core_channel_keys
+        ],
+        "margin_channels": margin_channels,
+        "margin_channel_names": [
+            str(row["name"])
+            for row in channel_estimates
+            if row["key"] in required_channel_keys
+            and row["key"] not in core_channel_keys
+        ],
+        "recommended_channel_count": len(required_channel_keys),
+        "recommended_channel_keys": sorted(required_channel_keys),
+        "recommended_channel_names": [
+            str(row["name"])
+            for row in channel_estimates
+            if row["key"] in required_channel_keys
+        ],
+        "channel_estimates": channel_estimates,
+        "per_label": per_label,
+        "split_budget": split_budget,
+        "total_candidate_videos": sum(split_budget.values()),
+        "selected_channel_pool_capacity_sufficient": all(
+            row["expected_capacity_shortfall_chunks"] <= 0 for row in per_label.values()
+        ),
+        "requires_another_round_after_labeling": bool(active_requirements),
+    }
+
+
 def select_directed_seed_channels(
     plan: dict[str, Any],
     curated_channels: Iterable[dict[str, Any]],
     *,
     max_channels: int = 12,
     min_historical_videos: int = 3,
+    include_historical_channels: bool = True,
 ) -> list[dict[str, Any]]:
     """Combina canales de alto rendimiento observado con semillas curadas."""
 
@@ -303,7 +650,10 @@ def select_directed_seed_channels(
     labels = tuple(plan["damage_labels"])
     weights = {label: float(plan["weights"].get(label, 0.0)) for label in labels}
     ranked: list[dict[str, Any]] = []
-    for profile in plan.get("channel_profiles", []):
+    historical_profiles = (
+        plan.get("channel_profiles", []) if include_historical_channels else []
+    )
+    for profile in historical_profiles:
         total = int(profile.get("labeled_videos", 0))
         channel_id = str(profile.get("channel_id") or "").strip()
         if total < min_historical_videos or not channel_id:
@@ -2030,6 +2380,9 @@ def discover_youtube_candidates(
             "target_category": source.get("target_category"),
             "sampling_mode": source.get("sampling_mode"),
             "priority_weight": source.get("priority_weight"),
+            "country_code": source.get("country_code"),
+            "peru_scope_verified": source.get("peru_scope_verified"),
+            "scope_evidence": source.get("scope_evidence"),
         }
         return sha256_text(
             json.dumps(identity, ensure_ascii=False, sort_keys=True, default=str)
@@ -2182,6 +2535,8 @@ def discover_youtube_candidates(
                 "title": item.get("title"),
                 "channel_id": item.get("channel_id") or source.get("channel_id"),
                 "channel_title": item.get("channel") or source.get("name"),
+                "channel_country": item.get("channel_country")
+                or item.get("uploader_country"),
                 "discovery_type": source["discovery_type"],
                 "discovery_source": source.get("name") or source.get("query"),
                 "discovery_rank": rank,
@@ -2192,6 +2547,9 @@ def discover_youtube_candidates(
                 "reason",
                 "sampling_mode",
                 "priority_weight",
+                "country_code",
+                "peru_scope_verified",
+                "scope_evidence",
             ):
                 if source.get(metadata_key) is not None:
                     candidate[metadata_key] = source[metadata_key]

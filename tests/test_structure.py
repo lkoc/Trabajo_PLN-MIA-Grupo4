@@ -455,9 +455,20 @@ def test_minority_scraping_notebook_targets_two_thousand_train_chunks_per_damage
     source = "\n".join(cell.source for cell in notebook.cells)
 
     assert "TARGET_TRAIN_CHUNKS_PER_DAMAGE = 2_000" in source
+    assert "PERU_ONLY = True" in source
+    assert "filter_peru_candidates" in source
+    assert "directed_non_peru_excluded_latest.jsonl" in source
+    assert '"country_scope": "PE_only_strict"' in source
+    assert "estimate_directed_video_budget" in source
+    assert "DIRECTED_SAFETY_FACTOR = 1.5" in source
+    assert "DIRECTED_YIELD_DISCOUNT = 0.5" in source
+    assert "canales_núcleo" in source
+    assert "canales_margen" in source
     assert (
-        'DIRECTED_SPLIT_BUDGET = {"train": 450, "validation": 80, "test": 80}' in source
+        "DIRECTED_SPLIT_BUDGET = DIRECTED_ACQUISITION_BUDGET['split_budget']" in source
     )
+    assert "directed_split_shortfall" in source
+    assert "No se encontraron suficientes videos PE verificados" in source
     assert "project_effective_training_rows" in source
     assert "eligible_splits=('train',)" in source
     assert "target_chunks_per_label=TARGET_TRAIN_CHUNKS_PER_DAMAGE" in source

@@ -18,8 +18,10 @@ from moderacion_peru.acquisition import (
     collect_project_video_inventory,
     consolidate_available_transcripts,
     discover_youtube_candidates,
+    estimate_directed_video_budget,
     expand_directed_channel_sources,
     fetch_youtube_subtitles,
+    filter_peru_candidates,
     ingest_incremental,
     load_candidates,
     load_vtt_backfill_candidates,
@@ -54,6 +56,120 @@ from moderacion_peru.schemas import ModelReadyRecord
 
 def test_video_reuse_keeps_only_new_ids():
     assert pending_video_ids(["a", "b", "a", "c"], ["a"]) == ["b", "c"]
+
+
+def test_peru_candidate_gate_rejects_foreign_and_unverified_channels():
+    candidates = [
+        {
+            "video_id": "curated",
+            "channel_id": "pe-curated",
+            "channel_title": "Canal curado",
+            "peru_scope_verified": True,
+        },
+        {
+            "video_id": "known",
+            "channel_id": "pe-known",
+            "channel_title": "Canal histórico",
+        },
+        {
+            "video_id": "explicit-pe",
+            "channel_id": "pe-metadata",
+            "channel_country": "Perú",
+        },
+        {
+            "video_id": "foreign",
+            "channel_id": "foreign",
+            "country_code": "PE",
+            "channel_country": "Colombia",
+            "peru_scope_verified": True,
+        },
+        {
+            "video_id": "unknown",
+            "channel_id": "unknown",
+            "channel_title": "Resultado ambiguo de una búsqueda Perú",
+        },
+    ]
+
+    accepted, excluded = filter_peru_candidates(
+        candidates,
+        allowed_channel_ids={"pe-known"},
+    )
+
+    assert [row["video_id"] for row in accepted] == [
+        "curated",
+        "known",
+        "explicit-pe",
+    ]
+    assert all(row["country_code"] == "PE" for row in accepted)
+    assert {row["video_id"]: row["scope_exclusion_reason"] for row in excluded} == {
+        "foreign": "explicit_non_peru_country",
+        "unknown": "unverified_channel_origin",
+    }
+
+
+def test_directed_budget_estimates_channels_and_videos_from_historical_yield():
+    plan = {
+        "target_chunks_per_label": 2_000,
+        "deficit_chunks": {"RACISMO_DISCRIMINACION": 30, "GENERO": 60},
+        "channel_profiles": [
+            {
+                "channel_id": "a",
+                "channel_title": "Canal A",
+                "labeled_videos": 100,
+                "positive_chunks": {
+                    "RACISMO_DISCRIMINACION": 200,
+                    "GENERO": 100,
+                },
+            },
+            {
+                "channel_id": "b",
+                "channel_title": "Canal B",
+                "labeled_videos": 100,
+                "positive_chunks": {
+                    "RACISMO_DISCRIMINACION": 50,
+                    "GENERO": 200,
+                },
+            },
+            {
+                "channel_id": "c",
+                "channel_title": "Canal C",
+                "labeled_videos": 100,
+                "positive_chunks": {
+                    "RACISMO_DISCRIMINACION": 25,
+                    "GENERO": 50,
+                },
+            },
+            {
+                "channel_id": "d",
+                "channel_title": "Canal D",
+                "labeled_videos": 100,
+                "positive_chunks": {
+                    "RACISMO_DISCRIMINACION": 10,
+                    "GENERO": 20,
+                },
+            },
+        ],
+    }
+    sources = [
+        {"name": f"Canal {name.upper()}", "channel_id": name, "quota": 100}
+        for name in ("a", "b", "c", "d")
+    ]
+
+    budget = estimate_directed_video_budget(
+        plan,
+        sources,
+        safety_factor=1.5,
+        yield_discount=0.5,
+        minimum_train_videos=20,
+        minimum_channels=2,
+        channel_margin_fraction=0.5,
+    )
+
+    assert budget["core_channel_count"] >= 2
+    assert budget["margin_channels"] >= 1
+    assert budget["recommended_channel_count"] > budget["core_channel_count"]
+    assert budget["split_budget"]["train"] >= 90
+    assert budget["total_candidate_videos"] == sum(budget["split_budget"].values())
 
 
 def test_directed_plan_falls_back_to_equal_damage_weights_without_prior_data():

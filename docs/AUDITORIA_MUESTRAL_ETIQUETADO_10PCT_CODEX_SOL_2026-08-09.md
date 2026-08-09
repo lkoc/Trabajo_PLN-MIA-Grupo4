@@ -163,11 +163,25 @@ somete cada chunk nuevo al prompt operativo.
 
 La campaña quedó implementada en
 [`flujo/01_datos/01_015_ampliacion_dirigida_minorias.ipynb`](../flujo/01_datos/01_015_ampliacion_dirigida_minorias.ipynb),
-sin modificar `01_01`. Selecciona como máximo 450 candidatos cuyo split estable
-es `train`, 80 de `validation` y 80 de `test`; después de etiquetar el lote debe
-recalcular el déficit y detener la adquisición cuando las cuatro cuentas de
-train alcancen 2.000. El presupuesto de videos incorpora margen porque una
-consulta temática no garantiza que un chunk positivo aparezca.
+sin modificar `01_01`. En vez de fijar una cantidad arbitraria, estima primero
+los chunks positivos por video de cada canal PE dirigido, aplica contracción por
+tamaño histórico, conserva solo 50 % del rendimiento estimado, infla el déficit
+con un factor de seguridad de 1,5 y calcula cuántos canales cubren la meta. Al
+núcleo requerido añade 25 % de canales de margen. En el corte actual resultan
+cuatro canales —tres de núcleo y uno de margen— y 311 candidatos: 239 cuyo split
+estable es `train`, 36 de `validation` y 36 de `test`. Después de etiquetar el
+lote debe recalcular el déficit y repetir solo si alguna cuenta de train sigue
+por debajo de 2.000.
+
+La campaña aplica además una compuerta `PERU_ONLY=True` antes de cualquier
+descarga. Solo admite el catálogo peruano curado, canales presentes en el
+dataset efectivo posterior a la exclusión extranjera o metadatos explícitos de
+país PE; mencionar “Perú” en una consulta no constituye evidencia. Un país
+explícito diferente y todo origen no verificado se excluyen y registran en
+`datos/raw/manifests/directed_non_peru_excluded_latest.jsonl`. Si la cohorte PE
+no reúne el presupuesto calculado por split, el cuaderno falla de forma
+explícita en lugar de ejecutar una campaña insuficiente o incorporar canales
+extranjeros.
 
 ## 2. Diseño metodológico
 

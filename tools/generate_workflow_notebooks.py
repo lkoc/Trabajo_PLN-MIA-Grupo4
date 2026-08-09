@@ -1210,7 +1210,7 @@ for _old, _new in (
     ),
     (
         "MAX_DIRECTED_CANDIDATES = None # None: conserva toda la cohorte dirigida inédita",
-        "MAX_DIRECTED_CANDIDATES = 610 # 450 train + 80 validation + 80 test",
+        "MAX_DIRECTED_CANDIDATES = None # se calcula por déficit y rendimiento histórico",
     ),
     (
         "MAX_EXPANDED_CHANNELS = 20    # canales nuevos inferidos desde búsquedas temáticas",
@@ -1228,31 +1228,38 @@ SCRAPING_MINORITY_PARAMETERS = _replace_required(
     SCRAPING_MINORITY_PARAMETERS,
     'DISCOVERY_MODE = "directed"   # Fijo: ampliación de daños minoritarios\n\n',
     'DISCOVERY_MODE = "directed"   # Fijo: ampliación de daños minoritarios\n'
+    "PERU_ONLY = True              # Invariante: bloquea canales extranjeros o no verificados\n"
     "TARGET_TRAIN_CHUNKS_PER_DAMAGE = 2_000\n"
     "SPLIT_SEED = 20260805\n"
-    'DIRECTED_SPLIT_BUDGET = {"train": 450, "validation": 80, "test": 80}\n\n',
+    "DIRECTED_SAFETY_FACTOR = 1.5  # margen ante menor rendimiento de videos nuevos\n"
+    "DIRECTED_YIELD_DISCOUNT = 0.5 # usa solo 50% del mejor rendimiento histórico\n"
+    "MIN_DIRECTED_TRAIN_VIDEOS = 50\n"
+    "DIRECTED_HOLDOUT_FRACTION = 0.15\n"
+    "DIRECTED_SPLIT_BUDGET = None  # se materializa después de calcular el plan\n\n",
 )
 SCRAPING_MINORITY_PARAMETERS = _replace_required(
     SCRAPING_MINORITY_PARAMETERS,
     'if DISCOVERY_MODE not in {"seed", "directed", "both"}:\n',
     "if TARGET_TRAIN_CHUNKS_PER_DAMAGE < 1:\n"
     '    raise ValueError("TARGET_TRAIN_CHUNKS_PER_DAMAGE debe ser positivo")\n'
-    'if set(DIRECTED_SPLIT_BUDGET) != {"train", "validation", "test"}:\n'
-    '    raise ValueError("DIRECTED_SPLIT_BUDGET debe declarar train, validation y test")\n'
-    "if any(value < 0 for value in DIRECTED_SPLIT_BUDGET.values()):\n"
-    '    raise ValueError("Los presupuestos por split no pueden ser negativos")\n'
-    "if (MAX_DIRECTED_CANDIDATES is not None\n"
-    "        and sum(DIRECTED_SPLIT_BUDGET.values()) > MAX_DIRECTED_CANDIDATES):\n"
-    '    raise ValueError("El presupuesto por split supera MAX_DIRECTED_CANDIDATES")\n'
+    "if PERU_ONLY is not True:\n"
+    '    raise ValueError("01_015 exige PERU_ONLY=True")\n'
+    "if DIRECTED_SAFETY_FACTOR < 1 or not 0 < DIRECTED_YIELD_DISCOUNT <= 1:\n"
+    '    raise ValueError("Los supuestos conservadores del presupuesto no son válidos")\n'
+    "if MIN_DIRECTED_TRAIN_VIDEOS < 1 or DIRECTED_HOLDOUT_FRACTION < 0:\n"
+    '    raise ValueError("Los mínimos del presupuesto dirigido no son válidos")\n'
     'if DISCOVERY_MODE not in {"seed", "directed", "both"}:\n',
 )
 SCRAPING_MINORITY_PARAMETERS = _replace_required(
     SCRAPING_MINORITY_PARAMETERS,
     '    "discovery_mode": DISCOVERY_MODE,\n',
     '    "discovery_mode": DISCOVERY_MODE,\n'
+    '    "peru_only": PERU_ONLY,\n'
     '    "target_train_chunks_per_damage": TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n'
     '    "split_seed": SPLIT_SEED,\n'
-    '    "directed_split_budget": DIRECTED_SPLIT_BUDGET,\n',
+    '    "directed_split_budget": DIRECTED_SPLIT_BUDGET,\n'
+    '    "directed_safety_factor": DIRECTED_SAFETY_FACTOR,\n'
+    '    "directed_yield_discount": DIRECTED_YIELD_DISCOUNT,\n',
 )
 
 
@@ -1278,6 +1285,12 @@ DIRECTED_QUERY_CATALOG = [
     {"query": "streaming peruano burla machista misógina homofóbica", "target_category": "ATAQUE_POR_GENERO_IDENTIDAD"},
     {"query": "comediante peruano ataque machista homofóbico", "target_category": "ATAQUE_POR_GENERO_IDENTIDAD"},
 ]
+for source in DIRECTED_CHANNEL_CATALOG:
+    source.update({
+        "country_code": "PE",
+        "peru_scope_verified": True,
+        "scope_evidence": "curated_peruvian_channel",
+    })
 """
 
 
@@ -1286,6 +1299,11 @@ SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
     "from moderacion_peru.io import read_jsonl\n",
     "from moderacion_peru.datasets import project_effective_training_rows\n"
     "from moderacion_peru.io import read_jsonl\n",
+)
+SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
+    SCRAPING_MINORITY_REUSE_AND_PLAN,
+    "    build_directed_sampling_plan,\n",
+    "    build_directed_sampling_plan,\n" "    estimate_directed_video_budget,\n",
 )
 SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
     SCRAPING_MINORITY_REUSE_AND_PLAN,
@@ -1323,6 +1341,65 @@ SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
     "        'soporte_chunks_train': directed_plan['support_chunks'],\n"
     "        'déficit_chunks_train': directed_plan['deficit_chunks'],\n"
     "        'adquisición_necesaria': directed_plan['acquisition_needed'],\n",
+)
+SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
+    SCRAPING_MINORITY_REUSE_AND_PLAN,
+    "    DIRECTED_SEARCH_QUERIES = select_directed_search_queries(\n",
+    "    for source in DIRECTED_CHANNELS:\n"
+    "        source.setdefault('quota', MAX_VIDEOS_PER_EXPANDED_CHANNEL)\n"
+    "        source.update({\n"
+    "            'country_code': 'PE',\n"
+    "            'peru_scope_verified': True,\n"
+    "            'scope_evidence': 'effective_dataset_after_foreign_exclusions',\n"
+    "        })\n"
+    "    DIRECTED_SEARCH_QUERIES = select_directed_search_queries(\n",
+)
+SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
+    SCRAPING_MINORITY_REUSE_AND_PLAN,
+    "        max_channels=MAX_DIRECTED_SEED_CHANNELS,\n",
+    "        max_channels=MAX_DIRECTED_SEED_CHANNELS,\n"
+    "        include_historical_channels=False,\n",
+)
+SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
+    SCRAPING_MINORITY_REUSE_AND_PLAN,
+    "    show_summary('Plan de ampliación dirigida', {\n",
+    "    DIRECTED_ACQUISITION_BUDGET = estimate_directed_video_budget(\n"
+    "        directed_plan,\n"
+    "        DIRECTED_CHANNELS,\n"
+    "        safety_factor=DIRECTED_SAFETY_FACTOR,\n"
+    "        yield_discount=DIRECTED_YIELD_DISCOUNT,\n"
+    "        minimum_train_videos=MIN_DIRECTED_TRAIN_VIDEOS,\n"
+    "        validation_fraction=DIRECTED_HOLDOUT_FRACTION,\n"
+    "        test_fraction=DIRECTED_HOLDOUT_FRACTION,\n"
+    "    )\n"
+    "    if (directed_plan['acquisition_needed']\n"
+    "            and not DIRECTED_ACQUISITION_BUDGET['selected_channel_pool_capacity_sufficient']):\n"
+    "        raise RuntimeError(\n"
+    "            'El catálogo PE verificado no tiene capacidad histórica suficiente; '\n"
+    "            'agregue canales peruanos verificados antes de descubrir videos.'\n"
+    "        )\n"
+    "    recommended_channel_names = set(\n"
+    "        DIRECTED_ACQUISITION_BUDGET['recommended_channel_names']\n"
+    "    )\n"
+    "    DIRECTED_CHANNELS = [\n"
+    "        source for source in DIRECTED_CHANNELS\n"
+    "        if str(source.get('name')) in recommended_channel_names\n"
+    "    ]\n"
+    "    DIRECTED_SPLIT_BUDGET = DIRECTED_ACQUISITION_BUDGET['split_budget']\n"
+    "    MAX_DIRECTED_CANDIDATES = DIRECTED_ACQUISITION_BUDGET['total_candidate_videos']\n"
+    "    show_summary('Plan de ampliación dirigida', {\n",
+)
+SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
+    SCRAPING_MINORITY_REUSE_AND_PLAN,
+    "        'consultas_temáticas': len(DIRECTED_SEARCH_QUERIES),\n",
+    "        'consultas_temáticas': len(DIRECTED_SEARCH_QUERIES),\n"
+    "        'canales_núcleo': DIRECTED_ACQUISITION_BUDGET['core_channel_count'],\n"
+    "        'nombres_canales_núcleo': DIRECTED_ACQUISITION_BUDGET['core_channel_names'],\n"
+    "        'canales_margen': DIRECTED_ACQUISITION_BUDGET['margin_channels'],\n"
+    "        'nombres_canales_margen': DIRECTED_ACQUISITION_BUDGET['margin_channel_names'],\n"
+    "        'canales_recomendados': DIRECTED_ACQUISITION_BUDGET['recommended_channel_count'],\n"
+    "        'presupuesto_videos_por_split': DIRECTED_SPLIT_BUDGET,\n"
+    "        'estimación_por_daño': DIRECTED_ACQUISITION_BUDGET['per_label'],\n",
 )
 
 
@@ -1362,21 +1439,118 @@ _MINORITY_SELECTION = """            selection_limit = (
             directed_split_counts = dict(Counter(
                 candidate.get('planned_split') for candidate in directed_selection
             ))
+            directed_split_shortfall = {
+                split: max(0, requested - directed_split_counts.get(split, 0))
+                for split, requested in DIRECTED_SPLIT_BUDGET.items()
+            }
+            write_jsonl_atomic(PERU_SCOPE_EXCLUSIONS_PATH, peru_scope_excluded)
+            if any(directed_split_shortfall.values()):
+                raise RuntimeError(
+                    'No se encontraron suficientes videos PE verificados para el '
+                    f'presupuesto calculado por split: {directed_split_shortfall}'
+                )
 """
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_DISCOVERY, _DEFAULT_SELECTION, _MINORITY_SELECTION
 )
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_MINORITY_DISCOVERY,
+    "    discover_youtube_candidates,\n",
+    "    discover_youtube_candidates,\n" "    filter_peru_candidates,\n",
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    "DIRECTED_PLAN_PATH = ROOT/'datos/raw/manifests/directed_plan_latest.json'\n",
+    "DIRECTED_PLAN_PATH = ROOT/'datos/raw/manifests/directed_plan_latest.json'\n"
+    "PERU_SCOPE_EXCLUSIONS_PATH = ROOT/'datos/raw/manifests/directed_non_peru_excluded_latest.jsonl'\n",
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    "expanded_channels = []\n",
+    "expanded_channels = []\n" "peru_scope_excluded = []\n",
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    "        if directed_plan is not None:\n",
+    "        allowed_peru_channel_ids = [\n"
+    "            source.get('channel_id') for source in DIRECTED_CHANNELS\n"
+    "            if source.get('channel_id')\n"
+    "        ]\n"
+    "        allowed_peru_channel_titles = [\n"
+    "            source.get('name') for source in DIRECTED_CHANNELS\n"
+    "            if source.get('name')\n"
+    "        ]\n"
+    "        discovered, excluded_now = filter_peru_candidates(\n"
+    "            discovered,\n"
+    "            allowed_channel_ids=allowed_peru_channel_ids,\n"
+    "            allowed_channel_titles=allowed_peru_channel_titles,\n"
+    "        )\n"
+    "        peru_scope_excluded.extend(excluded_now)\n"
+    "        if directed_plan is not None:\n",
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    "            if expanded_channels:\n",
+    "            for source in expanded_channels:\n"
+    "                source.update({\n"
+    "                    'country_code': 'PE',\n"
+    "                    'peru_scope_verified': True,\n"
+    "                    'scope_evidence': 'verified_peru_search_candidate',\n"
+    "                })\n"
+    "            if expanded_channels:\n",
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    "                discovered = merge_candidates(discovered, expanded_candidates)\n",
+    "                discovered = merge_candidates(discovered, expanded_candidates)\n"
+    "                discovered, excluded_now = filter_peru_candidates(\n"
+    "                    discovered,\n"
+    "                    allowed_channel_ids=[\n"
+    "                        *allowed_peru_channel_ids,\n"
+    "                        *(source.get('channel_id') for source in expanded_channels),\n"
+    "                    ],\n"
+    "                    allowed_channel_titles=[\n"
+    "                        *allowed_peru_channel_titles,\n"
+    "                        *(source.get('name') for source in expanded_channels),\n"
+    "                    ],\n"
+    "                )\n"
+    "                peru_scope_excluded.extend(excluded_now)\n",
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
     "                'directed_candidates_selected': len(directed_selection),\n",
     "                'directed_candidates_selected': len(directed_selection),\n"
     "                'directed_split_counts': directed_split_counts,\n"
+    "                'directed_split_shortfall': directed_split_shortfall,\n"
     "                'target_train_chunks_per_damage': TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n",
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    "                'target_train_chunks_per_damage': TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n",
+    "                'target_train_chunks_per_damage': TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n"
+    "                'acquisition_budget': DIRECTED_ACQUISITION_BUDGET,\n",
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    "                'selection_path': DIRECTED_SELECTION_PATH,\n",
+    "                'selection_path': DIRECTED_SELECTION_PATH,\n"
+    "                'country_scope': 'PE_only_strict',\n"
+    "                'non_peru_or_unverified_excluded': len(peru_scope_excluded),\n"
+    "                'scope_exclusions_path': PERU_SCOPE_EXCLUSIONS_PATH,\n",
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    "    added, existing = append_jsonl_once(DISCOVERED_PATH, discovered, id_field='video_id')\n",
+    "    write_jsonl_atomic(PERU_SCOPE_EXCLUSIONS_PATH, peru_scope_excluded)\n"
+    "    added, existing = append_jsonl_once(DISCOVERED_PATH, discovered, id_field='video_id')\n",
 )
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_MINORITY_DISCOVERY,
     '        "directed_cohort": len(directed_selection),\n',
     '        "directed_cohort": len(directed_selection),\n'
+    '        "country_scope": "PE_only_strict",\n'
+    '        "non_peru_or_unverified_excluded": len(peru_scope_excluded),\n'
+    '        "scope_exclusions_path": PERU_SCOPE_EXCLUSIONS_PATH,\n'
     '        "directed_split_counts": (directed_split_counts if directed_plan is not None else {}),\n',
 )
 
@@ -1585,7 +1759,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
     create(
         "flujo/01_datos/01_015_ampliacion_dirigida_minorias.ipynb",
         "01.015 · Ampliación dirigida de categorías minoritarias",
-        "Descubre y adquiere videos peruanos nuevos para llevar cada categoría de daño a por lo menos 2.000 chunks en train, sin modificar el cuaderno 01_01 de scraping inicial.",
+        "Descubre y adquiere videos peruanos nuevos para llevar cada categoría de daño a por lo menos 2.000 chunks en train, sin modificar el cuaderno 01_01 de scraping inicial. Una compuerta estricta PE excluye antes de la descarga todo canal extranjero o cuyo origen peruano no pueda verificarse.",
         "La selección usa el snapshot efectivo después de las decisiones CODEX–Sol-EH y mide el "
         "déficit exclusivamente en `train`. El muestreo dirigido adapta principios de aprendizaje "
         "activo ante desbalance y clasificación multietiqueta de cola larga "
@@ -1598,7 +1772,10 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "`target_category` son mecanismos de recuperación, nunca etiquetas: todo chunk nuevo debe pasar "
         "por el prompt operativo y la jerarquía de revisión. Las transcripciones automáticas pueden "
         "contener sesgos dialectales [@tatman2017captions], y el uso de la plataforma debe respetar sus "
-        "términos y el análisis ético contextual [@youtube2023terms] [@aoir2020ethics].",
+        "términos y el análisis ético contextual [@youtube2023terms] [@aoir2020ethics]. La expresión "
+        "Perú en una consulta no se considera evidencia de origen: solo se admiten canales del catálogo "
+        "PE curado, canales ya validados en el dataset efectivo o metadatos explícitos de país PE; los "
+        "demás quedan en un manifiesto de exclusiones auditable.",
         [
             (
                 "Preflight",

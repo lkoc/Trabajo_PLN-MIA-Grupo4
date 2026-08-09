@@ -1,7 +1,14 @@
 [
   {
-    "source": "cosificación contenido sexual explícito televisión Perú",
-    "url": "ytsearch30:cosificación contenido sexual explícito televisión Perú",
+    "source": "podcast peruano insulto cholo serrano indio clasismo",
+    "url": "ytsearch80:podcast peruano insulto cholo serrano indio clasismo",
+    "failure_kind": "empty_discovery",
+    "error_type": "EmptyDiscovery",
+    "message": "La fuente no devolvió videos identificables"
+  },
+  {
+    "source": "streaming peruano burla regional conero provinciano",
+    "url": "ytsearch80:streaming peruano burla regional conero provinciano",
     "failure_kind": "empty_discovery",
     "error_type": "EmptyDiscovery",
     "message": "La fuente no devolvió videos identificables"
