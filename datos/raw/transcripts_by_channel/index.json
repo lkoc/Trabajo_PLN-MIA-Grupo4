@@ -6,8 +6,8 @@
   "max_channel_file_bytes": 26214400,
   "total_channel_files": 341,
   "total_channels": 336,
-  "total_videos": 5174,
-  "total_bytes": 476201148,
+  "total_videos": 5213,
+  "total_bytes": 480765310,
   "files": [
     {
       "file": "0ox8hjjm2oq--f618799a8d14--part-0001.jsonl",
@@ -2021,9 +2021,9 @@
       "channel_titles": [
         "Nunca MAS"
       ],
-      "videos": 8,
-      "bytes": 1552080,
-      "sha256": "0ea9e64e02621e6365eb120e734af11da264d1ec3a83e3090c262d46206f348e"
+      "videos": 35,
+      "bytes": 5505525,
+      "sha256": "d391e9f80408b8acb5ebfdfae90824ac5f5d0af64b13b41424579cf96279aa7f"
     },
     {
       "file": "ucfxhplbcojk9m70c4vytixg--c9e8dc122e71--part-0001.jsonl",
@@ -3085,9 +3085,9 @@
       "channel_titles": [
         "Goblinciano"
       ],
-      "videos": 313,
-      "bytes": 24758946,
-      "sha256": "c911900cbddd813e0c6f82457cfd02e8b9738ae3bf179f2ffaac591647909b31"
+      "videos": 325,
+      "bytes": 25369663,
+      "sha256": "6acef57deaf59df3708d0125eb54cbf710217ec9ebb2ae87b5ad5f26a83ba110"
     },
     {
       "file": "uco3svqnaucicaj49ks-w8fw--2d0cdbb70e09--part-0001.jsonl",

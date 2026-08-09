@@ -3,14 +3,14 @@
   "partition_key": "youtube_video",
   "format": "webvtt",
   "id_field": "video_id",
-  "total_files": 4968,
-  "total_videos": 4952,
-  "total_bytes": 702782150,
-  "original_vtt_files": 4965,
+  "total_files": 5179,
+  "total_videos": 5163,
+  "total_bytes": 744026865,
+  "original_vtt_files": 5176,
   "transcript_api_vtt_files": 3,
   "invalid_vtt_files": 1,
-  "transcript_videos": 5002,
-  "transcript_videos_with_vtt": 4945,
+  "transcript_videos": 5213,
+  "transcript_videos_with_vtt": 5156,
   "missing_vtt_videos": 57,
   "missing_manifest": "missing_vtt.jsonl",
   "files": [
@@ -79,6 +79,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260727_lote2/raw/subtitulos/-5YuleqzULo.es.vtt"
       ]
+    },
+    {
+      "file": "-6d0dmtIwB0.es.vtt",
+      "video_id": "-6d0dmtIwB0",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 81528,
+      "sha256": "cd9fe8cb1cde876d07bc7982d9495191ba9008f4e24b3a6ad2449d3cd0f1a62c",
+      "source_paths": []
     },
     {
       "file": "-6ukjax9GgI.es.vtt",
@@ -904,6 +919,21 @@
       ]
     },
     {
+      "file": "-RIjFOwTIH4.es.vtt",
+      "video_id": "-RIjFOwTIH4",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 42924,
+      "sha256": "da05dcee0e97419261db8253b44031d0c07340da4b5c0a8b059d6b3907d4319d",
+      "source_paths": []
+    },
+    {
       "file": "-Rm_wdpFP1I.es-419.vtt",
       "video_id": "-Rm_wdpFP1I",
       "language": "es-419",
@@ -1162,6 +1192,21 @@
       "source_paths": [
         "datos/raw/subtitulos/-wcBkM7mwLo.es.vtt"
       ]
+    },
+    {
+      "file": "-wE62qlxICc.es.vtt",
+      "video_id": "-wE62qlxICc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 37259,
+      "sha256": "07dbe7fa238e77ff92c78aceaa48705b326a244736bb10391b97c9710ec4270a",
+      "source_paths": []
     },
     {
       "file": "-Wi4Xjxs4Bs.es.vtt",
@@ -1509,6 +1554,21 @@
       "source_paths": []
     },
     {
+      "file": "09DykAERKkc.es.vtt",
+      "video_id": "09DykAERKkc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 78342,
+      "sha256": "9dbcc62df9321c5ebd58b7e15f81df33a850316a8ff68cc7105a490991ae4cba",
+      "source_paths": []
+    },
+    {
       "file": "0AMbawSjGqc.es.vtt",
       "video_id": "0AMbawSjGqc",
       "language": "es",
@@ -1573,6 +1633,21 @@
       "source_paths": [
         "datos/raw/subtitulos/0Bpim5MRQLE.es.vtt"
       ]
+    },
+    {
+      "file": "0Bt5D8zYlo4.es.vtt",
+      "video_id": "0Bt5D8zYlo4",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 87264,
+      "sha256": "f08b7d9b2bbde55ea537518ca7c77099d75bbb0ddc1c35d9df2a9728991bd642",
+      "source_paths": []
     },
     {
       "file": "0BVsFSnoLG0.es.vtt",
@@ -1707,6 +1782,21 @@
       "source_paths": [
         "datos/raw/subtitulos/0fbmiZVyec4.es.vtt"
       ]
+    },
+    {
+      "file": "0FckKxC3rwA.es.vtt",
+      "video_id": "0FckKxC3rwA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 340827,
+      "sha256": "9efbd60942a4eaa5a2acfd5a6074976c25944d53d1e5968147fd6e6ec935fe77",
+      "source_paths": []
     },
     {
       "file": "0Fu-dDwy6RU.es.vtt",
@@ -1853,6 +1943,21 @@
       "valid_webvtt": true,
       "bytes": 10738,
       "sha256": "4681141680987ac2415939954b1a8a346a8b93b51c99d532da5ca381d973ec71",
+      "source_paths": []
+    },
+    {
+      "file": "0hrTJ6UK65s.es.vtt",
+      "video_id": "0hrTJ6UK65s",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 409922,
+      "sha256": "529d590301fa774a2a34016c7c322fef9888758ca96c20e24ba289cd17018967",
       "source_paths": []
     },
     {
@@ -2192,6 +2297,21 @@
       "valid_webvtt": true,
       "bytes": 64192,
       "sha256": "cce2c71220fa5214f28d19908c629803228ae977281524e2bdc16596bb1922e9",
+      "source_paths": []
+    },
+    {
+      "file": "0QqHsSHt09g.es.vtt",
+      "video_id": "0QqHsSHt09g",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 88717,
+      "sha256": "3be2f52f34b3e840ca99bbdd3337f108113d8a39d51768e62e22eb91bfd99096",
       "source_paths": []
     },
     {
@@ -2836,6 +2956,21 @@
       ]
     },
     {
+      "file": "18UBWMYSik0.es.vtt",
+      "video_id": "18UBWMYSik0",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 75408,
+      "sha256": "6ad77e2abc842ed7c229d25fb45d2084aaaf07bbbb3964d99b3697f4ba7c49fc",
+      "source_paths": []
+    },
+    {
       "file": "1_Vab-NAJC0.es.vtt",
       "video_id": "1_Vab-NAJC0",
       "language": "es",
@@ -3354,6 +3489,21 @@
       ]
     },
     {
+      "file": "1kuw4hpOm98.es.vtt",
+      "video_id": "1kuw4hpOm98",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 77556,
+      "sha256": "cb179393289a7d9ee0ff53e12c162c2c21e11b79e617fbfd33da02e103e11dbd",
+      "source_paths": []
+    },
+    {
       "file": "1KX4fhfE4Ss.es.vtt",
       "video_id": "1KX4fhfE4Ss",
       "language": "es",
@@ -3437,6 +3587,21 @@
       "source_paths": [
         "datos/raw/subtitulos/1LgTKKt_Y2g.es.vtt"
       ]
+    },
+    {
+      "file": "1LwMqL03t5A.es.vtt",
+      "video_id": "1LwMqL03t5A",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 49342,
+      "sha256": "2d903e52a40138b2d474e746c45744dce5fc65a652218a6efac6c3ea71b358fa",
+      "source_paths": []
     },
     {
       "file": "1MGd2qZpGPk.es.vtt",
@@ -3995,6 +4160,21 @@
       "source_paths": []
     },
     {
+      "file": "1zKV6S8k2x8.es.vtt",
+      "video_id": "1zKV6S8k2x8",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 116967,
+      "sha256": "6ed367eb980cc7b914e662b4bc2d7e8f9ce469df850f1168d9513943e8bb0f4d",
+      "source_paths": []
+    },
+    {
       "file": "1zuFmXdWUq0.es.vtt",
       "video_id": "1zuFmXdWUq0",
       "language": "es",
@@ -4342,6 +4522,21 @@
       ]
     },
     {
+      "file": "2bt5ax0geyU.es.vtt",
+      "video_id": "2bt5ax0geyU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 70088,
+      "sha256": "7099adf968b87e9508459a9e7b4908ba94e8bcdef3c6874ae49f40d50b6ee7c4",
+      "source_paths": []
+    },
+    {
       "file": "2CC-jYYLUAo.es.vtt",
       "video_id": "2CC-jYYLUAo",
       "language": "es",
@@ -4583,6 +4778,21 @@
       "source_paths": [
         "datos/raw/subtitulos/2hcASMwD0yI.es.vtt"
       ]
+    },
+    {
+      "file": "2hxK6KYzY70.es.vtt",
+      "video_id": "2hxK6KYzY70",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 83011,
+      "sha256": "1f68f86b71cb4cd0f3b60261c966a45701e4296d2668dc972b11e5e213692cc7",
+      "source_paths": []
     },
     {
       "file": "2IAN9ezoZPI.es.vtt",
@@ -5365,6 +5575,21 @@
       "source_paths": []
     },
     {
+      "file": "2XDVuK6ud50.es.vtt",
+      "video_id": "2XDVuK6ud50",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 74322,
+      "sha256": "34062bdb2e623b8efe08f2ca3389d75222c9f648ba9da3c7b5853080af612471",
+      "source_paths": []
+    },
+    {
       "file": "2xeDS-8Uvz8.es.vtt",
       "video_id": "2xeDS-8Uvz8",
       "language": "es",
@@ -5685,6 +5910,21 @@
       "source_paths": [
         "datos/raw/subtitulos/3AvusVItGX4.es.vtt"
       ]
+    },
+    {
+      "file": "3CHEKhzrNqc.es.vtt",
+      "video_id": "3CHEKhzrNqc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 107070,
+      "sha256": "4bf977fec2ea1db42a15c4ad60c5f66d0240c49d733587bc8eef78a938df342c",
+      "source_paths": []
     },
     {
       "file": "3dekST0xWHI.es.vtt",
@@ -7374,6 +7614,21 @@
       "source_paths": [
         "datos/raw/subtitulos/4KOaO3Kp6AQ.es.vtt"
       ]
+    },
+    {
+      "file": "4ljMRHVQEhY.es.vtt",
+      "video_id": "4ljMRHVQEhY",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 83357,
+      "sha256": "529a3893931e045f523b2f4279d212188c7122ee575b831bee2d38069f8fbf7d",
+      "source_paths": []
     },
     {
       "file": "4Lma61c9XMI.es.vtt",
@@ -10130,6 +10385,21 @@
       ]
     },
     {
+      "file": "6sWQXDx0lvY.es.vtt",
+      "video_id": "6sWQXDx0lvY",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 656186,
+      "sha256": "a37bda5e92ce22c0f20b4d716a6b0a66e673ad241730ad9e640eff6457c91e0b",
+      "source_paths": []
+    },
+    {
       "file": "6tf5V7xeqBI.es.vtt",
       "video_id": "6tf5V7xeqBI",
       "language": "es",
@@ -10177,6 +10447,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260726/raw/subtitulos/6Uyerf_9EDk.es.vtt"
       ]
+    },
+    {
+      "file": "6Vexz8dqkiE.es.vtt",
+      "video_id": "6Vexz8dqkiE",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 83244,
+      "sha256": "af9fb503649affb7b38d9b66f0947e58d014393779920fba31013a2939f5b4b3",
+      "source_paths": []
     },
     {
       "file": "6vMZmkoxPBI.es.vtt",
@@ -11157,6 +11442,21 @@
       ]
     },
     {
+      "file": "7qbc8ZBHGPQ.es.vtt",
+      "video_id": "7qbc8ZBHGPQ",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 549996,
+      "sha256": "7a6fa06fb92326ad115d7441930cebd93a134467c84578b34cee312eca662fc9",
+      "source_paths": []
+    },
+    {
       "file": "7qbSRJfJeTA.es.vtt",
       "video_id": "7qbSRJfJeTA",
       "language": "es",
@@ -11402,6 +11702,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_amenaza_20260727_lote3/raw/subtitulos/7X-RDinoCLs.es.vtt"
       ]
+    },
+    {
+      "file": "7x_kVktuop4.es.vtt",
+      "video_id": "7x_kVktuop4",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 74462,
+      "sha256": "dc2ee0d141dc4421998092c619b3ff97829748aceed2c819fedd992aec2f517f",
+      "source_paths": []
     },
     {
       "file": "7xgBR0A1EjM.es.vtt",
@@ -11826,6 +12141,21 @@
       ]
     },
     {
+      "file": "8_swz8pyaYA.es.vtt",
+      "video_id": "8_swz8pyaYA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 140647,
+      "sha256": "57922fc093ecad9749cce31e9bb47251d48d19e54e452b9a86d037fe0148cd02",
+      "source_paths": []
+    },
+    {
       "file": "8akAaHYIZfA.es.vtt",
       "video_id": "8akAaHYIZfA",
       "language": "es",
@@ -12105,6 +12435,21 @@
       ]
     },
     {
+      "file": "8KzjaiHiHlg.es.vtt",
+      "video_id": "8KzjaiHiHlg",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 82345,
+      "sha256": "7b0ea4c301b96af2db5ab50ec628431cb4eb1e5b772b0b0eaa3772c873353358",
+      "source_paths": []
+    },
+    {
       "file": "8L8oNGUu5Wo.es.vtt",
       "video_id": "8L8oNGUu5Wo",
       "language": "es",
@@ -12231,6 +12576,21 @@
       ]
     },
     {
+      "file": "8OHsffKv8Z8.es.vtt",
+      "video_id": "8OHsffKv8Z8",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 93945,
+      "sha256": "0cec4725bc2cb29624e42599472c22a6a855b859df497a60ada36c9e70b9e20e",
+      "source_paths": []
+    },
+    {
       "file": "8Omq7yF8QPs.es.vtt",
       "video_id": "8Omq7yF8QPs",
       "language": "es",
@@ -12258,6 +12618,21 @@
       "valid_webvtt": true,
       "bytes": 31556,
       "sha256": "62108892d2231a0a7e86c5453970b3d692aa333d9fccc69b13d7b2ffdbfa0fc9",
+      "source_paths": []
+    },
+    {
+      "file": "8p0NKUdTeSU.es.vtt",
+      "video_id": "8p0NKUdTeSU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 395441,
+      "sha256": "af3b06c564c0a53fad3c473382cd38f013ccc80de10c54d1e56cde776ddca4a7",
       "source_paths": []
     },
     {
@@ -12508,6 +12883,21 @@
       ]
     },
     {
+      "file": "8u3bCz6ij1I.es.vtt",
+      "video_id": "8u3bCz6ij1I",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 530265,
+      "sha256": "749bfb5049d60e4962870c67bbc8fb943be0c017216d46bd10a8cea11e71a70f",
+      "source_paths": []
+    },
+    {
       "file": "8uUtLM8XR8g.es.vtt",
       "video_id": "8uUtLM8XR8g",
       "language": "es",
@@ -12721,6 +13111,21 @@
       "source_paths": [
         "datos/raw/subtitulos/9-WRT_gEMOE.es.vtt"
       ]
+    },
+    {
+      "file": "90w1FPQo1EI.es.vtt",
+      "video_id": "90w1FPQo1EI",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 102555,
+      "sha256": "5eac2a0e0681448f59ccb3e0dbd65515fb8385fc167a100c43f057b00353573f",
+      "source_paths": []
     },
     {
       "file": "91_XnLBS0O4.es.vtt",
@@ -13017,6 +13422,21 @@
       ]
     },
     {
+      "file": "9cV7Z7Iwqqc.es.vtt",
+      "video_id": "9cV7Z7Iwqqc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 33021,
+      "sha256": "920f1489b88a65f62737d9d90b55f31c1f9bb696a62ccc29512d2b15be1b2b27",
+      "source_paths": []
+    },
+    {
       "file": "9DVZjiDEbNo.es.vtt",
       "video_id": "9DVZjiDEbNo",
       "language": "es",
@@ -13125,6 +13545,21 @@
       "valid_webvtt": true,
       "bytes": 22565,
       "sha256": "63c8a83b31646260ef31d95c05d9fce38c7f5780638a7613a06c87eed7237cf0",
+      "source_paths": []
+    },
+    {
+      "file": "9HxzJYhShnA.es.vtt",
+      "video_id": "9HxzJYhShnA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 78586,
+      "sha256": "7c6150853990087c88cf90453ce7d9f6be1e6357393855f638635f853bc51a54",
       "source_paths": []
     },
     {
@@ -13449,6 +13884,36 @@
       "valid_webvtt": true,
       "bytes": 67439,
       "sha256": "87327cd163705744cbf03f7f648fb779b33e827227d5c4e265568b7ed82bfa25",
+      "source_paths": []
+    },
+    {
+      "file": "9nIK-X-dRL8.es.vtt",
+      "video_id": "9nIK-X-dRL8",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 413847,
+      "sha256": "ed0a3de1fdec9d8c2d7eebff206353ce0df04b111ec6f712ac95c98826940731",
+      "source_paths": []
+    },
+    {
+      "file": "9NP2cIq2lok.es.vtt",
+      "video_id": "9NP2cIq2lok",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 73123,
+      "sha256": "58d5625f3f34269c9c7d029aacae9277aa1387075b657fb010390331c0732db7",
       "source_paths": []
     },
     {
@@ -14168,6 +14633,21 @@
       "source_paths": [
         "datos/raw/subtitulos/_etKsH0aFps.es.vtt"
       ]
+    },
+    {
+      "file": "_fcu8tdu6xU.es.vtt",
+      "video_id": "_fcu8tdu6xU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 299727,
+      "sha256": "afdb9709d94790651ad7068808c8212581c49700645be3cea37fd6fc95cd565b",
+      "source_paths": []
     },
     {
       "file": "_G3C-Mvj9WI.es.vtt",
@@ -15291,6 +15771,21 @@
       "source_paths": []
     },
     {
+      "file": "a_14jPVSTDE.es.vtt",
+      "video_id": "a_14jPVSTDE",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 38626,
+      "sha256": "8976e6c9a545ddde76494aeb064b3bd72b3dec6fc3b1748c943e09f6eca8b1af",
+      "source_paths": []
+    },
+    {
       "file": "A_h-c6URUAU.es.vtt",
       "video_id": "A_h-c6URUAU",
       "language": "es",
@@ -15641,6 +16136,21 @@
       "source_paths": [
         "datos/raw/subtitulos/adlxjVE7FLs.es.vtt"
       ]
+    },
+    {
+      "file": "adM9hLvAxsA.es.vtt",
+      "video_id": "adM9hLvAxsA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 84515,
+      "sha256": "2304c8d62839324c31ae9a8264a51351228d857bcdb97f84c8812bf2a11031da",
+      "source_paths": []
     },
     {
       "file": "AdQHgu5yi8o.es.vtt",
@@ -16765,6 +17275,21 @@
       ]
     },
     {
+      "file": "AQU9MvtH2KE.es.vtt",
+      "video_id": "AQU9MvtH2KE",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 6883,
+      "sha256": "e0200ada6b264b04abfcdf949294a8f97977718a93bced310ba94b27fe677890",
+      "source_paths": []
+    },
+    {
       "file": "AquxCB9jCXk.es.vtt",
       "video_id": "AquxCB9jCXk",
       "language": "es",
@@ -16909,6 +17434,21 @@
       "valid_webvtt": true,
       "bytes": 20784,
       "sha256": "6dfe5830dd4e1b9c4f04535cb307026290df34377e85819395ea3c52d6828e02",
+      "source_paths": []
+    },
+    {
+      "file": "ASJXrjgNKWI.es.vtt",
+      "video_id": "ASJXrjgNKWI",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 555837,
+      "sha256": "6ca75cfc39ba54917302492dc9fc3c66ccca1342ad10d6816948cdc742f839da",
       "source_paths": []
     },
     {
@@ -17466,6 +18006,21 @@
       ]
     },
     {
+      "file": "aZ3Ap8go8d4.es.vtt",
+      "video_id": "aZ3Ap8go8d4",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 84572,
+      "sha256": "629d5af7c602c2cb3293641c344cc0373ac88246fd6dc1ea02d64c5499f35dec",
+      "source_paths": []
+    },
+    {
       "file": "aZ7y4QII33w.es.vtt",
       "video_id": "aZ7y4QII33w",
       "language": "es",
@@ -17600,6 +18155,21 @@
       ]
     },
     {
+      "file": "b-at35RPbAo.es.vtt",
+      "video_id": "b-at35RPbAo",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 142267,
+      "sha256": "c7f40c1ad2380162d164f0819043d95b8731cd0a5b193767434371c53697a897",
+      "source_paths": []
+    },
+    {
       "file": "B-zN_QMhmyU.es.vtt",
       "video_id": "B-zN_QMhmyU",
       "language": "es",
@@ -17728,6 +18298,21 @@
       "source_paths": [
         "datos/raw/subtitulos/B28UYqiTSdU.es.vtt"
       ]
+    },
+    {
+      "file": "b2DNaYIq44g.es.vtt",
+      "video_id": "b2DNaYIq44g",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 176792,
+      "sha256": "27d6a7495e59e12bbb0694fa8d9fda4e431e17e01ffdc651fb285a769eeaff67",
+      "source_paths": []
     },
     {
       "file": "b2KVnmow2Ms.es.vtt",
@@ -17934,6 +18519,21 @@
       ]
     },
     {
+      "file": "B8RyfJpAQVk.es.vtt",
+      "video_id": "B8RyfJpAQVk",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 520268,
+      "sha256": "cd99d165d20cb4f6abad98f864522c7caa0788c6992a4907eaa06bf0c4b79e4d",
+      "source_paths": []
+    },
+    {
       "file": "b8xge3IYkQU.es.vtt",
       "video_id": "b8xge3IYkQU",
       "language": "es",
@@ -17949,6 +18549,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_amenaza_20260727_lote3/raw/subtitulos/b8xge3IYkQU.es.vtt"
       ]
+    },
+    {
+      "file": "B8ykdOWw3r4.es.vtt",
+      "video_id": "B8ykdOWw3r4",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 83732,
+      "sha256": "9f29f33f6a247f472f717562c58aa1e051f15e9aadce507e3266dc409cd830f7",
+      "source_paths": []
     },
     {
       "file": "B9d4C7vWk1I.es.vtt",
@@ -18305,6 +18920,21 @@
       ]
     },
     {
+      "file": "BcKHgg2kaRw.es.vtt",
+      "video_id": "BcKHgg2kaRw",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 78702,
+      "sha256": "9a2f58cbd901d1f189680298f4425122f71fa1582b6707428801ac5d32ec592a",
+      "source_paths": []
+    },
+    {
       "file": "bCLyOz-Qs4o.es.vtt",
       "video_id": "bCLyOz-Qs4o",
       "language": "es",
@@ -18635,6 +19265,21 @@
       ]
     },
     {
+      "file": "bG6bWfQ-js0.es.vtt",
+      "video_id": "bG6bWfQ-js0",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 554044,
+      "sha256": "a1c78a244ef14c6b43526340c070b4152ca10a789a151093d2c561c4db58576c",
+      "source_paths": []
+    },
+    {
       "file": "BG7kt0icTGQ.es.vtt",
       "video_id": "BG7kt0icTGQ",
       "language": "es",
@@ -18884,6 +19529,21 @@
       "source_paths": [
         "datos/raw/subtitulos/BHqPOSTt1gI.es.vtt"
       ]
+    },
+    {
+      "file": "bhxou4wpmf8.es.vtt",
+      "video_id": "bhxou4wpmf8",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 134263,
+      "sha256": "6f61c8c118f28d7106d98cc5ee0d856f704f9826442655a15ce453c111019aaf",
+      "source_paths": []
     },
     {
       "file": "BI-O7F9Bwpc.es.vtt",
@@ -19206,6 +19866,21 @@
       "source_paths": [
         "datos/raw/subtitulos/bk-PkzVH-J0.es.vtt"
       ]
+    },
+    {
+      "file": "bKfbWk4zBZc.es.vtt",
+      "video_id": "bKfbWk4zBZc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 512333,
+      "sha256": "7413643206a0f8aaeadf3845150ca27e8da6a30be9136273dd8d4c85bc5ff057",
+      "source_paths": []
     },
     {
       "file": "BKujn0jlZyk.es.vtt",
@@ -19781,6 +20456,21 @@
       "source_paths": [
         "datos/raw/subtitulos/BpuHyZzmRP0.es.vtt"
       ]
+    },
+    {
+      "file": "bpY_XeOltrQ.es.vtt",
+      "video_id": "bpY_XeOltrQ",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 86464,
+      "sha256": "2d676d8c2319f19bac740c27921f4eb2a51541c892015ea446e976683397626b",
+      "source_paths": []
     },
     {
       "file": "Bq9PZnSbvGY.es.vtt",
@@ -21387,6 +22077,21 @@
       "source_paths": []
     },
     {
+      "file": "cdf6_U7og_Y.es.vtt",
+      "video_id": "cdf6_U7og_Y",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 495172,
+      "sha256": "c411b5c918178bb96d64c28149589277d924dfdc1a703054daf165928569e59a",
+      "source_paths": []
+    },
+    {
       "file": "CDNjqCwemDU.es.vtt",
       "video_id": "CDNjqCwemDU",
       "language": "es",
@@ -21751,6 +22456,21 @@
       "valid_webvtt": true,
       "bytes": 112556,
       "sha256": "d6c7fccc808efc89565d71f886baf12986894486364f6382dd648b04aeb3b0fa",
+      "source_paths": []
+    },
+    {
+      "file": "Cj14TbrXjlg.es.vtt",
+      "video_id": "Cj14TbrXjlg",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 175776,
+      "sha256": "9faca466fc303b5e5d6193f11f4a489c9bd8056a37add04f5be06384c2029fda",
       "source_paths": []
     },
     {
@@ -22223,6 +22943,21 @@
       ]
     },
     {
+      "file": "cpVklRKorvk.es.vtt",
+      "video_id": "cpVklRKorvk",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 388914,
+      "sha256": "bc8d84a0ee770ce1cf51610cc127abbabd874994630ed5fbc181707d79edc4d4",
+      "source_paths": []
+    },
+    {
       "file": "cq9lhKbdVWk.es.vtt",
       "video_id": "cq9lhKbdVWk",
       "language": "es",
@@ -22419,6 +23154,21 @@
       ]
     },
     {
+      "file": "CSUg5q5EGek.es.vtt",
+      "video_id": "CSUg5q5EGek",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 92677,
+      "sha256": "dc46b3bcb27f0578c0a3c3a188ab4c8dd8dc7b8469311b3882b85a440d157751",
+      "source_paths": []
+    },
+    {
       "file": "cSYGKoqUgwM.es.vtt",
       "video_id": "cSYGKoqUgwM",
       "language": "es",
@@ -22581,6 +23331,21 @@
       "source_paths": []
     },
     {
+      "file": "cUfUQK7APkQ.es.vtt",
+      "video_id": "cUfUQK7APkQ",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 95934,
+      "sha256": "27ae0edff89d97219b914aa32deed7256a15941b1f4d544ee604d56b45b26afa",
+      "source_paths": []
+    },
+    {
       "file": "CulG6OWxJhM.es.vtt",
       "video_id": "CulG6OWxJhM",
       "language": "es",
@@ -22640,6 +23405,21 @@
       "valid_webvtt": true,
       "bytes": 259976,
       "sha256": "92e6d441afaa7c817aeb8a29cb80bc5be4e48cff897729b6ac955fc775723b17",
+      "source_paths": []
+    },
+    {
+      "file": "cvcugpzaAb4.es.vtt",
+      "video_id": "cvcugpzaAb4",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 244273,
+      "sha256": "839f8683722f1e91185eb6fe0ef7bee7f7661500350fc46b71432c1d7612e80f",
       "source_paths": []
     },
     {
@@ -22788,6 +23568,21 @@
       "source_paths": [
         "datos/raw/subtitulos/CXn8MtvR1B8.es.vtt"
       ]
+    },
+    {
+      "file": "Cxo1mO7m6Dc.es.vtt",
+      "video_id": "Cxo1mO7m6Dc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 77681,
+      "sha256": "79166b7045f7ea9ca8f78ef14a0fd9fc47d5b296ea8431d3a7f2488be4e5f96b",
+      "source_paths": []
     },
     {
       "file": "cxWcNFbcFn0.es.vtt",
@@ -23225,6 +24020,21 @@
       "source_paths": []
     },
     {
+      "file": "D6eb23j8IbA.es.vtt",
+      "video_id": "D6eb23j8IbA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 86034,
+      "sha256": "50fd812c70a44e95bb39e6062044a313877d3094f8c5fdcaa0aa87b97710301b",
+      "source_paths": []
+    },
+    {
       "file": "d6MunxCr-YI.es.vtt",
       "video_id": "d6MunxCr-YI",
       "language": "es",
@@ -23323,6 +24133,21 @@
       "source_paths": [
         "datos/raw/subtitulos/d_I7g_KGQEo.es.vtt"
       ]
+    },
+    {
+      "file": "D_IyWXJbuXw.es.vtt",
+      "video_id": "D_IyWXJbuXw",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 380756,
+      "sha256": "9da747a110121e2296eea0edac969c61fe168e4c730d404db417709dd75f32f4",
+      "source_paths": []
     },
     {
       "file": "dAcgCwwkpHM.es.vtt",
@@ -23721,6 +24546,21 @@
       ]
     },
     {
+      "file": "DGUIqI6duGA.es.vtt",
+      "video_id": "DGUIqI6duGA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 75149,
+      "sha256": "7e47bb886eeb68d16823abe36894524669f54bd39a95677803e5b21893236e8c",
+      "source_paths": []
+    },
+    {
       "file": "dgwbNq5Z1_o.es.vtt",
       "video_id": "dgwbNq5Z1_o",
       "language": "es",
@@ -23819,6 +24659,21 @@
       "source_paths": [
         "datos/raw/subtitulos/dHNeUydOdts.es.vtt"
       ]
+    },
+    {
+      "file": "DhU-s1H38ds.es.vtt",
+      "video_id": "DhU-s1H38ds",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 494999,
+      "sha256": "075328d76091a6c6cf59b01b0df374c8bd42ad369134a29fd06256d0204e6abe",
+      "source_paths": []
     },
     {
       "file": "dhY2O45rBo4.es.vtt",
@@ -24085,6 +24940,21 @@
       "source_paths": []
     },
     {
+      "file": "dLfDTE-ufGM.es.vtt",
+      "video_id": "dLfDTE-ufGM",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 320110,
+      "sha256": "3eeb92c7ff23bccef50241c09ddea1104e622032a32b6064e6af7740e572acb9",
+      "source_paths": []
+    },
+    {
       "file": "dLkO4OfZgCo.es.vtt",
       "video_id": "dLkO4OfZgCo",
       "language": "es",
@@ -24115,6 +24985,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260726/raw/subtitulos/dlUeXtp3tC8.es.vtt"
       ]
+    },
+    {
+      "file": "DLuxvC9BLMs.es.vtt",
+      "video_id": "DLuxvC9BLMs",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 83813,
+      "sha256": "326347ea33782a031cb63374e1660ec5a52098da2b00dcefdad1c3265add6bcd",
+      "source_paths": []
     },
     {
       "file": "dLwv0cAmHy8.es.vtt",
@@ -24266,6 +25151,21 @@
       ]
     },
     {
+      "file": "DNkhM1n5kC8.es.vtt",
+      "video_id": "DNkhM1n5kC8",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 77206,
+      "sha256": "54a626bb21757298045f7cbdfe7e86e8aaab1685d75e761640714b42af4a254f",
+      "source_paths": []
+    },
+    {
       "file": "DNxgkx_jyC0.es.vtt",
       "video_id": "DNxgkx_jyC0",
       "language": "es",
@@ -24347,6 +25247,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260727_lote2/raw/subtitulos/dObPbumK4L8.es.vtt"
       ]
+    },
+    {
+      "file": "dOjcgmaGOy4.es.vtt",
+      "video_id": "dOjcgmaGOy4",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 105204,
+      "sha256": "a93cc7b433f6173cd96dc43fa4993e52a30896e318835428b3e4a0d592dce860",
+      "source_paths": []
     },
     {
       "file": "dpDZvUkVl2U.es.vtt",
@@ -24662,6 +25577,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260727_lote2/raw/subtitulos/Dtd6-kLQMqc.es.vtt"
       ]
+    },
+    {
+      "file": "DTIEVC9D7Ds.es.vtt",
+      "video_id": "DTIEVC9D7Ds",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 80096,
+      "sha256": "5968536f02fd04b5b317942a330b4d3f6b5ecc831fa81a759ee0eb267d69afdb",
+      "source_paths": []
     },
     {
       "file": "DTkSnCiPCto.es.vtt",
@@ -25182,6 +26112,21 @@
       "source_paths": []
     },
     {
+      "file": "DXsTLFy79bw.es.vtt",
+      "video_id": "DXsTLFy79bw",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 393054,
+      "sha256": "2101f3d340f8a6dcda0bf31879bdbbd62a17d39d0a86e2ec212622f2ba8ae171",
+      "source_paths": []
+    },
+    {
       "file": "dyKD5Zm34Us.es.vtt",
       "video_id": "dyKD5Zm34Us",
       "language": "es",
@@ -25310,6 +26255,21 @@
       "source_paths": [
         "datos/raw/subtitulos/e-CvwTvAWAk.es.vtt"
       ]
+    },
+    {
+      "file": "e06GNH08jlU.es.vtt",
+      "video_id": "e06GNH08jlU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 354752,
+      "sha256": "b66176a8ededcf4c120df9b5a3b25b409d25d6a982ff93357f3de9bd0464000d",
+      "source_paths": []
     },
     {
       "file": "e0mFEwwhjeU.es.vtt",
@@ -25442,6 +26402,21 @@
       "source_paths": [
         "datos/raw/subtitulos/E3kpNZkbPiQ.es.vtt"
       ]
+    },
+    {
+      "file": "e3kRE8AMOo8.es.vtt",
+      "video_id": "e3kRE8AMOo8",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 152734,
+      "sha256": "11daa65edbb97ad8bebc4aeb89f9ff10c8078a3db1a6463c23bd91ac573bd00f",
+      "source_paths": []
     },
     {
       "file": "e3q9HpBHFTI.es.vtt",
@@ -25942,6 +26917,21 @@
       "source_paths": []
     },
     {
+      "file": "EAjQUUkrRkM.es.vtt",
+      "video_id": "EAjQUUkrRkM",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 45823,
+      "sha256": "93803d573097bb5fbe12ce17dd5995870da5e77648f27b0a1803cbf36582ce85",
+      "source_paths": []
+    },
+    {
       "file": "EapX-IQ891Y.es.vtt",
       "video_id": "EapX-IQ891Y",
       "language": "es",
@@ -26010,6 +27000,21 @@
       ]
     },
     {
+      "file": "eb_KOvdY6aI.es.vtt",
+      "video_id": "eb_KOvdY6aI",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 149636,
+      "sha256": "b200fdc4aef74195c67ee529fba5dcc2b377e647d68ebfaf0c54a6cb219bf3d2",
+      "source_paths": []
+    },
+    {
       "file": "ebcOC8J2yhg.es.vtt",
       "video_id": "ebcOC8J2yhg",
       "language": "es",
@@ -26042,6 +27047,21 @@
       "source_paths": [
         "datos/raw/subtitulos/EbGVcsBK3Ls.es.vtt"
       ]
+    },
+    {
+      "file": "ebKoQxhAibc.es.vtt",
+      "video_id": "ebKoQxhAibc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 84518,
+      "sha256": "0416fefac7dfec82a7e300f2638279366f6a9c009679f3099243daf00d3838ae",
+      "source_paths": []
     },
     {
       "file": "eBzNK1MN86s.es.vtt",
@@ -26525,6 +27545,21 @@
       "valid_webvtt": true,
       "bytes": 13275,
       "sha256": "6fea636f929674952e46f933fff53e90fd08fa75ab7e299f1a26860365915d8a",
+      "source_paths": []
+    },
+    {
+      "file": "EH0Xg9se2dM.es.vtt",
+      "video_id": "EH0Xg9se2dM",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 78755,
+      "sha256": "c05cf556f4894c28183b534c2d6cc6ae0920ab49dce2bef3c2fdbe95930f37ac",
       "source_paths": []
     },
     {
@@ -27625,6 +28660,36 @@
       ]
     },
     {
+      "file": "ETrDrX1XJmo.es.vtt",
+      "video_id": "ETrDrX1XJmo",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 88757,
+      "sha256": "55257bc54ca311db90c06c49f346999ccee197766a4985b5505c976ca2f6b4f0",
+      "source_paths": []
+    },
+    {
+      "file": "EtyXRc5HXxo.es.vtt",
+      "video_id": "EtyXRc5HXxo",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 81876,
+      "sha256": "ef7beedf840076dfcf5acb86e9cb379cdabf1cf97c22f7646ee98b55c4054c5d",
+      "source_paths": []
+    },
+    {
       "file": "eudv9pU4Vvo.es.vtt",
       "video_id": "eudv9pU4Vvo",
       "language": "es",
@@ -27657,6 +28722,21 @@
       "source_paths": [
         "datos/raw/subtitulos/EUF1L-tdmJ8.es.vtt"
       ]
+    },
+    {
+      "file": "Euox0i9Q2yY.es.vtt",
+      "video_id": "Euox0i9Q2yY",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 80253,
+      "sha256": "2b0cc4f44d1ed10ca8f53b10d1829db36e9b40d9cb8987a32e358ec43ec98ccb",
+      "source_paths": []
     },
     {
       "file": "EUPDnk9rAik.es.vtt",
@@ -27974,6 +29054,21 @@
       "source_paths": []
     },
     {
+      "file": "EWk8DRoGHkE.es.vtt",
+      "video_id": "EWk8DRoGHkE",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 105933,
+      "sha256": "a25e29985060ee11dc83c98fc1f282173446e8a7b3ee5b5b5f6ab9ff29a54871",
+      "source_paths": []
+    },
+    {
       "file": "EWLGp9_X3g8.es.vtt",
       "video_id": "EWLGp9_X3g8",
       "language": "es",
@@ -28249,6 +29344,21 @@
       ]
     },
     {
+      "file": "F-1EclfpDwU.es.vtt",
+      "video_id": "F-1EclfpDwU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 76967,
+      "sha256": "1df60fb2e9762e656870f77553a121690da35db1539bb6fa049122cf12230325",
+      "source_paths": []
+    },
+    {
       "file": "f-e-ax4BZB8.es.vtt",
       "video_id": "f-e-ax4BZB8",
       "language": "es",
@@ -28381,6 +29491,36 @@
       "source_paths": []
     },
     {
+      "file": "f3-vbRDlBUo.es.vtt",
+      "video_id": "f3-vbRDlBUo",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 268751,
+      "sha256": "22d8888751939361848d756b5498052f1cad526195cc3d8987e2b2c7bc0c02a7",
+      "source_paths": []
+    },
+    {
+      "file": "F3ZwMO4b46c.es.vtt",
+      "video_id": "F3ZwMO4b46c",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 83772,
+      "sha256": "8e28197e41eea682e97ea573d7aea89e02866055b035de7e5d7c6cbc339d5fbe",
+      "source_paths": []
+    },
+    {
       "file": "F41-uh8WraQ.es.vtt",
       "video_id": "F41-uh8WraQ",
       "language": "es",
@@ -28494,6 +29634,21 @@
       "source_paths": []
     },
     {
+      "file": "f7J5-1_w0Ks.es.vtt",
+      "video_id": "f7J5-1_w0Ks",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 260966,
+      "sha256": "1d0af9d83d03d4936c0a303941a988aa95155f457dd05693c844ff65816b6412",
+      "source_paths": []
+    },
+    {
       "file": "f7TSKmJtTIM.es.vtt",
       "video_id": "f7TSKmJtTIM",
       "language": "es",
@@ -28521,6 +29676,21 @@
       "valid_webvtt": true,
       "bytes": 42682,
       "sha256": "534ce5e05bbe3f1c8c293246844e95f8f48df6a09427c27de9c86e8f9df7f0f8",
+      "source_paths": []
+    },
+    {
+      "file": "F8fqLppdwUU.es.vtt",
+      "video_id": "F8fqLppdwUU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 508429,
+      "sha256": "efa00c4cd15d634425f07192362c054846d642cb24d8f179cdf6687dd558442f",
       "source_paths": []
     },
     {
@@ -28715,6 +29885,21 @@
       "valid_webvtt": true,
       "bytes": 71841,
       "sha256": "e7cf90f080288e99c4047efa24cf13c732d4c9eb511214a143616b698a955f81",
+      "source_paths": []
+    },
+    {
+      "file": "fBiTh7z4k1M.es.vtt",
+      "video_id": "fBiTh7z4k1M",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 136636,
+      "sha256": "5567b16eaf8ab326afd1be1075fd2a1809d07d7f3feb6c9a0730fa8aba502472",
       "source_paths": []
     },
     {
@@ -28963,6 +30148,21 @@
       ]
     },
     {
+      "file": "feV7k2dC9Zs.es.vtt",
+      "video_id": "feV7k2dC9Zs",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 240387,
+      "sha256": "61606780026448dbbe8ca215502875b3acd84b9968318c0c1e4408ed524cb8cd",
+      "source_paths": []
+    },
+    {
       "file": "fFaTKbdBIsk.es.vtt",
       "video_id": "fFaTKbdBIsk",
       "language": "es",
@@ -28990,6 +30190,21 @@
       "valid_webvtt": true,
       "bytes": 51079,
       "sha256": "79070b81bd0f8359eb00df02d4bc48714c13caa3d6838e0fe05d5d8c2c056df8",
+      "source_paths": []
+    },
+    {
+      "file": "FFIW8EhoR4M.es.vtt",
+      "video_id": "FFIW8EhoR4M",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 88993,
+      "sha256": "e1951edee8841ca24d1fb9d8f33f02d0a39b06070d3b9ba6263f5cd20201bcbe",
       "source_paths": []
     },
     {
@@ -29658,6 +30873,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260727_lote2/raw/subtitulos/fOKt7a5Ri3o.es.vtt"
       ]
+    },
+    {
+      "file": "fPkmPrHKahc.es.vtt",
+      "video_id": "fPkmPrHKahc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 302524,
+      "sha256": "a2a5388bfe019982f7123fdaefb6a5f43ea9853312e010d35bacac9bde84b5ea",
+      "source_paths": []
     },
     {
       "file": "FPWSyHvyrr8.es.vtt",
@@ -30936,6 +32166,36 @@
       ]
     },
     {
+      "file": "g83jz8sEkJ4.es.vtt",
+      "video_id": "g83jz8sEkJ4",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 85157,
+      "sha256": "52a92fcd17524c104abba12507e96d23b5ca1ac93f4d604cd39d6e990acd0bb3",
+      "source_paths": []
+    },
+    {
+      "file": "G85gkL819KA.es.vtt",
+      "video_id": "G85gkL819KA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 416427,
+      "sha256": "7511ba39d0f796ff09c5f807a8486810c4070df0fd6977a90602492ee745e2f7",
+      "source_paths": []
+    },
+    {
       "file": "G8OIU1hygjs.es.vtt",
       "video_id": "G8OIU1hygjs",
       "language": "es",
@@ -32010,6 +33270,21 @@
       "source_paths": []
     },
     {
+      "file": "gMJF-yqQKwM.es.vtt",
+      "video_id": "gMJF-yqQKwM",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 256263,
+      "sha256": "ebebd2539cf33123c5869122f57e437f890a12e98704bb3b9992bdaba8f9c1f3",
+      "source_paths": []
+    },
+    {
       "file": "gMn05zymTdY.es.vtt",
       "video_id": "gMn05zymTdY",
       "language": "es",
@@ -32720,6 +33995,21 @@
       "source_paths": []
     },
     {
+      "file": "gXh-nB7F3IM.es.vtt",
+      "video_id": "gXh-nB7F3IM",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 95771,
+      "sha256": "1084f0fcd64e5f2b03fffa9844ce811c2bd1a5d2afbea02d41b4b24b19bedd8b",
+      "source_paths": []
+    },
+    {
       "file": "Gxj2yevsGww.es.vtt",
       "video_id": "Gxj2yevsGww",
       "language": "es",
@@ -33076,6 +34366,21 @@
       ]
     },
     {
+      "file": "H0Aus9dE0Po.es.vtt",
+      "video_id": "H0Aus9dE0Po",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 485048,
+      "sha256": "6759d5e9f475563fe091bf337975afa70c7535b0af35d12b5ea0a1480309261b",
+      "source_paths": []
+    },
+    {
       "file": "H0pDZiF5ncw.es.vtt",
       "video_id": "H0pDZiF5ncw",
       "language": "es",
@@ -33157,6 +34462,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260726/raw/subtitulos/H26872gddUc.es.vtt"
       ]
+    },
+    {
+      "file": "H2DzMNj3dqs.es.vtt",
+      "video_id": "H2DzMNj3dqs",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 87729,
+      "sha256": "f7beb9aa84a66dbca6baa748629d0688e04425defc06daab45984811851011b1",
+      "source_paths": []
     },
     {
       "file": "h2l_jJl2xtE.es.vtt",
@@ -33755,6 +35075,36 @@
       ]
     },
     {
+      "file": "HcX3LklmqxM.es.vtt",
+      "video_id": "HcX3LklmqxM",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 100035,
+      "sha256": "aab054680beb7b6a6db0c71c6dba7cf58cae22d8a6e4af91bebf0a5bdd636049",
+      "source_paths": []
+    },
+    {
+      "file": "HCxMis25jzI.es.vtt",
+      "video_id": "HCxMis25jzI",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 78522,
+      "sha256": "70a66eb182353a6bb3496e582a363ff5b5a8ce61d24c12c426f932e3c8ef302d",
+      "source_paths": []
+    },
+    {
       "file": "hcZ0EBIKUZM.es.vtt",
       "video_id": "hcZ0EBIKUZM",
       "language": "es",
@@ -34189,6 +35539,21 @@
       ]
     },
     {
+      "file": "hIK_B25E6SY.es.vtt",
+      "video_id": "hIK_B25E6SY",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 74736,
+      "sha256": "9ddc4c21f687722a7df561500bc3ba0e444fe0db584ccdfd589875afc229d69f",
+      "source_paths": []
+    },
+    {
       "file": "HIqsHMv4pM8.es.vtt",
       "video_id": "HIqsHMv4pM8",
       "language": "es",
@@ -34451,6 +35816,21 @@
       ]
     },
     {
+      "file": "hLiZRkcKnUM.es.vtt",
+      "video_id": "hLiZRkcKnUM",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 537868,
+      "sha256": "a8cbe06a47f621dc02f379f2b960ec595831662ec3f87eb2f0ae2fcc1bb77f34",
+      "source_paths": []
+    },
+    {
       "file": "Hlu5jBgxPiA.es.vtt",
       "video_id": "Hlu5jBgxPiA",
       "language": "es",
@@ -34579,6 +35959,21 @@
       ]
     },
     {
+      "file": "hN0kJIXdC6o.es.vtt",
+      "video_id": "hN0kJIXdC6o",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 296081,
+      "sha256": "dae77fe1d3863818ab22cbfbdbfeb42cd1ac3669785669e69a0685a509cc2d6b",
+      "source_paths": []
+    },
+    {
       "file": "hNAKNZujugg.es.vtt",
       "video_id": "hNAKNZujugg",
       "language": "es",
@@ -34594,6 +35989,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260727_lote2/raw/subtitulos/hNAKNZujugg.es.vtt"
       ]
+    },
+    {
+      "file": "HNBaiKo92nw.es.vtt",
+      "video_id": "HNBaiKo92nw",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 68075,
+      "sha256": "11aa0afd09bc2973638cff7e6202dce29dd9352f25bbbc13165435fb57058bda",
+      "source_paths": []
     },
     {
       "file": "hnBE4yA7sdk.es.vtt",
@@ -35384,6 +36794,21 @@
       ]
     },
     {
+      "file": "hXTM_nshBOo.es.vtt",
+      "video_id": "hXTM_nshBOo",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 528057,
+      "sha256": "0f40685b2253b57601f65c47c6e50dd34990b0bdfc622d71e3af9f8ba409d357",
+      "source_paths": []
+    },
+    {
       "file": "hYChJ8NilMc.es.vtt",
       "video_id": "hYChJ8NilMc",
       "language": "es",
@@ -35625,6 +37050,21 @@
       "source_paths": []
     },
     {
+      "file": "i0N8SE7x3qA.es.vtt",
+      "video_id": "i0N8SE7x3qA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 224733,
+      "sha256": "c078cbd913c61549dd2dc815434bbb3544edf710187bcc7e501569d71e8a8c79",
+      "source_paths": []
+    },
+    {
       "file": "I0wY0Ko2OYk.es.vtt",
       "video_id": "I0wY0Ko2OYk",
       "language": "es",
@@ -35815,6 +37255,21 @@
       "source_paths": [
         "datos/raw/subtitulos/i4N9DhnhcIA.es.vtt"
       ]
+    },
+    {
+      "file": "i4pKhpaZokU.es.vtt",
+      "video_id": "i4pKhpaZokU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 620029,
+      "sha256": "48fb1390cca10f961e2c6d5df3d9463b89f5b5eb77b440031e0572a2d8427717",
+      "source_paths": []
     },
     {
       "file": "i5G52dBHgbQ.es.vtt",
@@ -36060,6 +37515,21 @@
       ]
     },
     {
+      "file": "Iaa2LSEaANk.es.vtt",
+      "video_id": "Iaa2LSEaANk",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 146718,
+      "sha256": "ac0a1fef8d07e359e304806b6b3dfdc1d84ee79df866949b22b509665470b697",
+      "source_paths": []
+    },
+    {
       "file": "IaE4a-bUZYg.es.vtt",
       "video_id": "IaE4a-bUZYg",
       "language": "es",
@@ -36168,6 +37638,21 @@
       "valid_webvtt": true,
       "bytes": 16061,
       "sha256": "bf564b384bfe4e7139cc0150ed37ab13a48b299fd167046e0fad79ad3abdd94b",
+      "source_paths": []
+    },
+    {
+      "file": "IbK1Vn-Ihcc.es.vtt",
+      "video_id": "IbK1Vn-Ihcc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 211343,
+      "sha256": "89dec653a640cc1088a376a7d480a5ba53385fe6470efdce5ce1bf0d46d4e613",
       "source_paths": []
     },
     {
@@ -36450,6 +37935,21 @@
       "source_paths": []
     },
     {
+      "file": "IdxRlvXU8Eg.es.vtt",
+      "video_id": "IdxRlvXU8Eg",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 134457,
+      "sha256": "c8031daaed788aa4b7c7df0b99eb0b76de67e6ef601324763e973d09cb421f0d",
+      "source_paths": []
+    },
+    {
       "file": "IE0KTjn-uSc.es.vtt",
       "video_id": "IE0KTjn-uSc",
       "language": "es",
@@ -36495,6 +37995,21 @@
       "source_paths": [
         "datos/raw/subtitulos/iEkSaZlmb2Q.es.vtt"
       ]
+    },
+    {
+      "file": "IEkvWno2gXo.es.vtt",
+      "video_id": "IEkvWno2gXo",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 118332,
+      "sha256": "665d2a95b819353ac1c9bad87100282411894a19ca4296485d2bce22b2946880",
+      "source_paths": []
     },
     {
       "file": "IEzSmVn5mCA.es.vtt",
@@ -37304,6 +38819,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_amenaza_20260727_lote3/raw/subtitulos/IObZDKLSfNo.es.vtt"
       ]
+    },
+    {
+      "file": "IoGEzAmLcDg.es.vtt",
+      "video_id": "IoGEzAmLcDg",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 349943,
+      "sha256": "c0b3dc27826d755d056a2830ee7ebdeedf1cdca6c72997ad756b9e9479b052b4",
+      "source_paths": []
     },
     {
       "file": "iOQHBEOha2E.es.vtt",
@@ -38866,6 +40396,21 @@
       ]
     },
     {
+      "file": "Jdx2JclwQAs.es.vtt",
+      "video_id": "Jdx2JclwQAs",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 83660,
+      "sha256": "e8a0d52794caa3e8fe16c99e8e9effd9abfa0123aa52c161377dadd8cc752c50",
+      "source_paths": []
+    },
+    {
       "file": "JDz2slwxwGU.es.vtt",
       "video_id": "JDz2slwxwGU",
       "language": "es",
@@ -39313,6 +40858,21 @@
       ]
     },
     {
+      "file": "JL4xQjuJv0k.es.vtt",
+      "video_id": "JL4xQjuJv0k",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 79469,
+      "sha256": "b108d0c39108b978642753a33ca44577d7d6cbe549d0057c7b10555899b6b8f7",
+      "source_paths": []
+    },
+    {
       "file": "JL8A0DfTb9Q.es.vtt",
       "video_id": "JL8A0DfTb9Q",
       "language": "es",
@@ -39342,6 +40902,21 @@
       "valid_webvtt": true,
       "bytes": 88034,
       "sha256": "37848c501ecfb41271446e1cc6fa971a7f572ea5a3d10af72b8a234e7dc9dc29",
+      "source_paths": []
+    },
+    {
+      "file": "JLL3BvZmEPo.es.vtt",
+      "video_id": "JLL3BvZmEPo",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 154763,
+      "sha256": "97f2093098e4a66522b0c4ec5a221ccdcae932e7d5ae66f2a811459d5662a35c",
       "source_paths": []
     },
     {
@@ -39838,6 +41413,21 @@
       "valid_webvtt": true,
       "bytes": 677662,
       "sha256": "bb9ba2fc23f3ec9e166a22911ea95b5c56677e8fbb94c286e1153072dc8c6dd8",
+      "source_paths": []
+    },
+    {
+      "file": "jrdk10nZkdU.es.vtt",
+      "video_id": "jrdk10nZkdU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 528848,
+      "sha256": "1820b1ceb912b4b04e2d9b5c6a93e8cb804a1501d76f55c3c66f5eafca066c91",
       "source_paths": []
     },
     {
@@ -41239,6 +42829,21 @@
       "source_paths": []
     },
     {
+      "file": "K_uog3AYXOw.es.vtt",
+      "video_id": "K_uog3AYXOw",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 160851,
+      "sha256": "cb2e1699572e9c6508b50c98712869af6119741e698e7fa50bf9dea97bf6e5ca",
+      "source_paths": []
+    },
+    {
       "file": "Ka0qqhsmKkM.es.vtt",
       "video_id": "Ka0qqhsmKkM",
       "language": "es",
@@ -41339,6 +42944,21 @@
       "source_paths": [
         "datos/raw/subtitulos/kaQzxNNz0t4.es.vtt"
       ]
+    },
+    {
+      "file": "kArJnRJnEkg.es.vtt",
+      "video_id": "kArJnRJnEkg",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 100632,
+      "sha256": "9dddc069ac1247cb410810fe1cd86498ed70baaffafe49b083b380bf0ed1a903",
+      "source_paths": []
     },
     {
       "file": "kB-AZgWKBqk.es.vtt",
@@ -41486,6 +43106,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_amenaza_20260727_lote3/raw/subtitulos/KDEb0840pj4.es.vtt"
       ]
+    },
+    {
+      "file": "KdHK7NAcJMU.es.vtt",
+      "video_id": "KdHK7NAcJMU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 244235,
+      "sha256": "384cd3b031e988acde9ac49a789a71bfcd60d440e156900adf8f67c8a7533509",
+      "source_paths": []
     },
     {
       "file": "KdOUoeob0q4.es.vtt",
@@ -41843,6 +43478,21 @@
       "valid_webvtt": true,
       "bytes": 7759,
       "sha256": "a9c0843320c0db5057b929042f16e9677ba2de89abfd328f41dfbaa9f94e561f",
+      "source_paths": []
+    },
+    {
+      "file": "KGOPgGpe25c.es.vtt",
+      "video_id": "KGOPgGpe25c",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 551173,
+      "sha256": "910b2cf5c2ba664bf849c66def631572c970b9fbbf5c606369098cc003e195da",
       "source_paths": []
     },
     {
@@ -42668,6 +44318,21 @@
       ]
     },
     {
+      "file": "kRQP8v8P9ik.es.vtt",
+      "video_id": "kRQP8v8P9ik",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 60694,
+      "sha256": "27d1b8665871af1d870d309d8c0e8ae34fb9701027175ad0e450d5022dca5d72",
+      "source_paths": []
+    },
+    {
       "file": "ks3e_5ieYpA.es.vtt",
       "video_id": "ks3e_5ieYpA",
       "language": "es",
@@ -42863,6 +44528,21 @@
       "valid_webvtt": true,
       "bytes": 157318,
       "sha256": "ae64183e166403ca7af2ffd89ce6dceff7c493e38304644fb8f5558654691809",
+      "source_paths": []
+    },
+    {
+      "file": "KTpsnP7IWOM.es.vtt",
+      "video_id": "KTpsnP7IWOM",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 98732,
+      "sha256": "324e7cd6f379e50d284bc520eb41514ce4d8d87c043b05d368a96209361d23ad",
       "source_paths": []
     },
     {
@@ -43631,6 +45311,21 @@
       ]
     },
     {
+      "file": "l3nQoSPAg_o.es.vtt",
+      "video_id": "l3nQoSPAg_o",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 181626,
+      "sha256": "46451dfd6415ba9dc8691e67391318155b65dfc0b485f74173ff4cef0fd072b2",
+      "source_paths": []
+    },
+    {
       "file": "L4Gh_xk88Ac.es.vtt",
       "video_id": "L4Gh_xk88Ac",
       "language": "es",
@@ -44012,6 +45707,21 @@
       "source_paths": []
     },
     {
+      "file": "lbQKXurGgu0.es.vtt",
+      "video_id": "lbQKXurGgu0",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 219526,
+      "sha256": "b6ae05a038b102c51cc9fb2bb684c20a5cf816c0f0ab37715c5247f63d8a4409",
+      "source_paths": []
+    },
+    {
       "file": "lbvY7qjzmzo.es.vtt",
       "video_id": "lbvY7qjzmzo",
       "language": "es",
@@ -44059,6 +45769,21 @@
       "source_paths": [
         "datos/raw/subtitulos/LcgyIBtGKjc.es.vtt"
       ]
+    },
+    {
+      "file": "lcHiXSpLf9c.es.vtt",
+      "video_id": "lcHiXSpLf9c",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 73136,
+      "sha256": "03af40f264d15979058ded88fe7e1ff19c231f3e11b8cf4d68b42dc409967c64",
+      "source_paths": []
     },
     {
       "file": "LCs6in_KmX0.es.vtt",
@@ -44291,6 +46016,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260727_lote2/raw/subtitulos/lfFcwEO-rRI.es.vtt"
       ]
+    },
+    {
+      "file": "lFIGv5Cvz50.es.vtt",
+      "video_id": "lFIGv5Cvz50",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 98098,
+      "sha256": "212f8da31fc2d6819595b8e0f5aa01e46bc757d8487be1efae7bc5f58f24fd4c",
+      "source_paths": []
     },
     {
       "file": "LGC_p8SH5P0.es.vtt",
@@ -45156,6 +46896,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260727_lote2/raw/subtitulos/lRkWyHPDabw.es.vtt"
       ]
+    },
+    {
+      "file": "lRlJALbkW4c.es.vtt",
+      "video_id": "lRlJALbkW4c",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 138964,
+      "sha256": "f971c83d147f83025ca778a34af379f47622619d19f7a897e4f73593b86e2704",
+      "source_paths": []
     },
     {
       "file": "LRpTCsLvu7s.es.vtt",
@@ -46043,6 +47798,21 @@
       "source_paths": []
     },
     {
+      "file": "m45DUCUEtUA.es.vtt",
+      "video_id": "m45DUCUEtUA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 79397,
+      "sha256": "034eb403dfd129ac0642749ab1f8105ecba3f11b6c681bc6f2d33e3910160e75",
+      "source_paths": []
+    },
+    {
       "file": "M4wKRseBu8I.es.vtt",
       "video_id": "M4wKRseBu8I",
       "language": "es",
@@ -46150,6 +47920,21 @@
       "source_paths": []
     },
     {
+      "file": "M8OCOsv-m4c.es.vtt",
+      "video_id": "M8OCOsv-m4c",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 78025,
+      "sha256": "49af497b21727ba751d61d9a5eed8d40be03d8a21b9ae82ddfdcee3a6fbd546f",
+      "source_paths": []
+    },
+    {
       "file": "m9cqZb63ppU.es.vtt",
       "video_id": "m9cqZb63ppU",
       "language": "es",
@@ -46218,6 +48003,21 @@
       ]
     },
     {
+      "file": "mAsesFAPFSg.es.vtt",
+      "video_id": "mAsesFAPFSg",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 141683,
+      "sha256": "59482e2e6e54a03d1aa3f149577fa8745b82170f86961fee593916eabb1bb585",
+      "source_paths": []
+    },
+    {
       "file": "MB6PR7xGWV0.es.vtt",
       "video_id": "MB6PR7xGWV0",
       "language": "es",
@@ -46250,6 +48050,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260726/raw/subtitulos/MBBHkDcqYew.es.vtt"
       ]
+    },
+    {
+      "file": "mbKQ54d2TYY.es.vtt",
+      "video_id": "mbKQ54d2TYY",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 550214,
+      "sha256": "d37f5080b0ecfb53dbb78524794c9a193b8c26e760d8d8976826512873e57fbe",
+      "source_paths": []
     },
     {
       "file": "mbrx6XfXM7s.es.vtt",
@@ -46740,6 +48555,21 @@
       ]
     },
     {
+      "file": "mIgFZPC0QhU.es.vtt",
+      "video_id": "mIgFZPC0QhU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 129338,
+      "sha256": "9f9eff092d8a3f5458302af55ca6c93e016a9e9e656b0ad381093874df45d186",
+      "source_paths": []
+    },
+    {
       "file": "MIHYmTGhXEs.es.vtt",
       "video_id": "MIHYmTGhXEs",
       "language": "es",
@@ -46911,6 +48741,21 @@
       ]
     },
     {
+      "file": "MKOBoSrpqgQ.es.vtt",
+      "video_id": "MKOBoSrpqgQ",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 66316,
+      "sha256": "1b2a24aa28245b56dbf3fb4a0c07cd06d0249243b93a372735fe787b8abebbae",
+      "source_paths": []
+    },
+    {
       "file": "MkS5mBHeREY.es.vtt",
       "video_id": "MkS5mBHeREY",
       "language": "es",
@@ -47024,6 +48869,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260727_lote2/raw/subtitulos/Mlb67tBg9RA.es.vtt"
       ]
+    },
+    {
+      "file": "mlDoh7k1lQw.es.vtt",
+      "video_id": "mlDoh7k1lQw",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 94462,
+      "sha256": "bcc298da2377bb6628eac09feaa11d85671530128d35f7ae5650da460432ec3d",
+      "source_paths": []
     },
     {
       "file": "MlGk-znwVkY.es.vtt",
@@ -47652,6 +49512,21 @@
       "source_paths": []
     },
     {
+      "file": "MTcOLk_1ZpE.es.vtt",
+      "video_id": "MTcOLk_1ZpE",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 87434,
+      "sha256": "c1c259cdac785fe8db579db1c37f5c26d0bdd911d4ff07c6f06679a6fcd38eee",
+      "source_paths": []
+    },
+    {
       "file": "mthDqkFNDTY.es.vtt",
       "video_id": "mthDqkFNDTY",
       "language": "es",
@@ -48270,6 +50145,21 @@
       ]
     },
     {
+      "file": "mZovyarrkYg.es.vtt",
+      "video_id": "mZovyarrkYg",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 150068,
+      "sha256": "84a9aca896ef9d0d4b2ce5ef150ead3c2e626e56084d25fbe773b24a0fd33992",
+      "source_paths": []
+    },
+    {
       "file": "MzQY9WDmeDE.es.vtt",
       "video_id": "MzQY9WDmeDE",
       "language": "es",
@@ -48316,6 +50206,21 @@
       "valid_webvtt": true,
       "bytes": 710463,
       "sha256": "0e3da678ef11e3aea14ab0bf422f3b0ca304a68cb6182f0588fa14a296f62de7",
+      "source_paths": []
+    },
+    {
+      "file": "N0BWayV3erE.es.vtt",
+      "video_id": "N0BWayV3erE",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 401619,
+      "sha256": "5cfeb8dd0ed4b5cd8fc1c16b57f450d93e6c055006bb2c9d4222e08b85539073",
       "source_paths": []
     },
     {
@@ -48892,6 +50797,21 @@
       "source_paths": [
         "datos/raw/subtitulos/naQ6R3fOVpA.es.vtt"
       ]
+    },
+    {
+      "file": "NBDpbahjjcA.es.vtt",
+      "video_id": "NBDpbahjjcA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 76183,
+      "sha256": "78f55a46c152f57eb639cffe05202ac79ecb071c93598935f9d83e20987fa028",
+      "source_paths": []
     },
     {
       "file": "NbPCuFUDHHY.es.vtt",
@@ -50295,6 +52215,36 @@
       ]
     },
     {
+      "file": "NUoXbvFSlyU.es.vtt",
+      "video_id": "NUoXbvFSlyU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 314616,
+      "sha256": "801729e65bd051ae599579bba8b9cc2bfc743983464af22862e2ec14a946a95e",
+      "source_paths": []
+    },
+    {
+      "file": "nUVV20qsMmU.es.vtt",
+      "video_id": "nUVV20qsMmU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 160942,
+      "sha256": "e8efc2228b4bfbc828b5e6d233df8079633b90c3ccd530055aa1556b6a3789a5",
+      "source_paths": []
+    },
+    {
       "file": "nuyb6gblbIk.es.vtt",
       "video_id": "nuyb6gblbIk",
       "language": "es",
@@ -50555,6 +52505,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260727_lote2/raw/subtitulos/NXVvHvGqGv4.es.vtt"
       ]
+    },
+    {
+      "file": "Ny2stKoHdgc.es.vtt",
+      "video_id": "Ny2stKoHdgc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 80013,
+      "sha256": "67b79640ab76e6c518ed9cdf09a4e33f4efbd34375954af168ab5100fa11ac0c",
+      "source_paths": []
     },
     {
       "file": "Ny4c4oDTRnM.es.vtt",
@@ -50934,6 +52899,21 @@
       "source_paths": []
     },
     {
+      "file": "o3xPbl3v-NA.es.vtt",
+      "video_id": "o3xPbl3v-NA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 228026,
+      "sha256": "ed4bb9ea70a0277ca0a439cef3e17f0fdf4d3bede7247509f028920c0882d728",
+      "source_paths": []
+    },
+    {
       "file": "O46r-YnzR_g.es.vtt",
       "video_id": "O46r-YnzR_g",
       "language": "es",
@@ -51209,6 +53189,21 @@
       ]
     },
     {
+      "file": "o_LTze261nQ.es.vtt",
+      "video_id": "o_LTze261nQ",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 108813,
+      "sha256": "b6280ec07eede9883dafbad85f6db552153eb33ecc9592845e0a3af4e09e6837",
+      "source_paths": []
+    },
+    {
       "file": "o_rDgRWuSh0.es.vtt",
       "video_id": "o_rDgRWuSh0",
       "language": "es",
@@ -51430,6 +53425,21 @@
       "valid_webvtt": true,
       "bytes": 57505,
       "sha256": "bd836fc8550310fd1a441a5738a2a16064ba636a993c7cf0d8ff3ccf0213d966",
+      "source_paths": []
+    },
+    {
+      "file": "OdHxTYtNZeg.es.vtt",
+      "video_id": "OdHxTYtNZeg",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 82150,
+      "sha256": "a97149a00cf0330ba72e7e9691e0ce7f12177f67d1ceaa993385b2fcfe68811f",
       "source_paths": []
     },
     {
@@ -52987,6 +54997,21 @@
       ]
     },
     {
+      "file": "OWlryMLElpY.es.vtt",
+      "video_id": "OWlryMLElpY",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 150992,
+      "sha256": "6fdef0cd50a1045ef28b2716472fb35c51787a729098ecb79fe2df7b976453e9",
+      "source_paths": []
+    },
+    {
       "file": "OWMBnaPOP6w.es.vtt",
       "video_id": "OWMBnaPOP6w",
       "language": "es",
@@ -53051,6 +55076,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260726/raw/subtitulos/oX_H77gVceQ.es.vtt"
       ]
+    },
+    {
+      "file": "Oxc2Gvbyymg.es.vtt",
+      "video_id": "Oxc2Gvbyymg",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 231323,
+      "sha256": "58e87c76d2704e5bc6582dba3c38dc4e9270227ab6dae116714db40aa7645fad",
+      "source_paths": []
     },
     {
       "file": "oXhFR8oiu9k.es.vtt",
@@ -53136,6 +55176,21 @@
       "source_paths": [
         "datos/raw/subtitulos/OXzsm-HE9ng.es.vtt"
       ]
+    },
+    {
+      "file": "oy-cmhDVebw.es.vtt",
+      "video_id": "oy-cmhDVebw",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 80331,
+      "sha256": "9af3a7d540517dda8ec24788f61617242a54f237fdfbb2b7f9544eaf2e73163c",
+      "source_paths": []
     },
     {
       "file": "OY58Cb7WPd8.es.vtt",
@@ -54459,6 +56514,21 @@
       ]
     },
     {
+      "file": "PKTrPL3iArA.es.vtt",
+      "video_id": "PKTrPL3iArA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 425139,
+      "sha256": "8636965a591933966f60b4c7d5a99bbb1a760d2cfd1c2bf35beee37247cce6c4",
+      "source_paths": []
+    },
+    {
       "file": "PkY92Jyi4CA.es.vtt",
       "video_id": "PkY92Jyi4CA",
       "language": "es",
@@ -54604,6 +56674,21 @@
       "source_paths": []
     },
     {
+      "file": "PmjVYZUyej8.es.vtt",
+      "video_id": "PmjVYZUyej8",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 598469,
+      "sha256": "fb0718ffca12994382f8d340e5d40d20ea9ed3749610a3bbca45e6b229574e18",
+      "source_paths": []
+    },
+    {
       "file": "pmOzvTlOv8M.es.vtt",
       "video_id": "pmOzvTlOv8M",
       "language": "es",
@@ -54665,6 +56750,21 @@
       "valid_webvtt": true,
       "bytes": 87673,
       "sha256": "eaf28a7adbcc6df4f3f0ce50eb10aba8206a10145563682c9a30b7c5d00cbf25",
+      "source_paths": []
+    },
+    {
+      "file": "Pn61jWA4D08.es.vtt",
+      "video_id": "Pn61jWA4D08",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 564384,
+      "sha256": "40ba69e567d7b069877b6243d1e83858187927f426e9683e0e833ed54552c951",
       "source_paths": []
     },
     {
@@ -55696,6 +57796,21 @@
       ]
     },
     {
+      "file": "PyJZ71zkU0c.es.vtt",
+      "video_id": "PyJZ71zkU0c",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 432122,
+      "sha256": "671a561658705c47799a74f1968a6f559aff947ddadc591678679f124a5e750f",
+      "source_paths": []
+    },
+    {
       "file": "pYvtrJBaQCs.es.vtt",
       "video_id": "pYvtrJBaQCs",
       "language": "es",
@@ -55913,6 +58028,21 @@
       ]
     },
     {
+      "file": "Q2v-8aXGhsc.es.vtt",
+      "video_id": "Q2v-8aXGhsc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 78057,
+      "sha256": "d4c18acbd4cc34473fdf59d7aa2fd0aa2093d751cb58e20da6398df6f36b005e",
+      "source_paths": []
+    },
+    {
       "file": "q48a330iKkI.es.vtt",
       "video_id": "q48a330iKkI",
       "language": "es",
@@ -56013,6 +58143,21 @@
       ]
     },
     {
+      "file": "q66J9LVxzwE.es.vtt",
+      "video_id": "q66J9LVxzwE",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 188538,
+      "sha256": "5315d881d5f38027b0b0bfc9fb4c409972e66459c67ba836c2052443d90b4d32",
+      "source_paths": []
+    },
+    {
       "file": "Q69wHIJ4OJ8.es.vtt",
       "video_id": "Q69wHIJ4OJ8",
       "language": "es",
@@ -56092,6 +58237,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_amenaza_20260727_lote3/raw/subtitulos/Q7kXOjKpiwc.es.vtt"
       ]
+    },
+    {
+      "file": "Q7R6t8K0hwE.es.vtt",
+      "video_id": "Q7R6t8K0hwE",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 90176,
+      "sha256": "6c3ccc3fac4542c05a5e38e2c1d8faf1068399ae31cea683a4a260184dcfbe70",
+      "source_paths": []
     },
     {
       "file": "q80Zp7-yggo.es.vtt",
@@ -56641,6 +58801,21 @@
       ]
     },
     {
+      "file": "qfRjdrhWOgM.es.vtt",
+      "video_id": "qfRjdrhWOgM",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 78514,
+      "sha256": "f6547917e1a0423d25da44376e60c680599e691ad3344597bc627aad24001475",
+      "source_paths": []
+    },
+    {
       "file": "QfRsTi6nVBU.es.vtt",
       "video_id": "QfRsTi6nVBU",
       "language": "es",
@@ -56833,6 +59008,21 @@
       ]
     },
     {
+      "file": "QhO6lNeNSwo.es.vtt",
+      "video_id": "QhO6lNeNSwo",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 553918,
+      "sha256": "096b53408a6302611b6001fbffda2ea207340765f1eb6b65886724d4ac855012",
+      "source_paths": []
+    },
+    {
       "file": "qHSTuoDT1Y4.es.vtt",
       "video_id": "qHSTuoDT1Y4",
       "language": "es",
@@ -56948,6 +59138,21 @@
       "source_paths": [
         "datos/raw/subtitulos/qj4Ywbk_n9I.es.vtt"
       ]
+    },
+    {
+      "file": "Qj9bSO9eFrA.es.vtt",
+      "video_id": "Qj9bSO9eFrA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 88409,
+      "sha256": "bdf571ffc0d0d75d3b29c0ac98a0fea6b527d0e9d090714dd2d5e5fd3c954c68",
+      "source_paths": []
     },
     {
       "file": "qjEpLlsTZeY.es.vtt",
@@ -57176,6 +59381,36 @@
       "source_paths": []
     },
     {
+      "file": "QM8wuY-B9GA.es.vtt",
+      "video_id": "QM8wuY-B9GA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 168213,
+      "sha256": "a924f97988444e1f6e444ba63def00825038026cff46588f2150e39d8ba01d5c",
+      "source_paths": []
+    },
+    {
+      "file": "qmczMN9lrp0.es.vtt",
+      "video_id": "qmczMN9lrp0",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 77257,
+      "sha256": "d957d318f9abccaec354893fb0ddcf82a6f1ea03aee09606dac3c02fdf0ddf3c",
+      "source_paths": []
+    },
+    {
       "file": "qMfanQaTRXE.es.vtt",
       "video_id": "qMfanQaTRXE",
       "language": "es",
@@ -57342,6 +59577,21 @@
       "source_paths": []
     },
     {
+      "file": "Qo9RJ1WV0tc.es.vtt",
+      "video_id": "Qo9RJ1WV0tc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 619462,
+      "sha256": "35c7d55f8ccf12792d63b28187841a54c4a8761c00c0adea8f52aaa81db1656f",
+      "source_paths": []
+    },
+    {
       "file": "QOK1K_FJqdg.es.vtt",
       "video_id": "QOK1K_FJqdg",
       "language": "es",
@@ -57405,6 +59655,21 @@
       "valid_webvtt": true,
       "bytes": 50814,
       "sha256": "aed2672b730edc6b09268fe123421cf98f0fc2a15155b8022e39b63c8c390455",
+      "source_paths": []
+    },
+    {
+      "file": "QPpIiD0bx4o.es.vtt",
+      "video_id": "QPpIiD0bx4o",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 82799,
+      "sha256": "d0f91420e18b3f1309febec79c792a76dc7c53bfe932fd6f4e3d1f33ec9a7c20",
       "source_paths": []
     },
     {
@@ -58188,6 +60453,21 @@
       "source_paths": []
     },
     {
+      "file": "QyX02QVcmJw.es.vtt",
+      "video_id": "QyX02QVcmJw",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 79849,
+      "sha256": "37cf2881d510ddf848c1cd1849af504338895eb551e14743ec3780a54026ef87",
+      "source_paths": []
+    },
+    {
       "file": "qYyDzdFhSTg.es.vtt",
       "video_id": "qYyDzdFhSTg",
       "language": "es",
@@ -58284,6 +60564,21 @@
       ]
     },
     {
+      "file": "r1_TG0Mh7xM.es.vtt",
+      "video_id": "r1_TG0Mh7xM",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 77519,
+      "sha256": "ea1436b8f9cb1f7b9f8af3f1163a3030235affb4f2eaa2d89333fd9674bcc21e",
+      "source_paths": []
+    },
+    {
       "file": "R1EmzeiRABE.es.vtt",
       "video_id": "R1EmzeiRABE",
       "language": "es",
@@ -58377,6 +60672,21 @@
       "valid_webvtt": true,
       "bytes": 200291,
       "sha256": "ab3d0363feca61d0c952cf97438a6fc5247ada5f3ec17eeb4e9d68d8823bc7dd",
+      "source_paths": []
+    },
+    {
+      "file": "R3w9qGoFMUs.es.vtt",
+      "video_id": "R3w9qGoFMUs",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 352217,
+      "sha256": "3fbbdcf63b59b868da3ba174277f83d671b3217b618c21a03b0703cbb5dc4958",
       "source_paths": []
     },
     {
@@ -58853,6 +61163,21 @@
       ]
     },
     {
+      "file": "RBx9ln8WBHw.es.vtt",
+      "video_id": "RBx9ln8WBHw",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 82391,
+      "sha256": "ab1813784de77683cb8080bd481b81981babd69f263d2c4800065d4615deac75",
+      "source_paths": []
+    },
+    {
       "file": "rClb4qZ3mEw.es.vtt",
       "video_id": "rClb4qZ3mEw",
       "language": "es",
@@ -58931,6 +61256,21 @@
       "valid_webvtt": true,
       "bytes": 38027,
       "sha256": "936834983c2811c0adf62e8dedb3275bcf41476c4876f4ac8035753307d81ddc",
+      "source_paths": []
+    },
+    {
+      "file": "rE8g0EBfygk.es.vtt",
+      "video_id": "rE8g0EBfygk",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 128455,
+      "sha256": "220a17b9b15ec0a3e6715129afb5b9afbd87d38b452616acabf2a5d0a1ecb319",
       "source_paths": []
     },
     {
@@ -61069,6 +63409,21 @@
       ]
     },
     {
+      "file": "SaXSl9JrQUo.es.vtt",
+      "video_id": "SaXSl9JrQUo",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 96871,
+      "sha256": "0477169894ff0bb5290c918e7a9ef850dce86d78ef9b86de0b127e7fe5c469d7",
+      "source_paths": []
+    },
+    {
       "file": "sb7WcAZXf-Y.es.vtt",
       "video_id": "sb7WcAZXf-Y",
       "language": "es",
@@ -61331,6 +63686,21 @@
       ]
     },
     {
+      "file": "sd66vowVKEc.es.vtt",
+      "video_id": "sd66vowVKEc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 348888,
+      "sha256": "30773210e177eda18543348cde5a7a12afd83795eee095d1acc6291620c005e0",
+      "source_paths": []
+    },
+    {
       "file": "SDAMs7BqLVs.es.vtt",
       "video_id": "SDAMs7BqLVs",
       "language": "es",
@@ -61521,6 +63891,36 @@
       "source_paths": [
         "datos/raw/subtitulos/Sfvc3s0wLMo.es.vtt"
       ]
+    },
+    {
+      "file": "sg7edsraW-k.es.vtt",
+      "video_id": "sg7edsraW-k",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 84350,
+      "sha256": "7c9b7a254e52024385ce1c56d84e230bf9e28f06a9059e5fb405859fb8a911ec",
+      "source_paths": []
+    },
+    {
+      "file": "SGeVQDAaBSI.es.vtt",
+      "video_id": "SGeVQDAaBSI",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 99643,
+      "sha256": "6e61fa29c1ad01d87b9f78e5efc6ec3038d3d86da1dd034353a2d15bd02c29b7",
+      "source_paths": []
     },
     {
       "file": "Sgk6IuAepNA.es.vtt",
@@ -62290,6 +64690,21 @@
       ]
     },
     {
+      "file": "spGxIeBZHAE.es.vtt",
+      "video_id": "spGxIeBZHAE",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 82465,
+      "sha256": "3caf1989b2c9a8688b5088e60909f21014a77e9f6208d455253d7a59db15d9ec",
+      "source_paths": []
+    },
+    {
       "file": "sPO_-FLCnpc.es.vtt",
       "video_id": "sPO_-FLCnpc",
       "language": "es",
@@ -62336,6 +64751,21 @@
       "valid_webvtt": true,
       "bytes": 55028,
       "sha256": "8f65198a4dc703800f1be5f28063701dfd93dd99f08f1f5430db0e0352f5613a",
+      "source_paths": []
+    },
+    {
+      "file": "SQagSrFGE8I.es.vtt",
+      "video_id": "SQagSrFGE8I",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 186581,
+      "sha256": "bc08986e60c31f21ca417d80aa3d83e2a93512972b3b6d3ec86dd05ca36dc4d6",
       "source_paths": []
     },
     {
@@ -62844,6 +65274,21 @@
       "source_paths": []
     },
     {
+      "file": "Sx8Hkn7Xf3Q.es.vtt",
+      "video_id": "Sx8Hkn7Xf3Q",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 144826,
+      "sha256": "9190e27b992b09fa3a967b8befd1e42e1fb42073ff5b4af842182534e3cd5a69",
+      "source_paths": []
+    },
+    {
       "file": "Sx8WjMQbTZk.es.vtt",
       "video_id": "Sx8WjMQbTZk",
       "language": "es",
@@ -62903,6 +65348,21 @@
       "valid_webvtt": true,
       "bytes": 22152,
       "sha256": "309f20b617f3a4e74ed30f802b877775230bb4f0246949237ed6d1610586e172",
+      "source_paths": []
+    },
+    {
+      "file": "sXW90cqbHQw.es.vtt",
+      "video_id": "sXW90cqbHQw",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 71983,
+      "sha256": "65f6d5fa0286496e44361fbde14b5ffdc41a842c720839b1dd267b692900b310",
       "source_paths": []
     },
     {
@@ -63654,6 +66114,21 @@
       ]
     },
     {
+      "file": "taJYWwbgGX4.es.vtt",
+      "video_id": "taJYWwbgGX4",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 76762,
+      "sha256": "bac2645be2adfbf58fc20c4f9496cf5e551d87ff8613033b8087e163b95cf667",
+      "source_paths": []
+    },
+    {
       "file": "tb0yt-Aom_k.es.vtt",
       "video_id": "tb0yt-Aom_k",
       "language": "es",
@@ -64127,6 +66602,21 @@
       ]
     },
     {
+      "file": "tHG7qi9Cu70.es.vtt",
+      "video_id": "tHG7qi9Cu70",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 307715,
+      "sha256": "8f75836a7a30841b0aff8a4717e73fec47913efbf61baffa5c7da45e72110ad4",
+      "source_paths": []
+    },
+    {
       "file": "thyqrKr9HR4.es.vtt",
       "video_id": "thyqrKr9HR4",
       "language": "es",
@@ -64314,6 +66804,21 @@
       ]
     },
     {
+      "file": "TK0tWpITpmI.es.vtt",
+      "video_id": "TK0tWpITpmI",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 79390,
+      "sha256": "944b473744b39a0b921dc4e44ff9773ded0b66e71da97172ad2758825d27940c",
+      "source_paths": []
+    },
+    {
       "file": "TK3KVuObrHA.es.vtt",
       "video_id": "TK3KVuObrHA",
       "language": "es",
@@ -64405,6 +66910,21 @@
       "valid_webvtt": true,
       "bytes": 25034,
       "sha256": "eb48cafcd9f9889198626aa47d303420d007699a029d7c2001429d1141c63fb6",
+      "source_paths": []
+    },
+    {
+      "file": "Tlq3NAz64hM.es.vtt",
+      "video_id": "Tlq3NAz64hM",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 90955,
+      "sha256": "5f985e8dddfa8be8371a316411310e315f9926798bee40738e67f27979a7fe21",
       "source_paths": []
     },
     {
@@ -64538,6 +67058,21 @@
       "source_paths": [
         "datos/raw/subtitulos/TmybYNVyNQk.es.vtt"
       ]
+    },
+    {
+      "file": "tN2ka5k1dF0.es.vtt",
+      "video_id": "tN2ka5k1dF0",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 255534,
+      "sha256": "6f89254f1a5263a307088b02a2fb27aababfe4aa2c0b41d8d5134668f17c72c6",
+      "source_paths": []
     },
     {
       "file": "TNaBtHobqoU.es.vtt",
@@ -65025,6 +67560,21 @@
       "valid_webvtt": true,
       "bytes": 43029,
       "sha256": "a9e0817ea59091c16a0b051e9bc254d2b734d2366bc7780f879c1535e47199fe",
+      "source_paths": []
+    },
+    {
+      "file": "ttzFQC2866E.es.vtt",
+      "video_id": "ttzFQC2866E",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 143047,
+      "sha256": "b215c3ac0eabe57e6ac665291c7d82c1c3f08af05956757c18cb7993d8578b6a",
       "source_paths": []
     },
     {
@@ -65571,6 +68121,36 @@
       ]
     },
     {
+      "file": "U-TICcaQDGc.es.vtt",
+      "video_id": "U-TICcaQDGc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 80879,
+      "sha256": "dc966f3cfa441e60fd427c47c024bc68658408aa8902d7314c9820c84ac4c19e",
+      "source_paths": []
+    },
+    {
+      "file": "u-Vy5q1whU0.es.vtt",
+      "video_id": "u-Vy5q1whU0",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 81247,
+      "sha256": "3f27b60020a6b5f6e9f2522dd89971db4279e0c223a0e0c0aa43cc551793b4ac",
+      "source_paths": []
+    },
+    {
       "file": "U-x205F7ISc.es.vtt",
       "video_id": "U-x205F7ISc",
       "language": "es",
@@ -65918,6 +68498,21 @@
       "source_paths": []
     },
     {
+      "file": "U7LpJQbbUTg.es.vtt",
+      "video_id": "U7LpJQbbUTg",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 277355,
+      "sha256": "545967e3ccc5f1ead71f9546eae62aff202ceea64496f0aef29ecef977d4e9bc",
+      "source_paths": []
+    },
+    {
       "file": "u7VICVwi6hU.es.vtt",
       "video_id": "u7VICVwi6hU",
       "language": "es",
@@ -65967,6 +68562,21 @@
       "source_paths": [
         "datos/raw/subtitulos/u8PjIOeWzVA.es.vtt"
       ]
+    },
+    {
+      "file": "u9MbQrA0dJ8.es.vtt",
+      "video_id": "u9MbQrA0dJ8",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 258603,
+      "sha256": "1ae9eb144d5dae68701f4be672c301ec186c81ba6296fc928a6b1ba65345f04b",
+      "source_paths": []
     },
     {
       "file": "U_MZYDyrVP8.es.vtt",
@@ -68245,6 +70855,21 @@
       ]
     },
     {
+      "file": "V-Vwiz8FXg0.es.vtt",
+      "video_id": "V-Vwiz8FXg0",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 522919,
+      "sha256": "5e01bf4036ffdeee54affae87868bd524724419eabcc1dfbbb0fd0b56b4595b0",
+      "source_paths": []
+    },
+    {
       "file": "V07XVE3VCxk.es.vtt",
       "video_id": "V07XVE3VCxk",
       "language": "es",
@@ -68443,6 +71068,21 @@
       "valid_webvtt": true,
       "bytes": 25848,
       "sha256": "8b5281eed9a5e297ef67f85afe280bad81af4dc8a2f923b0a8f2132436784d8e",
+      "source_paths": []
+    },
+    {
+      "file": "V4kxs-35X30.es.vtt",
+      "video_id": "V4kxs-35X30",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 79581,
+      "sha256": "2cad611e8c87d34fcf8f39a42132f058b89ef38d82da15c7c5586cc9bf5bd6be",
       "source_paths": []
     },
     {
@@ -70345,6 +72985,21 @@
       ]
     },
     {
+      "file": "vX_Vw8ZbC1M.es.vtt",
+      "video_id": "vX_Vw8ZbC1M",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 176851,
+      "sha256": "d2165193c0f203365a0954eb345543b85e14846a4720239c230f4e660cd78f5c",
+      "source_paths": []
+    },
+    {
       "file": "VxMK-Mh9LCY.es.vtt",
       "video_id": "VxMK-Mh9LCY",
       "language": "es",
@@ -70488,6 +73143,21 @@
       "source_paths": []
     },
     {
+      "file": "vzbwx9zAXFk.es.vtt",
+      "video_id": "vzbwx9zAXFk",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 83915,
+      "sha256": "024ae44d1c06240f09b054b5ccb01251f6943874a439e9fba1c5b2be6ff58183",
+      "source_paths": []
+    },
+    {
       "file": "vzdzml45znM.es.vtt",
       "video_id": "vzdzml45znM",
       "language": "es",
@@ -70588,6 +73258,21 @@
       ]
     },
     {
+      "file": "w0JDb1RCppU.es.vtt",
+      "video_id": "w0JDb1RCppU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 262471,
+      "sha256": "48f39e99641b11403c3f746839faf32f4ed0dbdedd77e10cfbc88362ea79cd65",
+      "source_paths": []
+    },
+    {
       "file": "w0kN7tkIRFo.es.vtt",
       "video_id": "w0kN7tkIRFo",
       "language": "es",
@@ -70600,6 +73285,21 @@
       "valid_webvtt": true,
       "bytes": 6134,
       "sha256": "5bdc0198c86739e66585fe23e1493178a899c5574d40b8730ca9a5603557fda5",
+      "source_paths": []
+    },
+    {
+      "file": "W1NaJDOUJrY.es.vtt",
+      "video_id": "W1NaJDOUJrY",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 541050,
+      "sha256": "2f6b5c4b4c1f11bcf35f300273dde60712f1bedd46acd0165ae76d4ff4dd5975",
       "source_paths": []
     },
     {
@@ -70978,6 +73678,21 @@
       "source_paths": []
     },
     {
+      "file": "W_wH6AFSyFE.es.vtt",
+      "video_id": "W_wH6AFSyFE",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 607175,
+      "sha256": "7f3dd92e247d4431ecf9cb6d6e6aec94d5a0ae02ab4cc5cc0d4275255958c8ac",
+      "source_paths": []
+    },
+    {
       "file": "wA1AApUUSFk.es.vtt",
       "video_id": "wA1AApUUSFk",
       "language": "es",
@@ -71042,6 +73757,21 @@
       "source_paths": [
         "datos/raw/subtitulos/waoznCjnY8M.es.vtt"
       ]
+    },
+    {
+      "file": "WaUGBCN0fRA.es.vtt",
+      "video_id": "WaUGBCN0fRA",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 488960,
+      "sha256": "3e3a9fff026f620b512d09fd4cd62a8fc5301a9c71a8e96e24aa5bfae8462e0b",
+      "source_paths": []
     },
     {
       "file": "way0btql7cw.es.vtt",
@@ -71745,6 +74475,21 @@
       ]
     },
     {
+      "file": "Wk98QvcucII.es.vtt",
+      "video_id": "Wk98QvcucII",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 76238,
+      "sha256": "e87622eb39a516422dd5853440e8de2ea4cc8887228d9d60a1141c824214f0cc",
+      "source_paths": []
+    },
+    {
       "file": "wKIYj6XKHvU.es.vtt",
       "video_id": "wKIYj6XKHvU",
       "language": "es",
@@ -71973,6 +74718,21 @@
       "source_paths": [
         "datos/raw/subtitulos/WlyEVokPJq4.es.vtt"
       ]
+    },
+    {
+      "file": "wM5l94LBkCE.es.vtt",
+      "video_id": "wM5l94LBkCE",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 252091,
+      "sha256": "3901df3e4c916d0f59b2e8a35bd7e0c4e8a75b60f68f5ffa774f97b09cacc205",
+      "source_paths": []
     },
     {
       "file": "wm_15-Ba0hc.es.vtt",
@@ -72265,6 +75025,21 @@
       "source_paths": [
         "datos/raw/subtitulos/wQLySS1WPU0.es.vtt"
       ]
+    },
+    {
+      "file": "WQyb9vujR_4.es.vtt",
+      "video_id": "WQyb9vujR_4",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 72836,
+      "sha256": "0e7e189cadfc131974bb3cf17ec78cbf170820772fccdb8141b9f69801c877b1",
+      "source_paths": []
     },
     {
       "file": "wrm0AdWU0nM.es.vtt",
@@ -72616,6 +75391,21 @@
       ]
     },
     {
+      "file": "WvsDtgcgZfQ.es.vtt",
+      "video_id": "WvsDtgcgZfQ",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 279041,
+      "sha256": "ed795be6ef71ff42325966aa07233e9790dbd9587516bc9f33cb0e5aebaf8226",
+      "source_paths": []
+    },
+    {
       "file": "WVSjU07_ZWw.es.vtt",
       "video_id": "WVSjU07_ZWw",
       "language": "es",
@@ -72958,6 +75748,21 @@
       "valid_webvtt": true,
       "bytes": 79411,
       "sha256": "e2414a07211ab280478d1921be11205d4cc1dc701323b9ce6f89a5884a8804d4",
+      "source_paths": []
+    },
+    {
+      "file": "WY3Mw462PPU.es.vtt",
+      "video_id": "WY3Mw462PPU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 248259,
+      "sha256": "e7507f8eb1064af34348be3b5530f23f0390b900e5f23012ca13e3c1ff824f73",
       "source_paths": []
     },
     {
@@ -73332,6 +76137,21 @@
       ]
     },
     {
+      "file": "X40EqzguH5M.es.vtt",
+      "video_id": "X40EqzguH5M",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 71886,
+      "sha256": "46d04014d947628df8ec2f0f1978c84c13daf28927d3728cd83abe07d317f4d6",
+      "source_paths": []
+    },
+    {
       "file": "X41nVaiyNRk.es.vtt",
       "video_id": "X41nVaiyNRk",
       "language": "es",
@@ -73560,6 +76380,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260726/raw/subtitulos/x96ViSOMsP4.es.vtt"
       ]
+    },
+    {
+      "file": "X9hJUYOg-oY.es.vtt",
+      "video_id": "X9hJUYOg-oY",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 80842,
+      "sha256": "51600219df33f19bafd8bcb2f79862e7a23296882863c354db55306194c4b29b",
+      "source_paths": []
     },
     {
       "file": "x9ismIYeLnE.es.vtt",
@@ -74167,6 +77002,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260727_lote2/raw/subtitulos/XEO99obrmAs.es.vtt"
       ]
+    },
+    {
+      "file": "XeQuF1FTyg8.es.vtt",
+      "video_id": "XeQuF1FTyg8",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 74341,
+      "sha256": "4f489191406a7cc3ac13131ae5202429ce7bdd22442b2333b1d3bf932aa0ea1a",
+      "source_paths": []
     },
     {
       "file": "Xf6OEgLbKLs.es.vtt",
@@ -75497,6 +78347,21 @@
       "source_paths": []
     },
     {
+      "file": "xupfj2v9CiQ.es.vtt",
+      "video_id": "xupfj2v9CiQ",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 87774,
+      "sha256": "5c8b55be8a313cf3558271498d6c0c7f72191046809cc638dfc553863f242c2f",
+      "source_paths": []
+    },
+    {
       "file": "XUVtjoDEvUg.es.vtt",
       "video_id": "XUVtjoDEvUg",
       "language": "es",
@@ -75840,6 +78705,21 @@
       ]
     },
     {
+      "file": "XY0Ua30ntbc.es.vtt",
+      "video_id": "XY0Ua30ntbc",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 109784,
+      "sha256": "92c02b7750808a3dc90d9690408ca07d23d10b4ab64d3db8b4e849f3bc3b335a",
+      "source_paths": []
+    },
+    {
       "file": "xy2hET0Po4w.es.vtt",
       "video_id": "xy2hET0Po4w",
       "language": "es",
@@ -76167,6 +79047,21 @@
       "valid_webvtt": true,
       "bytes": 58933,
       "sha256": "03080246ce6cc62ea52a6f836ce2f7570c84f3b35049e8ea17785fd3fd99a0ad",
+      "source_paths": []
+    },
+    {
+      "file": "Y2KTdKvcB1A.es.vtt",
+      "video_id": "Y2KTdKvcB1A",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 78357,
+      "sha256": "5b669ede81a8f9de16d87fda524eda3c047d57d42cdc130a6db56c2009849966",
       "source_paths": []
     },
     {
@@ -76545,6 +79440,21 @@
       ]
     },
     {
+      "file": "y9irRonrn3M.es.vtt",
+      "video_id": "y9irRonrn3M",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 80625,
+      "sha256": "141f664a774849f7dcbbc06fda77646dab41e4eccbab8a9b11a90123c16a489d",
+      "source_paths": []
+    },
+    {
       "file": "Y9pCD46BPpA.es.vtt",
       "video_id": "Y9pCD46BPpA",
       "language": "es",
@@ -76741,6 +79651,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260726/raw/subtitulos/yB3Dj0lkdA0.es.vtt"
       ]
+    },
+    {
+      "file": "YBfC9ym-BEk.es.vtt",
+      "video_id": "YBfC9ym-BEk",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 86612,
+      "sha256": "35de9391d8024ebd41f4e3ac0a707dc1b929e7c251a86ebf35e69881155077db",
+      "source_paths": []
     },
     {
       "file": "YBFcNbxFE30.es.vtt",
@@ -77037,6 +79962,21 @@
       ]
     },
     {
+      "file": "yevV376tYak.es.vtt",
+      "video_id": "yevV376tYak",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 78630,
+      "sha256": "6f53fd0810bd49316c83919cb742c78e34b7bc5ca00ac7ed05607fd300509a0d",
+      "source_paths": []
+    },
+    {
       "file": "YFQLFBof5ic.es.vtt",
       "video_id": "YFQLFBof5ic",
       "language": "es",
@@ -77278,6 +80218,21 @@
       "source_paths": [
         "datos/raw/subtitulos/yIUkStuplR8.es.vtt"
       ]
+    },
+    {
+      "file": "YJgWnOa_wQw.es.vtt",
+      "video_id": "YJgWnOa_wQw",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 68946,
+      "sha256": "2ffdc3271cd41dcfdacd7d5aab7bc66381c470c7651a0fa1c21681061cbc3c5e",
+      "source_paths": []
     },
     {
       "file": "yJHQ927qgN4.es.vtt",
@@ -77569,6 +80524,36 @@
       "valid_webvtt": true,
       "bytes": 216497,
       "sha256": "7162285f70189f9870eb37065f9bd1cc061b64b3aeb2e563fa006046e2ba6cd0",
+      "source_paths": []
+    },
+    {
+      "file": "yMcPWG95EXY.es.vtt",
+      "video_id": "yMcPWG95EXY",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 565850,
+      "sha256": "0cb7f1730d4280725801ac0ce509e6245abdd6e195b2943dede5e8cbef4a9d9c",
+      "source_paths": []
+    },
+    {
+      "file": "YMOS8GSkxQ4.es.vtt",
+      "video_id": "YMOS8GSkxQ4",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCba1vMvOHWlMddLARS382Zw",
+      "channel_file_stem": "ucba1vmvohwlmddlars382zw--85c635b8e4d7",
+      "channel_id": "UCba1vMvOHWlMddLARS382Zw",
+      "channel_title": "Hablando Huevadas",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 432550,
+      "sha256": "d85280665b6c072b214a212f45ff02ca565146fc2542afba5e47b1156f2cf57e",
       "source_paths": []
     },
     {
@@ -78100,6 +81085,21 @@
       ]
     },
     {
+      "file": "YSNF8UIop-8.es.vtt",
+      "video_id": "YSNF8UIop-8",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 81839,
+      "sha256": "2ec9596985ca0ea95528d1eba3cee90f624e75994cc8be3f33f499d4d622f128",
+      "source_paths": []
+    },
+    {
       "file": "yTKKwnruBNE.es.vtt",
       "video_id": "yTKKwnruBNE",
       "language": "es",
@@ -78364,6 +81364,21 @@
       ]
     },
     {
+      "file": "ywtyyRw2ojk.es.vtt",
+      "video_id": "ywtyyRw2ojk",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 80938,
+      "sha256": "0c4c6384f3f66632cea22f41695ed92f15521654b23479020e271c37ff3d587e",
+      "source_paths": []
+    },
+    {
       "file": "YX8RZaToUlY.es.vtt",
       "video_id": "YX8RZaToUlY",
       "language": "es",
@@ -78428,6 +81443,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260727_lote2/raw/subtitulos/yXJQf_npJho.es.vtt"
       ]
+    },
+    {
+      "file": "yxN01IhwvqI.es.vtt",
+      "video_id": "yxN01IhwvqI",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 297727,
+      "sha256": "ede478742ae45c0176ffa9654410d0c1893950bba522a90e42ead20fa109ad0e",
+      "source_paths": []
     },
     {
       "file": "yxpkdXjB4IM.es.vtt",
@@ -78795,6 +81825,21 @@
       "source_paths": [
         "datos/ampliacion/ampliacion_dano_20260727_lote2/raw/subtitulos/Z3jNyj0i2sQ.es.vtt"
       ]
+    },
+    {
+      "file": "Z3p76QLtjzg.es.vtt",
+      "video_id": "Z3p76QLtjzg",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 577602,
+      "sha256": "c2b455c3903871ba14dd7555723d83db7f98f758af8dfc4cf685cff69b6ec5f1",
+      "source_paths": []
     },
     {
       "file": "Z4jNyXXfweE.es.vtt",
@@ -79334,6 +82379,21 @@
       ]
     },
     {
+      "file": "zDEjdpQ9iyo.es.vtt",
+      "video_id": "zDEjdpQ9iyo",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 84514,
+      "sha256": "0416244c6902b296c2e2b59442bb04da2fa2cc143aebfed6ff9de02ce55ed2f8",
+      "source_paths": []
+    },
+    {
       "file": "ZDGZN0SaEKY.es.vtt",
       "video_id": "ZDGZN0SaEKY",
       "language": "es",
@@ -79564,6 +82624,21 @@
       "source_paths": [
         "datos/raw/subtitulos/ZG4LlLmxXHk.es.vtt"
       ]
+    },
+    {
+      "file": "Zgam19fXCEE.es.vtt",
+      "video_id": "Zgam19fXCEE",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 120179,
+      "sha256": "9e29f3135fa3b305b157ed5846c72a72f8c24c5e8443d9865a5122a5e2a10699",
+      "source_paths": []
     },
     {
       "file": "zghyqxLSbcQ.es.vtt",
@@ -79893,6 +82968,21 @@
       "valid_webvtt": true,
       "bytes": 78201,
       "sha256": "9b6a1f6f956ab388eef51791c85ec42e3be13371d5712b02d4328b1beaf57f9a",
+      "source_paths": []
+    },
+    {
+      "file": "zLMib7VUt7s.es.vtt",
+      "video_id": "zLMib7VUt7s",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 75907,
+      "sha256": "9fa8458111da58c1f4b40894ecaf9c185dc2b86b3b1d7627973ea6423aee8fb6",
       "source_paths": []
     },
     {
@@ -80239,6 +83329,21 @@
       ]
     },
     {
+      "file": "Zp11MmWyhfg.es.vtt",
+      "video_id": "Zp11MmWyhfg",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 68749,
+      "sha256": "ce7c6f062f012b022a6160a2d97eb8ede790776105fa6ae0f0d4d5509b0b69de",
+      "source_paths": []
+    },
+    {
       "file": "zP5rDTIxgZ0.es.vtt",
       "video_id": "zP5rDTIxgZ0",
       "language": "es",
@@ -80431,6 +83536,21 @@
       "source_paths": []
     },
     {
+      "file": "zQnF_JhzdeU.es.vtt",
+      "video_id": "zQnF_JhzdeU",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 80708,
+      "sha256": "9be1922a55ed84648d88cdd5d8817b9e7e0113df747276e766b79b466186aa5f",
+      "source_paths": []
+    },
+    {
       "file": "Zqzs_5F_wDo.es.vtt",
       "video_id": "Zqzs_5F_wDo",
       "language": "es",
@@ -80480,6 +83600,21 @@
       "source_paths": [
         "datos/raw/subtitulos/zRqqIYepbS8.es.vtt"
       ]
+    },
+    {
+      "file": "ZrUb0rizB90.es.vtt",
+      "video_id": "ZrUb0rizB90",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 100905,
+      "sha256": "e57144e59fd00b10f16044e7e778ced169cd1f19471a80c1e08afcb4f3017a81",
+      "source_paths": []
     },
     {
       "file": "zRx2xKtA464.es.vtt",
@@ -80774,6 +83909,21 @@
       ]
     },
     {
+      "file": "zVKpznqhG8k.es.vtt",
+      "video_id": "zVKpznqhG8k",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_file_stem": "ucfqwxsa2wp6y5fkuacgshga--fbfff9d8973d",
+      "channel_id": "UCFqwxsa2Wp6Y5FkUAcGShGA",
+      "channel_title": "Nunca MAS",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 143033,
+      "sha256": "2e3b09faf8b3feb99b6d0f9ef769a7e5f898739111197405febf4cc33d0986fb",
+      "source_paths": []
+    },
+    {
       "file": "ZvnRmj4VY-k.es.vtt",
       "video_id": "ZvnRmj4VY-k",
       "language": "es",
@@ -80853,6 +84003,21 @@
       "source_paths": [
         "datos/raw/subtitulos/zWzl_4WyDQw.es.vtt"
       ]
+    },
+    {
+      "file": "ZxBMY28km6E.es.vtt",
+      "video_id": "ZxBMY28km6E",
+      "language": "es",
+      "origin": "original_ytdlp_vtt",
+      "channel_key": "id:UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_file_stem": "uco0cdofdg-3hxa_vpg8imnw--bfa53d5deebc",
+      "channel_id": "UCO0cdOFdG-3hxa_VPG8imnw",
+      "channel_title": "Goblinciano",
+      "transcript_available": true,
+      "valid_webvtt": true,
+      "bytes": 82470,
+      "sha256": "cba9623033d967cee19d2a12c512a0c7e3617e81592d911cfba77dde8a146048",
+      "source_paths": []
     },
     {
       "file": "Zxhr2cRCJI0.es.vtt",
