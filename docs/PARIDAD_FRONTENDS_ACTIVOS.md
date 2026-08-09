@@ -21,8 +21,8 @@ revisión obligatoria prevalecen.
 | enlace al segundo del video | enlace temporal por `video_id` | implementado |
 | propuesta y categorías/flags | propuesta LLM visible y controles derivados de la taxonomía | implementado; la visibilidad inicial es una decisión operativa con riesgo de anclaje documentado |
 | aceptar, modificar, diferir y excluir | botones explícitos “Aceptar sugerencia”, “Guardar mi decisión”, “Revisar después” y “Excluir del dataset”; ayuda contextual; excluir exige confirmación | implementado |
-| aceptar o excluir por video/canal | diálogo con vista previa de alcance, preservación predeterminada de resueltos y confirmación | implementado; cada chunk aceptado conserva su propia propuesta y cada evento registra alcance/lote |
-| progreso, cohorte y siguiente pendiente | barra, filtro y navegación circular; un diferido sigue pendiente hasta una decisión resolutiva | implementado y probado en navegador |
+| aceptar, clasificar o excluir por video/canal | diálogo con vista previa; permite conservar cada propuesta, asignar la misma combinación humana de `SEGURO`/daños/flags o excluir; exige confirmación | implementado; la clasificación común puede cubrir también los ya resueltos y cada evento registra alcance/lote |
+| progreso, colas, cohorte y siguiente pendiente | botones directos Urgentes, Prioritarios Pro y Todos; filtro de cohorte en diálogo y navegación circular; un diferido sigue pendiente | implementado; 2.705, 44.617 y 166.940 casos en el corte vigente |
 | guía, exportación y reanudación | diálogo, JSONL y lectura de eventos previos | implementado |
 | borradores locales | `localStorage` por `chunk_id` | implementado |
 | atajos A/R/Ctrl+Enter/flechas | se conservan; D añade diferimiento | implementado y cubierto por prueba estructural |
@@ -34,11 +34,25 @@ revisado y una campaña grande no obliga a incrustar datos sensibles en el
 frontend. Una decisión `defer` se conserva en el historial, pero no cuenta como
 resuelta ni desaparece del conjunto pendiente.
 
+Las colas no son sinónimas. **Urgentes** es el subconjunto corto de propuestas
+máximas incompatibles que la consolidación no resolvió automáticamente.
+**Prioritarios Pro** reúne las salidas de DeepSeek Pro que quedaron
+`needs_review=true` o conservaron al menos una categoría de daño. En el corte
+vigente son 35.385 casos Pro sin resolver y 10.891 con daño; su unión es 44.617
+porque 1.659 cumplen ambas condiciones. La confianza autodeclarada no se usa
+como umbral adicional, pues la calibración disponible fue inconclusa.
+**Todos** conserva acceso a la campaña completa.
+
 La acción masiva deriva el video o canal desde el chunk activo. Para canales sin
 `channel_id`, usa coincidencia normalizada del título; el diálogo muestra el
 alcance antes de habilitar la confirmación. Por defecto solo afecta pendientes y
 diferidos. Incluir resueltos crea nuevos eventos de precedencia, nunca reescribe
 ni elimina el historial anterior. Un reintento del mismo lote es idempotente.
+La opción **Clasificar todo igual** activa inicialmente la inclusión de resueltos
+para abarcar realmente todo el video o canal; la persona revisora puede
+desmarcarla. La clasificación común admite `SEGURO` de forma excluyente o una
+combinación de categorías de daño y flags válidos. El servidor vuelve a validar
+estas invariantes antes de guardar.
 
 ## Producción supervisada
 

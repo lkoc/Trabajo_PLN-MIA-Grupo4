@@ -12,6 +12,8 @@ from moderacion_peru.servers import (
     _labeling_campaign_page,
     _labeling_progress,
     _labeling_scope_rows,
+    _is_labeling_priority,
+    _is_labeling_urgent,
     _production_feedback,
     _production_registry_paths,
 )
@@ -50,6 +52,55 @@ def test_labeling_campaign_is_paged_and_uses_latest_review_state():
         "pending": 2,
         "progress_pct": pytest.approx(100 / 3),
     }
+
+
+def test_labeling_urgent_and_pro_priority_queues_are_distinct():
+    rows = [
+        {
+            "chunk_id": "urgent-flash",
+            "annotator_model": "deepseek-v4-flash",
+            "coarse_labels": ["SEGURO"],
+            "consolidation_warning": "conflicting_top_priority_decisions",
+        },
+        {
+            "chunk_id": "pro-unresolved",
+            "annotator_model": "deepseek-v4-pro",
+            "coarse_labels": [],
+            "needs_review": True,
+            "decision_status": "needs_review",
+        },
+        {
+            "chunk_id": "pro-damage",
+            "annotator_model": "deepseek-v4-pro",
+            "coarse_labels": ["ACOSO_AMENAZA"],
+            "needs_review": False,
+            "decision_status": "resolved",
+        },
+        {
+            "chunk_id": "pro-safe",
+            "annotator_model": "deepseek-v4-pro",
+            "coarse_labels": ["SEGURO"],
+            "needs_review": False,
+            "decision_status": "resolved",
+        },
+    ]
+
+    assert [_is_labeling_urgent(row) for row in rows] == [True, False, False, False]
+    assert [_is_labeling_priority(row) for row in rows] == [False, True, True, False]
+    urgent = _labeling_campaign_page(
+        rows, {}, offset=0, limit=10, urgent_only=True
+    )
+    priority = _labeling_campaign_page(
+        rows, {}, offset=0, limit=10, priority_only=True
+    )
+
+    assert [row["chunk_id"] for row in urgent["rows"]] == ["urgent-flash"]
+    assert [row["chunk_id"] for row in priority["rows"]] == [
+        "pro-unresolved",
+        "pro-damage",
+    ]
+    assert _labeling_progress(rows, {}, urgent_only=True)["total"] == 1
+    assert _labeling_progress(rows, {}, priority_only=True)["total"] == 2
 
 
 def test_labeling_bulk_scope_uses_video_and_channel_title_fallback():
@@ -173,6 +224,45 @@ def test_labeling_bulk_events_are_idempotent_and_preserve_each_proposal():
     assert events[0].batch_target_count == 2
     assert [event.event_id for event in repeated_events] == [event.event_id for event in events]
     assert repeated_summary == summary
+
+    modify_summary, modified = _labeling_bulk_events(
+        rows,
+        reviews,
+        **{
+            **arguments,
+            "scope": "channel",
+            "action": "modify",
+            "batch_id": "batch-test-classify",
+            "final_labels": [
+                taxonomy.damage_labels[0],
+                taxonomy.damage_labels[1],
+            ],
+            "flags": [taxonomy.flags[0]],
+        },
+    )
+    assert modify_summary["events_ready"] == 2
+    assert modify_summary["applied_labels"] == list(taxonomy.damage_labels[:2])
+    assert modify_summary["applied_flags"] == [taxonomy.flags[0]]
+    assert {event.chunk_id for event in modified} == {"c2", "c3"}
+    assert all(event.action == "modify" for event in modified)
+    assert all(event.decision_scope == "channel" for event in modified)
+    assert all(
+        event.final_labels == list(taxonomy.damage_labels[:2])
+        and event.flags == [taxonomy.flags[0]]
+        for event in modified
+    )
+
+    with pytest.raises(ValueError, match="mutuamente excluyente"):
+        _labeling_bulk_events(
+            rows,
+            reviews,
+            **{
+                **arguments,
+                "action": "modify",
+                "batch_id": "batch-test-invalid",
+                "final_labels": [taxonomy.safe_label, taxonomy.damage_labels[0]],
+            },
+        )
 
     reject_summary, rejected = _labeling_bulk_events(
         rows,

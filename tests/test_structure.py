@@ -224,7 +224,7 @@ def test_required_frontends_are_small_templates():
     assert "taxonomy.safe_label" in human_source
     assert "event.target.value===taxonomy.safe_label" in human_source
     assert "/api/progress" in human_source
-    assert "pending:'1'" in human_source
+    assert "query.set('pending','1')" in human_source
     assert "previous_text" in human_source
     assert "localStorage" in human_source
     assert "display_name" in human_source
@@ -250,11 +250,20 @@ def test_required_frontends_are_small_templates():
     assert "/api/review/bulk" in human_source
     assert "bulkIncludeResolved" in human_source
     assert "Acción masiva por video o canal" in human_source
+    assert "Clasificar todo igual" in human_source
+    assert 'id="bulkLabels"' in human_source
+    assert 'id="bulkFlags"' in human_source
+    assert "final_labels:finalLabels" in human_source
     assert "Guardar mi decisión" in human_source
     assert "Revisar después" in human_source
     assert "Excluir del dataset" in human_source
     assert '<dialog id="actionsDialog"' in human_source
     assert "¿Qué hace cada botón?" in human_source
+    assert "Prioritarios Pro" in human_source
+    assert "Urgentes" in human_source
+    assert 'data-mode="all"' in human_source
+    assert '<dialog id="filterDialog"' in human_source
+    assert "Acerca de" in human_source
 
 
 def test_02_01_uses_explicit_operational_review_threshold_without_changing_calibration():

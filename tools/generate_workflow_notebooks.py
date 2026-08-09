@@ -68,7 +68,9 @@ py -3.12 -m venv .venv
 </code></pre>
 </div>
 
-Mantenga esa terminal abierta y visite <http://127.0.0.1:8765>. Para detener el servidor, vuelva a la terminal y presione `Ctrl+C`. En ejecuciones posteriores basta con repetir el bloque de inicio."""
+Mantenga esa terminal abierta y visite <http://127.0.0.1:8765>. La interfaz empieza en **Urgentes** (cola corta de conflictos); puede cambiar a **Prioritarios Pro** (Pro sin resolver o con daño) o **Todos** desde la barra superior.
+
+Para detener el servidor, vuelva a la terminal y presione `Ctrl+C`. En ejecuciones posteriores basta con repetir el bloque de inicio. Si se actualizó el código del servidor, deténgalo y vuelva a iniciar: recargar el navegador por sí solo no activa esos cambios."""
 
 
 SETUP = """from pathlib import Path

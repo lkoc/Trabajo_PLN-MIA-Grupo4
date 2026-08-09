@@ -33,7 +33,8 @@ RETRAIN_MINIMUM_SAFE = 200
 RETRAIN_MINIMUM_PER_DAMAGE = 100
 MAX_REQUEST_BYTES = 2 * 1024 * 1024
 LABELING_BULK_SCOPES = {"video", "channel"}
-LABELING_BULK_ACTIONS = {"accept", "reject"}
+LABELING_BULK_ACTIONS = {"accept", "modify", "reject"}
+LABELING_URGENT_WARNING = "conflicting_top_priority_decisions"
 
 
 def _is_labeling_priority(row: dict[str, Any]) -> bool:
@@ -52,6 +53,12 @@ def _is_labeling_priority(row: dict[str, Any]) -> bool:
     return unresolved or has_damage
 
 
+def _is_labeling_urgent(row: dict[str, Any]) -> bool:
+    """Cola corta: la consolidación mantuvo propuestas máximas incompatibles."""
+
+    return str(row.get("consolidation_warning") or "") == LABELING_URGENT_WARNING
+
+
 def _labeling_campaign_page(
     campaign_rows: list[dict[str, Any]],
     latest_reviews: dict[str, dict[str, Any]],
@@ -61,6 +68,7 @@ def _labeling_campaign_page(
     cohort: str = "",
     only_pending: bool = False,
     priority_only: bool = False,
+    urgent_only: bool = False,
 ) -> dict[str, Any]:
     """Pagina la campaña sin copiar el corpus completo para cada solicitud."""
 
@@ -73,7 +81,9 @@ def _labeling_campaign_page(
         row_cohort = str(row.get("cohort") or row.get("label_source") or "sin_cohorte")
         if cohort and cohort != "all" and row_cohort != cohort:
             continue
-        if priority_only and not _is_labeling_priority(row):
+        if urgent_only and not _is_labeling_urgent(row):
+            continue
+        if priority_only and not urgent_only and not _is_labeling_priority(row):
             continue
         current_view_position = view_position
         view_position += 1
@@ -104,12 +114,23 @@ def _labeling_progress(
     latest_reviews: dict[str, dict[str, Any]],
     *,
     priority_only: bool = False,
+    urgent_only: bool = False,
+    cohort: str = "",
 ) -> dict[str, Any]:
-    selected_rows = (
-        [row for row in campaign_rows if _is_labeling_priority(row)]
-        if priority_only
-        else campaign_rows
-    )
+    cohort_rows = [
+        row
+        for row in campaign_rows
+        if not cohort
+        or cohort == "all"
+        or str(row.get("cohort") or row.get("label_source") or "sin_cohorte")
+        == cohort
+    ]
+    if urgent_only:
+        selected_rows = [row for row in cohort_rows if _is_labeling_urgent(row)]
+    elif priority_only:
+        selected_rows = [row for row in cohort_rows if _is_labeling_priority(row)]
+    else:
+        selected_rows = cohort_rows
     selected_ids = {str(row.get("chunk_id")) for row in selected_rows}
     total = len(selected_rows)
     events = [
@@ -227,11 +248,27 @@ def _labeling_bulk_events(
     reviewer: str,
     notes: str,
     batch_id: str,
+    final_labels: list[str] | None = None,
+    flags: list[str] | None = None,
 ) -> tuple[dict[str, Any], list[ReviewEvent]]:
     """Construye eventos idempotentes para una revisión masiva trazable."""
 
     if action not in LABELING_BULK_ACTIONS:
-        raise ValueError("La acción masiva debe ser accept o reject")
+        raise ValueError("La acción masiva debe ser accept, modify o reject")
+    taxonomy = load_taxonomy()
+    raw_labels = final_labels or []
+    raw_flags = flags or []
+    if not all(isinstance(value, str) for value in (*raw_labels, *raw_flags)):
+        raise ValueError("Las categorías y flags deben ser cadenas de texto")
+    common_labels = list(taxonomy.normalize_categories(raw_labels))
+    common_flags = list(dict.fromkeys(raw_flags))
+    unknown_flags = set(common_flags) - set(taxonomy.flags)
+    if unknown_flags:
+        raise ValueError(f"Flags desconocidos: {sorted(unknown_flags)}")
+    if action == "modify" and not common_labels:
+        raise ValueError("La clasificación masiva requiere una categoría final")
+    if common_flags and not set(common_labels).intersection(taxonomy.damage_labels):
+        raise ValueError("Los flags requieren al menos una categoría final de daño")
     clean_batch_id = str(batch_id).strip()
     if not clean_batch_id or len(clean_batch_id) > 128:
         raise ValueError("batch_id debe contener entre 1 y 128 caracteres")
@@ -256,10 +293,26 @@ def _labeling_bulk_events(
         if action == "accept" and not proposed_labels:
             skipped_without_proposal += 1
             continue
+        event_labels = (
+            proposed_labels
+            if action == "accept"
+            else common_labels
+            if action == "modify"
+            else []
+        )
+        event_flags = (
+            list(row.get("flags") or [])
+            if action == "accept"
+            else common_flags
+            if action == "modify"
+            else []
+        )
         event_id = str(
             uuid.uuid5(
                 uuid.NAMESPACE_URL,
-                f"moderacion-peru|{clean_batch_id}|{scope}|{action}|{row['chunk_id']}",
+                "moderacion-peru|"
+                f"{clean_batch_id}|{scope}|{action}|{','.join(event_labels)}|"
+                f"{','.join(event_flags)}|{row['chunk_id']}",
             )
         )
         try:
@@ -269,8 +322,8 @@ def _labeling_bulk_events(
                     chunk_id=str(row["chunk_id"]),
                     action=action,
                     proposed_labels=proposed_labels,
-                    final_labels=proposed_labels if action == "accept" else [],
-                    flags=list(row.get("flags") or []) if action == "accept" else [],
+                    final_labels=event_labels,
+                    flags=event_flags,
                     reviewer=reviewer,
                     model_id=row.get("annotator_model"),
                     notes=notes,
@@ -290,6 +343,8 @@ def _labeling_bulk_events(
         "selected": len(selected_rows),
         "events_ready": len(events),
         "skipped_without_proposal": skipped_without_proposal,
+        "applied_labels": common_labels if action == "modify" else [],
+        "applied_flags": common_flags if action == "modify" else [],
         "skipped_invalid": skipped_invalid[:20],
         "skipped_invalid_count": len(skipped_invalid),
     }
@@ -598,6 +653,7 @@ def serve(
         }
     )
     labeling_priority_total = sum(_is_labeling_priority(row) for row in campaign_rows)
+    labeling_urgent_total = sum(_is_labeling_urgent(row) for row in campaign_rows)
     labeling_pro_unresolved_total = sum(
         "pro" in str(row.get("annotator_model") or "").casefold()
         and (
@@ -798,11 +854,16 @@ def serve(
                     "campaign_available": bool(campaign_path and campaign_path.is_file()),
                     "campaign_total": len(campaign_rows),
                     "campaign_priority_total": labeling_priority_total,
+                    "campaign_urgent_total": labeling_urgent_total,
                     "campaign_pro_unresolved_total": labeling_pro_unresolved_total,
                     "campaign_pro_damage_total": labeling_pro_damage_total,
                     "campaign_priority_rule": (
                         "Salida de DeepSeek Pro con needs_review=true o con al menos "
                         "una categoría de daño; la unión no duplica casos."
+                    ),
+                    "campaign_urgent_rule": (
+                        "Conflicto entre propuestas de máxima prioridad que la "
+                        "consolidación no pudo resolver automáticamente."
                     ),
                     "campaign_cohorts": labeling_cohorts if mode == "labeling" else [],
                     "registry_available": registry_available,
@@ -825,7 +886,12 @@ def serve(
                 limit = min(1000, max(1, int(query.get("limit", [50])[0])))
                 cohort = query.get("cohort", [""])[0]
                 only_pending = query.get("pending", ["0"])[0] == "1"
-                priority_only = query.get("priority", ["0"])[0] == "1"
+                queue = query.get("queue", ["all"])[0]
+                priority_only = (
+                    queue == "priority"
+                    or query.get("priority", ["0"])[0] == "1"
+                )
+                urgent_only = queue == "urgent"
                 with persistence_lock:
                     page = _labeling_campaign_page(
                         campaign_rows,
@@ -835,6 +901,7 @@ def serve(
                         cohort=cohort,
                         only_pending=only_pending,
                         priority_only=priority_only,
+                        urgent_only=urgent_only,
                     )
                 self.send_json(page)
                 return
@@ -855,12 +922,20 @@ def serve(
                 return
             if parsed.path == "/api/progress" and mode == "labeling":
                 query = urllib.parse.parse_qs(parsed.query)
-                priority_only = query.get("priority", ["0"])[0] == "1"
+                queue = query.get("queue", ["all"])[0]
+                priority_only = (
+                    queue == "priority"
+                    or query.get("priority", ["0"])[0] == "1"
+                )
+                urgent_only = queue == "urgent"
+                cohort = query.get("cohort", [""])[0]
                 with persistence_lock:
                     progress = _labeling_progress(
                         campaign_rows,
                         labeling_reviews,
                         priority_only=priority_only,
+                        urgent_only=urgent_only,
+                        cohort=cohort,
                     )
                 self.send_json(progress)
                 return
@@ -1039,6 +1114,10 @@ def serve(
                     include_resolved = payload.get("include_resolved", False)
                     if not isinstance(include_resolved, bool):
                         raise ValueError("include_resolved debe ser booleano")
+                    final_labels = payload.get("final_labels", [])
+                    flags = payload.get("flags", [])
+                    if not isinstance(final_labels, list) or not isinstance(flags, list):
+                        raise ValueError("final_labels y flags deben ser listas")
                     reviewer = str(payload.get("reviewer", "ANON")).strip() or "ANON"
                     salt = os.getenv("MODPERU_REVIEW_SALT", taxonomy.contract_id)
                     pseudonym = "reviewer-" + hashlib.sha256(
@@ -1055,6 +1134,8 @@ def serve(
                             reviewer=pseudonym,
                             notes=str(payload.get("notes", "")).strip(),
                             batch_id=str(payload.get("batch_id", "")),
+                            final_labels=final_labels,
+                            flags=flags,
                         )
                         if events:
                             event_rows = [event.model_dump(mode="json") for event in events]
