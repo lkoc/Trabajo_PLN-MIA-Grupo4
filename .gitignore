@@ -79,6 +79,7 @@ resultados/colab_bundle/*.gz
 !datos/raw/vtt_by_video/**
 !datos/raw/video_candidates.jsonl
 !datos/raw/directed_candidates_latest.jsonl
+!datos/raw/directed_candidates_carryover.jsonl
 !datos/raw/videos_candidatos.csv
 !datos/raw/canales_semilla.csv
 !datos/raw/candidatos_por_verificar.csv

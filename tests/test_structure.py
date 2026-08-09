@@ -57,6 +57,9 @@ def test_active_notebooks_are_ordered_and_clean():
         "02_03_revision_llm_dirigida.ipynb",
         "02_04_consolidacion_validacion_humana.ipynb",
     }
+    optionally_executed_notebooks = {
+        "01_015_ampliacion_dirigida_minorias.ipynb",
+    }
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
         assert (
@@ -73,7 +76,7 @@ def test_active_notebooks_are_ordered_and_clean():
             # Estas salidas ejecutadas pertenecen al usuario y constituyen evidencia
             # operativa; se conservan en lugar de reescribir sus cuadernos.
             assert output_cells
-        else:
+        elif path.name not in optionally_executed_notebooks:
             assert not output_cells
         source = "\n".join(cell.source for cell in notebook.cells)
         assert all(output in notebook.cells[0].source for output in TRAINED_OUTPUTS)
@@ -468,7 +471,30 @@ def test_minority_scraping_notebook_targets_two_thousand_train_chunks_per_damage
         "DIRECTED_SPLIT_BUDGET = DIRECTED_ACQUISITION_BUDGET['split_budget']" in source
     )
     assert "directed_split_shortfall" in source
-    assert "No se encontraron suficientes videos PE verificados" in source
+    assert "No se encontraron suficientes videos PE verificados" not in source
+    assert "DIRECTED_RESERVE_CHANNELS" in source
+    assert "canales_PE_de_reserva" in source
+    assert "directed_selection_incomplete" in source
+    assert "refilled_on_resume" in source
+    assert "Cohorte PE parcial: se continuará sin perder avances" in source
+    assert "directed_candidates_carryover.jsonl" in source
+    assert "write_jsonl_atomic(DIRECTED_CARRYOVER_PATH, directed_carryover)" in source
+    assert "merge_candidates(active_candidates, carryover_candidates)" in source
+    assert "cohorte_dirigida_vigente_más_arrastre" in source
+    assert "RESUME_DISCOVERY = True" in source
+    assert "directed_round_signature" in source
+    assert "resumed_existing_round" in source
+    assert "previous_round_selection" in source
+    assert "pending_in_resumed_round" in source
+    signature_block = source.split("directed_round_signature =", 1)[1].split(
+        "previous_plan_payload", 1
+    )[0]
+    manifest_block = source.split("write_json_atomic(DIRECTED_PLAN_PATH", 1)[1]
+    assert "acquisition_budget" not in signature_block
+    assert "'directed_round_signature': directed_round_signature" in manifest_block
+    assert "'pending_in_resumed_round': len(directed_selection)" in manifest_block
+    assert "cached_transcript" not in source
+    assert "reused_cache" in source
     assert "project_effective_training_rows" in source
     assert "eligible_splits=('train',)" in source
     assert "target_chunks_per_label=TARGET_TRAIN_CHUNKS_PER_DAMAGE" in source
@@ -479,6 +505,18 @@ def test_minority_scraping_notebook_targets_two_thousand_train_chunks_per_damage
     assert "Goblinciano" in source
     assert "Nunca MAS" in source
     assert "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD" in source
+
+    carryover = [
+        json.loads(line)
+        for line in (
+            ROOT / "datos/raw/directed_candidates_carryover.jsonl"
+        ).read_text(encoding="utf-8-sig").splitlines()
+        if line.strip()
+    ]
+    assert len(carryover) == 5
+    assert len({row["video_id"] for row in carryover}) == 5
+    assert all(row["country_code"] == "PE" for row in carryover)
+    assert all(row["peru_scope_verified"] is True for row in carryover)
 
 
 def test_chunk_length_pilot_is_optional_and_materialization_is_separate():

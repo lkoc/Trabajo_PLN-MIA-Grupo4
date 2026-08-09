@@ -7170,6 +7170,54 @@
       "sampling_mode": "directed",
       "priority_weight": 0.7128712871287128,
       "reason": "semilla curada para ampliación dirigida"
+    },
+    {
+      "name": "Arde Troya con Juliana Oxenford",
+      "url": "https://www.youtube.com/@ardetroyalr",
+      "quota": 150,
+      "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD",
+      "country_code": "PE",
+      "peru_scope_verified": true,
+      "scope_evidence": "effective_dataset_after_foreign_exclusions",
+      "sampling_mode": "directed",
+      "priority_weight": 1.0,
+      "reason": "semilla curada para ampliación dirigida"
+    },
+    {
+      "name": "PBO",
+      "url": "https://www.youtube.com/channel/UCgR0st4ZLABi-LQcWNu3wnQ",
+      "quota": 150,
+      "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD",
+      "country_code": "PE",
+      "peru_scope_verified": true,
+      "scope_evidence": "effective_dataset_after_foreign_exclusions",
+      "sampling_mode": "directed",
+      "priority_weight": 1.0,
+      "reason": "semilla curada para ampliación dirigida"
+    },
+    {
+      "name": "Todo Good",
+      "url": "https://www.youtube.com/@todogoodpe",
+      "quota": 150,
+      "target_category": "RACISMO_DISCRIMINACION|ATAQUE_POR_GENERO_IDENTIDAD",
+      "country_code": "PE",
+      "peru_scope_verified": true,
+      "scope_evidence": "effective_dataset_after_foreign_exclusions",
+      "sampling_mode": "directed",
+      "priority_weight": 1.0,
+      "reason": "semilla curada para ampliación dirigida"
+    },
+    {
+      "name": "Magaly TV La Firme",
+      "url": "https://www.youtube.com/@MagalyTVLaFirmeATV",
+      "quota": 150,
+      "target_category": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "country_code": "PE",
+      "peru_scope_verified": true,
+      "scope_evidence": "effective_dataset_after_foreign_exclusions",
+      "sampling_mode": "directed",
+      "priority_weight": 0.7128712871287128,
+      "reason": "semilla curada para ampliación dirigida"
     }
   ],
   "planned_queries": [
@@ -7217,13 +7265,13 @@
     }
   ],
   "expanded_channels": [],
-  "directed_candidates_discovered": 1086,
-  "directed_known_videos_excluded": 676,
-  "directed_candidates_selected": 311,
+  "directed_candidates_discovered": 1686,
+  "directed_known_videos_excluded": 1353,
+  "directed_candidates_selected": 250,
   "directed_split_counts": {
-    "train": 239,
-    "validation": 36,
-    "test": 36
+    "train": 200,
+    "validation": 27,
+    "test": 23
   },
   "directed_split_shortfall": {
     "train": 0,
@@ -7610,6 +7658,14 @@
     "selected_channel_pool_capacity_sufficient": true,
     "requires_another_round_after_labeling": true
   },
+  "directed_round_signature": "53d2c41bcdc4244ee6122ad3c2d1c3e06f9869b2516f90cbbecfce5a98e82705",
+  "resumed_existing_round": true,
+  "completed_before_resume": 61,
+  "refilled_on_resume": 0,
+  "pending_in_resumed_round": 250,
+  "selection_incomplete": false,
+  "carryover_pending": 5,
+  "carryover_path": "D:\\trabajo_PLN\\Trabajo_PLN-MIA-Grupo4\\datos\\raw\\directed_candidates_carryover.jsonl",
   "selection_path": "D:\\trabajo_PLN\\Trabajo_PLN-MIA-Grupo4\\datos\\raw\\directed_candidates_latest.jsonl",
   "country_scope": "PE_only_strict",
   "non_peru_or_unverified_excluded": 47,

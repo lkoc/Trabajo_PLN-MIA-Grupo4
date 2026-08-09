@@ -6,8 +6,8 @@
   "max_channel_file_bytes": 26214400,
   "total_channel_files": 341,
   "total_channels": 336,
-  "total_videos": 5213,
-  "total_bytes": 480765310,
+  "total_videos": 5361,
+  "total_bytes": 495941312,
   "files": [
     {
       "file": "0ox8hjjm2oq--f618799a8d14--part-0001.jsonl",
@@ -38,30 +38,6 @@
       "videos": 1,
       "bytes": 19831,
       "sha256": "66b958757a5bdbf94f213a6cf33f6dc53a6520989f4777cde65296d0f3b92aed"
-    },
-    {
-      "file": "arde-troya-con-juliana-oxenford--98afa5172ba6--part-0001.jsonl",
-      "channel_key": "title:arde troya con juliana oxenford",
-      "part": 1,
-      "channel_ids": [],
-      "channel_titles": [
-        "Arde Troya con Juliana Oxenford"
-      ],
-      "videos": 133,
-      "bytes": 25730349,
-      "sha256": "d24af19fc59456be96e22424d458c0539f4fa389ee6b657a36c6b2c22f8005b7"
-    },
-    {
-      "file": "arde-troya-con-juliana-oxenford--98afa5172ba6--part-0002.jsonl",
-      "channel_key": "title:arde troya con juliana oxenford",
-      "part": 2,
-      "channel_ids": [],
-      "channel_titles": [
-        "Arde Troya con Juliana Oxenford"
-      ],
-      "videos": 52,
-      "bytes": 9649533,
-      "sha256": "50c7b56895147a2146fac6e5c3d2b35fc89263dbdcf34d492c9350d00519d6fb"
     },
     {
       "file": "att9a53cwnk--13f15f641dd7--part-0001.jsonl",
@@ -320,18 +296,6 @@
       "sha256": "7eb29e3719972e74939d746e0d0ce6a9c10e023b46a040cbfa75bf7c3bb379b2"
     },
     {
-      "file": "todo-good--c7a2cbfd6b80--part-0001.jsonl",
-      "channel_key": "title:todo good",
-      "part": 1,
-      "channel_ids": [],
-      "channel_titles": [
-        "Todo Good"
-      ],
-      "videos": 148,
-      "bytes": 16224271,
-      "sha256": "e86c240608b0fb35b39b397be1e4691a812f61b8f13235cfa9ce27f10286bea5"
-    },
-    {
       "file": "uc-1pqb0kwanjcrha63ztbkg--1a7971723a38--part-0001.jsonl",
       "channel_key": "id:UC-1pqb0KwANjcRHA63ZTBkg",
       "part": 1,
@@ -358,6 +322,20 @@
       "videos": 46,
       "bytes": 4331975,
       "sha256": "a0551a945d7bd482959284afe708316eb8ff7713bb19354bf22f0405c97df406"
+    },
+    {
+      "file": "uc-f4h9osw5jreshkauu0m1a--1538b0e6a360--part-0001.jsonl",
+      "channel_key": "id:UC-f4h9oSW5JreShkauu0m1A",
+      "part": 1,
+      "channel_ids": [
+        "UC-f4h9oSW5JreShkauu0m1A"
+      ],
+      "channel_titles": [
+        "Todo Good"
+      ],
+      "videos": 150,
+      "bytes": 16471063,
+      "sha256": "e6312267b34a372139bdc1ad1dd1e831a08095f9900723b8705bab7ee397adc5"
     },
     {
       "file": "uc-w7-vrelsbgqybkwtujhvq--101322bc9cbb--part-0001.jsonl",
@@ -1349,9 +1327,9 @@
       "channel_titles": [
         "Hablando Huevadas"
       ],
-      "videos": 21,
-      "bytes": 4107105,
-      "sha256": "badb8452371eb4db5dd7d3ba99df3136ff1d71f67442e646b5b3273d8cbc7767"
+      "videos": 24,
+      "bytes": 4589877,
+      "sha256": "3cc3cefcf54bb5af947c23a1d9e0cb7be0444989a19fb6ff90e1a5a9a1007f62"
     },
     {
       "file": "ucbiq92lt_ufno-ktzigvxgg--7a4bb92d783e--part-0001.jsonl",
@@ -1909,9 +1887,9 @@
       "channel_titles": [
         "Magaly TV La Firme"
       ],
-      "videos": 197,
-      "bytes": 9642824,
-      "sha256": "0de7552da32fbe2c698849e9c1244ccbd426ae0f2c8618f52991833a9f457944"
+      "videos": 244,
+      "bytes": 12179034,
+      "sha256": "a304b0c583a0011ec433458c3364668666d949fed53f9573c38cc9398b978c36"
     },
     {
       "file": "ucfe_qycwncj_fvp6xp3mj2q--3d0b5f193d42--part-0001.jsonl",
@@ -2021,9 +1999,9 @@
       "channel_titles": [
         "Nunca MAS"
       ],
-      "videos": 35,
-      "bytes": 5505525,
-      "sha256": "d391e9f80408b8acb5ebfdfae90824ac5f5d0af64b13b41424579cf96279aa7f"
+      "videos": 53,
+      "bytes": 8316158,
+      "sha256": "77b1c887f1b1a27317647b5f600ec9b95274cf18643592d3766dfbfe30f6a86e"
     },
     {
       "file": "ucfxhplbcojk9m70c4vytixg--c9e8dc122e71--part-0001.jsonl",
@@ -2122,6 +2100,32 @@
       "videos": 5,
       "bytes": 384765,
       "sha256": "51d48979823c4d7908c4d0ad966851f51262a061bccfb87b188bf8608fdfcfbf"
+    },
+    {
+      "file": "ucgeabnv1xth8-qewqmstmdw--b28554e3a744--part-0001.jsonl",
+      "channel_key": "id:UCgEabnv1xth8-qeWqMsTmDw",
+      "part": 1,
+      "channel_ids": [],
+      "channel_titles": [
+        "Arde Troya con Juliana Oxenford"
+      ],
+      "videos": 133,
+      "bytes": 25730349,
+      "sha256": "d24af19fc59456be96e22424d458c0539f4fa389ee6b657a36c6b2c22f8005b7"
+    },
+    {
+      "file": "ucgeabnv1xth8-qewqmstmdw--b28554e3a744--part-0002.jsonl",
+      "channel_key": "id:UCgEabnv1xth8-qeWqMsTmDw",
+      "part": 2,
+      "channel_ids": [
+        "UCgEabnv1xth8-qeWqMsTmDw"
+      ],
+      "channel_titles": [
+        "Arde Troya con Juliana Oxenford"
+      ],
+      "videos": 66,
+      "bytes": 12036581,
+      "sha256": "383bf8c3ad24744d5d97644843d01d7dcf08b3a80441dfbafba131fc4caa2169"
     },
     {
       "file": "ucgenagbrdztmid251tfsioa--9eded8670ce1--part-0001.jsonl",
@@ -2231,9 +2235,9 @@
       "channel_titles": [
         "PBO"
       ],
-      "videos": 31,
-      "bytes": 6911277,
-      "sha256": "fc495ed504b6934cf97ac86efca1e1b72bab14c4480007cd5c04387de6346942"
+      "videos": 83,
+      "bytes": 12971178,
+      "sha256": "db73eba3842e3b6e270d1884430a29b0a31d8d158aa59cd834b4cba970827ea8"
     },
     {
       "file": "ucgspwxamo2mw5myktsiurca--eeb8540f0b2d--part-0001.jsonl",
@@ -3085,9 +3089,9 @@
       "channel_titles": [
         "Goblinciano"
       ],
-      "videos": 325,
-      "bytes": 25369663,
-      "sha256": "6acef57deaf59df3708d0125eb54cbf710217ec9ebb2ae87b5ad5f26a83ba110"
+      "videos": 337,
+      "bytes": 26022309,
+      "sha256": "4c2940f93ddad28d55e9e2416221a1f245b95ac627a2238de9b9719f8574df25"
     },
     {
       "file": "uco3svqnaucicaj49ks-w8fw--2d0cdbb70e09--part-0001.jsonl",

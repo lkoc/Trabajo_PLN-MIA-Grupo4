@@ -1381,10 +1381,17 @@ SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
     "    recommended_channel_names = set(\n"
     "        DIRECTED_ACQUISITION_BUDGET['recommended_channel_names']\n"
     "    )\n"
-    "    DIRECTED_CHANNELS = [\n"
+    "    DIRECTED_PRIMARY_CHANNELS = [\n"
     "        source for source in DIRECTED_CHANNELS\n"
     "        if str(source.get('name')) in recommended_channel_names\n"
     "    ]\n"
+    "    DIRECTED_RESERVE_CHANNELS = [\n"
+    "        source for source in DIRECTED_CHANNELS\n"
+    "        if str(source.get('name')) not in recommended_channel_names\n"
+    "    ]\n"
+    "    # Se descubren también las reservas PE verificadas. La selección sigue\n"
+    "    # limitada al presupuesto y solo usa reservas si faltan inéditos del núcleo.\n"
+    "    DIRECTED_CHANNELS = DIRECTED_PRIMARY_CHANNELS + DIRECTED_RESERVE_CHANNELS\n"
     "    DIRECTED_SPLIT_BUDGET = DIRECTED_ACQUISITION_BUDGET['split_budget']\n"
     "    MAX_DIRECTED_CANDIDATES = DIRECTED_ACQUISITION_BUDGET['total_candidate_videos']\n"
     "    show_summary('Plan de ampliación dirigida', {\n",
@@ -1398,6 +1405,10 @@ SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
     "        'canales_margen': DIRECTED_ACQUISITION_BUDGET['margin_channels'],\n"
     "        'nombres_canales_margen': DIRECTED_ACQUISITION_BUDGET['margin_channel_names'],\n"
     "        'canales_recomendados': DIRECTED_ACQUISITION_BUDGET['recommended_channel_count'],\n"
+    "        'canales_PE_de_reserva': len(DIRECTED_RESERVE_CHANNELS),\n"
+    "        'nombres_canales_PE_de_reserva': [\n"
+    "            source.get('name') for source in DIRECTED_RESERVE_CHANNELS\n"
+    "        ],\n"
     "        'presupuesto_videos_por_split': DIRECTED_SPLIT_BUDGET,\n"
     "        'estimación_por_daño': DIRECTED_ACQUISITION_BUDGET['per_label'],\n",
 )
@@ -1414,44 +1425,145 @@ _DEFAULT_SELECTION = """            directed_selection = select_directed_candida
                 ),
             )
 """
-_MINORITY_SELECTION = """            selection_limit = (
-                len(directed_pool)
-                if MAX_DIRECTED_CANDIDATES is None
-                else MAX_DIRECTED_CANDIDATES
+_MINORITY_SELECTION = """            directed_round_signature = sha256_text(json.dumps({
+                'deficit_chunks': directed_plan['deficit_chunks'],
+                'support_chunks': directed_plan['support_chunks'],
+                'recommended_channels': DIRECTED_ACQUISITION_BUDGET['recommended_channel_names'],
+                'discovery_channels': [source.get('name') for source in DIRECTED_CHANNELS],
+                'split_budget': DIRECTED_SPLIT_BUDGET,
+                'target_train_chunks_per_damage': TARGET_TRAIN_CHUNKS_PER_DAMAGE,
+                'split_seed': SPLIT_SEED,
+                'country_scope': 'PE_only_strict',
+            }, ensure_ascii=False, sort_keys=True))
+            previous_plan_payload = (
+                json.loads(DIRECTED_PLAN_PATH.read_text(encoding='utf-8-sig'))
+                if DIRECTED_PLAN_PATH.exists() else {}
             )
-            directed_selection = []
-            remaining_selection = selection_limit
-            for planned_split, requested in DIRECTED_SPLIT_BUDGET.items():
-                split_selection = select_directed_candidates(
-                    directed_pool,
-                    KNOWN_VIDEO_IDS,
-                    directed_plan,
-                    max_candidates=min(requested, remaining_selection),
-                    required_split=planned_split,
-                    split_seed=SPLIT_SEED,
+            previous_round_selection = (
+                load_candidates(DIRECTED_SELECTION_PATH)
+                if DIRECTED_SELECTION_PATH.exists() else []
+            )
+            previous_carryover = (
+                load_candidates(DIRECTED_CARRYOVER_PATH)
+                if DIRECTED_CARRYOVER_PATH.exists() else []
+            )
+            resumed_existing_round = (
+                DIRECTED_SELECTION_PATH.exists()
+                and previous_plan_payload.get('directed_round_signature')
+                == directed_round_signature
+            )
+            completed_before_resume = 0
+            refilled_on_resume = 0
+            if resumed_existing_round:
+                directed_selection = [
+                    candidate for candidate in previous_round_selection
+                    if str(candidate.get('video_id') or '').strip() not in KNOWN_VIDEO_IDS
+                ]
+                completed_before_resume = (
+                    int(previous_plan_payload.get('completed_before_resume') or 0)
+                    + len(previous_round_selection) - len(directed_selection)
                 )
-                directed_selection = merge_candidates(directed_selection, split_selection)
-                remaining_selection -= len(split_selection)
-            directed_selection = [
-                {**candidate, 'directed_selection_rank': index}
-                for index, candidate in enumerate(directed_selection, 1)
-            ]
+                directed_split_shortfall = {
+                    split: int(
+                        (previous_plan_payload.get('directed_split_shortfall') or {}).get(
+                            split, 0
+                        )
+                    )
+                    for split in DIRECTED_SPLIT_BUDGET
+                }
+                pending_ids = {
+                    str(candidate.get('video_id') or '').strip()
+                    for candidate in directed_selection
+                }
+                for planned_split, requested in tuple(directed_split_shortfall.items()):
+                    if requested <= 0:
+                        continue
+                    refill = select_directed_candidates(
+                        directed_pool,
+                        KNOWN_VIDEO_IDS | pending_ids,
+                        directed_plan,
+                        max_candidates=requested,
+                        required_split=planned_split,
+                        split_seed=SPLIT_SEED,
+                    )
+                    directed_selection = merge_candidates(directed_selection, refill)
+                    pending_ids.update(
+                        str(candidate.get('video_id') or '').strip()
+                        for candidate in refill
+                    )
+                    refilled_on_resume += len(refill)
+                    directed_split_shortfall[planned_split] = max(
+                        0, requested - len(refill)
+                    )
+            else:
+                selection_limit = (
+                    len(directed_pool)
+                    if MAX_DIRECTED_CANDIDATES is None
+                    else MAX_DIRECTED_CANDIDATES
+                )
+                directed_selection = []
+                remaining_selection = selection_limit
+                for planned_split, requested in DIRECTED_SPLIT_BUDGET.items():
+                    split_selection = select_directed_candidates(
+                        directed_pool,
+                        KNOWN_VIDEO_IDS,
+                        directed_plan,
+                        max_candidates=min(requested, remaining_selection),
+                        required_split=planned_split,
+                        split_seed=SPLIT_SEED,
+                    )
+                    directed_selection = merge_candidates(directed_selection, split_selection)
+                    remaining_selection -= len(split_selection)
+                directed_selection = [
+                    {**candidate, 'directed_selection_rank': index}
+                    for index, candidate in enumerate(directed_selection, 1)
+                ]
+                fresh_split_counts = Counter(
+                    candidate.get('planned_split') for candidate in directed_selection
+                )
+                directed_split_shortfall = {
+                    split: max(0, requested - fresh_split_counts.get(split, 0))
+                    for split, requested in DIRECTED_SPLIT_BUDGET.items()
+                }
             directed_split_counts = dict(Counter(
                 candidate.get('planned_split') for candidate in directed_selection
             ))
-            directed_split_shortfall = {
-                split: max(0, requested - directed_split_counts.get(split, 0))
-                for split, requested in DIRECTED_SPLIT_BUDGET.items()
+            active_selection_ids = {
+                str(candidate.get('video_id') or '').strip()
+                for candidate in directed_selection
             }
-            write_jsonl_atomic(PERU_SCOPE_EXCLUSIONS_PATH, peru_scope_excluded)
-            if any(directed_split_shortfall.values()):
-                raise RuntimeError(
-                    'No se encontraron suficientes videos PE verificados para el '
-                    f'presupuesto calculado por split: {directed_split_shortfall}'
+            carryover_sources = (
+                previous_carryover
+                if resumed_existing_round
+                else merge_candidates(previous_carryover, previous_round_selection)
+            )
+            directed_carryover = [
+                candidate for candidate in carryover_sources
+                if (
+                    str(candidate.get('video_id') or '').strip()
+                    and str(candidate.get('video_id') or '').strip() not in KNOWN_VIDEO_IDS
+                    and str(candidate.get('video_id') or '').strip()
+                    not in active_selection_ids
                 )
+            ]
+            directed_selection_incomplete = any(directed_split_shortfall.values())
+            write_jsonl_atomic(PERU_SCOPE_EXCLUSIONS_PATH, peru_scope_excluded)
+            write_jsonl_atomic(DIRECTED_CARRYOVER_PATH, directed_carryover)
 """
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_DISCOVERY, _DEFAULT_SELECTION, _MINORITY_SELECTION
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    "from collections import Counter\n",
+    "from collections import Counter\nimport json\n",
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    "from moderacion_peru.io import append_jsonl_once, write_json_atomic, write_jsonl_atomic\n",
+    "from moderacion_peru.io import (\n"
+    "    append_jsonl_once, sha256_text, write_json_atomic, write_jsonl_atomic,\n"
+    ")\n",
 )
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_MINORITY_DISCOVERY,
@@ -1462,6 +1574,7 @@ SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_MINORITY_DISCOVERY,
     "DIRECTED_PLAN_PATH = ROOT/'datos/raw/manifests/directed_plan_latest.json'\n",
     "DIRECTED_PLAN_PATH = ROOT/'datos/raw/manifests/directed_plan_latest.json'\n"
+    "DIRECTED_CARRYOVER_PATH = ROOT/'datos/raw/directed_candidates_carryover.jsonl'\n"
     "PERU_SCOPE_EXCLUSIONS_PATH = ROOT/'datos/raw/manifests/directed_non_peru_excluded_latest.jsonl'\n",
 )
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
@@ -1526,9 +1639,19 @@ SCRAPING_MINORITY_DISCOVERY = _replace_required(
 )
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_MINORITY_DISCOVERY,
-    "                'target_train_chunks_per_damage': TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n",
     "                'target_train_chunks_per_damage': TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n"
-    "                'acquisition_budget': DIRECTED_ACQUISITION_BUDGET,\n",
+    "                'selection_path': DIRECTED_SELECTION_PATH,\n",
+    "                'target_train_chunks_per_damage': TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n"
+    "                'acquisition_budget': DIRECTED_ACQUISITION_BUDGET,\n"
+    "                'directed_round_signature': directed_round_signature,\n"
+    "                'resumed_existing_round': resumed_existing_round,\n"
+    "                'completed_before_resume': completed_before_resume,\n"
+    "                'refilled_on_resume': refilled_on_resume,\n"
+    "                'pending_in_resumed_round': len(directed_selection),\n"
+    "                'selection_incomplete': directed_selection_incomplete,\n"
+    "                'carryover_pending': len(directed_carryover),\n"
+    "                'carryover_path': DIRECTED_CARRYOVER_PATH,\n"
+    "                'selection_path': DIRECTED_SELECTION_PATH,\n",
 )
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_MINORITY_DISCOVERY,
@@ -1551,7 +1674,55 @@ SCRAPING_MINORITY_DISCOVERY = _replace_required(
     '        "country_scope": "PE_only_strict",\n'
     '        "non_peru_or_unverified_excluded": len(peru_scope_excluded),\n'
     '        "scope_exclusions_path": PERU_SCOPE_EXCLUSIONS_PATH,\n'
-    '        "directed_split_counts": (directed_split_counts if directed_plan is not None else {}),\n',
+    '        "directed_split_counts": (directed_split_counts if directed_plan is not None else {}),\n'
+    '        "directed_split_shortfall": (directed_split_shortfall if directed_plan is not None else {}),\n'
+    '        "selection_incomplete": (directed_selection_incomplete if directed_plan is not None else False),\n'
+    '        "carryover_pending": (len(directed_carryover) if directed_plan is not None else 0),\n'
+    '        "carryover_path": (DIRECTED_CARRYOVER_PATH if directed_plan is not None else None),\n'
+    '        "resumed_existing_round": (resumed_existing_round if directed_plan is not None else False),\n'
+    '        "completed_before_resume": (completed_before_resume if directed_plan is not None else 0),\n',
+)
+SCRAPING_MINORITY_DISCOVERY = _replace_required(
+    SCRAPING_MINORITY_DISCOVERY,
+    "    }, tone='success' if not discovery_failures else 'warning')\n"
+    "    if discovery_failures:\n",
+    "    }, tone=(\n"
+    "        'warning' if (\n"
+    "            discovery_failures\n"
+    "            or (directed_plan is not None and directed_selection_incomplete)\n"
+    "        ) else 'success'\n"
+    "    ))\n"
+    "    if directed_plan is not None and directed_selection_incomplete:\n"
+    "        show_callout(\n"
+    "            'Cohorte PE parcial: se continuará sin perder avances',\n"
+    "            'Se procesarán ahora los videos PE disponibles. El faltante por split '\n"
+    "            f'{directed_split_shortfall} quedó guardado y podrá rellenarse al '\n"
+    "            'reanudar o en la siguiente ronda después del etiquetado.',\n"
+    "            tone='warning',\n"
+    "        )\n"
+    "    if discovery_failures:\n",
+)
+
+SCRAPING_MINORITY_CANDIDATES = _replace_required(
+    SCRAPING_CANDIDATES,
+    "if DISCOVERY_MODE == 'directed':\n"
+    "    candidates = load_candidates(DIRECTED_SELECTION_PATH)\n"
+    "    candidate_origin = 'cohorte_dirigida_vigente'\n",
+    "if DISCOVERY_MODE == 'directed':\n"
+    "    active_candidates = load_candidates(DIRECTED_SELECTION_PATH)\n"
+    "    carryover_candidates = load_candidates(DIRECTED_CARRYOVER_PATH)\n"
+    "    candidates = merge_candidates(active_candidates, carryover_candidates)\n"
+    "    candidate_origin = 'cohorte_dirigida_vigente_más_arrastre'\n",
+)
+SCRAPING_MINORITY_CANDIDATES = _replace_required(
+    SCRAPING_MINORITY_CANDIDATES,
+    "    'únicos': len(candidates),\n",
+    "    'únicos': len(candidates),\n"
+    "    'cohorte_vigente': len(active_candidates),\n"
+    "    'arrastre_histórico': len(carryover_candidates),\n"
+    "    'duplicados_cohorte_arrastre_eliminados': (\n"
+    "        len(active_candidates) + len(carryover_candidates) - len(candidates)\n"
+    "    ),\n",
 )
 
 
@@ -1759,7 +1930,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
     create(
         "flujo/01_datos/01_015_ampliacion_dirigida_minorias.ipynb",
         "01.015 · Ampliación dirigida de categorías minoritarias",
-        "Descubre y adquiere videos peruanos nuevos para llevar cada categoría de daño a por lo menos 2.000 chunks en train, sin modificar el cuaderno 01_01 de scraping inicial. Una compuerta estricta PE excluye antes de la descarga todo canal extranjero o cuyo origen peruano no pueda verificarse.",
+        "Descubre y adquiere videos peruanos nuevos para llevar cada categoría de daño a por lo menos 2.000 chunks en train, sin modificar el cuaderno 01_01 de scraping inicial. Una compuerta estricta PE excluye antes de la descarga todo canal extranjero o cuyo origen peruano no pueda verificarse. La ejecución es reanudable: conserva fuentes terminadas, caché por video y checkpoints canónicos, y en cada nueva ronda recalcula únicamente el déficit pendiente.",
         "La selección usa el snapshot efectivo después de las decisiones CODEX–Sol-EH y mide el "
         "déficit exclusivamente en `train`. El muestreo dirigido adapta principios de aprendizaje "
         "activo ante desbalance y clasificación multietiqueta de cola larga "
@@ -1797,7 +1968,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "Descubrimiento y cohorte separada por split",
                 SCRAPING_MINORITY_DISCOVERY,
             ),
-            ("Cohorte activa y caché", SCRAPING_CANDIDATES),
+            ("Cohorte activa, arrastre y caché", SCRAPING_MINORITY_CANDIDATES),
             ("Ejecución controlada y tolerante a fallos", SCRAPING_EXECUTION),
         ],
     )
