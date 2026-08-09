@@ -9,6 +9,7 @@ jupyterlab<5,>=4.3
 pandas<3,>=2.2
 tqdm<5,>=4.66
 yt-dlp>=2025.1
+youtube-transcript-api<2,>=1.2
 
 [dev]
 nbformat<6,>=5.10

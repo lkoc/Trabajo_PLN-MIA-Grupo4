@@ -141,6 +141,38 @@ def test_annotation_consolidation_reports_each_long_phase(tmp_path):
     assert progress[-1]["status"] == "finished"
 
 
+def test_annotation_consolidation_batches_notebook_progress(tmp_path):
+    source = tmp_path / "annotations.jsonl"
+    write_jsonl_atomic(
+        source,
+        [
+            {
+                "chunk_id": f"c{index}",
+                "video_id": "v1",
+                "text": f"texto {index}",
+                "coarse_labels": ["SEGURO"],
+                "label_source": "ollama_local",
+            }
+            for index in range(2501)
+        ],
+    )
+    progress = []
+
+    consolidate_annotations(
+        [source],
+        tmp_path / "consolidated.jsonl",
+        progress_callback=progress.append,
+    )
+
+    for phase in ("loading_annotations", "consolidating"):
+        advances = [
+            event["advance"]
+            for event in progress
+            if event["phase"] == phase and event["status"] == "progress"
+        ]
+        assert advances == [1000, 1000, 501]
+
+
 def test_rejected_human_event_is_valid_but_never_trains(tmp_path):
     chunks = tmp_path / "chunks.jsonl"
     write_jsonl_atomic(chunks, [{"chunk_id": "c1", "video_id": "v1", "text": "x"}])

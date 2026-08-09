@@ -26,6 +26,7 @@ DEFAULT_PRECEDENCE = {
 
 
 ProgressCallback = Callable[[dict[str, Any]], None]
+PROGRESS_BATCH_SIZE = 1000
 
 
 def _notify_progress(
@@ -47,6 +48,36 @@ def _notify_progress(
                 **details,
             }
         )
+
+
+def _notify_batched_progress(
+    callback: ProgressCallback | None,
+    *,
+    phase: str,
+    completed: int,
+    finished: bool = False,
+    total: int | None = None,
+    **details: Any,
+) -> None:
+    """Agrupa avances para no inundar frontends de notebooks con eventos."""
+
+    if finished:
+        advance = completed % PROGRESS_BATCH_SIZE
+        if not advance:
+            return
+    else:
+        if completed % PROGRESS_BATCH_SIZE:
+            return
+        advance = PROGRESS_BATCH_SIZE
+    _notify_progress(
+        callback,
+        status="progress",
+        phase=phase,
+        advance=advance,
+        total=total,
+        completed=completed,
+        **details,
+    )
 
 
 def consolidate_annotations(
@@ -72,42 +103,56 @@ def consolidate_annotations(
         for row in read_jsonl(source):
             candidates[row["chunk_id"]].append(row)
             loaded_annotations += 1
-            _notify_progress(
+            _notify_batched_progress(
                 progress_callback,
-                status="progress",
                 phase="loading_annotations",
-                advance=1,
                 completed=loaded_annotations,
             )
+    _notify_batched_progress(
+        progress_callback,
+        phase="loading_annotations",
+        completed=loaded_annotations,
+        finished=True,
+    )
 
     chunk_lookup: dict[str, dict[str, Any]] = {}
     _notify_progress(
         progress_callback, status="phase_started", phase="loading_chunks"
     )
+    loaded_chunks = 0
     if chunks_source and Path(chunks_source).is_file():
-        for completed, row in enumerate(read_jsonl(chunks_source), 1):
+        for loaded_chunks, row in enumerate(read_jsonl(chunks_source), 1):
             chunk_lookup[str(row["chunk_id"])] = row
-            _notify_progress(
+            _notify_batched_progress(
                 progress_callback,
-                status="progress",
                 phase="loading_chunks",
-                advance=1,
-                completed=completed,
+                completed=loaded_chunks,
             )
+        _notify_batched_progress(
+            progress_callback,
+            phase="loading_chunks",
+            completed=loaded_chunks,
+            finished=True,
+        )
     video_lookup: dict[str, dict[str, Any]] = {}
     _notify_progress(
         progress_callback, status="phase_started", phase="loading_transcripts"
     )
+    loaded_transcripts = 0
     if transcripts_source and Path(transcripts_source).is_file():
-        for completed, row in enumerate(read_jsonl(transcripts_source), 1):
+        for loaded_transcripts, row in enumerate(read_jsonl(transcripts_source), 1):
             video_lookup[str(row["video_id"])] = row
-            _notify_progress(
+            _notify_batched_progress(
                 progress_callback,
-                status="progress",
                 phase="loading_transcripts",
-                advance=1,
-                completed=completed,
+                completed=loaded_transcripts,
             )
+        _notify_batched_progress(
+            progress_callback,
+            phase="loading_transcripts",
+            completed=loaded_transcripts,
+            finished=True,
+        )
     selected = []
     conflicts = 0
     _notify_progress(
@@ -158,15 +203,21 @@ def consolidate_annotations(
             winner["consolidation_warning"] = "conflicting_top_priority_decisions"
         winner["consolidated_sources"] = [row.get("label_source") for row in rows]
         selected.append(winner)
-        _notify_progress(
+        _notify_batched_progress(
             progress_callback,
-            status="progress",
             phase="consolidating",
-            advance=1,
             total=len(candidates),
             completed=completed,
             conflicts=conflicts,
         )
+    _notify_batched_progress(
+        progress_callback,
+        phase="consolidating",
+        completed=len(candidates),
+        finished=True,
+        total=len(candidates),
+        conflicts=conflicts,
+    )
     selected.sort(
         key=lambda row: (
             str(row.get("video_id") or ""),
@@ -182,13 +233,17 @@ def consolidate_annotations(
         )
         for completed, row in enumerate(read_jsonl(destination_path), 1):
             previous_rows.append(row)
-            _notify_progress(
+            _notify_batched_progress(
                 progress_callback,
-                status="progress",
                 phase="checking_existing",
-                advance=1,
                 completed=completed,
             )
+        _notify_batched_progress(
+            progress_callback,
+            phase="checking_existing",
+            completed=len(previous_rows),
+            finished=True,
+        )
     if destination_path.is_file() and canonical_json_sha256(previous_rows) == canonical_json_sha256(selected):
         status = "noop"
     else:

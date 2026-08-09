@@ -223,7 +223,8 @@ def test_required_frontends_are_small_templates():
     human_source = human.read_text(encoding="utf-8")
     assert "t.safe_label" in human_source
     assert "event.target.value===t.safe_label" in human_source
-    assert "/api/reviews" in human_source
+    assert "/api/progress" in human_source
+    assert "pending:'1'" in human_source
     assert "previous_text" in human_source
     assert "localStorage" in human_source
     assert "display_name" in human_source

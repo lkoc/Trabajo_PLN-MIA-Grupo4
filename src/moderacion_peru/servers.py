@@ -34,6 +34,62 @@ RETRAIN_MINIMUM_PER_DAMAGE = 100
 MAX_REQUEST_BYTES = 2 * 1024 * 1024
 
 
+def _labeling_campaign_page(
+    campaign_rows: list[dict[str, Any]],
+    latest_reviews: dict[str, dict[str, Any]],
+    *,
+    offset: int,
+    limit: int,
+    cohort: str = "",
+    only_pending: bool = False,
+) -> dict[str, Any]:
+    """Pagina la campaña sin copiar el corpus completo para cada solicitud."""
+
+    page_indices: list[int] = []
+    page_rows: list[dict[str, Any]] = []
+    matching = 0
+    for index, row in enumerate(campaign_rows):
+        row_cohort = str(row.get("cohort") or row.get("label_source") or "sin_cohorte")
+        if cohort and cohort != "all" and row_cohort != cohort:
+            continue
+        review = latest_reviews.get(str(row.get("chunk_id")))
+        if only_pending and review is not None and review.get("action") != "defer":
+            continue
+        if offset <= matching < offset + limit:
+            page_indices.append(index)
+            page_rows.append(row)
+        matching += 1
+    return {
+        "total": matching,
+        "offset": offset,
+        "indices": page_indices,
+        "rows": page_rows,
+        "reviews": {
+            str(row["chunk_id"]): latest_reviews[str(row["chunk_id"])]
+            for row in page_rows
+            if str(row.get("chunk_id")) in latest_reviews
+        },
+    }
+
+
+def _labeling_progress(
+    campaign_rows: list[dict[str, Any]],
+    latest_reviews: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    total = len(campaign_rows)
+    events = list(latest_reviews.values())
+    resolved = sum(event.get("action") != "defer" for event in events)
+    deferred = sum(event.get("action") == "defer" for event in events)
+    return {
+        "total": total,
+        "reviewed": len(events),
+        "resolved": resolved,
+        "deferred": deferred,
+        "pending": max(0, total - resolved),
+        "progress_pct": 100 * resolved / max(1, total),
+    }
+
+
 def _model_slot(model_family: str) -> str:
     family = model_family.casefold()
     if family.startswith("classical:"):
@@ -324,6 +380,17 @@ def serve(
         following = campaign_rows[index + 1] if index + 1 < len(campaign_rows) else None
         row["previous_text"] = previous.get("text") if previous and previous.get("video_id") == row.get("video_id") else None
         row["next_text"] = following.get("text") if following and following.get("video_id") == row.get("video_id") else None
+    labeling_reviews = (
+        {row["chunk_id"]: row for row in read_jsonl(review_path)}
+        if mode == "labeling" and review_path.is_file()
+        else {}
+    )
+    labeling_cohorts = sorted(
+        {
+            str(row.get("cohort") or row.get("label_source") or "sin_cohorte")
+            for row in campaign_rows
+        }
+    )
 
     def registry_state() -> tuple[dict[str, Any], dict[str, Path]]:
         if not registry_path.is_file():
@@ -506,6 +573,8 @@ def serve(
                     "mode": mode,
                     "taxonomy": taxonomy.model_dump(),
                     "campaign_available": bool(campaign_path and campaign_path.is_file()),
+                    "campaign_total": len(campaign_rows),
+                    "campaign_cohorts": labeling_cohorts if mode == "labeling" else [],
                     "registry_available": registry_available,
                     "registry": registry_payload,
                     "models": registry_models,
@@ -524,32 +593,23 @@ def serve(
                 query = urllib.parse.parse_qs(parsed.query)
                 offset = max(0, int(query.get("offset", [0])[0]))
                 limit = min(1000, max(1, int(query.get("limit", [50])[0])))
-                rows = campaign_rows
-                if query.get("pending", ["0"])[0] == "1" and review_path.is_file():
-                    latest = {row["chunk_id"]: row for row in read_jsonl(review_path)}
-                    resolved = {
-                        chunk_id
-                        for chunk_id, event in latest.items()
-                        if event.get("action") != "defer"
-                    }
-                    rows = [row for row in rows if row.get("chunk_id") not in resolved]
-                self.send_json({"total": len(rows), "offset": offset, "rows": rows[offset:offset + limit]})
+                cohort = query.get("cohort", [""])[0]
+                only_pending = query.get("pending", ["0"])[0] == "1"
+                with persistence_lock:
+                    page = _labeling_campaign_page(
+                        campaign_rows,
+                        labeling_reviews,
+                        offset=offset,
+                        limit=limit,
+                        cohort=cohort,
+                        only_pending=only_pending,
+                    )
+                self.send_json(page)
                 return
             if parsed.path == "/api/progress" and mode == "labeling":
-                total = len(campaign_rows)
-                events = list(read_jsonl(review_path)) if review_path.is_file() else []
-                latest = {event["chunk_id"]: event for event in events}
-                resolved = sum(event.get("action") != "defer" for event in latest.values())
-                self.send_json(
-                    {
-                        "total": total,
-                        "reviewed": len(latest),
-                        "resolved": resolved,
-                        "deferred": sum(event.get("action") == "defer" for event in latest.values()),
-                        "pending": max(0, total - resolved),
-                        "progress_pct": 100 * resolved / max(1, total),
-                    }
-                )
+                with persistence_lock:
+                    progress = _labeling_progress(campaign_rows, labeling_reviews)
+                self.send_json(progress)
                 return
             if parsed.path == "/api/reviews" and mode == "labeling":
                 rows = list(read_jsonl(review_path)) if review_path.is_file() else []
@@ -746,6 +806,8 @@ def serve(
                     )
                     if mode == "production":
                         _production_feedback(inference_path, review_path, ready_path)
+                    elif added:
+                        labeling_reviews[event.chunk_id] = event.model_dump(mode="json")
             except (KeyError, ValueError, ValidationError) as exc:
                 self.send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return

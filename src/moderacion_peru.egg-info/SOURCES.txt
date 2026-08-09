@@ -3,6 +3,7 @@ pyproject.toml
 src/moderacion_peru/__init__.py
 src/moderacion_peru/acquisition.py
 src/moderacion_peru/artifacts.py
+src/moderacion_peru/chunk_optimization.py
 src/moderacion_peru/cli.py
 src/moderacion_peru/colab.py
 src/moderacion_peru/consolidation.py
@@ -12,9 +13,11 @@ src/moderacion_peru/experiments.py
 src/moderacion_peru/incremental.py
 src/moderacion_peru/io.py
 src/moderacion_peru/labeling.py
+src/moderacion_peru/labeling_calibration.py
 src/moderacion_peru/manifests.py
 src/moderacion_peru/migration.py
 src/moderacion_peru/models.py
+src/moderacion_peru/neural_chunk_robust.py
 src/moderacion_peru/notebook_ui.py
 src/moderacion_peru/paths.py
 src/moderacion_peru/pilot.py
@@ -34,9 +37,13 @@ src/moderacion_peru/providers/base.py
 src/moderacion_peru/providers/deepseek.py
 src/moderacion_peru/providers/huggingface.py
 src/moderacion_peru/providers/ollama.py
+tests/test_chunk_optimization.py
 tests/test_colab.py
 tests/test_end_to_end_bridge.py
+tests/test_frontend_parity.py
 tests/test_incremental_and_migration.py
+tests/test_neural_chunk_robust.py
+tests/test_prepare_colab_bundle.py
 tests/test_providers_and_training.py
 tests/test_structure.py
 tests/test_taxonomy_and_schemas.py

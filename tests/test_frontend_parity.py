@@ -8,10 +8,46 @@ from moderacion_peru.registry import compare_and_publish_registry
 from moderacion_peru.schemas import ReviewEvent
 from moderacion_peru.servers import (
     _consensus_result,
+    _labeling_campaign_page,
+    _labeling_progress,
     _production_feedback,
     _production_registry_paths,
 )
 from moderacion_peru.taxonomy import load_taxonomy
+
+
+def test_labeling_campaign_is_paged_and_uses_latest_review_state():
+    rows = [
+        {"chunk_id": "c1", "cohort": "a", "text": "uno"},
+        {"chunk_id": "c2", "cohort": "a", "text": "dos"},
+        {"chunk_id": "c3", "cohort": "b", "text": "tres"},
+    ]
+    reviews = {
+        "c1": {"chunk_id": "c1", "action": "accept"},
+        "c2": {"chunk_id": "c2", "action": "defer"},
+    }
+
+    page = _labeling_campaign_page(
+        rows,
+        reviews,
+        offset=0,
+        limit=1,
+        cohort="a",
+        only_pending=True,
+    )
+
+    assert page["total"] == 1
+    assert page["indices"] == [1]
+    assert [row["chunk_id"] for row in page["rows"]] == ["c2"]
+    assert page["reviews"] == {"c2": reviews["c2"]}
+    assert _labeling_progress(rows, reviews) == {
+        "total": 3,
+        "reviewed": 2,
+        "resolved": 1,
+        "deferred": 1,
+        "pending": 2,
+        "progress_pct": pytest.approx(100 / 3),
+    }
 
 
 def _candidate(root: Path, dataset: Path, family: str, identifier: str, score: float) -> None:
