@@ -6,7 +6,7 @@ El flujo remoto no requiere Google Cloud Console, un cliente OAuth propio ni
 Google Drive Desktop. `02_00_preparacion_bundle_colab.ipynb` se ejecuta
 directamente en Google Colab, obtiene un bundle ya construido, verifica su
 `bundle_id` y todos sus SHA-256, monta Drive mediante `drive.mount()` y publica
-una versión inmutable. Después, `02_01` y `03_02`–`03_06` resuelven
+una versión inmutable. Después, `02_01` y `03_02`–`03_06b` resuelven
 `bundle_releases/latest.json`, validan esa versión y reconstruyen el proyecto
 mínimo en `/content` antes de importar código.
 
@@ -79,11 +79,11 @@ ser sobrescrita.
 
 Ejecute `02_00` dos veces en el recorrido completo: después de `01_03`, antes de
 `02_01`, para publicar los chunks; y después de que `02_05` cree un snapshot
-nuevo, antes de entrenar con `03_02`–`03_06`.
+nuevo, antes de entrenar con `03_02`–`03_06b`.
 
 ## Consumidores y GPU
 
-Los cuadernos `02_01` y `03_02`–`03_06` pueden ejecutarse en Colab. `02_01` usa la API DeepSeek y funciona con un runtime CPU; no reserva una GPU innecesaria. `03_02`–`03_06` sí requieren la L4. Su bootstrap:
+Los cuadernos `02_01` y `03_02`–`03_06b` pueden ejecutarse en Colab. `02_01` usa la API DeepSeek y funciona con un runtime CPU; no reserva una GPU innecesaria. `03_02`–`03_06b` sí requieren la L4. Su bootstrap:
 
 1. monta Drive y lee `bundle_releases/latest.json`;
 2. exige que el SHA-256 del core coincida con el esperado por el cuaderno;
@@ -138,7 +138,7 @@ no inventa una corrida: los interruptores de entrenamiento permanecen en
    `RUN_PUBLISH_BUNDLE=True`.
 3. Autorice `drive.mount()` y confirme `status=published_to_drive`, el
    `bundle_id` y `manifest_sha256`.
-4. Abra `02_01` o `03_02`–`03_06`, seleccione Colab/L4 y ejecute desde la primera
+4. Abra `02_01` o `03_02`–`03_06b`, seleccione Colab/L4 y ejecute desde la primera
    celda.
 5. Confirme **Bundle de Colab verificado** antes de activar el procesamiento.
 

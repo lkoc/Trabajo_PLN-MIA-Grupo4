@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -9,7 +9,7 @@ from .taxonomy import load_taxonomy
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class AnnotationRecord(BaseModel):
@@ -51,7 +51,7 @@ class AnnotationRecord(BaseModel):
     created_at: datetime = Field(default_factory=utc_now)
 
     @model_validator(mode="after")
-    def validate_semantics(self) -> "AnnotationRecord":
+    def validate_semantics(self) -> AnnotationRecord:
         taxonomy = load_taxonomy()
         self.coarse_labels = list(taxonomy.normalize_categories(self.coarse_labels))
         self.fine_labels = list(taxonomy.normalize_fine_labels(self.fine_labels))
@@ -90,14 +90,20 @@ class ModelReadyRecord(BaseModel):
     chunk_id: str = Field(min_length=1)
     video_id: str = Field(min_length=1)
     channel_id: str | None = None
+    channel_title: str | None = None
     text: str = Field(min_length=1)
     coarse_labels: list[str]
     fine_labels: list[str] = Field(default_factory=list)
     flags_reference_only: list[str] = Field(default_factory=list)
+    coarse_observed_mask: list[int] = Field(default_factory=list)
+    fine_observed_mask: list[int] = Field(default_factory=list)
+    flags_observed_mask: list[int] = Field(default_factory=list)
     label_source: str = Field(min_length=1)
+    prompt_sha256: str | None = None
     sample_weight: float = Field(default=1.0, ge=0)
     campaign: str | None = None
     split: Literal["train", "validation", "test"]
+    channel_split: Literal["train", "validation", "test"] | None = None
     needs_review: bool = False
     training_eligible: bool = True
     decision_status: Literal["resolved", "needs_review", "excluded"] = "resolved"
@@ -106,13 +112,37 @@ class ModelReadyRecord(BaseModel):
     migration_warning: str | None = None
 
     @model_validator(mode="after")
-    def validate_training_row(self) -> "ModelReadyRecord":
+    def validate_training_row(self) -> ModelReadyRecord:
         taxonomy = load_taxonomy()
         self.coarse_labels = list(taxonomy.normalize_categories(self.coarse_labels))
         self.fine_labels = list(taxonomy.normalize_fine_labels(self.fine_labels))
         unknown_flags = set(self.flags_reference_only) - set(taxonomy.flags)
         if unknown_flags:
             raise ValueError(f"Flags desconocidos: {sorted(unknown_flags)}")
+        if not self.coarse_observed_mask:
+            self.coarse_observed_mask = [1] * len(taxonomy.target_labels)
+        if not self.fine_observed_mask:
+            self.fine_observed_mask = [
+                int(bool(self.fine_labels)) for _ in taxonomy.fine_labels
+            ]
+        if not self.flags_observed_mask:
+            self.flags_observed_mask = [
+                int(bool(self.flags_reference_only)) for _ in taxonomy.flags
+            ]
+        expected_masks = (
+            (
+                "coarse_observed_mask",
+                self.coarse_observed_mask,
+                len(taxonomy.target_labels),
+            ),
+            ("fine_observed_mask", self.fine_observed_mask, len(taxonomy.fine_labels)),
+            ("flags_observed_mask", self.flags_observed_mask, len(taxonomy.flags)),
+        )
+        for name, mask, expected in expected_masks:
+            if len(mask) != expected or any(value not in {0, 1} for value in mask):
+                raise ValueError(
+                    f"{name} debe contener {expected} posiciones binarias en orden canónico"
+                )
         if self.training_eligible and (not self.coarse_labels or self.needs_review):
             raise ValueError("Una fila entrenable requiere categoría resuelta")
         if self.legacy_coarse_labels:
@@ -188,7 +218,7 @@ class ModelRegistryEntry(BaseModel):
     status: Literal["candidate", "validated", "shadow_only", "archived"] = "candidate"
 
     @model_validator(mode="after")
-    def validate_targets(self) -> "ModelRegistryEntry":
+    def validate_targets(self) -> ModelRegistryEntry:
         taxonomy = load_taxonomy()
         if tuple(self.target_labels) != taxonomy.target_labels:
             raise ValueError("El registro no usa las cinco salidas canónicas en orden")
@@ -226,7 +256,7 @@ class ReviewEvent(BaseModel):
     created_at: datetime = Field(default_factory=utc_now)
 
     @model_validator(mode="after")
-    def validate_review(self) -> "ReviewEvent":
+    def validate_review(self) -> ReviewEvent:
         taxonomy = load_taxonomy()
         self.proposed_labels = list(taxonomy.normalize_categories(self.proposed_labels))
         self.final_labels = list(taxonomy.normalize_categories(self.final_labels))

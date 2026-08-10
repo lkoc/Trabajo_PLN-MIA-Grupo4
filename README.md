@@ -151,16 +151,17 @@ tope artificial; persiste por `chunk_id` y puede continuar con una recarga.
 
 | Cuaderno | Familia o decisión | Resultado materializado |
 |---|---|---|
-| `03_01_modelos_clasicos` | Dummy, ComplementNB, regresión logística, SVM lineal y SGD incremental con TF-IDF | cinco candidatos con umbrales y métricas |
-| `03_02_transformers_planos` | MiniLM multilingüe y E5-small multilingüe | checkpoints y candidatos planos |
-| `03_03_transformer_cascada` | compuerta de cualquier daño seguida de cuatro salidas de daño | candidato de dos etapas |
+| `03_01_modelos_clasicos` | cinco estimadores con TF-IDF palabra+carácter, en variantes base e informada por política | candidatos de 22 salidas con supervisión enmascarada |
+| `03_02_transformers_planos` | MiniLM multilingüe y E5-small multilingüe | checkpoints de 5+14+3 salidas y candidatos planos |
+| `03_03_transformer_cascada` | compuerta de cualquier daño con auxiliares, seguida de cuatro salidas de daño | candidato de dos etapas y diagnóstico de propagación |
 | `03_04_transformer_multitarea` | cinco salidas principales, 14 etiquetas finas y tres flags auxiliares | candidato multitarea |
-| `03_05_qwen_lora` | Qwen3-0.6B con adaptación LoRA | adaptador, checkpoint y candidato reanudable |
-| `03_06_qwen_estructurado` | Qwen con penalización del conflicto `SEGURO+daño` | checkpoint y candidato estructurado |
-| `03_07_comparacion_final` | compara candidatos del mismo snapshot | informe común y registro productivo |
-| `03_08_auditoria_finas_flags` | audita cobertura de etiquetas finas y flags | informe auxiliar del snapshot |
+| `03_05_qwen_lora` | Qwen3-0.6B-Base con adaptación LoRA y cabeza clasificadora | adaptador y candidato de 22 salidas; no se presenta como prompting |
+| `03_06_qwen_estructurado` | Qwen clasificador con penalización del conflicto `SEGURO+daño` | checkpoint estructurado de 22 salidas |
+| `03_06b_qwen_prompt_sft` | Qwen3-0.6B conversacional, LoRA causal y cápsula trazable del prompt v3.2 | JSON estricto y candidato realmente condicionado por prompt |
+| `03_07_comparacion_final` | individuos, ensembles, diversidad, bootstrap por video y pruebas pareadas | comparación en validation y manifiesto congelado; test/publicación separados |
+| `03_08_auditoria_finas_flags` | audita máscaras, cobertura, consistencia y métricas auxiliares observadas | informes del snapshot y de candidatos disponibles |
 
-Cada candidato completa `fit → calibración en validation → evaluación en test → manifiesto`. La selección usa solo validation. Test informa el desempeño después de congelar modelo y umbrales. El protocolo registra AP, precisión, recall y F1 por salida; AP/F1 macro de los cuatro daños; detección de cualquier daño; falsos seguros; conflicto `SEGURO+daño`; calibración y carga de revisión.
+Los cuadernos `03_01`–`03_06b` completan `fit → calibración/evaluación en validation → manifiesto` y dejan test sellado. `03_07` compara individuos y ensembles, congela candidatos, umbrales y regla; un segundo interruptor infiere una sola vez sobre el test natural completo. Train y validation conservan todo el daño y seleccionan `SEGURO` de forma determinista, aproximadamente proporcional por canal, con ratio 4:1: quedan 51.205/10.600 chunks. Test conserva sus 22.684 chunks y su prevalencia natural. De la misma inferencia se deriva además una vista secundaria determinista 4:1 de 9.010 chunks; no se vuelve a abrir ni ejecutar el modelo. La publicación permanece bloqueada por defecto.
 
 ### 04 · Operación supervisada
 
@@ -287,12 +288,12 @@ Desde VS Code, abra la carpeta clonada, seleccione como kernel el Python de `.ve
 .\.venv\Scripts\jupyter-lab.exe
 ```
 
-El recorrido completo contiene 19 cuadernos:
+El recorrido completo contiene 20 cuadernos:
 
 ```text
 01_01 → 01_015 ampliación minoritaria opcional → 01_02 opcional → 01_03
 → 02_00 en Colab → 02_01 (calibración→Flash→Pro) → 02_02 fallback opcional → 02_03 auditoría → 02_04 → 02_05 → 02_00 en Colab
-→ 03_01 ... 03_06 en ramas comparables
+→ 03_01 ... 03_06 clasificadores y 03_06b SFT condicionado por prompt en ramas comparables
 → 03_07 → 03_08 → 04_01
 ```
 
@@ -306,10 +307,10 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 | `02_00` | `RUN_PUBLISH_BUNDLE=False`, `BUNDLE_SOURCE='github'` | ábralo en Colab; use GitHub si el bundle está sincronizado o `'local_upload'` para seleccionar los nueve archivos locales, active y autorice `drive.mount()` |
 | `02_01` | recuperación histórica y checkpoints automáticos activos; cuatro interruptores de API controlan cada fase; panel 1 000, `PRIMARY_LIMIT=None`, `REVIEW_LIMIT=None` para la campaña completa | recupera solo coincidencias exactas 1:1, valida `/models`, ejecuta calibración, Flash y Pro sobre pendientes; `Ctrl+C` conserva grupos terminados y publica el run en Drive cuando esa opción está habilitada |
 | `02_02` | `RUN_FALLBACK=False`, `LIMIT=20` | active solo si necesita un diagnóstico local independiente; `None` procesa todos los pendientes |
-| `03_01`–`03_06` | `RUN_TRAINING=False` | active la familia que se desea entrenar |
-| `03_07` | `RUN_PUBLISH=False` | active después de reunir candidatos completos del mismo snapshot |
+| `03_01`–`03_06b` | `RUN_TRAINING=False`; ratio `SEGURO`/daño = 4:1 en train/validation; test natural completo | active la familia; `03_07` reutiliza una inferencia de test para las vistas natural y 4:1 |
+| `03_07` | `RUN_COMPARE_AND_FREEZE=False`, `RUN_TEST_ONCE=False`, `RUN_PUBLISH=False` | compare/congele, revise evidencia, abra test una vez; publicación sigue bloqueada hasta aprobación posterior |
 
-`03_01`–`03_06` no forman una cadena: son alternativas comparables y pueden ejecutarse en paralelo o por separado. `03_07` requiere al menos un candidato completo y no compara candidatos creados con snapshots distintos.
+`03_01`–`03_06b` no forman una cadena: son alternativas comparables. `03_05`/`03_06` son clasificadores supervisados; solo `03_06b` recibe el prompt como condición de entrada. `03_07` requiere candidatos completos del mismo snapshot y rechaza cualquiera que haya abierto test antes de congelar.
 
 ### 7. Reconciliar, entrenar y publicar mediante la CLI
 
@@ -361,7 +362,7 @@ Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guarda
 .\.venv\Scripts\python.exe tools/generate_workflow_notebooks.py
 ```
 
-Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, archivado reversible por longitud, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 19 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
+Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, archivado reversible por longitud, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 20 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
 
 El artículo y la presentación se recompilan de forma independiente:
 
@@ -405,7 +406,7 @@ El dataset actual baja de aproximadamente 104,2 MiB a 20,3 MiB con gzip nivel 9,
 
 ## Google Colab L4 desde VS Code
 
-Los cuadernos `03_02`–`03_06`, y opcionalmente `02_01`, incluyen el puente a Colab. La cascada API de `02_01` no usa la GPU asignada; la L4 solo es necesaria para modelos locales/neuronales. `02_00_preparacion_bundle_colab.ipynb` descarga el bundle sincronizado desde GitHub o recibe el bundle local por el selector del navegador, verifica su identidad, monta Drive y publica la versión. No requiere Google Cloud Console ni Drive Desktop. Después, el consumidor resuelve `bundle_releases/latest.json`, verifica el `bundle_id` y todos los SHA-256 y activa la versión antes de importar el proyecto. No transfiere videos, audio, PDFs, modelos Ollama ni cachés de Hugging Face.
+Los cuadernos `03_02`–`03_06b`, y opcionalmente `02_01`, incluyen el puente a Colab. La cascada API de `02_01` no usa la GPU asignada; la L4 solo es necesaria para modelos locales/neuronales. `02_00_preparacion_bundle_colab.ipynb` descarga el bundle sincronizado desde GitHub o recibe el bundle local por el selector del navegador, verifica su identidad, monta Drive y publica la versión. No requiere Google Cloud Console ni Drive Desktop. Después, el consumidor resuelve `bundle_releases/latest.json`, verifica el `bundle_id` y todos los SHA-256 y activa la versión antes de importar el proyecto. No transfiere videos, audio, PDFs, modelos Ollama ni cachés de Hugging Face.
 
 La preparación, verificación SHA-256, reanudación por `COLAB_RUN_ID` y recuperación de resultados se describen en [`docs/COLAB_L4.md`](docs/COLAB_L4.md). El backend L4 falla explícitamente si Colab asigna una GPU distinta cuando `COLAB_REQUIRE_L4=True`.
 

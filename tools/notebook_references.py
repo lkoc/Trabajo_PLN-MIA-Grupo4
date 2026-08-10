@@ -10,7 +10,6 @@ import re
 from collections.abc import Iterable
 from typing import Any
 
-
 CITATION_MARKER = re.compile(r"\[@([A-Za-z0-9_]+)\]")
 
 
@@ -223,6 +222,11 @@ REFERENCE_LIBRARY = {
         'Qwen Team, "Model Card: Qwen/Qwen3-0.6B-Base," Hugging Face Hub, revision '
         "da87bfb608c14b7cf20ba1ce41287e8de496c0cd, 2025. [Online]. Available: "
         "https://huggingface.co/Qwen/Qwen3-0.6B-Base/tree/da87bfb608c14b7cf20ba1ce41287e8de496c0cd"
+    ),
+    "hf2026qwen06binstructcard": (
+        'Qwen Team, "Model Card: Qwen/Qwen3-0.6B," Hugging Face Hub, revision '
+        "6130ef31402718485ca4d80a6234f70d9a4cf362, 2025. [Online]. Available: "
+        "https://huggingface.co/Qwen/Qwen3-0.6B/tree/6130ef31402718485ca4d80a6234f70d9a4cf362"
     ),
     "hf2026peft018": (
         'Hugging Face, "LoRA API Reference," PEFT documentation, ver. 0.18.0, 2025. '

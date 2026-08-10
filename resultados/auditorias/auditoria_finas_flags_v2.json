@@ -1,0 +1,66 @@
+{
+  "schema_version": "2.1.0",
+  "operation": "audit_fine_labels_and_flags",
+  "created_at": "2026-08-10T08:52:02.782532+00:00",
+  "dataset": "datos\\model_ready\\v2\\dataset_5_salidas.jsonl",
+  "dataset_sha256": "013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86",
+  "rows": 173240,
+  "splits": {
+    "test": 22684,
+    "train": 123239,
+    "validation": 27317
+  },
+  "channel_robustness_splits": {
+    "validation": 23834,
+    "train": 128156,
+    "test": 21250
+  },
+  "fine_label_counts": {
+    "seguro": 128537,
+    "seguro_ironia_marcada": 555,
+    "racismo_etnico_explicito": 1052,
+    "racismo_linguistico": 50,
+    "clasismo_racial": 403,
+    "discriminacion_regional": 382,
+    "racismo_encubierto": 792,
+    "misoginia_acoso_genero": 1720,
+    "homofobia_transfobia": 459,
+    "acoso_personal": 6216,
+    "amenaza_directa": 1783,
+    "sexual_explicito": 2102,
+    "sexual_cosificacion": 797,
+    "sexual_no_consensual": 282
+  },
+  "flag_counts": {
+    "ironia_ambigua": 114,
+    "humor_encubridor": 1398,
+    "contexto_necesario": 244
+  },
+  "fine_observed_counts": {
+    "seguro": 143255,
+    "seguro_ironia_marcada": 143255,
+    "racismo_etnico_explicito": 172887,
+    "racismo_linguistico": 172887,
+    "clasismo_racial": 172887,
+    "discriminacion_regional": 172887,
+    "racismo_encubierto": 172887,
+    "misoginia_acoso_genero": 173068,
+    "homofobia_transfobia": 173068,
+    "acoso_personal": 172355,
+    "amenaza_directa": 172355,
+    "sexual_explicito": 172395,
+    "sexual_cosificacion": 172395,
+    "sexual_no_consensual": 172395
+  },
+  "flag_observed_counts": {
+    "ironia_ambigua": 173240,
+    "humor_encubridor": 173240,
+    "contexto_necesario": 173240
+  },
+  "rows_without_fine_reference": 32025,
+  "rows_with_complete_fine_mask": 141159,
+  "rows_with_complete_flag_mask": 173240,
+  "fine_to_coarse_inconsistencies": 0,
+  "inconsistent_chunk_ids_sample": [],
+  "interpretation": "Las finas y flags son objetivos auxiliares únicamente en posiciones con máscara observada; ausente no equivale a negativo."
+}

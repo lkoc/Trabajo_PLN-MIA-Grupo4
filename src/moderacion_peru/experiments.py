@@ -2,27 +2,51 @@ from __future__ import annotations
 
 import json
 import math
+import os
+import time
+from collections.abc import Iterable, Sequence
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 import numpy as np
 
-from .datasets import load_split
+from .datasets import deterministic_safe_downsample
 from .device import resolve_device, torch_device_name
-from .io import canonical_json_sha256, read_jsonl, sha256_file, write_json_atomic, write_jsonl_atomic
+from .io import (
+    canonical_json_sha256,
+    read_jsonl,
+    sha256_file,
+    write_json_atomic,
+    write_jsonl_atomic,
+)
 from .manifests import artifact_reference, build_manifest, save_manifest
 from .models import TRANSFORMER_SPECS, TrainingSpecification
 from .taxonomy import load_taxonomy
-from .training import calibrate_thresholds, classification_metrics, encode_targets
+from .training import (
+    calibrate_thresholds,
+    classification_metrics,
+    encode_targets,
+    masked_multilabel_metrics,
+)
+
+TRAINING_ENGINE_VERSION = "4.1.0"
+PROJECT_SAFE_TO_DAMAGE_RATIO = 4.0
+DEFAULT_LOCAL_PARALLEL_WORKERS = 4
 
 
-TRAINING_ENGINE_VERSION = "3.0.0"
+def _require_project_safe_ratio(value: float | None) -> float:
+    if value != PROJECT_SAFE_TO_DAMAGE_RATIO:
+        raise ValueError(
+            "La política activa exige safe_to_damage_ratio=4.0. "
+            "Entrenar con todos los SEGURO queda fuera del alcance de este proyecto."
+        )
+    return PROJECT_SAFE_TO_DAMAGE_RATIO
 
 
 def _utc_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _sigmoid(values: np.ndarray) -> np.ndarray:
@@ -30,7 +54,9 @@ def _sigmoid(values: np.ndarray) -> np.ndarray:
     return 1.0 / (1.0 + np.exp(-clipped))
 
 
-def _experiment_signature(dataset: Path, experiment: str, configuration: dict[str, Any]) -> str:
+def _experiment_signature(
+    dataset: Path, experiment: str, configuration: dict[str, Any]
+) -> str:
     return canonical_json_sha256(
         {
             "engine": TRAINING_ENGINE_VERSION,
@@ -49,7 +75,11 @@ def _complete_candidate(path: Path, signature: str) -> dict[str, Any] | None:
     manifest = Path(candidate.get("checkpoint_manifest", ""))
     if not manifest.is_absolute():
         manifest = path.parent / manifest
-    if candidate.get("run_signature") != signature or candidate.get("status") != "complete" or not manifest.is_file():
+    if (
+        candidate.get("run_signature") != signature
+        or candidate.get("status") != "complete"
+        or not manifest.is_file()
+    ):
         return None
     payload = json.loads(manifest.read_text(encoding="utf-8"))
     for record in payload.get("files", []):
@@ -93,8 +123,13 @@ def _write_predictions(
     path: Path,
     rows: Sequence[dict[str, Any]],
     scores: np.ndarray,
+    *,
+    output_labels: Sequence[str] | None = None,
 ) -> None:
     taxonomy = load_taxonomy()
+    labels = list(output_labels or taxonomy.target_labels)
+    if scores.shape != (len(rows), len(labels)):
+        raise ValueError("Predicciones y contrato de salidas no coinciden")
     output = []
     for row, vector in zip(rows, scores, strict=True):
         output.append(
@@ -103,8 +138,7 @@ def _write_predictions(
                 "video_id": row["video_id"],
                 "split": row["split"],
                 "scores": {
-                    label: float(vector[index])
-                    for index, label in enumerate(taxonomy.target_labels)
+                    label: float(vector[index]) for index, label in enumerate(labels)
                 },
                 "true_labels": row["coarse_labels"],
             }
@@ -112,44 +146,177 @@ def _write_predictions(
     write_jsonl_atomic(path, output)
 
 
-def _evaluate(
+def _evaluate_validation(
     run_dir: Path,
     validation_rows: Sequence[dict[str, Any]],
-    validation_scores: np.ndarray,
-    test_rows: Sequence[dict[str, Any]],
-    test_scores: np.ndarray,
+    validation_scores_all: np.ndarray,
+    output_labels: Sequence[str],
 ) -> tuple[dict[str, float], dict[str, Any], dict[str, Any]]:
+    """Calibra y evalúa validation sin consultar el split test.
+
+    Los primeros cinco scores son las salidas gruesas. Las métricas auxiliares
+    respetan las máscaras de observación del snapshot.
+    """
+
+    taxonomy = load_taxonomy()
+    if tuple(output_labels[:5]) != taxonomy.target_labels:
+        raise ValueError("Las primeras cinco salidas deben seguir el contrato grueso")
     y_validation = encode_targets(validation_rows)
-    y_test = encode_targets(test_rows)
+    validation_scores = validation_scores_all[:, :5]
     thresholds = calibrate_thresholds(y_validation, validation_scores)
-    validation_metrics = classification_metrics(y_validation, validation_scores, thresholds)
-    test_metrics = classification_metrics(y_test, test_scores, thresholds)
+    validation_metrics = classification_metrics(
+        y_validation, validation_scores, thresholds
+    )
+    auxiliary: dict[str, Any] = {}
+    offset = len(taxonomy.target_labels)
+    if len(output_labels) >= offset + len(taxonomy.fine_labels):
+        fine_truth = np.asarray(
+            [
+                [
+                    int(label in row.get("fine_labels", ()))
+                    for label in taxonomy.fine_labels
+                ]
+                for row in validation_rows
+            ],
+            dtype=np.int8,
+        )
+        fine_mask = np.asarray(
+            [
+                row.get("fine_observed_mask", [0] * len(taxonomy.fine_labels))
+                for row in validation_rows
+            ],
+            dtype=np.int8,
+        )
+        fine_scores = validation_scores_all[
+            :, offset : offset + len(taxonomy.fine_labels)
+        ]
+        fine_thresholds = calibrate_thresholds(
+            fine_truth,
+            fine_scores,
+            taxonomy.fine_labels,
+            fine_mask,
+        )
+        auxiliary["fine"] = masked_multilabel_metrics(
+            fine_truth,
+            fine_scores,
+            fine_mask,
+            taxonomy.fine_labels,
+            fine_thresholds,
+        )
+        auxiliary["fine"]["thresholds"] = fine_thresholds
+        offset += len(taxonomy.fine_labels)
+    if len(output_labels) >= offset + len(taxonomy.flags):
+        flag_truth = np.asarray(
+            [
+                [
+                    int(flag in row.get("flags_reference_only", ()))
+                    for flag in taxonomy.flags
+                ]
+                for row in validation_rows
+            ],
+            dtype=np.int8,
+        )
+        flag_mask = np.asarray(
+            [
+                row.get("flags_observed_mask", [0] * len(taxonomy.flags))
+                for row in validation_rows
+            ],
+            dtype=np.int8,
+        )
+        flag_scores = validation_scores_all[:, offset : offset + len(taxonomy.flags)]
+        flag_thresholds = calibrate_thresholds(
+            flag_truth,
+            flag_scores,
+            taxonomy.flags,
+            flag_mask,
+        )
+        auxiliary["flags"] = masked_multilabel_metrics(
+            flag_truth,
+            flag_scores,
+            flag_mask,
+            taxonomy.flags,
+            flag_thresholds,
+        )
+        auxiliary["flags"]["thresholds"] = flag_thresholds
     write_json_atomic(run_dir / "thresholds.json", thresholds)
     write_json_atomic(
         run_dir / "metrics.json",
         {
             "selection_split": "validation",
-            "test_used_for_selection": False,
+            "test_status": "sealed_not_evaluated",
             "thresholds": thresholds,
             "validation": validation_metrics,
-            "test": test_metrics,
+            "auxiliary_validation_observed_only": auxiliary,
         },
     )
-    _write_predictions(run_dir / "predictions_validation.jsonl", validation_rows, validation_scores)
-    _write_predictions(run_dir / "predictions_test.jsonl", test_rows, test_scores)
-    return thresholds, validation_metrics, test_metrics
+    _write_predictions(
+        run_dir / "predictions_validation.jsonl",
+        validation_rows,
+        validation_scores_all,
+        output_labels=output_labels,
+    )
+    return thresholds, validation_metrics, auxiliary
 
 
-def _dataset_splits(dataset: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+def _dataset_splits(
+    dataset: Path,
+    *,
+    split_scheme: str = "video",
+    safe_to_damage_ratio: float | None = 4.0,
+    sampling_seed: int = 20260805,
+) -> tuple[
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    dict[str, Any],
+]:
     rows = [row for row in read_jsonl(dataset)]
-    train = [row for row in rows if row.get("split") == "train"]
-    validation = [row for row in rows if row.get("split") == "validation"]
-    test = [row for row in rows if row.get("split") == "test"]
-    if not train or not validation or not test:
+    split_field = {"video": "split", "channel": "channel_split"}.get(split_scheme)
+    if split_field is None:
+        raise ValueError("split_scheme debe ser 'video' o 'channel'")
+    train_full = [row for row in rows if row.get(split_field) == "train"]
+    validation_full = [row for row in rows if row.get(split_field) == "validation"]
+    test_full = [row for row in rows if row.get(split_field) == "test"]
+    train, train_sampling = deterministic_safe_downsample(
+        train_full,
+        safe_to_damage_ratio=safe_to_damage_ratio,
+        seed=sampling_seed,
+    )
+    validation, validation_sampling = deterministic_safe_downsample(
+        validation_full,
+        safe_to_damage_ratio=safe_to_damage_ratio,
+        seed=sampling_seed,
+    )
+    if not train or not validation or not test_full:
         raise ValueError(
             "El snapshot necesita filas en train, validation y test; agregue videos, no redistribuya chunks"
         )
-    return train, validation, test
+    sampling = {
+        "policy": "fixed_4_to_1_train_validation_full_sealed_test",
+        "split_scheme": split_scheme,
+        "split_field": split_field,
+        "sampling_seed": sampling_seed,
+        "safe_to_damage_ratio": safe_to_damage_ratio,
+        "train": train_sampling,
+        "validation": validation_sampling,
+        "test_sealed": {
+            "policy": "full_natural_prevalence",
+            "rows_before": len(test_full),
+            "rows_after": len(test_full),
+            "rows_removed": 0,
+        },
+        "test_reporting": {
+            "primary": "full_natural_prevalence",
+            "secondary": "deterministic_4_to_1_slice_from_same_predictions",
+            "single_inference_pass": True,
+        },
+        "prevalence_interpretation": (
+            "Validation metrics describe the deterministic 4:1 benchmark. The sealed "
+            "test is scored once at natural prevalence and the same predictions also "
+            "produce a deterministic 4:1 secondary view."
+        ),
+    }
+    return train, validation, test_full, sampling
 
 
 def _classical_scores(model: Any, texts: Sequence[str]) -> np.ndarray:
@@ -164,6 +331,103 @@ def _classical_scores(model: Any, texts: Sequence[str]) -> np.ndarray:
     return values
 
 
+class MaskedOneVsRestClassifier:
+    """Un estimador binario por salida, omitiendo targets con máscara cero.
+
+    El target usa ``-1`` para posiciones no observadas. La clase se mantiene en
+    este módulo para que los artefactos joblib sean portables en inferencia.
+    """
+
+    def __init__(self, estimator: Any, *, n_jobs: int = 1) -> None:
+        self.estimator = estimator
+        self.n_jobs = n_jobs
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        parameters = {"estimator": self.estimator, "n_jobs": self.n_jobs}
+        if deep and hasattr(self.estimator, "get_params"):
+            parameters.update(
+                {
+                    f"estimator__{name}": value
+                    for name, value in self.estimator.get_params(deep=True).items()
+                }
+            )
+        return parameters
+
+    def set_params(self, **parameters: Any) -> MaskedOneVsRestClassifier:
+        nested = {}
+        for name, value in parameters.items():
+            if name.startswith("estimator__"):
+                nested[name.removeprefix("estimator__")] = value
+            else:
+                setattr(self, name, value)
+        if nested:
+            self.estimator.set_params(**nested)
+        return self
+
+    def __sklearn_tags__(self) -> Any:
+        """Expone tags modernos sin hacer scikit-learn una dependencia base."""
+
+        from sklearn.base import BaseEstimator
+
+        return BaseEstimator.__sklearn_tags__(self)
+
+    def __sklearn_is_fitted__(self) -> bool:
+        return hasattr(self, "estimators_") and hasattr(self, "n_outputs_")
+
+    def fit(self, features: Any, targets: np.ndarray) -> MaskedOneVsRestClassifier:
+        from joblib import Parallel, delayed
+        from sklearn.base import clone
+        from sklearn.dummy import DummyClassifier
+
+        matrix = np.asarray(targets)
+        if matrix.ndim != 2:
+            raise ValueError("MaskedOneVsRestClassifier requiere una matriz 2D")
+        if self.n_jobs == 0:
+            raise ValueError("n_jobs no puede ser cero")
+
+        def fit_output(index: int) -> Any:
+            observed = matrix[:, index] >= 0
+            truth = matrix[observed, index].astype(np.int8)
+            if not observed.any():
+                estimator = DummyClassifier(strategy="constant", constant=0)
+                estimator.fit(features[:1], np.asarray([0], dtype=np.int8))
+            elif np.unique(truth).size < 2:
+                estimator = DummyClassifier(strategy="constant", constant=int(truth[0]))
+                estimator.fit(features[observed], truth)
+            else:
+                estimator = clone(self.estimator)
+                estimator.fit(features[observed], truth)
+            return estimator
+
+        self.estimators_ = Parallel(n_jobs=self.n_jobs, prefer="threads")(
+            delayed(fit_output)(index) for index in range(matrix.shape[1])
+        )
+        self.n_outputs_ = matrix.shape[1]
+        return self
+
+    def predict_proba(self, features: Any) -> np.ndarray:
+        from joblib import Parallel, delayed
+
+        def score_output(estimator: Any) -> np.ndarray:
+            if hasattr(estimator, "predict_proba"):
+                probabilities = np.asarray(estimator.predict_proba(features))
+                classes = list(getattr(estimator, "classes_", (0, 1)))
+                if 1 in classes:
+                    values = probabilities[:, classes.index(1)]
+                else:
+                    values = np.zeros(features.shape[0], dtype=float)
+            elif hasattr(estimator, "decision_function"):
+                values = _sigmoid(np.asarray(estimator.decision_function(features)))
+            else:
+                values = np.asarray(estimator.predict(features), dtype=float)
+            return values
+
+        scores = Parallel(n_jobs=self.n_jobs, prefer="threads")(
+            delayed(score_output)(estimator) for estimator in self.estimators_
+        )
+        return np.column_stack(scores)
+
+
 def train_classical_experiments(
     dataset_path: str | Path,
     output_root: str | Path,
@@ -171,17 +435,32 @@ def train_classical_experiments(
     force: bool = False,
     model_names: Iterable[str] | None = None,
     max_features: int = 150000,
+    variants: Iterable[str] = ("base",),
+    safe_to_damage_ratio: float | None = 4.0,
+    split_scheme: str = "video",
+    sampling_seed: int = 20260805,
+    parallel_workers: int = DEFAULT_LOCAL_PARALLEL_WORKERS,
 ) -> dict[str, Any]:
-    """Ejecuta fit→calibración→test para los cinco baselines clásicos."""
+    """Entrena baselines enmascarados y produce evidencia solo de validation.
 
+    ``base`` usa TF-IDF de palabras y caracteres; ``policy_informed`` añade
+    disparadores auditables del prompt v3.2, pero sigue siendo un clasificador
+    supervisado y no se presenta como modelo condicionado por prompt.
+    """
+
+    safe_to_damage_ratio = _require_project_safe_ratio(safe_to_damage_ratio)
+    available_workers = os.cpu_count() or 1
+    if parallel_workers < 1:
+        raise ValueError("parallel_workers debe ser al menos 1")
+    parallel_workers = min(parallel_workers, available_workers)
     try:
         import joblib
+        from sklearn.calibration import CalibratedClassifierCV
         from sklearn.dummy import DummyClassifier
         from sklearn.feature_extraction.text import TfidfVectorizer
         from sklearn.linear_model import LogisticRegression, SGDClassifier
-        from sklearn.multiclass import OneVsRestClassifier
         from sklearn.naive_bayes import ComplementNB
-        from sklearn.pipeline import Pipeline
+        from sklearn.pipeline import FeatureUnion, Pipeline
         from sklearn.svm import LinearSVC
     except ImportError as exc:
         raise RuntimeError("Instale moderacion-peru[entrenamiento]") from exc
@@ -191,11 +470,23 @@ def train_classical_experiments(
     candidates_spec = {
         "dummy": DummyClassifier(strategy="prior"),
         "complement_nb": ComplementNB(alpha=1.0),
-        "logistic_regression": LogisticRegression(max_iter=2000, class_weight="balanced"),
-        "linear_svm": LinearSVC(class_weight="balanced"),
-        "sgd_incremental": SGDClassifier(loss="log_loss", random_state=20260805),
+        "logistic_regression": LogisticRegression(
+            max_iter=2000, class_weight="balanced"
+        ),
+        "linear_svm": CalibratedClassifierCV(
+            LinearSVC(class_weight="balanced"), method="sigmoid", cv=3
+        ),
+        "sgd_incremental": SGDClassifier(
+            loss="log_loss",
+            class_weight="balanced",
+            random_state=20260805,
+        ),
     }
-    selected_names = list(candidates_spec) if model_names is None else list(dict.fromkeys(model_names))
+    selected_names = (
+        list(candidates_spec)
+        if model_names is None
+        else list(dict.fromkeys(model_names))
+    )
     unknown = sorted(set(selected_names) - set(candidates_spec))
     if unknown:
         raise ValueError(f"Modelos clasicos desconocidos: {unknown}")
@@ -204,8 +495,24 @@ def train_classical_experiments(
     if max_features < 100:
         raise ValueError("max_features debe ser al menos 100")
     candidates_spec = {name: candidates_spec[name] for name in selected_names}
+    selected_variants = list(dict.fromkeys(variants))
+    unknown_variants = sorted(set(selected_variants) - {"base", "policy_informed"})
+    if unknown_variants or not selected_variants:
+        raise ValueError(f"Variantes clásicas inválidas: {unknown_variants}")
 
-    configuration: dict[str, Any] = {"suite": "classical_v3", "seed": 20260805}
+    configuration: dict[str, Any] = {
+        "suite": "classical_v4_masked",
+        "seed": sampling_seed,
+        "models": selected_names,
+        "variants": selected_variants,
+        "max_features": max_features,
+        "safe_to_damage_ratio_train_validation": safe_to_damage_ratio,
+        "test_policy": "full_natural_plus_4_to_1_secondary_same_predictions",
+        "split_scheme": split_scheme,
+        "parallel_workers": parallel_workers,
+        "feature_extraction": "once_per_variant_reused_by_all_models",
+        "test_status": "sealed_not_evaluated",
+    }
     if model_names is not None or max_features != 150000:
         configuration.update(
             {
@@ -219,97 +526,204 @@ def train_classical_experiments(
     complete = run_dir / "suite_complete.json"
     if complete.is_file() and not force:
         state = json.loads(complete.read_text(encoding="utf-8"))
-        candidates = [_complete_candidate(Path(path), signature) for path in state.get("candidate_paths", [])]
+        candidates = [
+            _complete_candidate(Path(path), signature)
+            for path in state.get("candidate_paths", [])
+        ]
         if candidates and all(candidate is not None for candidate in candidates):
-            return {"status": "noop", "run_signature": signature, "candidates": candidates}
+            return {
+                "status": "noop",
+                "run_signature": signature,
+                "candidates": candidates,
+            }
 
-    train, validation, test = _dataset_splits(dataset)
+    train, validation, test, sampling = _dataset_splits(
+        dataset,
+        split_scheme=split_scheme,
+        safe_to_damage_ratio=safe_to_damage_ratio,
+        sampling_seed=sampling_seed,
+    )
     train_texts = [str(row["text"]) for row in train]
-    targets = encode_targets(train)
+    targets, masks, output_labels = _output_targets_and_masks(train)
+    masked_targets = targets.astype(np.int8)
+    masked_targets[masks == 0] = -1
     validation_texts = [str(row["text"]) for row in validation]
-    test_texts = [str(row["text"]) for row in test]
     run_dir.mkdir(parents=True, exist_ok=True)
+    write_json_atomic(run_dir / "training_sampling.json", sampling)
     candidates: list[dict[str, Any]] = []
-    for name, estimator in candidates_spec.items():
-        model_dir = run_dir / name
-        model_dir.mkdir(parents=True, exist_ok=True)
-        pipeline = Pipeline(
-            [
-                (
-                    "tfidf",
-                    TfidfVectorizer(
-                        ngram_range=(1, 2),
-                        min_df=1 if len(train) < 100 else 2,
-                        max_features=max_features,
-                        sublinear_tf=True,
-                    ),
+    from .policy_features import POLICY_FEATURE_VERSION, PolicyCueTransformer
+
+    for variant in selected_variants:
+        features: list[tuple[str, Any]] = [
+            (
+                "word",
+                TfidfVectorizer(
+                    ngram_range=(1, 2),
+                    min_df=1 if len(train) < 100 else 2,
+                    max_features=max_features,
+                    sublinear_tf=True,
+                    strip_accents="unicode",
                 ),
-                ("classifier", OneVsRestClassifier(estimator, n_jobs=1)),
-            ]
-        )
-        pipeline.fit(train_texts, targets)
-        validation_scores = _classical_scores(pipeline, validation_texts)
-        test_scores = _classical_scores(pipeline, test_texts)
-        thresholds, validation_metrics, test_metrics = _evaluate(
-            model_dir, validation, validation_scores, test, test_scores
-        )
-        checkpoint = model_dir / "model.joblib"
-        joblib.dump(pipeline, checkpoint)
-        bundle = model_dir / "inference.json"
-        write_json_atomic(
-            bundle,
-            {
-                "type": "sklearn_joblib",
-                "model": checkpoint.name,
-                "target_labels": list(load_taxonomy().target_labels),
-            },
-        )
-        manifest = _checkpoint_manifest(model_dir, [checkpoint, bundle])
-        candidate = {
-            "schema_version": "2.1.0",
-            "candidate_id": f"classical-{name}-{signature[:12]}",
-            "experiment": name,
-            "model_family": f"classical:{name}",
-            "run_signature": signature,
-            "dataset": str(dataset),
-            "dataset_sha256": sha256_file(dataset),
-            "target_labels": list(load_taxonomy().target_labels),
-            "thresholds": thresholds,
-            "validation_metrics": validation_metrics,
-            "test_metrics": test_metrics,
-            "metrics_path": "metrics.json",
-            "checkpoint_manifest": manifest.name,
-            "inference": {"type": "sklearn_joblib", "bundle": bundle.name},
-            "hardware": {"backend": "cpu", "requested": "cpu", "device_name": "CPU", "dtype": "float64"},
-            "warm_start_from": None,
-            "status": "complete",
-            "completed_at": _utc_iso(),
-        }
-        candidate_path = model_dir / "candidate.json"
-        write_json_atomic(candidate_path, candidate)
-        save_manifest(
-            model_dir / "run_manifest.json",
-            build_manifest(
-                run_id=candidate["candidate_id"],
-                stage="03_entrenamiento",
-                inputs=[artifact_reference(dataset, "model_ready_snapshot")],
-                outputs=[
-                    artifact_reference(candidate_path, "candidate"),
-                    artifact_reference(manifest, "checkpoint_manifest"),
-                    artifact_reference(model_dir / "metrics.json", "metrics"),
-                ],
-                configuration={"engine": TRAINING_ENGINE_VERSION, **configuration, "model": name},
-                hardware=candidate["hardware"],
-                counters={"train_rows": len(train), "validation_rows": len(validation), "test_rows": len(test)},
             ),
+            (
+                "char",
+                TfidfVectorizer(
+                    analyzer="char_wb",
+                    ngram_range=(3, 5),
+                    min_df=1 if len(train) < 100 else 2,
+                    max_features=max(100, max_features // 2),
+                    sublinear_tf=True,
+                ),
+            ),
+        ]
+        if variant == "policy_informed":
+            features.append(("policy_v3_2", PolicyCueTransformer()))
+        feature_transformer = FeatureUnion(features)
+        feature_started = time.perf_counter()
+        train_features = feature_transformer.fit_transform(train_texts, masked_targets)
+        validation_features = feature_transformer.transform(validation_texts)
+        feature_seconds = time.perf_counter() - feature_started
+        feature_summary = {
+            "policy": "fit_once_per_variant_reuse_across_models",
+            "variant": variant,
+            "train_shape": list(train_features.shape),
+            "validation_shape": list(validation_features.shape),
+            "elapsed_seconds": feature_seconds,
+            "parallel_workers_per_multilabel_model": parallel_workers,
+        }
+        write_json_atomic(
+            run_dir / f"feature_extraction_{variant}.json", feature_summary
         )
-        candidate["candidate_path"] = str(candidate_path)
-        candidates.append(candidate)
+        for name, estimator in candidates_spec.items():
+            model_started = time.perf_counter()
+            experiment_name = (
+                name if selected_variants == ["base"] else f"{variant}_{name}"
+            )
+            model_dir = run_dir / experiment_name
+            model_dir.mkdir(parents=True, exist_ok=True)
+            fit_started = time.perf_counter()
+            classifier = MaskedOneVsRestClassifier(
+                estimator, n_jobs=parallel_workers
+            ).fit(train_features, masked_targets)
+            fit_seconds = time.perf_counter() - fit_started
+            pipeline = Pipeline(
+                [
+                    ("features", feature_transformer),
+                    ("classifier", classifier),
+                ]
+            )
+            validation_started = time.perf_counter()
+            validation_scores = classifier.predict_proba(validation_features)
+            thresholds, validation_metrics, auxiliary_metrics = _evaluate_validation(
+                model_dir, validation, validation_scores, output_labels
+            )
+            validation_seconds = time.perf_counter() - validation_started
+            checkpoint = model_dir / "model.joblib"
+            joblib.dump(pipeline, checkpoint)
+            bundle = model_dir / "inference.json"
+            write_json_atomic(
+                bundle,
+                {
+                    "type": "sklearn_joblib",
+                    "model": checkpoint.name,
+                    "target_labels": list(load_taxonomy().target_labels),
+                    "output_labels": output_labels,
+                    "primary_output_count": 5,
+                    "variant": variant,
+                    "policy_feature_version": (
+                        POLICY_FEATURE_VERSION if variant == "policy_informed" else None
+                    ),
+                    "parallel_workers": parallel_workers,
+                    "feature_extraction": "shared_fitted_transformer_per_variant",
+                },
+            )
+            manifest = _checkpoint_manifest(model_dir, [checkpoint, bundle])
+            candidate = {
+                "schema_version": "2.1.0",
+                "candidate_id": f"classical-{experiment_name}-{signature[:12]}",
+                "experiment": experiment_name,
+                "model_family": f"classical:{variant}:{name}",
+                "conditioning": (
+                    "supervised_policy_features"
+                    if variant == "policy_informed"
+                    else "supervised_labels_only"
+                ),
+                "run_signature": signature,
+                "dataset": str(dataset),
+                "dataset_sha256": sha256_file(dataset),
+                "target_labels": list(load_taxonomy().target_labels),
+                "thresholds": thresholds,
+                "validation_metrics": validation_metrics,
+                "auxiliary_validation_metrics": auxiliary_metrics,
+                "test_metrics": None,
+                "test_status": "sealed_not_evaluated",
+                "training_sampling": sampling,
+                "metrics_path": "metrics.json",
+                "checkpoint_manifest": manifest.name,
+                "inference": {"type": "sklearn_joblib", "bundle": bundle.name},
+                "hardware": {
+                    "backend": "cpu",
+                    "requested": "cpu",
+                    "device_name": os.environ.get("PROCESSOR_IDENTIFIER", "CPU"),
+                    "dtype": "float64",
+                    "logical_processors": available_workers,
+                    "parallel_workers": parallel_workers,
+                },
+                "runtime_optimization": {
+                    "feature_extraction": feature_summary,
+                    "multilabel_fit": "joblib_threads_shared_sparse_matrix",
+                    "parallel_workers": parallel_workers,
+                    "fit_elapsed_seconds": fit_seconds,
+                },
+                "stage_timings_seconds": {
+                    "shared_feature_extraction_variant": feature_seconds,
+                    "model_fit": fit_seconds,
+                    "validation_inference_and_metrics": validation_seconds,
+                    "model_total_before_serialization": time.perf_counter()
+                    - model_started,
+                },
+                "warm_start_from": None,
+                "status": "complete",
+                "completed_at": _utc_iso(),
+            }
+            candidate_path = model_dir / "candidate.json"
+            write_json_atomic(candidate_path, candidate)
+            save_manifest(
+                model_dir / "run_manifest.json",
+                build_manifest(
+                    run_id=candidate["candidate_id"],
+                    stage="03_entrenamiento",
+                    inputs=[artifact_reference(dataset, "model_ready_snapshot")],
+                    outputs=[
+                        artifact_reference(candidate_path, "candidate"),
+                        artifact_reference(manifest, "checkpoint_manifest"),
+                        artifact_reference(model_dir / "metrics.json", "metrics"),
+                    ],
+                    configuration={
+                        "engine": TRAINING_ENGINE_VERSION,
+                        **configuration,
+                        "model": name,
+                        "variant": variant,
+                    },
+                    hardware=candidate["hardware"],
+                    counters={
+                        "train_rows_after_safe_sampling": len(train),
+                        "validation_rows_4_to_1": len(validation),
+                        "test_rows_sealed": len(test),
+                        "feature_columns": int(train_features.shape[1]),
+                        "parallel_workers": parallel_workers,
+                    },
+                ),
+            )
+            candidate["candidate_path"] = str(candidate_path)
+            candidates.append(candidate)
     write_json_atomic(
         complete,
         {
             "run_signature": signature,
-            "candidate_paths": [candidate["candidate_path"] for candidate in candidates],
+            "candidate_paths": [
+                candidate["candidate_path"] for candidate in candidates
+            ],
             "completed_at": _utc_iso(),
         },
     )
@@ -323,6 +737,7 @@ class _TokenizedRows:
         rows: Sequence[dict[str, Any]],
         targets: np.ndarray,
         max_length: int,
+        observed_masks: np.ndarray | None = None,
     ) -> None:
         self.encodings = tokenizer(
             [str(row["text"]) for row in rows],
@@ -331,6 +746,13 @@ class _TokenizedRows:
             max_length=max_length,
         )
         self.targets = targets.astype(np.float32)
+        self.observed_masks = (
+            np.ones_like(self.targets, dtype=np.float32)
+            if observed_masks is None
+            else observed_masks.astype(np.float32)
+        )
+        if self.observed_masks.shape != self.targets.shape:
+            raise ValueError("La máscara de entrenamiento no coincide con los targets")
 
     def __len__(self) -> int:
         return len(self.targets)
@@ -338,29 +760,77 @@ class _TokenizedRows:
     def __getitem__(self, index: int) -> dict[str, Any]:
         import torch
 
-        item = {key: torch.tensor(value[index]) for key, value in self.encodings.items()}
+        item = {
+            key: torch.tensor(value[index]) for key, value in self.encodings.items()
+        }
         item["labels"] = torch.tensor(self.targets[index], dtype=torch.float32)
+        item["label_mask"] = torch.tensor(
+            self.observed_masks[index], dtype=torch.float32
+        )
         return item
 
 
-def _output_targets(rows: Sequence[dict[str, Any]], experiment: str) -> tuple[np.ndarray, list[str]]:
+def _output_targets_and_masks(
+    rows: Sequence[dict[str, Any]],
+) -> tuple[np.ndarray, np.ndarray, list[str]]:
+    """Construye siempre 5+14+3 salidas y su supervisión explícita."""
+
     taxonomy = load_taxonomy()
     coarse = encode_targets(rows).astype(np.float32)
-    if experiment != "multitask":
-        return coarse, list(taxonomy.target_labels)
     fine = np.asarray(
-        [[int(label in row.get("fine_labels", [])) for label in taxonomy.fine_labels] for row in rows],
+        [
+            [int(label in row.get("fine_labels", [])) for label in taxonomy.fine_labels]
+            for row in rows
+        ],
         dtype=np.float32,
     )
     flags = np.asarray(
-        [[int(flag in row.get("flags_reference_only", [])) for flag in taxonomy.flags] for row in rows],
+        [
+            [
+                int(flag in row.get("flags_reference_only", []))
+                for flag in taxonomy.flags
+            ]
+            for row in rows
+        ],
         dtype=np.float32,
     )
-    return np.concatenate([coarse, fine, flags], axis=1), [
+    coarse_mask = np.asarray(
+        [
+            row.get("coarse_observed_mask", [1] * len(taxonomy.target_labels))
+            for row in rows
+        ],
+        dtype=np.float32,
+    )
+    fine_mask = np.asarray(
+        [
+            row.get("fine_observed_mask", [0] * len(taxonomy.fine_labels))
+            for row in rows
+        ],
+        dtype=np.float32,
+    )
+    flags_mask = np.asarray(
+        [row.get("flags_observed_mask", [0] * len(taxonomy.flags)) for row in rows],
+        dtype=np.float32,
+    )
+    labels = [
         *taxonomy.target_labels,
         *(f"fine:{label}" for label in taxonomy.fine_labels),
         *(f"flag:{flag}" for flag in taxonomy.flags),
     ]
+    return (
+        np.concatenate([coarse, fine, flags], axis=1),
+        np.concatenate([coarse_mask, fine_mask, flags_mask], axis=1),
+        labels,
+    )
+
+
+def _output_targets(
+    rows: Sequence[dict[str, Any]], experiment: str | None = None
+) -> tuple[np.ndarray, list[str]]:
+    """Compatibilidad: todos los clasificadores compatibles exponen 22 salidas."""
+
+    targets, _masks, labels = _output_targets_and_masks(rows)
+    return targets, labels
 
 
 def _build_hf_model(
@@ -379,7 +849,9 @@ def _build_hf_model(
         try:
             from peft import PeftConfig, PeftModel
         except ImportError as exc:
-            raise RuntimeError("Instale PEFT mediante moderacion-peru[entrenamiento]") from exc
+            raise RuntimeError(
+                "Instale PEFT mediante moderacion-peru[entrenamiento]"
+            ) from exc
         adapter = str(adapter_source)
         peft_config = PeftConfig.from_pretrained(adapter)
         source = peft_config.base_model_name_or_path
@@ -409,14 +881,16 @@ def _build_hf_model(
         id2label=id2label,
         label2id={label: index for index, label in id2label.items()},
         problem_type="multi_label_classification",
-        ignore_mismatched_sizes=not bool(model_source),
+        ignore_mismatched_sizes=True,
     )
     model.config.pad_token_id = tokenizer.pad_token_id
     if lora:
         try:
             from peft import LoraConfig, TaskType, get_peft_model
         except ImportError as exc:
-            raise RuntimeError("Instale PEFT mediante moderacion-peru[entrenamiento]") from exc
+            raise RuntimeError(
+                "Instale PEFT mediante moderacion-peru[entrenamiento]"
+            ) from exc
         model = get_peft_model(
             model,
             LoraConfig(
@@ -430,14 +904,21 @@ def _build_hf_model(
     return tokenizer, model
 
 
-def _last_candidate(output_root: Path, experiment: str, dataset_sha: str) -> dict[str, Any] | None:
+def _last_candidate(
+    output_root: Path, experiment: str, dataset_sha: str
+) -> dict[str, Any] | None:
     candidates = []
     for path in output_root.rglob("candidate.json") if output_root.exists() else []:
         try:
             row = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
-        if row.get("experiment") == experiment and row.get("status") == "complete" and row.get("dataset_sha256") != dataset_sha:
+        if (
+            row.get("experiment") == experiment
+            and row.get("status") == "complete"
+            and row.get("dataset_sha256") != dataset_sha
+            and row.get("output_count", 5) == 22
+        ):
             row["candidate_path"] = str(path)
             candidates.append(row)
     return max(candidates, key=lambda row: row.get("completed_at", ""), default=None)
@@ -457,35 +938,67 @@ def _fit_hf(
     tokenizer: Any,
     train_rows: Sequence[dict[str, Any]],
     targets: np.ndarray,
+    observed_masks: np.ndarray,
+    validation_rows: Sequence[dict[str, Any]],
+    validation_targets: np.ndarray,
+    validation_masks: np.ndarray,
     spec: TrainingSpecification,
     training_dir: Path,
     hardware: Any,
     *,
     structured_penalty: float = 0.0,
     output_weights: Sequence[float] | None = None,
-) -> None:
+) -> dict[str, Any]:
     try:
         import torch
-        from transformers import Trainer, TrainingArguments
+        from transformers import EarlyStoppingCallback, Trainer, TrainingArguments
         from transformers.trainer_utils import get_last_checkpoint
     except ImportError as exc:
         raise RuntimeError("Instale PyTorch, accelerate y Transformers") from exc
 
-    dataset = _TokenizedRows(tokenizer, train_rows, targets, spec.max_length)
+    dataset = _TokenizedRows(
+        tokenizer, train_rows, targets, spec.max_length, observed_masks
+    )
+    validation_dataset = _TokenizedRows(
+        tokenizer,
+        validation_rows,
+        validation_targets,
+        spec.max_length,
+        validation_masks,
+    )
+    observed_positive = (targets * observed_masks).sum(axis=0)
+    observed_negative = ((1 - targets) * observed_masks).sum(axis=0)
+    positive_weights = np.clip(
+        observed_negative / np.maximum(1.0, observed_positive), 1.0, 20.0
+    ).astype(np.float32)
 
     class StructuredTrainer(Trainer):
-        def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
+        def compute_loss(
+            self, model, inputs, return_outputs=False, num_items_in_batch=None
+        ):
             labels = inputs.pop("labels")
+            label_mask = inputs.pop("label_mask")
             outputs = model(**inputs)
             logits = outputs.logits
-            elementwise = torch.nn.functional.binary_cross_entropy_with_logits(logits, labels, reduction="none")
+            positive = torch.as_tensor(
+                positive_weights, device=logits.device, dtype=logits.dtype
+            )
+            elementwise = torch.nn.functional.binary_cross_entropy_with_logits(
+                logits,
+                labels,
+                reduction="none",
+                pos_weight=positive,
+            )
             if output_weights is not None:
-                weights = torch.as_tensor(output_weights, device=logits.device, dtype=logits.dtype)
+                weights = torch.as_tensor(
+                    output_weights, device=logits.device, dtype=logits.dtype
+                )
                 elementwise = elementwise * weights.unsqueeze(0)
-            loss = elementwise.mean()
-            if structured_penalty and logits.shape[1] == 5:
+            elementwise = elementwise * label_mask
+            loss = elementwise.sum() / label_mask.sum().clamp_min(1.0)
+            if structured_penalty and logits.shape[1] >= 5:
                 probabilities = torch.sigmoid(logits)
-                conflict = probabilities[:, 0] * probabilities[:, 1:].amax(dim=1)
+                conflict = probabilities[:, 0] * probabilities[:, 1:5].amax(dim=1)
                 loss = loss + structured_penalty * conflict.mean()
             return (loss, outputs) if return_outputs else loss
 
@@ -496,19 +1009,54 @@ def _fit_hf(
         gradient_accumulation_steps=spec.gradient_accumulation,
         learning_rate=spec.learning_rate,
         seed=spec.seed,
+        eval_strategy="epoch",
         save_strategy="epoch",
         save_total_limit=2,
+        load_best_model_at_end=True,
+        metric_for_best_model="macro_auprc_damage",
+        greater_is_better=True,
         logging_strategy="steps",
         logging_steps=max(1, math.ceil(len(dataset) / max(1, spec.batch_size * 5))),
         report_to=[],
         use_cpu=hardware.backend == "cpu",
         fp16=hardware.backend in {"cuda", "rocm"} and hardware.dtype == "float16",
-        bf16=hardware.backend in {"cuda", "rocm", "xpu"} and hardware.dtype == "bfloat16",
+        bf16=hardware.backend in {"cuda", "rocm", "xpu"}
+        and hardware.dtype == "bfloat16",
         dataloader_pin_memory=hardware.backend != "cpu",
     )
-    trainer = StructuredTrainer(model=model, args=arguments, train_dataset=dataset)
-    checkpoint = get_last_checkpoint(str(training_dir)) if training_dir.is_dir() else None
-    trainer.train(resume_from_checkpoint=checkpoint)
+
+    def compute_metrics(evaluation: Any) -> dict[str, float]:
+        logits = (
+            evaluation.predictions[0]
+            if isinstance(evaluation.predictions, tuple)
+            else evaluation.predictions
+        )
+        scores = _sigmoid(np.asarray(logits, dtype=float))[:, :5]
+        truth = np.asarray(evaluation.label_ids, dtype=np.int8)[:, :5]
+        metrics = classification_metrics(truth, scores)
+        return {
+            "macro_auprc_damage": float(metrics["average_precision_macro_damage"]),
+            "macro_auprc_five": float(metrics["average_precision_macro_five"]),
+        }
+
+    trainer = StructuredTrainer(
+        model=model,
+        args=arguments,
+        train_dataset=dataset,
+        eval_dataset=validation_dataset,
+        compute_metrics=compute_metrics,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=1)],
+    )
+    checkpoint = (
+        get_last_checkpoint(str(training_dir)) if training_dir.is_dir() else None
+    )
+    result = trainer.train(resume_from_checkpoint=checkpoint)
+    return {
+        "training_metrics": dict(result.metrics),
+        "positive_weights": positive_weights.tolist(),
+        "best_checkpoint": trainer.state.best_model_checkpoint,
+        "best_validation_metric": trainer.state.best_metric,
+    }
 
 
 def _predict_hf(
@@ -531,6 +1079,7 @@ def _predict_hf(
     with torch.no_grad():
         for batch in loader:
             batch.pop("labels", None)
+            batch.pop("label_mask", None)
             batch = {key: value.to(device) for key, value in batch.items()}
             logits = model(**batch).logits
             scores.append(torch.sigmoid(logits).float().cpu().numpy())
@@ -543,6 +1092,40 @@ def _save_hf(model: Any, tokenizer: Any, model_dir: Path) -> None:
     tokenizer.save_pretrained(model_dir)
 
 
+def _token_truncation_diagnostic(
+    tokenizer: Any,
+    rows: Sequence[dict[str, Any]],
+    max_length: int,
+    *,
+    batch_size: int = 512,
+) -> dict[str, Any]:
+    if not callable(tokenizer):
+        return {
+            "rows": len(rows),
+            "max_length": max_length,
+            "status": "unavailable_non_callable_tokenizer",
+        }
+    lengths: list[int] = []
+    for start in range(0, len(rows), batch_size):
+        encoded = tokenizer(
+            [str(row["text"]) for row in rows[start : start + batch_size]],
+            truncation=False,
+            padding=False,
+            add_special_tokens=True,
+        )
+        lengths.extend(len(values) for values in encoded["input_ids"])
+    array = np.asarray(lengths, dtype=int)
+    return {
+        "rows": len(rows),
+        "max_length": max_length,
+        "truncated_rows": int((array > max_length).sum()),
+        "truncated_fraction": float((array > max_length).mean()) if len(array) else 0.0,
+        "token_length_p50": float(np.quantile(array, 0.50)) if len(array) else 0.0,
+        "token_length_p95": float(np.quantile(array, 0.95)) if len(array) else 0.0,
+        "token_length_max": int(array.max()) if len(array) else 0,
+    }
+
+
 def train_neural_experiment(
     dataset_path: str | Path,
     output_root: str | Path,
@@ -551,16 +1134,28 @@ def train_neural_experiment(
     device: str = "auto",
     force: bool = False,
     spec_key: str | None = None,
+    safe_to_damage_ratio: float | None = 4.0,
+    split_scheme: str = "video",
+    sampling_seed: int = 20260805,
 ) -> dict[str, Any]:
-    """Cierra fit→calibración→test→candidato para una familia neuronal.
+    """Cierra fit→calibración validation→candidato sin abrir test.
 
     Experimentos admitidos: ``flat_minilm``, ``flat_e5``, ``cascade``,
     ``multitask``, ``qwen_lora`` y ``qwen_structured``.
     """
 
-    allowed = {"flat_minilm", "flat_e5", "cascade", "multitask", "qwen_lora", "qwen_structured"}
+    safe_to_damage_ratio = _require_project_safe_ratio(safe_to_damage_ratio)
+    allowed = {
+        "flat_minilm",
+        "flat_e5",
+        "cascade",
+        "multitask",
+        "qwen_lora",
+        "qwen_structured",
+    }
     if experiment not in allowed:
         raise ValueError(f"Experimento desconocido: {experiment}")
+    run_started = time.perf_counter()
     key = spec_key or (
         "qwen_lora" if experiment in {"qwen_lora", "qwen_structured"} else "e5"
     )
@@ -568,7 +1163,9 @@ def train_neural_experiment(
         key = "minilm"
     if experiment == "flat_e5":
         key = "e5"
-    spec = TRANSFORMER_SPECS[key]
+    spec = TrainingSpecification(
+        **{**asdict(TRANSFORMER_SPECS[key]), "seed": sampling_seed}
+    )
     dataset = Path(dataset_path).resolve()
     output = Path(output_root)
     hardware = resolve_device(device)
@@ -578,7 +1175,18 @@ def train_neural_experiment(
         "structured_penalty": 0.2 if experiment == "qwen_structured" else 0.0,
         "hardware_backend": hardware.backend,
         "dtype": hardware.dtype,
-        "multitask_weights": {"coarse": 1.0, "fine": 0.3, "flags": 0.2} if experiment == "multitask" else None,
+        "multitask_weights": (
+            {"coarse": 1.0, "fine": 0.3, "flags": 0.2}
+            if experiment == "multitask"
+            else None
+        ),
+        "all_compatible_outputs": "5+14+3_masked",
+        "safe_to_damage_ratio_train_validation": safe_to_damage_ratio,
+        "test_policy": "full_natural_plus_4_to_1_secondary_same_predictions",
+        "split_scheme": split_scheme,
+        "sampling_seed": sampling_seed,
+        "early_stopping_selection": "best_validation_macro_auprc_damage",
+        "test_status": "sealed_not_evaluated",
     }
     signature = _experiment_signature(dataset, experiment, configuration)
     run_dir = output / "runs" / f"{experiment}-{signature[:16]}"
@@ -587,44 +1195,198 @@ def train_neural_experiment(
         complete = _complete_candidate(candidate_path, signature)
         if complete is not None:
             return {"status": "noop", "candidate": complete, "run_signature": signature}
-    train, validation, test = _dataset_splits(dataset)
+    train, validation, test, sampling = _dataset_splits(
+        dataset,
+        split_scheme=split_scheme,
+        safe_to_damage_ratio=safe_to_damage_ratio,
+        sampling_seed=sampling_seed,
+    )
     run_dir.mkdir(parents=True, exist_ok=True)
+    write_json_atomic(run_dir / "training_sampling.json", sampling)
     previous = _last_candidate(output, experiment, sha256_file(dataset))
     taxonomy = load_taxonomy()
+    cascade_diagnostics: dict[str, Any] | None = None
+    training_elapsed = 0.0
+    validation_inference_elapsed = 0.0
 
     if experiment == "cascade":
-        damage_indices = [taxonomy.target_labels.index(label) for label in taxonomy.damage_labels]
+        damage_indices = [
+            taxonomy.target_labels.index(label) for label in taxonomy.damage_labels
+        ]
         train_full = encode_targets(train).astype(np.float32)
         gate_targets = train_full[:, damage_indices].max(axis=1, keepdims=True)
+        train_all, train_masks, all_labels = _output_targets_and_masks(train)
+        validation_all_targets, validation_all_masks, _ = _output_targets_and_masks(
+            validation
+        )
+        auxiliary_count = len(taxonomy.fine_labels) + len(taxonomy.flags)
+        gate_targets = np.concatenate([gate_targets, train_all[:, 5:]], axis=1)
+        gate_masks = np.concatenate(
+            [np.ones((len(train), 1), dtype=np.float32), train_masks[:, 5:]],
+            axis=1,
+        )
+        validation_gate_targets = np.concatenate(
+            [
+                validation_all_targets[:, damage_indices].max(axis=1, keepdims=True),
+                validation_all_targets[:, 5:],
+            ],
+            axis=1,
+        )
+        validation_gate_masks = np.concatenate(
+            [
+                np.ones((len(validation), 1), dtype=np.float32),
+                validation_all_masks[:, 5:],
+            ],
+            axis=1,
+        )
         harmful = gate_targets[:, 0] == 1
         if not harmful.any():
             raise ValueError("La cascada necesita daños explícitos en train")
         gate_spec = TrainingSpecification(**{**asdict(spec), "model_id": spec.model_id})
-        previous_gate = _candidate_asset(previous, previous.get("inference", {}).get("gate_model")) if previous else None
-        previous_damage = _candidate_asset(previous, previous.get("inference", {}).get("damage_model")) if previous else None
-        gate_tokenizer, gate_model = _build_hf_model(gate_spec, ["ANY_DAMAGE"], model_source=previous_gate)
-        damage_tokenizer, damage_model = _build_hf_model(spec, taxonomy.damage_labels, model_source=previous_damage)
-        _fit_hf(gate_model, gate_tokenizer, train, gate_targets, gate_spec, run_dir / "trainer_gate", hardware)
+        previous_gate = (
+            _candidate_asset(previous, previous.get("inference", {}).get("gate_model"))
+            if previous
+            else None
+        )
+        previous_damage = (
+            _candidate_asset(
+                previous, previous.get("inference", {}).get("damage_model")
+            )
+            if previous
+            else None
+        )
+        gate_labels = ["ANY_DAMAGE", *all_labels[5:]]
+        gate_tokenizer, gate_model = _build_hf_model(
+            gate_spec, gate_labels, model_source=previous_gate
+        )
+        damage_tokenizer, damage_model = _build_hf_model(
+            spec, taxonomy.damage_labels, model_source=previous_damage
+        )
+        gate_diagnostic = _token_truncation_diagnostic(
+            gate_tokenizer, train, gate_spec.max_length
+        )
+        phase_started = time.perf_counter()
+        gate_fit = _fit_hf(
+            gate_model,
+            gate_tokenizer,
+            train,
+            gate_targets,
+            gate_masks,
+            validation,
+            validation_gate_targets,
+            validation_gate_masks,
+            gate_spec,
+            run_dir / "trainer_gate",
+            hardware,
+            output_weights=[1.0]
+            + [0.3] * len(taxonomy.fine_labels)
+            + [0.2] * len(taxonomy.flags),
+        )
+        training_elapsed += time.perf_counter() - phase_started
         damage_rows = [row for row, keep in zip(train, harmful, strict=True) if keep]
         damage_targets = train_full[harmful][:, damage_indices]
-        _fit_hf(damage_model, damage_tokenizer, damage_rows, damage_targets, spec, run_dir / "trainer_damage", hardware)
-        gate_validation = _predict_hf(gate_model, gate_tokenizer, validation, spec.max_length, hardware, 1)
-        gate_test = _predict_hf(gate_model, gate_tokenizer, test, spec.max_length, hardware, 1)
-        damage_validation = _predict_hf(damage_model, damage_tokenizer, validation, spec.max_length, hardware, 4)
-        damage_test = _predict_hf(damage_model, damage_tokenizer, test, spec.max_length, hardware, 4)
-        validation_scores = np.concatenate([1 - gate_validation, gate_validation * damage_validation], axis=1)
-        test_scores = np.concatenate([1 - gate_test, gate_test * damage_test], axis=1)
+        damage_masks = np.ones_like(damage_targets, dtype=np.float32)
+        validation_damage_targets = validation_all_targets[:, damage_indices]
+        validation_damage_masks = validation_all_masks[:, damage_indices]
+        damage_diagnostic = _token_truncation_diagnostic(
+            damage_tokenizer, damage_rows, spec.max_length
+        )
+        phase_started = time.perf_counter()
+        damage_fit = _fit_hf(
+            damage_model,
+            damage_tokenizer,
+            damage_rows,
+            damage_targets,
+            damage_masks,
+            validation,
+            validation_damage_targets,
+            validation_damage_masks,
+            spec,
+            run_dir / "trainer_damage",
+            hardware,
+        )
+        training_elapsed += time.perf_counter() - phase_started
+        validation_started = time.perf_counter()
+        gate_validation = _predict_hf(
+            gate_model,
+            gate_tokenizer,
+            validation,
+            spec.max_length,
+            hardware,
+            1 + auxiliary_count,
+        )
+        damage_validation = _predict_hf(
+            damage_model, damage_tokenizer, validation, spec.max_length, hardware, 4
+        )
+        validation_inference_elapsed = time.perf_counter() - validation_started
+        validation_primary = np.concatenate(
+            [
+                1 - gate_validation[:, :1],
+                gate_validation[:, :1] * damage_validation,
+            ],
+            axis=1,
+        )
+        validation_scores = np.concatenate(
+            [validation_primary, gate_validation[:, 1:]], axis=1
+        )
+        from sklearn.metrics import average_precision_score, f1_score
+
+        gate_truth = validation_all_targets[:, damage_indices].max(axis=1)
+        gate_grid = np.linspace(0.05, 0.95, 91)
+        gate_threshold = max(
+            gate_grid,
+            key=lambda value: (
+                f1_score(
+                    gate_truth,
+                    gate_validation[:, 0] >= value,
+                    zero_division=0,
+                ),
+                value,
+            ),
+        )
+        gate_missed = (gate_truth == 1) & (gate_validation[:, 0] < gate_threshold)
+        cascade_diagnostics = {
+            "gate_average_precision": float(
+                average_precision_score(gate_truth, gate_validation[:, 0])
+            ),
+            "gate_threshold_validation": float(gate_threshold),
+            "gate_f1_validation": float(
+                f1_score(
+                    gate_truth,
+                    gate_validation[:, 0] >= gate_threshold,
+                    zero_division=0,
+                )
+            ),
+            "damage_rows_blocked_by_gate_fraction": float(
+                gate_missed.sum() / max(1, gate_truth.sum())
+            ),
+            "comparison_against_flat": "performed in 03_07 on identical validation chunk_ids",
+        }
+        labels = all_labels
+        fit_summary = {"gate": gate_fit, "damage": damage_fit}
+        truncation = {"gate": gate_diagnostic, "damage": damage_diagnostic}
         gate_dir, damage_dir = run_dir / "gate_model", run_dir / "damage_model"
         _save_hf(gate_model, gate_tokenizer, gate_dir)
         _save_hf(damage_model, damage_tokenizer, damage_dir)
-        inference = {"type": "hf_cascade", "gate_model": gate_dir.name, "damage_model": damage_dir.name}
+        inference = {
+            "type": "hf_cascade",
+            "gate_model": gate_dir.name,
+            "damage_model": damage_dir.name,
+        }
         checkpoint_paths = [gate_dir, damage_dir]
     else:
-        targets, labels = _output_targets(train, experiment)
+        targets, target_masks, labels = _output_targets_and_masks(train)
+        validation_targets, validation_masks, _ = _output_targets_and_masks(validation)
         previous_source = None
         if previous and experiment != "qwen_lora":
-            previous_source = _candidate_asset(previous, previous.get("inference", {}).get("model"))
-        previous_adapter = _candidate_asset(previous, previous.get("inference", {}).get("model")) if previous and experiment == "qwen_lora" else None
+            previous_source = _candidate_asset(
+                previous, previous.get("inference", {}).get("model")
+            )
+        previous_adapter = (
+            _candidate_asset(previous, previous.get("inference", {}).get("model"))
+            if previous and experiment == "qwen_lora"
+            else None
+        )
         tokenizer, model = _build_hf_model(
             spec,
             labels,
@@ -632,39 +1394,58 @@ def train_neural_experiment(
             lora=experiment == "qwen_lora",
             adapter_source=previous_adapter,
         )
-        _fit_hf(
+        truncation = _token_truncation_diagnostic(tokenizer, train, spec.max_length)
+        phase_started = time.perf_counter()
+        fit_summary = _fit_hf(
             model,
             tokenizer,
             train,
             targets,
+            target_masks,
+            validation,
+            validation_targets,
+            validation_masks,
             spec,
             run_dir / "trainer",
             hardware,
             structured_penalty=0.2 if experiment == "qwen_structured" else 0.0,
-            output_weights=(
-                [1.0] * 5 + [0.3] * len(taxonomy.fine_labels) + [0.2] * len(taxonomy.flags)
-                if experiment == "multitask"
-                else None
-            ),
+            output_weights=[1.0] * 5
+            + [0.3] * len(taxonomy.fine_labels)
+            + [0.2] * len(taxonomy.flags),
         )
-        validation_all = _predict_hf(model, tokenizer, validation, spec.max_length, hardware, len(labels))
-        test_all = _predict_hf(model, tokenizer, test, spec.max_length, hardware, len(labels))
-        validation_scores = validation_all[:, :5]
-        test_scores = test_all[:, :5]
+        training_elapsed = time.perf_counter() - phase_started
+        validation_started = time.perf_counter()
+        validation_all = _predict_hf(
+            model, tokenizer, validation, spec.max_length, hardware, len(labels)
+        )
+        validation_inference_elapsed = time.perf_counter() - validation_started
+        validation_scores = validation_all
         model_dir = run_dir / "model"
         _save_hf(model, tokenizer, model_dir)
         inference = {
-            "type": "hf_peft_sequence_classifier" if experiment == "qwen_lora" else "hf_sequence_classifier",
+            "type": (
+                "hf_peft_sequence_classifier"
+                if experiment == "qwen_lora"
+                else "hf_sequence_classifier"
+            ),
             "model": model_dir.name,
             "primary_output_count": 5,
+            "output_count": len(labels),
+            "output_labels": labels,
         }
         checkpoint_paths = [model_dir]
 
-    thresholds, validation_metrics, test_metrics = _evaluate(
-        run_dir, validation, validation_scores, test, test_scores
+    metrics_started = time.perf_counter()
+    thresholds, validation_metrics, auxiliary_metrics = _evaluate_validation(
+        run_dir, validation, validation_scores, labels
     )
+    validation_metrics_elapsed = time.perf_counter() - metrics_started
+    write_json_atomic(run_dir / "truncation_diagnostic.json", truncation)
+    write_json_atomic(run_dir / "fit_summary.json", fit_summary)
     bundle = run_dir / "inference.json"
-    write_json_atomic(bundle, {**inference, "target_labels": list(taxonomy.target_labels)})
+    write_json_atomic(
+        bundle, {**inference, "target_labels": list(taxonomy.target_labels)}
+    )
     manifest = _checkpoint_manifest(run_dir, [*checkpoint_paths, bundle])
     candidate = {
         "schema_version": "2.1.0",
@@ -677,11 +1458,24 @@ def train_neural_experiment(
         "target_labels": list(taxonomy.target_labels),
         "thresholds": thresholds,
         "validation_metrics": validation_metrics,
-        "test_metrics": test_metrics,
+        "auxiliary_validation_metrics": auxiliary_metrics,
+        "test_metrics": None,
+        "test_status": "sealed_not_evaluated",
+        "output_count": len(labels),
+        "output_labels": labels,
+        "training_sampling": sampling,
+        "truncation_diagnostic": truncation,
+        "cascade_diagnostics": cascade_diagnostics,
         "metrics_path": "metrics.json",
         "checkpoint_manifest": manifest.name,
         "inference": {**inference, "bundle": bundle.name},
         "hardware": hardware.model_dump(),
+        "stage_timings_seconds": {
+            "training_fit": training_elapsed,
+            "validation_inference": validation_inference_elapsed,
+            "validation_metrics_and_thresholds": validation_metrics_elapsed,
+            "total_before_candidate_write": time.perf_counter() - run_started,
+        },
         "warm_start_from": previous.get("candidate_id") if previous else None,
         "status": "complete",
         "completed_at": _utc_iso(),
@@ -700,8 +1494,14 @@ def train_neural_experiment(
             ],
             configuration={"engine": TRAINING_ENGINE_VERSION, **configuration},
             hardware=hardware,
-            counters={"train_rows": len(train), "validation_rows": len(validation), "test_rows": len(test)},
-            warnings=["warm_start_from:" + previous["candidate_id"]] if previous else [],
+            counters={
+                "train_rows_after_safe_sampling": len(train),
+                "validation_rows_4_to_1": len(validation),
+                "test_rows_sealed": len(test),
+            },
+            warnings=(
+                ["warm_start_from:" + previous["candidate_id"]] if previous else []
+            ),
         ),
     )
     return {"status": "trained", "candidate": candidate, "run_signature": signature}
@@ -713,12 +1513,37 @@ def train_flat_transformers(
     *,
     device: str = "auto",
     force: bool = False,
+    safe_to_damage_ratio: float | None = 4.0,
+    split_scheme: str = "video",
+    sampling_seed: int = 20260805,
 ) -> dict[str, Any]:
     results = [
-        train_neural_experiment(dataset_path, output_root, experiment="flat_minilm", device=device, force=force),
-        train_neural_experiment(dataset_path, output_root, experiment="flat_e5", device=device, force=force),
+        train_neural_experiment(
+            dataset_path,
+            output_root,
+            experiment="flat_minilm",
+            device=device,
+            force=force,
+            safe_to_damage_ratio=safe_to_damage_ratio,
+            split_scheme=split_scheme,
+            sampling_seed=sampling_seed,
+        ),
+        train_neural_experiment(
+            dataset_path,
+            output_root,
+            experiment="flat_e5",
+            device=device,
+            force=force,
+            safe_to_damage_ratio=safe_to_damage_ratio,
+            split_scheme=split_scheme,
+            sampling_seed=sampling_seed,
+        ),
     ]
     return {
-        "status": "noop" if all(result["status"] == "noop" for result in results) else "trained",
+        "status": (
+            "noop"
+            if all(result["status"] == "noop" for result in results)
+            else "trained"
+        ),
         "results": results,
     }

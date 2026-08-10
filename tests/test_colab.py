@@ -37,6 +37,7 @@ def test_colab_config_syncs_only_declared_inputs_and_keeps_api_on_cpu():
         "03_04",
         "03_05",
         "03_06",
+        "03_06b",
     }
     assert "datos/raw/transcripts_raw.jsonl" in config["excluded_from_drive"]
     assert config["notebooks"]["02_01"]["requires_cuda"] is False

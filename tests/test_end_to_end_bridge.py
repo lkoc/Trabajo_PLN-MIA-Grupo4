@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from moderacion_peru.consolidation import consolidate_annotations, reconcile_human_reviews
-from moderacion_peru.datasets import materialize_versioned_training_snapshot
-from moderacion_peru.experiments import train_classical_experiments
 from moderacion_peru import experiments
+from moderacion_peru.consolidation import (
+    consolidate_annotations,
+    reconcile_human_reviews,
+)
+from moderacion_peru.datasets import (
+    deterministic_safe_downsample,
+    materialize_versioned_training_snapshot,
+)
+from moderacion_peru.experiments import train_classical_experiments
 from moderacion_peru.io import read_jsonl, write_jsonl_atomic
 from moderacion_peru.registry import ProductionPredictor, compare_and_publish_registry
 from moderacion_peru.schemas import AnnotationRecord, ModelReadyRecord, ReviewEvent
@@ -48,7 +54,7 @@ def test_human_events_close_annotation_to_versioned_snapshot_and_noop(tmp_path):
         final_labels=["ATAQUE_POR_GENERO_IDENTIDAD"],
         flags=["humor_encubridor"],
         reviewer="reviewer-fixture",
-        created_at=datetime(2026, 8, 5, tzinfo=timezone.utc),
+        created_at=datetime(2026, 8, 5, tzinfo=UTC),
     )
     write_jsonl_atomic(reviews, [event.model_dump(mode="json")])
     reviewed = tmp_path / "reviewed.jsonl"
@@ -61,7 +67,9 @@ def test_human_events_close_annotation_to_versioned_snapshot_and_noop(tmp_path):
         chunks_source=chunks,
         progress_callback=reconciliation_progress.append,
     )
-    second = reconcile_human_reviews(consolidated, [reviews], reviewed, chunks_source=chunks)
+    second = reconcile_human_reviews(
+        consolidated, [reviews], reviewed, chunks_source=chunks
+    )
     assert first["status"] == "updated"
     assert second["status"] == "noop"
     row = next(read_jsonl(reviewed))
@@ -91,6 +99,11 @@ def test_human_events_close_annotation_to_versioned_snapshot_and_noop(tmp_path):
     assert ready.channel_id == "channel-fixture"
     assert ready.flags_reference_only == ["humor_encubridor"]
     assert ready.split in {"train", "validation", "test"}
+    assert ready.channel_split in {"train", "validation", "test"}
+    assert len(ready.coarse_observed_mask) == 5
+    assert len(ready.fine_observed_mask) == 14
+    assert len(ready.flags_observed_mask) == 3
+    assert ready.flags_observed_mask == [1, 1, 1]
     assert {event["phase"] for event in snapshot_progress} >= {
         "preparing_snapshot",
         "deduplicating_snapshot",
@@ -98,6 +111,71 @@ def test_human_events_close_annotation_to_versioned_snapshot_and_noop(tmp_path):
         "snapshot",
     }
     assert snapshot_progress[-1]["status"] == "finished"
+
+
+def test_safe_downsample_is_deterministic_and_never_removes_damage():
+    rows = [
+        {
+            "chunk_id": f"safe-{index}",
+            "channel_id": f"channel-{index % 3}",
+            "coarse_labels": ["SEGURO"],
+        }
+        for index in range(30)
+    ] + [
+        {
+            "chunk_id": f"damage-{index}",
+            "channel_id": f"channel-{index % 3}",
+            "coarse_labels": ["ACOSO_AMENAZA"],
+        }
+        for index in range(5)
+    ]
+    first, summary = deterministic_safe_downsample(
+        rows, safe_to_damage_ratio=4.0, seed=7
+    )
+    second, repeated = deterministic_safe_downsample(
+        rows, safe_to_damage_ratio=4.0, seed=7
+    )
+    assert [row["chunk_id"] for row in first] == [row["chunk_id"] for row in second]
+    assert summary == repeated
+    assert summary["safe_rows_after"] == 20
+    assert summary["damage_rows"] == 5
+    assert {f"damage-{index}" for index in range(5)} <= {
+        row["chunk_id"] for row in first
+    }
+
+
+def test_training_splits_reduce_train_validation_but_keep_full_test(tmp_path):
+    dataset = tmp_path / "dataset.jsonl"
+    rows = []
+    for split in ("train", "validation", "test"):
+        rows.extend(
+            {
+                "chunk_id": f"{split}-safe-{index}",
+                "channel_id": f"channel-{index % 2}",
+                "coarse_labels": ["SEGURO"],
+                "split": split,
+            }
+            for index in range(12)
+        )
+        rows.extend(
+            {
+                "chunk_id": f"{split}-damage-{index}",
+                "channel_id": f"channel-{index % 2}",
+                "coarse_labels": ["ACOSO_AMENAZA"],
+                "split": split,
+            }
+            for index in range(2)
+        )
+    write_jsonl_atomic(dataset, rows)
+
+    train, validation, test, sampling = experiments._dataset_splits(dataset)
+
+    assert len(train) == 10
+    assert len(validation) == 10
+    assert len(test) == 14
+    assert sampling["policy"] == "fixed_4_to_1_train_validation_full_sealed_test"
+    assert sampling["test_sealed"]["policy"] == "full_natural_prevalence"
+    assert sampling["test_reporting"]["single_inference_pass"] is True
 
 
 def test_annotation_consolidation_reports_each_long_phase(tmp_path):
@@ -266,7 +344,11 @@ def test_rejected_human_event_is_valid_but_never_trains(tmp_path):
 def _fixture_dataset(path):
     taxonomy = load_taxonomy()
     rows = []
-    for split, prefix in (("train", "train"), ("validation", "valid"), ("test", "test")):
+    for split, prefix in (
+        ("train", "train"),
+        ("validation", "valid"),
+        ("test", "test"),
+    ):
         for index in range(15):
             label = taxonomy.target_labels[index % len(taxonomy.target_labels)]
             rows.append(
@@ -310,7 +392,19 @@ def test_classical_fit_calibration_test_registry_and_inference_are_end_to_end(tm
     assert all(0 <= score <= 1 for score in scores.values())
 
 
-def test_classical_smoke_subset_reuses_complete_training_path(tmp_path):
+def test_classical_smoke_subset_reuses_features_and_parallel_heads(
+    tmp_path, monkeypatch
+):
+    from sklearn.pipeline import FeatureUnion
+
+    fit_transform_calls = []
+    original_fit_transform = FeatureUnion.fit_transform
+
+    def tracked_fit_transform(self, *args, **kwargs):
+        fit_transform_calls.append(1)
+        return original_fit_transform(self, *args, **kwargs)
+
+    monkeypatch.setattr(FeatureUnion, "fit_transform", tracked_fit_transform)
     dataset = tmp_path / "dataset.jsonl"
     _fixture_dataset(dataset)
     result = train_classical_experiments(
@@ -324,16 +418,30 @@ def test_classical_smoke_subset_reuses_complete_training_path(tmp_path):
         "complement_nb",
         "sgd_incremental",
     }
+    assert len(fit_transform_calls) == 1
+    assert all(
+        candidate["runtime_optimization"]["parallel_workers"] == 4
+        for candidate in result["candidates"]
+    )
+    assert all(
+        candidate["runtime_optimization"]["feature_extraction"]["policy"]
+        == "fit_once_per_variant_reuse_across_models"
+        for candidate in result["candidates"]
+    )
 
 
-def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(tmp_path, monkeypatch):
+def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(
+    tmp_path, monkeypatch
+):
     dataset = tmp_path / "dataset.jsonl"
     _fixture_dataset(dataset)
 
     class DummyModel:
         pass
 
-    monkeypatch.setattr(experiments, "_build_hf_model", lambda *args, **kwargs: (object(), DummyModel()))
+    monkeypatch.setattr(
+        experiments, "_build_hf_model", lambda *args, **kwargs: (object(), DummyModel())
+    )
     monkeypatch.setattr(experiments, "_fit_hf", lambda *args, **kwargs: None)
 
     def fake_predict(model, tokenizer, rows, max_length, hardware, output_count):
@@ -354,7 +462,14 @@ def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(tmp_pa
     monkeypatch.setattr(experiments, "_predict_hf", fake_predict)
     monkeypatch.setattr(experiments, "_save_hf", fake_save)
 
-    for experiment in ("flat_minilm", "flat_e5", "cascade", "multitask", "qwen_lora", "qwen_structured"):
+    for experiment in (
+        "flat_minilm",
+        "flat_e5",
+        "cascade",
+        "multitask",
+        "qwen_lora",
+        "qwen_structured",
+    ):
         output = tmp_path / experiment
         first = experiments.train_neural_experiment(
             dataset,
@@ -370,5 +485,7 @@ def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(tmp_pa
         )
         assert first["status"] == "trained"
         assert second["status"] == "noop"
-        assert set(first["candidate"]["thresholds"]) == set(load_taxonomy().target_labels)
+        assert set(first["candidate"]["thresholds"]) == set(
+            load_taxonomy().target_labels
+        )
         assert first["candidate"]["checkpoint_manifest"] == "checkpoint_manifest.json"

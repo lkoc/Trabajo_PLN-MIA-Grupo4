@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-10T07:31:59.426456+00:00",
+  "generated_at": "2026-08-10T09:17:18.630234+00:00",
   "taxonomy_contract": "moderacion_peru_5_salidas_v2",
   "taxonomy_version": "2.1.0",
   "core": {
     "name": "project_core.zip",
-    "sha256": "eaa521a58c77e769c33829b96f9eb7f42cec38cfb79b6c3d95a5b36f2345c4c0",
-    "bytes": 171133,
+    "sha256": "1668961d08621eca34c82e6af27c1bc4dfd11bcaeb5b94af472e821a6269931c",
+    "bytes": 193738,
     "files": [
       "config/colab_l4.json",
       "config/prompt_operacional_ollama_v3_2.md",
@@ -22,6 +22,7 @@
       "src/moderacion_peru/consolidation.py",
       "src/moderacion_peru/datasets.py",
       "src/moderacion_peru/device.py",
+      "src/moderacion_peru/ensemble_evaluation.py",
       "src/moderacion_peru/experiments.py",
       "src/moderacion_peru/incremental.py",
       "src/moderacion_peru/io.py",
@@ -34,6 +35,8 @@
       "src/moderacion_peru/notebook_ui.py",
       "src/moderacion_peru/paths.py",
       "src/moderacion_peru/pilot.py",
+      "src/moderacion_peru/policy_features.py",
+      "src/moderacion_peru/prompt_sft.py",
       "src/moderacion_peru/providers/__init__.py",
       "src/moderacion_peru/providers/base.py",
       "src/moderacion_peru/providers/deepseek.py",
@@ -124,13 +127,14 @@
         "03_04",
         "03_05",
         "03_06",
+        "03_06b",
         "03_07",
         "03_08"
       ],
-      "source_sha256": "24d3d81d23c00cb1ba27fcca8c2759a97be5c9932ceaeb60be0a4e9a1cfca783",
-      "source_bytes": 175177452,
-      "archive_sha256": "fff64588386dc2d5fe3c0db032629cbc1ca227b9fa2da025737dcb653a80976f",
-      "archive_bytes": 35780476
+      "source_sha256": "013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86",
+      "source_bytes": 225478048,
+      "archive_sha256": "6f63802cc26a4c7f0313cc8d27c5f9e9231d4be6bc2fc590e6da074c1ecc7589",
+      "archive_bytes": 37459199
     }
   },
   "excluded_from_drive": [
@@ -142,5 +146,5 @@
     "modelos Ollama",
     "paper, presentación y frontends"
   ],
-  "bundle_id": "41d92ba615c4a4e5f72425376591ab7c88cb8707e003b350da0460af1141b073"
+  "bundle_id": "dc8c271dda2c3b65c01bd2bea3a7ad4b2182bf40676f7e834e8367a5cf37fca9"
 }

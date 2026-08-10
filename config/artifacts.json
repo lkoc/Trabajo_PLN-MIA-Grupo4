@@ -35,7 +35,7 @@
     {
       "path": "datos/model_ready/v2/dataset_5_salidas.jsonl",
       "role": "snapshot entrenable de taxonomía 2.1 con cinco salidas canónicas",
-      "required_by": ["03_01_modelos_clasicos", "03_02_transformers_planos", "03_03_transformer_cascada", "03_04_transformer_multitarea", "03_05_qwen_lora", "03_06_qwen_estructurado", "03_07_comparacion_final", "03_08_auditoria_finas_flags"],
+      "required_by": ["03_01_modelos_clasicos", "03_02_transformers_planos", "03_03_transformer_cascada", "03_04_transformer_multitarea", "03_05_qwen_lora", "03_06_qwen_estructurado", "03_06b_qwen_prompt_sft", "03_07_comparacion_final", "03_08_auditoria_finas_flags"],
       "recovery": "Ejecutar 02_05 o modperu prepare-training sobre el consolidado revisado. Para la línea base preservada, recuperar la migración verificada; nunca modificar la fuente ni inferir SEGURO desde una lista vacía."
     },
     {

@@ -49,7 +49,7 @@ CONTRACT_SUMMARY_DOCUMENTS = (
 
 def test_active_notebooks_are_ordered_and_clean():
     notebooks = sorted((ROOT / "flujo").rglob("*.ipynb"))
-    assert len(notebooks) == 19
+    assert len(notebooks) == 20
     executed_reporting_notebooks = {
         "01_03_limpieza_troceado_incremental.ipynb",
         "02_00_preparacion_bundle_colab.ipynb",
@@ -57,6 +57,7 @@ def test_active_notebooks_are_ordered_and_clean():
         "02_03_revision_llm_dirigida.ipynb",
         "02_04_consolidacion_validacion_humana.ipynb",
         "02_05_cierre_humano_snapshot.ipynb",
+        "03_08_auditoria_finas_flags.ipynb",
     }
     optionally_executed_notebooks = {
         "01_015_ampliacion_dirigida_minorias.ipynb",
@@ -179,6 +180,7 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
         "03_04",
         "03_05",
         "03_06",
+        "03_06b",
     }
     expected = {"02_00", *expected_consumers}
     manifest = json.loads(
@@ -433,7 +435,7 @@ def test_root_readme_summarizes_and_reproduces_the_active_workflow():
     for folder, expected_count in {
         "01_datos": 4,
         "02_etiquetado": 6,
-        "03_entrenamiento": 8,
+        "03_entrenamiento": 9,
         "04_produccion": 1,
     }.items():
         notebooks = sorted((ROOT / "flujo" / folder).glob("*.ipynb"))

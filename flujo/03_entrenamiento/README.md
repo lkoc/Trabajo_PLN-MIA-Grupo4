@@ -10,16 +10,16 @@
 
 **Contrato de etiquetas v2.1:** cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran al entrenamiento. Esta combinación, sus umbrales y sus reglas de exclusividad son decisiones operativas locales.
 
-Ejecute `03_01`–`03_08` en orden. Todos consumen snapshots del contrato `moderacion_peru_5_salidas_v2`, taxonomía `2.1.0`, y deben compartir la misma partición agrupada por `video_id`.
+Ejecute primero `03_08`, después las ramas `03_01`–`03_06b` que quiera comparar y al final `03_07`. Todos consumen snapshots del contrato `moderacion_peru_5_salidas_v2`, taxonomía `2.1.0`, y deben compartir la misma partición agrupada por `video_id`.
 
 La selección de familia, checkpoint, época y umbrales utiliza validation. Test se consulta después de congelar la decisión. Las métricas históricas de cuatro daños se mantienen separadas en `archivo/`.
 
-Los cuadernos ya no se limitan a construir la arquitectura: cada rama ejecuta `fit → calibración de cinco umbrales en validation → evaluación final en test → checkpoint/manifiesto → candidate.json`. `03_07` compara solo candidatos del SHA-256 activo y publica `modelos/registro_modelos_5_salidas.json`.
+Cada rama ejecuta `fit → calibración/evaluación en validation → checkpoint/manifiesto → candidate.json`; ninguna abre test. `03_07` compara individuos y ensembles del mismo SHA, congela la decisión y deja en interruptores separados la apertura única de test y una publicación que permanece bloqueada. Las ramas compatibles usan 5+14+3 salidas y máscaras observadas.
 
 Los encoders o backbones anteriores pueden servir de inicialización, pero la primera cabeza principal de cinco salidas se entrena de nuevo. En incrementos posteriores, Transformers y Qwen reanudan una interrupción del mismo run o usan el checkpoint compatible anterior como *warm start*, siempre entrenando con datos anteriores+nuevos. Una firma idéntica produce `status="noop"`.
 
 Consulte [`docs/HARDWARE.md`](../../docs/HARDWARE.md) antes de instalar PyTorch: una rueda CUDA no sustituye una rueda ROCm o XPU.
 
-`03_02`–`03_06` incluyen un backend Colab L4 reproducible desde VS Code. El snapshot se transfiere comprimido y verificado, se copia a `/content` y los checkpoints se publican de forma atómica. `03_01`, `03_07` y `03_08` permanecen locales salvo que sea necesario regenerar inferencias. Véase [`docs/COLAB_L4.md`](../../docs/COLAB_L4.md).
+`03_02`–`03_06b` incluyen un backend Colab L4 reproducible desde VS Code. El snapshot se transfiere comprimido y verificado, se copia a `/content` y los checkpoints se publican de forma atómica. `03_01`, `03_07` y `03_08` permanecen locales salvo que sea necesario regenerar inferencias. Véase [`docs/COLAB_L4.md`](../../docs/COLAB_L4.md).
 
-Active `RUN_TRAINING=True` en cada familia que quiera comparar y `RUN_PUBLISH=True` en `03_07`. No es obligatorio entrenarlas todas: basta un candidato completo para un registro operativo, aunque una comparación académica profunda debe ejecutar las ramas declaradas.
+Active `RUN_TRAINING=True` en cada clasificador que quiera comparar. En `03_06b`, ejecute primero `RUN_PILOT=True`; el piloto no es elegible para `03_07`. Train y validation usan una submuestra determinista `SEGURO`/daño 4:1. En `03_07`, active primero `RUN_COMPARE_AND_FREEZE`; después `RUN_TEST_ONCE` ejecuta una sola inferencia sobre todo el test natural. El informe presenta esa evaluación como principal y deriva de las mismas predicciones una vista secundaria 4:1. `RUN_PUBLISH` no publica: lanza un bloqueo hasta una aprobación posterior.
