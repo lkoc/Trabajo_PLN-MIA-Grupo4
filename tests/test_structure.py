@@ -49,14 +49,16 @@ CONTRACT_SUMMARY_DOCUMENTS = (
 
 def test_active_notebooks_are_ordered_and_clean():
     notebooks = sorted((ROOT / "flujo").rglob("*.ipynb"))
-    assert len(notebooks) == 20
-    executed_reporting_notebooks = {
+    assert len(notebooks) == 21
+    executed_evidence_notebooks = {
         "01_03_limpieza_troceado_incremental.ipynb",
         "02_00_preparacion_bundle_colab.ipynb",
         "02_01_etiquetado_deepseek_flash_pro.ipynb",
         "02_03_revision_llm_dirigida.ipynb",
         "02_04_consolidacion_validacion_humana.ipynb",
         "02_05_cierre_humano_snapshot.ipynb",
+        "03_01_modelos_clasicos.ipynb",
+        "03_04_transformer_multitarea.ipynb",
         "03_08_auditoria_finas_flags.ipynb",
     }
     optionally_executed_notebooks = {
@@ -74,7 +76,7 @@ def test_active_notebooks_are_ordered_and_clean():
             for cell in notebook.cells
             if cell.cell_type == "code" and cell.get("outputs")
         ]
-        if path.name in executed_reporting_notebooks:
+        if path.name in executed_evidence_notebooks:
             # Estas salidas ejecutadas pertenecen al usuario y constituyen evidencia
             # operativa; se conservan en lugar de reescribir sus cuadernos.
             assert output_cells
@@ -150,6 +152,36 @@ def test_neural_chunk_report_has_consistent_numeric_references():
     assert "proceedings.neurips.cc/paper/2020" in references
 
 
+def test_training_architecture_report_cites_prior_applied_schemes():
+    report = (ROOT / "docs" / "ARQUITECTURAS_MODELOS_03.md").read_text(
+        encoding="utf-8"
+    )
+    body, references = report.split("## Referencias", maxsplit=1)
+    cited = set(map(int, BODY_CITATION.findall(body)))
+    entries = list(map(int, REFERENCE_ENTRY.findall(references)))
+
+    assert cited == set(range(1, 29))
+    assert entries == list(range(1, 29))
+    assert report.count("```mermaid") >= 5
+    assert all(
+        notebook_id in report
+        for notebook_id in (
+            "03_01",
+            "03_02",
+            "03_03",
+            "03_03b",
+            "03_04",
+            "03_05",
+            "03_06",
+            "03_06b",
+        )
+    )
+    assert "One-step and Two-step Classification" in references
+    assert "Hierarchical Multi-Task Learning" in references
+    assert "Mistral Sequence Classification with PEFT" in references
+    assert "LlamaLens" in references
+
+
 def test_chunk_optimization_notebook_loads_consolidated_results_before_models():
     notebook = nbformat.read(
         ROOT / "flujo" / "01_datos" / "01_02_optimizacion_longitud_chunks.ipynb",
@@ -177,6 +209,7 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
         "02_02",
         "03_02",
         "03_03",
+        "03_03b",
         "03_04",
         "03_05",
         "03_06",
@@ -442,7 +475,7 @@ def test_root_readme_summarizes_and_reproduces_the_active_workflow():
     for folder, expected_count in {
         "01_datos": 4,
         "02_etiquetado": 6,
-        "03_entrenamiento": 9,
+        "03_entrenamiento": 10,
         "04_produccion": 1,
     }.items():
         notebooks = sorted((ROOT / "flujo" / folder).glob("*.ipynb"))
@@ -702,12 +735,18 @@ def test_local_training_notebooks_expose_bounded_deterministic_parallelism():
     )
     classical_source = "\n".join(cell.source for cell in classical.cells)
     comparison_source = "\n".join(cell.source for cell in comparison.cells)
+    generator_source = (
+        ROOT / "tools" / "generate_workflow_notebooks.py"
+    ).read_text(encoding="utf-8")
 
     assert "PARALLEL_WORKERS=4" in classical_source
     assert "parallel_workers=PARALLEL_WORKERS" in classical_source
     assert "una extracción por variante" in classical_source
     assert "LINEAR_SVM_MAX_ITER=20000" in classical_source
-    assert "RUN_SVM_CONVERGENCE_REPAIR=False" in classical_source
+    # El cuaderno puede conservar RUN_*=True como evidencia ejecutada del usuario;
+    # el generador es quien fija el valor inerte y reproducible para una copia nueva.
+    assert "RUN_SVM_CONVERGENCE_REPAIR=" in classical_source
+    assert "RUN_SVM_CONVERGENCE_REPAIR=False" in generator_source
     assert "svm_convergence_repair" in classical_source
     assert "PARALLEL_WORKERS=4" in comparison_source
     assert "parallel_workers=PARALLEL_WORKERS" in comparison_source

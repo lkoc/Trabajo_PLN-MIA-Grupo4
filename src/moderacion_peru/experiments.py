@@ -12,6 +12,12 @@ from typing import Any
 
 import numpy as np
 
+from .cascade import (
+    DEFAULT_GATE_MIN_DAMAGE_RECALL,
+    DEFAULT_GATE_MIN_SAFE_NPV,
+    calibrate_safety_first_gate,
+    combine_safety_first_cascade_scores,
+)
 from .datasets import deterministic_safe_downsample
 from .device import resolve_device, torch_device_name
 from .io import (
@@ -1327,12 +1333,14 @@ def train_neural_experiment(
     safe_to_damage_ratio: float | None = 4.0,
     split_scheme: str = "video",
     sampling_seed: int = 20260805,
+    cascade_gate_min_damage_recall: float = DEFAULT_GATE_MIN_DAMAGE_RECALL,
+    cascade_gate_min_safe_npv: float = DEFAULT_GATE_MIN_SAFE_NPV,
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     """Cierra fit→calibración validation→candidato sin abrir test.
 
     Experimentos admitidos: ``flat_minilm``, ``flat_e5``, ``cascade``,
-    ``multitask``, ``qwen_lora`` y ``qwen_structured``.
+    ``cascade_v2``, ``multitask``, ``qwen_lora`` y ``qwen_structured``.
     """
 
     safe_to_damage_ratio = _require_project_safe_ratio(safe_to_damage_ratio)
@@ -1340,13 +1348,19 @@ def train_neural_experiment(
         "flat_minilm",
         "flat_e5",
         "cascade",
+        "cascade_v2",
         "multitask",
         "qwen_lora",
         "qwen_structured",
     }
     if experiment not in allowed:
         raise ValueError(f"Experimento desconocido: {experiment}")
-    progress_total = 5 if experiment == "cascade" else 4
+    if experiment == "cascade_v2":
+        if not 0 < cascade_gate_min_damage_recall <= 1:
+            raise ValueError("cascade_gate_min_damage_recall debe pertenecer a (0, 1]")
+        if not 0 < cascade_gate_min_safe_npv <= 1:
+            raise ValueError("cascade_gate_min_safe_npv debe pertenecer a (0, 1]")
+    progress_total = 5 if experiment in {"cascade", "cascade_v2"} else 4
     _notify_progress(
         progress_callback,
         status="started",
@@ -1371,7 +1385,9 @@ def train_neural_experiment(
     configuration = {
         "experiment": experiment,
         "specification": asdict(spec),
-        "structured_penalty": 0.2 if experiment == "qwen_structured" else 0.0,
+        "structured_penalty": (
+            0.2 if experiment in {"cascade_v2", "qwen_structured"} else 0.0
+        ),
         "hardware_backend": hardware.backend,
         "dtype": hardware.dtype,
         "multitask_weights": (
@@ -1385,6 +1401,16 @@ def train_neural_experiment(
         "split_scheme": split_scheme,
         "sampling_seed": sampling_seed,
         "early_stopping_selection": "best_validation_macro_auprc_damage",
+        "cascade_v2_gate_constraints": (
+            {
+                "minimum_damage_recall": cascade_gate_min_damage_recall,
+                "minimum_safe_npv": cascade_gate_min_safe_npv,
+                "selection_partition": "validation",
+                "fallback": "route_all_to_five_output_branch",
+            }
+            if experiment == "cascade_v2"
+            else None
+        ),
         "test_status": "sealed_not_evaluated",
     }
     signature = _experiment_signature(dataset, experiment, configuration)
@@ -1422,7 +1448,8 @@ def train_neural_experiment(
     training_elapsed = 0.0
     validation_inference_elapsed = 0.0
 
-    if experiment == "cascade":
+    if experiment in {"cascade", "cascade_v2"}:
+        safety_first = experiment == "cascade_v2"
         damage_indices = [
             taxonomy.target_labels.index(label) for label in taxonomy.damage_labels
         ]
@@ -1461,9 +1488,10 @@ def train_neural_experiment(
             if previous
             else None
         )
-        previous_damage = (
+        specialist_asset_key = "branch_model" if safety_first else "damage_model"
+        previous_specialist = (
             _candidate_asset(
-                previous, previous.get("inference", {}).get("damage_model")
+                previous, previous.get("inference", {}).get(specialist_asset_key)
             )
             if previous
             else None
@@ -1472,8 +1500,11 @@ def train_neural_experiment(
         gate_tokenizer, gate_model = _build_hf_model(
             gate_spec, gate_labels, model_source=previous_gate
         )
-        damage_tokenizer, damage_model = _build_hf_model(
-            spec, taxonomy.damage_labels, model_source=previous_damage
+        specialist_labels = (
+            taxonomy.target_labels if safety_first else taxonomy.damage_labels
+        )
+        specialist_tokenizer, specialist_model = _build_hf_model(
+            spec, specialist_labels, model_source=previous_specialist
         )
         gate_diagnostic = _token_truncation_diagnostic(
             gate_tokenizer, train, gate_spec.max_length
@@ -1503,34 +1534,53 @@ def train_neural_experiment(
             phase="compuerta entrenada",
             advance=1,
         )
-        damage_rows = [row for row, keep in zip(train, harmful, strict=True) if keep]
-        damage_targets = train_full[harmful][:, damage_indices]
-        damage_masks = np.ones_like(damage_targets, dtype=np.float32)
-        validation_damage_targets = validation_all_targets[:, damage_indices]
-        validation_damage_masks = validation_all_masks[:, damage_indices]
-        damage_diagnostic = _token_truncation_diagnostic(
-            damage_tokenizer, damage_rows, spec.max_length
+        specialist_rows = (
+            list(train)
+            if safety_first
+            else [row for row, keep in zip(train, harmful, strict=True) if keep]
+        )
+        specialist_targets = (
+            train_full if safety_first else train_full[harmful][:, damage_indices]
+        )
+        specialist_masks = np.ones_like(specialist_targets, dtype=np.float32)
+        validation_specialist_targets = (
+            validation_all_targets[:, :5]
+            if safety_first
+            else validation_all_targets[:, damage_indices]
+        )
+        validation_specialist_masks = (
+            validation_all_masks[:, :5]
+            if safety_first
+            else validation_all_masks[:, damage_indices]
+        )
+        specialist_diagnostic = _token_truncation_diagnostic(
+            specialist_tokenizer, specialist_rows, spec.max_length
         )
         phase_started = time.perf_counter()
-        damage_fit = _fit_hf(
-            damage_model,
-            damage_tokenizer,
-            damage_rows,
-            damage_targets,
-            damage_masks,
+        specialist_fit = _fit_hf(
+            specialist_model,
+            specialist_tokenizer,
+            specialist_rows,
+            specialist_targets,
+            specialist_masks,
             validation,
-            validation_damage_targets,
-            validation_damage_masks,
+            validation_specialist_targets,
+            validation_specialist_masks,
             spec,
-            run_dir / "trainer_damage",
+            run_dir / ("trainer_branch" if safety_first else "trainer_damage"),
             hardware,
-            primary_output_count=4,
+            structured_penalty=0.2 if safety_first else 0.0,
+            primary_output_count=5 if safety_first else 4,
         )
         training_elapsed += time.perf_counter() - phase_started
         _notify_progress(
             progress_callback,
             status="progress",
-            phase="rama de daño entrenada",
+            phase=(
+                "rama de cinco salidas entrenada"
+                if safety_first
+                else "rama de daño entrenada"
+            ),
             advance=1,
         )
         validation_started = time.perf_counter()
@@ -1542,8 +1592,13 @@ def train_neural_experiment(
             hardware,
             1 + auxiliary_count,
         )
-        damage_validation = _predict_hf(
-            damage_model, damage_tokenizer, validation, spec.max_length, hardware, 4
+        specialist_validation = _predict_hf(
+            specialist_model,
+            specialist_tokenizer,
+            validation,
+            spec.max_length,
+            hardware,
+            5 if safety_first else 4,
         )
         validation_inference_elapsed = time.perf_counter() - validation_started
         _notify_progress(
@@ -1552,31 +1607,48 @@ def train_neural_experiment(
             phase="validation inferida",
             advance=1,
         )
-        validation_primary = np.concatenate(
-            [
-                1 - gate_validation[:, :1],
-                gate_validation[:, :1] * damage_validation,
-            ],
-            axis=1,
-        )
+        if safety_first:
+            gate_truth = validation_all_targets[:, damage_indices].max(axis=1)
+            gate_calibration = calibrate_safety_first_gate(
+                gate_truth,
+                gate_validation[:, 0],
+                min_damage_recall=cascade_gate_min_damage_recall,
+                min_safe_npv=cascade_gate_min_safe_npv,
+            )
+            validation_primary = combine_safety_first_cascade_scores(
+                gate_validation[:, 0],
+                specialist_validation,
+                gate_threshold=gate_calibration["threshold"],
+            )
+        else:
+            validation_primary = np.concatenate(
+                [
+                    1 - gate_validation[:, :1],
+                    gate_validation[:, :1] * specialist_validation,
+                ],
+                axis=1,
+            )
         validation_scores = np.concatenate(
             [validation_primary, gate_validation[:, 1:]], axis=1
         )
         from sklearn.metrics import average_precision_score, f1_score
 
         gate_truth = validation_all_targets[:, damage_indices].max(axis=1)
-        gate_grid = np.linspace(0.05, 0.95, 91)
-        gate_threshold = max(
-            gate_grid,
-            key=lambda value: (
-                f1_score(
-                    gate_truth,
-                    gate_validation[:, 0] >= value,
-                    zero_division=0,
+        if safety_first:
+            gate_threshold = float(gate_calibration["threshold"])
+        else:
+            gate_grid = np.linspace(0.05, 0.95, 91)
+            gate_threshold = max(
+                gate_grid,
+                key=lambda value: (
+                    f1_score(
+                        gate_truth,
+                        gate_validation[:, 0] >= value,
+                        zero_division=0,
+                    ),
+                    value,
                 ),
-                value,
-            ),
-        )
+            )
         gate_missed = (gate_truth == 1) & (gate_validation[:, 0] < gate_threshold)
         cascade_diagnostics = {
             "gate_average_precision": float(
@@ -1594,19 +1666,45 @@ def train_neural_experiment(
                 gate_missed.sum() / max(1, gate_truth.sum())
             ),
             "comparison_against_flat": "performed in 03_07 on identical validation chunk_ids",
+            "architecture": (
+                "safety_first_gate_then_safe_plus_four_damage_branch"
+                if safety_first
+                else "soft_any_damage_gate_times_four_damage_branch"
+            ),
+            "safety_gate_calibration": gate_calibration if safety_first else None,
         }
         labels = all_labels
-        fit_summary = {"gate": gate_fit, "damage": damage_fit}
-        truncation = {"gate": gate_diagnostic, "damage": damage_diagnostic}
-        gate_dir, damage_dir = run_dir / "gate_model", run_dir / "damage_model"
+        fit_summary = {"gate": gate_fit, "specialist": specialist_fit}
+        truncation = {"gate": gate_diagnostic, "specialist": specialist_diagnostic}
+        gate_dir = run_dir / "gate_model"
+        specialist_dir = run_dir / (
+            "branch_model" if safety_first else "damage_model"
+        )
         _save_hf(gate_model, gate_tokenizer, gate_dir)
-        _save_hf(damage_model, damage_tokenizer, damage_dir)
-        inference = {
-            "type": "hf_cascade",
-            "gate_model": gate_dir.name,
-            "damage_model": damage_dir.name,
-        }
-        checkpoint_paths = [gate_dir, damage_dir]
+        _save_hf(
+            specialist_model,
+            specialist_tokenizer,
+            specialist_dir,
+        )
+        inference = (
+            {
+                "type": "hf_cascade_v2",
+                "gate_model": gate_dir.name,
+                "branch_model": specialist_dir.name,
+                "gate_threshold": float(gate_calibration["threshold"]),
+                "gate_constraints": {
+                    "minimum_damage_recall": cascade_gate_min_damage_recall,
+                    "minimum_safe_npv": cascade_gate_min_safe_npv,
+                },
+            }
+            if safety_first
+            else {
+                "type": "hf_cascade",
+                "gate_model": gate_dir.name,
+                "damage_model": specialist_dir.name,
+            }
+        )
+        checkpoint_paths = [gate_dir, specialist_dir]
     else:
         targets, target_masks, labels = _output_targets_and_masks(train)
         validation_targets, validation_masks, _ = _output_targets_and_masks(validation)

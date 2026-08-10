@@ -11,7 +11,11 @@ from .artifacts import artifact_status
 from .consolidation import reconcile_human_reviews
 from .datasets import materialize_versioned_training_snapshot
 from .device import resolve_device
-from .experiments import train_classical_experiments, train_flat_transformers, train_neural_experiment
+from .experiments import (
+    train_classical_experiments,
+    train_flat_transformers,
+    train_neural_experiment,
+)
 from .io import read_jsonl
 from .migration import migrate_jsonl
 from .paths import find_project_root
@@ -198,7 +202,18 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.set_defaults(func=command_prepare_training)
 
     train = subparsers.add_parser("train", help="Ejecuta fit, calibración, test y candidato idempotente")
-    train.add_argument("family", choices=["classical", "flat", "cascade", "multitask", "qwen_lora", "qwen_structured"])
+    train.add_argument(
+        "family",
+        choices=[
+            "classical",
+            "flat",
+            "cascade",
+            "cascade_v2",
+            "multitask",
+            "qwen_lora",
+            "qwen_structured",
+        ],
+    )
     train.add_argument("--dataset")
     train.add_argument("--output")
     train.add_argument("--device", default="auto")

@@ -12,6 +12,7 @@ from typing import Any
 
 import numpy as np
 
+from .cascade import combine_safety_first_cascade_scores
 from .datasets import deterministic_safe_downsample
 from .device import resolve_device, torch_device_name
 from .io import (
@@ -749,23 +750,33 @@ def _score_candidate(
 
     if kind in {"hf_sequence_classifier", "hf_peft_sequence_classifier"}:
         return sequence_scores(_asset(candidate, inference["model"]), 5, progress_phase)
-    if kind == "hf_cascade":
+    if kind in {"hf_cascade", "hf_cascade_v2"}:
         gate = sequence_scores(
             _asset(candidate, inference["gate_model"]),
             1,
             f"{progress_phase} · compuerta",
         )
+        safety_first = kind == "hf_cascade_v2"
         original_kind = inference["type"]
         inference["type"] = "hf_sequence_classifier"
         try:
-            damage = sequence_scores(
-                _asset(candidate, inference["damage_model"]),
-                4,
-                f"{progress_phase} · daño",
+            specialist = sequence_scores(
+                _asset(
+                    candidate,
+                    inference["branch_model" if safety_first else "damage_model"],
+                ),
+                5 if safety_first else 4,
+                f"{progress_phase} · {'rama segura/daño' if safety_first else 'daño'}",
             )
         finally:
             inference["type"] = original_kind
-        return np.concatenate([1 - gate, gate * damage], axis=1)
+        if safety_first:
+            return combine_safety_first_cascade_scores(
+                gate[:, 0],
+                specialist,
+                gate_threshold=float(inference["gate_threshold"]),
+            )
+        return np.concatenate([1 - gate, gate * specialist], axis=1)
     raise ValueError(f"Inferencia no soportada en apertura de test: {kind}")
 
 

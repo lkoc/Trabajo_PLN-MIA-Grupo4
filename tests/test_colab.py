@@ -132,6 +132,7 @@ def test_colab_config_syncs_only_declared_inputs_and_keeps_api_on_cpu():
         "02_02",
         "03_02",
         "03_03",
+        "03_03b",
         "03_04",
         "03_05",
         "03_06",

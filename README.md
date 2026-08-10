@@ -154,6 +154,7 @@ tope artificial; persiste por `chunk_id` y puede continuar con una recarga.
 | `03_01_modelos_clasicos` | cinco estimadores con TF-IDF palabra+carácter, en variantes base e informada por política | candidatos de 22 salidas con supervisión enmascarada |
 | `03_02_transformers_planos` | MiniLM multilingüe y E5-small multilingüe | checkpoints de 5+14+3 salidas y candidatos planos |
 | `03_03_transformer_cascada` | compuerta de cualquier daño con auxiliares, seguida de cuatro salidas de daño | candidato de dos etapas y diagnóstico de propagación |
+| `03_03b_transformer_cascada_segura` | compuerta E5 calibrada por recall de daño y NPV segura, seguida de `SEGURO` más cuatro daños | candidato de seguridad primero, fallback a la rama completa y diagnóstico de cobertura |
 | `03_04_transformer_multitarea` | cinco salidas principales, 14 etiquetas finas y tres flags auxiliares | candidato multitarea |
 | `03_05_qwen_lora` | Qwen3-0.6B-Base con adaptación LoRA y cabeza clasificadora | adaptador y candidato de 22 salidas; no se presenta como prompting |
 | `03_06_qwen_estructurado` | Qwen clasificador con penalización del conflicto `SEGURO+daño` | checkpoint estructurado de 22 salidas |
@@ -162,6 +163,8 @@ tope artificial; persiste por `chunk_id` y puede continuar con una recarga.
 | `03_08_auditoria_finas_flags` | audita máscaras, cobertura, consistencia y métricas auxiliares observadas | informes del snapshot y de candidatos disponibles |
 
 Los cuadernos `03_01`–`03_06b` completan `fit → calibración/evaluación en validation → manifiesto` y dejan test sellado. `03_07` compara individuos y ensembles, congela candidatos, umbrales y regla; un segundo interruptor infiere una sola vez sobre el test natural completo. Train y validation conservan todo el daño y seleccionan `SEGURO` de forma determinista, aproximadamente proporcional por canal, con ratio 4:1: quedan 51.205/10.600 chunks. Test conserva sus 22.684 chunks y su prevalencia natural. De la misma inferencia se deriva además una vista secundaria determinista 4:1 de 9.010 chunks; no se vuelve a abrir ni ejecutar el modelo. La publicación permanece bloqueada por defecto.
+
+La explicación arquitectónica, los esquemas Mermaid, las diferencias de implementación y una matriz de antecedentes aplicados están en [Arquitecturas de entrenamiento 03_01–03_06b](docs/ARQUITECTURAS_MODELOS_03.md).
 
 Los cuadernos locales aprovechan cuatro hilos de forma acotada: `03_01` reutiliza una extracción TF–IDF por variante entre todos sus modelos y paraleliza las 22 cabezas; `03_07` paraleliza las réplicas bootstrap por video. Ambos registran tiempos por etapa. Los miembros del ensemble se infieren secuencialmente para evitar multiplicar RAM o VRAM.
 
@@ -290,12 +293,12 @@ Desde VS Code, abra la carpeta clonada, seleccione como kernel el Python de `.ve
 .\.venv\Scripts\jupyter-lab.exe
 ```
 
-El recorrido completo contiene 20 cuadernos:
+El recorrido completo contiene 21 cuadernos:
 
 ```text
 01_01 → 01_015 ampliación minoritaria opcional → 01_02 opcional → 01_03
 → 02_00 en Colab → 02_01 (calibración→Flash→Pro) → 02_02 fallback opcional → 02_03 auditoría → 02_04 → 02_05 → 02_00 en Colab
-→ 03_01 ... 03_06 clasificadores y 03_06b SFT condicionado por prompt en ramas comparables
+→ 03_01 ... 03_06 clasificadores —incluida 03_03b— y 03_06b SFT condicionado por prompt en ramas comparables
 → 03_07 → 03_08 → 04_01
 ```
 
@@ -364,7 +367,7 @@ Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guarda
 .\.venv\Scripts\python.exe tools/generate_workflow_notebooks.py
 ```
 
-Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, archivado reversible por longitud, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 20 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
+Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, archivado reversible por longitud, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 21 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
 
 El artículo y la presentación se recompilan de forma independiente:
 

@@ -484,6 +484,10 @@ def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(
         coarse = experiments.encode_targets(rows).astype(float)
         if output_count == 1:
             return coarse[:, 1:].max(axis=1, keepdims=True) * 0.8 + 0.1
+        if output_count == 18:
+            output = __import__("numpy").zeros((len(rows), output_count), dtype=float) + 0.1
+            output[:, 0] = coarse[:, 1:].max(axis=1) * 0.8 + 0.1
+            return output
         if output_count == 4:
             return coarse[:, 1:] * 0.8 + 0.1
         output = __import__("numpy").zeros((len(rows), output_count), dtype=float) + 0.1
@@ -502,6 +506,7 @@ def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(
         "flat_minilm",
         "flat_e5",
         "cascade",
+        "cascade_v2",
         "multitask",
         "qwen_lora",
         "qwen_structured",
@@ -525,5 +530,17 @@ def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(
             load_taxonomy().target_labels
         )
         assert first["candidate"]["checkpoint_manifest"] == "checkpoint_manifest.json"
+        if experiment == "cascade_v2":
+            assert first["candidate"]["inference"] == {
+                "type": "hf_cascade_v2",
+                "gate_model": "gate_model",
+                "branch_model": "branch_model",
+                "gate_threshold": 0.9,
+                "gate_constraints": {
+                    "minimum_damage_recall": 0.99,
+                    "minimum_safe_npv": 0.99,
+                },
+                "bundle": "inference.json",
+            }
 
-    assert fit_primary_counts == [5, 5, 1, 4, 5, 5, 5]
+    assert fit_primary_counts == [5, 5, 1, 4, 1, 5, 5, 5, 5]

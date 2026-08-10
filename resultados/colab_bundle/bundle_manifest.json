@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-10T15:00:43.294171+00:00",
+  "generated_at": "2026-08-10T17:00:53.675130+00:00",
   "taxonomy_contract": "moderacion_peru_5_salidas_v2",
   "taxonomy_version": "2.1.0",
   "core": {
     "name": "project_core.zip",
-    "sha256": "dd7a9e1ea0727413b85201ec22d583093ddee39011b1df0b05021ab44d7ab22c",
-    "bytes": 200112,
+    "sha256": "933fc7672c801d9a68630b3452fe29098cd24b063e9ea1983d5d6a6746b1b3f3",
+    "bytes": 202856,
     "files": [
       "config/colab_l4.json",
       "config/prompt_operacional_ollama_v3_2.md",
@@ -16,6 +16,7 @@
       "src/moderacion_peru/__init__.py",
       "src/moderacion_peru/acquisition.py",
       "src/moderacion_peru/artifacts.py",
+      "src/moderacion_peru/cascade.py",
       "src/moderacion_peru/chunk_optimization.py",
       "src/moderacion_peru/cli.py",
       "src/moderacion_peru/colab.py",
@@ -124,6 +125,7 @@
         "03_01",
         "03_02",
         "03_03",
+        "03_03b",
         "03_04",
         "03_05",
         "03_06",
@@ -146,5 +148,5 @@
     "modelos Ollama",
     "paper, presentación y frontends"
   ],
-  "bundle_id": "23a5ac06386d9a5e2b67d9e09121c25c4e4fdefc653ffe75952e1e2175e7c4ac"
+  "bundle_id": "4c734dde0716b338b8b6d64a7a9a3ed59ddab98c0e24ed8d2c3ac08331631941"
 }

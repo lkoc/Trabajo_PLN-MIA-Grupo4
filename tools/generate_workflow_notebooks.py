@@ -3076,6 +3076,35 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
             "constituyen una arquitectura local cuya ventaja debe demostrarse en validación.",
         ),
         (
+            "03_03b_transformer_cascada_segura.ipynb",
+            "Transformer en cascada v2 orientado a seguridad",
+            "from moderacion_peru.experiments import train_neural_experiment\n"
+            "from moderacion_peru.models import TRANSFORMER_SPECS\n"
+            "DATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\n"
+            "OUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/cascada_v2'\n"
+            "DEVICE='cuda' if COLAB_CONTEXT else 'auto'\n"
+            "SAFE_TO_DAMAGE_RATIO=4.0\n"
+            "GATE_MIN_DAMAGE_RECALL=0.99  # en validation: al menos 99 % de los daños pasan a la rama\n"
+            "GATE_MIN_SAFE_NPV=0.99  # en validation: al menos 99 % de los bloqueados por la compuerta son SEGURO\n"
+            "EPOCHS=TRANSFORMER_SPECS['e5'].epochs  # máximo 3; se restaura la mejor época de validation\n"
+            "RUN_TRAINING=False\n"
+            "if RUN_TRAINING:\n"
+            "    cascade_v2_result=run_with_progress('Cascada v2 orientada a seguridad',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='cascade_v2',device=DEVICE,safe_to_damage_ratio=SAFE_TO_DAMAGE_RATIO,cascade_gate_min_damage_recall=GATE_MIN_DAMAGE_RECALL,cascade_gate_min_safe_npv=GATE_MIN_SAFE_NPV,progress_unit='etapa')\n"
+            "    show_result('Cascada v2: compuerta y rama de cinco salidas',cascade_v2_result,tone='success')\n"
+            "else:\n"
+            "    show_summary('Configuración preliminar',{'compuerta':'ANY_DAMAGE + 14 finas + 3 flags','restricción_recall_daño':GATE_MIN_DAMAGE_RECALL,'restricción_NPV_seguro':GATE_MIN_SAFE_NPV,'fallback':'si no hay umbral no trivial factible, deriva todo a la segunda rama','rama_especializada':'SEGURO + cuatro daños; penaliza conflicto SEGURO+daño','épocas_máximas':EPOCHS,'selección':'mejor macro-AUPRC de daño en validation','advertencia':'las restricciones son evidencia empírica de validation, no garantía poblacional','test':'natural completo, sellado'},tone='warning')",
+            "03_03b",
+            "La propuesta es una clasificación jerárquica local, relacionada con los marcos generales "
+            "de jerarquías [@silla2011hierarchical] y clasificación multietiqueta "
+            "[@tsoumakas2007multilabel]. La compuerta se selecciona únicamente en `validation` bajo "
+            "restricciones empíricas de sensibilidad al daño y valor predictivo de la decisión "
+            "`SEGURO`; esta precaución es pertinente porque las redes modernas pueden estar "
+            "descalibradas [@guo2017calibration]. La segunda rama vuelve a incluir `SEGURO` más los "
+            "cuatro daños para recuperar falsos positivos de la compuerta. El umbral, las metas de "
+            "0,99 y la penalización de conflicto son decisiones del proyecto, no garantías "
+            "poblacionales.",
+        ),
+        (
             "03_04_transformer_multitarea.ipynb",
             "Transformer jerárquico multitarea",
             "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/multitarea'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nSAFE_TO_DAMAGE_RATIO=4.0  # política fija en train y validation\nRUN_TRAINING=False\nif RUN_TRAINING:\n    multitask_result=run_with_progress('Transformer multitarea',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='multitask',device=DEVICE,safe_to_damage_ratio=SAFE_TO_DAMAGE_RATIO,progress_unit='etapa')\n    show_result('Multitarea enmascarada',multitask_result,tone='success')\nelse:\n    show_summary('Configuración preliminar',{'salidas':'5 gruesas + 14 finas + 3 flags','máscaras':'ausente no equivale a negativo','progreso':'Trainer por lote/época + barra por etapa','SEGURO_train_validation':'4:1 fijo','test':'natural completo, sellado'},tone='neutral')",

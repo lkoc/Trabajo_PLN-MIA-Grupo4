@@ -8,6 +8,7 @@ from typing import Any
 
 import numpy as np
 
+from .cascade import combine_safety_first_cascade_scores
 from .device import resolve_device, torch_device_name
 from .io import sha256_file, write_json_atomic
 from .manifests import artifact_reference
@@ -353,16 +354,20 @@ class ProductionPredictor:
             self._model = AutoPeftModelForSequenceClassification.from_pretrained(
                 model_path
             ).to(self._torch_device)
-        elif kind == "hf_cascade":
+        elif kind in {"hf_cascade", "hf_cascade_v2"}:
             gate_path = self._asset(inference["gate_model"])
-            damage_path = self._asset(inference["damage_model"])
+            specialist_path = self._asset(
+                inference[
+                    "branch_model" if kind == "hf_cascade_v2" else "damage_model"
+                ]
+            )
             self._tokenizer = AutoTokenizer.from_pretrained(gate_path)
             self._model = AutoModelForSequenceClassification.from_pretrained(
                 gate_path
             ).to(self._torch_device)
-            self._damage_tokenizer = AutoTokenizer.from_pretrained(damage_path)
+            self._damage_tokenizer = AutoTokenizer.from_pretrained(specialist_path)
             self._damage_model = AutoModelForSequenceClassification.from_pretrained(
-                damage_path
+                specialist_path
             ).to(self._torch_device)
         else:
             raise ValueError(f"Tipo de inferencia no soportado: {kind}")
@@ -392,7 +397,7 @@ class ProductionPredictor:
                     .cpu()
                     .numpy()
                 )
-            if kind == "hf_cascade":
+            if kind in {"hf_cascade", "hf_cascade_v2"}:
                 damage_encoded = self._damage_tokenizer(
                     text, return_tensors="pt", truncation=True, max_length=256
                 )
@@ -409,7 +414,14 @@ class ProductionPredictor:
                         .numpy()
                     )
                 gate = float(primary[0])
-                values = [1 - gate, *(gate * damage)]
+                if kind == "hf_cascade_v2":
+                    values = combine_safety_first_cascade_scores(
+                        np.asarray([gate]),
+                        np.asarray([damage[:5]]),
+                        gate_threshold=float(self.entry.inference["gate_threshold"]),
+                    )[0]
+                else:
+                    values = [1 - gate, *(gate * damage)]
             else:
                 values = primary[:5]
         return {label: float(values[index]) for index, label in enumerate(labels)}
