@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import numpy as np
 
@@ -78,24 +79,49 @@ def train_classical_suite(
     candidates = {
         "dummy": DummyClassifier(strategy="prior"),
         "complement_nb": ComplementNB(alpha=1.0),
-        "logistic_regression": LogisticRegression(max_iter=2000, class_weight="balanced"),
-        "linear_svm": LinearSVC(class_weight="balanced"),
-        "sgd_incremental": SGDClassifier(loss="log_loss", class_weight="balanced", random_state=20260805),
+        "logistic_regression": LogisticRegression(
+            max_iter=2000, class_weight="balanced"
+        ),
+        "linear_svm": LinearSVC(
+            class_weight="balanced",
+            dual="auto",
+            max_iter=20000,
+            tol=1e-3,
+            random_state=20260805,
+        ),
+        "sgd_incremental": SGDClassifier(
+            loss="log_loss", class_weight="balanced", random_state=20260805
+        ),
     }
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
-    registry = {"schema_version": "2.1.0", "target_labels": list(load_taxonomy().target_labels), "models": {}}
+    registry = {
+        "schema_version": "2.1.0",
+        "target_labels": list(load_taxonomy().target_labels),
+        "models": {},
+    }
     for name, estimator in candidates.items():
         pipeline = Pipeline(
             [
-                ("tfidf", TfidfVectorizer(ngram_range=(1, 2), min_df=2, max_features=150000, sublinear_tf=True)),
+                (
+                    "tfidf",
+                    TfidfVectorizer(
+                        ngram_range=(1, 2),
+                        min_df=2,
+                        max_features=150000,
+                        sublinear_tf=True,
+                    ),
+                ),
                 ("classifier", OneVsRestClassifier(estimator, n_jobs=1)),
             ]
         )
         pipeline.fit(texts, targets)
         path = output / f"{name}.joblib"
         joblib.dump(pipeline, path)
-        registry["models"][name] = {"path": str(path), "incremental": name == "sgd_incremental"}
+        registry["models"][name] = {
+            "path": str(path),
+            "incremental": name == "sgd_incremental",
+        }
     write_json_atomic(output / "registry.json", registry)
     return registry
 
@@ -127,7 +153,9 @@ def build_qwen_lora_classifier(device: str = "auto"):
     try:
         from peft import LoraConfig, TaskType, get_peft_model
     except ImportError as exc:
-        raise RuntimeError("Instale PEFT mediante moderacion-peru[entrenamiento]") from exc
+        raise RuntimeError(
+            "Instale PEFT mediante moderacion-peru[entrenamiento]"
+        ) from exc
     spec = TRANSFORMER_SPECS["qwen_lora"]
     tokenizer, model, hardware = build_transformer_classifier(spec, device)
     lora = LoraConfig(
@@ -140,7 +168,9 @@ def build_qwen_lora_classifier(device: str = "auto"):
     return tokenizer, get_peft_model(model, lora), hardware
 
 
-def save_training_specification(path: str | Path, spec: TrainingSpecification, device: str) -> None:
+def save_training_specification(
+    path: str | Path, spec: TrainingSpecification, device: str
+) -> None:
     taxonomy = load_taxonomy()
     write_json_atomic(
         path,

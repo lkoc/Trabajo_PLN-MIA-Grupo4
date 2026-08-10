@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from pathlib import Path
 
 from moderacion_peru import experiments
 from moderacion_peru.consolidation import (
@@ -13,7 +14,7 @@ from moderacion_peru.datasets import (
     materialize_versioned_training_snapshot,
 )
 from moderacion_peru.experiments import train_classical_experiments
-from moderacion_peru.io import read_jsonl, write_jsonl_atomic
+from moderacion_peru.io import read_jsonl, write_json_atomic, write_jsonl_atomic
 from moderacion_peru.registry import ProductionPredictor, compare_and_publish_registry
 from moderacion_peru.schemas import AnnotationRecord, ModelReadyRecord, ReviewEvent
 from moderacion_peru.taxonomy import load_taxonomy
@@ -377,12 +378,32 @@ def test_classical_fit_calibration_test_registry_and_inference_are_end_to_end(tm
         assert set(candidate["thresholds"]) == set(load_taxonomy().target_labels)
         assert "false_safe_rate_on_damage" in candidate["validation_metrics"]
         assert "test_metrics" in candidate
+        assert "fit_quality" in candidate
+
+    svm = next(
+        candidate
+        for candidate in trained["candidates"]
+        if candidate["model_family"].endswith(":linear_svm")
+    )
+    assert svm["fit_quality"]["converged"] is True
+    legacy_svm = json.loads(Path(svm["candidate_path"]).read_text(encoding="utf-8"))
+    legacy_svm.pop("fit_quality")
+    write_json_atomic(svm["candidate_path"], legacy_svm)
 
     registry = tmp_path / "registro.json"
     published = compare_and_publish_registry(dataset, [model_root], registry)
     repeated_publish = compare_and_publish_registry(dataset, [model_root], registry)
     assert published["status"] == "created"
     assert repeated_publish["status"] == "noop"
+    comparison = json.loads(
+        (tmp_path / "comparacion_modelos_5_salidas.json").read_text(encoding="utf-8")
+    )
+    rejected_svm = next(
+        row
+        for row in comparison["rejected"]
+        if row["candidate_id"] == svm["candidate_id"]
+    )
+    assert "svm_convergence_not_verified" in rejected_svm["reasons"]
     entry = json.loads(registry.read_text(encoding="utf-8"))
     assert entry["status"] == "validated"
     assert entry["dataset_sha256"]

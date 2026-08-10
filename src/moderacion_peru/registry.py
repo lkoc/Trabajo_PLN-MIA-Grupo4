@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from collections.abc import Iterable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import numpy as np
 
@@ -78,7 +79,9 @@ def _registry_entry(
     comparison_registries: dict[str, Any] | None = None,
 ) -> ModelRegistryEntry:
     taxonomy = load_taxonomy()
-    manifest_path = _candidate_asset(candidate, candidate["checkpoint_manifest"]).resolve()
+    manifest_path = _candidate_asset(
+        candidate, candidate["checkpoint_manifest"]
+    ).resolve()
     portable_inference = dict(candidate["inference"])
     for key in ("bundle", "model", "gate_model", "damage_model"):
         if portable_inference.get(key):
@@ -93,7 +96,9 @@ def _registry_entry(
         target_labels=list(taxonomy.target_labels),
         checkpoint=artifact_reference(manifest_path, "checkpoint_manifest"),
         thresholds=candidate["thresholds"],
-        metrics_path=relative_to_root(_candidate_asset(candidate, candidate["metrics_path"])),
+        metrics_path=relative_to_root(
+            _candidate_asset(candidate, candidate["metrics_path"])
+        ),
         hardware=candidate.get("hardware"),
         dataset_sha256=dataset_sha,
         run_signature=candidate["run_signature"],
@@ -102,11 +107,15 @@ def _registry_entry(
             "false_safe_rate_on_damage": float(
                 candidate["validation_metrics"]["false_safe_rate_on_damage"]
             ),
-            "f1_macro_damage": float(candidate["validation_metrics"]["f1_macro_damage"]),
+            "f1_macro_damage": float(
+                candidate["validation_metrics"]["f1_macro_damage"]
+            ),
             "average_precision_macro_damage": float(
                 candidate["validation_metrics"]["average_precision_macro_damage"]
             ),
-            "review_load_rate": float(candidate["validation_metrics"]["review_load_rate"]),
+            "review_load_rate": float(
+                candidate["validation_metrics"]["review_load_rate"]
+            ),
         },
         comparison_registries=comparison_registries or {},
         status="validated",
@@ -148,26 +157,40 @@ def compare_and_publish_registry(
             reasons.append("different_snapshot")
         if tuple(candidate.get("target_labels", [])) != taxonomy.target_labels:
             reasons.append("wrong_contract")
+        family = str(candidate.get("model_family", "")).casefold()
+        if (
+            family.endswith(":linear_svm")
+            and candidate.get("fit_quality", {}).get("converged") is not True
+        ):
+            reasons.append("svm_convergence_not_verified")
         manifest = _candidate_asset(candidate, candidate.get("checkpoint_manifest", ""))
         if not manifest.is_file():
             reasons.append("checkpoint_manifest_missing")
         if reasons:
-            rejected.append({"candidate_id": candidate.get("candidate_id"), "reasons": reasons})
+            rejected.append(
+                {"candidate_id": candidate.get("candidate_id"), "reasons": reasons}
+            )
         else:
             eligible.append(candidate)
     if not eligible:
-        raise ValueError("No hay candidatos completos para el SHA-256 del snapshot activo")
+        raise ValueError(
+            "No hay candidatos completos para el SHA-256 del snapshot activo"
+        )
     selected = max(eligible, key=_selection_key)
     destination = Path(registry_path)
     best_by_slot = {
-        slot: max((row for row in eligible if _model_slot(row) == slot), key=_selection_key)
+        slot: max(
+            (row for row in eligible if _model_slot(row) == slot), key=_selection_key
+        )
         for slot in ("classical", "transformer", "qwen")
         if any(_model_slot(row) == slot for row in eligible)
     }
     member_paths: dict[str, Path] = {}
     member_status: dict[str, str] = {}
     for slot, candidate in best_by_slot.items():
-        member_path = destination.with_name(f"{destination.stem}.{slot}{destination.suffix}")
+        member_path = destination.with_name(
+            f"{destination.stem}.{slot}{destination.suffix}"
+        )
         member_paths[slot] = member_path
         member_status[slot] = _write_registry(
             member_path,
@@ -194,12 +217,16 @@ def compare_and_publish_registry(
             }
             for candidate in eligible
         ),
-        key=lambda row: _selection_key(next(item for item in eligible if item["candidate_id"] == row["candidate_id"])),
+        key=lambda row: _selection_key(
+            next(
+                item for item in eligible if item["candidate_id"] == row["candidate_id"]
+            )
+        ),
         reverse=True,
     )
     comparison = {
         "schema_version": "2.1.0",
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
         "dataset": str(dataset),
         "dataset_sha256": dataset_sha,
         "selection_split": "validation",
@@ -214,15 +241,28 @@ def compare_and_publish_registry(
         "selected_by_slot": {
             slot: candidate["candidate_id"] for slot, candidate in best_by_slot.items()
         },
-        "consensus_available": set(best_by_slot) == {"classical", "transformer", "qwen"},
+        "consensus_available": set(best_by_slot)
+        == {"classical", "transformer", "qwen"},
         "ranking": ranking,
         "rejected": rejected,
     }
-    comparison_destination = Path(comparison_path) if comparison_path else destination.with_name("comparacion_modelos_5_salidas.json")
+    comparison_destination = (
+        Path(comparison_path)
+        if comparison_path
+        else destination.with_name("comparacion_modelos_5_salidas.json")
+    )
     if comparison_destination.is_file():
-        previous_comparison = json.loads(comparison_destination.read_text(encoding="utf-8"))
-        stable_previous = {key: value for key, value in previous_comparison.items() if key != "created_at"}
-        stable_current = {key: value for key, value in comparison.items() if key != "created_at"}
+        previous_comparison = json.loads(
+            comparison_destination.read_text(encoding="utf-8")
+        )
+        stable_previous = {
+            key: value
+            for key, value in previous_comparison.items()
+            if key != "created_at"
+        }
+        stable_current = {
+            key: value for key, value in comparison.items() if key != "created_at"
+        }
         if stable_previous == stable_current:
             comparison = previous_comparison
         else:
@@ -235,7 +275,8 @@ def compare_and_publish_registry(
         "selected_by_slot": {
             slot: candidate["candidate_id"] for slot, candidate in best_by_slot.items()
         },
-        "consensus_available": set(best_by_slot) == {"classical", "transformer", "qwen"},
+        "consensus_available": set(best_by_slot)
+        == {"classical", "transformer", "qwen"},
         "eligible": len(eligible),
         "rejected": len(rejected),
         "registry": str(destination),
@@ -258,8 +299,13 @@ class ProductionPredictor:
         if checkpoint and not checkpoint.is_absolute():
             checkpoint = self.root / checkpoint
         if checkpoint:
-            if not checkpoint.is_file() or sha256_file(checkpoint) != self.entry.checkpoint.sha256:
-                raise ValueError("El manifiesto del checkpoint no coincide con el registro")
+            if (
+                not checkpoint.is_file()
+                or sha256_file(checkpoint) != self.entry.checkpoint.sha256
+            ):
+                raise ValueError(
+                    "El manifiesto del checkpoint no coincide con el registro"
+                )
             manifest = json.loads(checkpoint.read_text(encoding="utf-8"))
             for record in manifest.get("files", []):
                 artifact = checkpoint.parent / record["path"]
@@ -296,20 +342,28 @@ class ProductionPredictor:
         if kind == "hf_sequence_classifier":
             model_path = self._asset(inference["model"])
             self._tokenizer = AutoTokenizer.from_pretrained(model_path)
-            self._model = AutoModelForSequenceClassification.from_pretrained(model_path).to(self._torch_device)
+            self._model = AutoModelForSequenceClassification.from_pretrained(
+                model_path
+            ).to(self._torch_device)
         elif kind == "hf_peft_sequence_classifier":
             from peft import AutoPeftModelForSequenceClassification
 
             model_path = self._asset(inference["model"])
             self._tokenizer = AutoTokenizer.from_pretrained(model_path)
-            self._model = AutoPeftModelForSequenceClassification.from_pretrained(model_path).to(self._torch_device)
+            self._model = AutoPeftModelForSequenceClassification.from_pretrained(
+                model_path
+            ).to(self._torch_device)
         elif kind == "hf_cascade":
             gate_path = self._asset(inference["gate_model"])
             damage_path = self._asset(inference["damage_model"])
             self._tokenizer = AutoTokenizer.from_pretrained(gate_path)
-            self._model = AutoModelForSequenceClassification.from_pretrained(gate_path).to(self._torch_device)
+            self._model = AutoModelForSequenceClassification.from_pretrained(
+                gate_path
+            ).to(self._torch_device)
             self._damage_tokenizer = AutoTokenizer.from_pretrained(damage_path)
-            self._damage_model = AutoModelForSequenceClassification.from_pretrained(damage_path).to(self._torch_device)
+            self._damage_model = AutoModelForSequenceClassification.from_pretrained(
+                damage_path
+            ).to(self._torch_device)
         else:
             raise ValueError(f"Tipo de inferencia no soportado: {kind}")
 
@@ -324,17 +378,36 @@ class ProductionPredictor:
         else:
             import torch
 
-            encoded = self._tokenizer(text, return_tensors="pt", truncation=True, max_length=256)
-            encoded = {key: value.to(self._torch_device) for key, value in encoded.items()}
+            encoded = self._tokenizer(
+                text, return_tensors="pt", truncation=True, max_length=256
+            )
+            encoded = {
+                key: value.to(self._torch_device) for key, value in encoded.items()
+            }
             self._model.eval()
             with torch.no_grad():
-                primary = torch.sigmoid(self._model(**encoded).logits)[0].float().cpu().numpy()
+                primary = (
+                    torch.sigmoid(self._model(**encoded).logits)[0]
+                    .float()
+                    .cpu()
+                    .numpy()
+                )
             if kind == "hf_cascade":
-                damage_encoded = self._damage_tokenizer(text, return_tensors="pt", truncation=True, max_length=256)
-                damage_encoded = {key: value.to(self._torch_device) for key, value in damage_encoded.items()}
+                damage_encoded = self._damage_tokenizer(
+                    text, return_tensors="pt", truncation=True, max_length=256
+                )
+                damage_encoded = {
+                    key: value.to(self._torch_device)
+                    for key, value in damage_encoded.items()
+                }
                 self._damage_model.eval()
                 with torch.no_grad():
-                    damage = torch.sigmoid(self._damage_model(**damage_encoded).logits)[0].float().cpu().numpy()
+                    damage = (
+                        torch.sigmoid(self._damage_model(**damage_encoded).logits)[0]
+                        .float()
+                        .cpu()
+                        .numpy()
+                    )
                 gate = float(primary[0])
                 values = [1 - gate, *(gate * damage)]
             else:

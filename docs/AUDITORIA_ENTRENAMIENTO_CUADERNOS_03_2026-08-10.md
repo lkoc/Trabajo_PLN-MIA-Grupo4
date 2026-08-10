@@ -45,7 +45,7 @@ Se inspeccionaron los cuadernos, `src/moderacion_peru/experiments.py`, `training
 | Taxonomía                    |                                         2.1.0, cinco salidas gruesas |
 | `snapshot_id`               |                                          `v2.1.0-86822445ec0262da` |
 | SHA-256 del dataset           | `013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86` |
-| Bundle Colab                  | `83326b6cad7f1c7019f4dbaf26c81e2bb5bcec767c5dd6b85a8107c8b77e9826` |
+| Bundle Colab                  | `11cb8005e225403816d4e1b935ef6947055b912b30565fcacc89a4de70f10a4f` |
 | Prompt operativo              |                         `config/prompt_operacional_ollama_v3_2.md` |
 | SHA-256 del prompt            | `793e1a962c7065523ba0972e6b966cef8ab2f6e6c2678fde03e6ff5c27f42271` |
 
@@ -562,7 +562,11 @@ Con las mejoras implementadas, la serie 03 podrá responder de forma auditable n
 
 ### 17.1. Estado de evidencia
 
-Al cierre de esta auditoría, **ningún entrenamiento 03_01–03_06b sobre el snapshot vigente `013d60...c1f86` ha sido ejecutado**. Tampoco se abrió test. Por tanto, el tiempo de cómputo y costo efectivamente consumidos por las corridas finales de entrenamiento, validation y test son, hasta este corte, **0 horas y USD 0**. Los candidatos históricos corresponden a pilotos o snapshots anteriores y no se contabilizan como entrenamiento final. `03_08` sí tiene salidas de auditoría del snapshot, pero la ejecución conservada no registró tiempo de pared; no es válido reconstruirlo a partir de la hora de modificación del archivo.
+Al cierre actualizado de esta auditoría, `03_01` ejecutó la suite clásica sobre el snapshot vigente `013d60...c1f86`; `03_02`–`03_06b` permanecen pendientes y test no fue abierto. La corrida clásica observada consumió aproximadamente **924,28 segundos (15 min 24 s) de CPU local**: 67,11 s de extracción compartida de rasgos y 857,16 s acumulados dentro de los diez candidatos. El costo externo observado fue **USD 0**; no se midió electricidad local.
+
+La corrida original de `03_01` usó el límite predeterminado de 1.000 iteraciones de `LinearSVC`. El registro de ejecución mostró `ConvergenceWarning` repetido durante la calibración de las 22 salidas en tres pliegues. Por ello, los ocho candidatos no SVM se conservan, pero los dos SVM originales quedan **no elegibles** para comparación o publicación: no contienen evidencia verificable de convergencia. La reparación específica usa `dual='auto'`, tolerancia `1e-3`, hasta 20.000 iteraciones y registra `fit_quality`; solo un SVM con `fit_quality.converged=true` puede entrar en `03_07`. Esta reparación evita repetir los otros ocho candidatos.
+
+`03_08` sí tiene salidas de auditoría del snapshot, pero la ejecución conservada no registró tiempo de pared; no es válido reconstruirlo a partir de la hora de modificación del archivo.
 
 La distinción entre observado y estimado es obligatoria:
 
@@ -606,7 +610,7 @@ Todos los rangos de esta tabla son **estimaciones de planificación**, no tiempo
 
 | Cuaderno | Hardware previsto | Entrenamiento | Validation | Test | Estado y tiempo observado | Estimación previa | Costo remoto equivalente |
 | --- | --- | --- | --- | --- | --- | ---: | ---: |
-| `03_01` clásicos | CPU local; Ryzen 7, 4/16 hilos, ~28,83 GiB | 51.205 filas; dos matrices TF–IDF compartidas y diez candidatos | 10.600 filas por candidato | sellado; solo el ganador pasa a `03_07` | pendiente en snapshot vigente | 4–12 h | USD 0 externo; electricidad no medida |
+| `03_01` clásicos | CPU local; Ryzen 7, 4/16 hilos, ~28,83 GiB | 51.205 filas; dos matrices TF–IDF compartidas y diez candidatos | 10.600 filas por candidato | sellado; solo el ganador pasa a `03_07` | 15 min 24 s observados; ocho candidatos válidos y dos SVM originales en cuarentena hasta reparación | estimación original 4–12 h; resultó conservadora | USD 0 externo; electricidad no medida |
 | `03_02` planos | Colab NVIDIA L4, BF16/FP16 | MiniLM + E5, 51.205 filas | 10.600 por época y calibración final | sellado | pendiente | 1–2,5 h | USD 0,86–2,16 |
 | `03_03` cascada | Colab NVIDIA L4, BF16/FP16 | compuerta + rama de daño | doble inferencia y diagnóstico de propagación | sellado | pendiente | 1–2,5 h | USD 0,86–2,16 |
 | `03_04` multitarea | Colab NVIDIA L4, BF16/FP16 | 5+14+3 salidas enmascaradas | early stopping y calibración | sellado | pendiente | 0,75–1,67 h | USD 0,65–1,44 |

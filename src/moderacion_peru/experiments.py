@@ -31,9 +31,11 @@ from .training import (
     masked_multilabel_metrics,
 )
 
-TRAINING_ENGINE_VERSION = "4.1.0"
+TRAINING_ENGINE_VERSION = "4.2.0"
 PROJECT_SAFE_TO_DAMAGE_RATIO = 4.0
 DEFAULT_LOCAL_PARALLEL_WORKERS = 4
+DEFAULT_LINEAR_SVM_MAX_ITER = 20000
+DEFAULT_LINEAR_SVM_TOL = 1e-3
 ProgressCallback = Callable[[dict[str, Any]], None]
 
 
@@ -337,6 +339,43 @@ def _classical_scores(model: Any, texts: Sequence[str]) -> np.ndarray:
     return values
 
 
+def _estimator_iteration_diagnostic(estimator: Any) -> dict[str, Any]:
+    """Resume si estimadores iterativos alcanzaron su límite configurado."""
+
+    calibrated = getattr(estimator, "calibrated_classifiers_", ())
+    fitted_estimators = (
+        [item.estimator for item in calibrated] if calibrated else [estimator]
+    )
+    traces = []
+    for fitted in fitted_estimators:
+        n_iter = getattr(fitted, "n_iter_", None)
+        max_iter = getattr(fitted, "max_iter", None)
+        if n_iter is None or max_iter is None:
+            continue
+        observed = [int(value) for value in np.asarray(n_iter).reshape(-1)]
+        limit = int(max_iter)
+        traces.append(
+            {
+                "iterations": observed,
+                "max_iter": limit,
+                "hit_iteration_limit": any(value >= limit for value in observed),
+            }
+        )
+    return {
+        "iteration_tracking_available": bool(traces),
+        "iterative_fits": len(traces),
+        "fits_at_iteration_limit": sum(
+            bool(trace["hit_iteration_limit"]) for trace in traces
+        ),
+        "converged": (
+            all(not trace["hit_iteration_limit"] for trace in traces)
+            if traces
+            else None
+        ),
+        "traces": traces,
+    }
+
+
 class MaskedOneVsRestClassifier:
     """Un estimador binario por salida, omitiendo targets con máscara cero.
 
@@ -409,6 +448,33 @@ class MaskedOneVsRestClassifier:
             delayed(fit_output)(index) for index in range(matrix.shape[1])
         )
         self.n_outputs_ = matrix.shape[1]
+        output_diagnostics = [
+            _estimator_iteration_diagnostic(estimator) for estimator in self.estimators_
+        ]
+        tracked = [
+            diagnostic
+            for diagnostic in output_diagnostics
+            if diagnostic["iteration_tracking_available"]
+        ]
+        self.fit_diagnostics_ = {
+            "outputs": self.n_outputs_,
+            "outputs_with_iteration_tracking": len(tracked),
+            "outputs_at_iteration_limit": sum(
+                diagnostic["fits_at_iteration_limit"] > 0 for diagnostic in tracked
+            ),
+            "iterative_fits": sum(
+                diagnostic["iterative_fits"] for diagnostic in tracked
+            ),
+            "fits_at_iteration_limit": sum(
+                diagnostic["fits_at_iteration_limit"] for diagnostic in tracked
+            ),
+            "converged": (
+                all(diagnostic["converged"] is True for diagnostic in tracked)
+                if tracked
+                else None
+            ),
+            "per_output": output_diagnostics,
+        }
         return self
 
     def predict_proba(self, features: Any) -> np.ndarray:
@@ -446,6 +512,8 @@ def train_classical_experiments(
     split_scheme: str = "video",
     sampling_seed: int = 20260805,
     parallel_workers: int = DEFAULT_LOCAL_PARALLEL_WORKERS,
+    linear_svm_max_iter: int = DEFAULT_LINEAR_SVM_MAX_ITER,
+    linear_svm_tol: float = DEFAULT_LINEAR_SVM_TOL,
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     """Entrena baselines enmascarados y produce evidencia solo de validation.
@@ -459,6 +527,10 @@ def train_classical_experiments(
     available_workers = os.cpu_count() or 1
     if parallel_workers < 1:
         raise ValueError("parallel_workers debe ser al menos 1")
+    if linear_svm_max_iter < 1000:
+        raise ValueError("linear_svm_max_iter debe ser al menos 1000")
+    if not 0 < linear_svm_tol <= 0.1:
+        raise ValueError("linear_svm_tol debe estar en (0, 0.1]")
     parallel_workers = min(parallel_workers, available_workers)
     try:
         import joblib
@@ -481,7 +553,15 @@ def train_classical_experiments(
             max_iter=2000, class_weight="balanced"
         ),
         "linear_svm": CalibratedClassifierCV(
-            LinearSVC(class_weight="balanced"), method="sigmoid", cv=3
+            LinearSVC(
+                class_weight="balanced",
+                dual="auto",
+                max_iter=linear_svm_max_iter,
+                tol=linear_svm_tol,
+                random_state=sampling_seed,
+            ),
+            method="sigmoid",
+            cv=3,
         ),
         "sgd_incremental": SGDClassifier(
             loss="log_loss",
@@ -525,6 +605,12 @@ def train_classical_experiments(
         "test_policy": "full_natural_plus_4_to_1_secondary_same_predictions",
         "split_scheme": split_scheme,
         "parallel_workers": parallel_workers,
+        "linear_svm": {
+            "solver": "LinearSVC_dual_auto",
+            "max_iter": linear_svm_max_iter,
+            "tol": linear_svm_tol,
+            "calibration": "sigmoid_cv3",
+        },
         "feature_extraction": "once_per_variant_reused_by_all_models",
         "test_status": "sealed_not_evaluated",
     }
@@ -711,6 +797,7 @@ def train_classical_experiments(
                     "parallel_workers": parallel_workers,
                     "fit_elapsed_seconds": fit_seconds,
                 },
+                "fit_quality": classifier.fit_diagnostics_,
                 "stage_timings_seconds": {
                     "shared_feature_extraction_variant": feature_seconds,
                     "model_fit": fit_seconds,

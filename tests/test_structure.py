@@ -699,6 +699,9 @@ def test_local_training_notebooks_expose_bounded_deterministic_parallelism():
     assert "PARALLEL_WORKERS=4" in classical_source
     assert "parallel_workers=PARALLEL_WORKERS" in classical_source
     assert "una extracción por variante" in classical_source
+    assert "LINEAR_SVM_MAX_ITER=20000" in classical_source
+    assert "RUN_SVM_CONVERGENCE_REPAIR=False" in classical_source
+    assert "svm_convergence_repair" in classical_source
     assert "PARALLEL_WORKERS=4" in comparison_source
     assert "parallel_workers=PARALLEL_WORKERS" in comparison_source
     assert "inferencia_miembros':'secuencial" in comparison_source

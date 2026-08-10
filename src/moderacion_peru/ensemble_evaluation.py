@@ -338,6 +338,12 @@ def compare_and_freeze_validation(
             reasons.append("wrong_contract")
         if candidate.get("test_metrics") not in (None, {}):
             reasons.append("test_was_opened_before_freeze")
+        family = str(candidate.get("model_family", "")).casefold()
+        if (
+            family.endswith(":linear_svm")
+            and candidate.get("fit_quality", {}).get("converged") is not True
+        ):
+            reasons.append("svm_convergence_not_verified")
         predictions = (
             Path(candidate["candidate_path"]).parent / "predictions_validation.jsonl"
         )
