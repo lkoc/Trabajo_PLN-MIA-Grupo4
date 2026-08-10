@@ -8,7 +8,13 @@ from ..device import resolve_device, torch_device_name
 from ..io import sha256_file, sha256_text
 from ..paths import operational_prompt_path as default_operational_prompt_path
 from ..schemas import AnnotationRecord
-from .base import SYSTEM_PROMPT, AnnotationProvider, ProviderError, normalize_payload, taxonomy_prompt
+from .base import (
+    SYSTEM_PROMPT,
+    AnnotationProvider,
+    ProviderError,
+    normalize_payload,
+    taxonomy_prompt,
+)
 
 
 class HuggingFaceProvider(AnnotationProvider):
@@ -34,7 +40,9 @@ class HuggingFaceProvider(AnnotationProvider):
         self.max_new_tokens = max_new_tokens
         self.retries = retries
         if records_per_request < 1 or inference_batch_size < 1:
-            raise ValueError("records_per_request e inference_batch_size deben ser positivos")
+            raise ValueError(
+                "records_per_request e inference_batch_size deben ser positivos"
+            )
         self.records_per_request = int(records_per_request)
         self.inference_batch_size = int(inference_batch_size)
         self.label_source = str(label_source)
@@ -86,12 +94,17 @@ class HuggingFaceProvider(AnnotationProvider):
         try:
             from transformers import pipeline
         except ImportError as exc:
-            raise ProviderError("Instale el extra de entrenamiento para usar Hugging Face") from exc
+            raise ProviderError(
+                "Instale el extra de entrenamiento para usar Hugging Face"
+            ) from exc
         device = torch_device_name(self.hardware)
         kwargs: dict[str, Any] = {
             "model": self.model,
             "revision": self.revision,
             "dtype": "auto",
+            # Los checkpoints Qwen fijados por el proyecto son públicos. Evita
+            # que huggingface_hub consulte el vault de secretos de Colab/VS Code.
+            "token": False,
         }
         if self.hardware.backend in {"cuda", "rocm"}:
             kwargs["device"] = 0
@@ -162,7 +175,7 @@ class HuggingFaceProvider(AnnotationProvider):
         user = (
             f"{self._authority()}\n\n{self._compact_schema()}\n"
             "Clasifica independientemente los registros. Conserva el orden y cada chunk_id. "
-            "Devuelve exactamente {\"annotations\":[...]} con una anotación por registro.\n"
+            'Devuelve exactamente {"annotations":[...]} con una anotación por registro.\n'
             f"REGISTROS: {json.dumps(records, ensure_ascii=False)}\nJSON:"
         )
         return self._chat_prompt(user)
@@ -250,13 +263,23 @@ class HuggingFaceProvider(AnnotationProvider):
                 wrapper = self._extract_json(output)
                 annotations = wrapper.get("annotations")
                 if not isinstance(annotations, list) or len(annotations) != len(group):
-                    raise ProviderError("El wrapper annotations no conserva el tamaño del lote")
-                received = [str(row.get("chunk_id")) for row in annotations if isinstance(row, dict)]
+                    raise ProviderError(
+                        "El wrapper annotations no conserva el tamaño del lote"
+                    )
+                received = [
+                    str(row.get("chunk_id"))
+                    for row in annotations
+                    if isinstance(row, dict)
+                ]
                 if received != expected:
-                    raise ProviderError("El wrapper annotations no conserva orden y chunk_id")
+                    raise ProviderError(
+                        "El wrapper annotations no conserva orden y chunk_id"
+                    )
                 for chunk, payload in zip(group, annotations):
                     try:
-                        by_id[str(chunk["chunk_id"])] = self._normalize(payload, chunk, prompt)
+                        by_id[str(chunk["chunk_id"])] = self._normalize(
+                            payload, chunk, prompt
+                        )
                     except (ValueError, ProviderError) as exc:
                         by_id[str(chunk["chunk_id"])] = exc
             except (ValueError, ProviderError) as exc:
@@ -280,6 +303,7 @@ class HuggingFaceProvider(AnnotationProvider):
         self._pipeline = None
         try:
             import gc
+
             import torch
 
             gc.collect()

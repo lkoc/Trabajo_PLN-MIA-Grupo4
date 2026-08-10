@@ -11,7 +11,12 @@ from typing import Any
 
 import numpy as np
 
-from .device import resolve_device, torch_device_name
+from .device import (
+    cuda_performance_profile,
+    high_memory_bf16_cuda,
+    resolve_device,
+    torch_device_name,
+)
 from .experiments import (
     TRAINING_ENGINE_VERSION,
     ProgressCallback,
@@ -164,6 +169,7 @@ def _generate_json_scores(
     *,
     device: str,
     max_input_length: int,
+    batch_size: int = 1,
     progress_callback: ProgressCallback | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     import torch
@@ -181,65 +187,89 @@ def _generate_json_scores(
         total=len(rows),
         advance=0,
     )
-    for index, row in enumerate(rows):
-        prompt = tokenizer.apply_chat_template(
-            [
-                {"role": "system", "content": system_prompt},
-                {
-                    "role": "user",
-                    "content": "Clasifica este chunk y devuelve solo JSON:\n"
-                    + str(row["text"]),
-                },
-            ],
-            tokenize=False,
-            add_generation_prompt=True,
-            enable_thinking=False,
-        )
-        encoded = tokenizer(
-            prompt,
-            return_tensors="pt",
-            truncation=True,
-            max_length=max_input_length,
-        )
-        encoded = {key: value.to(device) for key, value in encoded.items()}
-        with torch.no_grad():
-            generated = model.generate(
-                **encoded,
-                max_new_tokens=256,
-                do_sample=False,
-                pad_token_id=tokenizer.pad_token_id,
-                eos_token_id=tokenizer.eos_token_id,
-            )
-        text = tokenizer.decode(
-            generated[0, encoded["input_ids"].shape[1] :], skip_special_tokens=True
-        )
-        match = re.search(r"\{.*\}", text, flags=re.DOTALL)
-        try:
-            payload = json.loads(match.group(0) if match else text)
-            coarse = taxonomy.normalize_categories(payload.get("coarse_labels", ()))
-            fine = taxonomy.normalize_fine_labels(payload.get("fine_labels", ()))
-            flags = tuple(
-                flag for flag in payload.get("flags", ()) if flag in taxonomy.flags
-            )
-            confidence = float(np.clip(payload.get("confidence", 0.5), 0.0, 1.0))
-            if not coarse:
-                raise ValueError("coarse_labels vacío")
-            selected = set(coarse) | set(fine) | set(flags)
-            scores[index] = [
-                confidence if label in selected else 1 - confidence
-                for label in output_labels
+    previous_padding_side = getattr(tokenizer, "padding_side", "right")
+    tokenizer.padding_side = "left"
+    try:
+        for start in range(0, len(rows), batch_size):
+            batch_rows = rows[start : start + batch_size]
+            prompts = [
+                tokenizer.apply_chat_template(
+                    [
+                        {"role": "system", "content": system_prompt},
+                        {
+                            "role": "user",
+                            "content": "Clasifica este chunk y devuelve solo JSON:\n"
+                            + str(row["text"]),
+                        },
+                    ],
+                    tokenize=False,
+                    add_generation_prompt=True,
+                    enable_thinking=False,
+                )
+                for row in batch_rows
             ]
-            valid += 1
-        except (ValueError, TypeError, json.JSONDecodeError) as exc:
-            key = type(exc).__name__
-            schema_errors[key] = schema_errors.get(key, 0) + 1
-        _notify_progress(
-            progress_callback,
-            status="progress",
-            phase="generando validation",
-            advance=1,
-            details={"JSON válidos": valid, "fila": index + 1},
-        )
+            encoded = tokenizer(
+                prompts,
+                return_tensors="pt",
+                truncation=True,
+                padding=True,
+                max_length=max_input_length,
+            )
+            encoded = {
+                key: value.to(device, non_blocking=device != "cpu")
+                for key, value in encoded.items()
+            }
+            with torch.no_grad():
+                generated = model.generate(
+                    **encoded,
+                    max_new_tokens=256,
+                    do_sample=False,
+                    pad_token_id=tokenizer.pad_token_id,
+                    eos_token_id=tokenizer.eos_token_id,
+                )
+            texts = tokenizer.batch_decode(
+                generated[:, encoded["input_ids"].shape[1] :],
+                skip_special_tokens=True,
+            )
+            for offset, text in enumerate(texts):
+                index = start + offset
+                match = re.search(r"\{.*\}", text, flags=re.DOTALL)
+                try:
+                    payload = json.loads(match.group(0) if match else text)
+                    coarse = taxonomy.normalize_categories(
+                        payload.get("coarse_labels", ())
+                    )
+                    fine = taxonomy.normalize_fine_labels(
+                        payload.get("fine_labels", ())
+                    )
+                    flags = tuple(
+                        flag
+                        for flag in payload.get("flags", ())
+                        if flag in taxonomy.flags
+                    )
+                    confidence = float(
+                        np.clip(payload.get("confidence", 0.5), 0.0, 1.0)
+                    )
+                    if not coarse:
+                        raise ValueError("coarse_labels vacío")
+                    selected = set(coarse) | set(fine) | set(flags)
+                    scores[index] = [
+                        confidence if label in selected else 1 - confidence
+                        for label in output_labels
+                    ]
+                    valid += 1
+                except (ValueError, TypeError, json.JSONDecodeError) as exc:
+                    key = type(exc).__name__
+                    schema_errors[key] = schema_errors.get(key, 0) + 1
+            _notify_progress(
+                progress_callback,
+                status="progress",
+                phase="generando validation",
+                advance=len(batch_rows),
+                details={"JSON válidos": valid, "fila": start + len(batch_rows)},
+            )
+    finally:
+        tokenizer.padding_side = previous_padding_side
     _notify_progress(
         progress_callback,
         status="finished",
@@ -293,6 +323,13 @@ def train_prompt_conditioned_sft(
     prompt_text = prompt_path.read_text(encoding="utf-8")
     prompt_sha = sha256_file(prompt_path)
     system_prompt = compile_operational_prompt_capsule(prompt_text)
+    hardware = resolve_device(device)
+    high_memory_profile = high_memory_bf16_cuda(hardware)
+    train_batch_size = 2 if high_memory_profile else 1
+    eval_batch_size = 2 if high_memory_profile else 1
+    gradient_accumulation = 4 if high_memory_profile else 8
+    dataloader_num_workers = 2 if high_memory_profile else 0
+    generation_batch_size = 4 if high_memory_profile else 1
     configuration = {
         "experiment": "qwen_prompt_sft",
         "model_id": PROMPT_SFT_MODEL_ID,
@@ -309,6 +346,12 @@ def train_prompt_conditioned_sft(
         "train_limit": train_limit,
         "validation_limit": validation_limit,
         "seed": seed,
+        "performance_profile": cuda_performance_profile(hardware),
+        "per_device_train_batch_size": train_batch_size,
+        "per_device_eval_batch_size": eval_batch_size,
+        "gradient_accumulation_steps": gradient_accumulation,
+        "dataloader_num_workers": dataloader_num_workers,
+        "generation_batch_size": generation_batch_size,
         "test_status": "sealed_not_evaluated",
     }
     signature = _experiment_signature(dataset, "qwen_prompt_sft", configuration)
@@ -348,18 +391,25 @@ def train_prompt_conditioned_sft(
                 f"{seed}|prompt-sft-validation|{row['chunk_id']}".encode()
             ).hexdigest(),
         )[:validation_limit]
-    hardware = resolve_device(device)
     torch_device = torch_device_name(hardware)
     tokenizer = AutoTokenizer.from_pretrained(
-        PROMPT_SFT_MODEL_ID, revision=PROMPT_SFT_MODEL_REVISION
+        PROMPT_SFT_MODEL_ID,
+        revision=PROMPT_SFT_MODEL_REVISION,
+        token=False,
     )
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
-    model = AutoModelForCausalLM.from_pretrained(
-        PROMPT_SFT_MODEL_ID,
-        revision=PROMPT_SFT_MODEL_REVISION,
-        torch_dtype=(torch.bfloat16 if hardware.dtype == "bfloat16" else None),
-    )
+    model_kwargs: dict[str, Any] = {
+        "revision": PROMPT_SFT_MODEL_REVISION,
+        "token": False,
+    }
+    if hardware.dtype == "bfloat16":
+        model_kwargs["dtype"] = torch.bfloat16
+    elif hardware.dtype == "float16":
+        model_kwargs["dtype"] = torch.float16
+    if hardware.backend == "cuda":
+        model_kwargs["attn_implementation"] = "sdpa"
+    model = AutoModelForCausalLM.from_pretrained(PROMPT_SFT_MODEL_ID, **model_kwargs)
     model = get_peft_model(
         model,
         LoraConfig(
@@ -370,6 +420,7 @@ def train_prompt_conditioned_sft(
             target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
         ),
     )
+    model.config.use_cache = False
     model.gradient_checkpointing_enable()
     train_dataset = PromptCompletionDataset(
         tokenizer, train, system_prompt, max_length=max_length
@@ -382,9 +433,9 @@ def train_prompt_conditioned_sft(
         args=TrainingArguments(
             output_dir=str(run_dir / "trainer"),
             num_train_epochs=epochs,
-            per_device_train_batch_size=1,
-            per_device_eval_batch_size=1,
-            gradient_accumulation_steps=8,
+            per_device_train_batch_size=train_batch_size,
+            per_device_eval_batch_size=eval_batch_size,
+            gradient_accumulation_steps=gradient_accumulation,
             learning_rate=1e-4,
             eval_strategy="epoch",
             save_strategy="epoch",
@@ -398,6 +449,14 @@ def train_prompt_conditioned_sft(
             bf16=hardware.dtype == "bfloat16",
             fp16=hardware.dtype == "float16",
             remove_unused_columns=False,
+            dataloader_pin_memory=hardware.backend != "cpu",
+            dataloader_num_workers=dataloader_num_workers,
+            dataloader_persistent_workers=dataloader_num_workers > 0,
+            dataloader_prefetch_factor=(2 if dataloader_num_workers > 0 else None),
+            optim=(
+                "adamw_torch_fused" if hardware.backend == "cuda" else "adamw_torch"
+            ),
+            tf32=high_memory_profile,
         ),
         train_dataset=train_dataset,
         eval_dataset=validation_dataset,
@@ -418,6 +477,7 @@ def train_prompt_conditioned_sft(
     training_started = time.perf_counter()
     training_result = trainer.train(resume_from_checkpoint=checkpoint)
     training_elapsed = time.perf_counter() - training_started
+    model.config.use_cache = True
     model.to(torch_device)
     validation_started = time.perf_counter()
     validation_scores, generation = _generate_json_scores(
@@ -427,6 +487,7 @@ def train_prompt_conditioned_sft(
         system_prompt,
         device=torch_device,
         max_input_length=max_length - 256,
+        batch_size=generation_batch_size,
         progress_callback=progress_callback,
     )
     validation_generation_elapsed = time.perf_counter() - validation_started

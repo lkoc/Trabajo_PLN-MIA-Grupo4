@@ -19,7 +19,12 @@ from .cascade import (
     combine_safety_first_cascade_scores,
 )
 from .datasets import deterministic_safe_downsample
-from .device import resolve_device, torch_device_name
+from .device import (
+    cuda_performance_profile,
+    high_memory_bf16_cuda,
+    resolve_device,
+    torch_device_name,
+)
 from .io import (
     canonical_json_sha256,
     read_jsonl,
@@ -882,12 +887,15 @@ class _TokenizedRows:
         max_length: int,
         observed_masks: np.ndarray | None = None,
     ) -> None:
-        self.encodings = tokenizer(
+        encoded = tokenizer(
             [str(row["text"]) for row in rows],
             truncation=True,
             padding="max_length",
             max_length=max_length,
         )
+        self.encodings = {
+            key: np.asarray(values, dtype=np.int64) for key, values in encoded.items()
+        }
         self.targets = targets.astype(np.float32)
         self.observed_masks = (
             np.ones_like(self.targets, dtype=np.float32)
@@ -904,12 +912,10 @@ class _TokenizedRows:
         import torch
 
         item = {
-            key: torch.tensor(value[index]) for key, value in self.encodings.items()
+            key: torch.from_numpy(value[index]) for key, value in self.encodings.items()
         }
-        item["labels"] = torch.tensor(self.targets[index], dtype=torch.float32)
-        item["label_mask"] = torch.tensor(
-            self.observed_masks[index], dtype=torch.float32
-        )
+        item["labels"] = torch.from_numpy(self.targets[index])
+        item["label_mask"] = torch.from_numpy(self.observed_masks[index])
         return item
 
 
@@ -1108,16 +1114,16 @@ def _hf_validation_metrics(
     if primary_output_count == 5:
         metrics = classification_metrics(primary_truth, primary_scores)
         return {
-            "macro_auprc_damage": float(
-                metrics["average_precision_macro_damage"]
-            ),
+            "macro_auprc_damage": float(metrics["average_precision_macro_damage"]),
             "macro_auprc_five": float(metrics["average_precision_macro_five"]),
         }
 
     from sklearn.metrics import average_precision_score
 
     per_output = [
-        float(average_precision_score(primary_truth[:, index], primary_scores[:, index]))
+        float(
+            average_precision_score(primary_truth[:, index], primary_scores[:, index])
+        )
         for index in range(primary_output_count)
     ]
     # Conserva el nombre histórico usado por Trainer y por los checkpoints. En la
@@ -1142,6 +1148,10 @@ def _fit_hf(
     structured_penalty: float = 0.0,
     output_weights: Sequence[float] | None = None,
     primary_output_count: int = 5,
+    eval_batch_size: int = 8,
+    dataloader_num_workers: int = 0,
+    progress_callback: ProgressCallback | None = None,
+    progress_label: str = "modelo",
 ) -> dict[str, Any]:
     try:
         import torch
@@ -1150,6 +1160,13 @@ def _fit_hf(
     except ImportError as exc:
         raise RuntimeError("Instale PyTorch, accelerate y Transformers") from exc
 
+    _notify_progress(
+        progress_callback,
+        status="progress",
+        phase=f"tokenizando {progress_label}",
+        advance=0,
+        details={"train": len(train_rows), "validation": len(validation_rows)},
+    )
     dataset = _TokenizedRows(
         tokenizer, train_rows, targets, spec.max_length, observed_masks
     )
@@ -1200,6 +1217,7 @@ def _fit_hf(
         output_dir=str(training_dir),
         num_train_epochs=spec.epochs,
         per_device_train_batch_size=spec.batch_size,
+        per_device_eval_batch_size=eval_batch_size,
         gradient_accumulation_steps=spec.gradient_accumulation,
         learning_rate=spec.learning_rate,
         seed=spec.seed,
@@ -1221,6 +1239,11 @@ def _fit_hf(
         bf16=hardware.backend in {"cuda", "rocm", "xpu"}
         and hardware.dtype == "bfloat16",
         dataloader_pin_memory=hardware.backend != "cpu",
+        dataloader_num_workers=dataloader_num_workers,
+        dataloader_persistent_workers=dataloader_num_workers > 0,
+        dataloader_prefetch_factor=2 if dataloader_num_workers > 0 else None,
+        optim=("adamw_torch_fused" if hardware.backend == "cuda" else "adamw_torch"),
+        tf32=high_memory_bf16_cuda(hardware),
     )
 
     def compute_metrics(evaluation: Any) -> dict[str, float]:
@@ -1242,6 +1265,17 @@ def _fit_hf(
         eval_dataset=validation_dataset,
         compute_metrics=compute_metrics,
         callbacks=[EarlyStoppingCallback(early_stopping_patience=1)],
+    )
+    _notify_progress(
+        progress_callback,
+        status="progress",
+        phase=f"entrenando {progress_label}",
+        advance=0,
+        details={
+            "lote_GPU": spec.batch_size,
+            "acumulación": spec.gradient_accumulation,
+            "lote_validation": eval_batch_size,
+        },
     )
     checkpoint = (
         get_last_checkpoint(str(training_dir)) if training_dir.is_dir() else None
@@ -1267,7 +1301,15 @@ def _predict_hf(
 
     dummy = np.zeros((len(rows), output_count), dtype=np.float32)
     dataset = _TokenizedRows(tokenizer, rows, dummy, max_length)
-    loader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=False)
+    high_memory_profile = high_memory_bf16_cuda(hardware)
+    loader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=64 if high_memory_profile else 16,
+        shuffle=False,
+        num_workers=2 if high_memory_profile else 0,
+        pin_memory=hardware.backend != "cpu",
+        persistent_workers=high_memory_profile,
+    )
     device = torch_device_name(hardware)
     model.to(device)
     model.eval()
@@ -1276,7 +1318,10 @@ def _predict_hf(
         for batch in loader:
             batch.pop("labels", None)
             batch.pop("label_mask", None)
-            batch = {key: value.to(device) for key, value in batch.items()}
+            batch = {
+                key: value.to(device, non_blocking=hardware.backend != "cpu")
+                for key, value in batch.items()
+            }
             logits = model(**batch).logits
             scores.append(torch.sigmoid(logits).float().cpu().numpy())
     return np.concatenate(scores, axis=0)
@@ -1382,6 +1427,20 @@ def train_neural_experiment(
     dataset = Path(dataset_path).resolve()
     output = Path(output_root)
     hardware = resolve_device(device)
+    performance_profile = cuda_performance_profile(hardware)
+    qwen_high_memory_profile = key == "qwen_lora" and high_memory_bf16_cuda(hardware)
+    if qwen_high_memory_profile:
+        # Conserva el lote efectivo histórico (2 × 4 = 8), pero evita cuatro
+        # micropasadas seriales cuando los 40 GB permiten un lote real de ocho.
+        spec = TrainingSpecification(
+            **{
+                **asdict(spec),
+                "batch_size": 8,
+                "gradient_accumulation": 1,
+            }
+        )
+    eval_batch_size = 32 if qwen_high_memory_profile else 8
+    dataloader_num_workers = 2 if qwen_high_memory_profile else 0
     configuration = {
         "experiment": experiment,
         "specification": asdict(spec),
@@ -1390,6 +1449,9 @@ def train_neural_experiment(
         ),
         "hardware_backend": hardware.backend,
         "dtype": hardware.dtype,
+        "performance_profile": performance_profile,
+        "per_device_eval_batch_size": eval_batch_size,
+        "dataloader_num_workers": dataloader_num_workers,
         "multitask_weights": (
             {"coarse": 1.0, "fine": 0.3, "flags": 0.2}
             if experiment == "multitask"
@@ -1526,6 +1588,10 @@ def train_neural_experiment(
             + [0.3] * len(taxonomy.fine_labels)
             + [0.2] * len(taxonomy.flags),
             primary_output_count=1,
+            eval_batch_size=eval_batch_size,
+            dataloader_num_workers=dataloader_num_workers,
+            progress_callback=progress_callback,
+            progress_label="compuerta",
         )
         training_elapsed += time.perf_counter() - phase_started
         _notify_progress(
@@ -1571,6 +1637,10 @@ def train_neural_experiment(
             hardware,
             structured_penalty=0.2 if safety_first else 0.0,
             primary_output_count=5 if safety_first else 4,
+            eval_batch_size=eval_batch_size,
+            dataloader_num_workers=dataloader_num_workers,
+            progress_callback=progress_callback,
+            progress_label="rama especializada",
         )
         training_elapsed += time.perf_counter() - phase_started
         _notify_progress(
@@ -1677,9 +1747,7 @@ def train_neural_experiment(
         fit_summary = {"gate": gate_fit, "specialist": specialist_fit}
         truncation = {"gate": gate_diagnostic, "specialist": specialist_diagnostic}
         gate_dir = run_dir / "gate_model"
-        specialist_dir = run_dir / (
-            "branch_model" if safety_first else "damage_model"
-        )
+        specialist_dir = run_dir / ("branch_model" if safety_first else "damage_model")
         _save_hf(gate_model, gate_tokenizer, gate_dir)
         _save_hf(
             specialist_model,
@@ -1743,6 +1811,10 @@ def train_neural_experiment(
             output_weights=[1.0] * 5
             + [0.3] * len(taxonomy.fine_labels)
             + [0.2] * len(taxonomy.flags),
+            eval_batch_size=eval_batch_size,
+            dataloader_num_workers=dataloader_num_workers,
+            progress_callback=progress_callback,
+            progress_label=experiment,
         )
         training_elapsed = time.perf_counter() - phase_started
         _notify_progress(

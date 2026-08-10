@@ -13,9 +13,9 @@ from pathlib import Path
 import pytest
 
 from moderacion_peru import colab
+from moderacion_peru.device import cuda_performance_profile, high_memory_bf16_cuda
 from moderacion_peru.io import sha256_file
 from moderacion_peru.schemas import HardwareRecord
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -34,7 +34,9 @@ def _generated_colab_bundle_functions() -> dict[str, object]:
         if cell["cell_type"] == "code"
     ]
     setup = next(
-        source for source in code_sources if "def _ensure_expected_drive_release" in source
+        source
+        for source in code_sources
+        if "def _ensure_expected_drive_release" in source
     )
     tree = ast.parse(setup)
     function_names = {
@@ -65,11 +67,16 @@ def _generated_colab_bundle_functions() -> dict[str, object]:
         "COLAB_NOTEBOOK_BUILD_BUNDLE_ID": "fixture-pending",
         "COLAB_EXPECTED_CORE_SHA256": "fixture-pending",
     }
-    exec(compile(ast.Module(body=selected, type_ignores=[]), "<colab_setup>", "exec"), namespace)
+    exec(
+        compile(ast.Module(body=selected, type_ignores=[]), "<colab_setup>", "exec"),
+        namespace,
+    )
     return namespace
 
 
-def test_generated_colab_bootstrap_auto_publishes_once_and_then_reuses_release(tmp_path):
+def test_generated_colab_bootstrap_auto_publishes_once_and_then_reuses_release(
+    tmp_path,
+):
     functions = _generated_colab_bundle_functions()
     staging = tmp_path / "staging"
     staging.mkdir()
@@ -92,7 +99,9 @@ def test_generated_colab_bootstrap_auto_publishes_once_and_then_reuses_release(t
         },
     }
     manifest["bundle_id"] = functions["_bundle_id_for_manifest"](manifest)
-    (staging / "bundle_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    (staging / "bundle_manifest.json").write_text(
+        json.dumps(manifest), encoding="utf-8"
+    )
     functions["COLAB_NOTEBOOK_BUILD_BUNDLE_ID"] = manifest["bundle_id"]
     functions["COLAB_EXPECTED_CORE_SHA256"] = manifest["core"]["sha256"]
     functions["_verify_expected_bundle"].__defaults__ = (manifest["bundle_id"],)
@@ -109,7 +118,9 @@ def test_generated_colab_bootstrap_auto_publishes_once_and_then_reuses_release(t
     assert second["status"] == "already_present_and_verified"
     pointer = json.loads((releases / "latest.json").read_text(encoding="utf-8"))
     assert pointer["bundle_id"] == manifest["bundle_id"]
-    assert (releases / manifest["bundle_id"] / "dataset.jsonl.gz").read_bytes() == b"dataset"
+    assert (
+        releases / manifest["bundle_id"] / "dataset.jsonl.gz"
+    ).read_bytes() == b"dataset"
 
 
 def test_colab_config_syncs_only_declared_inputs_and_keeps_api_on_cpu():
@@ -141,12 +152,40 @@ def test_colab_config_syncs_only_declared_inputs_and_keeps_api_on_cpu():
     assert "datos/raw/transcripts_raw.jsonl" in config["excluded_from_drive"]
     assert config["notebooks"]["02_01"]["requires_cuda"] is False
     assert config["notebooks"]["02_01"]["expected_gpu"] is None
+    qwen_a100 = {"02_02", "03_05", "03_06", "03_06b"}
+    assert all(
+        config["notebooks"][notebook_id]["expected_gpu"]
+        == "NVIDIA A100 40GB or equivalent CUDA BF16 GPU"
+        for notebook_id in qwen_a100
+    )
     assert all(
         specification["requires_cuda"] is True
         and specification["expected_gpu"] == "NVIDIA L4"
         for notebook_id, specification in config["notebooks"].items()
-        if notebook_id != "02_01"
+        if notebook_id not in {"02_01", *qwen_a100}
     )
+
+
+def test_a100_40gb_activates_high_memory_bf16_profile():
+    a100 = HardwareRecord(
+        backend="cuda",
+        requested="cuda",
+        device_name="NVIDIA A100-SXM4-40GB",
+        total_memory_bytes=42_405_855_232,
+        dtype="bfloat16",
+    )
+    l4 = HardwareRecord(
+        backend="cuda",
+        requested="cuda",
+        device_name="NVIDIA L4",
+        total_memory_bytes=24_151_572_480,
+        dtype="bfloat16",
+    )
+
+    assert high_memory_bf16_cuda(a100)
+    assert cuda_performance_profile(a100) == "cuda_bf16_40gb_plus"
+    assert not high_memory_bf16_cuda(l4)
+    assert cuda_performance_profile(l4) == "cuda_standard"
 
 
 def test_colab_stages_declared_input_and_restores_published_run(tmp_path, monkeypatch):
@@ -193,9 +232,14 @@ def test_colab_stages_declared_input_and_restores_published_run(tmp_path, monkey
     )
     assert first.input("dataset_5_salidas").read_bytes() == raw.read_bytes()
     assert not (runtime / "inputs" / "datos" / "processed" / "chunks_v2.jsonl").exists()
-    (first.scratch_output_dir / "checkpoint.json").write_text('{"epoch":1}\n', encoding="utf-8")
+    (first.scratch_output_dir / "checkpoint.json").write_text(
+        '{"epoch":1}\n', encoding="utf-8"
+    )
     published = colab.publish_colab_outputs(first)
-    assert sha256_file(first.drive_run_dir / "run_outputs.tar.gz") == published["archive"]["sha256"]
+    assert (
+        sha256_file(first.drive_run_dir / "run_outputs.tar.gz")
+        == published["archive"]["sha256"]
+    )
 
     second_runtime = tmp_path / "runtime_second"
     second = colab.prepare_colab_context(
@@ -229,7 +273,9 @@ def test_local_bundle_input_is_restored_verified_and_never_silently_replaced(tmp
         json.dumps(
             {
                 "manifest": "bundle_manifest.json",
-                "inputs": {"dataset": {"source": entry["source"], "archive": entry["archive"]}},
+                "inputs": {
+                    "dataset": {"source": entry["source"], "archive": entry["archive"]}
+                },
             }
         ),
         encoding="utf-8",
@@ -255,7 +301,9 @@ def test_non_l4_runtime_fails_explicitly(tmp_path, monkeypatch):
     monkeypatch.setattr(
         colab,
         "resolve_device",
-        lambda _: HardwareRecord(backend="cuda", requested="cuda", device_name="NVIDIA T4"),
+        lambda _: HardwareRecord(
+            backend="cuda", requested="cuda", device_name="NVIDIA T4"
+        ),
     )
     try:
         colab.prepare_colab_context(

@@ -64,9 +64,9 @@
     "02_02": {
       "colab_mode": "recommended",
       "requires_cuda": true,
-      "expected_gpu": "NVIDIA L4",
+      "expected_gpu": "NVIDIA A100 40GB or equivalent CUDA BF16 GPU",
       "input_keys": ["chunks_v2"],
-      "reason": "Cascada Hugging Face Qwen3-1.7B a Qwen3-4B; carga los modelos secuencialmente para limitar la memoria GPU."
+      "reason": "Cascada Hugging Face Qwen3-1.7B a Qwen3-4B; en A100 aumenta los lotes y conserva la carga secuencial de modelos."
     },
     "03_02": {
       "colab_mode": "recommended",
@@ -99,23 +99,23 @@
     "03_05": {
       "colab_mode": "recommended",
       "requires_cuda": true,
-      "expected_gpu": "NVIDIA L4",
+      "expected_gpu": "NVIDIA A100 40GB or equivalent CUDA BF16 GPU",
       "input_keys": ["dataset_5_salidas"],
-      "reason": "Fine-tuning Qwen-LoRA y checkpoints reanudables."
+      "reason": "Fine-tuning Qwen-LoRA con perfil A100 8×1, BF16 y checkpoints reanudables."
     },
     "03_06": {
       "colab_mode": "recommended",
       "requires_cuda": true,
-      "expected_gpu": "NVIDIA L4",
+      "expected_gpu": "NVIDIA A100 40GB or equivalent CUDA BF16 GPU",
       "input_keys": ["dataset_5_salidas"],
-      "reason": "Entrenamiento e inferencia estructurada sobre el backbone Qwen."
+      "reason": "Entrenamiento e inferencia estructurada sobre Qwen con perfil A100 8×1 y BF16."
     },
     "03_06b": {
       "colab_mode": "recommended",
       "requires_cuda": true,
-      "expected_gpu": "NVIDIA L4",
+      "expected_gpu": "NVIDIA A100 40GB or equivalent CUDA BF16 GPU",
       "input_keys": ["dataset_5_salidas"],
-      "reason": "SFT causal Qwen-LoRA condicionado por una cápsula trazable del prompt v3.2; es la rama más costosa."
+      "reason": "SFT causal Qwen-LoRA con perfil A100 2×4, validación generativa por lotes y prompt v3.2."
     }
   },
   "excluded_from_drive": [

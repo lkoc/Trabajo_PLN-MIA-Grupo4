@@ -66,6 +66,7 @@ def test_active_notebooks_are_ordered_and_clean():
     optionally_executed_notebooks = {
         "01_015_ampliacion_dirigida_minorias.ipynb",
         "03_03b_transformer_cascada_segura.ipynb",
+        "03_05_qwen_lora.ipynb",
     }
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
@@ -156,9 +157,7 @@ def test_neural_chunk_report_has_consistent_numeric_references():
 
 
 def test_training_architecture_report_cites_prior_applied_schemes():
-    report = (ROOT / "docs" / "ARQUITECTURAS_MODELOS_03.md").read_text(
-        encoding="utf-8"
-    )
+    report = (ROOT / "docs" / "ARQUITECTURAS_MODELOS_03.md").read_text(encoding="utf-8")
     body, references = report.split("## Referencias", maxsplit=1)
     cited = set(map(int, BODY_CITATION.findall(body)))
     entries = list(map(int, REFERENCE_ENTRY.findall(references)))
@@ -253,7 +252,10 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
                 continue
             assert "prepare_colab_context" in source
             assert "publish_colab_outputs" in source
-            assert "COLAB_REQUIRE_L4 = True" in source
+            if metadata["notebook_id"] in {"02_02", "03_05", "03_06", "03_06b"}:
+                assert "COLAB_REQUIRE_L4 = False" in source
+            else:
+                assert "COLAB_REQUIRE_L4 = True" in source
             assert "COLAB_AUTO_UPDATE_BUNDLE = True" in source
             assert "COLAB_AUTO_PUBLISH_MISSING_BUNDLE = True" in source
             assert 'COLAB_BUNDLE_SOURCE = "github"' in source
@@ -277,6 +279,12 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
             if metadata["notebook_id"] == "02_01":
                 assert metadata["expected_gpu"] is None
                 assert "esta campaña API funciona con runtime CPU" in source
+            elif metadata["notebook_id"] in {"02_02", "03_05", "03_06", "03_06b"}:
+                assert (
+                    metadata["expected_gpu"]
+                    == "NVIDIA A100 40GB or equivalent CUDA BF16 GPU"
+                )
+                assert "NVIDIA A100 de 40 GB" in source
             else:
                 assert metadata["expected_gpu"] == "NVIDIA L4"
     assert observed == expected
@@ -738,9 +746,9 @@ def test_local_training_notebooks_expose_bounded_deterministic_parallelism():
     )
     classical_source = "\n".join(cell.source for cell in classical.cells)
     comparison_source = "\n".join(cell.source for cell in comparison.cells)
-    generator_source = (
-        ROOT / "tools" / "generate_workflow_notebooks.py"
-    ).read_text(encoding="utf-8")
+    generator_source = (ROOT / "tools" / "generate_workflow_notebooks.py").read_text(
+        encoding="utf-8"
+    )
 
     assert "PARALLEL_WORKERS=4" in classical_source
     assert "parallel_workers=PARALLEL_WORKERS" in classical_source

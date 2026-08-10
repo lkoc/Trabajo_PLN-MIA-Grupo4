@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ONLY_NOTEBOOKS: set[str] | None = None
 _COLAB_BUNDLE_IDENTITY: dict[str, str] | None = None
 OPERATIONAL_PROMPT_RELATIVE = "config/prompt_operacional_ollama_v3_2.md"
+QWEN_A100_NOTEBOOKS = {"02_02", "03_05", "03_06", "03_06b"}
 
 PROJECT_TITLE = (
     "Moderación semiautomática de videos peruanos de YouTube mediante modelos "
@@ -222,7 +223,7 @@ import zipfile
 COLAB_NOTEBOOK_ID = "__NOTEBOOK_ID__"
 COLAB_DRIVE_FOLDER = "ModeracionPeru_Colab"  # Debe coincidir con config/colab_l4.json
 COLAB_RUN_ID = ""  # Vacío reanuda <notebook>_working_v2_1; use otro ID para otro experimento
-COLAB_REQUIRE_L4 = True
+COLAB_REQUIRE_L4 = __REQUIRE_L4__
 COLAB_AUTO_UPDATE_BUNDLE = True
 COLAB_AUTO_PUBLISH_MISSING_BUNDLE = True
 COLAB_BUNDLE_SOURCE = "github"  # "github" o "local_upload"
@@ -603,9 +604,18 @@ def colab_setup(notebook_id: str) -> str:
     identity = colab_bundle_identity()
     return (
         COLAB_SETUP.replace("__NOTEBOOK_ID__", notebook_id)
+        .replace("__REQUIRE_L4__", str(notebook_id not in QWEN_A100_NOTEBOOKS))
         .replace("__EXPECTED_BUNDLE_ID__", identity["bundle_id"])
         .replace("__EXPECTED_CORE_SHA256__", identity["core_sha256"])
     )
+
+
+def colab_expected_gpu(notebook_id: str | None, requires_gpu: bool) -> str | None:
+    if not notebook_id or not requires_gpu:
+        return None
+    if notebook_id in QWEN_A100_NOTEBOOKS:
+        return "NVIDIA A100 40GB or equivalent CUDA BF16 GPU"
+    return "NVIDIA L4"
 
 
 def colab_publisher_setup() -> str:
@@ -1437,7 +1447,7 @@ SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
 SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
     SCRAPING_MINORITY_REUSE_AND_PLAN,
     "    build_directed_sampling_plan,\n",
-    "    build_directed_sampling_plan,\n" "    estimate_directed_video_budget,\n",
+    "    build_directed_sampling_plan,\n    estimate_directed_video_budget,\n",
 )
 SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
     SCRAPING_MINORITY_REUSE_AND_PLAN,
@@ -1704,7 +1714,7 @@ SCRAPING_MINORITY_DISCOVERY = _replace_required(
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_MINORITY_DISCOVERY,
     "    discover_youtube_candidates,\n",
-    "    discover_youtube_candidates,\n" "    filter_peru_candidates,\n",
+    "    discover_youtube_candidates,\n    filter_peru_candidates,\n",
 )
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_MINORITY_DISCOVERY,
@@ -1716,7 +1726,7 @@ SCRAPING_MINORITY_DISCOVERY = _replace_required(
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_MINORITY_DISCOVERY,
     "expanded_channels = []\n",
-    "expanded_channels = []\n" "peru_scope_excluded = []\n",
+    "expanded_channels = []\nperu_scope_excluded = []\n",
 )
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_MINORITY_DISCOVERY,
@@ -1937,8 +1947,8 @@ def create(
                         else None
                     )
                 ),
-                "expected_gpu": (
-                    "NVIDIA L4" if colab_notebook_id and colab_requires_gpu else None
+                "expected_gpu": colab_expected_gpu(
+                    colab_notebook_id, colab_requires_gpu
                 ),
                 "build_bundle_id": (
                     bundle_identity["bundle_id"] if bundle_identity else None
@@ -1946,7 +1956,9 @@ def create(
                 "bundle_resolution": (
                     "publishes_drive_latest_pointer"
                     if colab_publisher
-                    else "auto_publish_missing_drive_release" if bundle_identity else None
+                    else "auto_publish_missing_drive_release"
+                    if bundle_identity
+                    else None
                 ),
                 "expected_core_sha256": (
                     bundle_identity["core_sha256"] if bundle_identity else None
@@ -1989,7 +2001,10 @@ def create(
                 "## Backend opcional Google Colab desde VS Code\n\n"
                 "Instale la extensión oficial **Google Colab** (`google.colab`), seleccione "
                 + (
-                    "`Select Kernel > Colab` y asigne una **NVIDIA L4**. "
+                    "`Select Kernel > Colab` y asigne una **NVIDIA A100 de 40 GB** "
+                    "para Qwen. "
+                    if colab_notebook_id in QWEN_A100_NOTEBOOKS
+                    else "`Select Kernel > Colab` y asigne una **NVIDIA L4**. "
                     if colab_requires_gpu
                     else "`Select Kernel > Colab`; esta campaña API funciona con runtime CPU. "
                 )
@@ -2782,13 +2797,15 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         "Qwen3 es una familia multilingüe de pesos abiertos [@qwen2025qwen3]. Las revisiones exactas "
         "de `Qwen/Qwen3-1.7B` y `Qwen/Qwen3-4B` se fijan mediante sus tarjetas oficiales "
         "[@hf2026qwen17bcard] [@hf2026qwen4bcard]. La cascada carga los modelos secuencialmente en una "
-        "NVIDIA L4: 1.7B aporta cobertura y 4B revisa daño, abstenciones, baja confianza y un control "
+        "GPU CUDA BF16; el perfil A100 de 40 GB duplica prudentemente el lote de inferencia. El modelo "
+        "1.7B aporta cobertura y 4B revisa daño, abstenciones, baja confianza y un control "
         "seguro. Esta política de enrutamiento es una decisión local que debe compararse con una pasada "
         "4B y con referencias humanas; las propuestas no son *ground truth* [@schroeder2025llmassisted].",
         [
             (
                 "Configuración Colab y contrato JSON",
                 "from moderacion_peru.providers import HuggingFaceProvider\n"
+                "from moderacion_peru.device import high_memory_bf16_cuda,resolve_device\n"
                 "from moderacion_peru.io import read_jsonl,write_json_atomic,write_jsonl_atomic\n\n"
                 "SOURCE=COLAB_CONTEXT.input('chunks_v2') if COLAB_CONTEXT else ROOT/'datos/processed/chunks_v2.jsonl'\n"
                 "CAMPAIGN_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'datos/etiquetado/cascada_qwen_hf'\n"
@@ -2802,9 +2819,13 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "REVIEW_LIMIT=20   # Smoke reanudable; use None para toda la cola dirigida.\n"
                 "REVIEW_CONFIDENCE_THRESHOLD=0.85\n"
                 "SAFE_CONTROL_RATE=0.05\n"
-                "MAX_NEEDS_REVIEW_FOR_QWEN4B=None\n\n"
-                "primary_provider=HuggingFaceProvider(model='Qwen/Qwen3-1.7B',revision='70d244cc86ccca08cf5af4e1e306ecf908b1ad5e',device='auto',records_per_request=5,inference_batch_size=4,max_new_tokens=256,operational_prompt_path=OPERATIONAL_PROMPT,label_source='qwen_hf_colab_primary')\n"
-                "reviewer_provider=HuggingFaceProvider(model='Qwen/Qwen3-4B',revision='1cfa9a7208912126459214e8b04321603b3df60c',device='auto',records_per_request=5,inference_batch_size=2,max_new_tokens=256,operational_prompt_path=OPERATIONAL_PROMPT,label_source='qwen_hf_colab_review')\n"
+                "MAX_NEEDS_REVIEW_FOR_QWEN4B=None\n"
+                "QWEN_HARDWARE=resolve_device('auto')\n"
+                "QWEN_A100_PROFILE=high_memory_bf16_cuda(QWEN_HARDWARE)\n"
+                "PRIMARY_INFERENCE_BATCH_SIZE=8 if QWEN_A100_PROFILE else 4\n"
+                "REVIEW_INFERENCE_BATCH_SIZE=4 if QWEN_A100_PROFILE else 2\n\n"
+                "primary_provider=HuggingFaceProvider(model='Qwen/Qwen3-1.7B',revision='70d244cc86ccca08cf5af4e1e306ecf908b1ad5e',device='auto',records_per_request=5,inference_batch_size=PRIMARY_INFERENCE_BATCH_SIZE,max_new_tokens=256,operational_prompt_path=OPERATIONAL_PROMPT,label_source='qwen_hf_colab_primary')\n"
+                "reviewer_provider=HuggingFaceProvider(model='Qwen/Qwen3-4B',revision='1cfa9a7208912126459214e8b04321603b3df60c',device='auto',records_per_request=5,inference_batch_size=REVIEW_INFERENCE_BATCH_SIZE,max_new_tokens=256,operational_prompt_path=OPERATIONAL_PROMPT,label_source='qwen_hf_colab_review')\n"
                 "primary_probe=primary_provider.probe(); reviewer_probe=reviewer_provider.probe()\n"
                 "for role,probe in [('primario',primary_probe),('revisor',reviewer_probe)]:\n"
                 "    if probe['response_format']!={'type':'json_object'} or probe['output_contract']['root_key']!='annotations':\n"
@@ -2813,7 +2834,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "        raise RuntimeError(f'El proveedor {role} no usa el prompt operacional vigente')\n"
                 "show_result('Qwen3-1.7B primario',primary_probe,tone='success')\n"
                 "show_result('Qwen3-4B revisor',reviewer_probe,tone='success')\n"
-                "show_callout('Optimización correcta','02_02 no llama a DeepSeek y no genera cargos ni aciertos de caché de su API. Agrupa 5 chunks por prompt y aprovecha la L4 con lotes GPU de 4 prompts para 1.7B y 2 para 4B; subirlos exige medir memoria antes.',tone='neutral')\n"
+                "show_callout('Perfil de aceleración',f'02_02 no llama a DeepSeek. Perfil A100={QWEN_A100_PROFILE}; lotes GPU: {PRIMARY_INFERENCE_BATCH_SIZE} prompts para 1.7B y {REVIEW_INFERENCE_BATCH_SIZE} para 4B. Los modelos se cargan secuencialmente.',tone='neutral')\n"
                 "show_callout('Contrato verificado','Ambos modelos reciben el prompt operacional 3.2.0 y solo se persisten objetos validados con raíz annotations, orden y chunk_id exactos.',tone='success')",
             ),
             (
@@ -3118,7 +3139,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         (
             "03_05_qwen_lora.ipynb",
             "Qwen-LoRA",
-            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_lora'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    qwen_lora_result=run_with_progress('Qwen-LoRA',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='qwen_lora',device=DEVICE,safe_to_damage_ratio=4.0,progress_unit='etapa')\n    show_result('Qwen-LoRA clasificador de 22 salidas',qwen_lora_result,tone='success')\nelse:\n    show_summary('Configuración preliminar',{'método':'clasificador supervisado, no condicionado por prompt','salidas':'5+14+3 enmascaradas','progreso':'Trainer por lote/época + barra por etapa','SEGURO_train_validation':'4:1 fijo','reanuda_colab':bool(COLAB_CONTEXT and COLAB_CONTEXT.resumed),'test':'natural completo, sellado'},tone='neutral')",
+            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_lora'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    qwen_lora_result=run_with_progress('Qwen-LoRA',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='qwen_lora',device=DEVICE,safe_to_damage_ratio=4.0,progress_unit='etapa')\n    show_result('Qwen-LoRA clasificador de 22 salidas',qwen_lora_result,tone='success')\nelse:\n    show_summary('Configuración preliminar',{'método':'clasificador supervisado, no condicionado por prompt','salidas':'5+14+3 enmascaradas','perfil_GPU':'A100: BF16, lote 8×1, validation 32 y 2 workers; fallback 2×4','progreso':'tokenización visible + Trainer por lote/época + barra por etapa','SEGURO_train_validation':'4:1 fijo','reanuda_colab':bool(COLAB_CONTEXT and COLAB_CONTEXT.resumed),'test':'natural completo, sellado'},tone='neutral')",
             "03_05",
             "LoRA introduce actualizaciones entrenables de bajo rango sobre un modelo preentrenado "
             "[@hu2022lora]. El backbone pertenece a la familia Qwen3 [@qwen2025qwen3] y se fija en el "
@@ -3129,7 +3150,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         (
             "03_06_qwen_estructurado.ipynb",
             "Qwen estructurado",
-            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_estructurado'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    qwen_structured_result=run_with_progress('Qwen estructurado',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='qwen_structured',device=DEVICE,safe_to_damage_ratio=4.0,progress_unit='etapa')\n    show_result('Qwen estructurado 22 salidas',qwen_structured_result,tone='success')\nelse:\n    show_summary('Configuración preliminar',{'estructura':'penaliza conflicto SEGURO+daño','auxiliares':'enmascaradas','progreso':'Trainer por lote/época + barra por etapa','SEGURO_train_validation':'4:1 fijo','calibración':'validation','test':'natural completo, sellado'},tone='neutral')",
+            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_estructurado'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_TRAINING=False\nif RUN_TRAINING:\n    qwen_structured_result=run_with_progress('Qwen estructurado',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='qwen_structured',device=DEVICE,safe_to_damage_ratio=4.0,progress_unit='etapa')\n    show_result('Qwen estructurado 22 salidas',qwen_structured_result,tone='success')\nelse:\n    show_summary('Configuración preliminar',{'estructura':'penaliza conflicto SEGURO+daño','auxiliares':'enmascaradas','perfil_GPU':'A100: BF16, lote 8×1, validation 32 y 2 workers; fallback 2×4','progreso':'tokenización visible + Trainer por lote/época + barra por etapa','SEGURO_train_validation':'4:1 fijo','calibración':'validation','test':'natural completo, sellado'},tone='neutral')",
             "03_06",
             "El backbone se documenta mediante el informe Qwen3 [@qwen2025qwen3] y la tarjeta exacta de "
             "`Qwen/Qwen3-0.6B-Base` [@hf2026qwen06bcard]. La separación entre compuerta y daños toma "
@@ -3139,7 +3160,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         (
             "03_06b_qwen_prompt_sft.ipynb",
             "Qwen SFT condicionado por prompt",
-            "from moderacion_peru.prompt_sft import train_prompt_conditioned_sft\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nPROMPT=ROOT/'config/prompt_operacional_ollama_v3_2.md'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_prompt_sft'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_PILOT=False\nRUN_FULL_TRAINING=False\nif RUN_PILOT:\n    pilot_result=run_with_progress('Piloto Qwen SFT',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT/'pilot',device=DEVICE,safe_to_damage_ratio=4.0,train_limit=5000,validation_limit=1000,progress_unit='fila')\n    show_result('Piloto SFT no elegible para 03_07',pilot_result,tone='warning')\nif RUN_FULL_TRAINING:\n    full_result=run_with_progress('Qwen SFT completo',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT,device=DEVICE,safe_to_damage_ratio=4.0,progress_unit='fila')\n    show_result('SFT generativo completo condicionado por prompt v3.2',full_result,tone='success')\nif not (RUN_PILOT or RUN_FULL_TRAINING):\n    show_summary('Configuración preliminar',{'método':'LoRA causal instruction-tuned','condicionamiento':'cápsula trazable del prompt v3.2 completo','piloto':'5.000 train + 1.000 validation; no entra a 03_07','completo':'51.205 train + 10.600 validation','progreso':'Trainer por lote/época + generación JSON fila a fila','test':'22.684 naturales sellados; vista secundaria 4:1 sin reinferencia','costo':'alto; ejecutar después de los baselines'},tone='warning')",
+            "from moderacion_peru.prompt_sft import train_prompt_conditioned_sft\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nPROMPT=ROOT/'config/prompt_operacional_ollama_v3_2.md'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_prompt_sft'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nRUN_PILOT=False\nRUN_FULL_TRAINING=False\nif RUN_PILOT:\n    pilot_result=run_with_progress('Piloto Qwen SFT',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT/'pilot',device=DEVICE,safe_to_damage_ratio=4.0,train_limit=5000,validation_limit=1000,progress_unit='fila')\n    show_result('Piloto SFT no elegible para 03_07',pilot_result,tone='warning')\nif RUN_FULL_TRAINING:\n    full_result=run_with_progress('Qwen SFT completo',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT,device=DEVICE,safe_to_damage_ratio=4.0,progress_unit='fila')\n    show_result('SFT generativo completo condicionado por prompt v3.2',full_result,tone='success')\nif not (RUN_PILOT or RUN_FULL_TRAINING):\n    show_summary('Configuración preliminar',{'método':'LoRA causal instruction-tuned','condicionamiento':'cápsula trazable del prompt v3.2 completo','piloto':'5.000 train + 1.000 validation; no entra a 03_07','completo':'51.205 train + 10.600 validation','perfil_GPU':'A100: BF16, entrenamiento 2×4, validation 2 y generación JSON en lotes de 4','progreso':'Trainer por lote/época + generación JSON por lotes','test':'22.684 naturales sellados; vista secundaria 4:1 sin reinferencia','costo':'alto; ejecutar después de los baselines'},tone='warning')",
             "03_06b",
             "La rama usa el modelo conversacional oficial `Qwen/Qwen3-0.6B` "
             "[@hf2026qwen06binstructcard] y LoRA [@hu2022lora]. A diferencia de los clasificadores "
