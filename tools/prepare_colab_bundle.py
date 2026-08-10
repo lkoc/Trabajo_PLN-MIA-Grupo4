@@ -166,6 +166,65 @@ def build_core_archive(destination: Path) -> dict[str, object]:
     }
 
 
+def bundle_rebuild_reasons(destination: str | Path) -> tuple[str, ...]:
+    """Explica si el bundle dejó de representar el código o las entradas locales."""
+
+    target = Path(destination).expanduser().resolve()
+    config_path = ROOT / "config" / "colab_l4.json"
+    with config_path.open("r", encoding="utf-8") as handle:
+        config = json.load(handle)
+    manifest_path = target / config["manifest"]
+    if not manifest_path.is_file():
+        return ("falta bundle_manifest.json",)
+    try:
+        manifest = verify_bundle_directory(target)
+    except (OSError, TypeError, ValueError, KeyError) as exc:
+        return (f"bundle inválido: {exc}",)
+
+    reasons: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="moderacion_peru_core_check_") as temporary:
+        current_core = build_core_archive(Path(temporary) / config["core_archive"])
+    if current_core["sha256"] != manifest.get("core", {}).get("sha256"):
+        reasons.append("cambió el código o la configuración incluida en project_core.zip")
+
+    declared_inputs = manifest.get("inputs", {})
+    for key, specification in config["inputs"].items():
+        source = ROOT / specification["source"]
+        if not source.is_file():
+            reasons.append(f"falta la entrada requerida {key}: {source}")
+            continue
+        declared = declared_inputs.get(key)
+        if not isinstance(declared, dict):
+            reasons.append(f"el manifiesto no declara la entrada {key}")
+            continue
+        if declared.get("source_sha256") != sha256_file(source):
+            reasons.append(f"cambió la entrada local {key}")
+        if declared.get("archive") != specification["archive"]:
+            reasons.append(f"cambió el nombre de archivo configurado para {key}")
+    unexpected = sorted(set(declared_inputs) - set(config["inputs"]))
+    if unexpected:
+        reasons.append(f"el manifiesto conserva entradas no configuradas: {unexpected}")
+    return tuple(reasons)
+
+
+def ensure_prepared_bundle(destination: str | Path) -> dict[str, object]:
+    """Reconstruye el bundle solo cuando su código, entradas o artefactos cambiaron."""
+
+    target = Path(destination).expanduser().resolve()
+    reasons = bundle_rebuild_reasons(target)
+    if reasons:
+        result = prepare(target)
+        return {**result, "status": "rebuilt", "rebuild_reasons": list(reasons)}
+    manifest = verify_bundle_directory(target)
+    return {
+        "destination": str(target),
+        "manifest": str(target / "bundle_manifest.json"),
+        **manifest,
+        "status": "current",
+        "rebuild_reasons": [],
+    }
+
+
 def prepare(destination: str | Path, *, progress_callback=None) -> dict[str, object]:
     target = Path(destination).expanduser().resolve()
     target.mkdir(parents=True, exist_ok=True)

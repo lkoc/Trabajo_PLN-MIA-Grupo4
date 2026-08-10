@@ -69,6 +69,52 @@ def test_core_text_normalization_is_independent_of_platform_line_endings(tmp_pat
     assert bundle_tools.core_file_bytes(lf) == bundle_tools.core_file_bytes(crlf)
 
 
+def test_ensure_prepared_bundle_rebuilds_only_when_local_inputs_change(
+    tmp_path, monkeypatch
+):
+    root = tmp_path / "project"
+    (root / "config").mkdir(parents=True)
+    (root / "requirements").mkdir()
+    (root / "src" / "moderacion_peru").mkdir(parents=True)
+    (root / "datos").mkdir()
+    (root / "pyproject.toml").write_text("[project]\nname='fixture'\n", encoding="utf-8")
+    source_code = root / "src" / "moderacion_peru" / "fixture.py"
+    source_code.write_text("VALUE = 1\n", encoding="utf-8")
+    source_data = root / "datos" / "chunks.jsonl"
+    source_data.write_text('{"chunk_id":"c1"}\n', encoding="utf-8")
+    config = {
+        "schema_version": "1.0.0",
+        "taxonomy_contract": "fixture",
+        "taxonomy_version": "1.0.0",
+        "core_archive": "project_core.zip",
+        "manifest": "bundle_manifest.json",
+        "excluded_from_drive": [],
+        "inputs": {
+            "chunks": {
+                "source": "datos/chunks.jsonl",
+                "archive": "chunks.jsonl.gz",
+                "required_by": ["fixture"],
+            }
+        },
+    }
+    (root / "config" / "colab_l4.json").write_text(
+        json.dumps(config), encoding="utf-8"
+    )
+    monkeypatch.setattr(bundle_tools, "ROOT", root)
+    destination = root / "resultados" / "colab_bundle"
+
+    first = bundle_tools.ensure_prepared_bundle(destination)
+    second = bundle_tools.ensure_prepared_bundle(destination)
+    source_code.write_text("VALUE = 2\n", encoding="utf-8")
+    third = bundle_tools.ensure_prepared_bundle(destination)
+
+    assert first["status"] == "rebuilt"
+    assert second["status"] == "current"
+    assert third["status"] == "rebuilt"
+    assert first["bundle_id"] != third["bundle_id"]
+    assert "project_core.zip" in third["rebuild_reasons"][0]
+
+
 def test_publish_drive_release_is_versioned_and_idempotent(tmp_path, monkeypatch):
     local = tmp_path / "local_bundle"
     manifest = _fixture_bundle(local)

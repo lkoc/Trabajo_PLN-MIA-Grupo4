@@ -3,12 +3,12 @@
 ## Arquitectura
 
 El flujo remoto no requiere Google Cloud Console, un cliente OAuth propio ni
-Google Drive Desktop. `02_00_preparacion_bundle_colab.ipynb` se ejecuta
-directamente en Google Colab, obtiene un bundle ya construido, verifica su
-`bundle_id` y todos sus SHA-256, monta Drive mediante `drive.mount()` y publica
-una versión inmutable. Después, `02_01` y `03_02`–`03_06b` resuelven
-`bundle_releases/latest.json`, validan esa versión y reconstruyen el proyecto
-mínimo en `/content` antes de importar código.
+Google Drive Desktop. Cada cuaderno Colab (`02_01` y `03_02`–`03_06b`) verifica
+si Drive ya contiene el release exacto fijado al generarlo. Si falta, el mismo
+bootstrap obtiene el bundle, valida su `bundle_id` y todos sus SHA-256 y lo
+publica de forma inmutable. Después activa la copia verificada y reconstruye el
+proyecto mínimo en `/content` antes de importar código. `02_00` permanece como
+publicador manual opcional, pero ya no forma parte de la secuencia obligatoria.
 
 Google advierte que las máquinas virtuales de Colab son efímeras y que el
 montaje de Drive requiere autorización de la cuenta durante la sesión. Por eso
@@ -16,15 +16,15 @@ la fuente del bundle es reproducible, la publicación deja el manifiesto para el
 final y los consumidores verifican nuevamente cada artefacto. Referencia:
 [FAQ oficial de Colab](https://research.google.com/colaboratory/faq.html).
 
-## Fuentes admitidas por `02_00`
+## Fuentes admitidas por todos los cuadernos Colab
 
-La celda de configuración expone dos modos:
+La celda de bootstrap común expone dos modos:
 
 ```python
-RUN_PUBLISH_BUNDLE=False
-BUNDLE_SOURCE="github"       # o "local_upload"
-GITHUB_REPOSITORY="lkoc/Trabajo_PLN-MIA-Grupo4"
-GITHUB_REF="main"
+COLAB_AUTO_PUBLISH_MISSING_BUNDLE=True
+COLAB_BUNDLE_SOURCE="github"       # o "local_upload"
+COLAB_GITHUB_REPOSITORY="lkoc/Trabajo_PLN-MIA-Grupo4"
+COLAB_GITHUB_REF="main"
 ```
 
 - `github` descarga `resultados/colab_bundle` desde la rama, etiqueta o commit
@@ -40,19 +40,21 @@ GITHUB_REF="main"
 
 En ambos casos se rechaza la publicación si el `bundle_id` no puede
 recalcularse, el core no es compatible con el cuaderno o cualquier SHA-256 es
-distinto. `02_00` no construye datos dentro de la VM: el bundle local se genera,
-cuando corresponda, con:
+distinto. El generador detecta localmente si cambiaron `src/`, la configuración
+o cualquiera de las entradas y reconstruye el bundle antes de emitir los
+cuadernos. También puede ejecutarse explícitamente con:
 
 ```powershell
 python tools/prepare_colab_bundle.py --destination resultados/colab_bundle
 ```
 
-Después se sincroniza con GitHub o se usa `local_upload`.
+Después se sincroniza con GitHub o se selecciona `local_upload` en el propio
+cuaderno consumidor.
 
 ## Publicación versionada en Drive
 
-Al activar `RUN_PUBLISH_BUNDLE=True`, Colab solicita la autorización integrada
-de Drive y escribe:
+Cuando falta el release esperado, el bootstrap solicita la autorización
+integrada de Drive y escribe:
 
 ```text
 MyDrive/ModeracionPeru_Colab/
@@ -77,20 +79,21 @@ se reemplaza `latest.json`, que registra `bundle_id`, SHA-256 del core y SHA-256
 del manifiesto. Una carpeta existente pero inválida bloquea el proceso en vez de
 ser sobrescrita.
 
-Ejecute `02_00` dos veces en el recorrido completo: después de `01_03`, antes de
-`02_01`, para publicar los chunks; y después de que `02_05` cree un snapshot
-nuevo, antes de entrenar con `03_02`–`03_06b`.
+La publicación solo se ejecuta si el release esperado falta o es inválido. Si
+ya existe y supera la verificación, el cuaderno lo reutiliza sin volver a
+descargar ni copiar sus archivos.
 
 ## Consumidores y GPU
 
 Los cuadernos `02_01` y `03_02`–`03_06b` pueden ejecutarse en Colab. `02_01` usa la API DeepSeek y funciona con un runtime CPU; no reserva una GPU innecesaria. `03_02`–`03_06b` sí requieren la L4. Su bootstrap:
 
-1. monta Drive y lee `bundle_releases/latest.json`;
-2. exige que el SHA-256 del core coincida con el esperado por el cuaderno;
-3. valida el manifiesto y todos los archivos de la versión;
-4. actualiza la copia activa `bundle/` dejando su manifiesto para el final;
-5. extrae e instala el core en el SSD efímero `/content`;
-6. exige una `NVIDIA L4` solo si el cuaderno declara `requires_cuda=true` y `COLAB_REQUIRE_L4=True`.
+1. monta Drive y busca el release exacto fijado por el cuaderno;
+2. si falta, lo descarga de GitHub —o abre `local_upload`— y lo publica atómicamente;
+3. exige que el SHA-256 del core coincida con el esperado por el cuaderno;
+4. valida el manifiesto y todos los archivos de la versión;
+5. actualiza la copia activa `bundle/` dejando su manifiesto para el final;
+6. extrae e instala el core en el SSD efímero `/content`;
+7. exige una `NVIDIA L4` solo si el cuaderno declara `requires_cuda=true` y `COLAB_REQUIRE_L4=True`.
 
 Si el bundle cambió después de que el kernel importó `moderacion_peru`, el
 cuaderno exige reiniciar el kernel para evitar mezclar versiones. Los modelos se
@@ -132,14 +135,13 @@ no inventa una corrida: los interruptores de entrenamiento permanecen en
 
 ## Secuencia práctica
 
-1. Confirme que `resultados/colab_bundle` está actualizado; sincronícelo con
-   GitHub si usará `BUNDLE_SOURCE="github"`.
-2. Abra `02_00` en Google Colab, ejecute el preflight y cambie
-   `RUN_PUBLISH_BUNDLE=True`.
-3. Autorice `drive.mount()` y confirme `status=published_to_drive`, el
-   `bundle_id` y `manifest_sha256`.
-4. Abra `02_01` o `03_02`–`03_06b`, seleccione Colab/L4 y ejecute desde la primera
+1. Genere el cuaderno requerido; el generador reconstruirá
+   `resultados/colab_bundle` automáticamente si detecta cambios.
+2. Sincronice el bundle y los cuadernos con GitHub si conservará
+   `COLAB_BUNDLE_SOURCE="github"`.
+3. Abra `02_01` o `03_02`–`03_06b`, seleccione Colab/L4 y ejecute desde la primera
    celda.
+4. Autorice `drive.mount()`. Si el release falta, el mismo cuaderno lo publicará.
 5. Confirme **Bundle de Colab verificado** antes de activar el procesamiento.
 
 No hay credenciales, tokens ni IDs de carpetas personales versionados en el

@@ -219,18 +219,25 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
             assert "publish_colab_outputs" in source
             assert "COLAB_REQUIRE_L4 = True" in source
             assert "COLAB_AUTO_UPDATE_BUNDLE = True" in source
+            assert "COLAB_AUTO_PUBLISH_MISSING_BUNDLE = True" in source
+            assert 'COLAB_BUNDLE_SOURCE = "github"' in source
             assert 'os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"' in source
             assert 'os.environ["HF_HOME"] = "/content/huggingface"' in source
             assert f'COLAB_NOTEBOOK_BUILD_BUNDLE_ID = "{expected_bundle_id}"' in source
             assert "_activate_verified_drive_release" in source
-            assert "02_00_preparacion_bundle_colab.ipynb" in source
-            assert "raw.githubusercontent" not in source.lower()
-            assert "urllib.request" not in source
+            assert "_ensure_expected_drive_release" in source
+            assert "_publish_expected_bundle" in source
+            assert "raw.githubusercontent.com" in source.lower()
+            assert "urllib.request" in source
+            assert "files.upload()" in source
             assert "GITHUB_TOKEN" not in source
             assert 'pip", "install", "-q", "-r"' in source
             assert "git clone" not in source.lower()
-            assert metadata["transport"] == "google_drive_versioned_releases"
-            assert metadata["bundle_resolution"] == "drive_latest_pointer"
+            assert (
+                metadata["transport"]
+                == "github_or_browser_upload_with_drive_versioned_releases"
+            )
+            assert metadata["bundle_resolution"] == "auto_publish_missing_drive_release"
             if metadata["notebook_id"] == "02_01":
                 assert metadata["expected_gpu"] is None
                 assert "esta campaña API funciona con runtime CPU" in source

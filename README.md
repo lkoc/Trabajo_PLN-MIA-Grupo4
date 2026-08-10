@@ -383,8 +383,8 @@ Para incorporar videos o subtítulos adicionales:
 
 1. añada candidatos con `video_id` y URL a `datos/raw/videos_candidatos.csv` o al JSONL de candidatos;
 2. ejecute nuevamente `01_01` y `01_03`; si el objetivo es elevar daños minoritarios, ejecute `01_015` antes de `01_03`; este último recompone `transcripts_raw.jsonl` desde los JSON por canal y VTT locales, muestra avance por video y procesa solo hashes nuevos o modificados; `01_02` solo se repite si desea reevaluar o cambiar la longitud;
-3. sincronice el bundle con GitHub —o elija `local_upload`— y ejecute `02_00` en Colab antes de `02_01`; después complete la calibración y cascada Flash→Pro, audítela en `02_03` y cierre `02_04`–`02_05` para los chunks pendientes;
-4. regenere el bundle y vuelva a ejecutar `02_00` en Colab después de `02_05` para publicar en Drive el snapshot nuevo;
+3. regenere los cuadernos; el generador reconstruirá el bundle si cambió. Sincronícelo con GitHub —o elija `COLAB_BUNDLE_SOURCE="local_upload"`— y ejecute `02_01`, cuyo bootstrap publicará el release automáticamente si hace falta; después complete la calibración y cascada Flash→Pro, audítela en `02_03` y cierre `02_04`–`02_05` para los chunks pendientes;
+4. regenere los cuadernos después de `02_05`; al abrir cualquier entrenamiento Colab, su bootstrap publicará en Drive el snapshot nuevo solo si todavía falta;
 5. active las familias de `03` que desea actualizar;
 6. publique de nuevo solo cuando `03_07` encuentre candidatos completos del snapshot nuevo.
 
@@ -402,13 +402,13 @@ python tools/restore_synced_checkpoints.py
 
 El comando verifica los SHA-256 de `datos/raw/transcripts_by_channel/index.json`, cada entrada de `datos/raw/vtt_by_video/index.json` y `resultados/colab_bundle/bundle_manifest.json`; reconstruye el canónico de forma idempotente y descomprime atómicamente chunks y dataset en sus rutas esperadas. Los cuadernos `03_01`–`03_08` repiten la verificación del dataset antes de usarlo: si falta, lo restauran; si existe con otro hash, se detienen en vez de sobrescribirlo.
 
-Cuando `02_05` produzca un snapshot nuevo, regenere `resultados/colab_bundle`, sincronícelo con GitHub o use la carga local del navegador y vuelva a ejecutar `02_00` en Colab antes de `03`. El cuaderno verifica el `bundle_id` y todos los SHA-256, publica `bundle_releases/<bundle_id>`, actualiza al final `bundle_releases/latest.json` y no modifica versiones anteriores. El error ante una versión ausente o hashes distintos evita entrenar accidentalmente con un snapshot no declarado.
+Cuando `02_05` produzca un snapshot nuevo, vuelva a generar los cuadernos: el generador detecta el cambio y reconstruye `resultados/colab_bundle`. Sincronícelo con GitHub o seleccione `COLAB_BUNDLE_SOURCE="local_upload"` en el propio cuaderno consumidor. Cada cuaderno Colab verifica el `bundle_id` y todos los SHA-256 y, solo si falta el release esperado, publica `bundle_releases/<bundle_id>` y actualiza atómicamente `latest.json`. `02_00` queda disponible como publicador manual opcional, no como paso obligatorio.
 
 El dataset actual baja de aproximadamente 104,2 MiB a 20,3 MiB con gzip nivel 9, por lo que un único archivo comprimido es más simple y está holgadamente bajo los límites por archivo. Si una versión futura se aproxima a 45–50 MiB comprimidos, se deberá particionar primero por `split` y luego en partes numeradas, manteniendo un manifiesto único. El repositorio remoto es público: versionar estos checkpoints publica también el texto de los subtítulos y exige revisar licencias, términos de la plataforma y datos personales antes de hacer `push`.
 
 ## Google Colab L4 desde VS Code
 
-Los cuadernos `03_02`–`03_06b`, y opcionalmente `02_01`, incluyen el puente a Colab. La cascada API de `02_01` no usa la GPU asignada; la L4 solo es necesaria para modelos locales/neuronales. `02_00_preparacion_bundle_colab.ipynb` descarga el bundle sincronizado desde GitHub o recibe el bundle local por el selector del navegador, verifica su identidad, monta Drive y publica la versión. No requiere Google Cloud Console ni Drive Desktop. Después, el consumidor resuelve `bundle_releases/latest.json`, verifica el `bundle_id` y todos los SHA-256 y activa la versión antes de importar el proyecto. No transfiere videos, audio, PDFs, modelos Ollama ni cachés de Hugging Face.
+Los cuadernos `03_02`–`03_06b`, y opcionalmente `02_01`, incluyen el puente a Colab. La cascada API de `02_01` no usa la GPU asignada; la L4 solo es necesaria para modelos locales/neuronales. Cada bootstrap detecta si Drive carece del release esperado, descarga el bundle sincronizado desde GitHub —o recibe `local_upload`—, verifica su identidad, lo publica atómicamente y activa la versión antes de importar el proyecto. `02_00_preparacion_bundle_colab.ipynb` conserva la misma operación como alternativa manual. No requiere Google Cloud Console ni Drive Desktop y no transfiere videos, audio, PDFs, modelos Ollama ni cachés de Hugging Face.
 
 La preparación, verificación SHA-256, reanudación por `COLAB_RUN_ID` y recuperación de resultados se describen en [`docs/COLAB_L4.md`](docs/COLAB_L4.md). El backend L4 falla explícitamente si Colab asigna una GPU distinta cuando `COLAB_REQUIRE_L4=True`.
 

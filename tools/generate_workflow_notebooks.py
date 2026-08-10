@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import json
-import tempfile
 from pathlib import Path
 
 import nbformat as nbf
@@ -207,6 +205,7 @@ show_summary(
 
 
 COLAB_SETUP = """# Backend reproducible: local o Google Colab desde VS Code
+from datetime import datetime, timezone
 from pathlib import Path
 import hashlib
 import importlib.util
@@ -215,6 +214,9 @@ import os
 import shutil
 import subprocess
 import sys
+import urllib.parse
+import urllib.request
+import uuid
 import zipfile
 
 COLAB_NOTEBOOK_ID = "__NOTEBOOK_ID__"
@@ -222,6 +224,11 @@ COLAB_DRIVE_FOLDER = "ModeracionPeru_Colab"  # Debe coincidir con config/colab_l
 COLAB_RUN_ID = ""  # Vacío reanuda <notebook>_working_v2_1; use otro ID para otro experimento
 COLAB_REQUIRE_L4 = True
 COLAB_AUTO_UPDATE_BUNDLE = True
+COLAB_AUTO_PUBLISH_MISSING_BUNDLE = True
+COLAB_BUNDLE_SOURCE = "github"  # "github" o "local_upload"
+COLAB_GITHUB_REPOSITORY = "lkoc/Trabajo_PLN-MIA-Grupo4"
+COLAB_GITHUB_REF = "main"
+COLAB_GITHUB_BUNDLE_PATH = "resultados/colab_bundle"
 COLAB_NOTEBOOK_BUILD_BUNDLE_ID = "__EXPECTED_BUNDLE_ID__"  # Trazabilidad al generar el notebook
 COLAB_EXPECTED_CORE_SHA256 = "__EXPECTED_CORE_SHA256__"
 IN_COLAB = importlib.util.find_spec("google.colab") is not None
@@ -280,23 +287,160 @@ def _bundle_specs(manifest):
             raise ValueError(f"Entrada insegura o incompleta en bundle_manifest.json: {name!r}")
     return specs
 
-def _bundle_is_current(bundle_dir, manifest_path, expected_bundle_id):
+def _verify_expected_bundle(bundle_dir, expected_bundle_id=COLAB_NOTEBOOK_BUILD_BUNDLE_ID):
+    manifest_path = Path(bundle_dir) / "bundle_manifest.json"
     if not manifest_path.is_file():
+        raise FileNotFoundError(f"Falta {manifest_path}")
+    manifest = _read_manifest(manifest_path)
+    computed_bundle_id = _bundle_id_for_manifest(manifest)
+    if manifest.get("bundle_id") != computed_bundle_id:
+        raise ValueError("bundle_manifest.json no contiene una identidad válida")
+    if computed_bundle_id != expected_bundle_id:
+        raise ValueError(
+            f"Bundle inesperado: esperado={expected_bundle_id}, obtenido={computed_bundle_id}"
+        )
+    if manifest["core"]["sha256"] != COLAB_EXPECTED_CORE_SHA256:
+        raise ValueError("El core del bundle no coincide con el fijado por este cuaderno")
+    for name, expected_sha256 in _bundle_specs(manifest):
+        artifact = Path(bundle_dir) / name
+        if not artifact.is_file() or _sha256(artifact) != expected_sha256:
+            raise ValueError(f"Artefacto ausente o inválido: {artifact}")
+    return manifest
+
+def _bundle_is_current(bundle_dir, manifest_path, expected_bundle_id):
+    if Path(manifest_path) != Path(bundle_dir) / "bundle_manifest.json":
         return False
     try:
+        _verify_expected_bundle(bundle_dir, expected_bundle_id)
+        return True
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return False
+
+def _download_bundle_file(url, destination):
+    destination = Path(destination)
+    partial = destination.with_name(f".{destination.name}.partial")
+    request = urllib.request.Request(
+        url,
+        headers={"User-Agent": "ModeracionPeru-Colab-Bundle/2.0"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=180) as response, partial.open("wb") as target:
+            while block := response.read(1024 * 1024):
+                target.write(block)
+        os.replace(partial, destination)
+    finally:
+        if partial.exists():
+            partial.unlink()
+
+def _prepare_bundle_staging():
+    staging = Path("/content/moderacion_peru_bundle_source")
+    if staging.exists():
+        shutil.rmtree(staging)
+    staging.mkdir(parents=True)
+    return staging
+
+def _acquire_expected_bundle():
+    staging = _prepare_bundle_staging()
+    if COLAB_BUNDLE_SOURCE == "github":
+        encoded_ref = urllib.parse.quote(COLAB_GITHUB_REF, safe="")
+        base = (
+            f"https://raw.githubusercontent.com/{COLAB_GITHUB_REPOSITORY}/"
+            f"{encoded_ref}/{COLAB_GITHUB_BUNDLE_PATH}"
+        )
+        manifest_path = staging / "bundle_manifest.json"
+        _download_bundle_file(f"{base}/bundle_manifest.json", manifest_path)
         manifest = _read_manifest(manifest_path)
         if manifest.get("bundle_id") != _bundle_id_for_manifest(manifest):
-            return False
-        if manifest["bundle_id"] != expected_bundle_id:
-            return False
+            raise ValueError("El manifiesto descargado desde GitHub no es válido")
+        if manifest["bundle_id"] != COLAB_NOTEBOOK_BUILD_BUNDLE_ID:
+            raise RuntimeError(
+                "GitHub todavía no contiene el bundle fijado por este cuaderno. "
+                "Sincronice resultados/colab_bundle o use COLAB_BUNDLE_SOURCE='local_upload'."
+            )
         if manifest["core"]["sha256"] != COLAB_EXPECTED_CORE_SHA256:
-            return False
-        return all(
-            (bundle_dir / name).is_file() and _sha256(bundle_dir / name) == expected_sha256
-            for name, expected_sha256 in _bundle_specs(manifest)
+            raise RuntimeError("GitHub contiene un project_core.zip distinto al esperado")
+        for name, _ in _bundle_specs(manifest):
+            encoded_name = urllib.parse.quote(name, safe="")
+            _download_bundle_file(f"{base}/{encoded_name}", staging / name)
+    elif COLAB_BUNDLE_SOURCE == "local_upload":
+        from google.colab import files
+
+        uploaded = files.upload()
+        if "bundle_manifest.json" not in uploaded:
+            raise FileNotFoundError("La selección no incluyó bundle_manifest.json")
+        (staging / "bundle_manifest.json").write_bytes(uploaded["bundle_manifest.json"])
+        manifest = _read_manifest(staging / "bundle_manifest.json")
+        if manifest.get("bundle_id") != COLAB_NOTEBOOK_BUILD_BUNDLE_ID:
+            raise RuntimeError("Los archivos seleccionados no pertenecen al bundle esperado")
+        required = {"bundle_manifest.json", *(name for name, _ in _bundle_specs(manifest))}
+        missing = sorted(required - set(uploaded))
+        if missing:
+            raise FileNotFoundError(f"Faltaron archivos del bundle: {missing}")
+        for name in required - {"bundle_manifest.json"}:
+            (staging / name).write_bytes(uploaded[name])
+    else:
+        raise ValueError("COLAB_BUNDLE_SOURCE debe ser 'github' o 'local_upload'")
+    return staging, _verify_expected_bundle(staging)
+
+def _write_latest_pointer(releases_dir, release_dir, manifest):
+    pointer = {
+        "schema_version": "1.0.0",
+        "bundle_id": manifest["bundle_id"],
+        "core_sha256": manifest["core"]["sha256"],
+        "manifest_sha256": _sha256(Path(release_dir) / "bundle_manifest.json"),
+        "published_at": datetime.now(timezone.utc).isoformat(),
+    }
+    latest_path = Path(releases_dir) / "latest.json"
+    partial = Path(releases_dir) / f".latest-{uuid.uuid4().hex}.json"
+    partial.write_text(json.dumps(pointer, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    os.replace(partial, latest_path)
+    return pointer
+
+def _publish_expected_bundle(staging, releases_dir):
+    manifest = _verify_expected_bundle(staging)
+    releases_dir = Path(releases_dir)
+    releases_dir.mkdir(parents=True, exist_ok=True)
+    release_dir = releases_dir / COLAB_NOTEBOOK_BUILD_BUNDLE_ID
+    if release_dir.exists():
+        _verify_expected_bundle(release_dir)
+        release_status = "already_present_and_verified"
+    else:
+        partial = releases_dir / f".{COLAB_NOTEBOOK_BUILD_BUNDLE_ID}.partial-{uuid.uuid4().hex}"
+        partial.mkdir()
+        try:
+            for name, _ in _bundle_specs(manifest):
+                shutil.copyfile(Path(staging) / name, partial / name)
+            shutil.copyfile(
+                Path(staging) / "bundle_manifest.json",
+                partial / "bundle_manifest.json",
+            )
+            _verify_expected_bundle(partial)
+            os.replace(partial, release_dir)
+        finally:
+            if partial.exists():
+                shutil.rmtree(partial)
+        release_status = "auto_published_and_verified"
+    pointer = _write_latest_pointer(releases_dir, release_dir, manifest)
+    return {
+        "status": release_status,
+        "release_dir": release_dir,
+        "latest_pointer": pointer,
+    }
+
+def _ensure_expected_drive_release(releases_dir):
+    release_dir = Path(releases_dir) / COLAB_NOTEBOOK_BUILD_BUNDLE_ID
+    if _bundle_is_current(
+        release_dir,
+        release_dir / "bundle_manifest.json",
+        COLAB_NOTEBOOK_BUILD_BUNDLE_ID,
+    ):
+        return {"status": "already_present_and_verified", "release_dir": release_dir}
+    if not COLAB_AUTO_PUBLISH_MISSING_BUNDLE:
+        raise RuntimeError(
+            "Drive no contiene el release esperado y COLAB_AUTO_PUBLISH_MISSING_BUNDLE=False"
         )
-    except (KeyError, TypeError, ValueError, json.JSONDecodeError):
-        return False
+    staging, _ = _acquire_expected_bundle()
+    return _publish_expected_bundle(staging, releases_dir)
 
 def _activate_verified_drive_release(release_dir, bundle_dir, expected_bundle_id):
     release_manifest_path = release_dir / "bundle_manifest.json"
@@ -326,37 +470,29 @@ if IN_COLAB:
     DRIVE_ROOT = Path("/content/drive/MyDrive") / COLAB_DRIVE_FOLDER
     BUNDLE_DIR = DRIVE_ROOT / "bundle"
     RELEASES_DIR = DRIVE_ROOT / "bundle_releases"
+    RELEASES_DIR.mkdir(parents=True, exist_ok=True)
+    release_check = _ensure_expected_drive_release(RELEASES_DIR)
+    latest_bundle_id = COLAB_NOTEBOOK_BUILD_BUNDLE_ID
+    RELEASE_DIR = RELEASES_DIR / latest_bundle_id
+    manifest = _verify_expected_bundle(RELEASE_DIR)
+    release_manifest_path = RELEASE_DIR / "bundle_manifest.json"
     latest_pointer_path = RELEASES_DIR / "latest.json"
     latest_pointer = _read_manifest(latest_pointer_path) if latest_pointer_path.is_file() else {}
-    latest_bundle_id = str(latest_pointer.get("bundle_id") or "")
     latest_matches_notebook = (
-        len(latest_bundle_id) == 64
-        and latest_bundle_id == COLAB_NOTEBOOK_BUILD_BUNDLE_ID
+        latest_pointer.get("bundle_id") == COLAB_NOTEBOOK_BUILD_BUNDLE_ID
         and latest_pointer.get("core_sha256") == COLAB_EXPECTED_CORE_SHA256
+        and latest_pointer.get("manifest_sha256") == _sha256(release_manifest_path)
     )
     if latest_matches_notebook:
-        release_source = "latest_pointer"
-        RELEASE_DIR = RELEASES_DIR / latest_bundle_id
-        expected_manifest_sha256 = latest_pointer.get("manifest_sha256")
+        release_source = (
+            "auto_published_from_" + COLAB_BUNDLE_SOURCE
+            if release_check["status"] == "auto_published_and_verified"
+            else "latest_pointer"
+        )
     else:
         # Un cuaderno reproducible puede activar su release inmutable exacto aunque
         # latest todavía apunte a otra versión; jamás mezcla código e inputs.
         release_source = "notebook_pinned_release"
-        latest_bundle_id = COLAB_NOTEBOOK_BUILD_BUNDLE_ID
-        RELEASE_DIR = RELEASES_DIR / latest_bundle_id
-        pinned_manifest_path = RELEASE_DIR / "bundle_manifest.json"
-        if not _bundle_is_current(RELEASE_DIR, pinned_manifest_path, latest_bundle_id):
-            raise RuntimeError(
-                "Drive no contiene ni latest compatible ni el release inmutable fijado por este "
-                "cuaderno. Ejecute 02_00_preparacion_bundle_colab.ipynb y publique el bundle exacto."
-            )
-        pinned_manifest = _read_manifest(pinned_manifest_path)
-        if pinned_manifest.get("core", {}).get("sha256") != COLAB_EXPECTED_CORE_SHA256:
-            raise RuntimeError("El release fijado por el cuaderno contiene un core inesperado")
-        expected_manifest_sha256 = _sha256(pinned_manifest_path)
-    release_manifest_path = RELEASE_DIR / "bundle_manifest.json"
-    if not release_manifest_path.is_file() or _sha256(release_manifest_path) != expected_manifest_sha256:
-        raise RuntimeError("El manifiesto del release de Drive falta o no coincide con su referencia")
     manifest_path = BUNDLE_DIR / "bundle_manifest.json"
     bundle_activated = False
     modules_loaded_before_update = any(
@@ -370,9 +506,8 @@ if IN_COLAB:
             bundle_activated = True
         except Exception as exc:
             raise RuntimeError(
-                "No fue posible activar la versión esperada desde Google Drive. Ejecute en Colab "
-                "02_00_preparacion_bundle_colab.ipynb, confirme status=published_to_drive y "
-                f"compruebe que exista {RELEASE_DIR}."
+                "No fue posible activar la versión esperada desde Google Drive después de "
+                f"verificar o autopublicar {RELEASE_DIR}."
             ) from exc
     else:
         manifest = _read_manifest(manifest_path)
@@ -427,6 +562,7 @@ if IN_COLAB:
         'bundle_id': manifest['bundle_id'],
         'bundle_del_notebook_al_generarse': COLAB_NOTEBOOK_BUILD_BUNDLE_ID,
         'origen_del_release': release_source,
+        'estado_del_release': release_check['status'],
         'core_sha256': expected_core,
         'generado': manifest.get('generated_at'),
         'versión_inmutable_drive': RELEASE_DIR,
@@ -447,30 +583,18 @@ show_summary('Prompt operacional vigente', {'ruta': OPERATIONAL_PROMPT, 'versió
 
 
 def colab_bundle_identity() -> dict[str, str]:
-    """Fija en los notebooks el bundle local y comprueba que su core refleje src/."""
+    """Fija el bundle local y lo reconstruye automáticamente cuando quedó obsoleto."""
+
     global _COLAB_BUNDLE_IDENTITY
     if _COLAB_BUNDLE_IDENTITY is not None:
         return _COLAB_BUNDLE_IDENTITY
-    manifest_path = ROOT / "resultados" / "colab_bundle" / "bundle_manifest.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    from prepare_colab_bundle import build_core_archive, bundle_id_for_manifest
+    from prepare_colab_bundle import ensure_prepared_bundle
 
-    with tempfile.TemporaryDirectory(prefix="moderacion_peru_core_check_") as temporary:
-        rebuilt = build_core_archive(Path(temporary) / "project_core.zip")
-    declared_core = str(manifest["core"]["sha256"])
-    if rebuilt["sha256"] != declared_core:
-        raise RuntimeError(
-            "resultados/colab_bundle está desactualizado respecto de src/. Ejecute primero "
-            "`python tools/prepare_colab_bundle.py --destination resultados/colab_bundle`."
-        )
-    computed_bundle_id = bundle_id_for_manifest(manifest)
-    if manifest.get("bundle_id") != computed_bundle_id:
-        raise RuntimeError(
-            "bundle_manifest.json no tiene un bundle_id válido; regenere el bundle"
-        )
+    bundle_dir = ROOT / "resultados" / "colab_bundle"
+    manifest = ensure_prepared_bundle(bundle_dir)
     _COLAB_BUNDLE_IDENTITY = {
-        "bundle_id": computed_bundle_id,
-        "core_sha256": declared_core,
+        "bundle_id": str(manifest["bundle_id"]),
+        "core_sha256": str(manifest["core"]["sha256"]),
     }
     return _COLAB_BUNDLE_IDENTITY
 
@@ -1808,7 +1932,9 @@ def create(
                     "github_or_browser_upload_to_google_drive"
                     if colab_publisher
                     else (
-                        "google_drive_versioned_releases" if colab_notebook_id else None
+                        "github_or_browser_upload_with_drive_versioned_releases"
+                        if colab_notebook_id
+                        else None
                     )
                 ),
                 "expected_gpu": (
@@ -1820,7 +1946,7 @@ def create(
                 "bundle_resolution": (
                     "publishes_drive_latest_pointer"
                     if colab_publisher
-                    else "drive_latest_pointer" if bundle_identity else None
+                    else "auto_publish_missing_drive_release" if bundle_identity else None
                 ),
                 "expected_core_sha256": (
                     bundle_identity["core_sha256"] if bundle_identity else None
@@ -1868,10 +1994,11 @@ def create(
                     else "`Select Kernel > Colab`; esta campaña API funciona con runtime CPU. "
                 )
                 + "El notebook permanece local; "
-                "Drive transporta solo versiones inmutables del bundle. Si la copia activa no coincide, "
-                "la celda lee `bundle_releases/latest.json`, verifica todos sus SHA-256 y promueve "
-                "automáticamente esa versión. "
-                "Ejecute antes `02_00` directamente en Colab. Edite `COLAB_RUN_ID` para separar "
+                "Drive transporta solo versiones inmutables del bundle. La celda detecta si falta el "
+                "release exacto: en ese único caso lo obtiene desde GitHub —o mediante `local_upload`—, "
+                "verifica todos sus SHA-256 y lo publica de forma atómica. Después promueve la copia "
+                "activa cuando sea necesario; ya no requiere ejecutar `02_00` previamente. Edite "
+                "`COLAB_RUN_ID` para separar "
                 "experimentos. La compatibilidad de `drive.mount()` desde VS Code requiere la extensión "
                 "v0.2.1 o posterior [@googlecolab2026vscode]. La integridad del bundle se comprueba con "
                 "SHA-256 [@nist2015sha]. No sincronice cachés de modelos ni escriba checkpoints "
