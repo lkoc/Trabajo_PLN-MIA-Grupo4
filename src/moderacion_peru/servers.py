@@ -90,6 +90,14 @@ def _is_labeling_excluded(
     return str(row.get("decision_status") or "") == "excluded"
 
 
+def _requires_labeling_action(
+    row: dict[str, Any], latest_reviews: dict[str, dict[str, Any]]
+) -> bool:
+    """Indica si falta una decisión final o el revisor decidió diferirla."""
+
+    return _labeling_filter_values(row, latest_reviews)[2] in {"pending", "deferred"}
+
+
 def _labeling_filter_values(
     row: dict[str, Any], latest_reviews: dict[str, dict[str, Any]]
 ) -> tuple[set[str], set[str], str]:
@@ -230,6 +238,7 @@ def _labeling_progress(
     *,
     priority_only: bool = False,
     urgent_only: bool = False,
+    action_only: bool = False,
     excluded_only: bool = False,
     cohort: str = "",
     filter_labels: set[str] | None = None,
@@ -260,6 +269,10 @@ def _labeling_progress(
         ]
     elif urgent_only:
         selected_rows = [row for row in cohort_rows if _is_labeling_urgent(row)]
+    elif action_only:
+        selected_rows = [
+            row for row in cohort_rows if _requires_labeling_action(row, latest_reviews)
+        ]
     elif priority_only:
         selected_rows = [
             row
@@ -1283,6 +1296,9 @@ def serve(
         for row in campaign_rows
     )
     labeling_urgent_total = sum(_is_labeling_urgent(row) for row in campaign_rows)
+    labeling_action_total = sum(
+        _requires_labeling_action(row, labeling_reviews) for row in campaign_rows
+    )
     labeling_pro_intermediate_total = sum(
         "pro" in str(row.get("annotator_model") or "").casefold()
         and (
@@ -1499,6 +1515,7 @@ def serve(
                         "campaign_total": len(campaign_rows),
                         "campaign_priority_total": labeling_priority_total,
                         "campaign_urgent_total": labeling_urgent_total,
+                        "campaign_action_total": labeling_action_total,
                         "campaign_excluded_total": sum(
                             _is_labeling_excluded(row, labeling_reviews)
                             for row in campaign_rows
@@ -1515,6 +1532,11 @@ def serve(
                         "campaign_urgent_rule": (
                             "Conflicto entre propuestas de máxima prioridad que la "
                             "consolidación no pudo resolver automáticamente."
+                        ),
+                        "campaign_action_rule": (
+                            "Chunks sin decisión final o diferidos expresamente. "
+                            "Una decisión CODEX o humana superior cierra un "
+                            "needs_review intermedio de Pro."
                         ),
                         "campaign_excluded_rule": (
                             "Chunks cuya decisión vigente los deja fuera del dataset "
@@ -1552,6 +1574,7 @@ def serve(
                     queue == "priority" or query.get("priority", ["0"])[0] == "1"
                 )
                 urgent_only = queue == "urgent"
+                action_only = queue == "action"
                 excluded_only = queue == "excluded"
                 filter_labels = {value for value in query.get("label", []) if value}
                 filter_flags = {value for value in query.get("flag", []) if value}
@@ -1567,7 +1590,7 @@ def serve(
                         offset=offset,
                         limit=limit,
                         cohort=cohort,
-                        only_pending=only_pending,
+                        only_pending=only_pending or action_only,
                         priority_only=priority_only,
                         urgent_only=urgent_only,
                         excluded_only=excluded_only,
@@ -1601,6 +1624,7 @@ def serve(
                     queue == "priority" or query.get("priority", ["0"])[0] == "1"
                 )
                 urgent_only = queue == "urgent"
+                action_only = queue == "action"
                 excluded_only = queue == "excluded"
                 cohort = query.get("cohort", [""])[0]
                 filter_labels = {value for value in query.get("label", []) if value}
@@ -1616,6 +1640,7 @@ def serve(
                         labeling_reviews,
                         priority_only=priority_only,
                         urgent_only=urgent_only,
+                        action_only=action_only,
                         excluded_only=excluded_only,
                         cohort=cohort,
                         filter_labels=filter_labels,

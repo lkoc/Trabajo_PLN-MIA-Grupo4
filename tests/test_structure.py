@@ -56,6 +56,7 @@ def test_active_notebooks_are_ordered_and_clean():
         "02_01_etiquetado_deepseek_flash_pro.ipynb",
         "02_03_revision_llm_dirigida.ipynb",
         "02_04_consolidacion_validacion_humana.ipynb",
+        "02_05_cierre_humano_snapshot.ipynb",
     }
     optionally_executed_notebooks = {
         "01_015_ampliacion_dirigida_minorias.ipynb",
@@ -248,7 +249,7 @@ def test_required_frontends_are_small_templates():
     assert "taxonomy.safe_label" in human_source
     assert "event.target.value===taxonomy.safe_label" in human_source
     assert "/api/progress" in human_source
-    assert "query.set('pending','1')" in human_source
+    assert "state.mode==='action'" in human_source
     assert "previous_text" in human_source
     assert "localStorage" in human_source
     assert "display_name" in human_source
@@ -262,9 +263,11 @@ def test_required_frontends_are_small_templates():
     assert "Comparar familias" in production_source
     assert "Dataset para reentrenar" in production_source
     assert "event.key.toLowerCase()==='r'" in human_source
-    assert "review.action==='defer'" in human_source
+    assert "action==='defer'" in human_source
     assert "updateFlagAvailability" in human_source
-    assert "Diferido · pendiente" in human_source
+    assert "Diferido · requiere acción" in human_source
+    assert "Resuelto · decisión automática" in human_source
+    assert "Todos los chunks" in human_source
     assert "Sugerencia automática" in human_source
     assert "revealBtn" not in human_source
     assert '<dialog id="contextDialog"' in human_source
@@ -285,6 +288,8 @@ def test_required_frontends_are_small_templates():
     assert "¿Qué hace cada botón?" in human_source
     assert "Prioritarios Pro" in human_source
     assert "Urgentes" in human_source
+    assert "Requieren acción" in human_source
+    assert 'data-mode="action"' in human_source
     assert 'data-mode="all"' in human_source
     assert '<dialog id="filterDialog"' in human_source
     assert "Acerca de" in human_source

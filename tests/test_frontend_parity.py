@@ -16,6 +16,7 @@ from moderacion_peru.servers import (
     _is_labeling_excluded,
     _is_labeling_priority,
     _is_labeling_urgent,
+    _requires_labeling_action,
     _labeling_bulk_events,
     _labeling_campaign_page,
     _labeling_dashboard,
@@ -130,6 +131,42 @@ def test_labeling_urgent_and_pro_priority_queues_are_distinct():
         "pro-safe",
     ]
     assert _labeling_progress(rows, higher_reviews, priority_only=True)["total"] == 2
+
+
+def test_labeling_action_queue_contains_only_pending_or_deferred_cases():
+    rows = [
+        {"chunk_id": "automatic", "decision_status": "resolved"},
+        {"chunk_id": "pending", "decision_status": "needs_review"},
+        {"chunk_id": "deferred", "decision_status": "resolved"},
+        {"chunk_id": "human", "decision_status": "needs_review"},
+    ]
+    reviews = {
+        "deferred": {"chunk_id": "deferred", "action": "defer"},
+        "human": {
+            "chunk_id": "human",
+            "action": "modify",
+            "final_labels": ["SEGURO"],
+        },
+    }
+
+    assert [_requires_labeling_action(row, reviews) for row in rows] == [
+        False,
+        True,
+        True,
+        False,
+    ]
+    action_page = _labeling_campaign_page(
+        rows,
+        reviews,
+        offset=0,
+        limit=10,
+        only_pending=True,
+    )
+    assert [row["chunk_id"] for row in action_page["rows"]] == [
+        "pending",
+        "deferred",
+    ]
+    assert _labeling_progress(rows, reviews, action_only=True)["total"] == 2
 
 
 def test_labeling_excluded_queue_uses_latest_effective_decision():
