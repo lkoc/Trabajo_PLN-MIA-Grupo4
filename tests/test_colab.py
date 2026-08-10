@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+import ast
 import gzip
+import hashlib
 import json
+import os
+import shutil
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -12,6 +18,98 @@ from moderacion_peru.schemas import HardwareRecord
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _generated_colab_bundle_functions() -> dict[str, object]:
+    notebook = json.loads(
+        (ROOT / "flujo/03_entrenamiento/03_02_transformers_planos.ipynb").read_text(
+            encoding="utf-8"
+        )
+    )
+    code_sources = [
+        "".join(cell["source"])
+        if isinstance(cell["source"], list)
+        else str(cell["source"])
+        for cell in notebook["cells"]
+        if cell["cell_type"] == "code"
+    ]
+    setup = next(
+        source for source in code_sources if "def _ensure_expected_drive_release" in source
+    )
+    tree = ast.parse(setup)
+    function_names = {
+        "_sha256",
+        "_read_manifest",
+        "_bundle_id_for_manifest",
+        "_bundle_specs",
+        "_verify_expected_bundle",
+        "_bundle_is_current",
+        "_write_latest_pointer",
+        "_publish_expected_bundle",
+        "_ensure_expected_drive_release",
+    }
+    selected = [
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name in function_names
+    ]
+    namespace = {
+        "Path": Path,
+        "datetime": datetime,
+        "timezone": timezone,
+        "hashlib": hashlib,
+        "json": json,
+        "os": os,
+        "shutil": shutil,
+        "uuid": uuid,
+        "COLAB_NOTEBOOK_BUILD_BUNDLE_ID": "fixture-pending",
+        "COLAB_EXPECTED_CORE_SHA256": "fixture-pending",
+    }
+    exec(compile(ast.Module(body=selected, type_ignores=[]), "<colab_setup>", "exec"), namespace)
+    return namespace
+
+
+def test_generated_colab_bootstrap_auto_publishes_once_and_then_reuses_release(tmp_path):
+    functions = _generated_colab_bundle_functions()
+    staging = tmp_path / "staging"
+    staging.mkdir()
+    (staging / "project_core.zip").write_bytes(b"core")
+    (staging / "dataset.jsonl.gz").write_bytes(b"dataset")
+    manifest = {
+        "schema_version": "1.0.0",
+        "taxonomy_contract": "fixture",
+        "taxonomy_version": "1.0.0",
+        "core": {
+            "name": "project_core.zip",
+            "sha256": sha256_file(staging / "project_core.zip"),
+        },
+        "inputs": {
+            "dataset": {
+                "archive": "dataset.jsonl.gz",
+                "archive_sha256": sha256_file(staging / "dataset.jsonl.gz"),
+                "source_sha256": "fixture-source",
+            }
+        },
+    }
+    manifest["bundle_id"] = functions["_bundle_id_for_manifest"](manifest)
+    (staging / "bundle_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    functions["COLAB_NOTEBOOK_BUILD_BUNDLE_ID"] = manifest["bundle_id"]
+    functions["COLAB_EXPECTED_CORE_SHA256"] = manifest["core"]["sha256"]
+    functions["_verify_expected_bundle"].__defaults__ = (manifest["bundle_id"],)
+    functions["COLAB_AUTO_PUBLISH_MISSING_BUNDLE"] = True
+    releases = tmp_path / "bundle_releases"
+
+    first = functions["_publish_expected_bundle"](staging, releases)
+    functions["_acquire_expected_bundle"] = lambda: pytest.fail(
+        "No debe volver a adquirir un release ya verificado"
+    )
+    second = functions["_ensure_expected_drive_release"](releases)
+
+    assert first["status"] == "auto_published_and_verified"
+    assert second["status"] == "already_present_and_verified"
+    pointer = json.loads((releases / "latest.json").read_text(encoding="utf-8"))
+    assert pointer["bundle_id"] == manifest["bundle_id"]
+    assert (releases / manifest["bundle_id"] / "dataset.jsonl.gz").read_bytes() == b"dataset"
 
 
 def test_colab_config_syncs_only_declared_inputs_and_keeps_api_on_cpu():

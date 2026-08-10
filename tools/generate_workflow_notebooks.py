@@ -392,7 +392,7 @@ def _write_latest_pointer(releases_dir, release_dir, manifest):
     }
     latest_path = Path(releases_dir) / "latest.json"
     partial = Path(releases_dir) / f".latest-{uuid.uuid4().hex}.json"
-    partial.write_text(json.dumps(pointer, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    partial.write_text(json.dumps(pointer, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
     os.replace(partial, latest_path)
     return pointer
 
