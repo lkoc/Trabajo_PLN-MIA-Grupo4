@@ -1007,7 +1007,14 @@ def _build_hf_model(
         return tokenizer, PeftModel.from_pretrained(base, adapter, is_trainable=True)
     source = str(model_source or spec.model_id)
     revision = None if model_source else spec.revision
-    tokenizer = AutoTokenizer.from_pretrained(source, revision=revision)
+    tokenizer = AutoTokenizer.from_pretrained(
+        source,
+        revision=revision,
+        # All remote model revisions declared by this project are public.  Being
+        # explicit also prevents huggingface_hub from probing Colab's secret
+        # vault when the notebook is executed through the VS Code extension.
+        token=False,
+    )
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
     id2label = {index: label for index, label in enumerate(labels)}
@@ -1019,6 +1026,7 @@ def _build_hf_model(
         label2id={label: index for index, label in id2label.items()},
         problem_type="multi_label_classification",
         ignore_mismatched_sizes=True,
+        token=False,
     )
     model.config.pad_token_id = tokenizer.pad_token_id
     if lora:
@@ -1155,6 +1163,10 @@ def _fit_hf(
         logging_strategy="steps",
         logging_steps=max(1, math.ceil(len(dataset) / max(1, spec.batch_size * 5))),
         report_to=[],
+        # ``label_mask`` is consumed by StructuredTrainer.compute_loss rather than
+        # by model.forward.  Trainer would otherwise classify it as unused and
+        # remove it from every batch before the custom loss can read it.
+        remove_unused_columns=False,
         use_cpu=hardware.backend == "cpu",
         fp16=hardware.backend in {"cuda", "rocm"} and hardware.dtype == "float16",
         bf16=hardware.backend in {"cuda", "rocm", "xpu"}
