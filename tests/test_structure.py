@@ -58,6 +58,8 @@ def test_active_notebooks_are_ordered_and_clean():
         "02_04_consolidacion_validacion_humana.ipynb",
         "02_05_cierre_humano_snapshot.ipynb",
         "03_01_modelos_clasicos.ipynb",
+        "03_02_transformers_planos.ipynb",
+        "03_03_transformer_cascada.ipynb",
         "03_04_transformer_multitarea.ipynb",
         "03_08_auditoria_finas_flags.ipynb",
     }
