@@ -1078,6 +1078,48 @@ def _candidate_asset(candidate: dict[str, Any], value: str | Path | None) -> str
     return str(Path(candidate["candidate_path"]).parent / path)
 
 
+def _hf_validation_metrics(
+    logits: Any,
+    label_ids: Any,
+    *,
+    primary_output_count: int,
+) -> dict[str, float]:
+    """Métrica de selección para cabezas completas o ramas de una cascada."""
+
+    scores_array = np.asarray(logits, dtype=float)
+    truth_array = np.asarray(label_ids, dtype=np.int8)
+    if scores_array.ndim == 1:
+        scores_array = scores_array[:, None]
+    if truth_array.ndim == 1:
+        truth_array = truth_array[:, None]
+    if scores_array.shape != truth_array.shape:
+        raise ValueError("Logits y etiquetas de validation no tienen la misma forma")
+    if not 1 <= primary_output_count <= scores_array.shape[1]:
+        raise ValueError("primary_output_count no coincide con la cabeza del modelo")
+
+    primary_scores = _sigmoid(scores_array[:, :primary_output_count])
+    primary_truth = truth_array[:, :primary_output_count]
+    if primary_output_count == 5:
+        metrics = classification_metrics(primary_truth, primary_scores)
+        return {
+            "macro_auprc_damage": float(
+                metrics["average_precision_macro_damage"]
+            ),
+            "macro_auprc_five": float(metrics["average_precision_macro_five"]),
+        }
+
+    from sklearn.metrics import average_precision_score
+
+    per_output = [
+        float(average_precision_score(primary_truth[:, index], primary_scores[:, index]))
+        for index in range(primary_output_count)
+    ]
+    # Conserva el nombre histórico usado por Trainer y por los checkpoints. En la
+    # compuerta representa AP(ANY_DAMAGE); en la rama de daño, la macro-AP de sus
+    # cuatro categorías.
+    return {"macro_auprc_damage": float(np.mean(per_output))}
+
+
 def _fit_hf(
     model: Any,
     tokenizer: Any,
@@ -1093,6 +1135,7 @@ def _fit_hf(
     *,
     structured_penalty: float = 0.0,
     output_weights: Sequence[float] | None = None,
+    primary_output_count: int = 5,
 ) -> dict[str, Any]:
     try:
         import torch
@@ -1180,13 +1223,11 @@ def _fit_hf(
             if isinstance(evaluation.predictions, tuple)
             else evaluation.predictions
         )
-        scores = _sigmoid(np.asarray(logits, dtype=float))[:, :5]
-        truth = np.asarray(evaluation.label_ids, dtype=np.int8)[:, :5]
-        metrics = classification_metrics(truth, scores)
-        return {
-            "macro_auprc_damage": float(metrics["average_precision_macro_damage"]),
-            "macro_auprc_five": float(metrics["average_precision_macro_five"]),
-        }
+        return _hf_validation_metrics(
+            logits,
+            evaluation.label_ids,
+            primary_output_count=primary_output_count,
+        )
 
     trainer = StructuredTrainer(
         model=model,
@@ -1453,6 +1494,7 @@ def train_neural_experiment(
             output_weights=[1.0]
             + [0.3] * len(taxonomy.fine_labels)
             + [0.2] * len(taxonomy.flags),
+            primary_output_count=1,
         )
         training_elapsed += time.perf_counter() - phase_started
         _notify_progress(
@@ -1482,6 +1524,7 @@ def train_neural_experiment(
             spec,
             run_dir / "trainer_damage",
             hardware,
+            primary_output_count=4,
         )
         training_elapsed += time.perf_counter() - phase_started
         _notify_progress(

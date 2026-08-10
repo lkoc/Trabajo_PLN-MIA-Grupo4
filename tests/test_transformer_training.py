@@ -9,6 +9,37 @@ from moderacion_peru import experiments
 from moderacion_peru.models import TrainingSpecification
 
 
+def test_hf_validation_metrics_supports_gate_and_damage_cascade_heads():
+    gate_truth = np.asarray([[0], [0], [1], [1]], dtype=np.int8)
+    gate_logits = np.asarray([[-5.0], [-2.0], [2.0], [5.0]])
+    damage_truth = np.asarray(
+        [
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+        ],
+        dtype=np.int8,
+    )
+    damage_logits = np.where(damage_truth == 1, 5.0, -5.0)
+
+    gate_metrics = experiments._hf_validation_metrics(
+        gate_logits,
+        gate_truth,
+        primary_output_count=1,
+    )
+    damage_metrics = experiments._hf_validation_metrics(
+        damage_logits,
+        damage_truth,
+        primary_output_count=4,
+    )
+
+    assert gate_metrics["macro_auprc_damage"] == 1.0
+    assert damage_metrics["macro_auprc_damage"] == 1.0
+    assert "macro_auprc_five" not in gate_metrics
+    assert "macro_auprc_five" not in damage_metrics
+
+
 def test_public_hf_model_load_does_not_probe_for_an_implicit_token(monkeypatch):
     calls = []
 

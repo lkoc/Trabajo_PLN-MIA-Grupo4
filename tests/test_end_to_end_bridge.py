@@ -473,7 +473,12 @@ def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(
     monkeypatch.setattr(
         experiments, "_build_hf_model", lambda *args, **kwargs: (object(), DummyModel())
     )
-    monkeypatch.setattr(experiments, "_fit_hf", lambda *args, **kwargs: None)
+    fit_primary_counts = []
+
+    def fake_fit(*args, **kwargs):
+        fit_primary_counts.append(kwargs.get("primary_output_count", 5))
+
+    monkeypatch.setattr(experiments, "_fit_hf", fake_fit)
 
     def fake_predict(model, tokenizer, rows, max_length, hardware, output_count):
         coarse = experiments.encode_targets(rows).astype(float)
@@ -520,3 +525,5 @@ def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(
             load_taxonomy().target_labels
         )
         assert first["candidate"]["checkpoint_manifest"] == "checkpoint_manifest.json"
+
+    assert fit_primary_counts == [5, 5, 1, 4, 5, 5, 5]
