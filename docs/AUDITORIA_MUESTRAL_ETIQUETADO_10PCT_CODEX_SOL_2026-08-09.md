@@ -1,4 +1,4 @@
-# Auditoría del etiquetado peruano: muestra estratificada del 10 % y búsquedas dirigidas de corpus completo
+# Auditoría del etiquetado peruano: panel estratificado longitudinal y búsquedas dirigidas
 
 **Fecha de corte:** 9 de agosto de 2026  
 **Supervisor de referencia:** `CODEX`  
@@ -8,18 +8,28 @@
 **Carácter de las decisiones:** referencial, trazable y human-in-the-loop; una
 decisión humana posterior puede prevalecer sobre cualquier modelo.
 
-> **Actualización integrada:** se incorporaron la resolución de los 40.901
-> chunks elegibles que aún no tenían categoría gruesa y la comparación
-> reproducible Flash/Pro–CODEX–Sol-EH sobre los 16.694 casos de la muestra. El
-> detalle operativo complementario está en
+> **Corte final actualizado:** la campaña creció de 166.940 a **182.461 chunks**
+> y el dataset peruano entrenable de 157.719 a **173.240**. Se incorporaron
+> 15.521 chunks nuevos de 393 videos, la cascada DeepSeek v3.2 y la adjudicación
+> CODEX de las 941 propuestas Pro que aún requerían revisión. El estado final
+> tiene 173.240 decisiones entrenables, 9.221 exclusiones reversibles y **cero
+> pendientes o diferidos efectivos**. El panel histórico de 16.694 IDs se
+> mantiene congelado para comparación longitudinal; ya no se presenta como un
+> 10 % exacto del corpus ampliado.
+>
+> La resolución histórica de los 40.901 chunks sin categoría gruesa se conserva
+> como parte del proceso. Su detalle operativo está en
 > `docs/ADJUDICACION_CHUNKS_SIN_ETIQUETA_CODEX_2026-08-09.md`.
 
 Las cantidades de este documento se calcularon a partir de
 `datos/etiquetado/consolidado/anotaciones_v2.jsonl`, la última decisión por
 `chunk_id` de `datos/etiquetado/humano/labeling_events_v2.jsonl` y los
-archivos `primary_flash.jsonl`, `review_pro.jsonl` y manifiestos de
-`datos/etiquetado/cascada_deepseek_v4/`. La reconstrucción comparativa se
-automatizó en `tools/report_audit_comparison.py`. Son resultados del proyecto,
+archivos `primary_flash_v3_2.jsonl`, `review_pro_v3_2.jsonl` y manifiestos de
+`datos/etiquetado/cascada_deepseek_v4/`. La comparación longitudinal se
+automatizó en `tools/report_audit_comparison.py` y el corte censal en
+`tools/report_audit_current_state.py`. Sus salidas actuales son
+`docs/artefactos/auditoria_16k_panel_actual_v3_2_metrics.json` y
+`docs/artefactos/auditoria_estado_final_182461.json`. Son resultados del proyecto,
 no afirmaciones tomadas de fuentes externas. La documentación del dataset y
 del contexto de producción se explicita porque favorece la reproducibilidad y
 el análisis de sesgos [1], [2].
@@ -30,8 +40,8 @@ el análisis de sesgos [1], [2].
 
 | Magnitud | Antes del filtro | Dataset peruano elegible | Variación |
 |---|---:|---:|---:|
-| Chunks | 166.940 | 157.719 | −9.221 (−5,524 %) |
-| Videos | 4.992 | 4.513 | −479 (−9,595 %) |
+| Chunks | 182.461 | 173.240 | −9.221 (−5,054 %) |
+| Videos | 5.385 | 4.906 | −479 (−8,895 %) |
 | Canales con al menos un chunk | 322 | 276 | −46 (−14,286 %) |
 
 El filtro encontró 78 canales de origen extranjero con país identificable. No
@@ -43,7 +53,10 @@ canales afectados; 46 canales quedaron completamente fuera y los restantes
 conservaron al menos un video sobre el Perú.
 
 La exclusión es lógica y reversible: cada chunk recibió un evento `reject`, no
-fue borrado físicamente. Los canales con más material retirado fueron Infobae
+fue borrado físicamente. El incremento de 15.521 chunks provino de canales PE
+ya admitidos y no añadió nuevas exclusiones; por eso el numerador excluido se
+mantiene en 9.221 y su proporción baja de 5,524 % en el corte anterior a
+5,054 % en el corte ampliado. Los canales con más material retirado fueron Infobae
 (818 chunks), Instituto Nacional de Formación Política de Morena (796), 24
 Horas–TVN Chile (746), La Negra Candela Oficial (723) y W Radio Colombia (677).
 La contaminación extranjera ajena al Perú queda, por tanto, resuelta en el
@@ -51,106 +64,116 @@ estado efectivo usado por esta auditoría.
 
 ### 1.2. Distribución por canal y video
 
-En los 157.719 chunks elegibles:
+En los 173.240 chunks elegibles:
 
 | Unidad | Número | Media de chunks | Mediana | Mínimo | Máximo |
 |---|---:|---:|---:|---:|---:|
-| Canal | 276 | 571,45 | 25,5 | 1 | 30.888 |
-| Video | 4.513 | 34,95 | 19 | 1 | 767 |
+| Canal | 276 | 627,68 | 25,5 | 1 | 33.203 |
+| Video | 4.906 | 35,31 | 19 | 1 | 767 |
 
 Los diez canales con más chunks son:
 
 | Canal | Chunks |
 |---|---:|
-| Hablando Huevadas | 30.888 |
-| Arde Troya con Juliana Oxenford | 11.596 |
-| Goblinciano | 6.525 |
+| Hablando Huevadas | 33.203 |
+| Arde Troya con Juliana Oxenford | 12.295 |
+| Nunca MÁS | 11.364 |
+| Goblinciano | 8.166 |
 | Nada Espacial | 6.224 |
+| PBO | 5.970 |
 | Sin Guion con Rosa María Palacios | 5.623 |
-| Todo Good | 5.071 |
-| Nunca MÁS | 4.716 |
+| Todo Good | 5.148 |
 | ATV Noticias | 4.504 |
 | RPP Noticias | 4.348 |
-| DÍA D | 4.129 |
 
 Como resumen exploratorio —no como metadato editorial certificado— se aplicó
 una heurística reproducible sobre el nombre del canal:
 
 | Tipo heurístico | Canales | Chunks | Porcentaje de chunks |
 |---|---:|---:|---:|
-| Noticias/comentario | 63 | 58.823 | 37,30 % |
-| Entretenimiento/comedia | 9 | 58.586 | 37,15 % |
-| Otros/mixto | 204 | 40.310 | 25,56 % |
+| Noticias/comentario | 63 | 69.421 | 40,07 % |
+| Entretenimiento/comedia | 9 | 63.509 | 36,66 % |
+| Otros/mixto | 204 | 40.310 | 23,27 % |
 
-Esta concentración importa: un mismo error sistemático en pocos canales de
-gran tamaño puede mover más el dataset que errores dispersos en muchos canales.
+La membresía heurística de los 276 canales no cambió. Los 15.521 chunks nuevos
+se concentraron en siete canales: Nunca MÁS (6.648), PBO (3.251), Hablando
+Huevadas (2.315), Goblinciano (1.641), Magaly TV La Firme (890), Arde Troya
+(699) y Todo Good (77). Esta concentración importa: un mismo error sistemático
+en pocos canales de gran tamaño puede mover más el dataset que errores
+dispersos en muchos canales.
 
 ### 1.3. Estado final de las etiquetas
 
 `SEGURO` es excluyente y las cuatro categorías de daño son multietiqueta; por
 eso la suma de asignaciones de daño puede superar el número de chunks dañinos.
 
-| Estado o etiqueta | Chunks/asignaciones | % de los 157.719 chunks |
+| Estado o etiqueta | Chunks/asignaciones | % de los 173.240 chunks |
 |---|---:|---:|
-| `SEGURO` | 144.834 | 91,830 % |
+| `SEGURO` | 159.077 | 91,825 % |
 | Sin decisión final / contexto pendiente | 0 | 0,000 % |
-| Al menos una categoría de daño | 12.885 | 8,170 % |
-| `ACOSO_AMENAZA` | 7.237 | 4,589 % |
-| `CONTENIDO_SEXUAL` | 3.662 | 2,322 % |
-| `RACISMO_DISCRIMINACION` | 2.506 | 1,589 % |
-| `ATAQUE_POR_GENERO_IDENTIDAD` | 2.185 | 1,385 % |
+| Al menos una categoría de daño | 14.163 | 8,175 % |
+| `ACOSO_AMENAZA` | 8.276 | 4,777 % |
+| `CONTENIDO_SEXUAL` | 3.875 | 2,237 % |
+| `RACISMO_DISCRIMINACION` | 2.570 | 1,483 % |
+| `ATAQUE_POR_GENERO_IDENTIDAD` | 2.331 | 1,346 % |
 
 Las categorías menos representadas son ataque por género/identidad y
 racismo/discriminación. Sobre las cuatro cuentas de daño, la razón
-máximo/mínimo es **3,312**, el coeficiente de variación poblacional es
-**0,514** y la entropía de Shannon normalizada es **0,913**. La entropía
+máximo/mínimo es **3,550**, el coeficiente de variación poblacional es
+**0,561** y la entropía de Shannon normalizada es **0,898**. La entropía
 relativamente alta indica que las cuatro categorías están presentes; la razón
 y el coeficiente de variación muestran, sin embargo, una concentración clara
 en acoso/amenaza. La
 taxonomía distingue blanco, modalidad y alcance porque “lenguaje abusivo” no es
 una clase semántica única [3], [4].
 
-La resolución residual añadió 39.082 `SEGURO` y 1.819 chunks con al menos un
-daño. Sus asignaciones —que pueden solaparse— fueron 900 de acoso/amenaza, 569
-sexuales, 355 de racismo/discriminación y 158 de ataque por género/identidad.
-El estado final tiene, por tanto, **cobertura gruesa del 100 %** de los chunks
-elegibles; cobertura no significa exactitud perfecta.
+La resolución residual histórica añadió 39.082 `SEGURO` y 1.819 chunks con
+daño. El incremento posterior añadió otros **14.243 `SEGURO` y 1.278 chunks
+con daño**; sus asignaciones —que pueden solaparse— fueron 1.039 de
+acoso/amenaza, 213 sexuales, 64 de racismo/discriminación y 146 de ataque por
+género/identidad. Su prevalencia de daño fue 8,234 %, próxima al 8,170 % del
+corte anterior. No se retiró ninguna fila del snapshot previo ni cambió el
+conjunto de etiquetas de sus 157.719 IDs comunes. El estado final mantiene
+**cobertura gruesa del 100 %** de los chunks elegibles; cobertura no significa
+exactitud perfecta.
 
 El daño **no se redujo en términos netos**. En la muestra congelada pasó de
 1.155 a 1.319 chunks (+164; +14,20 %), principalmente porque la resolución de
 abstenciones encontró daños antes ausentes. En el universo, el corte previo a
-la adjudicación residual tenía 11.066 daños efectivos y el final 12.885
-(+1.819; +16,44 %). Al mismo tiempo sí se corrigieron falsos positivos de daño
+la adjudicación residual tenía 11.066 daños efectivos, el snapshot auditado
+anterior 12.885 y el corte ampliado 14.163. El último aumento fue de 1.278
+chunks (+9,919 % respecto de 12.885). Al mismo tiempo sí se corrigieron falsos positivos de daño
 en citas y denuncias; ese movimiento local hacia `SEGURO` fue menor que el
 movimiento opuesto de chunks sin etiqueta hacia daños sustentados. No debe
 confundirse “menos falsos positivos” con “menos daños totales”.
 
-### 1.4. Balance de train después de cerrar `needs_review`
+### 1.4. Balance por split después de cerrar `needs_review`
 
 El archivo canónico `datos/model_ready/v2/dataset_5_salidas.jsonl` se actualizó
 después de la última adjudicación. El snapshot inmutable
-`v2.1.0-05854b628c1a3b4d` aplica la última decisión por chunk, conserva el split
+`v2.1.0-e354b3248f7418f1` aplica la última decisión por chunk, conserva el split
 histórico por `video_id` y usa SHA-256 con semilla `20260805` para videos sin
-asignación previa. Contiene 111.723 filas en `train`, 25.200 en `validation` y
-20.796 en `test`, sin fuga de video; su SHA-256 es
-`d9261b5afe35f2753ec838708398a8152ce1d9113e78ee3f5ec1af6a6f5dc0f6`.
+asignación previa. Contiene 123.239 filas en `train`, 27.317 en `validation` y
+22.684 en `test`, sin fuga de video; su SHA-256 es
+`24d3d81d23c00cb1ba27fcca8c2759a97be5c9932ceaeb60be0a4e9a1cfca783`.
 
 | Split/etiqueta | Train | Validation | Test | Total |
 |---|---:|---:|---:|---:|
-| Chunks | 111.723 | 25.200 | 20.796 | 157.719 |
-| `SEGURO` | 102.467 | 23.251 | 19.116 | 144.834 |
-| Al menos un daño | 9.256 | 1.949 | 1.680 | 12.885 |
-| `ACOSO_AMENAZA` | 5.255 | 1.028 | 954 | 7.237 |
-| `CONTENIDO_SEXUAL` | 2.568 | 590 | 504 | 3.662 |
-| `RACISMO_DISCRIMINACION` | 1.826 | 379 | 301 | 2.506 |
-| `ATAQUE_POR_GENERO_IDENTIDAD` | 1.568 | 346 | 271 | 2.185 |
+| Chunks | 123.239 | 27.317 | 22.684 | 173.240 |
+| `SEGURO` | 112.998 | 25.197 | 20.882 | 159.077 |
+| Al menos un daño | 10.241 | 2.120 | 1.802 | 14.163 |
+| `ACOSO_AMENAZA` | 6.067 | 1.146 | 1.063 | 8.276 |
+| `CONTENIDO_SEXUAL` | 2.723 | 633 | 519 | 3.875 |
+| `RACISMO_DISCRIMINACION` | 1.880 | 382 | 308 | 2.570 |
+| `ATAQUE_POR_GENERO_IDENTIDAD` | 1.674 | 374 | 283 | 2.331 |
 
-En `train`, la razón máximo/mínimo es **3,351**, el coeficiente de variación
-poblacional es **0,521** y la entropía de Shannon normalizada es **0,911**.
-Solo acoso/amenaza y contenido sexual superan 2.000; faltan **174 chunks de
-racismo/discriminación** y **432 de ataque por género/identidad**. Por ello se
-recomienda ampliación dirigida, pero no un raspado indiscriminado de los
-canales dominantes.
+En `train`, la razón máximo/mínimo es **3,624**, el coeficiente de variación
+poblacional es **0,572** y la entropía de Shannon normalizada es **0,895**.
+Como diagnóstico, `train` aislado queda en 1.880 asignaciones de racismo y
+1.674 de género/identidad. Sin embargo, la condición de parada acordada para
+la ampliación es **2.000 por categoría en el total train + validation + test**.
+Ese criterio se cumple: racismo tiene 2.570 y género/identidad 2.331. Por tanto,
+no hace falta otra ronda de scraping para alcanzar el objetivo muestral.
 
 El rendimiento histórico de `train` identifica como fuentes útiles a Hablando
 Huevadas (673 racismo; 783 género/identidad), Goblinciano (637; 174), Juanito y
@@ -167,11 +190,12 @@ sin modificar `01_01`. En vez de fijar una cantidad arbitraria, estima primero
 los chunks positivos por video de cada canal PE dirigido, aplica contracción por
 tamaño histórico, conserva solo 50 % del rendimiento estimado, infla el déficit
 con un factor de seguridad de 1,5 y calcula cuántos canales cubren la meta. Al
-núcleo requerido añade 25 % de canales de margen. En el corte actual resultan
-cuatro canales —tres de núcleo y uno de margen— y 311 candidatos: 239 cuyo split
-estable es `train`, 36 de `validation` y 36 de `test`. Después de etiquetar el
-lote debe recalcular el déficit y repetir solo si alguna cuenta de train sigue
-por debajo de 2.000.
+núcleo requerido añade 25 % de canales de margen. La ejecución completa aportó
+393 videos y 15.521 chunks de siete canales PE. El cuaderno se actualizó para
+recalcular el déficit sobre el total entrenable y detenerse cuando las cuatro
+categorías suman al menos 2.000 entre train, validation y test. Con el corte
+actual `acquisition_needed` debe ser falso; los conteos por split quedan como
+diagnóstico y no activan otra descarga.
 
 La campaña aplica además una compuerta `PERU_ONLY=True` antes de cualquier
 descarga. Solo admite el catálogo peruano curado, canales presentes en el
@@ -197,31 +221,33 @@ local y postura, no una coincidencia léxica.
 
 ```mermaid
 flowchart TD
-    A[166.940 chunks originales] --> B{Filtro de alcance por canal, video y tema Perú}
+    A[182.461 chunks actuales] --> B{Filtro de alcance por canal, video y tema Perú}
     B -->|9.221 ajenos al Perú| X[Eventos reject reversibles]
-    B -->|157.719 elegibles| C[Estado efectivo: última decisión por chunk]
-    C --> D[Muestra SHA-256 de 16.694 chunks en 35 estratos]
+    B -->|173.240 elegibles| C[Estado efectivo: última decisión por chunk]
+    C --> D[Panel longitudinal SHA-256: 16.694 chunks, 35 estratos]
     D --> E[Lectura semántica CODEX–Sol xhigh]
     H[Interacción humana: criterios, excepciones y prioridades] --> E
     E --> F[62 correcciones de alta confianza]
-    C --> G[Búsqueda dirigida sobre los 157.719 chunks]
+    C --> G[Búsqueda dirigida histórica sobre 157.719 chunks]
     H --> G
     G --> I[Sexualidad, identidad, clase, región, amenazas, citas y usos amistosos]
     I --> J[469 chunks únicos adicionales corregidos]
     F --> K[531 correcciones semánticas únicas]
     J --> K
     K --> L[Eventos append-only con revisor CODEX]
-    C --> N[40.901 elegibles residuales sin etiqueta]
+    C --> N[40.901 residuales históricos sin etiqueta]
     N --> O[Jerarquía Flash/Pro v3.1.1 + supervisión CODEX–Sol-EH]
-    O --> P[40.901 decisiones; 0 elegibles pendientes]
-    C --> Q[47.368 estados intermedios needs_review: 35.385 Pro y 11.983 Flash]
-    Q --> R[45.727 decisiones superiores ya registradas: 33.744 Pro y 11.983 Flash]
-    Q --> S[1.641 propuestas Pro no vacías conservadas por CODEX–Sol-EH]
-    S --> T[Eventos accept append-only de prevalencia Pro]
-    R --> U[0 decisiones finales pendientes]
-    T --> U
-    L --> M[Métricas, prompt operativo v3.1.1 e informe]
+    O --> P[40.901 decisiones históricas]
+    V[01_015: 15.521 chunks nuevos, 393 videos PE] --> W[Flash v3.2 sobre 15.521]
+    W --> Y[3.541 enrutados a Pro v3.2]
+    Y --> Z[941 needs_review adjudicados por CODEX]
+    Z --> Z1[909 aceptados y 32 modificados]
+    H --> Z
+    L --> M[Snapshot final: 173.240 entrenables]
     P --> M
+    Z1 --> M
+    M --> U[0 pendientes o diferidos efectivos]
+    U --> R[Auditoría censal + panel longitudinal + reporte]
 ```
 
 ### 2.2. Intervención humana en el ciclo
@@ -245,7 +271,7 @@ cambios de confianza alta. El proceso sigue el principio práctico de diferir
 casos inciertos a un experto, sin confundir deferencia con una etiqueta de
 daño [15].
 
-Una comprobación posterior encontró 47.368 filas con `needs_review=true` en el
+En el corte histórico, una comprobación posterior encontró 47.368 filas con `needs_review=true` en el
 nivel intermedio: 35.385 provenían de Pro y 11.983 de Flash. Ese campo no
 prevalece sobre una decisión CODEX–Sol-EH o humana. Ya existían eventos
 superiores para 45.727 (33.744 Pro y los 11.983 Flash); los otros 1.641 tenían
@@ -255,17 +281,30 @@ añadieron 1.641 eventos `accept` deterministas bajo el lote
 `CODEX-PRO-PRECEDENCE-20260809`: 1.243 corresponden a train, 247 a validation y
 151 a test. Esta normalización de procedencia **no cambió ninguna etiqueta
 semántica ni los conteos del corpus total**; sí evitó que el generador del
-snapshot omitiera esos chunks. El estado jerárquico final comprobado es 157.719
-resueltos, 9.221 excluidos y cero pendientes o diferidos. Para evitar confundir
-una señal histórica con trabajo restante, la interfaz reporta por separado los
-35.385 `needs_review` intermedios de Pro y las cero decisiones finales Pro
-pendientes.
+snapshot omitiera esos chunks.
 
-### 2.3. Muestra estratificada del 10 %
+En la ampliación v3.2, Flash etiquetó los 15.521 chunks nuevos y 3.541 fueron
+enrutados a Pro. Las 941 propuestas Pro con `needs_review` fueron leídas como
+supervisión CODEX: 909 conservaron la etiqueta Pro y 32 se modificaron por una
+contradicción semántica clara. Entre los 349 casos con daño propuesto en esa
+cola, 29 pasaron a `SEGURO` (8,309 %); otras tres modificaciones retiraron una
+categoría parcial. Esto redujo 34 asignaciones de daño, principalmente
+acoso/amenaza y racismo, sin dejar abstenciones como etiquetas vacías.
+
+El estado jerárquico final comprobado es **173.240 resueltos, 9.221 excluidos
+y cero pendientes o diferidos**. Para evitar confundir
+una señal histórica con trabajo restante, la interfaz reporta por separado los
+**34.579 `needs_review` intermedios de Pro actuales**, todos superados por una
+decisión superior, y las cero decisiones finales Pro pendientes.
+
+### 2.3. Panel estratificado longitudinal originado en la muestra del 10 %
 
 Se fijó un tamaño exacto de **16.694 chunks**, igual al 10 % del dataset
-original redondeado y al 10,585 % del universo peruano elegible. La selección
-se congeló antes de corregir etiquetas:
+original redondeado y al 10,585 % del universo peruano elegible de ese corte.
+Tras la ampliación representa 9,149 % de los 182.461 chunks totales y **9,636 %
+de los 173.240 elegibles**. Se conserva como panel fijo: reseleccionarlo habría
+roto la comparación longitudinal. La selección se congeló antes de corregir
+etiquetas:
 
 - semilla textual: `CODEX-AUDIT-20260809-CLEAN`;
 - clave pseudoaleatoria: SHA-256 de `semilla|chunk_id`;
@@ -274,6 +313,14 @@ se congeló antes de corregir etiquetas:
 - asignación proporcional, mínimo de un caso por estrato y distribución de los
   residuos por restos mayores;
 - sin reemplazo y sin chunks extranjeros fuera de alcance.
+
+La actualización añade una segunda capa dirigida de **941 chunks nuevos** que
+Pro marcó para revisión CODEX. No hay solapamiento con el panel congelado: la
+huella auditada combinada es así **17.635 chunks únicos, 10,180 % del universo
+elegible actual**. Esta suma satisface una cobertura de revisión superior al
+10 %, pero no mezcla diseños: las estimaciones inferenciales continúan
+calculándose solo con el panel estratificado, mientras los 941 casos se usan
+para evaluar y corregir errores en la zona de mayor incertidumbre.
 
 La muestra contenía 11.186 `SEGURO`, 4.353 casos sin decisión final y 1.155
 chunks con al menos un daño; 12.341 estaban resueltos y eran comparables de
@@ -294,19 +341,29 @@ resuelto en eventos intermedios.
 | `ATAQUE_POR_GENERO_IDENTIDAD` | 217 | 218 |
 
 La prevalencia final de daño en la muestra fue **7,901 %**, IC Wilson 95 %
-[7,501 %, 8,320 %], cercana al 8,170 % del universo elegible. Esta cercanía es
+[7,501 %, 8,320 %], cercana al 8,175 % del universo elegible actual. Esta cercanía es
 descriptiva: la estratificación y la dependencia de las decisiones requieren
 conservar los estratos en la inferencia posterior.
 
 ### 2.4. Búsqueda dirigida de corpus completo
 
-Después de la muestra se recorrieron **los 157.719 chunks elegibles completos**.
+Después de la muestra se recorrieron **los 157.719 chunks elegibles de ese
+corte histórico completos**.
 El procedimiento tuvo dos niveles:
 
 1. recuperación amplia por familias léxicas, flexiones, errores de transcripción
    y patrones de atribución;
 2. criba semántica por ventana y lectura del chunk: blanco, relación entre
    hablantes, literalidad, atribución, postura y plausibilidad del daño.
+
+Los 15.521 chunks añadidos después no se presentan falsamente como una segunda
+lectura individual CODEX de corpus completo. Sí recibieron el prompt operativo
+3.2 —que incorpora las reglas léxicas y semánticas aprendidas— en Flash, Pro
+cuando correspondía y revisión CODEX de los 941 `needs_review`. Esta cobertura
+jerárquica es distinta de la búsqueda dirigida manual histórica y se reporta
+por separado. Como control ulterior, una búsqueda léxica automatizada sobre el
+incremento puede recuperar candidatos, pero cualquier cambio debe conservar la
+criba semántica de esta sección.
 
 Las familias incluyeron:
 
@@ -371,8 +428,8 @@ favorable a un modelo. Se definieron cuatro objetos distintos:
 
 1. **cascada Flash/Pro consolidada:** salida en
    `anotaciones_v2.jsonl` antes de las decisiones CODEX posteriores;
-2. **Flash aislado:** salida primaria `primary_flash.jsonl`;
-3. **Pro aislado:** salida `review_pro.jsonl`, disponible solo para la cola
+2. **Flash aislado:** salida primaria `primary_flash_v3_2.jsonl`;
+3. **Pro aislado:** salida `review_pro_v3_2.jsonl`, disponible solo para la cola
    dirigida a Pro;
 4. **referencia final CODEX–Sol-EH:** última decisión efectiva tras la lectura
    muestral, las búsquedas dirigidas y la adjudicación híbrida final.
@@ -445,11 +502,12 @@ procedencia es:
 
 | Procedencia de la última decisión | Chunks | % de la muestra |
 |---|---:|---:|
-| Decisión del modelo base conservada tras revisión | 11.968 | 71,690 % |
+| Decisión del modelo base sin evento posterior | 11.797 | 70,667 % |
 | Adjudicación híbrida residual Flash/Pro/CODEX | 4.327 | 25,919 % |
 | Revisión prioritaria CODEX previa a la muestra | 288 | 1,725 % |
 | Cambio muestral explícito de alta confianza | 62 | 0,371 % |
 | Cambio dirigido posterior de alta confianza | 47 | 0,282 % |
+| Aceptación explícita de prevalencia Pro | 171 | 1,024 % |
 | Evento manual previo distinto | 2 | 0,012 % |
 | **Total** | **16.694** | **100,000 %** |
 
@@ -462,48 +520,50 @@ cualitativa de “cambiar solo con alta confianza”.
 
 #### 3.1.3. Cobertura y concordancia contra CODEX–Sol-EH
 
-La cascada y Flash tenían registro para toda la muestra, pero no siempre
-emitieron etiqueta. Pro fue enrutado a 7.083 casos y respondió 3.910: 55,203 %
-de su cola y 23,422 % de la muestra.
+La cascada y Flash tenían registro para todo el panel, pero no siempre
+emitieron etiqueta. En el artefacto v3.2 Pro tuvo registro para 8.199 casos y
+respondió 5.026: 61,300 % de su cola y 30,107 % del panel. El aumento de
+cobertura Pro no altera la selección congelada ni convierte la cola dirigida
+en una muestra aleatoria.
 
 | Magnitud | Cascada Flash/Pro | Flash aislado | Pro aislado |
 |---|---:|---:|---:|
-| Casos respondidos | 12.050 | 11.537 | 3.910 |
-| Cobertura sobre 16.694 | 72,182 % | 69,109 % | 23,422 % |
-| Abstención/no enrutado | 27,818 % | 30,891 % | 76,578 % |
-| Acuerdo exacto selectivo | 0,9933 | 0,9039 | 0,9614 |
-| IC Wilson 95 % del acuerdo | [0,9917; 0,9946] | [0,8984; 0,9091] | [0,9549; 0,9670] |
-| TP / TN / FP / FN, daño binario | 1.062 / 10.912 / 64 / 12 | 1.074 / 9.606 / 821 / 36 | 1.092 / 2.680 / 135 / 3 |
-| Precisión binaria | 0,9432 | 0,5668 | 0,8900 |
-| Sensibilidad binaria | 0,9888 | 0,9676 | 0,9973 |
-| Especificidad binaria | 0,9942 | 0,9213 | 0,9520 |
-| F1 binario | 0,9655 | 0,7148 | 0,9406 |
-| Exactitud balanceada | 0,9915 | 0,9444 | 0,9747 |
-| MCC binario | 0,9623 | 0,7074 | 0,9186 |
-| Kappa de Cohen binario | 0,9620 | 0,6754 | 0,9156 |
+| Casos respondidos | 13.457 | 11.537 | 5.026 |
+| Cobertura sobre 16.694 | 80,610 % | 69,109 % | 30,107 % |
+| Abstención/no enrutado | 19,390 % | 30,891 % | 69,893 % |
+| Acuerdo exacto selectivo | 0,9839 | 0,9039 | 0,9590 |
+| IC Wilson 95 % del acuerdo | [0,9817; 0,9859] | [0,8984; 0,9091] | [0,9532; 0,9642] |
+| TP / TN / FP / FN, daño binario | 1.099 / 12.156 / 184 / 18 | 1.074 / 9.606 / 821 / 36 | 1.099 / 3.735 / 184 / 8 |
+| Precisión binaria | 0,8566 | 0,5668 | 0,8566 |
+| Sensibilidad binaria | 0,9839 | 0,9676 | 0,9928 |
+| Especificidad binaria | 0,9851 | 0,9213 | 0,9530 |
+| F1 binario | 0,9158 | 0,7148 | 0,9197 |
+| Exactitud balanceada | 0,9845 | 0,9444 | 0,9729 |
+| MCC binario | 0,9103 | 0,7074 | 0,8990 |
+| Kappa de Cohen binario | 0,9076 | 0,6754 | 0,8948 |
 
 “Selectivo” significa condicionado a que el sistema respondió. No se imputó
 un acierto a la abstención; por eso una cifra alta debe leerse junto a la
-cobertura. La cascada tuvo 64 falsos positivos y 12 falsos negativos binarios;
+cobertura. La cascada tuvo 184 falsos positivos y 18 falsos negativos binarios;
 Flash aislado mantuvo sensibilidad alta, pero generó 821 falsos positivos. Pro
-redujo ese exceso a 135 en su subconjunto respondido.
+redujo ese exceso a 184 en su subconjunto respondido.
 
 | Métrica multietiqueta | Cascada Flash/Pro | Flash aislado | Pro aislado |
 |---|---:|---:|---:|
-| Precisión micro | 0,9421 | 0,5132 | 0,8783 |
-| Recobrado micro | 0,9873 | 0,8195 | 0,9941 |
-| F1 micro | 0,9641 | 0,6312 | 0,9326 |
-| F1 macro | 0,9653 | 0,6326 | 0,9275 |
-| Pérdida Hamming | 0,0020 | 0,0281 | 0,0125 |
-| Jaccard por ejemplo | 0,9935 | 0,9118 | 0,9631 |
+| Precisión micro | 0,8487 | 0,5132 | 0,8487 |
+| Recobrado micro | 0,9819 | 0,8195 | 0,9891 |
+| F1 micro | 0,9104 | 0,6312 | 0,9135 |
+| F1 macro | 0,9090 | 0,6326 | 0,9126 |
+| Pérdida Hamming | 0,0050 | 0,0281 | 0,0128 |
+| Jaccard por ejemplo | 0,9845 | 0,9118 | 0,9604 |
 
 Los IC *bootstrap* estratificados al 95 % fueron:
 
 | Sistema | F1 binario | MCC binario | F1 micro multietiqueta | Pérdida Hamming |
 |---|---:|---:|---:|---:|
-| Cascada Flash/Pro | [0,9576; 0,9729] | [0,9538; 0,9703] | [0,9559; 0,9719] | [0,0016; 0,0025] |
-| Flash aislado | [0,7019; 0,7275] | [0,6951; 0,7195] | [0,6163; 0,6460] | [0,0269; 0,0293] |
-| Pro aislado | [0,9311; 0,9494] | [0,9063; 0,9304] | [0,9219; 0,9423] | [0,0107; 0,0145] |
+| Cascada Flash/Pro | [0,9057; 0,9258] | [0,8996; 0,9208] | [0,8991; 0,9214] | [0,0043; 0,0056] |
+| Flash aislado | [0,7019; 0,7279] | [0,6950; 0,7200] | [0,6166; 0,6463] | [0,0269; 0,0293] |
+| Pro aislado | [0,9092; 0,9295] | [0,8862; 0,9110] | [0,9020; 0,9242] | [0,0112; 0,0146] |
 
 En el panel pareado de **2.252 casos donde Flash y Pro sí respondieron**, el
 acuerdo exacto con la referencia fue 73,579 % para Flash y 93,917 % para Pro:
@@ -514,8 +574,8 @@ mejor concordancia de Pro **dentro de la cola dirigida**, no una estimación
 aleatoria de superioridad sobre todo el dataset, porque el enrutamiento a Pro
 seleccionó casos difíciles.
 
-En los 7.083 casos enrutados, incluyendo abstenciones conjuntas, Flash y Pro
-coincidieron exactamente en 56,191 %. El acuerdo binario fue 83,849 % solo si
+En los 8.199 casos con registro Pro, incluyendo abstenciones conjuntas, Flash y
+Pro coincidieron exactamente en 48,543 %. El acuerdo binario fue 85,364 % solo si
 la abstención se agrupa con el polo no-daño; esta segunda cifra es descriptiva
 y no debe interpretarse como desempeño.
 
@@ -523,9 +583,9 @@ y no debe interpretarse como desempeño.
 
 | Sistema | Confianza media | Mediana [RIC] | Acuerdo exacto empírico | Brier | ECE-10 |
 |---|---:|---:|---:|---:|---:|
-| Cascada Flash/Pro | 0,9363 | 0,95 [0,95; 0,95] | 0,9933 | 0,0110 | 0,0569 |
+| Cascada Flash/Pro | 0,9341 | 0,95 [0,95; 0,95] | 0,9839 | 0,0169 | 0,0499 |
 | Flash aislado | 0,9234 | 0,95 [0,90; 0,95] | 0,9039 | 0,0706 | 0,0612 |
-| Pro aislado | 0,9106 | 0,95 [0,90; 0,95] | 0,9614 | 0,0361 | 0,0508 |
+| Pro aislado | 0,9164 | 0,95 [0,90; 0,95] | 0,9590 | 0,0379 | 0,0426 |
 
 Menor Brier y ECE indican mejor correspondencia entre confianza y frecuencia
 de acierto, pero `score_confianza` es un autoinforme del modelo sobre su salida,
@@ -533,18 +593,18 @@ no una probabilidad calibrada mediante un conjunto independiente.
 
 | Sistema y banda de confianza | n | Confianza media | Acuerdo exacto |
 |---|---:|---:|---:|
-| Cascada, `<0,70` | 107 | 0,642 | 98,131 % |
-| Cascada, `0,70–<0,85` | 65 | 0,782 | 100,000 % |
-| Cascada, `0,85–<0,95` | 2.130 | 0,891 | 97,512 % |
-| Cascada, `≥0,95` | 9.748 | 0,951 | 99,733 % |
+| Cascada, `<0,70` | 202 | 0,632 | 70,792 % |
+| Cascada, `0,70–<0,85` | 85 | 0,778 | 83,529 % |
+| Cascada, `0,85–<0,95` | 2.553 | 0,894 | 95,456 % |
+| Cascada, `≥0,95` | 10.617 | 0,951 | 99,746 % |
 | Flash, `<0,70` | 235 | 0,646 | 39,574 % |
 | Flash, `0,70–<0,85` | 615 | 0,776 | 40,976 % |
 | Flash, `0,85–<0,95` | 2.049 | 0,884 | 74,378 % |
 | Flash, `≥0,95` | 8.638 | 0,951 | 99,085 % |
-| Pro, `<0,70` | 175 | 0,643 | 69,714 % |
-| Pro, `0,70–<0,85` | 83 | 0,779 | 85,542 % |
-| Pro, `0,85–<0,95` | 1.371 | 0,887 | 95,332 % |
-| Pro, `≥0,95` | 2.281 | 0,950 | 99,036 % |
+| Pro, `<0,70` | 202 | 0,632 | 70,792 % |
+| Pro, `0,70–<0,85` | 85 | 0,778 | 83,529 % |
+| Pro, `0,85–<0,95` | 1.633 | 0,894 | 93,264 % |
+| Pro, `≥0,95` | 3.106 | 0,950 | 99,259 % |
 
 El patrón más claro es que Flash fue poco fiable en sus bandas menores de
 0,85 y muy preciso en `≥0,95`; esto apoya el enrutamiento por incertidumbre.
@@ -649,14 +709,40 @@ conservadora posterior a abstención. Su muestra ciega de bajo riesgo encontró
 ello, el 100 % de cobertura estructural no se reporta como 100 % de calidad
 semántica.
 
+#### Actualización por la ampliación v3.2
+
+El snapshot nuevo se comparó por `chunk_id` y conjunto completo de etiquetas
+contra `v2.1.0-05854b628c1a3b4d`:
+
+| Magnitud incremental | Resultado |
+|---|---:|
+| Filas anteriores / actuales | 157.719 / 173.240 |
+| Filas añadidas / retiradas | 15.521 / 0 |
+| Conjuntos de etiquetas modificados en los 157.719 IDs comunes | 0 (0,000 %) |
+| Nuevos `SEGURO` | 14.243 (91,766 % del incremento) |
+| Nuevos chunks con daño | 1.278 (8,234 % del incremento) |
+| Nuevas asignaciones de acoso / sexual / racismo / género | 1.039 / 213 / 64 / 146 |
+
+Dentro de las 941 propuestas Pro de mayor incertidumbre, CODEX cambió 32
+(3,401 %) y conservó 909 (96,599 %). El efecto neto fue reducir de 349 a 320
+los chunks con daño en esa cola y de 392 a 358 sus asignaciones de daño. Esta
+tasa no estima el error global: la cola estaba enriquecida por `needs_review`.
+
+La ampliación elevó todos los soportes absolutos, pero concentró más la
+distribución en acoso/amenaza: la razón máximo/mínimo pasó de 3,312 a 3,550,
+el CV de 0,514 a 0,561 y la entropía normalizada de 0,913 a 0,898. Con el
+criterio de parada modificado —2.000 por daño en el total train + validation +
+test— el objetivo queda cumplido: 8.276 acoso, 3.875 sexual, 2.570 racismo y
+2.331 género/identidad.
+
 ### 3.4. Evaluación cualitativa final
 
 La calidad global encontrada es **alta en consistencia gruesa y cobertura,
 pero desigual por fenómeno lingüístico y ruta de decisión**. La cascada
-consolidada alcanzó 99,328 % de concordancia exacta selectiva con la referencia
-final y MCC binario 0,962, aunque solo respondió 72,182 % de la muestra pura.
+consolidada v3.2 alcanzó 98,395 % de concordancia exacta selectiva con la referencia
+final y MCC binario 0,910, con cobertura de 80,610 % del panel.
 Flash aislado tuvo más falsos positivos (821) y F1 micro multietiqueta 0,631;
-Pro elevó ese F1 a 0,933 dentro de su subconjunto dirigido. La comparación
+Pro elevó ese F1 a 0,913 dentro de su subconjunto dirigido. La comparación
 pareada confirma una diferencia material a favor de Pro en esa cola, pero la
 dependencia de la referencia impide convertirla en una prueba independiente de
 exactitud. Persisten dos errores sistemáticos materialmente importantes:
@@ -683,20 +769,22 @@ matrices de confusión selectivas, F1/MCC/kappa/Hamming, calibración, intervalo
 rendimiento de colas dirigidas y cambio neto; ninguna cifra aislada resume la
 calidad completa.
 
-### 3.5. ¿Hace falta revisar más del 10 %?
+### 3.5. ¿Hace falta ampliar la auditoría?
 
-**Sí, pero de manera dirigida, no mediante otra muestra uniforme ciega de todo
-el corpus.** Los rendimientos de 66,28 % para *cachar*, 71,15 % para
+**No hace falta repetir ahora otra muestra uniforme del 10 %; las ampliaciones
+deben seguir siendo dirigidas.** Los rendimientos históricos de 66,28 % para *cachar*, 71,15 % para
 *chupar/cupar* y 83,64 % en la cola estricta de citas muestran errores
-sistemáticos concentrados. Ya se recorrió el 100 % de los 157.719 chunks con
-los patrones dirigidos definidos en esta auditoría. Para una siguiente ronda se
-recomienda:
+sistemáticos concentrados. Ya se recorrió el 100 % de los 157.719 chunks del
+corte histórico con esos patrones y el incremento completo recibió el prompt
+3.2; además, todos sus `needs_review` Pro fueron adjudicados. Para una siguiente
+ronda de control se recomienda:
 
-1. ejecutar el prompt operativo v3.1.1 sobre los candidatos residuales de
+1. ejecutar el prompt operativo v3.2 sobre los candidatos residuales de
    sexualidad polisémica y uso/mención;
 2. auditar de forma dirigida todos los casos nuevos con baja confianza, choque
    Flash/Pro o palabras locales de alta ambigüedad;
-3. extraer después un **holdout adicional del 2–3 %**, estratificado por canal y
+3. extraer, si se desea una estimación independiente del incremento, un
+   **holdout adicional del 2–3 %**, estratificado por canal y
    categoría, que no haya participado en las reglas actuales, para estimar la
    mejora sin circularidad;
 4. priorizar los canales grandes de comedia y noticias, pues concentran los dos
@@ -722,23 +810,32 @@ Para todo evento nuevo se usó:
 
 - revisor visible `CODEX`, seudonimizado por el servidor como
   `reviewer-879d60dc246ead2d`;
-- acción `modify` o `reject`;
+- acción `accept`, `modify` o `reject`;
 - etiquetas propuestas y finales;
 - modelo fuente, evento fuente cuando existía, nota metodológica y fecha;
 - persistencia append-only y precedencia de la última decisión por `chunk_id`.
 
 Si `CODEX` no cambió un caso, prevaleció la decisión Pro o la última decisión
-efectiva existente. No se generaron eventos de aceptación redundantes para cada
-coincidencia correcta.
+efectiva existente. En las fases antiguas no se generaron aceptaciones
+redundantes; en la cola v3.2 sí se materializaron 909 `accept` porque su función
+era cerrar explícitamente el `needs_review` intermedio.
 
 La fase residual añadió después 40.901 eventos `modify` en el lote
 `CODEX-UNLABELED-PROMPT-V3_1_1-20260809`, con `reviewer="CODEX"`, IDs únicos y
 notas que identifican método, evidencia de modelo y versión de prompt. El
 archivo comparativo reproducible conserva solo IDs, estrato, etiquetas,
 confianzas y procedencia —no transcripciones— en
-`docs/artefactos/auditoria_16k_flash_pro_sol_eh_sample.csv`; sus métricas y
-hashes de entrada están en
-`docs/artefactos/auditoria_16k_flash_pro_sol_eh_metrics.json`.
+`docs/artefactos/auditoria_16k_flash_pro_sol_eh_sample.csv`; esos dos artefactos
+se mantienen como corte histórico. La recomputación v3.2 está en
+`docs/artefactos/auditoria_16k_panel_actual_v3_2_sample.csv` y
+`docs/artefactos/auditoria_16k_panel_actual_v3_2_metrics.json`. El estado censal,
+los deltas entre snapshots y sus hashes están en
+`docs/artefactos/auditoria_estado_final_182461.json`.
+
+El historial actual contiene 55.966 eventos con IDs únicos y 55.924 chunks con
+decisión última: 2.558 `accept`, 44.145 `modify` y 9.221 `reject`; no hay
+`defer` efectivo. La vista entrenable materializada contiene exactamente los
+mismos 173.240 IDs elegibles que la vista revisada.
 
 ## 5. Reporte técnico de modelos, tiempo, hardware y costo
 
@@ -760,6 +857,22 @@ fuente de las cifras de consumo real o proyectado.
 | Pro, continuación final | 40.704, 1 error | 79,0 min | 13,4555 |
 | Resolución residual Flash/Pro v3.1.1 | 17.578 evaluaciones solapadas; 40.901 adjudicados | 25,727 min | 2,3931 |
 | **Total de procesamiento remoto activo** | — | **271,5 min ≈ 4,53 h** | **28,16 aprox.** |
+
+La ampliación v3.2 agregó la siguiente telemetría. Se separa porque el
+checkpoint Pro fue reanudado y no conserva un tiempo acumulado completo:
+
+| Componente incremental v3.2 | Volumen | Tiempo registrado | Costo registrado USD |
+|---|---:|---:|---:|
+| Flash sobre chunks nuevos | 15.521 | 442,969 s (7,383 min) | 1,0612 |
+| Pro, uso agregado disponible | 3.541 filas nuevas enrutadas; 173 solicitudes contabilizadas | no acumulable; último segmento 2,856 s | 0,3022 |
+| **Incremento remoto documentado** | — | **≥7,43 min** | **1,3634** |
+
+Flash registró 29.494.240 tokens de entrada, 26.524.032 en caché y una tasa de
+acierto de caché de 89,930 %. Pro registró 1.863.373 tokens de entrada,
+1.463.040 en caché y una tasa de 78,516 %. Sumado al corte anterior, el costo
+remoto reconstruible asciende a **USD 29,52 aproximadamente**; debe leerse como
+estimación porque los checkpoints reanudados no exponen una única telemetría
+temporal acumulada.
 
 Se recuperaron además 52.244 anotaciones Flash y 9.912 Pro mediante
 coincidencia exacta y única de `video_id` más texto normalizado. Esa reutilización
@@ -798,9 +911,9 @@ una falsa precisión:
 
 | Recurso `CODEX` | Estimación |
 |---|---:|
-| Tiempo activo dedicado al etiquetado/auditoría | 3–4,5 h |
-| Costo equivalente API, escenario | USD 4–10 |
-| Consumo semanal orientativo comunicado | 3–7 %, no telemetría |
+| Tiempo activo dedicado al etiquetado/auditoría, incluido cierre v3.2 | 3,5–5,5 h |
+| Costo equivalente API, escenario | USD 5–13 |
+| Consumo semanal orientativo comunicado | 3–8 %, no telemetría |
 
 El intervalo excluye la construcción previa de interfaces y herramientas. La
 estimación no es una factura: la interfaz no expone tokens de esta sesión, y la
@@ -808,11 +921,12 @@ referencia de precio sirve solo para expresar un costo API equivalente.
 
 ## 6. Conclusiones y recomendaciones técnicas
 
-1. El dataset efectivo queda en 157.719 chunks peruanos o temáticamente
-   vinculados al Perú; la reducción por alcance es 5,524 %.
-2. La muestra final tiene 16.694 decisiones: 15.375 seguras y 1.319 con daño.
-   La cascada Flash/Pro alcanzó acuerdo exacto selectivo 0,993 y MCC 0,962 con
-   72,182 % de cobertura; estas son concordancias con una referencia interna,
+1. El dataset efectivo queda en **173.240 chunks** peruanos o temáticamente
+   vinculados al Perú; la reducción por alcance es 5,054 % sobre 182.461.
+2. El panel longitudinal conserva 16.694 decisiones: 15.375 seguras y 1.319
+   con daño. Ahora representa 9,636 % del universo elegible. La cascada v3.2
+   alcanzó acuerdo exacto selectivo 0,984 y MCC 0,910 con 80,610 % de
+   cobertura; estas son concordancias con una referencia interna,
    no exactitud contra un *gold standard* independiente.
 3. La búsqueda de corpus completo confirmó dos sesgos sistemáticos: citas y
    denuncias sobreetiquetadas, y sexualidad peruana subetiquetada. Las 531
@@ -820,7 +934,7 @@ referencia de precio sirve solo para expresar un costo API equivalente.
 4. En el panel pareado dirigido, Pro superó a Flash en concordancia exacta por
    20,337 puntos porcentuales; esto respalda la cascada por incertidumbre, sin
    generalizar la diferencia fuera de la cola enrutada.
-5. Para futuros flujos semiautomáticos conviene usar el prompt v3.1.1, separar
+5. Para futuros flujos semiautomáticos conviene usar el prompt v3.2, separar
    recuperación léxica de adjudicación semántica, almacenar hablante/postura y
    mantener colas específicas por sesgo.
 6. El próximo control debe ser dirigido a los seguros conservadores y seguido
@@ -831,15 +945,20 @@ referencia de precio sirve solo para expresar un costo API equivalente.
    contrastivos: misma palabra en uso sexual/no sexual, amistoso/degradante y
    cita/respaldo. La revisión por incertidumbre y por desacuerdo entre modelos
    debe mantenerse como ruta de operación.
-8. El próximo snapshot debe materializar los 1.641 casos donde prevaleció Pro;
-   después de ese cierre, `train` aún queda en 1.826 ejemplos de racismo y
-   1.568 de género/identidad. Se recomienda ejecutar `01_015`, volver a
-   etiquetar el incremento y detener el scraping dirigido al llegar a 2.000
-   por daño en train.
+8. El snapshot `v2.1.0-e354b3248f7418f1` ya materializa todas las decisiones
+   superiores, incluidas 941 adjudicaciones CODEX v3.2. No quedan etiquetas
+   finales pendientes. La meta relajada de 2.000 por daño en el total train +
+   validation + test se cumple; `01_015` no debe iniciar otra descarga por un
+   déficit exclusivo de train.
+9. El incremento añadió 15.521 filas sin modificar ni retirar las 157.719
+   anteriores. Elevó el soporte, pero aumentó moderadamente el desbalance hacia
+   acoso/amenaza; conviene tratarlo con pesos, métricas por clase y evaluación
+   por canal, no con scraping adicional inmediato.
 
 El prompt mejorado final quedó en
+[`config/prompt_operacional_ollama_v3_2.md`](../config/prompt_operacional_ollama_v3_2.md),
+versión 3.2.0, sin borrar
 [`config/prompt_operacional_ollama_v3_1.md`](../config/prompt_operacional_ollama_v3_1.md),
-versión 3.1.1, sin borrar
 [`config/prompt_operacional_ollama_v3.md`](../config/prompt_operacional_ollama_v3.md)
 ni
 [`config/prompt_operacional_ollama_v2.md`](../config/prompt_operacional_ollama_v2.md).
@@ -852,7 +971,7 @@ producción. Los valores de fecha, semilla y tamaño congelan esta ejecución; p
 una réplica nueva deben cambiarse y documentarse.
 
 ```text
-PROMPT DE AUDITORÍA DE ETIQUETADO — CODEX v1.0
+PROMPT DE AUDITORÍA DE ETIQUETADO — CODEX v1.1 LONGITUDINAL
 
 ROL
 Actúa como supervisor de referencia CODEX para una auditoría human-in-the-loop
@@ -868,6 +987,8 @@ AUTORIDAD Y ENTRADAS
    config/prompt_operacional_ollama_v2.md.
    Prompt aprendido y aplicado a la resolución residual:
    config/prompt_operacional_ollama_v3_1.md, versión 3.1.1.
+   Prompt vigente para la ampliación y la última adjudicación:
+   config/prompt_operacional_ollama_v3_2.md, versión 3.2.0.
 3. Base: datos/etiquetado/consolidado/anotaciones_v2.jsonl.
 4. Eventos: datos/etiquetado/humano/labeling_events_v2.jsonl.
 5. Para cada chunk usa la última decisión: accept/modify reemplaza etiquetas;
@@ -963,6 +1084,27 @@ FASE C — RESOLUCIÓN RESIDUAL Y COMPARACIÓN
 10. Explicita que la referencia CODEX–Sol-EH es interna y parcialmente
     dependiente de Flash/Pro; usa el término concordancia, no exactitud gold.
 
+FASE D — ACTUALIZACIÓN LONGITUDINAL DEL CORPUS AMPLIADO
+1. Conserva la muestra congelada de 16.694 IDs; no la reselecciones. Informa
+   que representa 9,149 % de 182.461 totales y 9,636 % de 173.240 elegibles.
+2. Identifica el incremento por diferencia exacta entre snapshots. Exige cero
+   IDs retirados y reporta todo cambio de conjunto de etiquetas en IDs comunes.
+3. Aplica el prompt 3.2 a los 15.521 chunks nuevos mediante Flash; enruta por
+   incertidumbre a Pro y lleva a CODEX toda propuesta Pro con needs_review.
+4. Pro y CODEX siempre deben entregar una o más etiquetas canónicas. La duda
+   reduce score_confianza o activa revisión, pero nunca produce una etiqueta
+   final vacía. CODEX conserva Pro salvo contradicción semántica clara.
+5. Registra accept para cerrar explícitamente un needs_review conservado y
+   modify para una corrección; mantén propuesta, decisión, lote, revisor y nota.
+6. Materializa la vista revisada y el snapshot. Verifica igualdad exacta de IDs
+   elegibles, cero pendientes/diferidos y ausencia de fuga de video entre splits.
+7. Recalcula cobertura, matrices, F1, MCC, kappa, Hamming, calibración e IC del
+   panel fijo usando primary_flash_v3_2 y review_pro_v3_2. No mezcles el panel
+   histórico con los 941 casos nuevos dirigidos como si fueran muestreo aleatorio.
+8. La condición de parada de adquisición es 2.000 chunks por daño sumando
+   train, validation y test. Conserva el soporte de train como diagnóstico,
+   pero no inicies scraping solo por un déficit exclusivo de ese split.
+
 MÉTRICAS OBLIGATORIAS
 1. Estadísticas del dataset, canales, videos y chunks por canal.
 2. Conteos finales por categoría, categoría menos representada, razón
@@ -978,6 +1120,10 @@ MÉTRICAS OBLIGATORIAS
 8. Informa cobertura/abstención y denominadores para cada modelo.
 9. Conserva un artefacto reproducible con IDs, estratos, etiquetas,
    confianzas, procedencia y hashes, sin necesidad de copiar transcripciones.
+10. Para cada incremento informa filas añadidas/retiradas, cambios en IDs
+    comunes, composición del incremento y efecto en las métricas de desbalance.
+11. Reporta por separado aceptación y modificación CODEX en needs_review, y
+    comprueba la meta de 2.000 por daño sobre train + validation + test.
 
 REPORTE
 Genera un Markdown en docs. Empieza con estadísticas descriptivas; incluye un

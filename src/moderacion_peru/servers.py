@@ -194,11 +194,15 @@ def _labeling_campaign_page(
             continue
         current_view_position = view_position
         view_position += 1
+        effective_status = _labeling_filter_values(row, latest_reviews)[2]
         if (
             only_pending
             and not excluded_only
-            and review is not None
-            and review.get("action") != "defer"
+            and effective_status
+            not in {
+                "pending",
+                "deferred",
+            }
         ):
             continue
         if offset <= matching < offset + limit:
@@ -284,14 +288,18 @@ def _labeling_progress(
             "excluded_total": excluded_total,
             "progress_pct": 100.0 if total else 0.0,
         }
-    resolved = sum(event.get("action") != "defer" for event in events)
-    deferred = sum(event.get("action") == "defer" for event in events)
+    effective_statuses = [
+        _labeling_filter_values(row, latest_reviews)[2] for row in selected_rows
+    ]
+    resolved = sum(status in {"resolved", "excluded"} for status in effective_statuses)
+    deferred = effective_statuses.count("deferred")
+    pending = effective_statuses.count("pending")
     return {
         "total": total,
         "reviewed": len(events),
         "resolved": resolved,
         "deferred": deferred,
-        "pending": max(0, total - resolved),
+        "pending": pending,
         "excluded_total": excluded_total,
         "progress_pct": 100 * resolved / max(1, total),
     }
@@ -573,6 +581,17 @@ def _labeling_dashboard(
             ),
         },
         {
+            "tone": (
+                "success" if min(category_values, default=0) >= 2_000 else "warning"
+            ),
+            "title": "Meta de soporte total",
+            "body": (
+                "La condici\u00f3n vigente suma train, validation y test: "
+                f"la clase menos representada tiene {min(category_values, default=0):,} "
+                "chunks frente a la meta de 2,000."
+            ),
+        },
+        {
             "tone": "info",
             "title": "Lectura cualitativa",
             "body": (
@@ -673,6 +692,9 @@ def _labeling_dashboard(
                 "max_min_ratio": ratio,
                 "coefficient_of_variation": category_cv,
                 "normalized_shannon_entropy": normalized_entropy,
+                "minimum_total_per_damage_target": 2_000,
+                "minimum_total_support": min(category_values, default=0),
+                "minimum_total_target_met": min(category_values, default=0) >= 2_000,
                 "most_represented": (
                     damage_labels[category_values.index(max(category_values))]
                     if category_values
@@ -1198,7 +1220,7 @@ def serve(
         root / "flujo" / "02_etiquetado" / "frontend" / "dashboard_etiquetado.html"
     )
     audit_metrics_path = (
-        root / "docs" / "artefactos" / "auditoria_16k_flash_pro_sol_eh_metrics.json"
+        root / "docs" / "artefactos" / "auditoria_16k_panel_actual_v3_2_metrics.json"
     )
     campaign_path = Path(campaign).resolve() if campaign else None
     if reviews:

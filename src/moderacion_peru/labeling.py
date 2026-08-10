@@ -116,6 +116,7 @@ def recover_historical_annotations(
             historical_by_id[chunk_id] = (row, annotation_path.name)
 
     historical_keys: dict[tuple[str, str], list[str]] = {}
+    historical_chunks_by_id: dict[str, dict[str, Any]] = {}
     historical_chunks_seen: set[str] = set()
     for chunk in read_jsonl(historical_chunks_path):
         chunk_id = str(chunk.get("chunk_id") or "")
@@ -124,6 +125,7 @@ def recover_historical_annotations(
         if chunk_id in historical_chunks_seen:
             raise ValueError(f"chunk_id duplicado en chunks históricos: {chunk_id}")
         historical_chunks_seen.add(chunk_id)
+        historical_chunks_by_id[chunk_id] = chunk
         key = _historical_text_key(chunk)
         if key is not None:
             historical_keys.setdefault(key, []).append(chunk_id)
@@ -137,6 +139,7 @@ def recover_historical_annotations(
         )
 
     current_keys: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    current_by_id: dict[str, dict[str, Any]] = {}
     current_ids: set[str] = set()
     for record in current_records:
         chunk_id = str(record.get("chunk_id") or "")
@@ -145,6 +148,7 @@ def recover_historical_annotations(
         if chunk_id in current_ids:
             raise ValueError(f"chunk_id duplicado en el corpus actual: {chunk_id}")
         current_ids.add(chunk_id)
+        current_by_id[chunk_id] = record
         key = _historical_text_key(record)
         if key is not None:
             current_keys.setdefault(key, []).append(record)
@@ -154,19 +158,17 @@ def recover_historical_annotations(
     matched_historical_ids: set[str] = set()
     ambiguous_keys = 0
     already_present_matches = 0
-    for key in sorted(set(historical_keys).intersection(current_keys)):
-        old_ids = historical_keys[key]
-        new_rows = current_keys[key]
-        if len(old_ids) != 1 or len(new_rows) != 1:
-            ambiguous_keys += 1
-            continue
-        historical_id = old_ids[0]
-        current = new_rows[0]
+
+    def recover_match(
+        historical_id: str,
+        current: dict[str, Any],
+        *,
+        warning: str,
+    ) -> bool:
         current_id = str(current["chunk_id"])
         matched_historical_ids.add(historical_id)
         if current_id in existing_by_id:
-            already_present_matches += 1
-            continue
+            return True
         historical, source_name = historical_by_id[historical_id]
         fine_labels = list(
             dict.fromkeys(
@@ -216,10 +218,56 @@ def recover_historical_annotations(
                     ]
                 )
             ),
-            consolidation_warning="historical_id_rekeyed_by_exact_normalized_text",
-            created_at=historical.get("created_at") or historical.get("annotated_at"),
+            consolidation_warning=warning,
+            created_at=(
+                historical.get("created_at")
+                or historical.get("annotated_at")
+                or datetime.now(timezone.utc)
+            ),
         )
         recovered.append(record.model_dump(mode="json"))
+        return False
+
+    direct_id_matches = 0
+    for historical_id in sorted(set(historical_by_id).intersection(current_by_id)):
+        historical_key = _historical_text_key(historical_chunks_by_id[historical_id])
+        current = current_by_id[historical_id]
+        if historical_key is None or historical_key != _historical_text_key(current):
+            continue
+        direct_id_matches += 1
+        already_present_matches += int(
+            recover_match(
+                historical_id,
+                current,
+                warning="historical_annotation_reused_by_identical_chunk_id_and_text",
+            )
+        )
+
+    for key in sorted(set(historical_keys).intersection(current_keys)):
+        old_ids = [
+            historical_id
+            for historical_id in historical_keys[key]
+            if historical_id not in matched_historical_ids
+        ]
+        new_rows = [
+            current
+            for current in current_keys[key]
+            if str(current["chunk_id"]) not in matched_historical_ids
+        ]
+        if not old_ids and not new_rows:
+            continue
+        if len(old_ids) != 1 or len(new_rows) != 1:
+            ambiguous_keys += 1
+            continue
+        historical_id = old_ids[0]
+        current = new_rows[0]
+        already_present_matches += int(
+            recover_match(
+                historical_id,
+                current,
+                warning="historical_id_rekeyed_by_exact_normalized_text",
+            )
+        )
 
     if recovered:
         write_jsonl_atomic(output, [*existing_rows, *recovered])
@@ -231,6 +279,7 @@ def recover_historical_annotations(
         "current_rows": len(current_ids),
         "historical_rows": len(historical_by_id),
         "exact_unique_matches": len(matched_historical_ids),
+        "direct_chunk_id_matches": direct_id_matches,
         "recovered_new": len(recovered),
         "already_present_matches": already_present_matches,
         "ambiguous_keys_excluded": ambiguous_keys,

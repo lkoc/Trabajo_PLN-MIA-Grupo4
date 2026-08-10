@@ -322,7 +322,7 @@ def test_02_01_uses_explicit_operational_review_threshold_without_changing_calib
         assert "RECOMMENDED_REVIEW_START_BALANCE_USD=15.00" in value
         assert "por encima del tope" not in value
         assert "esto no bloquea la ejecución" in value
-        assert "raise RuntimeError(f\"Saldo Pro" not in value
+        assert 'raise RuntimeError(f"Saldo Pro' not in value
         assert "RUN_PRIMARY=True" in value
         assert "RUN_DIRECTED_REVIEW=True" in value
         assert "confidence_threshold=REVIEW_CONFIDENCE_THRESHOLD" in value
@@ -499,12 +499,13 @@ def test_scraping_notebook_exposes_historical_controls_and_safe_failure_mode():
     ).is_file()
 
 
-def test_minority_scraping_notebook_targets_two_thousand_train_chunks_per_damage():
+def test_minority_scraping_notebook_targets_two_thousand_total_chunks_per_damage():
     path = ROOT / "flujo/01_datos/01_015_ampliacion_dirigida_minorias.ipynb"
     notebook = nbformat.read(path, as_version=4)
     source = "\n".join(cell.source for cell in notebook.cells)
 
-    assert "TARGET_TRAIN_CHUNKS_PER_DAMAGE = 2_000" in source
+    assert "TARGET_TOTAL_CHUNKS_PER_DAMAGE = 2_000" in source
+    assert "TARGET_ELIGIBLE_SPLITS = ('train', 'validation', 'test')" in source
     assert "PERU_ONLY = True" in source
     assert "filter_peru_candidates" in source
     assert "directed_non_peru_excluded_latest.jsonl" in source
@@ -543,8 +544,8 @@ def test_minority_scraping_notebook_targets_two_thousand_train_chunks_per_damage
     assert "cached_transcript" not in source
     assert "reused_cache" in source
     assert "project_effective_training_rows" in source
-    assert "eligible_splits=('train',)" in source
-    assert "target_chunks_per_label=TARGET_TRAIN_CHUNKS_PER_DAMAGE" in source
+    assert "eligible_splits=TARGET_ELIGIBLE_SPLITS" in source
+    assert "target_chunks_per_label=TARGET_TOTAL_CHUNKS_PER_DAMAGE" in source
     assert "required_split=planned_split" in source
     assert "split_seed=SPLIT_SEED" in source
     assert "de Pro es un estado intermedio" in source
@@ -555,9 +556,9 @@ def test_minority_scraping_notebook_targets_two_thousand_train_chunks_per_damage
 
     carryover = [
         json.loads(line)
-        for line in (
-            ROOT / "datos/raw/directed_candidates_carryover.jsonl"
-        ).read_text(encoding="utf-8-sig").splitlines()
+        for line in (ROOT / "datos/raw/directed_candidates_carryover.jsonl")
+        .read_text(encoding="utf-8-sig")
+        .splitlines()
         if line.strip()
     ]
     assert len(carryover) == 5
@@ -733,6 +734,10 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     assert "'thinking':probe['thinking']" in local
     assert "'context_cache':probe['context_cache']" in local
     assert "recover_historical_annotations" in local
+    assert (
+        "PRESERVE_PROMPT_POLICY_SHA256='433321cf7b41f997bb277ae87bc9fee01767d225a0fe49bea2cb918239dc1f06'"
+        in local
+    )
     assert "RECOVER_HISTORICAL=True" in local
     assert "AUTO_PUBLISH_CHECKPOINTS=True" in local
     assert "checkpoint_callback=checkpoint_callback_for(output)" in local
@@ -749,7 +754,22 @@ def test_stage_02_notebooks_show_progress_for_long_operations():
     )
     assert "Leyendo {name}" in notebook_sources["02_03_revision_llm_dirigida.ipynb"]
     assert (
+        "primary_flash_v3_2.jsonl"
+        in notebook_sources["02_03_revision_llm_dirigida.ipynb"]
+    )
+    assert (
+        "review_pro_v3_2.jsonl" in notebook_sources["02_03_revision_llm_dirigida.ipynb"]
+    )
+    assert (
         "progress_callback=report_consolidation_progress"
+        in notebook_sources["02_04_consolidacion_validacion_humana.ipynb"]
+    )
+    assert (
+        "primary_flash_v3_2.jsonl"
+        in notebook_sources["02_04_consolidacion_validacion_humana.ipynb"]
+    )
+    assert (
+        "review_pro_v3_2.jsonl"
         in notebook_sources["02_04_consolidacion_validacion_humana.ipynb"]
     )
     closure = notebook_sources["02_05_cierre_humano_snapshot.ipynb"]

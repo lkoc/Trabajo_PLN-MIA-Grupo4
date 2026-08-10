@@ -178,6 +178,7 @@ def materialize_training_snapshot(
         prepared = ModelReadyRecord(
             chunk_id=chunk_id,
             video_id=video_id,
+            channel_id=row.get("channel_id"),
             text=str(row["text"]),
             coarse_labels=list(labels),
             fine_labels=list(row.get("fine_labels", [])),
@@ -292,6 +293,7 @@ def materialize_versioned_training_snapshot(
         record = ModelReadyRecord(
             chunk_id=str(row["chunk_id"]),
             video_id=video_id,
+            channel_id=row.get("channel_id"),
             text=str(row["text"]),
             coarse_labels=list(taxonomy.normalize_categories(row["coarse_labels"])),
             fine_labels=list(row.get("fine_labels", [])),

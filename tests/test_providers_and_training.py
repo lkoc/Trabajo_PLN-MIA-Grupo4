@@ -733,6 +733,55 @@ def test_historical_recovery_rekeys_only_exact_unique_text_and_labels_pending(tm
     assert {row["chunk_id"] for row in read_jsonl(output)} == {"new-1", "new-2"}
 
 
+def test_historical_recovery_prefers_direct_ids_for_duplicate_text(tmp_path):
+    chunks = [
+        {"chunk_id": chunk_id, "video_id": "v1", "text": "texto repetido"}
+        for chunk_id in ("c1", "c2")
+    ]
+    annotations = [
+        {
+            "chunk_id": chunk_id,
+            "video_id": "v1",
+            "text": "texto repetido",
+            "fine_labels": ["seguro"],
+            "flags": [],
+            "needs_review": False,
+            "score_confianza": 0.95,
+            "annotator_model": "deepseek-v4-flash",
+            "prompt_sha256": "b" * 64,
+        }
+        for chunk_id in ("c1", "c2")
+    ]
+    chunk_path = tmp_path / "chunks.jsonl"
+    annotation_path = tmp_path / "annotations.jsonl"
+    chunk_path.write_text(
+        "\n".join(json.dumps(row) for row in chunks) + "\n", encoding="utf-8"
+    )
+    annotation_path.write_text(
+        "\n".join(json.dumps(row) for row in annotations) + "\n", encoding="utf-8"
+    )
+    output = tmp_path / "recovered.jsonl"
+
+    result = recover_historical_annotations(
+        chunks,
+        chunk_path,
+        [annotation_path],
+        output,
+        expected_model="deepseek-v4-flash",
+        historical_prompt_sha256="a" * 64,
+        run_metadata={"provider": {"model": "deepseek-v4-flash"}},
+    )
+
+    recovered = list(read_jsonl(output))
+    assert result["recovered_new"] == 2
+    assert result["direct_chunk_id_matches"] == 2
+    assert result["ambiguous_keys_excluded"] == 0
+    assert {row["chunk_id"] for row in recovered} == {"c1", "c2"}
+    assert {
+        row["consolidation_warning"] for row in recovered
+    } == {"historical_annotation_reused_by_identical_chunk_id_and_text"}
+
+
 def test_incremental_stream_checkpoint_survives_keyboard_interrupt(tmp_path):
     records = [
         {

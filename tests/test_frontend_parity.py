@@ -54,11 +54,11 @@ def test_labeling_campaign_is_paged_and_uses_latest_review_state():
     assert _labeling_progress(rows, reviews) == {
         "total": 3,
         "reviewed": 2,
-        "resolved": 1,
+        "resolved": 2,
         "deferred": 1,
-        "pending": 2,
+        "pending": 0,
         "excluded_total": 0,
-        "progress_pct": pytest.approx(100 / 3),
+        "progress_pct": pytest.approx(200 / 3),
     }
 
 

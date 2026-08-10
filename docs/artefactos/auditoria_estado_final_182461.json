@@ -1,0 +1,1642 @@
+{
+  "generated_by": "tools/report_audit_current_state.py",
+  "cutoff_date": "2026-08-09",
+  "campaign_scope_before_exclusions": {
+    "chunks": 182461,
+    "videos": 5385,
+    "channels": 322
+  },
+  "effective_dataset": {
+    "rows": 182461,
+    "excluded": 9221,
+    "eligible": 173240,
+    "safe": 159077,
+    "harm": 14163,
+    "labels": {
+      "ACOSO_AMENAZA": 8276,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 2331,
+      "CONTENIDO_SEXUAL": 3875,
+      "RACISMO_DISCRIMINACION": 2570,
+      "SEGURO": 159077
+    },
+    "labelsets": {
+      "ACOSO_AMENAZA": 6120,
+      "ACOSO_AMENAZA|ATAQUE_POR_GENERO_IDENTIDAD": 855,
+      "ACOSO_AMENAZA|ATAQUE_POR_GENERO_IDENTIDAD|CONTENIDO_SEXUAL": 79,
+      "ACOSO_AMENAZA|ATAQUE_POR_GENERO_IDENTIDAD|CONTENIDO_SEXUAL|RACISMO_DISCRIMINACION": 11,
+      "ACOSO_AMENAZA|ATAQUE_POR_GENERO_IDENTIDAD|RACISMO_DISCRIMINACION": 56,
+      "ACOSO_AMENAZA|CONTENIDO_SEXUAL": 560,
+      "ACOSO_AMENAZA|CONTENIDO_SEXUAL|RACISMO_DISCRIMINACION": 8,
+      "ACOSO_AMENAZA|RACISMO_DISCRIMINACION": 587,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 874,
+      "ATAQUE_POR_GENERO_IDENTIDAD|CONTENIDO_SEXUAL": 350,
+      "ATAQUE_POR_GENERO_IDENTIDAD|CONTENIDO_SEXUAL|RACISMO_DISCRIMINACION": 15,
+      "ATAQUE_POR_GENERO_IDENTIDAD|RACISMO_DISCRIMINACION": 91,
+      "CONTENIDO_SEXUAL": 2755,
+      "CONTENIDO_SEXUAL|RACISMO_DISCRIMINACION": 97,
+      "RACISMO_DISCRIMINACION": 1705,
+      "SEGURO": 159077
+    },
+    "damage_assignments": 17052,
+    "multilabel_harm_chunks": 2709,
+    "channel_distribution": {
+      "units": 276,
+      "mean_chunks": 627.6811594202899,
+      "median_chunks": 25.5,
+      "min_chunks": 1,
+      "max_chunks": 33203
+    },
+    "video_distribution": {
+      "units": 4906,
+      "mean_chunks": 35.311863024867506,
+      "median_chunks": 19.0,
+      "min_chunks": 1,
+      "max_chunks": 767
+    },
+    "top_channels": [
+      {
+        "channel": "Hablando Huevadas",
+        "chunks": 33203
+      },
+      {
+        "channel": "Arde Troya con Juliana Oxenford",
+        "chunks": 12295
+      },
+      {
+        "channel": "Nunca MAS",
+        "chunks": 11364
+      },
+      {
+        "channel": "Goblinciano",
+        "chunks": 8166
+      },
+      {
+        "channel": "Nada Espacial",
+        "chunks": 6224
+      },
+      {
+        "channel": "PBO",
+        "chunks": 5970
+      },
+      {
+        "channel": "Sin Guion con Rosa Maria Palacios",
+        "chunks": 5623
+      },
+      {
+        "channel": "Todo Good",
+        "chunks": 5148
+      },
+      {
+        "channel": "ATV Noticias",
+        "chunks": 4504
+      },
+      {
+        "channel": "RPP Noticias",
+        "chunks": 4348
+      }
+    ],
+    "damage_balance": {
+      "least_label": "ATAQUE_POR_GENERO_IDENTIDAD",
+      "least_count": 2331,
+      "most_label": "ACOSO_AMENAZA",
+      "most_count": 8276,
+      "max_min_ratio": 3.5504075504075505,
+      "population_cv": 0.5607016699321052,
+      "normalized_shannon_entropy": 0.8979383288611513
+    }
+  },
+  "training_snapshot": {
+    "snapshot_id": "v2.1.0-e354b3248f7418f1",
+    "dataset_sha256": "24d3d81d23c00cb1ba27fcca8c2759a97be5c9932ceaeb60be0a4e9a1cfca783",
+    "content_signature": "e354b3248f7418f141423080e8716869e9e51f41dc2b4e3247bb7fcc0f6ffe22",
+    "rows": 173240,
+    "splits": {
+      "train": {
+        "chunks": 123239,
+        "safe": 112998,
+        "SEGURO": 112998,
+        "harm": 10241,
+        "CONTENIDO_SEXUAL": 2723,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 1674,
+        "ACOSO_AMENAZA": 6067,
+        "RACISMO_DISCRIMINACION": 1880,
+        "videos": 3478,
+        "channels": 220,
+        "damage_balance": {
+          "least_label": "ATAQUE_POR_GENERO_IDENTIDAD",
+          "least_count": 1674,
+          "most_label": "ACOSO_AMENAZA",
+          "most_count": 6067,
+          "max_min_ratio": 3.6242532855436083,
+          "population_cv": 0.5720619257610601,
+          "normalized_shannon_entropy": 0.8945322702943016
+        }
+      },
+      "validation": {
+        "chunks": 27317,
+        "safe": 25197,
+        "SEGURO": 25197,
+        "harm": 2120,
+        "ACOSO_AMENAZA": 1146,
+        "RACISMO_DISCRIMINACION": 382,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 374,
+        "CONTENIDO_SEXUAL": 633,
+        "videos": 754,
+        "channels": 94,
+        "damage_balance": {
+          "least_label": "ATAQUE_POR_GENERO_IDENTIDAD",
+          "least_count": 374,
+          "most_label": "ACOSO_AMENAZA",
+          "most_count": 1146,
+          "max_min_ratio": 3.064171122994652,
+          "population_cv": 0.4947498912401529,
+          "normalized_shannon_entropy": 0.918193920783382
+        }
+      },
+      "test": {
+        "chunks": 22684,
+        "safe": 20882,
+        "SEGURO": 20882,
+        "harm": 1802,
+        "ACOSO_AMENAZA": 1063,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 283,
+        "CONTENIDO_SEXUAL": 519,
+        "RACISMO_DISCRIMINACION": 308,
+        "videos": 674,
+        "channels": 79,
+        "damage_balance": {
+          "least_label": "ATAQUE_POR_GENERO_IDENTIDAD",
+          "least_count": 283,
+          "most_label": "ACOSO_AMENAZA",
+          "most_count": 1063,
+          "max_min_ratio": 3.756183745583039,
+          "population_cv": 0.5775752021772381,
+          "normalized_shannon_entropy": 0.8902743480120044
+        }
+      }
+    },
+    "target_2000_total_train_validation_test": {
+      "criterion_met": true,
+      "support": {
+        "ACOSO_AMENAZA": 8276,
+        "CONTENIDO_SEXUAL": 3875,
+        "RACISMO_DISCRIMINACION": 2570,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 2331
+      },
+      "shortfall": {
+        "ACOSO_AMENAZA": 0,
+        "CONTENIDO_SEXUAL": 0,
+        "RACISMO_DISCRIMINACION": 0,
+        "ATAQUE_POR_GENERO_IDENTIDAD": 0
+      }
+    },
+    "train_only_diagnostic_shortfall_not_a_stop_condition": {
+      "ACOSO_AMENAZA": 0,
+      "CONTENIDO_SEXUAL": 0,
+      "RACISMO_DISCRIMINACION": 120,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 326
+    }
+  },
+  "increment_since_previous_audit_snapshot": {
+    "previous_rows": 157719,
+    "current_rows": 173240,
+    "net_rows": 15521,
+    "common_rows": 157719,
+    "added_rows": 15521,
+    "removed_rows": 0,
+    "changed_labelsets_in_common_rows": 0,
+    "changed_labelsets_fraction_of_common": 0.0,
+    "common_transitions": {},
+    "added_safe": 14243,
+    "added_harm": 1278,
+    "added_labels": {
+      "ACOSO_AMENAZA": 1039,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 146,
+      "CONTENIDO_SEXUAL": 213,
+      "RACISMO_DISCRIMINACION": 64,
+      "SEGURO": 14243
+    }
+  },
+  "human_review_events": {
+    "events": 55966,
+    "unique_event_ids": 55966,
+    "latest_reviewed_chunks": 55924,
+    "latest_actions": {
+      "accept": 2558,
+      "modify": 44145,
+      "reject": 9221
+    },
+    "events_by_batch": {
+      "CODEX-UNLABELED-PROMPT-V3_1_1-20260809": 40901,
+      "SIN_LOTE": 3256,
+      "CODEX-PRO-PRECEDENCE-20260809": 1641,
+      "CODEX-PRO-V3_2-FINAL-20260809": 941,
+      "codex-audit10-scope-v1-6491ad2050549228499427de": 261,
+      "codex-audit10-scope-v1-798120c0b9deaaa0090b6767": 163,
+      "codex-audit10-scope-v1-b9e5eab2a5cb5677c47ba509": 142,
+      "codex-audit10-scope-v1-b82b819f834601b950ef5a36": 137,
+      "codex-audit10-scope-v1-033fcabaee995f0703752392": 136,
+      "codex-audit10-scope-v1-c91d95fcf477c6b642938048": 127,
+      "codex-audit10-scope-v1-2a3660e6f147800cb5c17b33": 124,
+      "codex-audit10-scope-v1-021843863a665c7ff5762f41": 118,
+      "codex-audit10-scope-v1-f16e10e2426294fece76347f": 108,
+      "codex-audit10-scope-v1-d5ba7ea7bcb5f6624c9dca6b": 104,
+      "codex-audit10-scope-v1-7589b87cbef4f7558dbb843c": 103,
+      "codex-audit10-scope-v1-8d006df0c20947c7ee0130a1": 97,
+      "codex-audit10-scope-v1-60a8bb53987f3315a7ba5ee0": 97,
+      "codex-audit10-scope-v1-c516deb30d03e593ecbb1264": 94,
+      "codex-audit10-scope-v1-8cf44940a487b731119ec990": 94,
+      "codex-audit10-scope-v1-ffe6095f572d8e7c509b3d42": 93,
+      "codex-audit10-scope-v1-48f1018ba25797279f8de410": 91,
+      "codex-audit10-scope-v1-7f21fdb0b206358e54572996": 89,
+      "codex-audit10-scope-v1-6aba0cb5c57a1c15ab47c3c5": 83,
+      "codex-audit10-scope-v1-f275dac49a15bc9d3a5720cf": 82,
+      "codex-audit10-scope-v1-cf40b58d1e192f33662ef216": 81,
+      "codex-audit10-scope-v1-a7ade143279d6065c9c00044": 77,
+      "codex-audit10-scope-v1-6257b3b3e41f4bb57ae79c39": 75,
+      "codex-audit10-scope-v1-0787789a05aa62aadb5b6b68": 75,
+      "codex-audit10-scope-v1-363ed47e6a82e0e50d4487d8": 73,
+      "codex-audit10-scope-v1-cc1cc97755a1a0d0364241a3": 70,
+      "codex-audit10-scope-v1-a606e04098f7f04bf63e8e00": 68,
+      "codex-audit10-scope-v1-3edfa3d3066c9f379a340feb": 68,
+      "codex-audit10-scope-v1-3b78e865b375467d8781059d": 68,
+      "codex-audit10-scope-v1-04ff69e187bb923e9154396b": 67,
+      "codex-audit10-scope-v1-aa895967ec2fbeac04349aa4": 65,
+      "codex-audit10-scope-v1-184d28d46b6718ee3f7a264c": 64,
+      "codex-audit10-scope-v1-a867fd4feea2cfda80d791d2": 63,
+      "codex-audit10-scope-v1-b163d37bf5405401462f49ed": 63,
+      "codex-audit10-scope-v1-9f61b76b6811ecda01860780": 62,
+      "codex-audit10-scope-v1-5447b7cc8489d23b88c5e14e": 60,
+      "codex-audit10-scope-v1-7f59ef87982574a9fffde107": 58,
+      "codex-audit10-scope-v1-64b0f16f29c369bbd3f2ab29": 57,
+      "codex-audit10-scope-v1-f87165088f20c7d5ee212a5e": 56,
+      "codex-audit10-scope-v1-f464916925b7283e70e48a98": 55,
+      "codex-audit10-scope-v1-ceb382caa91201e954f63a9d": 55,
+      "codex-audit10-scope-v1-bee05673267f1b1f56efcff6": 53,
+      "codex-audit10-scope-v1-18bb580d7b2c43986506c400": 53,
+      "codex-audit10-scope-v1-624b037137988b52d0173407": 52,
+      "codex-audit10-scope-v1-d7584d34af7b5a280f1c5de9": 49,
+      "codex-audit10-scope-v1-d9be9113a887065909c644c1": 48,
+      "codex-audit10-scope-v1-a2988a030271ae829372dbae": 48,
+      "codex-audit10-scope-v1-8cf192f85165ca215b1637fa": 46,
+      "codex-audit10-scope-v1-f1ba23208a8b95f53e7fc076": 46,
+      "codex-audit10-scope-v1-252018a48ad416070b844f20": 46,
+      "codex-audit10-scope-v1-475e76c113b81d43a5bdd233": 45,
+      "codex-audit10-scope-v1-fe4b4e38f3ce82b1d2263da8": 44,
+      "codex-audit10-scope-v1-602f73f52baad446f30c73ac": 43,
+      "codex-audit10-scope-v1-08561879fd21cb1cec099721": 42,
+      "codex-audit10-scope-v1-515e7b5782544aabcfee3eb9": 41,
+      "codex-audit10-scope-v1-1a06486d71e9bad5f4e6ea37": 40,
+      "codex-audit10-scope-v1-03d370ddba2756c99fe25762": 40,
+      "codex-audit10-scope-v1-e8116dd6f28126b91813e847": 38,
+      "codex-audit10-scope-v1-d613f0897637b4219b9dd0eb": 38,
+      "codex-audit10-scope-v1-2a195a3a5686a3a04d44d2ce": 38,
+      "codex-audit10-scope-v1-18f54c291534fc5b01393dd8": 37,
+      "codex-audit10-scope-v1-d168835d31eb74bc0144b660": 37,
+      "codex-audit10-scope-v1-9b4caf613366674a6e6d0759": 37,
+      "codex-audit10-scope-v1-35d64477f463e7d704f93464": 37,
+      "codex-audit10-scope-v1-09afe63ea15eeef999832dbd": 37,
+      "codex-audit10-scope-v1-61e011a75185d5719b77cdac": 37,
+      "codex-audit10-scope-v1-fb70dddabdcc1dab4bfec381": 36,
+      "codex-audit10-scope-v1-8bc0b8bd28ad323d68538f1b": 34,
+      "codex-audit10-scope-v1-ce0090488c52650a051b7057": 34,
+      "codex-audit10-scope-v1-2b75deb0146cf5b487fe4150": 34,
+      "codex-audit10-scope-v1-7b9c14601ddad54bc4ef6ccd": 34,
+      "codex-audit10-scope-v1-0be8d292b1d758d2969f24a0": 33,
+      "codex-audit10-scope-v1-f83f6f2c21356a22960be798": 33,
+      "codex-audit10-scope-v1-c7486606405fb158cb6efd3f": 33,
+      "codex-audit10-scope-v1-8088faf1b0cd04eaaee2b33f": 32,
+      "codex-audit10-scope-v1-3811f8ad102a8c16e05f470f": 32,
+      "codex-audit10-scope-v1-e90445d5d6a696dfa096fc96": 32,
+      "codex-audit10-scope-v1-8fe9b7e368c88b5bf7bd95ad": 32,
+      "codex-audit10-scope-v1-9d316c41cb545c4dd8fb43c6": 32,
+      "codex-audit10-scope-v1-38d22e474068e2943b9b8607": 32,
+      "codex-audit10-scope-v1-f7f5265f2c9f4071100b8527": 32,
+      "codex-audit10-scope-v1-705047208a3520e126d02846": 31,
+      "codex-audit10-scope-v1-50e1080a0130bb3ab1e34fbb": 31,
+      "codex-audit10-scope-v1-fbdfb9ba5f4770edf1cda7c6": 31,
+      "codex-audit10-scope-v1-e9ee3d5070dcfb759da60ef2": 31,
+      "codex-audit10-scope-v1-efeef85d070d1f78e357b0e7": 30,
+      "codex-audit10-scope-v1-c1b09f0b699315e777c68472": 30,
+      "codex-audit10-scope-v1-e737ea203c2b662633717848": 30,
+      "codex-audit10-scope-v1-71620a6a78a223a9e2a91bfc": 30,
+      "codex-audit10-scope-v1-6ad48fb6f9a84b6f61dd249c": 30,
+      "codex-audit10-scope-v1-51761be32b11011a1ae98837": 29,
+      "codex-audit10-scope-v1-8d2ccb10f1ff6b459700b540": 29,
+      "codex-audit10-scope-v1-31e29f1488f769ef74d98d47": 29,
+      "codex-audit10-scope-v1-107cb89624d89bc090970c64": 29,
+      "codex-audit10-scope-v1-755c5fa5373568de7018aa4e": 28,
+      "codex-audit10-scope-v1-e9de3e33221508c5ed306246": 28,
+      "codex-audit10-scope-v1-25d28af1fd67436162167b81": 28,
+      "codex-audit10-scope-v1-d2329f52bf1705e8dba5479d": 27,
+      "codex-audit10-scope-v1-7d51bde9c5ea2ec67d86f5a2": 26,
+      "codex-audit10-scope-v1-7bda682aed194830ea2e54e1": 26,
+      "codex-audit10-scope-v1-eaccd5d7fdf92f592fdf5c4f": 25,
+      "codex-audit10-scope-v1-c13784700e8d8ee896eb60eb": 25,
+      "codex-audit10-scope-v1-2987804e9bfcebfdf85c96d1": 25,
+      "codex-audit10-scope-v1-1d5865b81d572bc2ebbf8986": 25,
+      "codex-audit10-scope-v1-8e13f5ae3000a43e0fe40266": 25,
+      "codex-audit10-scope-v1-2547719f64f84a94ef54d7da": 25,
+      "codex-audit10-scope-v1-03383691988e353dbda30767": 24,
+      "codex-audit10-scope-v1-230587cd06d1f4bf6633c1d1": 24,
+      "codex-audit10-scope-v1-c2d283c2646682ff111604f5": 24,
+      "codex-audit10-scope-v1-c035c6020dea146c9c3e5362": 24,
+      "codex-audit10-scope-v1-924f5f0fcbc20d04983f738a": 24,
+      "codex-audit10-scope-v1-e94c0bf4f6497053f41d8f5b": 24,
+      "codex-audit10-scope-v1-209e6c6bb9336369ba6d8dd5": 24,
+      "codex-audit10-scope-v1-c1a817bf54f94abf25f5975c": 24,
+      "codex-audit10-scope-v1-0d33bc89509cbc3b18eb7fbb": 23,
+      "codex-audit10-scope-v1-423ae83e34aba93ee410d7c2": 23,
+      "codex-audit10-scope-v1-56137509080aac0f892a30dc": 23,
+      "codex-audit10-scope-v1-6d4e58ad10c57d8e8cbaf1dc": 23,
+      "codex-audit10-scope-v1-ef59de541797905db3d09c2c": 23,
+      "codex-audit10-scope-v1-0e901a4daf4c2dd6c386eb8b": 23,
+      "codex-audit10-scope-v1-122719aa287edf96bf073c8e": 23,
+      "codex-audit10-scope-v1-66f462e3929e64611d0833b7": 23,
+      "codex-audit10-scope-v1-4d029ed4889965d06a3acf7a": 23,
+      "codex-audit10-scope-v1-ee5d29ebbc9445c68bc9bca6": 23,
+      "codex-audit10-scope-v1-fbae8bbd60bf2b214dc70dc6": 23,
+      "codex-audit10-scope-v1-17022dd5872fae68dd505bbf": 23,
+      "codex-audit10-scope-v1-258cb410c9e5eabcf09dbea7": 23,
+      "codex-audit10-scope-v1-61593f85b42e05ec5bbdafa4": 22,
+      "codex-audit10-scope-v1-eb99bae3faf9398965d09e69": 22,
+      "codex-audit10-scope-v1-996f9ef040a83b66c953b892": 22,
+      "codex-audit10-scope-v1-791f85077a78666005da007a": 22,
+      "codex-audit10-scope-v1-6d84c74609dd0aa822125486": 22,
+      "codex-audit10-scope-v1-43f1f6cb290d22039354526a": 22,
+      "codex-audit10-scope-v1-40553b12366afc6053461809": 22,
+      "codex-audit10-scope-v1-5a9465572b32dcaa3cd8da53": 22,
+      "codex-audit10-scope-v1-bd3ca40ba72424d81921bd22": 22,
+      "codex-audit10-scope-v1-470367ccc519d03b56f7397c": 22,
+      "codex-audit10-scope-v1-17012f8a911e84a1f313116f": 21,
+      "codex-audit10-scope-v1-2c22da8c6ff6ba729a691488": 21,
+      "codex-audit10-scope-v1-dc1f655f1d404bf4fbbb696e": 21,
+      "codex-audit10-scope-v1-508805f3300a9655dd4b8746": 21,
+      "codex-audit10-scope-v1-774a1a9dae1fc98e4773609e": 21,
+      "codex-audit10-scope-v1-ecb545198fd314816d3544ea": 21,
+      "codex-audit10-scope-v1-7159bbcb0bde91a1c1f8446c": 21,
+      "codex-audit10-scope-v1-089ecb2a369755e6ecb5a317": 21,
+      "codex-audit10-scope-v1-065ea52577311d66558f0e8c": 21,
+      "codex-audit10-scope-v1-032f2d02322f0b3dadece4a7": 20,
+      "codex-audit10-scope-v1-4e52e378c8edb12f83b74264": 20,
+      "codex-audit10-scope-v1-50d0423857652b6fee93cd88": 20,
+      "codex-audit10-scope-v1-d1da826fe4999535da521ac3": 20,
+      "codex-audit10-scope-v1-635bfc4b24352679bf76483b": 20,
+      "codex-audit10-scope-v1-bde1caba9a24719a2d50f933": 20,
+      "codex-audit10-scope-v1-ae05decea7e71bb3a6ea7a71": 20,
+      "codex-audit10-scope-v1-acd6e31ab9d4e35e26375c73": 20,
+      "codex-audit10-scope-v1-dd926669cd1acc75ec93a44b": 20,
+      "codex-audit10-scope-v1-ffa683dc4c700fbb16a39c69": 20,
+      "codex-audit10-scope-v1-518548fa9cc8a388a6954ea1": 20,
+      "codex-audit10-scope-v1-513521fa8248feeadc6a2de6": 20,
+      "codex-audit10-scope-v1-5b4c7bb277fdc5947cc22ead": 20,
+      "codex-audit10-scope-v1-a882eb4e8f30eedf3bd0b571": 20,
+      "codex-audit10-scope-v1-e145ab1e586a3a35419bbc34": 20,
+      "codex-audit10-scope-v1-58f45ea5ce12d09d6e6e6f9b": 19,
+      "codex-audit10-scope-v1-bac53f8e07e6c5e4bbf5e270": 19,
+      "codex-audit10-scope-v1-2aeb14fb39a115d851063838": 19,
+      "codex-audit10-scope-v1-f4fe66e8ce18b4d4b85226b1": 19,
+      "codex-audit10-scope-v1-417b685b3e4710a2aee4c4eb": 19,
+      "codex-audit10-scope-v1-3279e5fa6085ee76db7df116": 19,
+      "codex-audit10-scope-v1-af867d6e2367a35b9aeea7b0": 18,
+      "codex-audit10-scope-v1-e1ea8224bd944a3ee83c0eaf": 18,
+      "codex-audit10-scope-v1-f0c0f2885f41fc00f5cf1036": 18,
+      "codex-audit10-scope-v1-3acb7611ff7100c8c86b275a": 18,
+      "codex-audit10-scope-v1-7869e41118ef97957bc2e231": 18,
+      "codex-audit10-scope-v1-03624fd2773b693af045836b": 18,
+      "codex-audit10-scope-v1-656fc7ec1d58d6c7af24197e": 18,
+      "codex-audit10-scope-v1-c8bfc034f5351c8a0c01734a": 18,
+      "codex-audit10-scope-v1-2b4e8236f23ac3846aa7734f": 18,
+      "codex-audit10-scope-v1-4b52ccaf842955205c334a93": 18,
+      "codex-audit10-scope-v1-b3921dfb7003f1117863f853": 17,
+      "codex-audit10-scope-v1-2b15e3afd7a9500a22766762": 17,
+      "codex-audit10-scope-v1-7f5d591aa21354e5c9b3cfab": 17,
+      "codex-audit10-scope-v1-9e0ed6e8d7b0d4bcf0178444": 17,
+      "codex-audit10-scope-v1-ba446c8596809f79b4984806": 17,
+      "codex-audit10-scope-v1-c6e19460524f71a42c17dacf": 17,
+      "codex-audit10-scope-v1-dbfdd3c5a2b421383322ffa3": 17,
+      "codex-audit10-scope-v1-01ec79d0c5a3183ae36fc4fe": 17,
+      "codex-audit10-scope-v1-f4aa4d139950fc740674d9b3": 16,
+      "codex-audit10-scope-v1-0db4661b7f95e65085e74436": 16,
+      "codex-audit10-scope-v1-c44de4945e2770b66da1c85b": 16,
+      "codex-audit10-scope-v1-2c135c96077ad2cd03b2d09b": 16,
+      "codex-audit10-scope-v1-edb725cdacaf135b8c847754": 16,
+      "codex-audit10-scope-v1-2e91c89af8e40a77fb6d8e53": 15,
+      "codex-audit10-scope-v1-1b01c961fd175d1c8d509569": 15,
+      "codex-audit10-scope-v1-89725cd7e8d87d6f0a504382": 15,
+      "codex-audit10-scope-v1-f45fe6c15d769e23dbe158a7": 15,
+      "codex-audit10-scope-v1-8d525e9a7cac7641fa5f2505": 15,
+      "codex-audit10-scope-v1-52695c8bfbfcaa43033d5b9f": 15,
+      "codex-audit10-scope-v1-5d5723ad9ce5d22ed755cdbf": 15,
+      "codex-audit10-scope-v1-2c625cff4dd22295009043c1": 15,
+      "codex-audit10-scope-v1-ca7a25a0e59ce361443929bf": 15,
+      "codex-audit10-scope-v1-fe1c4d19d29a6110d5047cb2": 15,
+      "codex-audit10-scope-v1-e99fd345ae2a54a1fc9ac409": 15,
+      "codex-audit10-scope-v1-ee3f11495cedb611be7a1ac3": 14,
+      "codex-audit10-scope-v1-0198f98e4635d796bc617f07": 14,
+      "codex-audit10-scope-v1-e6bae42bd2168f146106c53e": 13,
+      "codex-audit10-scope-v1-f6ea7c85014e9ef8aca93755": 12,
+      "codex-audit10-scope-v1-587ba3f337d26d14fd3d2678": 12,
+      "codex-audit10-scope-v1-86052e5d4b8d2f4aebbb716d": 12,
+      "codex-audit10-scope-v1-70e86147e3dee91ddce41801": 12,
+      "codex-audit10-scope-v1-262a2f923749b06e5ec7b306": 11,
+      "codex-audit10-scope-v1-f1c17d217ddf392fb948020a": 11,
+      "codex-audit10-scope-v1-c5149bdc228b9197b7b9af52": 11,
+      "codex-audit10-scope-v1-d95acb25449f64746c59a9e3": 10,
+      "codex-audit10-scope-v1-6ea1e4697326d0ff96da4fc9": 10,
+      "codex-audit10-scope-v1-54a90cbc271973d0239b6582": 10,
+      "codex-audit10-scope-v1-71338a8cc472a95e26c28705": 10,
+      "codex-audit10-scope-v1-889fbbfdfa149e2478b28ba0": 10,
+      "codex-audit10-scope-v1-6c4521dd7e5426dae45429a5": 10,
+      "codex-audit10-scope-v1-808ecd9080b23f94be8bd0cd": 10,
+      "codex-audit10-scope-v1-1dd1618fc4a347024e053c6c": 10,
+      "codex-audit10-scope-v1-654194b789c211c78d1a63a2": 10,
+      "codex-audit10-scope-v1-9dc52abedc3b1e69f7bf9ade": 10,
+      "codex-audit10-scope-v1-8415ad0cf87cbf72348f296e": 9,
+      "codex-audit10-scope-v1-79054823668753bf7a3ddd46": 9,
+      "codex-audit10-scope-v1-32d7ce6c643bff2292f5989b": 9,
+      "codex-audit10-scope-v1-ed455870c57ada1568592143": 9,
+      "codex-audit10-scope-v1-fbf4df727bf58d2a1a56ef5c": 9,
+      "codex-audit10-scope-v1-a5ca2187d2f80f0119e23580": 9,
+      "codex-audit10-scope-v1-bbfa9be6dd3580853b0f5397": 9,
+      "codex-audit10-scope-v1-b997b2f590e93ff4ba7c5e9f": 8,
+      "codex-audit10-scope-v1-31d478bcf1920ca9e62dd59d": 8,
+      "codex-audit10-scope-v1-944656467e81122fd8f76d88": 8,
+      "codex-audit10-scope-v1-b21de2f9bbf7b02d0fd938a6": 8,
+      "codex-audit10-scope-v1-8ae451d9b2714c4a1d7f16ec": 8,
+      "codex-audit10-scope-v1-a049bb00412b958005c83d7e": 8,
+      "codex-audit10-scope-v1-a9055915680f4503faacac82": 8,
+      "codex-audit10-scope-v1-89896785935ae09ee0681be1": 8,
+      "codex-audit10-scope-v1-8e8715a4f596ccdeb50181b0": 8,
+      "codex-audit10-scope-v1-2c7cbeb4f5913f043ceef3c6": 8,
+      "codex-audit10-scope-v1-af58d481eabe12ad9a50682d": 8,
+      "codex-audit10-scope-v1-46258e527ad46255e0d88e26": 7,
+      "codex-audit10-scope-v1-e7b8b0553b81bb55d061a7fb": 7,
+      "codex-audit10-scope-v1-3d233000f7bb037d42cefc8d": 7,
+      "codex-audit10-scope-v1-8fef9b84bfcaf0b3ce2f5edd": 7,
+      "codex-audit10-scope-v1-a7b8769fd25c58f1a9f90469": 7,
+      "codex-audit10-scope-v1-cebe5c98c3a06c97db2560a1": 7,
+      "codex-audit10-scope-v1-7adb01343d283202c3b759ef": 7,
+      "codex-audit10-scope-v1-5cbf730e85ef75771564b6b3": 7,
+      "codex-audit10-scope-v1-45bfc85a7b46efc7e7e5bc33": 7,
+      "codex-audit10-scope-v1-dd9454a1d5cd2886f91bebc5": 7,
+      "codex-audit10-scope-v1-5b3bcca74a005eee25e31b4d": 7,
+      "codex-audit10-scope-v1-0836a4123e7b719b118486d0": 7,
+      "codex-audit10-scope-v1-77624ff943183a7ddff74ca7": 7,
+      "codex-audit10-scope-v1-dba7dabec280f60736efa51b": 7,
+      "codex-audit10-scope-v1-8e401893d831142243224f8f": 7,
+      "codex-audit10-scope-v1-28cc54726bb8b718f9fe907c": 7,
+      "codex-audit10-scope-v1-290724e7b70ee595074d8418": 7,
+      "codex-audit10-scope-v1-f3215fb1c49e76aee299d20d": 7,
+      "codex-audit10-scope-v1-4f8cdceeb11af7a72227399b": 7,
+      "codex-audit10-scope-v1-7a9c109ac3a64829b5c98d36": 7,
+      "1370d070-3362-4863-b850-5e9ce8e77b2f": 6,
+      "codex-audit10-scope-v1-bd6296b2b82f8b7d6c901e83": 6,
+      "codex-audit10-scope-v1-c722a30b538f2f6e31f7d1c8": 6,
+      "codex-audit10-scope-v1-f993a2e4d15a0313b336e9a0": 6,
+      "codex-audit10-scope-v1-6c1de3413f22205b4305cd29": 6,
+      "codex-audit10-scope-v1-db968cc2394356f7bd88e78c": 6,
+      "codex-audit10-scope-v1-71a4c28624979ebe9605a6af": 6,
+      "codex-audit10-scope-v1-603537fe82db552458f788c7": 6,
+      "codex-audit10-scope-v1-8fc0cf47926efcdcb92aabd3": 6,
+      "codex-audit10-scope-v1-bc05e30ec879fc062802c15b": 6,
+      "codex-audit10-scope-v1-ffe1b98f93a502b78dce797b": 6,
+      "codex-audit10-scope-v1-705adabdcc074d9ba567b9bc": 6,
+      "codex-audit10-scope-v1-89b33c31f9829ec0fc961746": 6,
+      "codex-audit10-scope-v1-f59c78d26b3b42802f0aa852": 6,
+      "codex-audit10-scope-v1-a201f6dbb9a4b4482b73a9ca": 6,
+      "codex-audit10-scope-v1-bbc656a4ec10daec385cbf85": 6,
+      "codex-audit10-scope-v1-8102254945c88d8472b68fa3": 6,
+      "codex-audit10-scope-v1-1b08a31fe4bb9c13841045e8": 6,
+      "codex-audit10-scope-v1-ae96859fd6206be653719ec4": 6,
+      "codex-audit10-scope-v1-09b3b995b6262440d6b3c86e": 6,
+      "codex-audit10-scope-v1-43982b5dcaf0c6c3b7228c1f": 6,
+      "codex-audit10-scope-v1-199454c353f3813ec0fdafab": 6,
+      "codex-audit10-scope-v1-e1d44edb420ffe878f5710d8": 6,
+      "codex-audit10-scope-v1-3730b466f42f0641c674bc4a": 6,
+      "codex-audit10-scope-v1-99bd83b869b1d583c322e417": 6,
+      "codex-audit10-scope-v1-c33ee5bdd7bdafc01503e8cc": 6,
+      "codex-audit10-scope-v1-bfc942beb4036a5dbc34c470": 6,
+      "codex-audit10-scope-v1-9abd1433f9b1ed321916057d": 6,
+      "codex-audit10-scope-v1-d46235587055ef756dc98cfd": 6,
+      "codex-audit10-scope-v1-7853bc11d18ff91d0945cb06": 5,
+      "codex-audit10-scope-v1-79cf7956c73d8939471fb601": 5,
+      "codex-audit10-scope-v1-baf8ed83ba172d7653c4befa": 5,
+      "codex-audit10-scope-v1-300597e6952799d8dc73f937": 5,
+      "codex-audit10-scope-v1-4a7132e3ceec43a07764931a": 5,
+      "codex-audit10-scope-v1-626ca0de7bb10d534e8ca256": 5,
+      "codex-audit10-scope-v1-e3525460952794638db1d123": 5,
+      "codex-audit10-scope-v1-a3bd2c52b7bf63c969c3e28a": 5,
+      "codex-audit10-scope-v1-27a283bcfeaf0b9ffd4ee621": 5,
+      "codex-audit10-scope-v1-97bbd4981120844e8a9f910d": 5,
+      "codex-audit10-scope-v1-3bb044b471cc7140dabea857": 5,
+      "codex-audit10-scope-v1-f1b766cf7cab29e8493056ba": 5,
+      "codex-audit10-scope-v1-d32eb816c11ece8f630612e8": 5,
+      "codex-audit10-scope-v1-918bcbbdf3ffcd4795b96cb8": 5,
+      "codex-audit10-scope-v1-c26aab60f024587e1e7afe48": 5,
+      "codex-audit10-scope-v1-b99c3cc0342912e741651187": 5,
+      "codex-audit10-scope-v1-786fb430e5aa749081c1e5f4": 5,
+      "codex-audit10-scope-v1-98e6dd0948786f76e808c134": 5,
+      "codex-audit10-scope-v1-7d0d3fedd15d2d80d04bb0d2": 5,
+      "codex-audit10-scope-v1-79b07824e2f466974b884ebf": 5,
+      "codex-audit10-scope-v1-460556745af0d3fe1729d0a4": 5,
+      "codex-audit10-scope-v1-4dfeedcf893a63f6eeffcec3": 5,
+      "codex-audit10-scope-v1-77aa9d7006d423c81431e93a": 5,
+      "codex-audit10-scope-v1-0b0f170a91d3fb453f91edfb": 5,
+      "codex-audit10-scope-v1-de4f02cf556b76f97844e135": 5,
+      "codex-audit10-scope-v1-dc1930d41a3f316303e55cb7": 5,
+      "codex-audit10-scope-v1-cbbb32a372f0fa3fe3bf4acd": 5,
+      "codex-audit10-scope-v1-673b293003bb7d92831cde74": 5,
+      "codex-audit10-scope-v1-82c1f74d7572d8a5c11b33a8": 5,
+      "codex-audit10-scope-v1-f83334f99d566d3eb864f59e": 5,
+      "codex-audit10-scope-v1-8b1ef3f726772cbda0f0cd67": 5,
+      "codex-audit10-scope-v1-ee33589f11d28ef22f74d88e": 5,
+      "codex-audit10-scope-v1-76a746704b7345d084082c5a": 5,
+      "codex-audit10-scope-v1-dd59bcf947a198c3ad131f71": 5,
+      "codex-audit10-scope-v1-b9ba37e2f91cabf5a016ce6a": 5,
+      "codex-audit10-scope-v1-5b18c74f7595d5dcd11b356c": 5,
+      "codex-audit10-scope-v1-848a45556d69705c7e3751f6": 5,
+      "codex-audit10-scope-v1-44dc5ef8dda6abbbcff3be90": 5,
+      "codex-audit10-scope-v1-87a4fefcad287f914625b3a7": 5,
+      "codex-audit10-scope-v1-db2c8209f13a968b96b8dd90": 5,
+      "codex-audit10-scope-v1-a4d6588376bcfad9ba7ad50b": 5,
+      "codex-audit10-scope-v1-0491e8fc25efe099c45e4e38": 5,
+      "codex-audit10-scope-v1-64b1e294f80f849e8efbdc0c": 5,
+      "codex-audit10-scope-v1-f87e9b840b6fd523cb549495": 5,
+      "codex-audit10-scope-v1-e63e695e81d6da4d5372b847": 5,
+      "codex-audit10-scope-v1-3289ebb13da83e0aae3d4d70": 5,
+      "codex-audit10-scope-v1-36d404795cccb3728252bdea": 5,
+      "codex-audit10-scope-v1-decc217a8e2007cc4fd0e7a0": 5,
+      "codex-audit10-scope-v1-3d2ea8141779d5026c784c95": 5,
+      "codex-audit10-scope-v1-ef66bcade7fca8bc4fce2aef": 5,
+      "codex-audit10-scope-v1-905341ff2bfd5b5a571c3c2f": 5,
+      "codex-audit10-scope-v1-2e117d74d42e26405ce078f8": 5,
+      "codex-audit10-scope-v1-2b15fbeeb42932a85e37eb82": 5,
+      "codex-audit10-scope-v1-7739d413fee136df5eb6350a": 5,
+      "codex-audit10-scope-v1-89fb6b3ac2835771249c817f": 5,
+      "codex-audit10-scope-v1-85133174eab1e28cfe2e4531": 5,
+      "codex-audit10-scope-v1-66b76bdcfee16b3d0919d877": 5,
+      "codex-audit10-scope-v1-00c1a794f9c78869c0a958a8": 5,
+      "codex-audit10-scope-v1-88fca2ab267ca4023f6e226b": 5,
+      "codex-audit10-scope-v1-fa4b7e904e8a9c0a76ce8cd2": 5,
+      "codex-audit10-scope-v1-f770d69db648511ba89f593a": 4,
+      "codex-audit10-scope-v1-83a11f42bc68e9b44676b7a4": 4,
+      "codex-audit10-scope-v1-a4d0480b1fefc9addad02b3d": 4,
+      "codex-audit10-scope-v1-513ab7a04f0270013d926f6b": 4,
+      "codex-audit10-scope-v1-ee90b0f9b96113cd05c2ccf3": 4,
+      "codex-audit10-scope-v1-b1ba1bef4237e18a995cbe3a": 4,
+      "codex-audit10-scope-v1-75ac78718f7b26f722dda9c9": 4,
+      "codex-audit10-scope-v1-0a22f656a28297e445145480": 4,
+      "codex-audit10-scope-v1-324a32bc20da29ea95be5018": 4,
+      "codex-audit10-scope-v1-b69c82589f522865978f53a6": 4,
+      "codex-audit10-scope-v1-9f1d0b2115e526a5f0cdb8a5": 4,
+      "codex-audit10-scope-v1-544bcbaafcdb04b3d98e3546": 4,
+      "codex-audit10-scope-v1-3d3b993c63f52e0cd75b50b0": 4,
+      "codex-audit10-scope-v1-c9efbe7180e585ced87693c5": 4,
+      "codex-audit10-scope-v1-5f1d4fcd5b1a943685c42f29": 4,
+      "codex-audit10-scope-v1-d685b6507a448ae23ac4de21": 4,
+      "codex-audit10-scope-v1-ab7e4e6642cc20b5d59499b4": 4,
+      "codex-audit10-scope-v1-d88f16f7530c9c2ba5951553": 4,
+      "codex-audit10-scope-v1-5943b071c22dd65dce8d3c0c": 4,
+      "codex-audit10-scope-v1-bf860bb79ac710575db33aca": 4,
+      "codex-audit10-scope-v1-eb131ddb6ef60c56d6f7f3eb": 4,
+      "codex-audit10-scope-v1-05fcf4754801c06cb270f6ed": 4,
+      "codex-audit10-scope-v1-f97e875e1334d9bdf46965fd": 4,
+      "codex-audit10-scope-v1-bde8671ad9a19c29cac506d6": 4,
+      "codex-audit10-scope-v1-f2a13c1da69c78545535c502": 4,
+      "codex-audit10-scope-v1-3549e5ae8bc99ae1d067d82e": 4,
+      "codex-audit10-scope-v1-9442bf77472c4c1ff1284447": 4,
+      "codex-audit10-scope-v1-8aab5d48753de83394f6b737": 4,
+      "codex-audit10-scope-v1-32fa2d2d6096e3b0c10c4990": 4,
+      "codex-audit10-scope-v1-b4bc73cec2c0a55569dba19e": 4,
+      "codex-audit10-scope-v1-eb8de6d21c349014e19c2359": 4,
+      "codex-audit10-scope-v1-083dba3ac93bd8e7df22f8bf": 4,
+      "codex-audit10-scope-v1-4cce75e4bbee3bc211b589cf": 4,
+      "codex-audit10-scope-v1-568a1bb4452918028635c285": 4,
+      "codex-audit10-scope-v1-7e430ef2925fd08283656297": 4,
+      "codex-audit10-scope-v1-a676ab9388c808f4c3aed862": 4,
+      "codex-audit10-scope-v1-11b911dcc7055b7a6ddb43b1": 4,
+      "codex-audit10-scope-v1-be0dc7c84acaa46fb24ea9e9": 4,
+      "codex-audit10-scope-v1-3fa2b06b4da7581efb583d4f": 4,
+      "codex-audit10-scope-v1-eba2a61ba7249ad0689e375a": 4,
+      "codex-audit10-scope-v1-ee1a879f97b98e23009d594a": 4,
+      "codex-audit10-scope-v1-914be574fb6240f378c7d280": 4,
+      "codex-audit10-scope-v1-fe86f0287f6f9f74b23c91f8": 4,
+      "codex-audit10-scope-v1-79857095a02a7f28f6161d73": 4,
+      "codex-audit10-scope-v1-f00cd050166a0288a1d69bc2": 4,
+      "codex-audit10-scope-v1-fd70dfbc4b7abd7dd028d070": 4,
+      "codex-audit10-scope-v1-fa1d184c32c2677bbd869048": 4,
+      "codex-audit10-scope-v1-7648b4b4fde1f1d6e6e32f1e": 3,
+      "codex-audit10-scope-v1-96c11ddaecb049b4f2ea11e0": 3,
+      "codex-audit10-scope-v1-bb70fdc11d9c7c12f384aada": 3,
+      "codex-audit10-scope-v1-727694c238a109a86f936a35": 3,
+      "codex-audit10-scope-v1-dfa815434854541d30d8f2f6": 3,
+      "codex-audit10-scope-v1-78fd6f3b6de191d646bbc571": 3,
+      "codex-audit10-scope-v1-3de062b16da95577b823927c": 3,
+      "codex-audit10-scope-v1-723cdb4402e8a3d35dfefc4e": 3,
+      "codex-audit10-scope-v1-3b3748f1af3cf8068a9e8586": 3,
+      "codex-audit10-scope-v1-58cdd2f695b1589865dd7863": 3,
+      "codex-audit10-scope-v1-a909016911633790eda78756": 3,
+      "codex-audit10-scope-v1-2594524a7f213d88a186a9bb": 3,
+      "codex-audit10-scope-v1-f0755c35449e3212b8f201e7": 3,
+      "codex-audit10-scope-v1-810514644e7412b04be3be3b": 3,
+      "codex-audit10-scope-v1-b795a3b3dcbdb06e8f904bc3": 3,
+      "codex-audit10-scope-v1-b88bb67cbac67f31337ed216": 3,
+      "codex-audit10-scope-v1-ad153bbfed35bda26213122c": 3,
+      "codex-audit10-scope-v1-490de3cf91f02100ca16ee40": 3,
+      "codex-audit10-scope-v1-070d1a42f9db3c0e4c4d2f41": 3,
+      "codex-audit10-scope-v1-2dec1097b8cdf05db543a909": 3,
+      "codex-audit10-scope-v1-461e96bee2b40c41cc237ac9": 3,
+      "codex-audit10-scope-v1-cfe0196fab57829612838036": 3,
+      "codex-audit10-scope-v1-934e94777866a930dc8adb6b": 3,
+      "codex-audit10-scope-v1-5e6feb6a817e351da1ca812c": 3,
+      "codex-audit10-scope-v1-099f372ad04fdfce778f3f3d": 3,
+      "codex-audit10-scope-v1-e237f2e82b2138cab9eb41da": 3,
+      "codex-audit10-scope-v1-38410dff76b54f7013f35aef": 3,
+      "codex-audit10-scope-v1-f1f69896e2e3ff10a0312ee7": 3,
+      "codex-audit10-scope-v1-033c9084330be35c794ae6d8": 3,
+      "codex-audit10-scope-v1-3b1cfc10b4c515dac5116a88": 3,
+      "codex-audit10-scope-v1-759b83dd903b9338942bec5b": 3,
+      "codex-audit10-scope-v1-af268adde70ab6b72d74614e": 3,
+      "codex-audit10-scope-v1-0ee72e75d63034f67f0a153c": 3,
+      "codex-audit10-scope-v1-d13e4d57d0a06e8f97dfadac": 3,
+      "codex-audit10-scope-v1-b8e3ab220243366045fdde54": 2,
+      "codex-audit10-scope-v1-aa245562b51a81e7bb9fdfd7": 2,
+      "codex-audit10-scope-v1-aa5aa35b2eed95e67209c71a": 2,
+      "codex-audit10-scope-v1-a7321d94581c643e5a631514": 2,
+      "codex-audit10-scope-v1-465c6b024febf7a483ce6b65": 2,
+      "codex-audit10-scope-v1-4112fb366dc1a4355cf022ed": 2,
+      "codex-audit10-scope-v1-14e69c017bc48fff77c54a8c": 2,
+      "codex-audit10-scope-v1-2e71ea2df6f3e44c3c785a3e": 2,
+      "codex-audit10-scope-v1-4778b0e85ca5592f4a042d8d": 2,
+      "codex-audit10-scope-v1-79a785779a086503d7adc53c": 2,
+      "codex-audit10-scope-v1-2d0748b2e4f49e7cd15a08a1": 2,
+      "codex-audit10-scope-v1-5213868d54b895696763e63a": 2,
+      "codex-audit10-scope-v1-b80137c84337f57dea980f2d": 2,
+      "codex-audit10-scope-v1-923fb55ae8dbd5b7f163d96e": 2,
+      "codex-audit10-scope-v1-a25e799a0f95b39d8dca1b63": 2,
+      "codex-audit10-scope-v1-098b3623cc4c645ee2029a9f": 2,
+      "codex-audit10-scope-v1-58204866473e4de1d9a28645": 2,
+      "codex-audit10-scope-v1-0235ff357188e7b40b9e9934": 2,
+      "codex-audit10-scope-v1-ba77d6784f1988f0a900f9f0": 2,
+      "codex-audit10-scope-v1-4626949e264895c1a285ea2b": 2,
+      "codex-audit10-scope-v1-9d795ecef6bb6267c98b3322": 2,
+      "codex-audit10-scope-v1-b2ca7c1dffb0ac525d6b2b83": 2,
+      "codex-audit10-scope-v1-04d2e6cd6276d4924f453b50": 2,
+      "codex-audit10-scope-v1-8ec2c624b8d10d0b61e0cfe4": 2,
+      "codex-audit10-scope-v1-9aec6ecf30d0a188ee35635f": 2,
+      "codex-audit10-scope-v1-7a0ec2f8323cef22b1fcb41e": 2,
+      "codex-audit10-scope-v1-9800e9902b0f6427896809c2": 2,
+      "codex-audit10-scope-v1-f852b824b2a014bc035d7d5e": 2,
+      "codex-audit10-scope-v1-c17dc41689da240b41a3f55d": 2,
+      "codex-audit10-scope-v1-0e42e7e036688c92c0d55afd": 2,
+      "codex-audit10-scope-v1-45f43cce10b1c6fd2da7c4bd": 2,
+      "codex-audit10-scope-v1-f73d3fdba076f7876e33aa0d": 1,
+      "codex-audit10-scope-v1-36bd40df7624b880f0e8b025": 1,
+      "codex-audit10-scope-v1-1f94bd1ed7c088074754b3e2": 1,
+      "codex-audit10-scope-v1-3f5ae3ea412a6e723c7d8b0c": 1,
+      "codex-audit10-scope-v1-e06e9004315e4b0093cde55d": 1,
+      "codex-audit10-scope-v1-fd1190fce75424fa30cabed4": 1,
+      "codex-audit10-scope-v1-842ba4dd3bd8dfc65f4568f5": 1,
+      "codex-audit10-scope-v1-955036fbbcc31ea0d272ec01": 1,
+      "codex-audit10-scope-v1-9a9c4f0d22b23a113f88c29b": 1,
+      "codex-audit10-scope-v1-301a993520407871597a5f05": 1,
+      "codex-audit10-scope-v1-8a501a68f7db7b2ed30fb91d": 1,
+      "codex-audit10-scope-v1-6e5c753bef67421412769757": 1,
+      "codex-audit10-scope-v1-53dbc8ef62dc7a6c05f8f9d4": 1,
+      "codex-audit10-scope-v1-4e866a1d4c83c43a32da2761": 1,
+      "codex-audit10-scope-v1-ed52b39fbadd51965d2f2af4": 1,
+      "codex-audit10-scope-v1-2d6e2a1d4896740ab36f6c77": 1,
+      "codex-audit10-scope-v1-b2a7a040ea1270f1ee5e6271": 1,
+      "codex-audit10-scope-v1-788cb81284e5444207e6df28": 1,
+      "codex-audit10-scope-v1-926c0e63fa0231563c7334f7": 1,
+      "codex-audit10-scope-v1-559abd92f5887da53879bd3e": 1
+    },
+    "events_by_reviewer": {
+      "CODEX": 43483,
+      "reviewer-879d60dc246ead2d": 12441,
+      "reviewer-0bb86bab6fb83fbd": 42
+    }
+  },
+  "codex_pro_v3_2": {
+    "pro_rows": 84902,
+    "review_events_before": 55966,
+    "latest_reviewed_chunks_before": 55924,
+    "targets": 941,
+    "accepted_pro": 909,
+    "modified": 32,
+    "labels_before": {
+      "ACOSO_AMENAZA": 277,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 25,
+      "CONTENIDO_SEXUAL": 60,
+      "RACISMO_DISCRIMINACION": 30,
+      "SEGURO": 592
+    },
+    "labels_after": {
+      "ACOSO_AMENAZA": 251,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 25,
+      "CONTENIDO_SEXUAL": 58,
+      "RACISMO_DISCRIMINACION": 24,
+      "SEGURO": 621
+    },
+    "transitions": {
+      "ACOSO_AMENAZA -> ACOSO_AMENAZA": 214,
+      "ACOSO_AMENAZA -> SEGURO": 24,
+      "ACOSO_AMENAZA+CONTENIDO_SEXUAL -> ACOSO_AMENAZA+CONTENIDO_SEXUAL": 9,
+      "ATAQUE_POR_GENERO_IDENTIDAD -> ATAQUE_POR_GENERO_IDENTIDAD": 8,
+      "ATAQUE_POR_GENERO_IDENTIDAD+ACOSO_AMENAZA -> ATAQUE_POR_GENERO_IDENTIDAD+ACOSO_AMENAZA": 17,
+      "CONTENIDO_SEXUAL -> CONTENIDO_SEXUAL": 45,
+      "CONTENIDO_SEXUAL -> SEGURO": 2,
+      "RACISMO_DISCRIMINACION -> RACISMO_DISCRIMINACION": 12,
+      "RACISMO_DISCRIMINACION -> SEGURO": 1,
+      "RACISMO_DISCRIMINACION+ACOSO_AMENAZA -> ACOSO_AMENAZA": 2,
+      "RACISMO_DISCRIMINACION+ACOSO_AMENAZA -> RACISMO_DISCRIMINACION+ACOSO_AMENAZA": 9,
+      "RACISMO_DISCRIMINACION+ACOSO_AMENAZA -> SEGURO": 2,
+      "RACISMO_DISCRIMINACION+CONTENIDO_SEXUAL -> CONTENIDO_SEXUAL": 1,
+      "RACISMO_DISCRIMINACION+CONTENIDO_SEXUAL -> RACISMO_DISCRIMINACION+CONTENIDO_SEXUAL": 3,
+      "SEGURO -> SEGURO": 592
+    },
+    "channels": {
+      "Goblinciano": 40,
+      "Hablando Huevadas": 636,
+      "Magaly TV La Firme": 2,
+      "Nunca MAS": 252,
+      "PBO": 9,
+      "Todo Good": 2
+    },
+    "override_decisions": [
+      {
+        "chunk_id": "6sWQXDx0lvY_d1e3c98e05dc62f71cac",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "La víctima denuncia arañazos y golpes; no profiere un ataque propio."
+      },
+      {
+        "chunk_id": "B8RyfJpAQVk_22b496f2d504c30e3ea9",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "RACISMO_DISCRIMINACION",
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "El chunk introduce con 'Escuchen' una grabación de una niña; los insultos raciales y personales son evidencia reproducida, no habla adoptada."
+      },
+      {
+        "chunk_id": "DXsTLFy79bw_d6f06f2f436549753b30",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Se responde defensivamente a amenazas previas; el chunk no profiere una amenaza, insulto ni hostigamiento propio."
+      },
+      {
+        "chunk_id": "F8fqLppdwUU_24b0f520187387c980cd",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Relato de maltrato y engaño; el enojo y la confrontación por sí solos no cumplen el umbral de acoso."
+      },
+      {
+        "chunk_id": "F8fqLppdwUU_eca306a41d8f3e6d55b6",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Discusión sobre responsabilidad y una acusación citada, sin insulto, humillación ni amenaza propia."
+      },
+      {
+        "chunk_id": "HNBaiKo92nw_c7d3e9789e9d20435b5d",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Acusación truncada de una amenaza recibida, sin hablante, blanco ni ataque propio recuperables."
+      },
+      {
+        "chunk_id": "Iaa2LSEaANk_e5c9e510cba9dc808659",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "'Ten cuidado' funciona como advertencia defensiva; no hay insulto ni amenaza plausible proferida."
+      },
+      {
+        "chunk_id": "OWlryMLElpY_75349318b301711f2985",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Fragmento sobre custodia y espera judicial; no contiene el ataque que la justificación Pro trasladó desde otro contexto."
+      },
+      {
+        "chunk_id": "PyJZ71zkU0c_45bae80483ff87eddb3b",
+        "channel_title": "Hablando Huevadas",
+        "proposed_labels": [
+          "CONTENIDO_SEXUAL"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "'concha de San Andrés' es un topónimo y la reducción mamaria no es sexual; la justificación Pro añadió un contexto de penetración ausente."
+      },
+      {
+        "chunk_id": "QhO6lNeNSwo_1cb80d087d48ef75da4b",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Acusación de violencia dentro de una disputa, sin insulto, amenaza o humillación observable."
+      },
+      {
+        "chunk_id": "QhO6lNeNSwo_3df171fe97c5eb7225cd",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Misma advertencia defensiva: tono hostil no equivale por sí solo a acoso."
+      },
+      {
+        "chunk_id": "V5dyjL_43RA_968b68e11072cb6060e2",
+        "channel_title": "PBO",
+        "proposed_labels": [
+          "RACISMO_DISCRIMINACION"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "'Videos chinos/Vladichín' es un juego de palabras sobre videovigilancia; no hay inferiorización racial, regional o nacional."
+      },
+      {
+        "chunk_id": "bKfbWk4zBZc_38ec63758560a551f0e5",
+        "channel_title": "Hablando Huevadas",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "No hay insulto, blanco ni amenaza observables; mencionar madre e hijo no basta para inferir acoso."
+      },
+      {
+        "chunk_id": "cWe6VKDEzvk_1d4000ce594bdbe77803",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Testimonio explícito de amenazas recibidas en el programa, sin adopción ni ataque propio."
+      },
+      {
+        "chunk_id": "cWe6VKDEzvk_26479e1c6c74877216b1",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "La hablante denuncia que ella y sus hijos fueron amenazados; aplica el veto de atribución."
+      },
+      {
+        "chunk_id": "cWe6VKDEzvk_8424836cd6d3cf7ea783",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "La conductora resume amenazas denunciadas y fotos de armas; no vuelve a dirigir la amenaza."
+      },
+      {
+        "chunk_id": "gJtXP-CTKc0_676950231167b2114ec6",
+        "channel_title": "Hablando Huevadas",
+        "proposed_labels": [
+          "RACISMO_DISCRIMINACION",
+          "CONTENIDO_SEXUAL"
+        ],
+        "final_labels": [
+          "CONTENIDO_SEXUAL"
+        ],
+        "reason": "El hablante desmiente el mito racial y no inferioriza al grupo; permanece la descripción sexual explícita independiente."
+      },
+      {
+        "chunk_id": "gMJF-yqQKwM_3774eb3d897e05c66402",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Continuación del audio infantil atribuido; denunciar a alguien no es aquí una amenaza proferida por el programa."
+      },
+      {
+        "chunk_id": "gMJF-yqQKwM_61fbde33eced5f5368ce",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "RACISMO_DISCRIMINACION",
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "El propio texto anuncia 'Vamos con el primer audio'; los insultos raciales son cita atribuida y no son adoptados."
+      },
+      {
+        "chunk_id": "gMJF-yqQKwM_7c8d067ad558fd72c508",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Continuación del audio infantil reproducido por el reportaje, sin adopción del narrador."
+      },
+      {
+        "chunk_id": "gMJF-yqQKwM_b3bbc1a1d27667bd1cff",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "La conductora presenta un audio de una niña; la amenaza e insulto quedan claramente atribuidos."
+      },
+      {
+        "chunk_id": "hLiZRkcKnUM_575e7fa35b18e257e284",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Es continuación de un audio atribuido y el chunk no contiene un insulto propio inequívoco del narrador."
+      },
+      {
+        "chunk_id": "hLiZRkcKnUM_8494ca6405510ea95599",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "La víctima pide que la dejen en paz y pregunta si la matarán o golpearán; no emite la amenaza."
+      },
+      {
+        "chunk_id": "hLiZRkcKnUM_e1971cea16779c3dfce4",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "El programa introduce y reproduce un audio atribuido; no hay ataque nuevo del narrador."
+      },
+      {
+        "chunk_id": "hN0kJIXdC6o_0ba2187a878d9678a500",
+        "channel_title": "Hablando Huevadas",
+        "proposed_labels": [
+          "CONTENIDO_SEXUAL"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "La frase insinuante está atribuida a una tercera persona y no describe un acto sexual explícito; aplica el veto de atribución."
+      },
+      {
+        "chunk_id": "hXTM_nshBOo_397d5029226dee00a464",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "La frase repite 'no va a subir' y niega matar/violar; Pro convirtió la negación en amenaza."
+      },
+      {
+        "chunk_id": "o3xPbl3v-NA_8536606e08a1129fc995",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "La hablante cita una amenaza recibida y la denuncia; la justificación Pro reconoce que corresponde el veto de atribución."
+      },
+      {
+        "chunk_id": "o3xPbl3v-NA_eada273108db0b793386",
+        "channel_title": "Nunca MAS",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "La hablante se defiende de acusaciones; no profiere un insulto ni amenaza contra un blanco."
+      },
+      {
+        "chunk_id": "oy169TBaS_o_818e0d5c268f0c209a4c",
+        "channel_title": "PBO",
+        "proposed_labels": [
+          "RACISMO_DISCRIMINACION",
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "reason": "'Caviares' designa una posición política en este uso y no prueba racialización; se conserva el ataque colectivo propio."
+      },
+      {
+        "chunk_id": "oy169TBaS_o_85478670133917626597",
+        "channel_title": "PBO",
+        "proposed_labels": [
+          "RACISMO_DISCRIMINACION",
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "reason": "'Caviares' designa una posición política en este uso y no prueba racialización; se conserva la imputación hostil al grupo."
+      },
+      {
+        "chunk_id": "wM5l94LBkCE_762042d3e94ac013a203",
+        "channel_title": "Hablando Huevadas",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Expresión censurada y fragmentaria sin blanco identificable; el contrato prohíbe inventar el ataque omitido."
+      },
+      {
+        "chunk_id": "wM5l94LBkCE_93d5ce875472e233fd63",
+        "channel_title": "Hablando Huevadas",
+        "proposed_labels": [
+          "ACOSO_AMENAZA"
+        ],
+        "final_labels": [
+          "SEGURO"
+        ],
+        "reason": "Insulto fosilizado aislado en ASR corrupto, sin blanco ni atribución recuperables."
+      }
+    ]
+  },
+  "frozen_panel": {
+    "seed_text": "CODEX-AUDIT-20260809-CLEAN",
+    "sha_key": "sha256(seed_text|chunk_id)",
+    "size": 16694,
+    "original_eligible_population": 157719,
+    "fraction_of_original_eligible": 0.10584647379199716,
+    "current_total_population": 182461,
+    "current_eligible_population": 173240,
+    "fraction_of_current_total": 0.09149352464362247,
+    "fraction_of_current_eligible": 0.09636342646040176,
+    "strata": 35,
+    "initial_effective_composition": {
+      "AL_MENOS_UN_DANO": 1155,
+      "PENDIENTE": 4353,
+      "SEGURO": 11186
+    },
+    "final_reference_composition": {
+      "AL_MENOS_UN_DANO": 1319,
+      "SEGURO": 15375
+    },
+    "initial_damage_label_assignments": {
+      "ACOSO_AMENAZA": 679,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 217,
+      "CONTENIDO_SEXUAL": 298,
+      "RACISMO_DISCRIMINACION": 236
+    },
+    "final_damage_label_assignments": {
+      "ACOSO_AMENAZA": 725,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 218,
+      "CONTENIDO_SEXUAL": 379,
+      "RACISMO_DISCRIMINACION": 273
+    },
+    "final_harm_prevalence": 0.07901042290643345,
+    "final_harm_prevalence_wilson_95": [
+      0.07501458210909805,
+      0.0831999670789428
+    ],
+    "registered_sample_corrections_recovered": 62
+  },
+  "combined_audit_coverage": {
+    "frozen_stratified_panel": 16694,
+    "directed_codex_v3_2": 941,
+    "overlap_between_layers": 0,
+    "unique_chunks": 17635,
+    "fraction_of_current_eligible": 0.10179519741399215,
+    "interpretation": "El panel sostiene la inferencia longitudinal; la capa CODEX es dirigida a incertidumbre y no se interpreta como muestra aleatoria."
+  },
+  "panel_systems": {
+    "cascada_flash_pro_consolidada": {
+      "system": "cascada_flash_pro_consolidada",
+      "sample_total": 16694,
+      "records_available": 16694,
+      "answered": 13457,
+      "coverage_over_sample": 0.8060979992811789,
+      "abstention_over_sample": 0.19390200071882113,
+      "reference_harm": 1117,
+      "predicted_harm": 1283,
+      "point": {
+        "exact_agreement": 0.9839488741918704,
+        "binary_f1": 0.9158333333333334,
+        "binary_mcc": 0.9102623066840902,
+        "multilabel_micro_f1": 0.9104327406910433,
+        "hamming_loss": 0.004960243739317827,
+        "tp": 1099,
+        "tn": 12156,
+        "fp": 184,
+        "fn": 18,
+        "multilabel_micro_precision": 0.8486554096310194,
+        "multilabel_micro_recall": 0.9819102749638206,
+        "multilabel_macro_precision": 0.8482383098406535,
+        "multilabel_macro_recall": 0.9800066438383654,
+        "multilabel_macro_f1": 0.9090040463419156,
+        "sample_jaccard": 0.9844752421292511,
+        "binary_precision": 0.8565861262665627,
+        "binary_recall_sensitivity": 0.9838854073410922,
+        "binary_specificity": 0.9850891410048622,
+        "binary_balanced_accuracy": 0.9844872741729772,
+        "binary_cohen_kappa": 0.9076364045585513
+      },
+      "exact_agreement_wilson_95": [
+        0.981683272266057,
+        0.9859382571788876
+      ],
+      "stratified_bootstrap_percentile_95": {
+        "exact_agreement": [
+          0.9819424834658542,
+          0.9858066433826261
+        ],
+        "binary_f1": [
+          0.9056592005648608,
+          0.9258487246101725
+        ],
+        "binary_mcc": [
+          0.8996196436230377,
+          0.9208113773012142
+        ],
+        "multilabel_micro_f1": [
+          0.8990634082311243,
+          0.9214108964915153
+        ],
+        "hamming_loss": [
+          0.004347179906368433,
+          0.005610462956082337
+        ]
+      },
+      "confidence": {
+        "n_with_confidence": 13457,
+        "mean": 0.9340521661588762,
+        "median": 0.95,
+        "q1": 0.95,
+        "q3": 0.95,
+        "empirical_exact_agreement": 0.9839488741918704,
+        "brier_for_exact_correctness": 0.016915478932897382,
+        "ece_10_equal_width": 0.04989670803299415,
+        "bands": [
+          {
+            "lower": 0.0,
+            "upper": 0.7,
+            "n": 202,
+            "mean_confidence": 0.6316831683168318,
+            "exact_agreement": 0.7079207920792079,
+            "exact_agreement_wilson_95": [
+              0.6418004752170058,
+              0.7662805813459063
+            ]
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.85,
+            "n": 85,
+            "mean_confidence": 0.7782352941176469,
+            "exact_agreement": 0.8352941176470589,
+            "exact_agreement_wilson_95": [
+              0.7423169668021896,
+              0.8992753793460349
+            ]
+          },
+          {
+            "lower": 0.85,
+            "upper": 0.95,
+            "n": 2553,
+            "mean_confidence": 0.8943282412847631,
+            "exact_agreement": 0.954563258911085,
+            "exact_agreement_wilson_95": [
+              0.9457790842958378,
+              0.9619815404362593
+            ]
+          },
+          {
+            "lower": 0.95,
+            "upper": 1.0,
+            "n": 10617,
+            "mean_confidence": 0.9506046905905623,
+            "exact_agreement": 0.99745690873128,
+            "exact_agreement_wilson_95": [
+              0.9963023826452784,
+              0.9982515838135038
+            ]
+          }
+        ]
+      },
+      "per_label": {
+        "ACOSO_AMENAZA": {
+          "reference_support": 640,
+          "predicted_support": 753,
+          "precision": 0.8459495351925631,
+          "recall": 0.9953125,
+          "f1": 0.914572864321608,
+          "cohen_kappa": 0.9099423842216752
+        },
+        "CONTENIDO_SEXUAL": {
+          "reference_support": 308,
+          "predicted_support": 333,
+          "precision": 0.8678678678678678,
+          "recall": 0.9383116883116883,
+          "f1": 0.9017160686427457,
+          "cohen_kappa": 0.8993219060068931
+        },
+        "RACISMO_DISCRIMINACION": {
+          "reference_support": 230,
+          "predicted_support": 267,
+          "precision": 0.8539325842696629,
+          "recall": 0.991304347826087,
+          "f1": 0.9175050301810865,
+          "cohen_kappa": 0.9159617620434926
+        },
+        "ATAQUE_POR_GENERO_IDENTIDAD": {
+          "reference_support": 204,
+          "predicted_support": 246,
+          "precision": 0.8252032520325203,
+          "recall": 0.9950980392156863,
+          "f1": 0.9022222222222223,
+          "cohen_kappa": 0.9005743136932894
+        }
+      }
+    },
+    "deepseek_v4_flash": {
+      "system": "deepseek_v4_flash",
+      "sample_total": 16694,
+      "records_available": 16694,
+      "answered": 11537,
+      "coverage_over_sample": 0.6910866179465677,
+      "abstention_over_sample": 0.30891338205343233,
+      "reference_harm": 1110,
+      "predicted_harm": 1895,
+      "point": {
+        "exact_agreement": 0.9038744907688308,
+        "binary_f1": 0.7148086522462562,
+        "binary_mcc": 0.7074105811160986,
+        "multilabel_micro_f1": 0.6311592138991741,
+        "hamming_loss": 0.02806188783912629,
+        "tp": 1074,
+        "tn": 9606,
+        "fp": 821,
+        "fn": 36,
+        "multilabel_micro_precision": 0.5132005558128764,
+        "multilabel_micro_recall": 0.8195266272189349,
+        "multilabel_macro_precision": 0.5307213847119879,
+        "multilabel_macro_recall": 0.8012016344412034,
+        "multilabel_macro_f1": 0.6325788935396066,
+        "sample_jaccard": 0.9117549334026755,
+        "binary_precision": 0.566754617414248,
+        "binary_recall_sensitivity": 0.9675675675675676,
+        "binary_specificity": 0.9212621079888751,
+        "binary_balanced_accuracy": 0.9444148377782213,
+        "binary_cohen_kappa": 0.6754225335120709
+      },
+      "exact_agreement_wilson_95": [
+        0.8983606015495117,
+        0.9091195144586209
+      ],
+      "stratified_bootstrap_percentile_95": {
+        "exact_agreement": [
+          0.9002340296437549,
+          0.9074282742480714
+        ],
+        "binary_f1": [
+          0.7018710847975554,
+          0.727878807460292
+        ],
+        "binary_mcc": [
+          0.6950486231839965,
+          0.7200408491264474
+        ],
+        "multilabel_micro_f1": [
+          0.6165845783575383,
+          0.6463207705273607
+        ],
+        "hamming_loss": [
+          0.02689173962035191,
+          0.029275374880818238
+        ]
+      },
+      "confidence": {
+        "n_with_confidence": 11537,
+        "mean": 0.923350091011528,
+        "median": 0.95,
+        "q1": 0.9,
+        "q3": 0.95,
+        "empirical_exact_agreement": 0.9038744907688308,
+        "brier_for_exact_correctness": 0.07055618445003034,
+        "ece_10_equal_width": 0.0611952847360666,
+        "bands": [
+          {
+            "lower": 0.0,
+            "upper": 0.7,
+            "n": 235,
+            "mean_confidence": 0.6457446808510641,
+            "exact_agreement": 0.39574468085106385,
+            "exact_agreement_wilson_95": [
+              0.3353817917605625,
+              0.45946119637917315
+            ]
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.85,
+            "n": 615,
+            "mean_confidence": 0.7756097560975609,
+            "exact_agreement": 0.4097560975609756,
+            "exact_agreement_wilson_95": [
+              0.37156534666572866,
+              0.4490672266406411
+            ]
+          },
+          {
+            "lower": 0.85,
+            "upper": 0.95,
+            "n": 2049,
+            "mean_confidence": 0.8844997559785261,
+            "exact_agreement": 0.7437774524158126,
+            "exact_agreement_wilson_95": [
+              0.7244314796992989,
+              0.7622110691967569
+            ]
+          },
+          {
+            "lower": 0.95,
+            "upper": 1.0,
+            "n": 8638,
+            "mean_confidence": 0.9506367214633017,
+            "exact_agreement": 0.9908543644362121,
+            "exact_agreement_wilson_95": [
+              0.9886173014524474,
+              0.9926550396808763
+            ]
+          }
+        ]
+      },
+      "per_label": {
+        "ACOSO_AMENAZA": {
+          "reference_support": 600,
+          "predicted_support": 1090,
+          "precision": 0.4706422018348624,
+          "recall": 0.855,
+          "f1": 0.6071005917159763,
+          "cohen_kappa": 0.5788473918787347
+        },
+        "CONTENIDO_SEXUAL": {
+          "reference_support": 326,
+          "predicted_support": 373,
+          "precision": 0.6890080428954424,
+          "recall": 0.7883435582822086,
+          "f1": 0.7353361945636624,
+          "cohen_kappa": 0.7271065814091426
+        },
+        "RACISMO_DISCRIMINACION": {
+          "reference_support": 236,
+          "predicted_support": 424,
+          "precision": 0.5,
+          "recall": 0.8983050847457628,
+          "f1": 0.6424242424242425,
+          "cohen_kappa": 0.6327724885936512
+        },
+        "ATAQUE_POR_GENERO_IDENTIDAD": {
+          "reference_support": 190,
+          "predicted_support": 272,
+          "precision": 0.4632352941176471,
+          "recall": 0.6631578947368421,
+          "f1": 0.5454545454545454,
+          "cohen_kappa": 0.5364657929789425
+        }
+      }
+    },
+    "deepseek_v4_pro": {
+      "system": "deepseek_v4_pro",
+      "sample_total": 16694,
+      "records_available": 8199,
+      "answered": 5026,
+      "coverage_over_sample": 0.30106625134778964,
+      "abstention_over_sample": 0.6989337486522104,
+      "reference_harm": 1107,
+      "predicted_harm": 1283,
+      "point": {
+        "exact_agreement": 0.9590131317150816,
+        "binary_f1": 0.9196652719665271,
+        "binary_mcc": 0.8989754781618342,
+        "multilabel_micro_f1": 0.9134971390104342,
+        "hamming_loss": 0.012783525666534023,
+        "tp": 1099,
+        "tn": 3735,
+        "fp": 184,
+        "fn": 8,
+        "multilabel_micro_precision": 0.8486554096310194,
+        "multilabel_micro_recall": 0.989067055393586,
+        "multilabel_macro_precision": 0.8482383098406535,
+        "multilabel_macro_recall": 0.9878783861899736,
+        "multilabel_macro_f1": 0.9125766139672831,
+        "sample_jaccard": 0.9604224698235841,
+        "binary_precision": 0.8565861262665627,
+        "binary_recall_sensitivity": 0.992773261065944,
+        "binary_specificity": 0.9530492472569533,
+        "binary_balanced_accuracy": 0.9729112541614486,
+        "binary_cohen_kappa": 0.894784517996794
+      },
+      "exact_agreement_wilson_95": [
+        0.9531723103591137,
+        0.9641528255869818
+      ],
+      "stratified_bootstrap_percentile_95": {
+        "exact_agreement": [
+          0.9538400318344608,
+          0.9639872662156784
+        ],
+        "binary_f1": [
+          0.9092429945629444,
+          0.9294608422086813
+        ],
+        "binary_mcc": [
+          0.8861651867810391,
+          0.9109587082630927
+        ],
+        "multilabel_micro_f1": [
+          0.9020124348562177,
+          0.9242280028724836
+        ],
+        "hamming_loss": [
+          0.011190559092717867,
+          0.014574214086748905
+        ]
+      },
+      "confidence": {
+        "n_with_confidence": 5026,
+        "mean": 0.9163708714683646,
+        "median": 0.95,
+        "q1": 0.9,
+        "q3": 0.95,
+        "empirical_exact_agreement": 0.9590131317150816,
+        "brier_for_exact_correctness": 0.037941663350577005,
+        "ece_10_equal_width": 0.042642260246716995,
+        "bands": [
+          {
+            "lower": 0.0,
+            "upper": 0.7,
+            "n": 202,
+            "mean_confidence": 0.6316831683168318,
+            "exact_agreement": 0.7079207920792079,
+            "exact_agreement_wilson_95": [
+              0.6418004752170058,
+              0.7662805813459063
+            ]
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.85,
+            "n": 85,
+            "mean_confidence": 0.7782352941176469,
+            "exact_agreement": 0.8352941176470589,
+            "exact_agreement_wilson_95": [
+              0.7423169668021896,
+              0.8992753793460349
+            ]
+          },
+          {
+            "lower": 0.85,
+            "upper": 0.95,
+            "n": 1633,
+            "mean_confidence": 0.8939865278628292,
+            "exact_agreement": 0.9326393141457441,
+            "exact_agreement_wilson_95": [
+              0.9194391768411511,
+              0.9438087525081175
+            ]
+          },
+          {
+            "lower": 0.95,
+            "upper": 1.0,
+            "n": 3106,
+            "mean_confidence": 0.9504346426271731,
+            "exact_agreement": 0.9925949774629749,
+            "exact_agreement_wilson_95": [
+              0.9889124693884451,
+              0.9950605210418789
+            ]
+          }
+        ]
+      },
+      "per_label": {
+        "ACOSO_AMENAZA": {
+          "reference_support": 640,
+          "predicted_support": 753,
+          "precision": 0.8459495351925631,
+          "recall": 0.9953125,
+          "f1": 0.914572864321608,
+          "cohen_kappa": 0.9009348097800072
+        },
+        "CONTENIDO_SEXUAL": {
+          "reference_support": 298,
+          "predicted_support": 333,
+          "precision": 0.8678678678678678,
+          "recall": 0.9697986577181208,
+          "f1": 0.9160063391442155,
+          "cohen_kappa": 0.910399073240007
+        },
+        "RACISMO_DISCRIMINACION": {
+          "reference_support": 230,
+          "predicted_support": 267,
+          "precision": 0.8539325842696629,
+          "recall": 0.991304347826087,
+          "f1": 0.9175050301810865,
+          "cohen_kappa": 0.9132390945736225
+        },
+        "ATAQUE_POR_GENERO_IDENTIDAD": {
+          "reference_support": 204,
+          "predicted_support": 246,
+          "precision": 0.8252032520325203,
+          "recall": 0.9950980392156863,
+          "f1": 0.9022222222222223,
+          "cohen_kappa": 0.8976816148560239
+        }
+      }
+    }
+  },
+  "paired_flash_vs_pro": {
+    "n": 2252,
+    "flash_exact_agreement": 0.7357904085257548,
+    "pro_exact_agreement": 0.9391651865008881,
+    "pro_minus_flash_exact_agreement": 0.2033747779751332,
+    "stratified_bootstrap_percentile_95": [
+      0.18650088809946713,
+      0.21981571936056832
+    ],
+    "flash_only_correct": 41,
+    "pro_only_correct": 499,
+    "mcnemar_exact_two_sided_p": 4.0643897882758935e-101,
+    "selection_warning": "El panel común pertenece a la cola dirigida a Pro; no es una comparación aleatoria de toda la muestra."
+  },
+  "input_sha256": {
+    "datos\\etiquetado\\consolidado\\anotaciones_v2.jsonl": "23a9341760997a68126bca985431436a8937cb35695a8efebec963412a3667ed",
+    "datos\\etiquetado\\consolidado\\anotaciones_revisadas_v2.jsonl": "629e37ba99c7107463f316d864f6a7ad1c790a5e97a985dbe0705849431f5f1c",
+    "datos\\etiquetado\\humano\\labeling_events_v2.jsonl": "99ada9138647bf09d2d0b0b7ddd5badb91e680287a2f8e0e74d38f499f39bbb6",
+    "datos\\model_ready\\v2\\dataset_5_salidas.jsonl": "24d3d81d23c00cb1ba27fcca8c2759a97be5c9932ceaeb60be0a4e9a1cfca783",
+    "datos\\model_ready\\v2\\snapshots\\v2.1.0-05854b628c1a3b4d\\dataset_5_salidas.jsonl": "d9261b5afe35f2753ec838708398a8152ce1d9113e78ee3f5ec1af6a6f5dc0f6",
+    "datos\\etiquetado\\humano\\codex_latest_pro_v3_2_reviewed.events.jsonl": "bf6f877d1798d23e9c4dee770cbfca72fbb65b5df0b1a6bc3427957fd10da895"
+  }
+}

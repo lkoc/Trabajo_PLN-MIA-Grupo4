@@ -1,0 +1,552 @@
+{
+  "generated_by": "tools/report_audit_comparison.py",
+  "sample": {
+    "seed_text": "CODEX-AUDIT-20260809-CLEAN",
+    "sha_key": "sha256(seed_text|chunk_id)",
+    "size": 16694,
+    "original_eligible_population": 157719,
+    "fraction_of_original_eligible": 0.10584647379199716,
+    "current_total_population": 182461,
+    "current_eligible_population": 173240,
+    "fraction_of_current_total": 0.09149352464362247,
+    "fraction_of_current_eligible": 0.09636342646040176,
+    "strata": 35,
+    "initial_effective_composition": {
+      "AL_MENOS_UN_DANO": 1155,
+      "PENDIENTE": 4353,
+      "SEGURO": 11186
+    },
+    "final_reference_composition": {
+      "AL_MENOS_UN_DANO": 1319,
+      "SEGURO": 15375
+    },
+    "initial_damage_label_assignments": {
+      "ACOSO_AMENAZA": 679,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 217,
+      "CONTENIDO_SEXUAL": 298,
+      "RACISMO_DISCRIMINACION": 236
+    },
+    "final_damage_label_assignments": {
+      "ACOSO_AMENAZA": 725,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 218,
+      "CONTENIDO_SEXUAL": 379,
+      "RACISMO_DISCRIMINACION": 273
+    },
+    "final_harm_prevalence": 0.07901042290643345,
+    "final_harm_prevalence_wilson_95": [
+      0.07501458210909805,
+      0.0831999670789428
+    ],
+    "registered_sample_corrections_recovered": 62
+  },
+  "reference": {
+    "name": "CODEX–Sol-EH supervisado / adjudicación híbrida final",
+    "warning": "Referencia interna no independiente: los acuerdos conservaron la decisión previa y 4.327 casos inicialmente pendientes se resolvieron con una jerarquía Flash/Pro/CODEX; la actualización v3.2 añadió una adjudicación CODEX dirigida de propuestas Pro.",
+    "numeric_sol_confidence_available": false,
+    "provenance": {
+      "adjudicacion_hibrida_final": 4327,
+      "cambio_dirigido_alta_confianza": 47,
+      "cambio_muestral_alta_confianza": 62,
+      "evento_manual_otro": 173,
+      "modelo_base_conservado": 11797,
+      "revision_prioritaria_pre_muestra": 288
+    },
+    "unlabeled_batch_methods_in_sample": {
+      "codex_attribution_or_contract_override": 8,
+      "codex_conservative_safe_after_abstention": 71,
+      "codex_low_risk_safe_after_abstention": 2563,
+      "codex_partial_contract_override": 2,
+      "flash_v2_prior_safe_low_risk": 184,
+      "flash_v3_1_1_low_risk_sample": 295,
+      "flash_v3_risk": 1037,
+      "pro_v3_1_1_low_risk_hard": 12,
+      "pro_v3_1_broad_stance": 21,
+      "pro_v3_1_hard": 72,
+      "pro_v3_1_stance": 62
+    }
+  },
+  "systems": {
+    "cascada_flash_pro_consolidada": {
+      "system": "cascada_flash_pro_consolidada",
+      "sample_total": 16694,
+      "records_available": 16694,
+      "answered": 13457,
+      "coverage_over_sample": 0.8060979992811789,
+      "abstention_over_sample": 0.19390200071882113,
+      "reference_harm": 1117,
+      "predicted_harm": 1283,
+      "point": {
+        "exact_agreement": 0.9839488741918704,
+        "binary_f1": 0.9158333333333334,
+        "binary_mcc": 0.9102623066840902,
+        "multilabel_micro_f1": 0.9104327406910433,
+        "hamming_loss": 0.004960243739317827,
+        "tp": 1099,
+        "tn": 12156,
+        "fp": 184,
+        "fn": 18,
+        "multilabel_micro_precision": 0.8486554096310194,
+        "multilabel_micro_recall": 0.9819102749638206,
+        "multilabel_macro_precision": 0.8482383098406535,
+        "multilabel_macro_recall": 0.9800066438383654,
+        "multilabel_macro_f1": 0.9090040463419156,
+        "sample_jaccard": 0.9844752421292511,
+        "binary_precision": 0.8565861262665627,
+        "binary_recall_sensitivity": 0.9838854073410922,
+        "binary_specificity": 0.9850891410048622,
+        "binary_balanced_accuracy": 0.9844872741729772,
+        "binary_cohen_kappa": 0.9076364045585513
+      },
+      "exact_agreement_wilson_95": [
+        0.981683272266057,
+        0.9859382571788876
+      ],
+      "stratified_bootstrap_percentile_95": {
+        "exact_agreement": [
+          0.9819424834658542,
+          0.9858066433826261
+        ],
+        "binary_f1": [
+          0.9056592005648608,
+          0.9258487246101725
+        ],
+        "binary_mcc": [
+          0.8996196436230377,
+          0.9208113773012142
+        ],
+        "multilabel_micro_f1": [
+          0.8990634082311243,
+          0.9214108964915153
+        ],
+        "hamming_loss": [
+          0.004347179906368433,
+          0.005610462956082337
+        ]
+      },
+      "confidence": {
+        "n_with_confidence": 13457,
+        "mean": 0.9340521661588762,
+        "median": 0.95,
+        "q1": 0.95,
+        "q3": 0.95,
+        "empirical_exact_agreement": 0.9839488741918704,
+        "brier_for_exact_correctness": 0.016915478932897382,
+        "ece_10_equal_width": 0.04989670803299415,
+        "bands": [
+          {
+            "lower": 0.0,
+            "upper": 0.7,
+            "n": 202,
+            "mean_confidence": 0.6316831683168318,
+            "exact_agreement": 0.7079207920792079,
+            "exact_agreement_wilson_95": [
+              0.6418004752170058,
+              0.7662805813459063
+            ]
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.85,
+            "n": 85,
+            "mean_confidence": 0.7782352941176469,
+            "exact_agreement": 0.8352941176470589,
+            "exact_agreement_wilson_95": [
+              0.7423169668021896,
+              0.8992753793460349
+            ]
+          },
+          {
+            "lower": 0.85,
+            "upper": 0.95,
+            "n": 2553,
+            "mean_confidence": 0.8943282412847631,
+            "exact_agreement": 0.954563258911085,
+            "exact_agreement_wilson_95": [
+              0.9457790842958378,
+              0.9619815404362593
+            ]
+          },
+          {
+            "lower": 0.95,
+            "upper": 1.0,
+            "n": 10617,
+            "mean_confidence": 0.9506046905905623,
+            "exact_agreement": 0.99745690873128,
+            "exact_agreement_wilson_95": [
+              0.9963023826452784,
+              0.9982515838135038
+            ]
+          }
+        ]
+      },
+      "per_label": {
+        "ACOSO_AMENAZA": {
+          "reference_support": 640,
+          "predicted_support": 753,
+          "precision": 0.8459495351925631,
+          "recall": 0.9953125,
+          "f1": 0.914572864321608,
+          "cohen_kappa": 0.9099423842216752
+        },
+        "CONTENIDO_SEXUAL": {
+          "reference_support": 308,
+          "predicted_support": 333,
+          "precision": 0.8678678678678678,
+          "recall": 0.9383116883116883,
+          "f1": 0.9017160686427457,
+          "cohen_kappa": 0.8993219060068931
+        },
+        "RACISMO_DISCRIMINACION": {
+          "reference_support": 230,
+          "predicted_support": 267,
+          "precision": 0.8539325842696629,
+          "recall": 0.991304347826087,
+          "f1": 0.9175050301810865,
+          "cohen_kappa": 0.9159617620434926
+        },
+        "ATAQUE_POR_GENERO_IDENTIDAD": {
+          "reference_support": 204,
+          "predicted_support": 246,
+          "precision": 0.8252032520325203,
+          "recall": 0.9950980392156863,
+          "f1": 0.9022222222222223,
+          "cohen_kappa": 0.9005743136932894
+        }
+      }
+    },
+    "deepseek_v4_flash": {
+      "system": "deepseek_v4_flash",
+      "sample_total": 16694,
+      "records_available": 16694,
+      "answered": 11537,
+      "coverage_over_sample": 0.6910866179465677,
+      "abstention_over_sample": 0.30891338205343233,
+      "reference_harm": 1110,
+      "predicted_harm": 1895,
+      "point": {
+        "exact_agreement": 0.9038744907688308,
+        "binary_f1": 0.7148086522462562,
+        "binary_mcc": 0.7074105811160986,
+        "multilabel_micro_f1": 0.6311592138991741,
+        "hamming_loss": 0.02806188783912629,
+        "tp": 1074,
+        "tn": 9606,
+        "fp": 821,
+        "fn": 36,
+        "multilabel_micro_precision": 0.5132005558128764,
+        "multilabel_micro_recall": 0.8195266272189349,
+        "multilabel_macro_precision": 0.5307213847119879,
+        "multilabel_macro_recall": 0.8012016344412034,
+        "multilabel_macro_f1": 0.6325788935396066,
+        "sample_jaccard": 0.9117549334026755,
+        "binary_precision": 0.566754617414248,
+        "binary_recall_sensitivity": 0.9675675675675676,
+        "binary_specificity": 0.9212621079888751,
+        "binary_balanced_accuracy": 0.9444148377782213,
+        "binary_cohen_kappa": 0.6754225335120709
+      },
+      "exact_agreement_wilson_95": [
+        0.8983606015495117,
+        0.9091195144586209
+      ],
+      "stratified_bootstrap_percentile_95": {
+        "exact_agreement": [
+          0.9002340296437549,
+          0.9074282742480714
+        ],
+        "binary_f1": [
+          0.7018710847975554,
+          0.727878807460292
+        ],
+        "binary_mcc": [
+          0.6950486231839965,
+          0.7200408491264474
+        ],
+        "multilabel_micro_f1": [
+          0.6165845783575383,
+          0.6463207705273607
+        ],
+        "hamming_loss": [
+          0.02689173962035191,
+          0.029275374880818238
+        ]
+      },
+      "confidence": {
+        "n_with_confidence": 11537,
+        "mean": 0.923350091011528,
+        "median": 0.95,
+        "q1": 0.9,
+        "q3": 0.95,
+        "empirical_exact_agreement": 0.9038744907688308,
+        "brier_for_exact_correctness": 0.07055618445003034,
+        "ece_10_equal_width": 0.0611952847360666,
+        "bands": [
+          {
+            "lower": 0.0,
+            "upper": 0.7,
+            "n": 235,
+            "mean_confidence": 0.6457446808510641,
+            "exact_agreement": 0.39574468085106385,
+            "exact_agreement_wilson_95": [
+              0.3353817917605625,
+              0.45946119637917315
+            ]
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.85,
+            "n": 615,
+            "mean_confidence": 0.7756097560975609,
+            "exact_agreement": 0.4097560975609756,
+            "exact_agreement_wilson_95": [
+              0.37156534666572866,
+              0.4490672266406411
+            ]
+          },
+          {
+            "lower": 0.85,
+            "upper": 0.95,
+            "n": 2049,
+            "mean_confidence": 0.8844997559785261,
+            "exact_agreement": 0.7437774524158126,
+            "exact_agreement_wilson_95": [
+              0.7244314796992989,
+              0.7622110691967569
+            ]
+          },
+          {
+            "lower": 0.95,
+            "upper": 1.0,
+            "n": 8638,
+            "mean_confidence": 0.9506367214633017,
+            "exact_agreement": 0.9908543644362121,
+            "exact_agreement_wilson_95": [
+              0.9886173014524474,
+              0.9926550396808763
+            ]
+          }
+        ]
+      },
+      "per_label": {
+        "ACOSO_AMENAZA": {
+          "reference_support": 600,
+          "predicted_support": 1090,
+          "precision": 0.4706422018348624,
+          "recall": 0.855,
+          "f1": 0.6071005917159763,
+          "cohen_kappa": 0.5788473918787347
+        },
+        "CONTENIDO_SEXUAL": {
+          "reference_support": 326,
+          "predicted_support": 373,
+          "precision": 0.6890080428954424,
+          "recall": 0.7883435582822086,
+          "f1": 0.7353361945636624,
+          "cohen_kappa": 0.7271065814091426
+        },
+        "RACISMO_DISCRIMINACION": {
+          "reference_support": 236,
+          "predicted_support": 424,
+          "precision": 0.5,
+          "recall": 0.8983050847457628,
+          "f1": 0.6424242424242425,
+          "cohen_kappa": 0.6327724885936512
+        },
+        "ATAQUE_POR_GENERO_IDENTIDAD": {
+          "reference_support": 190,
+          "predicted_support": 272,
+          "precision": 0.4632352941176471,
+          "recall": 0.6631578947368421,
+          "f1": 0.5454545454545454,
+          "cohen_kappa": 0.5364657929789425
+        }
+      }
+    },
+    "deepseek_v4_pro": {
+      "system": "deepseek_v4_pro",
+      "sample_total": 16694,
+      "records_available": 8199,
+      "answered": 5026,
+      "coverage_over_sample": 0.30106625134778964,
+      "abstention_over_sample": 0.6989337486522104,
+      "reference_harm": 1107,
+      "predicted_harm": 1283,
+      "point": {
+        "exact_agreement": 0.9590131317150816,
+        "binary_f1": 0.9196652719665271,
+        "binary_mcc": 0.8989754781618342,
+        "multilabel_micro_f1": 0.9134971390104342,
+        "hamming_loss": 0.012783525666534023,
+        "tp": 1099,
+        "tn": 3735,
+        "fp": 184,
+        "fn": 8,
+        "multilabel_micro_precision": 0.8486554096310194,
+        "multilabel_micro_recall": 0.989067055393586,
+        "multilabel_macro_precision": 0.8482383098406535,
+        "multilabel_macro_recall": 0.9878783861899736,
+        "multilabel_macro_f1": 0.9125766139672831,
+        "sample_jaccard": 0.9604224698235841,
+        "binary_precision": 0.8565861262665627,
+        "binary_recall_sensitivity": 0.992773261065944,
+        "binary_specificity": 0.9530492472569533,
+        "binary_balanced_accuracy": 0.9729112541614486,
+        "binary_cohen_kappa": 0.894784517996794
+      },
+      "exact_agreement_wilson_95": [
+        0.9531723103591137,
+        0.9641528255869818
+      ],
+      "stratified_bootstrap_percentile_95": {
+        "exact_agreement": [
+          0.9538400318344608,
+          0.9639872662156784
+        ],
+        "binary_f1": [
+          0.9092429945629444,
+          0.9294608422086813
+        ],
+        "binary_mcc": [
+          0.8861651867810391,
+          0.9109587082630927
+        ],
+        "multilabel_micro_f1": [
+          0.9020124348562177,
+          0.9242280028724836
+        ],
+        "hamming_loss": [
+          0.011190559092717867,
+          0.014574214086748905
+        ]
+      },
+      "confidence": {
+        "n_with_confidence": 5026,
+        "mean": 0.9163708714683646,
+        "median": 0.95,
+        "q1": 0.9,
+        "q3": 0.95,
+        "empirical_exact_agreement": 0.9590131317150816,
+        "brier_for_exact_correctness": 0.037941663350577005,
+        "ece_10_equal_width": 0.042642260246716995,
+        "bands": [
+          {
+            "lower": 0.0,
+            "upper": 0.7,
+            "n": 202,
+            "mean_confidence": 0.6316831683168318,
+            "exact_agreement": 0.7079207920792079,
+            "exact_agreement_wilson_95": [
+              0.6418004752170058,
+              0.7662805813459063
+            ]
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.85,
+            "n": 85,
+            "mean_confidence": 0.7782352941176469,
+            "exact_agreement": 0.8352941176470589,
+            "exact_agreement_wilson_95": [
+              0.7423169668021896,
+              0.8992753793460349
+            ]
+          },
+          {
+            "lower": 0.85,
+            "upper": 0.95,
+            "n": 1633,
+            "mean_confidence": 0.8939865278628292,
+            "exact_agreement": 0.9326393141457441,
+            "exact_agreement_wilson_95": [
+              0.9194391768411511,
+              0.9438087525081175
+            ]
+          },
+          {
+            "lower": 0.95,
+            "upper": 1.0,
+            "n": 3106,
+            "mean_confidence": 0.9504346426271731,
+            "exact_agreement": 0.9925949774629749,
+            "exact_agreement_wilson_95": [
+              0.9889124693884451,
+              0.9950605210418789
+            ]
+          }
+        ]
+      },
+      "per_label": {
+        "ACOSO_AMENAZA": {
+          "reference_support": 640,
+          "predicted_support": 753,
+          "precision": 0.8459495351925631,
+          "recall": 0.9953125,
+          "f1": 0.914572864321608,
+          "cohen_kappa": 0.9009348097800072
+        },
+        "CONTENIDO_SEXUAL": {
+          "reference_support": 298,
+          "predicted_support": 333,
+          "precision": 0.8678678678678678,
+          "recall": 0.9697986577181208,
+          "f1": 0.9160063391442155,
+          "cohen_kappa": 0.910399073240007
+        },
+        "RACISMO_DISCRIMINACION": {
+          "reference_support": 230,
+          "predicted_support": 267,
+          "precision": 0.8539325842696629,
+          "recall": 0.991304347826087,
+          "f1": 0.9175050301810865,
+          "cohen_kappa": 0.9132390945736225
+        },
+        "ATAQUE_POR_GENERO_IDENTIDAD": {
+          "reference_support": 204,
+          "predicted_support": 246,
+          "precision": 0.8252032520325203,
+          "recall": 0.9950980392156863,
+          "f1": 0.9022222222222223,
+          "cohen_kappa": 0.8976816148560239
+        }
+      }
+    }
+  },
+  "paired_flash_vs_pro_on_common_answered": {
+    "n": 2252,
+    "flash_exact_agreement": 0.7357904085257548,
+    "pro_exact_agreement": 0.9391651865008881,
+    "pro_minus_flash_exact_agreement": 0.2033747779751332,
+    "stratified_bootstrap_percentile_95": [
+      0.18650088809946713,
+      0.21981571936056832
+    ],
+    "flash_only_correct": 41,
+    "pro_only_correct": 499,
+    "mcnemar_exact_two_sided_p": 4.0643897882758935e-101,
+    "selection_warning": "El panel común pertenece a la cola dirigida a Pro; no es una comparación aleatoria de toda la muestra."
+  },
+  "flash_vs_pro_on_all_pro_routed_in_sample": {
+    "n": 8199,
+    "exact_agreement_including_joint_abstention": 0.4854250518355897,
+    "binary_harm_agreement_treating_abstention_as_no_harm": 0.8536406878887669,
+    "warning": "La segunda cifra mezcla SEGURO y abstención en el polo no-daño."
+  },
+  "inference": {
+    "bootstrap": "percentile, resampling within the 35 frozen strata",
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 20260809,
+    "proportion_interval": "Wilson score, 95%",
+    "calibration_bins": "10 equal-width bins"
+  },
+  "software": {
+    "numpy": "2.5.1",
+    "scipy": "1.18.0",
+    "scikit_learn": "1.9.0"
+  },
+  "inputs_sha256": {
+    "datos\\etiquetado\\consolidado\\anotaciones_v2.jsonl": "23a9341760997a68126bca985431436a8937cb35695a8efebec963412a3667ed",
+    "datos\\etiquetado\\humano\\labeling_events_v2.jsonl": "99ada9138647bf09d2d0b0b7ddd5badb91e680287a2f8e0e74d38f499f39bbb6",
+    "datos\\etiquetado\\cascada_deepseek_v4\\primary_flash_v3_2.jsonl": "623b27030d72d9f81b9e0bb483fc172d91908136c8bc22146a654ef0b3855100",
+    "datos\\etiquetado\\cascada_deepseek_v4\\review_pro_v3_2.jsonl": "32767680d119d2b94e2596f35b939abb6c5afad1a1b9ce07df62079d49edf2f3"
+  }
+}

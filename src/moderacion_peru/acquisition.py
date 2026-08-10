@@ -235,8 +235,10 @@ def build_directed_sampling_plan(
 ) -> dict[str, Any]:
     """Calcula déficits por video y rendimiento histórico por canal.
 
-    El conjunto de prueba se excluye por contrato. Si no hay positivos previos
-    utilizables, las cuatro categorías reciben el mismo peso de adquisición.
+    Los splits elegibles los define explícitamente quien llama; por defecto se
+    excluye test, pero una meta de soporte total puede incluirlo sin cambiar sus
+    etiquetas ni su asignación. Si no hay positivos previos utilizables, las
+    cuatro categorías reciben el mismo peso de adquisición.
     Las etiquetas sirven para seleccionar fuentes; nunca se copian como verdad
     de los videos nuevos.
     """

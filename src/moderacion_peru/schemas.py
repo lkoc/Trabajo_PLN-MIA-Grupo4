@@ -21,6 +21,7 @@ class AnnotationRecord(BaseModel):
     taxonomy_version: str = "2.1.0"
     chunk_id: str = Field(min_length=1)
     video_id: str | None = None
+    channel_id: str | None = None
     start_seconds: float | None = Field(default=None, ge=0)
     end_seconds: float | None = Field(default=None, ge=0)
     video_title: str | None = None
@@ -70,7 +71,11 @@ class AnnotationRecord(BaseModel):
             raise ValueError("decision_status=needs_review exige needs_review=true")
         if self.decision_status == "excluded" and self.training_eligible:
             raise ValueError("Una anotación excluida no puede ser entrenable")
-        if self.start_seconds is not None and self.end_seconds is not None and self.end_seconds < self.start_seconds:
+        if (
+            self.start_seconds is not None
+            and self.end_seconds is not None
+            and self.end_seconds < self.start_seconds
+        ):
             raise ValueError("end_seconds no puede preceder a start_seconds")
         return self
 
@@ -84,6 +89,7 @@ class ModelReadyRecord(BaseModel):
     taxonomy_version: str = "2.1.0"
     chunk_id: str = Field(min_length=1)
     video_id: str = Field(min_length=1)
+    channel_id: str | None = None
     text: str = Field(min_length=1)
     coarse_labels: list[str]
     fine_labels: list[str] = Field(default_factory=list)
@@ -112,7 +118,9 @@ class ModelReadyRecord(BaseModel):
         if self.legacy_coarse_labels:
             migrated = taxonomy.migrate_legacy_categories(self.legacy_coarse_labels)
             if migrated != tuple(self.coarse_labels):
-                raise ValueError("La salida canónica no coincide con la procedencia histórica")
+                raise ValueError(
+                    "La salida canónica no coincide con la procedencia histórica"
+                )
         return self
 
 
@@ -186,7 +194,11 @@ class ModelRegistryEntry(BaseModel):
             raise ValueError("El registro no usa las cinco salidas canónicas en orden")
         if set(self.thresholds) != set(taxonomy.target_labels):
             raise ValueError("Debe existir un umbral para cada salida entrenada")
-        unknown_slots = set(self.comparison_registries) - {"classical", "transformer", "qwen"}
+        unknown_slots = set(self.comparison_registries) - {
+            "classical",
+            "transformer",
+            "qwen",
+        }
         if unknown_slots:
             raise ValueError(f"Slots productivos desconocidos: {sorted(unknown_slots)}")
         return self
@@ -221,11 +233,15 @@ class ReviewEvent(BaseModel):
         if self.action == "defer" and self.final_labels:
             raise ValueError("Una decisión diferida no puede tener categorías finales")
         if self.action in {"accept", "modify"} and not self.final_labels:
-            raise ValueError("Aceptar o modificar requiere una categoría final explícita")
+            raise ValueError(
+                "Aceptar o modificar requiere una categoría final explícita"
+            )
         unknown_flags = set(self.flags) - set(taxonomy.flags)
         if unknown_flags:
             raise ValueError(f"Flags desconocidos: {sorted(unknown_flags)}")
-        if self.flags and not set(self.final_labels).intersection(taxonomy.damage_labels):
+        if self.flags and not set(self.final_labels).intersection(
+            taxonomy.damage_labels
+        ):
             raise ValueError("Los flags requieren al menos una categoría final de daño")
         return self
 

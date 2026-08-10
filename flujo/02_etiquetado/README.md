@@ -105,7 +105,7 @@ El dashboard consulta `/api/dashboard` cada 15 segundos. Los conteos de corpus,
 decisiones, exclusiones, colas, canales, desbalance y actividad se calculan sobre
 el último evento efectivo conservado en memoria. Las métricas de calidad e
 inferencia provienen del artefacto reproducible
-`docs/artefactos/auditoria_16k_flash_pro_sol_eh_metrics.json`: se presentan
+`docs/artefactos/auditoria_16k_panel_actual_v3_2_metrics.json`: se presentan
 separadas porque corresponden a la muestra estratificada congelada, no a una
 estimación instantánea recalculada después de cada clic.
 

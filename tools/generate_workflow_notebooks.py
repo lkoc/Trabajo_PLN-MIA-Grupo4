@@ -1237,7 +1237,8 @@ SCRAPING_MINORITY_PARAMETERS = _replace_required(
     'DISCOVERY_MODE = "directed"   # Fijo: ampliación de daños minoritarios\n\n',
     'DISCOVERY_MODE = "directed"   # Fijo: ampliación de daños minoritarios\n'
     "PERU_ONLY = True              # Invariante: bloquea canales extranjeros o no verificados\n"
-    "TARGET_TRAIN_CHUNKS_PER_DAMAGE = 2_000\n"
+    "TARGET_TOTAL_CHUNKS_PER_DAMAGE = 2_000\n"
+    "TARGET_ELIGIBLE_SPLITS = ('train', 'validation', 'test')\n"
     "SPLIT_SEED = 20260805\n"
     "DIRECTED_SAFETY_FACTOR = 1.5  # margen ante menor rendimiento de videos nuevos\n"
     "DIRECTED_YIELD_DISCOUNT = 0.5 # usa solo 50% del mejor rendimiento histórico\n"
@@ -1248,8 +1249,8 @@ SCRAPING_MINORITY_PARAMETERS = _replace_required(
 SCRAPING_MINORITY_PARAMETERS = _replace_required(
     SCRAPING_MINORITY_PARAMETERS,
     'if DISCOVERY_MODE not in {"seed", "directed", "both"}:\n',
-    "if TARGET_TRAIN_CHUNKS_PER_DAMAGE < 1:\n"
-    '    raise ValueError("TARGET_TRAIN_CHUNKS_PER_DAMAGE debe ser positivo")\n'
+    "if TARGET_TOTAL_CHUNKS_PER_DAMAGE < 1:\n"
+    '    raise ValueError("TARGET_TOTAL_CHUNKS_PER_DAMAGE debe ser positivo")\n'
     "if PERU_ONLY is not True:\n"
     '    raise ValueError("01_015 exige PERU_ONLY=True")\n'
     "if DIRECTED_SAFETY_FACTOR < 1 or not 0 < DIRECTED_YIELD_DISCOUNT <= 1:\n"
@@ -1263,7 +1264,8 @@ SCRAPING_MINORITY_PARAMETERS = _replace_required(
     '    "discovery_mode": DISCOVERY_MODE,\n',
     '    "discovery_mode": DISCOVERY_MODE,\n'
     '    "peru_only": PERU_ONLY,\n'
-    '    "target_train_chunks_per_damage": TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n'
+    '    "target_total_chunks_per_damage": TARGET_TOTAL_CHUNKS_PER_DAMAGE,\n'
+    '    "target_eligible_splits": TARGET_ELIGIBLE_SPLITS,\n'
     '    "split_seed": SPLIT_SEED,\n'
     '    "directed_split_budget": DIRECTED_SPLIT_BUDGET,\n'
     '    "directed_safety_factor": DIRECTED_SAFETY_FACTOR,\n'
@@ -1338,16 +1340,17 @@ SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
     "        DIRECTED_TRAINING_ROWS,\n"
     "        read_jsonl(CANONICAL) if CANONICAL.exists() else [],\n"
     "        damage_labels=taxonomy.damage_labels,\n"
-    "        eligible_splits=('train',),\n"
-    "        target_chunks_per_label=TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n",
+    "        eligible_splits=TARGET_ELIGIBLE_SPLITS,\n"
+    "        target_chunks_per_label=TARGET_TOTAL_CHUNKS_PER_DAMAGE,\n",
 )
 SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
     SCRAPING_MINORITY_REUSE_AND_PLAN,
     "        'soporte_videos_train_validation': directed_plan['support_videos'],\n"
     "        'déficit_videos': directed_plan['deficit_videos'],\n",
-    "        'objetivo_chunks_por_daño_train': directed_plan['target_chunks_per_label'],\n"
-    "        'soporte_chunks_train': directed_plan['support_chunks'],\n"
-    "        'déficit_chunks_train': directed_plan['deficit_chunks'],\n"
+    "        'objetivo_chunks_por_daño_total': directed_plan['target_chunks_per_label'],\n"
+    "        'splits_que_cuentan': TARGET_ELIGIBLE_SPLITS,\n"
+    "        'soporte_chunks_total': directed_plan['support_chunks'],\n"
+    "        'déficit_chunks_total': directed_plan['deficit_chunks'],\n"
     "        'adquisición_necesaria': directed_plan['acquisition_needed'],\n",
 )
 SCRAPING_MINORITY_REUSE_AND_PLAN = _replace_required(
@@ -1439,7 +1442,8 @@ _MINORITY_SELECTION = """            directed_round_signature = sha256_text(json
                 'recommended_channels': DIRECTED_ACQUISITION_BUDGET['recommended_channel_names'],
                 'discovery_channels': [source.get('name') for source in DIRECTED_CHANNELS],
                 'split_budget': DIRECTED_SPLIT_BUDGET,
-                'target_train_chunks_per_damage': TARGET_TRAIN_CHUNKS_PER_DAMAGE,
+                'target_total_chunks_per_damage': TARGET_TOTAL_CHUNKS_PER_DAMAGE,
+                'target_eligible_splits': TARGET_ELIGIBLE_SPLITS,
                 'split_seed': SPLIT_SEED,
                 'country_scope': 'PE_only_strict',
             }, ensure_ascii=False, sort_keys=True))
@@ -1643,13 +1647,16 @@ SCRAPING_MINORITY_DISCOVERY = _replace_required(
     "                'directed_candidates_selected': len(directed_selection),\n"
     "                'directed_split_counts': directed_split_counts,\n"
     "                'directed_split_shortfall': directed_split_shortfall,\n"
-    "                'target_train_chunks_per_damage': TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n",
+    "                'target_total_chunks_per_damage': TARGET_TOTAL_CHUNKS_PER_DAMAGE,\n"
+    "                'target_eligible_splits': TARGET_ELIGIBLE_SPLITS,\n",
 )
 SCRAPING_MINORITY_DISCOVERY = _replace_required(
     SCRAPING_MINORITY_DISCOVERY,
-    "                'target_train_chunks_per_damage': TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n"
+    "                'target_total_chunks_per_damage': TARGET_TOTAL_CHUNKS_PER_DAMAGE,\n"
+    "                'target_eligible_splits': TARGET_ELIGIBLE_SPLITS,\n"
     "                'selection_path': DIRECTED_SELECTION_PATH,\n",
-    "                'target_train_chunks_per_damage': TARGET_TRAIN_CHUNKS_PER_DAMAGE,\n"
+    "                'target_total_chunks_per_damage': TARGET_TOTAL_CHUNKS_PER_DAMAGE,\n"
+    "                'target_eligible_splits': TARGET_ELIGIBLE_SPLITS,\n"
     "                'acquisition_budget': DIRECTED_ACQUISITION_BUDGET,\n"
     "                'directed_round_signature': directed_round_signature,\n"
     "                'resumed_existing_round': resumed_existing_round,\n"
@@ -1732,6 +1739,28 @@ SCRAPING_MINORITY_CANDIDATES = _replace_required(
     "        len(active_candidates) + len(carryover_candidates) - len(candidates)\n"
     "    ),\n",
 )
+
+
+def preserve_matching_execution_outputs(
+    notebook: nbf.NotebookNode, target: Path
+) -> None:
+    """Keep executed evidence when regenerating a notebook with unchanged code cells."""
+
+    if not target.is_file():
+        return
+    previous = nbf.read(target, as_version=4)
+    previous_by_source: dict[str, list[nbf.NotebookNode]] = {}
+    for cell in previous.cells:
+        if cell.cell_type != "code" or not cell.get("outputs"):
+            continue
+        previous_by_source.setdefault(cell.source, []).append(cell)
+    for cell in notebook.cells:
+        candidates = previous_by_source.get(cell.source, [])
+        if cell.cell_type != "code" or len(candidates) != 1:
+            continue
+        previous_cell = candidates[0]
+        cell["execution_count"] = previous_cell.get("execution_count")
+        cell["outputs"] = previous_cell.get("outputs", [])
 
 
 def create(
@@ -1886,6 +1915,7 @@ def create(
         cell["id"] = f"{cell_prefix}-{index:02d}"
     target = ROOT / path
     target.parent.mkdir(parents=True, exist_ok=True)
+    preserve_matching_execution_outputs(notebook, target)
     nbf.write(notebook, target)
 
 
@@ -1938,14 +1968,13 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
     create(
         "flujo/01_datos/01_015_ampliacion_dirigida_minorias.ipynb",
         "01.015 · Ampliación dirigida de categorías minoritarias",
-        "Descubre y adquiere videos peruanos nuevos para llevar cada categoría de daño a por lo menos 2.000 chunks en train, sin modificar el cuaderno 01_01 de scraping inicial. Una compuerta estricta PE excluye antes de la descarga todo canal extranjero o cuyo origen peruano no pueda verificarse. La ejecución es reanudable: conserva fuentes terminadas, caché por video y checkpoints canónicos, y en cada nueva ronda recalcula únicamente el déficit pendiente.",
+        "Descubre y adquiere videos peruanos nuevos para llevar cada categoría de daño a por lo menos 2.000 chunks en el total train + validation + test, sin modificar el cuaderno 01_01 de scraping inicial. Una compuerta estricta PE excluye antes de la descarga todo canal extranjero o cuyo origen peruano no pueda verificarse. La ejecución es reanudable: conserva fuentes terminadas, caché por video y checkpoints canónicos, y en cada nueva ronda recalcula únicamente el déficit pendiente.",
         "La selección usa el snapshot efectivo después de las decisiones CODEX–Sol-EH y mide el "
-        "déficit exclusivamente en `train`. El muestreo dirigido adapta principios de aprendizaje "
+        "déficit en el total de `train`, `validation` y `test`. El muestreo dirigido adapta principios de aprendizaje "
         "activo ante desbalance y clasificación multietiqueta de cola larga "
         "[@fairstein2024balancing] [@huang2021balancing]. Los candidatos reciben un split estable por "
-        "`video_id` antes de descargar y etiquetar; la búsqueda no consulta etiquetas de validation o "
-        "test para decidir la meta. Se reserva una fracción de adquisición para ambos holdouts, pero "
-        "solo los chunks nuevos cuyo hash corresponde a train cuentan hacia el objetivo de 2.000. "
+        "`video_id` antes de descargar y etiquetar. Los tres splits cuentan para la condición de parada "
+        "de 2.000; el split permanece agrupado por video y se informa por separado para detectar desbalance. "
         "La adquisición escribe VTT mediante `yt-dlp` sin descargar audio o video [@ytdlp2026] y "
         "mantiene `youtube-transcript-api` como respaldo [@depoix2026transcript]. Las consultas y "
         "`target_category` son mecanismos de recuperación, nunca etiquetas: todo chunk nuevo debe pasar "
@@ -1960,14 +1989,14 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "Preflight",
                 "from moderacion_peru.artifacts import artifact_status\nshow_result('Disponibilidad de artefactos', artifact_status(ROOT), tone='neutral')",
             ),
-            ("Parámetros de la meta train ≥ 2.000", SCRAPING_MINORITY_PARAMETERS),
+            ("Parámetros de la meta total ≥ 2.000", SCRAPING_MINORITY_PARAMETERS),
             ("Canales y consultas para daños minoritarios", SCRAPING_MINORITY_SOURCES),
             (
-                "Snapshot efectivo y déficit por chunks de train\n\n"
+                "Snapshot efectivo y déficit por chunks totales\n\n"
                 "`needs_review` de Pro es un estado intermedio. Una decisión posterior CODEX–Sol-EH "
                 "o humana lo sustituye; si CODEX no cambió una propuesta Pro no vacía, prevalece Pro. "
                 "El plan usa la última decisión efectiva, conserva el split histórico por video y "
-                "calcula cuánto falta para 2.000 asignaciones en cada daño de train. Los canales se "
+                "calcula cuánto falta para 2.000 asignaciones en cada daño sumando train, validation y test. Los canales se "
                 "ordenan por rendimiento histórico, pero se combinan varias fuentes para evitar que "
                 "una clase aprenda únicamente el estilo de un canal.",
                 SCRAPING_MINORITY_REUSE_AND_PLAN,
@@ -2367,6 +2396,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "HISTORICAL_FLASH_SOURCES=(COLAB_CONTEXT.input('deepseek_flash_historico'),) if COLAB_CONTEXT else (ROOT/'datos/etiquetado/llm_api/deepseek-v4-flash_labeled_chunks_seed42.jsonl',)\n"
                 "HISTORICAL_PRO_SOURCES=(COLAB_CONTEXT.input('deepseek_pro_historico_principal'),COLAB_CONTEXT.input('deepseek_pro_historico_umbral'),COLAB_CONTEXT.input('deepseek_pro_historico_sospechosos')) if COLAB_CONTEXT else (ROOT/'datos/etiquetado/llm_api/deepseek-v4-pro_revision_de_deepseek-v4-flash_seed42.jsonl',ROOT/'datos/etiquetado/llm_api/deepseek-v4-pro_revision_umbral_recalibrado_t090_seed42.jsonl',ROOT/'datos/etiquetado/llm_api/deepseek-v4-pro_revision_sospechosos_gruesos_seed42.jsonl')\n"
                 "HISTORICAL_PROMPT_SHA256='52d4fec14ad433d35ec20de5f51a6954aad69dcedd1422059419dcecc2f9e778'\n"
+                "PRESERVE_PROMPT_POLICY_SHA256='433321cf7b41f997bb277ae87bc9fee01767d225a0fe49bea2cb918239dc1f06'\n"
                 "PREVIOUS_PRIMARY_PATH=CAMPAIGN_ROOT/'primary_flash.jsonl'\n"
                 "PREVIOUS_REVIEW_PATH=CAMPAIGN_ROOT/'review_pro.jsonl'\n"
                 "PRIMARY_PATH=CAMPAIGN_ROOT/'primary_flash_v3_2.jsonl'\n"
@@ -2496,10 +2526,10 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "    return {'provider':signature,'taxonomy':'moderacion_peru_5_salidas_v2','taxonomy_version':'2.1.0'}\n\n"
                 "FLASH_RECOVERY_CHUNKS=SOURCE if PREVIOUS_PRIMARY_PATH.is_file() else HISTORICAL_CHUNKS\n"
                 "FLASH_RECOVERY_SOURCES=(PREVIOUS_PRIMARY_PATH,) if PREVIOUS_PRIMARY_PATH.is_file() else HISTORICAL_FLASH_SOURCES\n"
-                "FLASH_RECOVERY_PROMPT='preserve_prompt_sha256_per_record' if PREVIOUS_PRIMARY_PATH.is_file() else HISTORICAL_PROMPT_SHA256\n"
+                "FLASH_RECOVERY_PROMPT=PRESERVE_PROMPT_POLICY_SHA256 if PREVIOUS_PRIMARY_PATH.is_file() else HISTORICAL_PROMPT_SHA256\n"
                 "PRO_RECOVERY_CHUNKS=SOURCE if PREVIOUS_REVIEW_PATH.is_file() else HISTORICAL_CHUNKS\n"
                 "PRO_RECOVERY_SOURCES=(PREVIOUS_REVIEW_PATH,) if PREVIOUS_REVIEW_PATH.is_file() else HISTORICAL_PRO_SOURCES\n"
-                "PRO_RECOVERY_PROMPT='preserve_prompt_sha256_per_record' if PREVIOUS_REVIEW_PATH.is_file() else HISTORICAL_PROMPT_SHA256\n"
+                "PRO_RECOVERY_PROMPT=PRESERVE_PROMPT_POLICY_SHA256 if PREVIOUS_REVIEW_PATH.is_file() else HISTORICAL_PROMPT_SHA256\n"
                 "FLASH_HISTORY_SIGNATURE=historical_recovery_signature(FLASH_RECOVERY_CHUNKS,FLASH_RECOVERY_SOURCES,expected_model='deepseek-v4-flash',historical_prompt_sha256=FLASH_RECOVERY_PROMPT) if RECOVER_HISTORICAL else None\n"
                 "PRO_HISTORY_SIGNATURE=historical_recovery_signature(PRO_RECOVERY_CHUNKS,PRO_RECOVERY_SOURCES,expected_model='deepseek-v4-pro',historical_prompt_sha256=PRO_RECOVERY_PROMPT) if RECOVER_HISTORICAL else None\n"
                 "PRIMARY_RUN_METADATA=provider_run_metadata(primary_provider,FLASH_HISTORY_SIGNATURE)\n"
@@ -2737,8 +2767,8 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "from tqdm.auto import tqdm\n"
                 "from moderacion_peru.io import read_jsonl\n"
                 "CAMPAIGN_ROOT=ROOT/'datos/etiquetado/cascada_deepseek_v4'\n"
-                "PRIMARY=CAMPAIGN_ROOT/'primary_flash.jsonl'\n"
-                "REVIEW=CAMPAIGN_ROOT/'review_pro.jsonl'\n"
+                "PRIMARY=CAMPAIGN_ROOT/'primary_flash_v3_2.jsonl'\n"
+                "REVIEW=CAMPAIGN_ROOT/'review_pro_v3_2.jsonl'\n"
                 "QUEUE=CAMPAIGN_ROOT/'directed_review_queue.jsonl'\n"
                 "CALIBRATION=CAMPAIGN_ROOT/'calibration_flash_vs_pro.json'\n"
                 "ROUTING=CAMPAIGN_ROOT/'routing_summary.json'\n"
@@ -2773,7 +2803,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "Consolidación",
                 "from tqdm.auto import tqdm\n"
                 "from moderacion_peru.consolidation import consolidate_annotations\n"
-                "SOURCES=[p for p in [ROOT/'datos/etiquetado/cascada_deepseek_v4/primary_flash.jsonl',ROOT/'datos/etiquetado/cascada_deepseek_v4/review_pro.jsonl',ROOT/'datos/etiquetado/fallback_hf/qwen3_1_7b_v2.jsonl'] if p.exists()]\n"
+                "SOURCES=[p for p in [ROOT/'datos/etiquetado/cascada_deepseek_v4/primary_flash_v3_2.jsonl',ROOT/'datos/etiquetado/cascada_deepseek_v4/review_pro_v3_2.jsonl',ROOT/'datos/etiquetado/cascada_qwen_hf/qwen3_4b_review_v3_2.jsonl',ROOT/'datos/etiquetado/cascada_qwen_hf/qwen3_1_7b_primary_v3_2.jsonl'] if p.exists()]\n"
                 "CHUNKS=ROOT/'datos/processed/chunks_v2.jsonl'\n"
                 "TRANSCRIPTS=ROOT/'datos/raw/transcripts_raw.jsonl'\n"
                 "OUTPUT=ROOT/'datos/etiquetado/consolidado/anotaciones_v2.jsonl'\n"

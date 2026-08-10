@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
-from .io import canonical_json_sha256, input_signature, read_jsonl, write_json_atomic, write_jsonl_atomic
+from .io import (
+    canonical_json_sha256,
+    input_signature,
+    read_jsonl,
+    write_json_atomic,
+    write_jsonl_atomic,
+)
 from .schemas import AnnotationRecord, ReviewEvent
 from .taxonomy import load_taxonomy
-
 
 DEFAULT_PRECEDENCE = {
     "human_modified": 50,
@@ -24,9 +29,23 @@ DEFAULT_PRECEDENCE = {
     "migration": 5,
 }
 
+HISTORICAL_RECOVERY_SUFFIX = "_historical_recovered"
+
 
 ProgressCallback = Callable[[dict[str, Any]], None]
 PROGRESS_BATCH_SIZE = 1000
+
+
+def _annotation_priority(row: dict[str, Any], priorities: dict[str, int]) -> int:
+    """Conserva la precedencia de origen al recuperar una inferencia histórica."""
+
+    label_source = str(row.get("label_source", ""))
+    if label_source in priorities:
+        return priorities[label_source]
+    if label_source.endswith(HISTORICAL_RECOVERY_SUFFIX):
+        base_source = label_source[: -len(HISTORICAL_RECOVERY_SUFFIX)]
+        return priorities.get(base_source, 0)
+    return 0
 
 
 def _notify_progress(
@@ -116,9 +135,7 @@ def consolidate_annotations(
     )
 
     chunk_lookup: dict[str, dict[str, Any]] = {}
-    _notify_progress(
-        progress_callback, status="phase_started", phase="loading_chunks"
-    )
+    _notify_progress(progress_callback, status="phase_started", phase="loading_chunks")
     loaded_chunks = 0
     if chunks_source and Path(chunks_source).is_file():
         for loaded_chunks, row in enumerate(read_jsonl(chunks_source), 1):
@@ -164,14 +181,16 @@ def consolidate_annotations(
     for completed, (chunk_id, rows) in enumerate(candidates.items(), 1):
         rows.sort(
             key=lambda row: (
-                priorities.get(str(row.get("label_source", "")), 0),
+                _annotation_priority(row, priorities),
                 str(row.get("created_at", "")),
             ),
             reverse=True,
         )
         winner = dict(rows[0])
         chunk = chunk_lookup.get(chunk_id, {})
-        video = video_lookup.get(str(winner.get("video_id") or chunk.get("video_id") or ""), {})
+        video = video_lookup.get(
+            str(winner.get("video_id") or chunk.get("video_id") or ""), {}
+        )
         for field, alternatives in {
             "video_id": ("video_id",),
             "start_seconds": ("start_seconds",),
@@ -192,8 +211,10 @@ def consolidate_annotations(
                     ),
                     None,
                 )
-        top_priority = priorities.get(str(winner.get("label_source", "")), 0)
-        tied = [row for row in rows if priorities.get(str(row.get("label_source", "")), 0) == top_priority]
+        top_priority = _annotation_priority(winner, priorities)
+        tied = [
+            row for row in rows if _annotation_priority(row, priorities) == top_priority
+        ]
         decisions = {tuple(row.get("coarse_labels", [])) for row in tied}
         if len(decisions) > 1:
             conflicts += 1
@@ -222,7 +243,11 @@ def consolidate_annotations(
     selected.sort(
         key=lambda row: (
             str(row.get("video_id") or ""),
-            float(row.get("start_seconds")) if row.get("start_seconds") is not None else float("inf"),
+            (
+                float(row.get("start_seconds"))
+                if row.get("start_seconds") is not None
+                else float("inf")
+            ),
             row["chunk_id"],
         )
     )
@@ -245,7 +270,9 @@ def consolidate_annotations(
             completed=len(previous_rows),
             finished=True,
         )
-    if destination_path.is_file() and canonical_json_sha256(previous_rows) == canonical_json_sha256(selected):
+    if destination_path.is_file() and canonical_json_sha256(
+        previous_rows
+    ) == canonical_json_sha256(selected):
         status = "noop"
     else:
         write_jsonl_atomic(destination_path, selected)
@@ -291,7 +318,9 @@ def _latest_review_events(
             seen_event_ids.add(event.event_id)
             previous = latest.get(event.chunk_id)
             current_key = (event.created_at, event.event_id)
-            previous_key = (previous.created_at, previous.event_id) if previous else None
+            previous_key = (
+                (previous.created_at, previous.event_id) if previous else None
+            )
             if previous_key is None or current_key > previous_key:
                 latest[event.chunk_id] = event
             _notify_progress(
@@ -324,7 +353,9 @@ def reconcile_human_reviews(
     source = Path(consolidated_source)
     reviews = [Path(path) for path in review_sources if Path(path).is_file()]
     destination_path = Path(destination)
-    state = Path(state_path) if state_path else destination_path.with_suffix(".state.json")
+    state = (
+        Path(state_path) if state_path else destination_path.with_suffix(".state.json")
+    )
     taxonomy = load_taxonomy()
     signature_inputs = [source, *reviews]
     if chunks_source:
@@ -357,9 +388,7 @@ def reconcile_human_reviews(
             return result
 
     chunk_lookup: dict[str, dict[str, Any]] = {}
-    _notify_progress(
-        progress_callback, status="phase_started", phase="loading_chunks"
-    )
+    _notify_progress(progress_callback, status="phase_started", phase="loading_chunks")
     if chunks_source and Path(chunks_source).is_file():
         for completed, row in enumerate(read_jsonl(chunks_source), 1):
             chunk_lookup[str(row["chunk_id"])] = row
@@ -374,15 +403,14 @@ def reconcile_human_reviews(
     rows: list[dict[str, Any]] = []
     counters: dict[str, int] = defaultdict(int)
     base_ids: set[str] = set()
-    _notify_progress(
-        progress_callback, status="phase_started", phase="reconciling"
-    )
+    _notify_progress(progress_callback, status="phase_started", phase="reconciling")
     for completed, raw in enumerate(read_jsonl(source), 1):
         row = dict(raw)
         chunk_id = str(row["chunk_id"])
         base_ids.add(chunk_id)
         chunk = chunk_lookup.get(chunk_id, {})
         row["video_id"] = row.get("video_id") or chunk.get("video_id")
+        row["channel_id"] = row.get("channel_id") or chunk.get("channel_id")
         row["text"] = row.get("text") or chunk.get("text")
         if not row.get("video_id"):
             counters["missing_video_id"] += 1
@@ -414,7 +442,9 @@ def reconcile_human_reviews(
                 row["needs_review"] = False
                 row["training_eligible"] = True
                 row["decision_status"] = "resolved"
-                row["label_source"] = "human_accepted" if event.action == "accept" else "human_modified"
+                row["label_source"] = (
+                    "human_accepted" if event.action == "accept" else "human_modified"
+                )
                 counters[f"human:{event.action}"] += 1
             elif event.action == "defer":
                 row["coarse_labels"] = []
@@ -444,7 +474,12 @@ def reconcile_human_reviews(
             completed=completed,
             reviewed=sum(
                 counters.get(key, 0)
-                for key in ("human:accept", "human:modify", "human:defer", "human:reject")
+                for key in (
+                    "human:accept",
+                    "human:modify",
+                    "human:defer",
+                    "human:reject",
+                )
             ),
         )
 

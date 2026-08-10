@@ -21,6 +21,7 @@ def test_human_events_close_annotation_to_versioned_snapshot_and_noop(tmp_path):
             {
                 "chunk_id": "video_with_underscore_deadbeef",
                 "video_id": "video_with_underscore",
+                "channel_id": "channel-fixture",
                 "text": "ataque",
                 "start_seconds": 10.0,
                 "end_seconds": 20.0,
@@ -65,6 +66,7 @@ def test_human_events_close_annotation_to_versioned_snapshot_and_noop(tmp_path):
     assert second["status"] == "noop"
     row = next(read_jsonl(reviewed))
     assert row["video_id"] == "video_with_underscore"
+    assert row["channel_id"] == "channel-fixture"
     assert row["coarse_labels"] == ["ATAQUE_POR_GENERO_IDENTIDAD"]
     assert row["flags"] == ["humor_encubridor"]
     assert row["label_source"] == "human_modified"
@@ -86,6 +88,7 @@ def test_human_events_close_annotation_to_versioned_snapshot_and_noop(tmp_path):
     assert snapshot_second["status"] == "noop"
     ready = ModelReadyRecord.model_validate(next(read_jsonl(canonical)))
     assert ready.video_id == "video_with_underscore"
+    assert ready.channel_id == "channel-fixture"
     assert ready.flags_reference_only == ["humor_encubridor"]
     assert ready.split in {"train", "validation", "test"}
     assert {event["phase"] for event in snapshot_progress} >= {
@@ -139,6 +142,56 @@ def test_annotation_consolidation_reports_each_long_phase(tmp_path):
         "consolidation",
     }
     assert progress[-1]["status"] == "finished"
+
+
+def test_historical_recovery_keeps_flash_pro_precedence(tmp_path):
+    flash = tmp_path / "flash.jsonl"
+    write_jsonl_atomic(
+        flash,
+        [
+            {
+                "chunk_id": "c1",
+                "video_id": "v1",
+                "text": "texto",
+                "coarse_labels": [],
+                "fine_labels": [],
+                "needs_review": True,
+                "training_eligible": False,
+                "decision_status": "needs_review",
+                "label_source": "deepseek_remote_historical_recovered",
+                "annotator_model": "deepseek-v4-flash",
+                "created_at": "2026-08-08T18:00:00Z",
+            }
+        ],
+    )
+    pro = tmp_path / "pro.jsonl"
+    write_jsonl_atomic(
+        pro,
+        [
+            {
+                "chunk_id": "c1",
+                "video_id": "v1",
+                "text": "texto",
+                "coarse_labels": ["SEGURO"],
+                "fine_labels": ["seguro"],
+                "needs_review": False,
+                "training_eligible": True,
+                "decision_status": "resolved",
+                "label_source": "llm_remote_review_historical_recovered",
+                "annotator_model": "deepseek-v4-pro",
+                "created_at": "2026-08-08T20:00:00Z",
+            }
+        ],
+    )
+    destination = tmp_path / "consolidated.jsonl"
+
+    result = consolidate_annotations([flash, pro], destination)
+    row = next(read_jsonl(destination))
+
+    assert result == {"status": "updated", "chunks": 1, "conflicts": 0}
+    assert row["coarse_labels"] == ["SEGURO"]
+    assert row["annotator_model"] == "deepseek-v4-pro"
+    assert row.get("consolidation_warning") is None
 
 
 def test_annotation_consolidation_batches_notebook_progress(tmp_path):
