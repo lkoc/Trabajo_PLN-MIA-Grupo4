@@ -65,6 +65,7 @@ def test_active_notebooks_are_ordered_and_clean():
     }
     optionally_executed_notebooks = {
         "01_015_ampliacion_dirigida_minorias.ipynb",
+        "03_03b_transformer_cascada_segura.ipynb",
     }
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)

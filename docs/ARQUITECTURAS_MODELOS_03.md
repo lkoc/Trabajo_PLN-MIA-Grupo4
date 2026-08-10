@@ -187,7 +187,10 @@ usa `τ=0`: no emite seguros en la compuerta y deriva todo a la rama.
 La rama se entrena con las cinco categorías y con todos los ejemplos del train
 muestreado 4:1. Una penalización local de `0.2` desalienta la coexistencia de
 score `SEGURO` alto y score de daño alto. Esto permite corregir falsos positivos
-de una compuerta sensible, aunque mantiene el costo de dos Transformers. La
+de una compuerta sensible. La implementación actual calcula ambas redes antes
+de combinar los scores, incluso para los casos que la compuerta resolvería como
+seguros; por tanto mantiene el costo de dos Transformers y no debe atribuirse un
+ahorro de latencia por enrutamiento. La
 calibración de redes merece auditoría porque su confianza puede ser incorrecta
 [11]; aquí “0.99” describe el conjunto de `validation`, no garantiza esa tasa en
 la población ni bajo cambio de distribución. Deben reportarse también número
@@ -291,7 +294,7 @@ debe incluir tanto calidad predictiva como tasa de parseo; no basta con AUPRC.
 | 03_01 | TF–IDF, sin Transformer | 22 binarias | modelos clásicos | bajo | contexto semántico limitado |
 | 03_02 | MiniLM o E5, 1 pasada | 22 binarias | modelo completo | medio | una cabeza resuelve todo |
 | 03_03 | E5 + E5, 2 pasadas | gate 18 + rama 4 | ambos completos | alto | falso seguro bloquea daños |
-| 03_03b | E5 + E5, hasta 2 pasadas lógicas | gate 18 + rama 5 | ambos completos | alto | poca cobertura si gate conservador |
+| 03_03b | E5 + E5, 2 pasadas | gate 18 + rama 5 | ambos completos | alto | poca cobertura si gate conservador |
 | 03_04 | E5, 1 pasada | 22 binarias | completo | medio | hoy duplica `flat_e5` |
 | 03_05 | Qwen Base, 1 pasada | 22 binarias | LoRA + cabeza | alto | más latencia; sin prompt |
 | 03_06 | Qwen Base, 1 pasada | 22 binarias estructuradas | modelo completo | muy alto | costo y peso de penalización |
