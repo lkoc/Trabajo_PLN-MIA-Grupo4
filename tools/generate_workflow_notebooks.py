@@ -2380,8 +2380,8 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
     )
     create(
         "flujo/02_etiquetado/02_00_preparacion_bundle_colab.ipynb",
-        "02.00 · Publicación del bundle versionado desde Colab",
-        "Descarga de GitHub el bundle sincronizado —o permite cargar el bundle local más reciente—, verifica su identidad y lo publica en Google Drive mediante la autorización integrada de Colab.",
+        "02.00 · Publicador manual opcional del bundle de Colab",
+        "Alternativa manual para descargar —o cargar—, verificar y publicar el bundle. Los demás cuadernos Colab ya incorporan esta operación y la ejecutan automáticamente solo cuando falta su release exacto.",
         "La identidad estable combina los SHA-256 del código y de las entradas comprimidas. El cuaderno "
         "verifica el `bundle_id` y cada artefacto antes de escribir en Drive; publica los artefactos y "
         "deja el manifiesto y `latest.json` para el final, de modo que una interrupción no se presente "
@@ -2403,7 +2403,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "if BUNDLE_SOURCE not in {'github','local_upload'}:\n"
                 "    raise ValueError(\"BUNDLE_SOURCE debe ser 'github' o 'local_upload'.\")\n"
                 "show_summary('Publicación preparada',{'ejecutar':RUN_PUBLISH_BUNDLE,'fuente':BUNDLE_SOURCE,'repositorio':GITHUB_REPOSITORY if BUNDLE_SOURCE=='github' else None,'revisión':GITHUB_REF if BUNDLE_SOURCE=='github' else None,'archivos_locales_requeridos':REQUIRED_BUNDLE_FILES if BUNDLE_SOURCE=='local_upload' else None,'destino':f'Mi unidad/{COLAB_DRIVE_FOLDER}/bundle_releases'},tone='neutral')\n"
-                "show_callout('Dos momentos de ejecución','Ejecute 02_00 antes de 02_01 para publicar chunks y vuelva a ejecutarlo después de 02_05 para publicar el snapshot que consumirá la etapa 03.',tone='info')",
+                "show_callout('Uso opcional','No necesita ejecutar 02_00 antes de cada consumidor. Úselo solo si desea publicar o auditar manualmente un bundle; 02_01 y 03_02–03_06b detectan y publican por sí mismos el release faltante.',tone='info')",
             ),
             (
                 "Adquisición y verificación integral",
@@ -2487,7 +2487,7 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "        raise RuntimeError('latest.json no conservó exactamente el puntero publicado')\n"
                 "    bundle_result={'status':'published_to_drive','release_status':release_status,'bundle_id':bundle_id,'release_dir':str(release_dir),'latest_pointer':str(latest_path),'manifest_sha256':pointer['manifest_sha256']}\n"
                 "    show_result('Versión de Colab publicada en Drive',bundle_result,tone='success')\n"
-                "    show_callout('Siguiente paso','02_01 y 03_02–03_06 resolverán latest.json, verificarán esta versión y la activarán antes de importar el proyecto.',tone='success')\n"
+                "    show_callout('Siguiente paso','Puede abrir directamente 02_01 o 03_02–03_06b; cada consumidor volverá a verificar esta versión antes de importar el proyecto.',tone='success')\n"
                 "else:\n"
                 "    show_callout('Publicación desactivada','No se montó Drive ni se escribió ningún archivo.',tone='neutral')",
             ),
