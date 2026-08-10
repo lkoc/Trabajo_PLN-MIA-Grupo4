@@ -428,6 +428,16 @@ def test_classical_smoke_subset_reuses_features_and_parallel_heads(
         == "fit_once_per_variant_reuse_across_models"
         for candidate in result["candidates"]
     )
+    assert all(
+        set(candidate["stage_timings_seconds"])
+        == {
+            "shared_feature_extraction_variant",
+            "model_fit",
+            "validation_inference_and_metrics",
+            "model_total_before_candidate_write",
+        }
+        for candidate in result["candidates"]
+    )
 
 
 def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(

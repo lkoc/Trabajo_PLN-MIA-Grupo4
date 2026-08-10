@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-import time
 import re
+import time
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
@@ -14,10 +14,12 @@ import numpy as np
 from .device import resolve_device, torch_device_name
 from .experiments import (
     TRAINING_ENGINE_VERSION,
+    ProgressCallback,
     _checkpoint_manifest,
     _dataset_splits,
     _evaluate_validation,
     _experiment_signature,
+    _notify_progress,
     _require_project_safe_ratio,
 )
 from .io import sha256_file, write_json_atomic
@@ -162,6 +164,7 @@ def _generate_json_scores(
     *,
     device: str,
     max_input_length: int,
+    progress_callback: ProgressCallback | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     import torch
 
@@ -171,6 +174,13 @@ def _generate_json_scores(
     valid = 0
     schema_errors: dict[str, int] = {}
     model.eval()
+    _notify_progress(
+        progress_callback,
+        status="started",
+        phase="generando validation",
+        total=len(rows),
+        advance=0,
+    )
     for index, row in enumerate(rows):
         prompt = tokenizer.apply_chat_template(
             [
@@ -223,6 +233,20 @@ def _generate_json_scores(
         except (ValueError, TypeError, json.JSONDecodeError) as exc:
             key = type(exc).__name__
             schema_errors[key] = schema_errors.get(key, 0) + 1
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="generando validation",
+            advance=1,
+            details={"JSON válidos": valid, "fila": index + 1},
+        )
+    _notify_progress(
+        progress_callback,
+        status="finished",
+        phase="validation generada",
+        total=len(rows),
+        completed=len(rows),
+    )
     return scores, {
         "rows": len(rows),
         "valid_json_contract": valid,
@@ -245,6 +269,7 @@ def train_prompt_conditioned_sft(
     train_limit: int | None = None,
     validation_limit: int | None = None,
     force: bool = False,
+    progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     """LoRA SFT generativo condicionado por una cápsula trazable de v3.2."""
 
@@ -294,6 +319,13 @@ def train_prompt_conditioned_sft(
         candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
         if candidate.get("run_signature") == signature:
             candidate["candidate_path"] = str(candidate_path)
+            _notify_progress(
+                progress_callback,
+                status="finished",
+                phase="candidato ya existente",
+                total=1,
+                completed=1,
+            )
             return {"status": "noop", "candidate": candidate}
     train, validation, test_sealed, sampling = _dataset_splits(
         dataset,
@@ -376,6 +408,13 @@ def train_prompt_conditioned_sft(
         if (run_dir / "trainer").is_dir()
         else None
     )
+    _notify_progress(
+        progress_callback,
+        status="started",
+        phase="entrenamiento SFT (Trainer muestra pasos y épocas)",
+        total=None,
+        advance=0,
+    )
     training_started = time.perf_counter()
     training_result = trainer.train(resume_from_checkpoint=checkpoint)
     training_elapsed = time.perf_counter() - training_started
@@ -388,6 +427,7 @@ def train_prompt_conditioned_sft(
         system_prompt,
         device=torch_device,
         max_input_length=max_length - 256,
+        progress_callback=progress_callback,
     )
     validation_generation_elapsed = time.perf_counter() - validation_started
     taxonomy = load_taxonomy()

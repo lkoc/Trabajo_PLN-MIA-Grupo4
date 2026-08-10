@@ -45,7 +45,7 @@ Se inspeccionaron los cuadernos, `src/moderacion_peru/experiments.py`, `training
 | Taxonomía                    |                                         2.1.0, cinco salidas gruesas |
 | `snapshot_id`               |                                          `v2.1.0-86822445ec0262da` |
 | SHA-256 del dataset           | `013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86` |
-| Bundle Colab                  | `dc8c271dda2c3b65c01bd2bea3a7ad4b2182bf40676f7e834e8367a5cf37fca9` |
+| Bundle Colab                  | `83326b6cad7f1c7019f4dbaf26c81e2bb5bcec767c5dd6b85a8107c8b77e9826` |
 | Prompt operativo              |                         `config/prompt_operacional_ollama_v3_2.md` |
 | SHA-256 del prompt            | `793e1a962c7065523ba0972e6b966cef8ab2f6e6c2678fde03e6ff5c27f42271` |
 
@@ -151,14 +151,14 @@ La procedencia debe conservarse como variable de auditoría y estratificación d
 
 | Cuaderno | Método implementado | Estado de ejecución | Control incorporado |
 | --- | --- | --- | --- |
-| `03_01_modelos_clasicos` | cinco estimadores; variantes base palabra+carácter e informada por política | `RUN_TRAINING=False` | 22 salidas enmascaradas, SGD balanceado y SVC calibrado |
+| `03_01_modelos_clasicos` | cinco estimadores; variantes base palabra+carácter e informada por política | `RUN_TRAINING=False` | TF–IDF una vez por variante; 22 salidas enmascaradas en cuatro hilos |
 | `03_02_transformers_planos` | MiniLM y E5, 5+14+3 salidas | `RUN_TRAINING=False` | `pos_weight`, máscaras, early stopping, truncamiento y robustez por canal opcional |
 | `03_03_transformer_cascada` | puerta de daño con finas/flags + rama de cuatro daños | `RUN_TRAINING=False` | propagación de error y comparación plana en `03_07` |
 | `03_04_transformer_multitarea` | 5 gruesas + 14 finas + 3 flags | `RUN_TRAINING=False` | pérdida enmascarada y ratio 4:1 fijo en train/validation |
 | `03_05_qwen_lora` | Qwen3-0.6B-Base clasificador LoRA de 22 salidas | `RUN_TRAINING=False` | rotulado explícito como clasificador supervisado |
 | `03_06_qwen_estructurado` | Qwen clasificador de 22 salidas con penalización estructural | `RUN_TRAINING=False` | calibración y auxiliares enmascarados |
 | `03_06b_qwen_prompt_sft` | Qwen3-0.6B conversacional [R19], LoRA causal, prompt v3.2 y JSON | `RUN_PILOT=False`; `RUN_FULL_TRAINING=False` | piloto no elegible y corrida completa separada |
-| `03_07_comparacion_final` | individuos, voto duro, medias suaves, unión/intersección | tres compuertas en `False` | Pareto, diversidad, bootstrap por video, pruebas pareadas/Holm, test único y publicación bloqueada |
+| `03_07_comparacion_final` | individuos, voto duro, medias suaves, unión/intersección | tres compuertas en `False` | bootstrap determinista en cuatro hilos, pruebas pareadas/Holm y test único |
 | `03_08_auditoria_finas_flags` | cobertura, consistencia y calidad auxiliar disponible | ejecutable sin entrenar | métricas solo en posiciones observadas |
 
 Los cuadernos 03_02–03_06b están preparados para Colab L4 y fijan el bundle actual. El entrenamiento no se ejecutó como parte de esta implementación; por tanto, las métricas predictivas continúan pendientes.
@@ -512,14 +512,14 @@ Test conserva las 22.684 filas naturales (1.802 daño + 20.882 `SEGURO`; 11,59:1
 
 | Cuaderno                                           | Cambio implementado                                                                                                                                              |
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 03_01                                              | Añadir clásica base palabra+carácter y clásica informada por política; objetivos auxiliares enmascarados; corregir`class_weight` de SGD; calibrar SVC. |
+| 03_01                                              | Clásicas base e informada por política; TF–IDF compartido por variante, 22 cabezas en cuatro hilos, `class_weight` corregido y SVC calibrado. |
 | 03_02                                              | Salida multitarea 5+14+3, máscaras, balance de pérdida, early stopping, calibración y diagnóstico de truncamiento.                                        |
 | 03_03                                              | Añadir auxiliares en puerta/rama, medir propagación y comparar contra modelo plano en los mismos ejemplos.                                                  |
 | 03_04                                              | Introducir máscaras explícitas, métricas auxiliares, ablations y pérdida balanceada.                                                                      |
 | 03_05                                              | Mantener Qwen LoRA clasificador, ampliar a 22 salidas enmascaradas y etiquetarlo correctamente como clasificador.                                             |
 | 03_06                                              | Mantener restricción estructural, añadir auxiliares/máscaras y calibración; separar de la rama prompt.                                                    |
 | Nuevo brazo dentro de 03_05/03_06 o nuevo cuaderno | SFT instruction-tuned con prompt v3.2 y JSON estricto. Se recomienda cuaderno separado para no mezclar clasificación y generación.                          |
-| 03_07                                              | Comparar todos los individuos y ensembles, diversidad, CIs y significancia; congelar el test; publicación desactivada por defecto.                           |
+| 03_07                                              | Comparar individuos/ensembles; bootstrap agrupado determinista en cuatro hilos; congelar el test y mantener publicación desactivada.                           |
 | 03_08                                              | Auditar máscaras, cobertura, consistencia y calidad predictiva de finas/flags sobre observados.                                                              |
 
 ## 14. Orden de ejecución posterior a la implementación

@@ -4,7 +4,7 @@ import json
 import math
 import os
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -34,6 +34,12 @@ from .training import (
 TRAINING_ENGINE_VERSION = "4.1.0"
 PROJECT_SAFE_TO_DAMAGE_RATIO = 4.0
 DEFAULT_LOCAL_PARALLEL_WORKERS = 4
+ProgressCallback = Callable[[dict[str, Any]], None]
+
+
+def _notify_progress(callback: ProgressCallback | None, **event: Any) -> None:
+    if callback is not None:
+        callback(event)
 
 
 def _require_project_safe_ratio(value: float | None) -> float:
@@ -440,6 +446,7 @@ def train_classical_experiments(
     split_scheme: str = "video",
     sampling_seed: int = 20260805,
     parallel_workers: int = DEFAULT_LOCAL_PARALLEL_WORKERS,
+    progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     """Entrena baselines enmascarados y produce evidencia solo de validation.
 
@@ -499,6 +506,14 @@ def train_classical_experiments(
     unknown_variants = sorted(set(selected_variants) - {"base", "policy_informed"})
     if unknown_variants or not selected_variants:
         raise ValueError(f"Variantes clásicas inválidas: {unknown_variants}")
+    progress_total = 1 + len(selected_variants) * (1 + len(candidates_spec))
+    _notify_progress(
+        progress_callback,
+        status="started",
+        phase="preparando datos",
+        total=progress_total,
+        advance=0,
+    )
 
     configuration: dict[str, Any] = {
         "suite": "classical_v4_masked",
@@ -531,6 +546,13 @@ def train_classical_experiments(
             for path in state.get("candidate_paths", [])
         ]
         if candidates and all(candidate is not None for candidate in candidates):
+            _notify_progress(
+                progress_callback,
+                status="finished",
+                phase="artefactos ya existentes",
+                total=progress_total,
+                completed=progress_total,
+            )
             return {
                 "status": "noop",
                 "run_signature": signature,
@@ -548,6 +570,13 @@ def train_classical_experiments(
     masked_targets = targets.astype(np.int8)
     masked_targets[masks == 0] = -1
     validation_texts = [str(row["text"]) for row in validation]
+    _notify_progress(
+        progress_callback,
+        status="progress",
+        phase="datos preparados",
+        advance=1,
+        details={"train": len(train), "validation": len(validation)},
+    )
     run_dir.mkdir(parents=True, exist_ok=True)
     write_json_atomic(run_dir / "training_sampling.json", sampling)
     candidates: list[dict[str, Any]] = []
@@ -593,6 +622,13 @@ def train_classical_experiments(
         }
         write_json_atomic(
             run_dir / f"feature_extraction_{variant}.json", feature_summary
+        )
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase=f"TF-IDF {variant}",
+            advance=1,
+            details={"columnas": int(train_features.shape[1])},
         )
         for name, estimator in candidates_spec.items():
             model_started = time.perf_counter()
@@ -679,7 +715,7 @@ def train_classical_experiments(
                     "shared_feature_extraction_variant": feature_seconds,
                     "model_fit": fit_seconds,
                     "validation_inference_and_metrics": validation_seconds,
-                    "model_total_before_serialization": time.perf_counter()
+                    "model_total_before_candidate_write": time.perf_counter()
                     - model_started,
                 },
                 "warm_start_from": None,
@@ -717,6 +753,13 @@ def train_classical_experiments(
             )
             candidate["candidate_path"] = str(candidate_path)
             candidates.append(candidate)
+            _notify_progress(
+                progress_callback,
+                status="progress",
+                phase=f"{variant} · {name}",
+                advance=1,
+                details={"candidatos": len(candidates)},
+            )
     write_json_atomic(
         complete,
         {
@@ -726,6 +769,13 @@ def train_classical_experiments(
             ],
             "completed_at": _utc_iso(),
         },
+    )
+    _notify_progress(
+        progress_callback,
+        status="finished",
+        phase="suite clásica completa",
+        total=progress_total,
+        completed=progress_total,
     )
     return {"status": "trained", "run_signature": signature, "candidates": candidates}
 
@@ -1137,6 +1187,7 @@ def train_neural_experiment(
     safe_to_damage_ratio: float | None = 4.0,
     split_scheme: str = "video",
     sampling_seed: int = 20260805,
+    progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     """Cierra fit→calibración validation→candidato sin abrir test.
 
@@ -1155,6 +1206,14 @@ def train_neural_experiment(
     }
     if experiment not in allowed:
         raise ValueError(f"Experimento desconocido: {experiment}")
+    progress_total = 5 if experiment == "cascade" else 4
+    _notify_progress(
+        progress_callback,
+        status="started",
+        phase=f"preparando {experiment}",
+        total=progress_total,
+        advance=0,
+    )
     run_started = time.perf_counter()
     key = spec_key or (
         "qwen_lora" if experiment in {"qwen_lora", "qwen_structured"} else "e5"
@@ -1194,12 +1253,26 @@ def train_neural_experiment(
     if not force:
         complete = _complete_candidate(candidate_path, signature)
         if complete is not None:
+            _notify_progress(
+                progress_callback,
+                status="finished",
+                phase="candidato ya existente",
+                total=progress_total,
+                completed=progress_total,
+            )
             return {"status": "noop", "candidate": complete, "run_signature": signature}
     train, validation, test, sampling = _dataset_splits(
         dataset,
         split_scheme=split_scheme,
         safe_to_damage_ratio=safe_to_damage_ratio,
         sampling_seed=sampling_seed,
+    )
+    _notify_progress(
+        progress_callback,
+        status="progress",
+        phase="datos preparados",
+        advance=1,
+        details={"train": len(train), "validation": len(validation)},
     )
     run_dir.mkdir(parents=True, exist_ok=True)
     write_json_atomic(run_dir / "training_sampling.json", sampling)
@@ -1283,6 +1356,12 @@ def train_neural_experiment(
             + [0.2] * len(taxonomy.flags),
         )
         training_elapsed += time.perf_counter() - phase_started
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="compuerta entrenada",
+            advance=1,
+        )
         damage_rows = [row for row, keep in zip(train, harmful, strict=True) if keep]
         damage_targets = train_full[harmful][:, damage_indices]
         damage_masks = np.ones_like(damage_targets, dtype=np.float32)
@@ -1306,6 +1385,12 @@ def train_neural_experiment(
             hardware,
         )
         training_elapsed += time.perf_counter() - phase_started
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="rama de daño entrenada",
+            advance=1,
+        )
         validation_started = time.perf_counter()
         gate_validation = _predict_hf(
             gate_model,
@@ -1319,6 +1404,12 @@ def train_neural_experiment(
             damage_model, damage_tokenizer, validation, spec.max_length, hardware, 4
         )
         validation_inference_elapsed = time.perf_counter() - validation_started
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="validation inferida",
+            advance=1,
+        )
         validation_primary = np.concatenate(
             [
                 1 - gate_validation[:, :1],
@@ -1414,11 +1505,23 @@ def train_neural_experiment(
             + [0.2] * len(taxonomy.flags),
         )
         training_elapsed = time.perf_counter() - phase_started
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="modelo entrenado",
+            advance=1,
+        )
         validation_started = time.perf_counter()
         validation_all = _predict_hf(
             model, tokenizer, validation, spec.max_length, hardware, len(labels)
         )
         validation_inference_elapsed = time.perf_counter() - validation_started
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="validation inferida",
+            advance=1,
+        )
         validation_scores = validation_all
         model_dir = run_dir / "model"
         _save_hf(model, tokenizer, model_dir)
@@ -1504,6 +1607,13 @@ def train_neural_experiment(
             ),
         ),
     )
+    _notify_progress(
+        progress_callback,
+        status="finished",
+        phase="candidato persistido",
+        total=progress_total,
+        completed=progress_total,
+    )
     return {"status": "trained", "candidate": candidate, "run_signature": signature}
 
 
@@ -1516,29 +1626,43 @@ def train_flat_transformers(
     safe_to_damage_ratio: float | None = 4.0,
     split_scheme: str = "video",
     sampling_seed: int = 20260805,
+    progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
-    results = [
-        train_neural_experiment(
-            dataset_path,
-            output_root,
-            experiment="flat_minilm",
-            device=device,
-            force=force,
-            safe_to_damage_ratio=safe_to_damage_ratio,
-            split_scheme=split_scheme,
-            sampling_seed=sampling_seed,
-        ),
-        train_neural_experiment(
-            dataset_path,
-            output_root,
-            experiment="flat_e5",
-            device=device,
-            force=force,
-            safe_to_damage_ratio=safe_to_damage_ratio,
-            split_scheme=split_scheme,
-            sampling_seed=sampling_seed,
-        ),
-    ]
+    experiments = ("flat_minilm", "flat_e5")
+    _notify_progress(
+        progress_callback,
+        status="started",
+        phase="transformers planos",
+        total=len(experiments),
+        advance=0,
+    )
+    results = []
+    for experiment in experiments:
+        results.append(
+            train_neural_experiment(
+                dataset_path,
+                output_root,
+                experiment=experiment,
+                device=device,
+                force=force,
+                safe_to_damage_ratio=safe_to_damage_ratio,
+                split_scheme=split_scheme,
+                sampling_seed=sampling_seed,
+            )
+        )
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase=experiment,
+            advance=1,
+        )
+    _notify_progress(
+        progress_callback,
+        status="finished",
+        phase="dos modelos completados",
+        total=len(experiments),
+        completed=len(experiments),
+    )
     return {
         "status": (
             "noop"

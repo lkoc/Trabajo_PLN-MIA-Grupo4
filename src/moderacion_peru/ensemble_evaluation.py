@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import time
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -26,6 +27,12 @@ from .training import calibrate_thresholds, classification_metrics, encode_targe
 
 DEFAULT_BOOTSTRAP_WORKERS = 4
 BOOTSTRAP_ENGINE = "grouped-video-threaded-v2"
+ProgressCallback = Callable[[dict[str, Any]], None]
+
+
+def _notify_progress(callback: ProgressCallback | None, **event: Any) -> None:
+    if callback is not None:
+        callback(event)
 
 
 def _candidate_slot(candidate: Mapping[str, Any]) -> str:
@@ -119,6 +126,7 @@ def _grouped_bootstrap_macro_ap(
     replicates: int,
     seed: int,
     parallel_workers: int = DEFAULT_BOOTSTRAP_WORKERS,
+    progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     from joblib import Parallel, delayed
     from sklearn.metrics import average_precision_score
@@ -170,6 +178,12 @@ def _grouped_bootstrap_macro_ap(
             sampled = rng.integers(0, len(group_indices), size=len(group_indices))
             indices = np.concatenate([group_indices[index] for index in sampled])
             values.append(macro_damage_ap(indices))
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="bootstrap AP agrupado por video",
+            advance=len(seed_chunk),
+        )
         return values
 
     chunks = Parallel(n_jobs=workers, prefer="threads")(
@@ -200,6 +214,7 @@ def _paired_bootstrap(
     replicates: int,
     seed: int,
     parallel_workers: int = DEFAULT_BOOTSTRAP_WORKERS,
+    progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     from joblib import Parallel, delayed
     from sklearn.metrics import average_precision_score
@@ -252,6 +267,12 @@ def _paired_bootstrap(
                 macro_damage_ap(challenger, indices)
                 - macro_damage_ap(reference, indices)
             )
+        _notify_progress(
+            progress_callback,
+            status="progress",
+            phase="bootstrap pareado",
+            advance=len(seed_chunk),
+        )
         return values
 
     chunks = Parallel(n_jobs=workers, prefer="threads")(
@@ -293,6 +314,7 @@ def compare_and_freeze_validation(
     bootstrap_replicates: int = 1000,
     seed: int = 20260805,
     parallel_workers: int = DEFAULT_BOOTSTRAP_WORKERS,
+    progress_callback: ProgressCallback | None = None,
     force: bool = False,
 ) -> dict[str, Any]:
     """Compara individuos/ensembles en validation y congela sin abrir test."""
@@ -444,6 +466,15 @@ def compare_and_freeze_validation(
             )
 
     bootstrap_started = time.perf_counter()
+    ensemble_count = sum(row["kind"] == "ensemble" for row in evaluated)
+    bootstrap_total = bootstrap_replicates * (len(evaluated) + ensemble_count)
+    _notify_progress(
+        progress_callback,
+        status="started",
+        phase="bootstrap agrupado por video",
+        total=bootstrap_total,
+        advance=0,
+    )
     for row in evaluated:
         bootstrap = _grouped_bootstrap_macro_ap(
             truth,
@@ -452,6 +483,7 @@ def compare_and_freeze_validation(
             replicates=bootstrap_replicates,
             seed=seed,
             parallel_workers=parallel_workers,
+            progress_callback=progress_callback,
         )
         bootstrap.pop("samples")
         row["bootstrap_grouped_by_video"] = bootstrap
@@ -473,6 +505,7 @@ def compare_and_freeze_validation(
             replicates=bootstrap_replicates,
             seed=seed + len(tests) + 1,
             parallel_workers=parallel_workers,
+            progress_callback=progress_callback,
         )
         test.update(
             {
@@ -482,6 +515,13 @@ def compare_and_freeze_validation(
         )
         tests.append(test)
     _holm_adjust(tests)
+    _notify_progress(
+        progress_callback,
+        status="finished",
+        phase="bootstrap completo",
+        total=bootstrap_total,
+        completed=bootstrap_total,
+    )
     bootstrap_elapsed = time.perf_counter() - bootstrap_started
     diversity = []
     for left in range(len(members)):
@@ -512,8 +552,7 @@ def compare_and_freeze_validation(
         },
         "stage_timings_seconds": {
             "grouped_and_paired_bootstrap": bootstrap_elapsed,
-            "comparison_total_before_write": time.perf_counter()
-            - comparison_started,
+            "comparison_total_before_write": time.perf_counter() - comparison_started,
         },
         "selection_policy": "Pareto report; AP macro de daños como desempate predeclarado, luego F1/recall/falsas alarmas/review",
         "pareto_front": frontier,
@@ -580,6 +619,8 @@ def _score_candidate(
     rows: Sequence[dict[str, Any]],
     *,
     device: str,
+    progress_callback: ProgressCallback | None = None,
+    progress_phase: str = "inferencia",
 ) -> np.ndarray:
     inference = candidate["inference"]
     kind = inference["type"]
@@ -593,7 +634,21 @@ def _score_candidate(
         model = joblib.load(
             _asset(candidate, inference["bundle"]).parent / bundle["model"]
         )
+        _notify_progress(
+            progress_callback,
+            status="started",
+            phase=progress_phase,
+            total=1,
+            advance=0,
+        )
         values = np.asarray(model.predict_proba(texts), dtype=float)
+        _notify_progress(
+            progress_callback,
+            status="finished",
+            phase=progress_phase,
+            total=1,
+            completed=1,
+        )
         return values[:, :5]
     if kind == "hf_prompt_sft_json":
         from peft import AutoPeftModelForCausalLM
@@ -610,6 +665,13 @@ def _score_candidate(
         provenance = json.loads(
             _asset(candidate, inference["prompt_capsule"]).read_text(encoding="utf-8")
         )
+
+        def relay_generation_progress(event: dict[str, Any]) -> None:
+            forwarded = dict(event)
+            detail = str(forwarded.get("phase") or "generación")
+            forwarded["phase"] = f"{progress_phase} · {detail}"
+            _notify_progress(progress_callback, **forwarded)
+
         values, _quality = _generate_json_scores(
             model,
             tokenizer,
@@ -617,6 +679,7 @@ def _score_candidate(
             provenance["capsule"],
             device=torch_device,
             max_input_length=3840,
+            progress_callback=relay_generation_progress,
         )
         return values[:, :5]
     try:
@@ -629,7 +692,7 @@ def _score_candidate(
     hardware = resolve_device(device)
     torch_device = torch_device_name(hardware)
 
-    def sequence_scores(path: Path, count: int) -> np.ndarray:
+    def sequence_scores(path: Path, count: int, phase: str) -> np.ndarray:
         tokenizer = AutoTokenizer.from_pretrained(path)
         if kind == "hf_peft_sequence_classifier":
             from peft import AutoPeftModelForSequenceClassification
@@ -639,10 +702,19 @@ def _score_candidate(
             model = AutoModelForSequenceClassification.from_pretrained(path)
         model.to(torch_device).eval()
         batches = []
+        batch_size = 16
+        batch_total = max(1, math.ceil(len(texts) / batch_size))
+        _notify_progress(
+            progress_callback,
+            status="started",
+            phase=phase,
+            total=batch_total,
+            advance=0,
+        )
         with torch.no_grad():
-            for start in range(0, len(texts), 16):
+            for start in range(0, len(texts), batch_size):
                 encoded = tokenizer(
-                    texts[start : start + 16],
+                    texts[start : start + batch_size],
                     return_tensors="pt",
                     padding=True,
                     truncation=True,
@@ -654,16 +726,37 @@ def _score_candidate(
                 batches.append(
                     torch.sigmoid(model(**encoded).logits).float().cpu().numpy()
                 )
+                _notify_progress(
+                    progress_callback,
+                    status="progress",
+                    phase=phase,
+                    advance=1,
+                )
+        _notify_progress(
+            progress_callback,
+            status="finished",
+            phase=phase,
+            total=batch_total,
+            completed=batch_total,
+        )
         return np.concatenate(batches, axis=0)[:, :count]
 
     if kind in {"hf_sequence_classifier", "hf_peft_sequence_classifier"}:
-        return sequence_scores(_asset(candidate, inference["model"]), 5)
+        return sequence_scores(_asset(candidate, inference["model"]), 5, progress_phase)
     if kind == "hf_cascade":
-        gate = sequence_scores(_asset(candidate, inference["gate_model"]), 1)
+        gate = sequence_scores(
+            _asset(candidate, inference["gate_model"]),
+            1,
+            f"{progress_phase} · compuerta",
+        )
         original_kind = inference["type"]
         inference["type"] = "hf_sequence_classifier"
         try:
-            damage = sequence_scores(_asset(candidate, inference["damage_model"]), 4)
+            damage = sequence_scores(
+                _asset(candidate, inference["damage_model"]),
+                4,
+                f"{progress_phase} · daño",
+            )
         finally:
             inference["type"] = original_kind
         return np.concatenate([1 - gate, gate * damage], axis=1)
@@ -677,6 +770,7 @@ def evaluate_frozen_test(
     confirm_single_test_open: bool = False,
     device: str = "auto",
     force: bool = False,
+    progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     """Abre test una sola vez para una decisión previamente congelada."""
 
@@ -715,10 +809,15 @@ def evaluate_frozen_test(
     if not test_rows:
         raise ValueError("No hay filas en el test congelado")
     inference_started = time.perf_counter()
-    member_scores = {
-        identifier: _score_candidate(candidate, test_rows, device=device)
-        for identifier, candidate in candidates.items()
-    }
+    member_scores = {}
+    for identifier, candidate in candidates.items():
+        member_scores[identifier] = _score_candidate(
+            candidate,
+            test_rows,
+            device=device,
+            progress_callback=progress_callback,
+            progress_phase=f"test · {identifier}",
+        )
     inference_elapsed = time.perf_counter() - inference_started
     matrices = list(member_scores.values())
     selected_id = freeze["selected_id"]
@@ -802,7 +901,7 @@ def evaluate_frozen_test(
         "stage_timings_seconds": {
             "test_inference_all_selected_members": inference_elapsed,
             "natural_and_4_to_1_metrics": metrics_elapsed,
-            "test_total_before_write": time.perf_counter() - evaluation_started,
+            "test_total_before_report_write": time.perf_counter() - evaluation_started,
         },
     }
     write_json_atomic(destination, payload)

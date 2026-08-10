@@ -686,6 +686,48 @@ def test_dataset_consumers_restore_and_verify_the_synced_checkpoint():
         assert "Dataset descomprimido y verificado" in source, path
 
 
+def test_local_training_notebooks_expose_bounded_deterministic_parallelism():
+    classical = nbformat.read(
+        ROOT / "flujo/03_entrenamiento/03_01_modelos_clasicos.ipynb", as_version=4
+    )
+    comparison = nbformat.read(
+        ROOT / "flujo/03_entrenamiento/03_07_comparacion_final.ipynb", as_version=4
+    )
+    classical_source = "\n".join(cell.source for cell in classical.cells)
+    comparison_source = "\n".join(cell.source for cell in comparison.cells)
+
+    assert "PARALLEL_WORKERS=4" in classical_source
+    assert "parallel_workers=PARALLEL_WORKERS" in classical_source
+    assert "una extracción por variante" in classical_source
+    assert "PARALLEL_WORKERS=4" in comparison_source
+    assert "parallel_workers=PARALLEL_WORKERS" in comparison_source
+    assert "inferencia_miembros':'secuencial" in comparison_source
+
+
+def test_active_long_running_notebooks_expose_progress_indicators():
+    chunk_optimization = nbformat.read(
+        ROOT / "flujo/01_datos/01_02_optimizacion_longitud_chunks.ipynb",
+        as_version=4,
+    )
+    chunk_source = "\n".join(cell.source for cell in chunk_optimization.cells)
+    assert "run_with_progress" in chunk_source
+
+    for path in sorted((ROOT / "flujo/03_entrenamiento").glob("*.ipynb")):
+        notebook = nbformat.read(path, as_version=4)
+        source = "\n".join(cell.source for cell in notebook.cells)
+        assert "run_with_progress" in source, path
+
+    classical = nbformat.read(
+        ROOT / "flujo/03_entrenamiento/03_01_modelos_clasicos.ipynb", as_version=4
+    )
+    classical_source = "\n".join(cell.source for cell in classical.cells)
+    assert "progress_unit='etapa'" in classical_source
+    experiments_source = (ROOT / "src/moderacion_peru/experiments.py").read_text(
+        encoding="utf-8"
+    )
+    assert "progress_callback: ProgressCallback | None = None" in experiments_source
+
+
 def test_stage_02_notebooks_show_progress_for_long_operations():
     notebook_sources = {}
     for path in sorted((ROOT / "flujo" / "02_etiquetado").glob("02_*.ipynb")):

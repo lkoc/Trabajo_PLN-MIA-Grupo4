@@ -12,6 +12,8 @@ El parámetro común es `device=auto|cuda|rocm|xpu|cpu`.
 
 El código distingue CUDA de ROCm antes de elegir kernels o registrar hardware. Si se solicita un backend ausente, se muestra una advertencia y se usa CPU; el manifiesto conserva el motivo.
 
+En la máquina auditada el entorno de entrenamiento todavía no contiene PyTorch, por lo que `auto` resuelve CPU aunque Windows enumere una Radeon 780M. `03_01` y el bootstrap de `03_07` usan cuatro de los 16 procesadores lógicos mediante hilos con memoria compartida; este límite reduce la duplicación de matrices dispersas. El inventario fechado está en `resultados/auditorias/hardware_local_2026-08-10.json`.
+
 Ollama administra su propia aceleración. Vulkan es experimental y no se activa automáticamente. El preflight registra versión, modelos instalados y disponibilidad, pero no descarga modelos ni inicia una corrida.
 
 No se incluye `torch` como dependencia universal en `pyproject.toml`: cada máquina debe instalar la distribución oficial correspondiente antes del extra `entrenamiento`. `bitsandbytes` es opcional y solo se usa después de un smoke test del backend.

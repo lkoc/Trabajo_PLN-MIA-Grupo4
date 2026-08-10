@@ -163,6 +163,8 @@ tope artificial; persiste por `chunk_id` y puede continuar con una recarga.
 
 Los cuadernos `03_01`–`03_06b` completan `fit → calibración/evaluación en validation → manifiesto` y dejan test sellado. `03_07` compara individuos y ensembles, congela candidatos, umbrales y regla; un segundo interruptor infiere una sola vez sobre el test natural completo. Train y validation conservan todo el daño y seleccionan `SEGURO` de forma determinista, aproximadamente proporcional por canal, con ratio 4:1: quedan 51.205/10.600 chunks. Test conserva sus 22.684 chunks y su prevalencia natural. De la misma inferencia se deriva además una vista secundaria determinista 4:1 de 9.010 chunks; no se vuelve a abrir ni ejecutar el modelo. La publicación permanece bloqueada por defecto.
 
+Los cuadernos locales aprovechan cuatro hilos de forma acotada: `03_01` reutiliza una extracción TF–IDF por variante entre todos sus modelos y paraleliza las 22 cabezas; `03_07` paraleliza las réplicas bootstrap por video. Ambos registran tiempos por etapa. Los miembros del ensemble se infieren secuencialmente para evitar multiplicar RAM o VRAM.
+
 ### 04 · Operación supervisada
 
 `04_01_frontend_produccion` inicia un demostrador local para texto o URL de YouTube. La interfaz permite consultar el mejor clásico, Transformer o Qwen, comparar sus respuestas o aplicar consenso 2-de-3. Muestra las cinco probabilidades, sus umbrales, la evidencia temporal y los motivos que obligan revisión. Un conflicto, una salida vacía o la proximidad a un umbral nunca se convierte automáticamente en `SEGURO`.

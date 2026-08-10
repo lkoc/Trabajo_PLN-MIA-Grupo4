@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import dataclasses
 import html
+import inspect
 import json
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any
-
+from threading import RLock
+from types import TracebackType
+from typing import Any, Self
 
 _PALETTE = {
     "info": ("#075985", "#e0f2fe", "#7dd3fc"),
@@ -28,6 +30,132 @@ _COPY_COMMAND_HANDLER = (
     "navigator.clipboard.writeText(text).then(done).catch(fallback);"
     "}else{fallback();}"
 )
+
+
+class NotebookProgress:
+    """Barra ``tqdm`` reutilizable como callback de procesos del proyecto."""
+
+    def __init__(
+        self,
+        description: str,
+        *,
+        total: int | None = None,
+        unit: str = "it",
+    ) -> None:
+        from tqdm.auto import tqdm
+
+        self._description = description
+        self._lock = RLock()
+        self._completed = 0
+        self._bar = tqdm(total=total, desc=description, unit=unit, dynamic_ncols=True)
+
+    def __call__(self, event: Mapping[str, Any]) -> None:
+        """Consume eventos ``total``, ``advance``/``completed`` y ``phase``."""
+
+        with self._lock:
+            total = event.get("total")
+            if event.get("status") == "started":
+                self._completed = 0
+                self._bar.reset(total=int(total) if total is not None else None)
+            elif (
+                total is not None and int(total) >= 0 and self._bar.total != int(total)
+            ):
+                self._bar.total = int(total)
+                self._bar.refresh()
+            phase = str(event.get("phase") or "").strip()
+            if phase:
+                self._bar.set_description_str(f"{self._description} · {phase}")
+            if event.get("completed") is not None:
+                target = max(self._completed, int(event["completed"]))
+                advance = target - self._completed
+            else:
+                advance = max(0, int(event.get("advance", 0)))
+                target = self._completed + advance
+            if advance:
+                self._bar.update(advance)
+                self._completed = target
+            details = event.get("details")
+            if isinstance(details, Mapping) and details:
+                self._bar.set_postfix(
+                    **{str(key): value for key, value in details.items()}
+                )
+            if event.get("status") == "finished":
+                self._bar.refresh()
+
+    def advance(self, amount: int = 1, *, phase: str | None = None) -> None:
+        event: dict[str, Any] = {"advance": amount}
+        if phase:
+            event["phase"] = phase
+        self(event)
+
+    def close(self) -> None:
+        with self._lock:
+            if not self._bar.disable:
+                self._bar.close()
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc: BaseException | None,
+        _traceback: TracebackType | None,
+    ) -> None:
+        self.close()
+
+
+def notebook_progress(
+    description: str, *, total: int | None = None, unit: str = "it"
+) -> NotebookProgress:
+    """Crea un indicador compatible con Jupyter, VS Code, Colab y terminal."""
+
+    return NotebookProgress(description, total=total, unit=unit)
+
+
+def run_with_progress(
+    description: str,
+    function: Callable[..., Any],
+    /,
+    *args: Any,
+    progress_total: int | None = None,
+    progress_unit: str = "it",
+    **kwargs: Any,
+) -> Any:
+    """Ejecuta una etapa larga con barra y conecta su callback si lo admite."""
+
+    supports_callback = "progress_callback" in inspect.signature(function).parameters
+    initial_total = progress_total if supports_callback else (progress_total or 1)
+    progress = notebook_progress(
+        description,
+        total=initial_total,
+        unit=progress_unit,
+    )
+    if supports_callback and "progress_callback" not in kwargs:
+        kwargs["progress_callback"] = progress
+    else:
+        progress(
+            {
+                "status": "started",
+                "phase": description,
+                "total": initial_total,
+                "advance": 0,
+            }
+        )
+    try:
+        result = function(*args, **kwargs)
+        if not supports_callback:
+            progress(
+                {
+                    "status": "finished",
+                    "phase": f"{description} · completo",
+                    "total": initial_total,
+                    "completed": initial_total,
+                }
+            )
+        return result
+    finally:
+        progress.close()
 
 
 def _normalise(value: Any) -> Any:
@@ -73,10 +201,10 @@ def _card(title: str, body: str, *, tone: str) -> str:
     foreground, background, border = _PALETTE.get(tone, _PALETTE["info"])
     return (
         f'<section style="border:1px solid {border};border-left:5px solid {foreground};'
-        f'background:{background};border-radius:8px;padding:12px 14px;margin:8px 0 14px 0;'
+        f"background:{background};border-radius:8px;padding:12px 14px;margin:8px 0 14px 0;"
         'font-family:Inter,Segoe UI,Arial,sans-serif;color:#0f172a">'
         f'<div style="font-weight:700;color:{foreground};margin-bottom:8px">'
-        f'{html.escape(str(title))}</div>{body}</section>'
+        f"{html.escape(str(title))}</div>{body}</section>"
     )
 
 
@@ -84,7 +212,10 @@ def show_callout(title: str, message: Any, *, tone: str = "info") -> None:
     """Muestra un estado o instrucción breve como tarjeta accesible."""
 
     rendered = html.escape(_text(message)).replace("\n", "<br>")
-    _display(_card(title, f'<div style="line-height:1.45">{rendered}</div>', tone=tone), f"{title}: {_text(message)}")
+    _display(
+        _card(title, f'<div style="line-height:1.45">{rendered}</div>', tone=tone),
+        f"{title}: {_text(message)}",
+    )
 
 
 def show_summary(title: str, values: Mapping[str, Any], *, tone: str = "info") -> None:
@@ -100,13 +231,19 @@ def show_summary(title: str, values: Mapping[str, Any], *, tone: str = "info") -
                 f'<pre style="white-space:pre-wrap;margin:6px 0 0">{rendered}</pre></details>'
             )
         rows.append(
-            '<tr>'
+            "<tr>"
             f'<th style="text-align:left;padding:5px 12px 5px 0;vertical-align:top;color:#475569">{html.escape(str(key))}</th>'
             f'<td style="padding:5px 0;vertical-align:top;font-family:ui-monospace,Consolas,monospace">{rendered}</td>'
-            '</tr>'
+            "</tr>"
         )
-    body = '<table style="border-collapse:collapse;width:100%">' + "".join(rows) + "</table>"
-    fallback = f"{title}\n" + "\n".join(f"- {key}: {_text(value)}" for key, value in normalised.items())
+    body = (
+        '<table style="border-collapse:collapse;width:100%">'
+        + "".join(rows)
+        + "</table>"
+    )
+    fallback = f"{title}\n" + "\n".join(
+        f"- {key}: {_text(value)}" for key, value in normalised.items()
+    )
     _display(_card(title, body, tone=tone), fallback)
 
 
@@ -134,7 +271,7 @@ def show_table(
             "<tr>"
             + "".join(
                 f'<td style="padding:6px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top">'
-                f'{html.escape(_text(row.get(column)))}</td>'
+                f"{html.escape(_text(row.get(column)))}</td>"
                 for column in columns
             )
             + "</tr>"
@@ -144,7 +281,10 @@ def show_table(
         if len(rows) > max_rows
         else ""
     )
-    markup = '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%">' + f"<thead><tr>{head}</tr></thead><tbody>{''.join(body_rows)}</tbody></table></div>{note}"
+    markup = (
+        '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%">'
+        + f"<thead><tr>{head}</tr></thead><tbody>{''.join(body_rows)}</tbody></table></div>{note}"
+    )
     _display(_card(title, markup, tone=tone), f"{title}: {len(rows)} filas")
 
 

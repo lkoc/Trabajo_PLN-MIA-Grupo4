@@ -100,7 +100,14 @@ def test_frozen_test_reports_natural_and_four_to_one_from_one_inference(
     )
     calls = []
 
-    def fake_scores(candidate, scored_rows, *, device):
+    def fake_scores(
+        candidate,
+        scored_rows,
+        *,
+        device,
+        progress_callback=None,
+        progress_phase="inferencia",
+    ):
         calls.append([row["chunk_id"] for row in scored_rows])
         scores = np.full((len(scored_rows), 5), 0.01, dtype=float)
         for index, row in enumerate(scored_rows):
@@ -124,3 +131,8 @@ def test_frozen_test_reports_natural_and_four_to_one_from_one_inference(
     assert payload["test_rows_4_to_1"] == 10
     assert payload["metrics"] == payload["primary_metrics_natural_prevalence"]
     assert "secondary_metrics_4_to_1" in payload
+    assert set(payload["stage_timings_seconds"]) == {
+        "test_inference_all_selected_members",
+        "natural_and_4_to_1_metrics",
+        "test_total_before_report_write",
+    }
