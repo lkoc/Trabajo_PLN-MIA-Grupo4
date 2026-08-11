@@ -11,7 +11,7 @@ from typing import Any
 
 from .io import sha256_file, write_json_atomic
 
-CHECKPOINT_SCHEMA_VERSION = "1.0.0"
+CHECKPOINT_SCHEMA_VERSION = "1.1.0"
 MODEL_CHECKPOINT_FILES = (
     "model.safetensors",
     "pytorch_model.bin",
@@ -101,6 +101,44 @@ def _copy_and_hash(source: Path, destination: Path) -> str:
     return digest.hexdigest()
 
 
+def _sync_and_verify_persistent_copy(
+    path: Path,
+    *,
+    expected_sha256: str,
+    expected_bytes: int,
+) -> None:
+    """Fuerza el vaciado disponible y relee la copia final desde el montaje.
+
+    Google Drive FUSE puede aceptar un ``rename`` de un archivo grande que aún
+    solo existe en la caché del runtime. Por eso los checkpoints se escriben con
+    su nombre final y no se publican manifiestos hasta cerrar, sincronizar y
+    volver a leer íntegramente ese archivo.
+    """
+
+    sync = getattr(os, "sync", None)
+    if sync is not None:
+        try:
+            sync()
+        except OSError:
+            # Algunos montajes FUSE no implementan una sincronización global;
+            # la relectura completa que sigue continúa siendo obligatoria.
+            pass
+    try:
+        actual_bytes = path.stat().st_size
+    except OSError as exc:
+        raise OSError(f"Drive no conservó la copia final {path.name}") from exc
+    if actual_bytes != expected_bytes:
+        raise ValueError(
+            f"Drive devolvió {actual_bytes} bytes para {path.name}; "
+            f"se esperaban {expected_bytes}"
+        )
+    durable_sha256 = sha256_file(path)
+    if durable_sha256 != expected_sha256:
+        raise ValueError(
+            f"La relectura final desde Drive cambió el SHA-256 de {path.name}"
+        )
+
+
 def persist_trainer_checkpoint(
     checkpoint_dir: str | Path,
     persistent_dir: str | Path,
@@ -133,19 +171,22 @@ def persist_trainer_checkpoint(
     )
     os.close(local_fd)
     local_archive = Path(local_name)
-    drive_fd, drive_name = tempfile.mkstemp(
-        prefix=f".{archive_name}.", suffix=".partial", dir=destination
-    )
-    os.close(drive_fd)
-    drive_partial = Path(drive_name)
     try:
         with tarfile.open(local_archive, "w") as handle:
             handle.add(checkpoint, arcname=checkpoint.name)
         local_sha256 = sha256_file(local_archive)
-        copied_sha256 = _copy_and_hash(local_archive, drive_partial)
+        local_bytes = local_archive.stat().st_size
+        # Escribir directamente el nombre final evita que Drive FUSE deje en el
+        # servidor un placeholder .partial de 0 bytes tras un rename grande.
+        # Sin manifiesto, una copia interrumpida nunca se considera recuperable.
+        copied_sha256 = _copy_and_hash(local_archive, target)
         if copied_sha256 != local_sha256:
             raise ValueError("La copia del checkpoint hacia Drive cambió su SHA-256")
-        os.replace(drive_partial, target)
+        _sync_and_verify_persistent_copy(
+            target,
+            expected_sha256=local_sha256,
+            expected_bytes=local_bytes,
+        )
         manifest = {
             "schema_version": CHECKPOINT_SCHEMA_VERSION,
             "saved_at": datetime.now(UTC).isoformat(),
@@ -155,7 +196,8 @@ def persist_trainer_checkpoint(
             "archive": {
                 "name": target.name,
                 "sha256": local_sha256,
-                "bytes": target.stat().st_size,
+                "bytes": local_bytes,
+                "verification": "full_readback_after_close",
             },
         }
         # El manifiesto por checkpoint permite recuperar una versión anterior si
@@ -165,7 +207,6 @@ def persist_trainer_checkpoint(
         return {**manifest, "persistent_dir": str(destination)}
     finally:
         local_archive.unlink(missing_ok=True)
-        drive_partial.unlink(missing_ok=True)
 
 
 def _persistent_manifests(persistent_dir: Path) -> list[dict[str, Any]]:
@@ -279,6 +320,17 @@ def restore_latest_trainer_checkpoint(
         if not archive.is_file():
             failures.append(f"step {step}: no existe {archive_name}")
             continue
+        try:
+            expected_bytes = int(manifest["archive"].get("bytes", 0))
+            actual_bytes = archive.stat().st_size
+        except (OSError, TypeError, ValueError):
+            failures.append(f"step {step}: tamaño de archivo ilegible")
+            continue
+        if expected_bytes > 0 and actual_bytes != expected_bytes:
+            failures.append(
+                f"step {step}: tamaño inválido ({actual_bytes} de {expected_bytes} bytes)"
+            )
+            continue
         if expected_sha256 and not _is_sha256(expected_sha256):
             failures.append(f"step {step}: SHA-256 malformado")
             continue
@@ -383,9 +435,27 @@ def restore_latest_trainer_checkpoint(
             local_archive.unlink(missing_ok=True)
     if local is not None:
         return local
-    raise ValueError(
-        "No fue posible restaurar ningún checkpoint persistente: " + "; ".join(failures)
+    # Si no hay una versión anterior verificable, continuar desde cero es la
+    # única recuperación automática posible. Se registra de forma explícita
+    # para que nunca parezca que la época dañada fue restaurada.
+    failure_record = {
+        "schema_version": CHECKPOINT_SCHEMA_VERSION,
+        "restored_at": datetime.now(UTC).isoformat(),
+        "source": None,
+        "step": None,
+        "epoch": None,
+        "integrity_source": "no_recoverable_checkpoint_restart_from_scratch",
+        "skipped_newer_checkpoints": failures,
+    }
+    training.mkdir(parents=True, exist_ok=True)
+    write_json_atomic(training / "persistent_checkpoint_restore.json", failure_record)
+    print(
+        "ADVERTENCIA: ningún checkpoint de Google Drive es recuperable; "
+        "el entrenamiento se reiniciará automáticamente desde la época 1. "
+        f"Versiones omitidas: {'; '.join(failures)}",
+        flush=True,
     )
+    return None
 
 
 def build_persistent_checkpoint_callback(

@@ -6,6 +6,7 @@ from types import ModuleType, SimpleNamespace
 
 import pytest
 
+from moderacion_peru import persistent_checkpoints
 from moderacion_peru.persistent_checkpoints import (
     build_persistent_checkpoint_callback,
     persist_trainer_checkpoint,
@@ -83,7 +84,7 @@ def test_restore_falls_back_to_previous_verified_checkpoint(tmp_path):
     )
     assert restore_record["step"] == 10
     assert any(
-        "step 20: SHA-256 inválido" in failure
+        "step 20: tamaño inválido" in failure
         for failure in restore_record["skipped_newer_checkpoints"]
     )
 
@@ -186,7 +187,7 @@ def test_hashless_archive_is_structurally_validated_and_manifest_is_repaired(tmp
     assert restore_record["integrity_source"] == "rebuilt_after_structural_validation"
 
 
-def test_missing_archive_never_silently_restarts_training(tmp_path):
+def test_missing_archive_restarts_from_scratch_with_explicit_audit(tmp_path, capsys):
     checkpoint = _checkpoint(
         tmp_path / "source" / "trainer", 6401, "época-uno", epoch=1.0
     )
@@ -194,10 +195,44 @@ def test_missing_archive_never_silently_restarts_training(tmp_path):
     persist_trainer_checkpoint(checkpoint, persistent)
     (persistent / "checkpoint-6401.tar").unlink()
 
-    with pytest.raises(ValueError, match="no existe checkpoint-6401.tar"):
-        restore_latest_trainer_checkpoint(
-            persistent, tmp_path / "new_runtime" / "trainer"
-        )
+    training = tmp_path / "new_runtime" / "trainer"
+    restored = restore_latest_trainer_checkpoint(persistent, training)
+
+    assert restored is None
+    assert "reiniciará automáticamente desde la época 1" in capsys.readouterr().out
+    restore_record = json.loads(
+        (training / "persistent_checkpoint_restore.json").read_text(encoding="utf-8")
+    )
+    assert (
+        restore_record["integrity_source"]
+        == "no_recoverable_checkpoint_restart_from_scratch"
+    )
+    assert restore_record["skipped_newer_checkpoints"] == [
+        "step 6401: no existe checkpoint-6401.tar"
+    ]
+
+
+def test_manifest_is_not_published_until_drive_readback_matches(
+    tmp_path, monkeypatch
+):
+    checkpoint = _checkpoint(tmp_path / "source" / "trainer", 45, epoch=1.0)
+    persistent = tmp_path / "drive" / "trainer_checkpoints"
+    real_sha256_file = persistent_checkpoints.sha256_file
+
+    def corrupt_drive_readback(path):
+        path = type(checkpoint)(path)
+        if path.parent == persistent and path.suffix == ".tar":
+            return "0" * 64
+        return real_sha256_file(path)
+
+    monkeypatch.setattr(persistent_checkpoints, "sha256_file", corrupt_drive_readback)
+
+    with pytest.raises(ValueError, match="relectura final desde Drive"):
+        persist_trainer_checkpoint(checkpoint, persistent)
+
+    assert (persistent / "checkpoint-45.tar").is_file()
+    assert not (persistent / "checkpoint-45.json").exists()
+    assert not (persistent / "latest.json").exists()
 
 
 def test_incomplete_local_copy_falls_back_to_verified_drive_epoch(tmp_path):
