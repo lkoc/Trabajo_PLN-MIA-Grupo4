@@ -42,14 +42,14 @@ Se inspeccionaron los cuadernos, `src/moderacion_peru/experiments.py`, `training
 | Taxonomía                    |                                         2.1.0, cinco salidas gruesas |
 | `snapshot_id`               |                                          `v2.1.0-86822445ec0262da` |
 | SHA-256 del dataset           | `013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86` |
-| Bundle Colab vigente          | `ecf2b4d5a7adb9960a60e14df86e1645e9e0d11eb7d0feeec2da6febfb0029fa` |
-| SHA-256 del núcleo del bundle | `b3cea5a85b1874f6d59762cf2bd64b5f662aab07ed73523fc9f66c89abbd3162` |
+| Bundle Colab vigente          | `4e4ffc2ae7041c94a73e4c564f9d65164123a4feeba6a0097b03f10b9941af35` |
+| SHA-256 del núcleo del bundle | `9bc85f40a25bf5d38ef0757bae1b4d737d1d261b760e7bee199c8e86132ef1f6` |
 | Prompt operativo              |                         `config/prompt_operacional_ollama_v3_2.md` |
 | SHA-256 del prompt            | `793e1a962c7065523ba0972e6b966cef8ab2f6e6c2678fde03e6ff5c27f42271` |
 
 Todo resultado futuro deberá persistir como mínimo: SHA del dataset, SHA del prompt si corresponde, versión de taxonomía, semilla, partición, versión del código, modelo base, hiperparámetros, umbrales, calibrador y entorno de ejecución.
 
-El bundle vigente fue generado el `2026-08-11T06:28:47.394111+00:00` e incorpora la recuperación robusta y la verificación posterior a la escritura de checkpoints persistentes. Los resultados ya completados conservan además el release inmutable con el que se ejecutaron: `03_03` usó `23a5ac...c4ac`; `03_03b` y `03_04`, `4c734d...1941`; `03_05`, `185daf...405b`. Los intentos fallidos de restauración de `03_06` usaron releases anteriores, incluido `f81112...c2178`; sus salidas no se reetiquetaron retroactivamente. Esta diferencia no altera el SHA del dataset, pero debe preservarse para reproducir exactamente cada corrida.
+El bundle vigente fue generado el `2026-08-11T06:32:25.102788+00:00` e incorpora la recuperación robusta y la verificación posterior a la escritura de checkpoints persistentes. Los resultados ya completados conservan además el release inmutable con el que se ejecutaron: `03_03` usó `23a5ac...c4ac`; `03_03b` y `03_04`, `4c734d...1941`; `03_05`, `185daf...405b`. Los intentos fallidos de restauración de `03_06` usaron releases anteriores, incluido `f81112...c2178`; sus salidas no se reetiquetaron retroactivamente. Esta diferencia no altera el SHA del dataset, pero debe preservarse para reproducir exactamente cada corrida.
 
 El nuevo snapshot contiene 14 máscaras finas y tres máscaras de *flags* por fila. Hay 32.025 filas sin referencia fina; ya no se convierten automáticamente en negativos. La auditoría registra 141.159 filas con máscara fina completa y las 173.240 con máscara completa de *flags*. La partición adicional por canal contiene 128.156/23.834/21.250 chunks en train/validation/test y, por construcción, ningún canal cruza esos grupos.
 
@@ -157,7 +157,7 @@ La procedencia debe conservarse como variable de auditoría y estratificación d
 | `03_03b_transformer_cascada_segura` | puerta conservadora + rama especializada que vuelve a incluir `SEGURO` | **Completo:** `cascade_v2-af78eba77883`, publicado en Drive | minimiza bloqueo falso y permite corregir falsos positivos de la puerta |
 | `03_04_transformer_multitarea` | 5 gruesas + 14 finas + 3 flags | **Completo:** `multitask-5a9b00f79262`, publicado en Drive | pérdida enmascarada y ratio 4:1 fijo en train/validation |
 | `03_05_qwen_lora` | Qwen3-0.6B-Base clasificador LoRA de 22 salidas | **Completo:** `qwen_lora-4aa5ce04df05`, reanudado y finalizado en A100; publicado en Drive | checkpoint completo por época en Drive y clasificación supervisada explícita |
-| `03_06_qwen_estructurado` | Qwen clasificador de 22 salidas con penalización estructural | **Primera época no recuperable:** el TAR no llegó a Drive; sin candidato final y listo para recomputar con `ecf2b4...029fa` | calibración, auxiliares enmascarados y checkpoint por época verificado por relectura |
+| `03_06_qwen_estructurado` | Qwen clasificador de 22 salidas con penalización estructural | **Primera época no recuperable:** el TAR no llegó a Drive; sin candidato final y listo para recomputar con `4e4ffc...1af35` | calibración, auxiliares enmascarados y checkpoint por época verificado por relectura |
 | `03_06b_qwen_prompt_sft` | Qwen3-0.6B conversacional [R19], LoRA causal, prompt v3.2 y JSON | `RUN_PILOT=False`; `RUN_FULL_TRAINING=False` | piloto no elegible y corrida completa separada |
 | `03_07_comparacion_final` | individuos, voto duro, medias suaves, unión/intersección | tres compuertas en `False` | bootstrap determinista en cuatro hilos, pruebas pareadas/Holm y test único |
 | `03_08_auditoria_finas_flags` | cobertura, consistencia y calidad auxiliar disponible | **Pendiente para el snapshot vigente:** la salida guardada corresponde a `24d3d8...ca783` | métricas solo en posiciones observadas |
@@ -223,7 +223,7 @@ Una salida versionada del cuaderno (`a7bed4e`) conserva las dos épocas completa
 
 La ejecución anterior llegó a `17656/25604` pasos (época 2,76/4), pero la última unidad completa recuperable era la época 2. El cuaderno registra una A100-SXM4 de 40 GB, el bundle `185daf...405b` y un contexto reanudado. La corrida continuó desde el checkpoint recuperable, persistió `epoch=3.0`, `step=19203` en Drive y produjo el candidato final, en vez de reiniciar desde cero.
 
-El contrato actual guarda, al finalizar cada época, un TAR en `drive_run_dir/trainer_checkpoints`, con adaptador/modelo, optimizador, *scheduler*, RNG y `trainer_state`; el manifiesto incluye `epoch` y `step`. Desde el bundle `ecf2b4...029fa`, el TAR se escribe directamente con su nombre final —sin promover mediante `rename` un archivo grande todavía alojado en la caché FUSE—, se cierra, se sincroniza cuando el montaje lo permite y se relee por completo para comprobar tamaño y SHA-256. Solo después se publican `checkpoint-<step>.json` y `latest.json`. Al reabrir Colab, el restaurador exige todos los componentes y `Trainer` continúa en la época siguiente. Si se interrumpe a mitad de época, se pierde esa fracción; una época solo se declara persistida después de la relectura final verificable.
+El contrato actual guarda, al finalizar cada época, un TAR en `drive_run_dir/trainer_checkpoints`, con adaptador/modelo, optimizador, *scheduler*, RNG y `trainer_state`; el manifiesto incluye `epoch` y `step`. Desde el bundle `4e4ffc...1af35`, el TAR se escribe directamente con su nombre final —sin promover mediante `rename` un archivo grande todavía alojado en la caché FUSE—, se cierra, se sincroniza cuando el montaje lo permite y se relee por completo para comprobar tamaño y SHA-256. Solo después se publican `checkpoint-<step>.json` y `latest.json`. Al reabrir Colab, el restaurador exige todos los componentes y `Trainer` continúa en la época siguiente. Si se interrumpe a mitad de época, se pierde esa fracción; una época solo se declara persistida después de la relectura final verificable.
 
 El candidato final, ya calibrado y con umbrales, quedó completado el `2026-08-11T05:02:50.187353+00:00`. Su ficha completa sobre las 10.600 filas de *validation* 4:1 es:
 
@@ -252,7 +252,7 @@ La publicación en Drive terminó el `2026-08-11T05:02:56.587782+00:00`. El arch
 
 La inspección directa de la misma cuenta de Google Drive confirmó la situación el 2026-08-11. En `ModeracionPeru_Colab/runs/03_06/03_06_working_v2_1/trainer_checkpoints/qwen_structured-f3205f6538191365/trainer` existen `latest.json` y `checkpoint-6401.json`, ambos de 315 bytes, y `.checkpoint-6401.tar.0sfo2dl7.partial`, de **0 bytes**. No existe `checkpoint-6401.tar`, tampoco aparece en la papelera ni en otra carpeta de la corrida. El manifiesto declara 7.153.223.680 bytes, `epoch=1.0`, `step=6401` y SHA-256 `fd65827108fb434466a0d114071f2baaad47a4ae8fb38e30236786c857131e01`. Los JSON describen el archivo, pero no contienen pesos; por tanto, esa época no puede reconstruirse.
 
-El bundle `ecf2b4...029fa` aplica estas reglas:
+El bundle `4e4ffc...1af35` aplica estas reglas:
 
 1. escribe el TAR grande directamente con su nombre final y no depende de un `rename` de Drive FUSE;
 2. después del cierre, fuerza la sincronización disponible y relee los 7 GB completos para verificar tamaño y SHA-256;
@@ -263,7 +263,7 @@ El bundle `ecf2b4...029fa` aplica estas reglas:
 
 Google Drive sigue siendo la fuente persistente de las épocas. Al comenzar, el restaurador compara el SSD temporal con `drive_run_dir/trainer_checkpoints/<experimento>/trainer`: usa el checkpoint local solo si está completo y es más nuevo; si falta o está incompleto, recorre los TAR de Drive en orden descendente, copia al SSD el primero verificable y entrega esa ruta explícita a `Trainer.train`. El límite `save_total_limit=2` afecta únicamente los checkpoints del SSD temporal; el callback conserva en Drive un TAR y un manifiesto independiente por cada época validada.
 
-Al corte todavía no hay métricas ni candidato de `03_06`. La época 1 debe computarse nuevamente; puede repetirse la celda de entrenamiento después de activar el bundle `ecf2b4...029fa`, sin borrar manualmente los JSON huérfanos.
+Al corte todavía no hay métricas ni candidato de `03_06`. La época 1 debe computarse nuevamente; puede repetirse la celda de entrenamiento después de activar el bundle `4e4ffc...1af35`, sin borrar manualmente los JSON huérfanos.
 
 ## 7. Auditoría crítica: hallazgos iniciales y resolución
 
@@ -617,7 +617,7 @@ Test conserva las 22.684 filas naturales (1.802 daño + 20.882 `SEGURO`; 11,59:1
 ## 14. Orden de ejecución posterior a la implementación
 
 1. ~~Modificar el contrato de snapshot para máscaras observadas y regenerar un snapshot con nuevo SHA.~~ Completado: `013d60...c1f86`.
-2. ~~Regenerar el bundle Colab y fijar su ID en los cuadernos.~~ Completado; hotfix vigente: `ecf2b4...029fa`.
+2. ~~Regenerar el bundle Colab y fijar su ID en los cuadernos.~~ Completado; hotfix vigente: `4e4ffc...1af35`.
 3. Ejecutar 03_08 como control previo sobre el snapshot vigente. La salida guardada actualmente es de un snapshot anterior.
 4. ~~Ejecutar 03_01 y conservar sus predicciones OOF/validation.~~ Completado, incluida la reparación convergente de ambos SVM.
 5. ~~Continuar `03_05` desde la época 2 preservada.~~ Completado. Reintentar `03_06` con el restaurador corregido; ejecutar `03_02` y el piloto no elegible de `03_06b`. `03_03`, `03_03b` y `03_04` también están completos.
@@ -655,7 +655,7 @@ El corte confirma que las arquitecturas ofrecen compromisos distintos: Qwen lide
 
 ### 17.1. Estado de evidencia
 
-Al cierre actualizado, `03_01`, `03_03`, `03_03b`, `03_04` y `03_05` produjeron candidatos completos sobre `013d60...c1f86`. `03_06` computó una época en A100, pero el TAR del paso 6401 no llegó a Drive y todavía no tiene candidato completo; el bundle `ecf2b4...029fa` está preparado para recomputarla y verificar la copia final antes de declarar éxito. `03_02` y `03_06b` siguen pendientes. El test no fue abierto.
+Al cierre actualizado, `03_01`, `03_03`, `03_03b`, `03_04` y `03_05` produjeron candidatos completos sobre `013d60...c1f86`. `03_06` computó una época en A100, pero el TAR del paso 6401 no llegó a Drive y todavía no tiene candidato completo; el bundle `4e4ffc...1af35` está preparado para recomputarla y verificar la copia final antes de declarar éxito. `03_02` y `03_06b` siguen pendientes. El test no fue abierto.
 
 La corrida clásica original consumió aproximadamente **924,28 segundos (15 min 24 s) de CPU local**. La reparación selectiva de los dos SVM añadió 1.891,18 s (31 min 31 s), para un total clásico observado aproximado de **2.815,46 s (46 min 55 s)**. El costo externo fue USD 0; no se midió electricidad local.
 
