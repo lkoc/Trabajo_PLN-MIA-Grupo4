@@ -34,6 +34,10 @@ from .io import (
 )
 from .manifests import artifact_reference, build_manifest, save_manifest
 from .models import TRANSFORMER_SPECS, TrainingSpecification
+from .persistent_checkpoints import (
+    build_persistent_checkpoint_callback,
+    restore_latest_trainer_checkpoint,
+)
 from .taxonomy import load_taxonomy
 from .training import (
     calibrate_thresholds,
@@ -1152,11 +1156,11 @@ def _fit_hf(
     dataloader_num_workers: int = 0,
     progress_callback: ProgressCallback | None = None,
     progress_label: str = "modelo",
+    persistent_checkpoint_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     try:
         import torch
         from transformers import EarlyStoppingCallback, Trainer, TrainingArguments
-        from transformers.trainer_utils import get_last_checkpoint
     except ImportError as exc:
         raise RuntimeError("Instale PyTorch, accelerate y Transformers") from exc
 
@@ -1258,13 +1262,19 @@ def _fit_hf(
             primary_output_count=primary_output_count,
         )
 
+    callbacks = [EarlyStoppingCallback(early_stopping_patience=1)]
+    persistent_callback = build_persistent_checkpoint_callback(
+        persistent_checkpoint_dir
+    )
+    if persistent_callback is not None:
+        callbacks.append(persistent_callback)
     trainer = StructuredTrainer(
         model=model,
         args=arguments,
         train_dataset=dataset,
         eval_dataset=validation_dataset,
         compute_metrics=compute_metrics,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=1)],
+        callbacks=callbacks,
     )
     _notify_progress(
         progress_callback,
@@ -1277,15 +1287,22 @@ def _fit_hf(
             "lote_validation": eval_batch_size,
         },
     )
-    checkpoint = (
-        get_last_checkpoint(str(training_dir)) if training_dir.is_dir() else None
+    restored_checkpoint = restore_latest_trainer_checkpoint(
+        persistent_checkpoint_dir, training_dir
     )
+    checkpoint = str(restored_checkpoint) if restored_checkpoint is not None else None
     result = trainer.train(resume_from_checkpoint=checkpoint)
     return {
         "training_metrics": dict(result.metrics),
         "positive_weights": positive_weights.tolist(),
         "best_checkpoint": trainer.state.best_model_checkpoint,
         "best_validation_metric": trainer.state.best_metric,
+        "resumed_from_checkpoint": checkpoint,
+        "persistent_checkpoint_dir": (
+            str(persistent_checkpoint_dir)
+            if persistent_checkpoint_dir is not None
+            else None
+        ),
     }
 
 
@@ -1380,6 +1397,7 @@ def train_neural_experiment(
     sampling_seed: int = 20260805,
     cascade_gate_min_damage_recall: float = DEFAULT_GATE_MIN_DAMAGE_RECALL,
     cascade_gate_min_safe_npv: float = DEFAULT_GATE_MIN_SAFE_NPV,
+    persistent_checkpoint_root: str | Path | None = None,
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     """Cierra fit→calibración validation→candidato sin abrir test.
@@ -1477,6 +1495,12 @@ def train_neural_experiment(
     }
     signature = _experiment_signature(dataset, experiment, configuration)
     run_dir = output / "runs" / f"{experiment}-{signature[:16]}"
+
+    def persistent_trainer_dir(name: str) -> Path | None:
+        if persistent_checkpoint_root is None:
+            return None
+        return Path(persistent_checkpoint_root) / run_dir.name / name
+
     candidate_path = run_dir / "candidate.json"
     if not force:
         complete = _complete_candidate(candidate_path, signature)
@@ -1592,6 +1616,7 @@ def train_neural_experiment(
             dataloader_num_workers=dataloader_num_workers,
             progress_callback=progress_callback,
             progress_label="compuerta",
+            persistent_checkpoint_dir=persistent_trainer_dir("trainer_gate"),
         )
         training_elapsed += time.perf_counter() - phase_started
         _notify_progress(
@@ -1641,6 +1666,9 @@ def train_neural_experiment(
             dataloader_num_workers=dataloader_num_workers,
             progress_callback=progress_callback,
             progress_label="rama especializada",
+            persistent_checkpoint_dir=persistent_trainer_dir(
+                "trainer_branch" if safety_first else "trainer_damage"
+            ),
         )
         training_elapsed += time.perf_counter() - phase_started
         _notify_progress(
@@ -1815,6 +1843,7 @@ def train_neural_experiment(
             dataloader_num_workers=dataloader_num_workers,
             progress_callback=progress_callback,
             progress_label=experiment,
+            persistent_checkpoint_dir=persistent_trainer_dir("trainer"),
         )
         training_elapsed = time.perf_counter() - phase_started
         _notify_progress(

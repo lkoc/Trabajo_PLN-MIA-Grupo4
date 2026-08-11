@@ -285,6 +285,13 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
                     == "NVIDIA A100 40GB or equivalent CUDA BF16 GPU"
                 )
                 assert "NVIDIA A100 de 40 GB" in source
+                if metadata["notebook_id"] in {"03_05", "03_06", "03_06b"}:
+                    assert "PERSISTENT_CHECKPOINT_ROOT" in source
+                    assert (
+                        "persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT"
+                        in source
+                    )
+                    assert "drive_run_dir/'trainer_checkpoints'" in source
             else:
                 assert metadata["expected_gpu"] == "NVIDIA L4"
     assert observed == expected

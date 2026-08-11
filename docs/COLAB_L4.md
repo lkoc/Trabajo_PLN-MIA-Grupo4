@@ -97,6 +97,8 @@ Los cuadernos `02_01` y `03_02`–`03_06b` pueden ejecutarse en Colab. `02_01` u
 
 Los cuadernos `02_02`, `03_05`, `03_06` y `03_06b` están optimizados para una A100 de 40 GB. La detección se basa en CUDA, soporte BF16 y memoria observable (al menos 39 GB), no únicamente en el nombre comercial. En `03_05` y `03_06` el lote efectivo permanece en ocho (`8×1` en A100 frente a `2×4` en L4); `03_06b` usa `2×4` en A100 frente a `1×8` en L4 por sus secuencias de 4096 tokens.
 
+`03_05`, `03_06` y `03_06b` entrenan sobre el SSD efímero, pero reflejan automáticamente cada checkpoint que termina de escribir `Trainer` en `COLAB_CONTEXT.drive_run_dir/trainer_checkpoints/<firma-del-run>/trainer/`. Cada versión se conserva como `checkpoint-<step>.tar`, con época terminada, manifiesto y SHA-256; `latest.json` se actualiza al final de la copia. El TAR contiene también optimizador, scheduler, RNG y `trainer_state.json`, por lo que un checkpoint guardado al terminar la época 2 reanuda la época 3 sin reiniciar el ajuste. Al activar esta función también se migra inmediatamente el checkpoint local más nuevo que todavía no exista en Drive. Tras perder o reiniciar el kernel, la siguiente ejecución verifica y restaura al SSD el checkpoint persistente más nuevo antes de reanudar `Trainer`. Si el último archivo estuviera incompleto, intenta el checkpoint anterior verificado. La publicación final mediante `PUBLISH_TO_DRIVE` sigue siendo necesaria para conservar el candidato completo, sus métricas y artefactos de inferencia.
+
 Si el bundle cambió después de que el kernel importó `moderacion_peru`, el
 cuaderno exige reiniciar el kernel para evitar mezclar versiones. Los modelos se
 descargan al caché efímero `/content/huggingface`; no se sincronizan videos,

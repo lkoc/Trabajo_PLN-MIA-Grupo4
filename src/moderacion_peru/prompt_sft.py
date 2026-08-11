@@ -28,6 +28,10 @@ from .experiments import (
     _require_project_safe_ratio,
 )
 from .io import sha256_file, write_json_atomic
+from .persistent_checkpoints import (
+    build_persistent_checkpoint_callback,
+    restore_latest_trainer_checkpoint,
+)
 from .taxonomy import load_taxonomy
 
 PROMPT_SFT_MODEL_ID = "Qwen/Qwen3-0.6B"
@@ -299,6 +303,7 @@ def train_prompt_conditioned_sft(
     train_limit: int | None = None,
     validation_limit: int | None = None,
     force: bool = False,
+    persistent_checkpoint_root: str | Path | None = None,
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     """LoRA SFT generativo condicionado por una cápsula trazable de v3.2."""
@@ -314,7 +319,6 @@ def train_prompt_conditioned_sft(
             Trainer,
             TrainingArguments,
         )
-        from transformers.trainer_utils import get_last_checkpoint
     except ImportError as exc:
         raise RuntimeError("Instale moderacion-peru[entrenamiento]") from exc
     run_started = time.perf_counter()
@@ -356,6 +360,11 @@ def train_prompt_conditioned_sft(
     }
     signature = _experiment_signature(dataset, "qwen_prompt_sft", configuration)
     run_dir = Path(output_root) / "runs" / f"qwen-prompt-sft-{signature[:16]}"
+    persistent_checkpoint_dir = (
+        Path(persistent_checkpoint_root) / run_dir.name / "trainer"
+        if persistent_checkpoint_root is not None
+        else None
+    )
     pilot = train_limit is not None or validation_limit is not None
     candidate_path = run_dir / ("pilot_candidate.json" if pilot else "candidate.json")
     if candidate_path.is_file() and not force:
@@ -428,6 +437,12 @@ def train_prompt_conditioned_sft(
     validation_dataset = PromptCompletionDataset(
         tokenizer, validation, system_prompt, max_length=max_length
     )
+    callbacks = [EarlyStoppingCallback(early_stopping_patience=1)]
+    persistent_callback = build_persistent_checkpoint_callback(
+        persistent_checkpoint_dir
+    )
+    if persistent_callback is not None:
+        callbacks.append(persistent_callback)
     trainer = Trainer(
         model=model,
         args=TrainingArguments(
@@ -460,13 +475,12 @@ def train_prompt_conditioned_sft(
         ),
         train_dataset=train_dataset,
         eval_dataset=validation_dataset,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=1)],
+        callbacks=callbacks,
     )
-    checkpoint = (
-        get_last_checkpoint(str(run_dir / "trainer"))
-        if (run_dir / "trainer").is_dir()
-        else None
+    restored_checkpoint = restore_latest_trainer_checkpoint(
+        persistent_checkpoint_dir, run_dir / "trainer"
     )
+    checkpoint = str(restored_checkpoint) if restored_checkpoint is not None else None
     _notify_progress(
         progress_callback,
         status="started",
@@ -546,6 +560,12 @@ def train_prompt_conditioned_sft(
         "inference": {**inference, "bundle": bundle.name},
         "hardware": hardware.model_dump(),
         "training_metrics": dict(training_result.metrics),
+        "resumed_from_checkpoint": checkpoint,
+        "persistent_checkpoint_dir": (
+            str(persistent_checkpoint_dir)
+            if persistent_checkpoint_dir is not None
+            else None
+        ),
         "stage_timings_seconds": {
             "training_fit": training_elapsed,
             "validation_generation": validation_generation_elapsed,
