@@ -4,6 +4,8 @@ import json
 import sys
 from types import ModuleType, SimpleNamespace
 
+import pytest
+
 from moderacion_peru.persistent_checkpoints import (
     build_persistent_checkpoint_callback,
     persist_trainer_checkpoint,
@@ -130,6 +132,20 @@ def test_hashless_archive_is_structurally_validated_and_manifest_is_repaired(tmp
         )
     )
     assert restore_record["integrity_source"] == "rebuilt_after_structural_validation"
+
+
+def test_missing_archive_never_silently_restarts_training(tmp_path):
+    checkpoint = _checkpoint(
+        tmp_path / "source" / "trainer", 6401, "época-uno", epoch=1.0
+    )
+    persistent = tmp_path / "drive" / "trainer_checkpoints"
+    persist_trainer_checkpoint(checkpoint, persistent)
+    (persistent / "checkpoint-6401.tar").unlink()
+
+    with pytest.raises(ValueError, match="no existe checkpoint-6401.tar"):
+        restore_latest_trainer_checkpoint(
+            persistent, tmp_path / "new_runtime" / "trainer"
+        )
 
 
 def test_local_newer_checkpoint_is_not_replaced(tmp_path):
