@@ -611,10 +611,10 @@ Test conserva las 22.684 filas naturales (1.802 daño + 20.882 `SEGURO`; 11,59:1
 ## 14. Orden de ejecución posterior a la implementación
 
 1. ~~Modificar el contrato de snapshot para máscaras observadas y regenerar un snapshot con nuevo SHA.~~ Completado: `013d60...c1f86`.
-2. ~~Regenerar el bundle Colab y fijar su ID en los cuadernos.~~ Completado; release vigente: `185daf...405b`.
+2. ~~Regenerar el bundle Colab y fijar su ID en los cuadernos.~~ Completado; hotfix vigente: `c6931e...43ee0`.
 3. Ejecutar 03_08 como control previo sobre el snapshot vigente. La salida guardada actualmente es de un snapshot anterior.
 4. ~~Ejecutar 03_01 y conservar sus predicciones OOF/validation.~~ Completado, incluida la reparación convergente de ambos SVM.
-5. ~~Continuar `03_05` desde la época 2 preservada.~~ Completado. Dejar finalizar `03_06`; ejecutar `03_02` y el piloto no elegible de `03_06b`. `03_03`, `03_03b` y `03_04` también están completos.
+5. ~~Continuar `03_05` desde la época 2 preservada.~~ Completado. Reintentar `03_06` con el restaurador corregido; ejecutar `03_02` y el piloto no elegible de `03_06b`. `03_03`, `03_03b` y `03_04` también están completos.
 6. Ejecutar 03_07 para comparar individuos/ensembles y congelar la decisión.
 7. Abrir test una vez, inferir sus 22.684 filas y generar resultados naturales más la vista secundaria 4:1 sin reinferencia.
 8. Publicar el registro solo después de revisar la tabla de evidencia.
@@ -649,7 +649,7 @@ El corte confirma que las arquitecturas ofrecen compromisos distintos: Qwen lide
 
 ### 17.1. Estado de evidencia
 
-Al cierre actualizado, `03_01`, `03_03`, `03_03b`, `03_04` y `03_05` produjeron candidatos completos sobre `013d60...c1f86`. `03_06` se inició en una A100 con `RUN_TRAINING=True`, pero todavía no muestra un checkpoint ni candidato completo; `03_02` y `03_06b` siguen pendientes. El test no fue abierto.
+Al cierre actualizado, `03_01`, `03_03`, `03_03b`, `03_04` y `03_05` produjeron candidatos completos sobre `013d60...c1f86`. `03_06` se inició en una A100 con `RUN_TRAINING=True`, pero se detuvo al restaurar el paso 6401 y todavía no tiene candidato completo; el hotfix está preparado para el reintento. `03_02` y `03_06b` siguen pendientes. El test no fue abierto.
 
 La corrida clásica original consumió aproximadamente **924,28 segundos (15 min 24 s) de CPU local**. La reparación selectiva de los dos SVM añadió 1.891,18 s (31 min 31 s), para un total clásico observado aproximado de **2.815,46 s (46 min 55 s)**. El costo externo fue USD 0; no se midió electricidad local.
 
@@ -707,7 +707,7 @@ La tabla separa tiempos observados y estimaciones previas. Los tiempos observado
 | `03_03b` cascada v2 | Colab NVIDIA L4, BF16/FP16 | compuerta + rama de cinco salidas | doble inferencia y diagnóstico de propagación | sellado | completo; 41 min 56 s | sin estimación separada original | ~USD 0,60 equivalentes L4 |
 | `03_04` multitarea | Colab NVIDIA L4, BF16/FP16 | 5+14+3 salidas enmascaradas | early stopping y calibración | sellado | completo; 21 min 34 s | estimación previa 0,75–1,67 h | ~USD 0,31 equivalentes L4 |
 | `03_05` Qwen-LoRA | Colab NVIDIA A100 40 GB, adaptación LoRA | 51.205 filas, 22 salidas | 10.600 por época y calibración | sellado | completo; época 2 restaurada y época 3 persistida; invocación final 25 min 42 s | tiempo acumulado entre sesiones no disponible | no disponible sin saldo de unidades Colab |
-| `03_06` Qwen estructurado | Colab NVIDIA A100 40 GB, BF16 observado | ajuste completo con penalización estructural | 10.600 y calibración | sellado | en curso (`RUN_TRAINING=True`); modelo inicializado, sin checkpoint completo visible al corte | medir al terminar | no disponible |
+| `03_06` Qwen estructurado | Colab NVIDIA A100 40 GB, BF16 observado | ajuste completo con penalización estructural | 10.600 y calibración | sellado | intento interrumpido al restaurar step 6401; hotfix listo, sin candidato completo | medir al terminar | no disponible |
 | `03_06b` piloto | Colab NVIDIA A100 40 GB, LoRA causal | 5.000 filas | 1.000; no elegible para selección | no se abre | pendiente | medir antes de extrapolar | no disponible |
 | `03_06b` completo | Colab NVIDIA A100 40 GB, LoRA causal y checkpoint reanudable | 51.205 filas | 10.600 mediante generación JSON | sellado | pendiente | estimar solo desde el piloto A100 | no disponible |
 | `03_07` comparación | CPU local, cuatro hilos | no entrena | predicciones existentes + bootstrap agrupado | 22.684 filas naturales una vez; vista 4:1 sin reinferencia | pendiente de sincronizar candidatos y completar familias | 1–4 h para comparación | USD 0 externo |
