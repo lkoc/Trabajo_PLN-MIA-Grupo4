@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-11T06:05:09.114900+00:00",
+  "generated_at": "2026-08-11T06:08:20.734328+00:00",
   "taxonomy_contract": "moderacion_peru_5_salidas_v2",
   "taxonomy_version": "2.1.0",
   "core": {
     "name": "project_core.zip",
-    "sha256": "5193c0b81b6fb40b4fdc04470a0cbcb7aad0e69275c8cf9861f5a96f23bd1c1c",
-    "bytes": 209727,
+    "sha256": "d6e0352eb6a802c50c802a4f070021ece4ee6ac1ec9f3e8a50d4af0be2594469",
+    "bytes": 209782,
     "files": [
       "config/colab_l4.json",
       "config/prompt_operacional_ollama_v3_2.md",
@@ -149,5 +149,5 @@
     "modelos Ollama",
     "paper, presentación y frontends"
   ],
-  "bundle_id": "26ee9512612739b8ac8435978428efa66614d74d9dc589480b8c4da9c04d01c0"
+  "bundle_id": "f8111278b28e08ea02a56607eb0901fa01e0e3495ff3eb6a3d7ac7f8545c2178"
 }

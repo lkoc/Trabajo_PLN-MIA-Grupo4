@@ -200,6 +200,29 @@ def test_missing_archive_never_silently_restarts_training(tmp_path):
         )
 
 
+def test_incomplete_local_copy_falls_back_to_verified_drive_epoch(tmp_path):
+    persistent = tmp_path / "drive" / "trainer_checkpoints"
+    persist_trainer_checkpoint(
+        _checkpoint(tmp_path / "source" / "trainer", 10, "drive-válido"),
+        persistent,
+    )
+    local_training = tmp_path / "new_runtime" / "trainer"
+    incomplete_local = _checkpoint(local_training, 20, "local-incompleto")
+    (incomplete_local / "scheduler.pt").unlink()
+
+    restored = restore_latest_trainer_checkpoint(persistent, local_training)
+
+    assert restored is not None
+    assert restored.name == "checkpoint-10"
+    assert (restored / "model.safetensors").read_text(encoding="utf-8") == "drive-válido"
+    restore_record = json.loads(
+        (local_training / "persistent_checkpoint_restore.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert restore_record["source"].endswith("checkpoint-10.tar")
+
+
 def test_local_newer_checkpoint_is_not_replaced(tmp_path):
     persistent = tmp_path / "drive" / "trainer_checkpoints"
     persist_trainer_checkpoint(

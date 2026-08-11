@@ -227,7 +227,7 @@ def restore_latest_trainer_checkpoint(
     persistent_dir: str | Path | None,
     training_dir: str | Path,
 ) -> Path | None:
-    """Restaura el checkpoint persistente más nuevo y verificado al SSD local."""
+    """Elige lo más nuevo entre SSD local y Drive y restaura una época verificable."""
 
     training = Path(training_dir)
     local = _latest_local_checkpoint(training)
@@ -368,6 +368,12 @@ def restore_latest_trainer_checkpoint(
                     "Checkpoint más reciente no recuperable; "
                     f"se continuará automáticamente desde el step {step}. "
                     f"Versiones omitidas: {'; '.join(failures)}",
+                    flush=True,
+                )
+            else:
+                print(
+                    "Checkpoint restaurado desde Google Drive: "
+                    f"epoch={manifest.get('epoch')} · step={step} · {archive}",
                     flush=True,
                 )
             return target

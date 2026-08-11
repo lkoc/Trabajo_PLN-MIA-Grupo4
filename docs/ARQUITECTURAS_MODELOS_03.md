@@ -437,7 +437,7 @@ como hardware consumido.
 | `03_03b` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_04` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_05` | candidato completo; época 2 restaurada y época 3 persistida | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, lote 8×1, evaluación 32, dos *workers*, una GPU | no aplica |
-| `03_06` | intento interrumpido al restaurar el paso 6401; hotfix listo, todavía sin candidato completo | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; el intento terminó antes de reanudar `Trainer.train` | A100 de 40 GB para el reintento con bundle `c6931e...43ee0` |
+| `03_06` | intento interrumpido al restaurar el paso 6401; hotfix listo, todavía sin candidato completo | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; el intento terminó antes de reanudar `Trainer.train` | A100 de 40 GB para el reintento con bundle `f81112...c2178` |
 | `03_06b` | piloto y corrida completa pendientes | **no disponible** | no observado | A100 de 40 GB recomendada; LoRA causal, lote 2×4 |
 | `03_07` | comparación pendiente | **no disponible** | no entrena modelos | CPU local, cuatro hilos para bootstrap |
 | `03_08` | pendiente para el SHA vigente | **no disponible** para el corte actual | no entrena modelos | CPU local |
