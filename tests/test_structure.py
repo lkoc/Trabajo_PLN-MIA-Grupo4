@@ -295,6 +295,12 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
                     assert "drive_run_dir/'trainer_checkpoints'" in source
             else:
                 assert metadata["expected_gpu"] == "NVIDIA L4"
+            if metadata["notebook_id"] == "03_02":
+                assert "PERSISTENT_CHECKPOINT_ROOT" in source
+                assert (
+                    "persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT" in source
+                )
+                assert "drive_run_dir/'trainer_checkpoints'" in source
     assert observed == expected
 
 

@@ -8,7 +8,7 @@ import subprocess
 import tarfile
 import tempfile
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -67,10 +67,24 @@ def _restore_run(drive_run_dir: Path, scratch_output_dir: Path) -> bool:
     with manifest_path.open("r", encoding="utf-8") as handle:
         manifest = json.load(handle)
     expected = manifest.get("archive", {}).get("sha256")
+    expected_bytes = int(manifest.get("archive", {}).get("bytes", 0))
+    if expected_bytes > 0 and archive_path.stat().st_size != expected_bytes:
+        raise ValueError(
+            f"Checkpoint de Drive truncado: {archive_path} tiene "
+            f"{archive_path.stat().st_size} de {expected_bytes} bytes"
+        )
     if not expected or sha256_file(archive_path) != expected:
         raise ValueError(f"Checkpoint de Drive corrupto o incompleto: {archive_path}")
     _safe_extract_tar(archive_path, scratch_output_dir)
     return True
+
+
+def _has_local_run_payload(scratch_output_dir: Path) -> bool:
+    """Detecta trabajo local real sin contar el contexto regenerable."""
+
+    return any(
+        path.name != "colab_context.json" for path in scratch_output_dir.iterdir()
+    )
 
 
 def _stage_gzip(
@@ -204,7 +218,18 @@ def prepare_colab_context(
     scratch = runtime / "runs" / notebook_id / active_run_id
     drive_run = drive / config["runs_folder"] / notebook_id / active_run_id
     scratch.mkdir(parents=True, exist_ok=True)
-    resumed = _restore_run(drive_run, scratch) if resume else False
+    if resume and _has_local_run_payload(scratch):
+        # Al reejecutar el bootstrap dentro del mismo kernel, el SSD puede
+        # contener checkpoints más nuevos que el TAR publicado anteriormente.
+        # No se deben sobrescribir con la copia histórica de Drive.
+        resumed = True
+        print(
+            "Se conservará el run local del runtime actual; "
+            "no se superpondrá el TAR histórico de Google Drive.",
+            flush=True,
+        )
+    else:
+        resumed = _restore_run(drive_run, scratch) if resume else False
     context = ColabContext(
         notebook_id=notebook_id,
         run_id=active_run_id,
@@ -222,7 +247,7 @@ def prepare_colab_context(
 
 
 def publish_colab_outputs(context: ColabContext) -> dict[str, Any]:
-    """Publica el run como un único TAR.GZ y después su manifiesto."""
+    """Publica el run y solo anuncia el TAR.GZ tras releerlo desde Drive."""
 
     context.drive_run_dir.mkdir(parents=True, exist_ok=True)
     local_archive = context.runtime_root / f".{context.notebook_id}.{context.run_id}.tar.gz"
@@ -231,15 +256,27 @@ def publish_colab_outputs(context: ColabContext) -> dict[str, Any]:
             if path.is_file():
                 handle.add(path, arcname=path.relative_to(context.scratch_output_dir))
     archive_sha = sha256_file(local_archive)
+    archive_bytes = local_archive.stat().st_size
     target = context.drive_run_dir / "run_outputs.tar.gz"
-    temporary = context.drive_run_dir / ".run_outputs.tar.gz.partial"
-    shutil.copyfile(local_archive, temporary)
-    if sha256_file(temporary) != archive_sha:
+    # Drive FUSE puede dejar un placeholder de 0 bytes si se renombra una copia
+    # grande aún pendiente. Escribir el nombre final y publicar el manifiesto
+    # solo tras una relectura completa evita declarar durable una copia ausente.
+    shutil.copyfile(local_archive, target)
+    sync = getattr(os, "sync", None)
+    if sync is not None:
+        try:
+            sync()
+        except OSError:
+            pass
+    if target.stat().st_size != archive_bytes:
+        raise ValueError(
+            "Google Drive no conserva el tamaño completo de run_outputs.tar.gz"
+        )
+    if sha256_file(target) != archive_sha:
         raise ValueError("La copia del run a Google Drive no conserva SHA-256")
-    os.replace(temporary, target)
     manifest = {
-        "schema_version": "1.0.0",
-        "published_at": datetime.now(timezone.utc).isoformat(),
+        "schema_version": "1.1.0",
+        "published_at": datetime.now(UTC).isoformat(),
         "notebook_id": context.notebook_id,
         "run_id": context.run_id,
         "taxonomy_contract": "moderacion_peru_5_salidas_v2",
@@ -247,7 +284,8 @@ def publish_colab_outputs(context: ColabContext) -> dict[str, Any]:
         "archive": {
             "name": target.name,
             "sha256": archive_sha,
-            "bytes": target.stat().st_size,
+            "bytes": archive_bytes,
+            "verification": "full_readback_after_close",
         },
     }
     write_json_atomic(context.drive_run_dir / "run_manifest.json", manifest)

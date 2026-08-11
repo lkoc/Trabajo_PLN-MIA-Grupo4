@@ -252,6 +252,55 @@ def test_colab_stages_declared_input_and_restores_published_run(tmp_path, monkey
     assert second.resumed
     assert (second.scratch_output_dir / "checkpoint.json").is_file()
 
+    # Reejecutar el bootstrap en el mismo runtime debe conservar un checkpoint
+    # local posterior, no volver a extraer encima el TAR histórico de Drive.
+    (second.scratch_output_dir / "checkpoint.json").write_text(
+        '{"epoch":2}\n', encoding="utf-8"
+    )
+    same_runtime = colab.prepare_colab_context(
+        "03_02",
+        project_root=ROOT,
+        drive_root=drive,
+        runtime_root=second_runtime,
+        run_id="fixture",
+    )
+    assert same_runtime.resumed
+    assert (same_runtime.scratch_output_dir / "checkpoint.json").read_text(
+        encoding="utf-8"
+    ) == '{"epoch":2}\n'
+
+
+def test_colab_run_manifest_waits_for_drive_readback(tmp_path, monkeypatch):
+    scratch = tmp_path / "runtime" / "runs" / "03_02" / "fixture"
+    scratch.mkdir(parents=True)
+    (scratch / "checkpoint.json").write_text('{"epoch":2}\n', encoding="utf-8")
+    context = colab.ColabContext(
+        notebook_id="03_02",
+        run_id="fixture",
+        drive_root=tmp_path / "drive",
+        runtime_root=tmp_path / "runtime",
+        project_root=ROOT,
+        input_paths={},
+        scratch_output_dir=scratch,
+        drive_run_dir=tmp_path / "drive" / "runs" / "03_02" / "fixture",
+        hardware={"backend": "cuda", "device_name": "NVIDIA L4"},
+    )
+    real_sha256_file = colab.sha256_file
+
+    def corrupt_drive_readback(path):
+        path = Path(path)
+        if path == context.drive_run_dir / "run_outputs.tar.gz":
+            return "0" * 64
+        return real_sha256_file(path)
+
+    monkeypatch.setattr(colab, "sha256_file", corrupt_drive_readback)
+
+    with pytest.raises(ValueError, match="no conserva SHA-256"):
+        colab.publish_colab_outputs(context)
+
+    assert (context.drive_run_dir / "run_outputs.tar.gz").is_file()
+    assert not (context.drive_run_dir / "run_manifest.json").exists()
+
 
 def test_local_bundle_input_is_restored_verified_and_never_silently_replaced(tmp_path):
     root = tmp_path / "project"

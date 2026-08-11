@@ -20,6 +20,33 @@ from moderacion_peru.schemas import AnnotationRecord, ModelReadyRecord, ReviewEv
 from moderacion_peru.taxonomy import load_taxonomy
 
 
+def test_flat_transformers_propagate_persistent_checkpoint_root(
+    tmp_path, monkeypatch
+):
+    calls = []
+
+    def fake_train_neural_experiment(dataset_path, output_root, **kwargs):
+        calls.append((dataset_path, output_root, kwargs))
+        return {"status": "trained", "candidate": {}}
+
+    monkeypatch.setattr(
+        experiments, "train_neural_experiment", fake_train_neural_experiment
+    )
+    persistent = tmp_path / "drive" / "trainer_checkpoints"
+
+    result = experiments.train_flat_transformers(
+        tmp_path / "dataset.jsonl",
+        tmp_path / "outputs",
+        persistent_checkpoint_root=persistent,
+    )
+
+    assert result["status"] == "trained"
+    assert [call[2]["experiment"] for call in calls] == ["flat_minilm", "flat_e5"]
+    assert all(
+        call[2]["persistent_checkpoint_root"] == persistent for call in calls
+    )
+
+
 def test_human_events_close_annotation_to_versioned_snapshot_and_noop(tmp_path):
     chunks = tmp_path / "chunks.jsonl"
     write_jsonl_atomic(

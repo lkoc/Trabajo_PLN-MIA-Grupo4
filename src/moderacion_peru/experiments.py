@@ -1967,6 +1967,7 @@ def train_flat_transformers(
     safe_to_damage_ratio: float | None = 4.0,
     split_scheme: str = "video",
     sampling_seed: int = 20260805,
+    persistent_checkpoint_root: str | Path | None = None,
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     experiments = ("flat_minilm", "flat_e5")
@@ -1989,6 +1990,7 @@ def train_flat_transformers(
                 safe_to_damage_ratio=safe_to_damage_ratio,
                 split_scheme=split_scheme,
                 sampling_seed=sampling_seed,
+                persistent_checkpoint_root=persistent_checkpoint_root,
             )
         )
         _notify_progress(

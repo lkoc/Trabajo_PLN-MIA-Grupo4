@@ -432,12 +432,12 @@ como hardware consumido.
 | Cuaderno | Estado al 2026-08-11 | Hardware realmente usado | Precisión/perfil | Hardware previsto si está pendiente |
 |---|---|---|---|---|
 | `03_01` | completo | CPU local AMD Ryzen 7 8845HS; 8 núcleos/16 hilos, cuatro *workers*, ~28,83 GiB RAM | estimadores clásicos en `float64`; Radeon 780M no usada | no aplica |
-| `03_02` | entrenamiento pendiente; solo se restauró el dataset | **no disponible** | no observado | NVIDIA L4, BF16/FP16 |
+| `03_02` | corrida histórica MiniLM+E5 completa en Drive; rerun más reciente: MiniLM 3/3 y E5 2,89/3 | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU; SSD local tiene prioridad y checkpoints futuros se verifican por época | L4 para recuperar o terminar E5 con bundle `c4513a...da63a52` |
 | `03_03` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_03b` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_04` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_05` | candidato completo; época 2 restaurada y época 3 persistida | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, lote 8×1, evaluación 32, dos *workers*, una GPU | no aplica |
-| `03_06` | primera época computada, pero no persistida: Drive conserva manifiestos y un `.partial` de 0 bytes; todavía sin candidato completo | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; debe recomputar la época 1 | A100 de 40 GB para el reintento con bundle `4e4ffc...1af35` |
+| `03_06` | primera época computada, pero no persistida: Drive conserva manifiestos y un `.partial` de 0 bytes; todavía sin candidato completo | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; debe recomputar la época 1 | A100 de 40 GB para el reintento con bundle `c4513a...da63a52` |
 | `03_06b` | piloto y corrida completa pendientes | **no disponible** | no observado | A100 de 40 GB recomendada; LoRA causal, lote 2×4 |
 | `03_07` | comparación pendiente | **no disponible** | no entrena modelos | CPU local, cuatro hilos para bootstrap |
 | `03_08` | pendiente para el SHA vigente | **no disponible** para el corte actual | no entrena modelos | CPU local |
