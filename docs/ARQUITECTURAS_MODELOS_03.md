@@ -70,6 +70,119 @@ el *early stopping* tiene paciencia 1. Por eso, tres épocas son un máximo
 razonable para el entrenamiento final de estas ramas, no una obligación de
 usar el checkpoint de la tercera época.
 
+## Justificación de los modelos base
+
+### Criterios de selección y límite de los benchmarks
+
+La elección se hizo *a priori*, antes de observar el test del proyecto, con
+cinco criterios: cobertura del español y variación multilingüe, compatibilidad
+con clasificación multietiqueta o SFT, costo que permita entrenar varias
+arquitecturas en una sola GPU, licencia y acceso reproducibles, y soporte
+estable en Transformers/PEFT. Un benchmark general no mide racismo, ataques por
+género, acoso ni contenido sexual peruano. Por ello, las cifras siguientes son
+evidencia de capacidad previa y eficiencia, no sustituyen la evaluación del
+corpus local ni autorizan a elegir por test.
+
+### Por qué MiniLM multilingüe y multilingual-E5-small
+
+Ambos son encoders bidireccionales pequeños y producen una representación del
+texto en una sola pasada, una forma natural de resolver 22 decisiones binarias
+con una cabeza fija. El checkpoint MiniLM convierte textos en vectores de 384
+dimensiones, admite 50 lenguas y fija 128 tokens en su tarjeta; su objetivo de
+paráfrasis aporta una señal semántica distinta de la simple modelización de
+lenguaje [29]. `multilingual-e5-small` tiene 12 capas, dimensión 384, alrededor
+de 0,1 mil millones de parámetros y soporte declarado para 100 lenguas; fue
+preentrenado contrastivamente con pares procedentes, entre otras fuentes, de
+NLLB, Wikipedia, Reddit y xP3 [7], [30].
+
+Usar los dos no pretende duplicar el mismo modelo. MiniLM representa una
+inicialización destilada orientada a similitud/paráfrasis [5], [6], mientras E5
+añade preentrenamiento contrastivo multilingüe a gran escala [7]. Mantenerlos en
+una escala y dimensión semejantes permite atribuir una eventual diferencia más
+plausiblemente al *backbone* y su preentrenamiento que a multiplicar por cinco
+el número de parámetros.
+
+#### Comparación con candidatos encoder
+
+| Candidato | Evidencia oficial reportada | Ventaja potencial | Razón para incluirlo o no como base principal |
+|---|---|---|---|
+| `paraphrase-multilingual-MiniLM-L12-v2` | 50 lenguas, vector 384 y máximo 128 tokens [29] | rápido; preentrenamiento de paráfrasis; ya se usó en el análisis de longitud de chunks | **Incluido** como control neuronal eficiente y continuidad con experimentos previos |
+| `multilingual-e5-small` | 12 capas, vector 384, ~0,1B; MRR@10 medio 64,4 en Mr. TyDi [30] | preentrenamiento contrastivo en 100 lenguas y transferencia semántica | **Incluido** como backbone común de planos, cascadas y multitarea |
+| `multilingual-e5-base` | MRR@10 65,9; ~0,3B y vector 768 [7], [30] | +1,5 puntos frente a E5-small en ese benchmark | no elegido inicialmente: más del doble de parámetros por una mejora moderada en recuperación, no demostrada en moderación |
+| `multilingual-e5-large` | MRR@10 70,5; ~0,6B y vector 1024 [7], [30] | mejor resultado E5 en Mr. TyDi | candidato de escalamiento, pero aproxima el costo de Qwen y dificulta comparar arquitecturas múltiples |
+| BETO cased | XNLI 82,01, PAWS-X 89,05 y MLDoc 95,60 en español [31] | preentrenamiento monolingüe español; alternativa fuerte para lenguaje local | no se descarta; su benchmark y objetivo no son comparables con Mr. TyDi, cubre peor *code-switching* y su tarjeta advierte revisar licencias de los textos de entrenamiento |
+| `mdeberta-v3-base` | XNLI medio 79,8 y 84,4 en español, frente a 76,2/80,7 de XLM-R-base bajo el mismo protocolo; 86M de backbone más 190M de embeddings [32] | evidencia fuerte de comprensión multilingüe | retador recomendable si hay presupuesto, pero requiere bastante más memoria que MiniLM/E5-small |
+
+Mr. TyDi evalúa recuperación y XNLI inferencia textual; sus números **no deben
+compararse entre filas como si midieran la misma tarea**. La lectura defendible
+es interna a cada fuente: E5-small sacrifica solo 1,5 puntos frente a E5-base
+con una reducción grande de tamaño, mientras BETO y mDeBERTa muestran que hay
+alternativas plausibles para una ablación española o de mayor capacidad.
+
+Para este proyecto, MiniLM y E5-small son apropiados *a priori* porque permiten
+entrenar el plano, dos cascadas y el multitarea con el mismo presupuesto L4,
+mantienen cobertura multilingüe útil ante nombres, anglicismos y cambios de
+código, y ofrecen dos preentrenamientos complementarios. No se afirma que sean
+óptimos. El 39,28 % de truncamiento observado a 128 tokens obliga a evaluar 256
+tokens, y BETO/mDeBERTa deben permanecer como retadores si los resultados
+finales justifican ampliar el presupuesto.
+
+### Por qué Qwen3-0.6B como LLM base
+
+La elección separa dos usos. `03_05` y `03_06` parten de
+`Qwen/Qwen3-0.6B-Base`, preentrenado pero no alineado a chat, para que la señal
+supervisada del proyecto controle una cabeza de clasificación nueva. `03_06b`
+usa `Qwen/Qwen3-0.6B`, la variante posentrenada, porque sí debe seguir el prompt
+operativo y generar JSON [33], [34]. No es correcto intercambiar sus resultados
+ni atribuir capacidad de *prompting* al clasificador Base.
+
+Qwen3-0.6B es un Transformer causal denso de 0,6B parámetros —0,44B sin
+embeddings—, 28 capas, GQA de 16 cabezas Q y ocho KV, y contexto de 32.768
+tokens [33]. La familia fue preentrenada con 36 billones de tokens en 119
+lenguas y dialectos y extendió el entrenamiento de contexto a 32k [14], [33].
+La licencia Apache-2.0 y el acceso no condicionado facilitan descargar,
+versionar, adaptar con LoRA y redistribuir artefactos reproducibles [33].
+
+#### Benchmark comparable dentro del informe Qwen3
+
+La tarjeta oficial remite al informe Qwen3. Su tabla 8 evalúa conjuntamente
+modelos Base pequeños; se reproducen solo cinco métricas pertinentes como
+indicadores generales/multilingües [14]:
+
+| Modelo Base | Parámetros | MMLU | BBH | MGSM | MMMLU | INCLUDE |
+|---|---:|---:|---:|---:|---:|---:|
+| Qwen2.5-0.5B | 0,5B | 47,50 | 20,30 | 12,07 | 31,53 | 24,74 |
+| **Qwen3-0.6B** | **0,6B** | **52,81** | **41,47** | **30,99** | **50,16** | **34,26** |
+| Gemma-3-1B | 1,0B | 26,26 | 28,13 | 1,74 | 26,57 | 25,62 |
+| Qwen2.5-1.5B | 1,5B | 60,90 | 45,10 | 32,82 | 60,27 | 39,55 |
+| Qwen3-1.7B | 1,7B | 62,63 | 54,47 | 50,71 | 63,27 | 45,57 |
+
+En esa evaluación, Qwen3-0.6B supera al predecesor Qwen2.5-0.5B y al
+Gemma-3-1B en las cinco columnas, aun siendo menor que Gemma. Los modelos
+Qwen de 1,5–1,7B rinden mejor, como cabe esperar, pero multiplican entre 2,5 y
+2,8 veces los parámetros del elegido. La tabla es autorreportada por Qwen y no
+incluye moderación; se usa como prior de capacidad, no como prueba independiente
+de superioridad.
+
+#### Otros LLM pequeños que pudieron elegirse
+
+| Candidato | Cualidades relevantes | Compromiso para este proyecto |
+|---|---|---|
+| Qwen2.5-0.5B | tamaño casi idéntico y mismo ecosistema | queda dominado por Qwen3-0.6B en la comparación conjunta del informe [14] |
+| Gemma-3-1B-PT | 1B, 32k y corpus declarado en más de 140 lenguas; familia Base e instruction-tuned [35] | alternativa multilingüe razonable, pero ~1,7× más parámetros, acceso sujeto a aceptar la licencia Gemma en Hugging Face y peor resultado en la tabla 8 de Qwen; merece réplica independiente antes de descartarlo |
+| Llama-3.2-1B | 1,23B, 128k y español entre ocho lenguas oficialmente soportadas; su tarjeta reporta MMLU 32,2 en inglés [36] | contexto innecesario para chunks de 128/4096 tokens, más del doble de parámetros, acceso condicionado y licencia comunitaria; el MMLU usa otro protocolo y no se compara numéricamente con la tabla anterior |
+| Qwen2.5-1.5B / Qwen3-1.7B | mejores resultados generales y multilingües en la tabla 8 [14] | retadores de capacidad, pero elevan memoria, tiempo por época y costo de repetir semillas/arquitecturas |
+
+La conclusión es limitada pero suficiente: Qwen3-0.6B es **apropiado a priori**
+para esta moderación porque combina cobertura multilingüe amplia, un salto
+verificable frente a la generación previa de tamaño parecido, licencia
+permisiva, variantes Base y posentrenada coherentes para los dos experimentos,
+y un tamaño que permite LoRA, checkpoints por época y comparación de varias
+ramas en una A100. No se elige porque sea el LLM más potente ni porque los
+benchmarks generales demuestren seguridad. Jerga peruana, ironía, categorías
+minoritarias y el costo de un falso `SEGURO` solo pueden validarse con las
+métricas locales, calibración y test sellado del proyecto.
+
 ## 03_01 · Modelos clásicos
 
 ### Arquitectura
@@ -230,8 +343,9 @@ los parámetros que se actualizan [13]. `03_05` carga
 `Qwen/Qwen3-0.6B-Base`, cuya familia se describe en el informe Qwen3 [14], y
 añade una cabeza clasificadora de 22 salidas. Los adaptadores se insertan en
 `q_proj`, `k_proj`, `v_proj` y `o_proj`, con rango 8, `alpha=16` y *dropout*
-0.05. La configuración usa tasa `1e-4`, lote 2, acumulación 4 y hasta cuatro
-épocas.
+0.05. La configuración usa tasa `1e-4` y hasta cuatro épocas. El perfil de
+fallback usa lote 2 y acumulación 4; en la A100 observada usa lote real 8 y
+acumulación 1, conservando el lote efectivo de ocho con menos micropasadas.
 
 ```mermaid
 flowchart TB
@@ -249,7 +363,7 @@ un clasificador: no recibe el prompt operacional ni genera JSON. Llamarlo
 ## 03_06 · Qwen clasificador estructurado
 
 Usa el mismo checkpoint base de Qwen y las mismas 22 salidas, pero no activa
-LoRA: ajusta el clasificador mediante el modelo completo. Añade a la BCE una
+LoRA: ajusta el modelo completo y su clasificador. Añade a la BCE una
 penalización por conflicto:
 
 \[
@@ -270,7 +384,9 @@ Compila una cápsula trazable del prompt v3.2, construye una conversación
 JSON estricto. La pérdida causal ignora los tokens del prompt y supervisa la
 respuesta; los campos auxiliares no observados se enmascaran. Usa LoRA con la
 misma configuración de rango, longitud máxima 4096, lote 1, acumulación 8, tasa
-`1e-4` y hasta dos épocas.
+`1e-4` y hasta dos épocas. En hardware de 40 GB, el perfil cambia a lote 2 y
+acumulación 4 —el lote efectivo sigue siendo ocho—, usa dos *workers* y genera
+en lotes de cuatro.
 
 ```mermaid
 flowchart LR
@@ -306,6 +422,31 @@ familia, umbral o época produciría sesgo de selección [16]. Para `03_03b` deb
 añadirse recall de daño de la compuerta, NPV de sus seguros, cobertura temprana,
 daños bloqueados y latencia. La decisión final no debe basarse solo en una
 métrica agregada.
+
+## Hardware observado por cuaderno
+
+“Observado” significa que la salida del cuaderno o el candidato guardó el
+dispositivo efectivo. “Previsto” describe la configuración y no debe citarse
+como hardware consumido.
+
+| Cuaderno | Estado al 2026-08-11 | Hardware realmente usado | Precisión/perfil | Hardware previsto si está pendiente |
+|---|---|---|---|---|
+| `03_01` | completo | CPU local AMD Ryzen 7 8845HS; 8 núcleos/16 hilos, cuatro *workers*, ~28,83 GiB RAM | estimadores clásicos en `float64`; Radeon 780M no usada | no aplica |
+| `03_02` | entrenamiento pendiente; solo se restauró el dataset | **no disponible** | no observado | NVIDIA L4, BF16/FP16 |
+| `03_03` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
+| `03_03b` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
+| `03_04` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
+| `03_05` | en curso desde la época 2 preservada | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, lote 8×1, evaluación 32, dos *workers*, una GPU | no aplica mientras continúe esta corrida |
+| `03_06` | pendiente | **no disponible** | no observado | A100 de 40 GB recomendada; ajuste completo, lote 8×1 si cumple el perfil de memoria |
+| `03_06b` | piloto y corrida completa pendientes | **no disponible** | no observado | A100 de 40 GB recomendada; LoRA causal, lote 2×4 |
+| `03_07` | comparación pendiente | **no disponible** | no entrena modelos | CPU local, cuatro hilos para bootstrap |
+| `03_08` | pendiente para el SHA vigente | **no disponible** para el corte actual | no entrena modelos | CPU local |
+
+Las L4 y A100 listadas son GPUs de sesiones distintas de Colab; no trabajaron
+en paralelo sobre una misma corrida. `03_05` usa una sola A100: Colab aporta el
+dispositivo, mientras el cuaderno define BF16, lotes, acumulación, *workers*,
+TF32 y checkpoints. El detalle de tiempos, costos y evidencia por candidato se
+mantiene en `AUDITORIA_ENTRENAMIENTO_CUADERNOS_03_2026-08-10.md`.
 
 ## Antecedentes de uso y delimitación de la contribución
 
