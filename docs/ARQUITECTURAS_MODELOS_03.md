@@ -554,3 +554,19 @@ antecedentes.
 [27] F. Ghorbanpour, D. Dementieva, and A. Fraser, “Can Prompting LLMs Unlock Hate Speech Detection across Languages? A Zero-shot and Few-shot Study,” in *Proc. 9th Workshop on Online Abuse and Harms*, 2025, pp. 413–425. [Online]. Available: [ACL Anthology](https://aclanthology.org/2025.woah-1.39/).
 
 [28] B. Wu, J. Zou, and X. Li, “System Report for CCL25-Eval Task 10: Prompt-Driven Large Language Model Merge for Fine-Grained Chinese Hate Speech Detection,” in *Proc. 24th China National Conference on Computational Linguistics*, 2025, pp. 403–410. [Online]. Available: [ACL Anthology](https://aclanthology.org/2025.ccl-2.48/).
+
+[29] Sentence Transformers, “Model Card: `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`,” Hugging Face Hub, revision `e8f8c211226b894fcb81acc59f3b34ba3efd5f42`. [Online]. Available: [Hugging Face](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/tree/e8f8c211226b894fcb81acc59f3b34ba3efd5f42). Accessed: Aug. 11, 2026.
+
+[30] intfloat, “Model Card: `intfloat/multilingual-e5-small`,” Hugging Face Hub, revision `614241f622f53c4eeff9890bdc4f31cfecc418b3`. [Online]. Available: [Hugging Face](https://huggingface.co/intfloat/multilingual-e5-small/tree/614241f622f53c4eeff9890bdc4f31cfecc418b3). Accessed: Aug. 11, 2026.
+
+[31] J. Cañete, G. Chaperon, R. Fuentes, J.-H. Ho, H. Kang, and J. Pérez, “Spanish Pre-Trained BERT Model and Evaluation Data,” in *PML4DC at ICLR*, 2020. [Online]. Available: [Universidad de Chile](https://users.dcc.uchile.cl/~jperez/papers/pml4dc2020.pdf); DCC Universidad de Chile, “Model Card: `dccuchile/bert-base-spanish-wwm-cased`,” revision `c691d92e2c7352822816fbe0c91ef167003fe05a`. [Online]. Available: [Hugging Face](https://huggingface.co/dccuchile/bert-base-spanish-wwm-cased/tree/c691d92e2c7352822816fbe0c91ef167003fe05a). Accessed: Aug. 11, 2026.
+
+[32] P. He, J. Gao, and W. Chen, “DeBERTaV3: Improving DeBERTa using ELECTRA-Style Pre-Training with Gradient-Disentangled Embedding Sharing,” arXiv:2111.09543, 2021, doi: [10.48550/arXiv.2111.09543](https://doi.org/10.48550/arXiv.2111.09543); Microsoft, “Model Card: `microsoft/mdeberta-v3-base`,” Hugging Face Hub. [Online]. Available: [Hugging Face](https://huggingface.co/microsoft/mdeberta-v3-base). Accessed: Aug. 11, 2026.
+
+[33] Qwen Team, “Model Card: `Qwen/Qwen3-0.6B-Base`,” Hugging Face Hub, revision `da87bfb608c14b7cf20ba1ce41287e8de496c0cd`. [Online]. Available: [Hugging Face](https://huggingface.co/Qwen/Qwen3-0.6B-Base/tree/da87bfb608c14b7cf20ba1ce41287e8de496c0cd). Accessed: Aug. 11, 2026.
+
+[34] Qwen Team, “Model Card: `Qwen/Qwen3-0.6B`,” Hugging Face Hub, revision `6130ef31402718485ca4d80a6234f70d9a4cf362`. [Online]. Available: [Hugging Face](https://huggingface.co/Qwen/Qwen3-0.6B/tree/6130ef31402718485ca4d80a6234f70d9a4cf362). Accessed: Aug. 11, 2026.
+
+[35] Gemma Team, “Model Card: `google/gemma-3-1b-pt`,” Hugging Face Hub, revision `fcf18a2a879aab110ca39f8bffbccd5d49d8eb29`. [Online]. Available: [Hugging Face](https://huggingface.co/google/gemma-3-1b-pt/tree/fcf18a2a879aab110ca39f8bffbccd5d49d8eb29). Accessed: Aug. 11, 2026.
+
+[36] Meta, “Model Card: `meta-llama/Llama-3.2-1B`,” Hugging Face Hub. [Online]. Available: [Hugging Face](https://huggingface.co/meta-llama/Llama-3.2-1B). Accessed: Aug. 11, 2026.

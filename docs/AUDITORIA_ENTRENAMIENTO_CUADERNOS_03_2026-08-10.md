@@ -314,6 +314,8 @@ El split por video evita memorizar el mismo video, pero la presencia del mismo c
 
 ## 8. Metodología aprobada e implementada; ejecución parcial
 
+La justificación de los backbones MiniLM, E5 y Qwen —incluidos candidatos alternativos, benchmarks oficiales, licencias y límites de comparabilidad— se documenta en `docs/ARQUITECTURAS_MODELOS_03.md`. Esta auditoría conserva aquí solo el efecto del diseño sobre selección, hardware y evidencia experimental.
+
 ```mermaid
 flowchart TD
     A[Snapshot fijado por SHA] --> B[Auditoría de etiquetas y máscaras]
@@ -672,7 +674,7 @@ La tabla separa tiempos observados y estimaciones previas. Los tiempos observado
 | `03_03b` cascada v2 | Colab NVIDIA L4, BF16/FP16 | compuerta + rama de cinco salidas | doble inferencia y diagnóstico de propagación | sellado | completo; 41 min 56 s | sin estimación separada original | ~USD 0,60 equivalentes L4 |
 | `03_04` multitarea | Colab NVIDIA L4, BF16/FP16 | 5+14+3 salidas enmascaradas | early stopping y calibración | sellado | completo; 21 min 34 s | estimación previa 0,75–1,67 h | ~USD 0,31 equivalentes L4 |
 | `03_05` Qwen-LoRA | Colab NVIDIA A100 40 GB, adaptación LoRA | 51.205 filas, 22 salidas | 10.600 por época y calibración | sellado | en curso; época 2 preservada; 4,57 iteraciones/s en la sesión reanudada | retirar estimación L4; medir al terminar | no disponible sin saldo de unidades Colab |
-| `03_06` Qwen estructurado | Colab NVIDIA A100 40 GB | LoRA con penalización estructural | 10.600 y calibración | sellado | pendiente | medir con el perfil A100 actual | no disponible |
+| `03_06` Qwen estructurado | Colab NVIDIA A100 40 GB | ajuste completo con penalización estructural | 10.600 y calibración | sellado | pendiente | medir con el perfil A100 actual | no disponible |
 | `03_06b` piloto | Colab NVIDIA A100 40 GB, LoRA causal | 5.000 filas | 1.000; no elegible para selección | no se abre | pendiente | medir antes de extrapolar | no disponible |
 | `03_06b` completo | Colab NVIDIA A100 40 GB, LoRA causal y checkpoint reanudable | 51.205 filas | 10.600 mediante generación JSON | sellado | pendiente | estimar solo desde el piloto A100 | no disponible |
 | `03_07` comparación | CPU local, cuatro hilos | no entrena | predicciones existentes + bootstrap agrupado | 22.684 filas naturales una vez; vista 4:1 sin reinferencia | pendiente de sincronizar candidatos y completar familias | 1–4 h para comparación | USD 0 externo |
@@ -746,6 +748,7 @@ No se asigna todavía un tiempo o costo al test porque depende del ganador conge
 - `resultados/auditorias/auditoria_finas_flags_v2.json`
 - `resultados/auditorias/hardware_local_2026-08-10.json`
 - `resultados/colab_bundle/bundle_manifest.json`
+- `docs/ARQUITECTURAS_MODELOS_03.md`
 - `modelos/v2/clasicos/runs/classical-b185d39f6fad7148/*/candidate.json`
 - `modelos/v2/clasicos/svm_convergence_repair/runs/classical-4648feb2d7cc692d/*/candidate.json`
 - `config/taxonomia_v2.json`
