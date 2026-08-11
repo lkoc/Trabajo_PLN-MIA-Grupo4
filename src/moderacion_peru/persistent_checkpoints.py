@@ -14,6 +14,10 @@ from .io import sha256_file, write_json_atomic
 CHECKPOINT_SCHEMA_VERSION = "1.0.0"
 
 
+def _is_sha256(value: str) -> bool:
+    return len(value) == 64 and all(character in "0123456789abcdef" for character in value)
+
+
 def _checkpoint_step(path: Path) -> int:
     prefix = "checkpoint-"
     if not path.name.startswith(prefix) or not path.name[len(prefix) :].isdigit():
@@ -113,19 +117,34 @@ def _persistent_manifests(persistent_dir: Path) -> list[dict[str, Any]]:
         )
     )
     manifests: list[dict[str, Any]] = []
-    seen: set[tuple[int, str]] = set()
+    # ``latest.json`` es solo un puntero redundante. Si quedó truncado o perdió
+    # el SHA durante una desconexión de Drive, no debe ocultar el manifiesto
+    # inmutable ``checkpoint-<step>.json`` del mismo checkpoint.
+    seen: set[tuple[int, str, str]] = set()
     for path in paths:
         try:
             manifest = json.loads(path.read_text(encoding="utf-8"))
             step = int(manifest["step"])
             archive_name = str(manifest["archive"]["name"])
+            archive_sha256 = str(manifest["archive"].get("sha256", "")).lower()
         except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
             continue
-        identity = (step, archive_name)
+        identity = (step, archive_name, archive_sha256)
         if identity not in seen:
             manifests.append(manifest)
             seen.add(identity)
-    return sorted(manifests, key=lambda item: int(item["step"]), reverse=True)
+
+    def restore_priority(item: dict[str, Any]) -> tuple[int, bool, bool]:
+        archive = item["archive"]
+        archive_name = str(archive["name"])
+        archive_sha256 = str(archive.get("sha256", "")).lower()
+        return (
+            int(item["step"]),
+            (persistent_dir / archive_name).is_file(),
+            _is_sha256(archive_sha256),
+        )
+
+    return sorted(manifests, key=restore_priority, reverse=True)
 
 
 def _latest_local_checkpoint(training_dir: Path) -> Path | None:
@@ -175,9 +194,12 @@ def restore_latest_trainer_checkpoint(
             failures.append(f"step {step}: nombre de archivo inseguro")
             continue
         archive = persistent / archive_name
-        expected_sha256 = str(manifest["archive"].get("sha256", ""))
-        if not archive.is_file() or not expected_sha256:
-            failures.append(f"step {step}: falta archivo o SHA-256")
+        expected_sha256 = str(manifest["archive"].get("sha256", "")).lower()
+        if not archive.is_file():
+            failures.append(f"step {step}: no existe {archive_name}")
+            continue
+        if expected_sha256 and not _is_sha256(expected_sha256):
+            failures.append(f"step {step}: SHA-256 malformado")
             continue
         local_fd, local_name = tempfile.mkstemp(
             prefix=f".{archive_name}.", suffix=".restore", dir=training.parent
@@ -187,8 +209,16 @@ def restore_latest_trainer_checkpoint(
         try:
             copied_sha256 = _copy_and_hash(archive, local_archive)
             if copied_sha256 != expected_sha256:
-                failures.append(f"step {step}: SHA-256 inválido")
-                continue
+                if expected_sha256:
+                    failures.append(f"step {step}: SHA-256 inválido")
+                    continue
+                # Compatibilidad defensiva con un puntero de Drive que conservó
+                # el TAR y sus metadatos, pero perdió solamente el SHA. El hash
+                # se adopta después de validar el TAR y trainer_state.json.
+                expected_sha256 = copied_sha256
+                integrity_source = "rebuilt_after_structural_validation"
+            else:
+                integrity_source = "manifest_sha256"
             with tempfile.TemporaryDirectory(
                 prefix=f".checkpoint-{step}.", dir=training.parent
             ) as staging_name:
@@ -199,6 +229,19 @@ def restore_latest_trainer_checkpoint(
                 if not (extracted / "trainer_state.json").is_file():
                     failures.append(f"step {step}: contenido incompleto")
                     continue
+                try:
+                    trainer_state = json.loads(
+                        (extracted / "trainer_state.json").read_text(encoding="utf-8")
+                    )
+                    recorded_step = int(trainer_state["global_step"])
+                except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
+                    failures.append(f"step {step}: trainer_state.json inválido")
+                    continue
+                if recorded_step != step:
+                    failures.append(
+                        f"step {step}: trainer_state registra step {recorded_step}"
+                    )
+                    continue
                 target = training / extracted.name
                 if target.exists():
                     backup = training / f".{target.name}.incomplete"
@@ -206,6 +249,32 @@ def restore_latest_trainer_checkpoint(
                         backup = training / f".{target.name}.incomplete-{os.getpid()}"
                     os.replace(target, backup)
                 os.replace(extracted, target)
+            if integrity_source == "rebuilt_after_structural_validation":
+                repaired_manifest = {
+                    **manifest,
+                    "schema_version": CHECKPOINT_SCHEMA_VERSION,
+                    "recovered_at": datetime.now(UTC).isoformat(),
+                    "checkpoint_name": f"checkpoint-{step}",
+                    "epoch": manifest.get("epoch", trainer_state.get("epoch")),
+                    "archive": {
+                        **manifest["archive"],
+                        "name": archive_name,
+                        "sha256": expected_sha256,
+                        "bytes": archive.stat().st_size,
+                    },
+                }
+                write_json_atomic(
+                    persistent / f"checkpoint-{step}.json", repaired_manifest
+                )
+                latest_path = persistent / "latest.json"
+                try:
+                    latest_step = int(
+                        json.loads(latest_path.read_text(encoding="utf-8"))["step"]
+                    )
+                except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
+                    latest_step = -1
+                if latest_step <= step:
+                    write_json_atomic(latest_path, repaired_manifest)
             write_json_atomic(
                 training / "persistent_checkpoint_restore.json",
                 {
@@ -215,6 +284,7 @@ def restore_latest_trainer_checkpoint(
                     "sha256": expected_sha256,
                     "step": step,
                     "epoch": manifest.get("epoch"),
+                    "integrity_source": integrity_source,
                 },
             )
             return target

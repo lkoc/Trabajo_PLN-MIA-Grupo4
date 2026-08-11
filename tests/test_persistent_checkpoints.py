@@ -76,6 +76,62 @@ def test_restore_falls_back_to_previous_verified_checkpoint(tmp_path):
     assert (restored / "model.safetensors").read_text(encoding="utf-8") == "válido"
 
 
+def test_corrupt_latest_pointer_does_not_hide_valid_checkpoint_manifest(tmp_path):
+    checkpoint = _checkpoint(
+        tmp_path / "source" / "trainer", 6401, "época-uno", epoch=1.0
+    )
+    persistent = tmp_path / "drive" / "trainer_checkpoints"
+    persist_trainer_checkpoint(checkpoint, persistent)
+    latest_path = persistent / "latest.json"
+    latest = json.loads(latest_path.read_text(encoding="utf-8"))
+    latest["archive"].pop("sha256")
+    latest_path.write_text(json.dumps(latest), encoding="utf-8")
+
+    restored = restore_latest_trainer_checkpoint(
+        persistent, tmp_path / "new_runtime" / "trainer"
+    )
+
+    assert restored is not None
+    assert restored.name == "checkpoint-6401"
+    assert (restored / "model.safetensors").read_text(encoding="utf-8") == "época-uno"
+    restore_record = json.loads(
+        (restored.parent / "persistent_checkpoint_restore.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert restore_record["integrity_source"] == "manifest_sha256"
+
+
+def test_hashless_archive_is_structurally_validated_and_manifest_is_repaired(tmp_path):
+    checkpoint = _checkpoint(
+        tmp_path / "source" / "trainer", 6401, "época-uno", epoch=1.0
+    )
+    persistent = tmp_path / "drive" / "trainer_checkpoints"
+    manifest = persist_trainer_checkpoint(checkpoint, persistent)
+    (persistent / "checkpoint-6401.json").unlink()
+    latest_path = persistent / "latest.json"
+    latest = json.loads(latest_path.read_text(encoding="utf-8"))
+    latest["archive"].pop("sha256")
+    latest_path.write_text(json.dumps(latest), encoding="utf-8")
+
+    restored = restore_latest_trainer_checkpoint(
+        persistent, tmp_path / "new_runtime" / "trainer"
+    )
+
+    assert restored is not None
+    assert (restored / "model.safetensors").read_text(encoding="utf-8") == "época-uno"
+    repaired = json.loads(
+        (persistent / "checkpoint-6401.json").read_text(encoding="utf-8")
+    )
+    assert repaired["archive"]["sha256"] == manifest["archive"]["sha256"]
+    restore_record = json.loads(
+        (restored.parent / "persistent_checkpoint_restore.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert restore_record["integrity_source"] == "rebuilt_after_structural_validation"
+
+
 def test_local_newer_checkpoint_is_not_replaced(tmp_path):
     persistent = tmp_path / "drive" / "trainer_checkpoints"
     persist_trainer_checkpoint(

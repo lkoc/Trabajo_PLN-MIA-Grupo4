@@ -12,7 +12,7 @@ La serie ya produjo resultados comparables en *validation*, pero **todavía no p
 1. Hay 14 candidatos elegibles y completos para el SHA-256 vigente: diez clásicos, una cascada original, una cascada v2, un Transformer multitarea y Qwen-LoRA. Los dos SVM iniciales con convergencia no demostrada fueron sustituidos por reparaciones con `fit_quality.converged=true`; no se cuentan dos veces.
 2. Qwen-LoRA lidera entre los candidatos completos el macro-F1 de cinco salidas (0,6275), micro-F1 (0,8396), macro-AUPRC de daño (0,5422), F1 de *any-damage* (0,6731) y macro-F1 fina observada (0,4286). No domina todo: el Transformer multitarea conserva la menor tasa de falso seguro (0,3939 frente a 0,4590 de Qwen), y otros modelos presentan mejor calibración.
 3. Qwen terminó tras restaurar la época 2 y persistir el checkpoint de la época 3 en Drive. El candidato final `qwen_lora-4aa5ce04df05` incluye calibración, umbrales y `candidate.json`; sus métricas finales reemplazan, para comparación, las cifras intermedias por época.
-4. Qwen estructurado (`03_06`) acaba de iniciarse en A100, aún sin checkpoint o candidato completo visible. Continúan pendientes el Transformer plano (`03_02`), Qwen generativo condicionado por prompt (`03_06b`), la robustez por canal y la comparación individual–*ensemble* (`03_07`).
+4. Qwen estructurado (`03_06`) se inició en A100, pero la reanudación se detuvo al leer un manifiesto incompleto del paso 6401; aún no existe candidato completo. El restaurador y el bundle ya fueron corregidos para reintentar sin ocultar un manifiesto individual válido.
 5. El test permanece sellado en todos los candidatos completos (`test_metrics=null`); no existe todavía registro final ni reporte `test_final_abierto_una_vez.json`.
 
 Los hallazgos metodológicos del inicio de la auditoría —máscaras de observación, calibración, pérdida balanceada, separación de test, rama condicionada por prompt y evaluación por canal— quedaron convertidos en controles de código. Los resultados de este corte son exclusivamente de *validation* 4:1 y no prueban generalización al test natural ni a canales retenidos.
@@ -42,14 +42,14 @@ Se inspeccionaron los cuadernos, `src/moderacion_peru/experiments.py`, `training
 | Taxonomía                    |                                         2.1.0, cinco salidas gruesas |
 | `snapshot_id`               |                                          `v2.1.0-86822445ec0262da` |
 | SHA-256 del dataset           | `013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86` |
-| Bundle Colab vigente          | `185dafb6605f714596b9653f3663a2ffd15b0726587baa75ed810e742fb6405b` |
-| SHA-256 del núcleo del bundle | `e66b3a250d081cd1c3ed994ce0e2795a78f4a94fab9a2667981838dba1af0f82` |
+| Bundle Colab vigente          | `c6931e08bfff00710c94902274034faad20707172d945b6bb5555ed45cf43ee0` |
+| SHA-256 del núcleo del bundle | `7d3fac552ce96dad1a33bc73907ae825bd7a091347562cf4d16ea6f4e4feec48` |
 | Prompt operativo              |                         `config/prompt_operacional_ollama_v3_2.md` |
 | SHA-256 del prompt            | `793e1a962c7065523ba0972e6b966cef8ab2f6e6c2678fde03e6ff5c27f42271` |
 
 Todo resultado futuro deberá persistir como mínimo: SHA del dataset, SHA del prompt si corresponde, versión de taxonomía, semilla, partición, versión del código, modelo base, hiperparámetros, umbrales, calibrador y entorno de ejecución.
 
-El bundle vigente fue generado el `2026-08-11T03:55:30Z` —todavía 10 de agosto en Lima—. Los resultados ya completados conservan además el release inmutable con el que se ejecutaron: `03_03` usó `23a5ac...c4ac`; `03_03b` y `03_04`, `4c734d...1941`; la reanudación actual de `03_05`, `185daf...405b`. Esta diferencia no altera el SHA del dataset, pero debe preservarse para reproducir exactamente cada corrida.
+El bundle vigente fue generado el `2026-08-11T05:55:06.846132+00:00` e incorpora la recuperación robusta de checkpoints persistentes. Los resultados ya completados conservan además el release inmutable con el que se ejecutaron: `03_03` usó `23a5ac...c4ac`; `03_03b` y `03_04`, `4c734d...1941`; `03_05`, `185daf...405b`. El primer intento de `03_06` también usó `185daf...405b` y se detuvo durante la restauración. Esta diferencia no altera el SHA del dataset, pero debe preservarse para reproducir exactamente cada corrida.
 
 El nuevo snapshot contiene 14 máscaras finas y tres máscaras de *flags* por fila. Hay 32.025 filas sin referencia fina; ya no se convierten automáticamente en negativos. La auditoría registra 141.159 filas con máscara fina completa y las 173.240 con máscara completa de *flags*. La partición adicional por canal contiene 128.156/23.834/21.250 chunks en train/validation/test y, por construcción, ningún canal cruza esos grupos.
 
@@ -157,7 +157,7 @@ La procedencia debe conservarse como variable de auditoría y estratificación d
 | `03_03b_transformer_cascada_segura` | puerta conservadora + rama especializada que vuelve a incluir `SEGURO` | **Completo:** `cascade_v2-af78eba77883`, publicado en Drive | minimiza bloqueo falso y permite corregir falsos positivos de la puerta |
 | `03_04_transformer_multitarea` | 5 gruesas + 14 finas + 3 flags | **Completo:** `multitask-5a9b00f79262`, publicado en Drive | pérdida enmascarada y ratio 4:1 fijo en train/validation |
 | `03_05_qwen_lora` | Qwen3-0.6B-Base clasificador LoRA de 22 salidas | **Completo:** `qwen_lora-4aa5ce04df05`, reanudado y finalizado en A100; publicado en Drive | checkpoint completo por época en Drive y clasificación supervisada explícita |
-| `03_06_qwen_estructurado` | Qwen clasificador de 22 salidas con penalización estructural | **En curso en A100:** `RUN_TRAINING=True`; modelo inicializado, aún sin checkpoint o candidato final | calibración, auxiliares enmascarados y checkpoint por época |
+| `03_06_qwen_estructurado` | Qwen clasificador de 22 salidas con penalización estructural | **Interrumpido durante la restauración:** intento en A100, sin candidato final; listo para reintentar con el bundle `c6931e...43ee0` | calibración, auxiliares enmascarados y checkpoint por época |
 | `03_06b_qwen_prompt_sft` | Qwen3-0.6B conversacional [R19], LoRA causal, prompt v3.2 y JSON | `RUN_PILOT=False`; `RUN_FULL_TRAINING=False` | piloto no elegible y corrida completa separada |
 | `03_07_comparacion_final` | individuos, voto duro, medias suaves, unión/intersección | tres compuertas en `False` | bootstrap determinista en cuatro hilos, pruebas pareadas/Holm y test único |
 | `03_08_auditoria_finas_flags` | cobertura, consistencia y calidad auxiliar disponible | **Pendiente para el snapshot vigente:** la salida guardada corresponde a `24d3d8...ca783` | métricas solo en posiciones observadas |
@@ -175,7 +175,7 @@ La evidencia se consolidó desde tres capas: los `candidate.json` locales, las s
 | Transformer cascada            | **2 completos: original y v2 segura**         |
 | Transformer multitarea         | **1 completo**                                |
 | Qwen + LoRA                    | **1 completo; época 2 restaurada antes de finalizar** |
-| Qwen estructurado              | **En curso en A100; todavía sin candidato completo** |
+| Qwen estructurado              | **Reanudación interrumpida; hotfix listo, sin candidato completo** |
 | LLM condicionado por prompt    | **Implementado; ejecución pendiente** |
 | *Ensemble* duro 2-de-3       | **Implementado; evaluación pendiente** |
 | *Ensemble* suave o ponderado | **Implementado; evaluación pendiente** |
@@ -245,6 +245,19 @@ El candidato final, ya calibrado y con umbrales, quedó completado el `2026-08-1
 La cifra final de AUPRC no coincide exactamente con la salida intermedia de la época 2 porque la tabla de épocas se calcula durante el ajuste, mientras el candidato se evalúa después con el artefacto final, calibración y protocolo de persistencia. La invocación final registró 1.453,40 s de ajuste y 1.541,95 s hasta la escritura del candidato; el tiempo acumulado de las sesiones anteriores no está disponible.
 
 La publicación en Drive terminó el `2026-08-11T05:02:56.587782+00:00`. El archivo `run_outputs.tar.gz` tiene 66.018.515 bytes y SHA-256 `86831d363d8e2d10becc061ac0b032cf3134cc9dad28b4b225ee7f01c33497b6`. El candidato conserva `test_metrics=null` y `test_status=sealed_not_evaluated`: el test continúa sellado.
+
+### 6.4. Incidente de restauración en Qwen estructurado
+
+El primer intento de `03_06` en A100 encontró el paso persistente 6401, correspondiente al límite de una época, pero terminó antes de reanudar `Trainer.train` con `ValueError: step 6401: falta archivo o SHA-256`. El mensaje no demuestra que los pesos sean inválidos: identifica un desacuerdo entre el manifiesto de Drive y el archivo que debía autenticar.
+
+La revisión encontró que el restaurador leía `latest.json` antes que `checkpoint-6401.json` y deduplicaba ambos usando solo paso y nombre de archivo. Por ello, un puntero `latest.json` incompleto podía ocultar el manifiesto individual válido del mismo TAR. El bundle `c6931e...43ee0` corrige el orden de recuperación y aplica estas reglas:
+
+1. prefiere la combinación que tenga TAR existente y SHA-256 válido;
+2. si el TAR existe y falta únicamente el SHA, valida su estructura y que `trainer_state.json` registre exactamente el paso 6401 antes de reconstruir el manifiesto;
+3. si el TAR no existe o su SHA válido no coincide, conserva el fallo y no simula una reanudación ni empieza desde cero silenciosamente;
+4. si la última versión es irrecuperable, prueba un checkpoint anterior verificable.
+
+Al corte todavía no hay métricas ni candidato de `03_06`. Debe repetirse la celda de entrenamiento después de activar el bundle corregido.
 
 ## 7. Auditoría crítica: hallazgos iniciales y resolución
 
