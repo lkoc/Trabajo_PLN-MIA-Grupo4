@@ -12,6 +12,16 @@ from typing import Any
 from .io import sha256_file, write_json_atomic
 
 CHECKPOINT_SCHEMA_VERSION = "1.0.0"
+MODEL_CHECKPOINT_FILES = (
+    "model.safetensors",
+    "pytorch_model.bin",
+    "adapter_model.safetensors",
+    "adapter_model.bin",
+)
+MODEL_CHECKPOINT_INDEXES = (
+    "model.safetensors.index.json",
+    "pytorch_model.bin.index.json",
+)
 
 
 def _is_sha256(value: str) -> bool:
@@ -23,6 +33,56 @@ def _checkpoint_step(path: Path) -> int:
     if not path.name.startswith(prefix) or not path.name[len(prefix) :].isdigit():
         raise ValueError(f"Nombre de checkpoint inesperado: {path.name}")
     return int(path.name[len(prefix) :])
+
+
+def _checkpoint_resume_problems(checkpoint: Path, expected_step: int) -> list[str]:
+    """Valida los artefactos que Trainer necesita para una reanudación exacta."""
+
+    problems: list[str] = []
+    if not checkpoint.is_dir():
+        return ["directorio ausente"]
+    state_path = checkpoint / "trainer_state.json"
+    try:
+        trainer_state = json.loads(state_path.read_text(encoding="utf-8"))
+        recorded_step = int(trainer_state["global_step"])
+    except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
+        problems.append("trainer_state.json inválido")
+    else:
+        if recorded_step != expected_step:
+            problems.append(f"trainer_state registra step {recorded_step}")
+
+    has_model = any((checkpoint / name).is_file() for name in MODEL_CHECKPOINT_FILES)
+    if not has_model:
+        for index_name in MODEL_CHECKPOINT_INDEXES:
+            index_path = checkpoint / index_name
+            if not index_path.is_file():
+                continue
+            try:
+                index = json.loads(index_path.read_text(encoding="utf-8"))
+                shards = {str(name) for name in index["weight_map"].values()}
+                has_model = bool(shards) and all(
+                    Path(name).name == name and (checkpoint / name).is_file()
+                    for name in shards
+                )
+            except (OSError, KeyError, TypeError, json.JSONDecodeError):
+                has_model = False
+            if has_model:
+                break
+    if not has_model:
+        problems.append("faltan pesos o adaptador del modelo")
+
+    for name in ("optimizer.pt", "scheduler.pt"):
+        path = checkpoint / name
+        if not path.is_file() or path.stat().st_size == 0:
+            problems.append(f"falta {name}")
+    rng_files = [
+        path
+        for path in checkpoint.glob("rng_state*.pth")
+        if path.is_file() and path.stat().st_size > 0
+    ]
+    if not rng_files:
+        problems.append("falta estado RNG")
+    return problems
 
 
 def _copy_and_hash(source: Path, destination: Path) -> str:
@@ -50,8 +110,12 @@ def persist_trainer_checkpoint(
     checkpoint = Path(checkpoint_dir)
     destination = Path(persistent_dir)
     step = _checkpoint_step(checkpoint)
-    if not checkpoint.is_dir() or not (checkpoint / "trainer_state.json").is_file():
-        raise FileNotFoundError(f"Checkpoint de Trainer incompleto: {checkpoint}")
+    resume_problems = _checkpoint_resume_problems(checkpoint, step)
+    if resume_problems:
+        raise FileNotFoundError(
+            f"Checkpoint de Trainer incompleto: {checkpoint}: "
+            + "; ".join(resume_problems)
+        )
     try:
         trainer_state = json.loads(
             (checkpoint / "trainer_state.json").read_text(encoding="utf-8")
@@ -154,7 +218,7 @@ def _latest_local_checkpoint(training_dir: Path) -> Path | None:
             step = _checkpoint_step(path)
         except ValueError:
             continue
-        if path.is_dir() and (path / "trainer_state.json").is_file():
+        if not _checkpoint_resume_problems(path, step):
             candidates.append((step, path))
     return max(candidates, default=(0, None), key=lambda item: item[0])[1]
 
@@ -188,6 +252,23 @@ def restore_latest_trainer_checkpoint(
     for manifest in manifests:
         step = int(manifest["step"])
         if step <= local_step:
+            if failures:
+                write_json_atomic(
+                    training / "persistent_checkpoint_restore.json",
+                    {
+                        "schema_version": CHECKPOINT_SCHEMA_VERSION,
+                        "restored_at": datetime.now(UTC).isoformat(),
+                        "source": str(local),
+                        "step": local_step,
+                        "integrity_source": "verified_local_checkpoint",
+                        "skipped_newer_checkpoints": failures,
+                    },
+                )
+                print(
+                    "Checkpoint persistente más reciente no recuperable; "
+                    f"se continuará automáticamente desde el step local {local_step}.",
+                    flush=True,
+                )
             return local
         archive_name = str(manifest["archive"]["name"])
         if Path(archive_name).name != archive_name:
@@ -226,22 +307,16 @@ def restore_latest_trainer_checkpoint(
                 with tarfile.open(local_archive, "r") as handle:
                     handle.extractall(staging, filter="data")
                 extracted = staging / f"checkpoint-{step}"
-                if not (extracted / "trainer_state.json").is_file():
-                    failures.append(f"step {step}: contenido incompleto")
-                    continue
-                try:
-                    trainer_state = json.loads(
-                        (extracted / "trainer_state.json").read_text(encoding="utf-8")
-                    )
-                    recorded_step = int(trainer_state["global_step"])
-                except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
-                    failures.append(f"step {step}: trainer_state.json inválido")
-                    continue
-                if recorded_step != step:
+                resume_problems = _checkpoint_resume_problems(extracted, step)
+                if resume_problems:
                     failures.append(
-                        f"step {step}: trainer_state registra step {recorded_step}"
+                        f"step {step}: contenido no reanudable: "
+                        + ", ".join(resume_problems)
                     )
                     continue
+                trainer_state = json.loads(
+                    (extracted / "trainer_state.json").read_text(encoding="utf-8")
+                )
                 target = training / extracted.name
                 if target.exists():
                     backup = training / f".{target.name}.incomplete"
@@ -285,8 +360,16 @@ def restore_latest_trainer_checkpoint(
                     "step": step,
                     "epoch": manifest.get("epoch"),
                     "integrity_source": integrity_source,
+                    "skipped_newer_checkpoints": failures,
                 },
             )
+            if failures:
+                print(
+                    "Checkpoint más reciente no recuperable; "
+                    f"se continuará automáticamente desde el step {step}. "
+                    f"Versiones omitidas: {'; '.join(failures)}",
+                    flush=True,
+                )
             return target
         except (OSError, tarfile.TarError, ValueError) as exc:
             failures.append(f"step {step}: {type(exc).__name__}: {exc}")

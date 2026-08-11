@@ -76,6 +76,58 @@ def test_restore_falls_back_to_previous_verified_checkpoint(tmp_path):
     assert restored is not None
     assert restored.name == "checkpoint-10"
     assert (restored / "model.safetensors").read_text(encoding="utf-8") == "válido"
+    restore_record = json.loads(
+        (restored.parent / "persistent_checkpoint_restore.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert restore_record["step"] == 10
+    assert any(
+        "step 20: SHA-256 inválido" in failure
+        for failure in restore_record["skipped_newer_checkpoints"]
+    )
+
+
+def test_restore_falls_back_when_latest_epoch_lacks_optimizer_state(tmp_path):
+    trainer = tmp_path / "source" / "trainer"
+    persistent = tmp_path / "drive" / "trainer_checkpoints"
+    persist_trainer_checkpoint(_checkpoint(trainer, 10, "válido"), persistent)
+    latest = _checkpoint(trainer, 20, "incompleto")
+    # El TAR simula una época que quedó incompleta aunque su SHA sea coherente.
+    latest_manifest = persist_trainer_checkpoint(latest, persistent)
+    (latest / "optimizer.pt").unlink()
+    import tarfile
+
+    with tarfile.open(persistent / "checkpoint-20.tar", "w") as handle:
+        handle.add(latest, arcname=latest.name)
+    from moderacion_peru.io import sha256_file
+
+    latest_manifest["archive"]["sha256"] = sha256_file(
+        persistent / "checkpoint-20.tar"
+    )
+    latest_manifest["archive"]["bytes"] = (
+        persistent / "checkpoint-20.tar"
+    ).stat().st_size
+    for name in ("checkpoint-20.json", "latest.json"):
+        (persistent / name).write_text(
+            json.dumps(latest_manifest), encoding="utf-8"
+        )
+
+    restored = restore_latest_trainer_checkpoint(
+        persistent, tmp_path / "new_runtime" / "trainer"
+    )
+
+    assert restored is not None
+    assert restored.name == "checkpoint-10"
+    restore_record = json.loads(
+        (restored.parent / "persistent_checkpoint_restore.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert any(
+        "step 20: contenido no reanudable: falta optimizer.pt" in failure
+        for failure in restore_record["skipped_newer_checkpoints"]
+    )
 
 
 def test_corrupt_latest_pointer_does_not_hide_valid_checkpoint_manifest(tmp_path):
