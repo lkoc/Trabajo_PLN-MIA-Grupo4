@@ -472,9 +472,15 @@ def build_persistent_checkpoint_callback(
     class PersistentCheckpointCallback(TrainerCallback):
         def on_save(self, args, state, control, **kwargs):
             checkpoint = Path(args.output_dir) / f"checkpoint-{state.global_step}"
+            print(
+                "Guardando época en Google Drive y verificando el TAR completo; "
+                "no interrumpas el runtime hasta ver la confirmación final. "
+                f"step={state.global_step}",
+                flush=True,
+            )
             manifest = persist_trainer_checkpoint(checkpoint, destination)
             print(
-                "Checkpoint persistido en Google Drive: "
+                "Checkpoint persistido y verificado por relectura en Google Drive: "
                 f"epoch={manifest['epoch']} · step={manifest['step']} · "
                 f"{manifest['persistent_dir']}",
                 flush=True,
