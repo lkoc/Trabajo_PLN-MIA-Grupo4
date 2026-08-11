@@ -436,14 +436,14 @@ como hardware consumido.
 | `03_03` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_03b` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_04` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
-| `03_05` | en curso desde la época 2 preservada | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, lote 8×1, evaluación 32, dos *workers*, una GPU | no aplica mientras continúe esta corrida |
-| `03_06` | pendiente | **no disponible** | no observado | A100 de 40 GB recomendada; ajuste completo, lote 8×1 si cumple el perfil de memoria |
+| `03_05` | candidato completo; época 2 restaurada y época 3 persistida | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, lote 8×1, evaluación 32, dos *workers*, una GPU | no aplica |
+| `03_06` | entrenamiento iniciado (`RUN_TRAINING=True`); todavía sin checkpoint o candidato completo visible | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; modelo inicializado, corrida aún abierta | no aplica a la sesión actual |
 | `03_06b` | piloto y corrida completa pendientes | **no disponible** | no observado | A100 de 40 GB recomendada; LoRA causal, lote 2×4 |
 | `03_07` | comparación pendiente | **no disponible** | no entrena modelos | CPU local, cuatro hilos para bootstrap |
 | `03_08` | pendiente para el SHA vigente | **no disponible** para el corte actual | no entrena modelos | CPU local |
 
 Las L4 y A100 listadas son GPUs de sesiones distintas de Colab; no trabajaron
-en paralelo sobre una misma corrida. `03_05` usa una sola A100: Colab aporta el
+en paralelo sobre una misma corrida. `03_05` usó una sola A100: Colab aportó el
 dispositivo, mientras el cuaderno define BF16, lotes, acumulación, *workers*,
 TF32 y checkpoints. El detalle de tiempos, costos y evidencia por candidato se
 mantiene en `AUDITORIA_ENTRENAMIENTO_CUADERNOS_03_2026-08-10.md`.

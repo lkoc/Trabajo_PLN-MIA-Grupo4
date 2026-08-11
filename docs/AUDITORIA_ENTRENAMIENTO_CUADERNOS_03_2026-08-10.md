@@ -3,16 +3,16 @@
 **Proyecto:** Moderación multietiqueta de videos peruanos
 **Alcance:** cuadernos `03_01` a `03_08`, incluida la nueva rama `03_06b`, código compartido de entrenamiento, snapshot entrenable y artefactos de evaluación
 **Fecha de corte:** 2026-08-11 (actualización del informe iniciado el 2026-08-10)
-**Estado:** corte de resultados actualizado; 13 candidatos elegibles completos en *validation*, Qwen-LoRA en curso desde la época 2 preservada, test todavía sellado
+**Estado:** corte de resultados actualizado; 14 candidatos elegibles completos en *validation*, incluido Qwen-LoRA, test todavía sellado
 
 ## 1. Resumen ejecutivo
 
 La serie ya produjo resultados comparables en *validation*, pero **todavía no permite declarar un ganador final**. El snapshot está cerrado, tiene 173.240 chunks entrenables y no presenta solapamiento de videos entre `train`, `validation` y `test`. El corte verificable es el siguiente:
 
-1. Hay 13 candidatos elegibles y completos para el SHA-256 vigente: diez clásicos, una cascada original, una cascada v2 y un Transformer multitarea. Los dos SVM iniciales con convergencia no demostrada fueron sustituidos por reparaciones con `fit_quality.converged=true`; no se cuentan dos veces.
-2. Entre candidatos completos, la cascada v2 logra el mayor macro-F1 de cinco salidas (0,5981), el multitarea el mayor F1 de *any-damage* (0,6562) y la menor tasa de falso seguro (0,3939), y el SVM informado por política la mayor macro-AUPRC de daño (0,4983). Ningún modelo domina todas las métricas.
-3. Qwen-LoRA sigue en curso. La época 2 cerró con macro-AUPRC de daño 0,5461 y macro-AUPRC de cinco salidas 0,6315, por encima de los candidatos completos en esas métricas intermedias. No se incorpora al ranking: aún faltan épocas, calibración, umbrales y escritura de `candidate.json`.
-4. Continúan pendientes el Transformer plano (`03_02`), Qwen estructurado (`03_06`), Qwen generativo condicionado por prompt (`03_06b`), la robustez por canal y la comparación individual–*ensemble* (`03_07`).
+1. Hay 14 candidatos elegibles y completos para el SHA-256 vigente: diez clásicos, una cascada original, una cascada v2, un Transformer multitarea y Qwen-LoRA. Los dos SVM iniciales con convergencia no demostrada fueron sustituidos por reparaciones con `fit_quality.converged=true`; no se cuentan dos veces.
+2. Qwen-LoRA lidera entre los candidatos completos el macro-F1 de cinco salidas (0,6275), micro-F1 (0,8396), macro-AUPRC de daño (0,5422), F1 de *any-damage* (0,6731) y macro-F1 fina observada (0,4286). No domina todo: el Transformer multitarea conserva la menor tasa de falso seguro (0,3939 frente a 0,4590 de Qwen), y otros modelos presentan mejor calibración.
+3. Qwen terminó tras restaurar la época 2 y persistir el checkpoint de la época 3 en Drive. El candidato final `qwen_lora-4aa5ce04df05` incluye calibración, umbrales y `candidate.json`; sus métricas finales reemplazan, para comparación, las cifras intermedias por época.
+4. Qwen estructurado (`03_06`) acaba de iniciarse en A100, aún sin checkpoint o candidato completo visible. Continúan pendientes el Transformer plano (`03_02`), Qwen generativo condicionado por prompt (`03_06b`), la robustez por canal y la comparación individual–*ensemble* (`03_07`).
 5. El test permanece sellado en todos los candidatos completos (`test_metrics=null`); no existe todavía registro final ni reporte `test_final_abierto_una_vez.json`.
 
 Los hallazgos metodológicos del inicio de la auditoría —máscaras de observación, calibración, pérdida balanceada, separación de test, rama condicionada por prompt y evaluación por canal— quedaron convertidos en controles de código. Los resultados de este corte son exclusivamente de *validation* 4:1 y no prueban generalización al test natural ni a canales retenidos.
@@ -156,17 +156,17 @@ La procedencia debe conservarse como variable de auditoría y estratificación d
 | `03_03_transformer_cascada` | puerta de daño con finas/flags + rama de cuatro daños | **Completo:** `cascade-2b78ad8fe71f`, publicado en Drive | propagación de error y comparación plana en `03_07` |
 | `03_03b_transformer_cascada_segura` | puerta conservadora + rama especializada que vuelve a incluir `SEGURO` | **Completo:** `cascade_v2-af78eba77883`, publicado en Drive | minimiza bloqueo falso y permite corregir falsos positivos de la puerta |
 | `03_04_transformer_multitarea` | 5 gruesas + 14 finas + 3 flags | **Completo:** `multitask-5a9b00f79262`, publicado en Drive | pérdida enmascarada y ratio 4:1 fijo en train/validation |
-| `03_05_qwen_lora` | Qwen3-0.6B-Base clasificador LoRA de 22 salidas | **En curso:** época 2 completa y reanudada en A100; aún sin candidato final | checkpoint completo por época en Drive y clasificación supervisada explícita |
-| `03_06_qwen_estructurado` | Qwen clasificador de 22 salidas con penalización estructural | **Pendiente:** `RUN_TRAINING=False` | calibración, auxiliares enmascarados y checkpoint por época |
+| `03_05_qwen_lora` | Qwen3-0.6B-Base clasificador LoRA de 22 salidas | **Completo:** `qwen_lora-4aa5ce04df05`, reanudado y finalizado en A100; publicado en Drive | checkpoint completo por época en Drive y clasificación supervisada explícita |
+| `03_06_qwen_estructurado` | Qwen clasificador de 22 salidas con penalización estructural | **En curso en A100:** `RUN_TRAINING=True`; modelo inicializado, aún sin checkpoint o candidato final | calibración, auxiliares enmascarados y checkpoint por época |
 | `03_06b_qwen_prompt_sft` | Qwen3-0.6B conversacional [R19], LoRA causal, prompt v3.2 y JSON | `RUN_PILOT=False`; `RUN_FULL_TRAINING=False` | piloto no elegible y corrida completa separada |
 | `03_07_comparacion_final` | individuos, voto duro, medias suaves, unión/intersección | tres compuertas en `False` | bootstrap determinista en cuatro hilos, pruebas pareadas/Holm y test único |
 | `03_08_auditoria_finas_flags` | cobertura, consistencia y calidad auxiliar disponible | **Pendiente para el snapshot vigente:** la salida guardada corresponde a `24d3d8...ca783` | métricas solo en posiciones observadas |
 
-`03_02`–`03_04` usan el perfil L4; `03_05`–`03_06b` están ajustados para A100 de 40 GB, con *fallback* conservador. Los interruptores reflejan el estado práctico: `03_03`, `03_03b`, `03_04` y `03_05` conservan la ejecución activada en los cuadernos descargados; `03_02`, `03_06` y `03_06b` siguen desactivados.
+`03_02`–`03_04` usan el perfil L4; `03_05`–`03_06b` están ajustados para A100 de 40 GB, con *fallback* conservador. Los interruptores reflejan el estado práctico: `03_03`, `03_03b`, `03_04`, `03_05` y ahora `03_06` conservan la ejecución activada en los cuadernos descargados; `03_02` y `03_06b` siguen desactivados.
 
 ## 6. Estado real de los resultados
 
-La evidencia se consolidó desde tres capas: los `candidate.json` locales, las salidas HTML guardadas en los cuadernos y el historial Git de la corrida Qwen interrumpida. Se encontraron 12 `candidate.json` locales con el SHA vigente: diez de la corrida clásica original y dos reparaciones SVM. Como los dos SVM originales no demostraron convergencia, el conjunto clásico elegible contiene ocho candidatos originales más los dos reparados. Las salidas publicadas de Colab añaden tres candidatos neuronales completos. En total hay **13 candidatos completos elegibles** para *validation* y ninguno abrió test.
+La evidencia se consolidó desde tres capas: los `candidate.json` locales, las salidas HTML guardadas en los cuadernos y el historial Git de la corrida Qwen interrumpida y reanudada. Se encontraron 12 `candidate.json` locales con el SHA vigente: diez de la corrida clásica original y dos reparaciones SVM. Como los dos SVM originales no demostraron convergencia, el conjunto clásico elegible contiene ocho candidatos originales más los dos reparados. Las salidas publicadas de Colab añaden cuatro candidatos neuronales completos, incluido Qwen-LoRA. En total hay **14 candidatos completos elegibles** para *validation* y ninguno abrió test.
 
 | Familia o combinación         | Resultado válido para snapshot actual              |
 | ------------------------------ | --------------------------------------------------- |
@@ -174,8 +174,8 @@ La evidencia se consolidó desde tres capas: los `candidate.json` locales, las s
 | Transformer plano              | **Pendiente**                                 |
 | Transformer cascada            | **2 completos: original y v2 segura**         |
 | Transformer multitarea         | **1 completo**                                |
-| Qwen + LoRA                    | **En curso; época 2 preservada**              |
-| Qwen estructurado              | **Pendiente**                                 |
+| Qwen + LoRA                    | **1 completo; época 2 restaurada antes de finalizar** |
+| Qwen estructurado              | **En curso en A100; todavía sin candidato completo** |
 | LLM condicionado por prompt    | **Implementado; ejecución pendiente** |
 | *Ensemble* duro 2-de-3       | **Implementado; evaluación pendiente** |
 | *Ensemble* suave o ponderado | **Implementado; evaluación pendiente** |
@@ -201,17 +201,18 @@ Todos usan las mismas 51.205 filas de entrenamiento y 10.600 de *validation*. La
 
 El SVM informado lidera la métrica primaria de macro-AUPRC de daño, pero la regresión logística informada obtiene mayor macro-F1 y menor falso seguro dentro de los clásicos. La ECE muy baja del Dummy no implica utilidad: carece de discriminación de daño y produce falso seguro 1,0.
 
-### 6.2. Transformers completos
+### 6.2. Modelos neuronales completos
 
 | Candidato | Macro-F1 5 | Micro-F1 | Macro-AUPRC daño | F1 *any-damage* | Falso seguro | ECE / Brier | Macro-F1 fina obs. | Tiempo registrado |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `cascade-2b78ad8fe71f` | 0,5876 | 0,8211 | 0,4590 | 0,6399 | 0,5123 | 0,0333 / 0,0597 | 0,2514 | 271,53 s |
-| `cascade_v2-af78eba77883` | **0,5981** | **0,8259** | **0,4647** | 0,6526 | 0,4415 | **0,0548 / 0,0699** | 0,2563 | 2.515,88 s |
-| `multitask-5a9b00f79262` | 0,5766 | 0,8194 | 0,4401 | **0,6562** | **0,3939** | 0,0751 / 0,0761 | **0,3068** | 1.294,07 s |
+| `cascade-2b78ad8fe71f` | 0,5876 | 0,8211 | 0,4590 | 0,6399 | 0,5123 | **0,0333 / 0,0597** | 0,2514 | 271,53 s |
+| `cascade_v2-af78eba77883` | 0,5981 | 0,8259 | 0,4647 | 0,6526 | 0,4415 | 0,0548 / 0,0699 | 0,2563 | 2.515,88 s |
+| `multitask-5a9b00f79262` | 0,5766 | 0,8194 | 0,4401 | 0,6562 | **0,3939** | 0,0751 / 0,0761 | 0,3068 | 1.294,07 s |
+| `qwen_lora-4aa5ce04df05` | **0,6275** | **0,8396** | **0,5422** | **0,6731** | 0,4590 | 0,0545 / 0,0622 | **0,4286** | 1.541,95 s en la invocación final |
 
-La cascada v2 mejora a la cascada original en macro-F1, macro-AUPRC de daño, F1 de *any-damage* y falso seguro, aunque empeora ECE y Brier. Esto respalda la estructura propuesta, pero no demuestra todavía superioridad estadística. El multitarea es el mejor de los tres para evitar falsos seguros y para etiquetas finas observadas. Los tiempos proceden de `stage_timings_seconds`; en `03_03`, que reanudó trabajo previo, 271,53 s representan la invocación registrada y no necesariamente toda la campaña acumulada.
+La cascada v2 mejora a la cascada original en macro-F1, macro-AUPRC de daño, F1 de *any-damage* y falso seguro, aunque empeora ECE y Brier. Qwen lidera las métricas agregadas y finas de esta tabla, pero el multitarea sigue siendo el más conservador frente al error operacional crítico de declarar seguro un daño. Esto no demuestra todavía superioridad estadística. Los tiempos proceden de `stage_timings_seconds`; en `03_03` y `03_05`, que reanudaron trabajo previo, representan la invocación registrada y no necesariamente toda la campaña acumulada.
 
-### 6.3. Qwen-LoRA: resultado parcial y preservación de época
+### 6.3. Qwen-LoRA: resultado final y preservación de época
 
 Una salida versionada del cuaderno (`a7bed4e`) conserva las dos épocas completas alcanzadas antes de la interrupción:
 
@@ -220,11 +221,30 @@ Una salida versionada del cuaderno (`a7bed4e`) conserva las dos épocas completa
 | 1 | 0,2365 | **0,2334** | 0,5181 | 0,6087 |
 | 2 | **0,2062** | 0,2614 | **0,5461** | **0,6315** |
 
-La ejecución anterior llegó a `17656/25604` pasos (época 2,76/4), pero la última unidad completa recuperable era la época 2. El cuaderno actual registra una A100-SXM4 de 40 GB, el bundle `185daf...405b`, contexto reanudado y progreso `14195/25604` (época 2,22/4) tras 5 min 04 s de la nueva sesión. La diferencia de 1.393 pasos desde el límite esperado de la época 2 (`12802`) y el rendimiento de 4,57 iteraciones/s son consistentes con una reanudación real desde esa época, no con un reinicio desde cero.
+La ejecución anterior llegó a `17656/25604` pasos (época 2,76/4), pero la última unidad completa recuperable era la época 2. El cuaderno registra una A100-SXM4 de 40 GB, el bundle `185daf...405b` y un contexto reanudado. La corrida continuó desde el checkpoint recuperable, persistió `epoch=3.0`, `step=19203` en Drive y produjo el candidato final, en vez de reiniciar desde cero.
 
 El contrato actual guarda, al finalizar cada época, un TAR atómico en `drive_run_dir/trainer_checkpoints`, con adaptador/modelo, optimizador, *scheduler*, RNG y `trainer_state`; el manifiesto incluye `epoch` y `step`. Al reabrir Colab restaura el checkpoint completo y `Trainer` continúa en la época siguiente. Si se interrumpe a mitad de época, puede perderse únicamente esa fracción no terminada: la última época completa permanece. Para una verificación forense byte a byte aún debe copiarse al repositorio el `latest.json` y el SHA del TAR almacenado en el Drive personal, que no es accesible desde esta auditoría local.
 
-Las métricas de Qwen son intermedias, previas a la calibración y a los umbrales finales. Aunque la macro-AUPRC de daño de la época 2 supera el máximo de los candidatos completos (0,5461 frente a 0,4983), no debe declararse ganador hasta que produzca un candidato completo bajo el mismo protocolo.
+El candidato final, ya calibrado y con umbrales, quedó completado el `2026-08-11T05:02:50.187353+00:00`. Su ficha completa sobre las 10.600 filas de *validation* 4:1 es:
+
+| Ámbito | Métrica | Resultado |
+| --- | --- | ---: |
+| Cinco salidas | Macro-F1 | **0,6275** |
+| Cinco salidas | Micro-F1 | **0,8396** |
+| Cinco salidas | Macro-AUPRC de daño | **0,5422** |
+| Cinco salidas | Macro-AUPRC de las cinco etiquetas | 0,6285 |
+| *Any-damage* | Precisión / *recall* / F1 | 0,6609 / 0,6858 / **0,6731** |
+| *Any-damage* | AUPRC / ROC-AUC / *balanced accuracy* | 0,7131 / 0,9073 / 0,7989 |
+| Riesgo operativo | Falso seguro sobre daño | 0,4590 |
+| Riesgo operativo | Falsa alarma sobre seguro | 0,0880 |
+| Riesgo operativo | Conflicto `SEGURO`–daño / carga de revisión | 0,0633 / 0,1076 |
+| Calibración | ECE / Brier macro | 0,0545 / 0,0622 |
+| Finas observadas | Macro-AUPRC / macro-F1 | 0,3705 / **0,4286** |
+| *Flags* observados | Macro-AUPRC / macro-F1 | 0,0834 / 0,1436 |
+
+La cifra final de AUPRC no coincide exactamente con la salida intermedia de la época 2 porque la tabla de épocas se calcula durante el ajuste, mientras el candidato se evalúa después con el artefacto final, calibración y protocolo de persistencia. La invocación final registró 1.453,40 s de ajuste y 1.541,95 s hasta la escritura del candidato; el tiempo acumulado de las sesiones anteriores no está disponible.
+
+La publicación en Drive terminó el `2026-08-11T05:02:56.587782+00:00`. El archivo `run_outputs.tar.gz` tiene 66.018.515 bytes y SHA-256 `86831d363d8e2d10becc061ac0b032cf3134cc9dad28b4b225ee7f01c33497b6`. El candidato conserva `test_metrics=null` y `test_status=sealed_not_evaluated`: el test continúa sellado.
 
 ## 7. Auditoría crítica: hallazgos iniciales y resolución
 
@@ -245,7 +265,7 @@ Los apartados A–I conservan la motivación de la auditoría original. En este 
 
 #### A. Test visible antes de congelar el experimento — severidad alta
 
-Al inicio, cada candidato calculaba métricas de test durante su entrenamiento. Ahora 03_01–03_06 producen únicamente predicciones y métricas de entrenamiento/*validation*; `03_07` congela candidato, umbrales, calibradores y regla de *ensemble*, y solo entonces abre el test una vez. Los 13 candidatos completos verifican `test_metrics=null`.
+Al inicio, cada candidato calculaba métricas de test durante su entrenamiento. Ahora 03_01–03_06 producen únicamente predicciones y métricas de entrenamiento/*validation*; `03_07` congela candidato, umbrales, calibradores y regla de *ensemble*, y solo entonces abre el test una vez. Los 14 candidatos completos verifican `test_metrics=null`.
 
 #### B. Etiquetas auxiliares no observadas tratadas como negativas — severidad alta
 
@@ -306,11 +326,11 @@ Los Transformers ahora evalúan por época con macro-AUPRC de daños, guardan ch
 
 #### H. Máximo de 128 tokens sin diagnóstico — severidad media
 
-El diagnóstico ya se registra por tokenizador. En los tres Transformers completos, 20.114 de 51.205 filas de entrenamiento se truncaron a 128 tokens (39,28 %; P50 121, P95 164, máximo 217); la rama de daño de la cascada original llegó a 44,35 %. El truncamiento es material, por lo que permanece pendiente comparar 128 contra 256 en un piloto estratificado.
+El diagnóstico ya se registra por tokenizador. En los tres Transformers codificadores completos, 20.114 de 51.205 filas de entrenamiento se truncaron a 128 tokens (39,28 %; P50 121, P95 164, máximo 217); la rama de daño de la cascada original llegó a 44,35 %. En Qwen-LoRA se truncaron 28.740 filas (56,13 %; P50 133, P95 179, máximo 302). El truncamiento es material, por lo que permanece pendiente comparar 128 contra 256 en un piloto estratificado.
 
 #### I. Generalización por canal no medida — severidad media-alta
 
-El split por video evita memorizar el mismo video, pero la presencia del mismo canal en varios splits permite aprender estilo, invitados y muletillas. El conjunto alternativo con canales completamente retenidos ya existe; su entrenamiento/evaluación sigue pendiente. La estratificación multietiqueta debe conservar en lo posible prevalencias y combinaciones [R14].
+El split por video evita memorizar el mismo video, pero la presencia del mismo canal en varios splits permite aprender estilo, invitados y muletillas. El conjunto alternativo con canales completamente retenidos ya existe; su entrenamiento/evaluación sigue pendiente. La estratificación multietiqueta debe conservar en lo posible prevalencias y combinaciones [R10, R14].
 
 ## 8. Metodología aprobada e implementada; ejecución parcial
 
@@ -526,17 +546,17 @@ Por ello, el proyecto no debe declarar calidad con accuracy o micro-F1 solamente
 | Modelo                      | Macro-F1 gruesa |  Micro-F1 | Macro-AUPRC daño | *Any-damage* F1 | Falso seguro | ECE/Brier | Macro-F1 fina observada | Test canal retenido |
 | --------------------------- | --------------: | --------: | ----------------: | ------------: | -----------: | --------: | ----------------------: | ------------------: |
 | Clásico base: SVM reparado | 0,5959 | 0,8263 | 0,4960 | 0,6177 | 0,5825 | 0,0078 / 0,0527 | 0,3678 | Pendiente |
-| Clásico informado: SVM reparado | 0,5937 | 0,8239 | **0,4983** | 0,6206 | 0,5717 | 0,0081 / 0,0527 | **0,3694** | Pendiente |
+| Clásico informado: SVM reparado | 0,5937 | 0,8239 | 0,4983 | 0,6206 | 0,5717 | 0,0081 / 0,0527 | 0,3694 | Pendiente |
 | Transformer plano           |       Pendiente | Pendiente |         Pendiente |     Pendiente |    Pendiente | Pendiente |               Pendiente |           Pendiente |
 | Cascada                     | 0,5876 | 0,8211 | 0,4590 | 0,6399 | 0,5123 | 0,0333 / 0,0597 | 0,2514 | Pendiente |
-| Cascada v2 segura           | **0,5981** | **0,8259** | 0,4647 | 0,6526 | 0,4415 | 0,0548 / 0,0699 | 0,2563 | Pendiente |
-| Multitarea                  | 0,5766 | 0,8194 | 0,4401 | **0,6562** | **0,3939** | 0,0751 / 0,0761 | 0,3068 | Pendiente |
-| Qwen LoRA clasificador      | Pendiente | Pendiente | 0,5461 provisional | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente |
+| Cascada v2 segura           | 0,5981 | 0,8259 | 0,4647 | 0,6526 | 0,4415 | 0,0548 / 0,0699 | 0,2563 | Pendiente |
+| Multitarea                  | 0,5766 | 0,8194 | 0,4401 | 0,6562 | **0,3939** | 0,0751 / 0,0761 | 0,3068 | Pendiente |
+| Qwen LoRA clasificador      | **0,6275** | **0,8396** | **0,5422** | **0,6731** | 0,4590 | 0,0545 / 0,0622 | **0,4286** | Pendiente |
 | Qwen estructurado           |       Pendiente | Pendiente |         Pendiente |     Pendiente |    Pendiente | Pendiente |               Pendiente |           Pendiente |
 | LLM condicionado por prompt |       Pendiente | Pendiente |         Pendiente |     Pendiente |    Pendiente | Pendiente |               Pendiente |           Pendiente |
 | Mejor ensemble              |       Pendiente | Pendiente |         Pendiente |     Pendiente |    Pendiente | Pendiente |               Pendiente |           Pendiente |
 
-Los clásicos de esta tabla se eligen por macro-AUPRC de daño dentro de cada variante para mantener un criterio único; la regresión logística informada, no mostrada aquí, obtiene un macro-F1 ligeramente mayor (0,5968). La cifra Qwen corresponde a la época 2 y se excluye de cualquier selección hasta completar entrenamiento, calibración y persistencia del candidato.
+Los clásicos de esta tabla se eligen por macro-AUPRC de daño dentro de cada variante para mantener un criterio único; la regresión logística informada, no mostrada aquí, obtiene un macro-F1 ligeramente mayor (0,5968). Qwen ya es un candidato completo y entra en la comparación, pero no debe congelarse como ganador sin robustez por canal, pruebas pareadas, comparación con las familias pendientes y evaluación individual–*ensemble* en `03_07`.
 
 ## 12. Criterios de publicación propuestos
 
@@ -581,7 +601,7 @@ Test conserva las 22.684 filas naturales (1.802 daño + 20.882 `SEGURO`; 11,59:1
 2. ~~Regenerar el bundle Colab y fijar su ID en los cuadernos.~~ Completado; release vigente: `185daf...405b`.
 3. Ejecutar 03_08 como control previo sobre el snapshot vigente. La salida guardada actualmente es de un snapshot anterior.
 4. ~~Ejecutar 03_01 y conservar sus predicciones OOF/validation.~~ Completado, incluida la reparación convergente de ambos SVM.
-5. Continuar `03_05` desde la época 2 preservada; ejecutar `03_02`, `03_06` y el piloto no elegible de `03_06b`. `03_03`, `03_03b` y `03_04` ya están completos.
+5. ~~Continuar `03_05` desde la época 2 preservada.~~ Completado. Dejar finalizar `03_06`; ejecutar `03_02` y el piloto no elegible de `03_06b`. `03_03`, `03_03b` y `03_04` también están completos.
 6. Ejecutar 03_07 para comparar individuos/ensembles y congelar la decisión.
 7. Abrir test una vez, inferir sus 22.684 filas y generar resultados naturales más la vista secundaria 4:1 sin reinferencia.
 8. Publicar el registro solo después de revisar la tabla de evidencia.
@@ -606,23 +626,23 @@ La serie 03 está en ejecución bajo el snapshot vigente. La publicación final 
 
 ## 16. Conclusiones
 
-El dataset actual es suficientemente grande para entrenar y cumple el mínimo relajado de 2.000 ejemplos por daño en el conjunto total. Los riesgos metodológicos detectados quedaron convertidos en controles ejecutables: máscaras observadas, test sellado, calibración comparable, pérdida balanceada, partición alternativa por canal y comparación individual–ensemble. Ya existen 13 candidatos completos y comparables en *validation*, pero faltan familias importantes y no corresponde congelar una selección.
+El dataset actual es suficientemente grande para entrenar y cumple el mínimo relajado de 2.000 ejemplos por daño en el conjunto total. Los riesgos metodológicos detectados quedaron convertidos en controles ejecutables: máscaras observadas, test sellado, calibración comparable, pérdida balanceada, partición alternativa por canal y comparación individual–ensemble. Ya existen 14 candidatos completos y comparables en *validation*, pero faltan familias importantes y no corresponde congelar una selección.
 
 La corrección más importante es semántica y estadística: **ausente no significa negativo**. Finas y *flags* deben enriquecer todos los modelos compatibles, pero solo donde exista observación verificable. La segunda corrección es experimental: el test debe permanecer cerrado hasta que modelos, umbrales y ensemble estén congelados. La tercera es conceptual: un Qwen con cabeza de clasificación no equivale a un modelo condicionado por prompt; ambos deben compararse como ramas distintas.
 
-El corte confirma que las arquitecturas ofrecen compromisos distintos: cascada v2 maximiza macro-F1, multitarea reduce falsos seguros y el clásico SVM informado conserva la mayor macro-AUPRC entre candidatos completos. Qwen es prometedor al cierre de la época 2, pero su cifra sigue siendo provisional. Solo `03_07`, seguido de la apertura única del test, podrá establecer si esas diferencias son estables, si el *ensemble* aporta y si el costo adicional del LLM es defendible. La doble lectura natural/4:1 del test se obtendrá de una única matriz de predicciones y evitará convertir el benchmark secundario en otra oportunidad de selección.
+El corte confirma que las arquitecturas ofrecen compromisos distintos: Qwen lidera macro-F1, micro-F1, macro-AUPRC de daño, F1 de *any-damage* y macro-F1 fina; el multitarea, en cambio, reduce más los falsos seguros. Solo `03_07`, seguido de la apertura única del test, podrá establecer si esas diferencias son estables, si el *ensemble* aporta y si el costo adicional del LLM es defendible. La doble lectura natural/4:1 del test se obtendrá de una única matriz de predicciones y evitará convertir el benchmark secundario en otra oportunidad de selección.
 
 ## 17. Cierre técnico: hardware, tiempos y costos
 
 ### 17.1. Estado de evidencia
 
-Al cierre actualizado, `03_01`, `03_03`, `03_03b` y `03_04` produjeron candidatos completos sobre `013d60...c1f86`; `03_05` continúa desde la época 2 y `03_02`, `03_06` y `03_06b` están pendientes. El test no fue abierto.
+Al cierre actualizado, `03_01`, `03_03`, `03_03b`, `03_04` y `03_05` produjeron candidatos completos sobre `013d60...c1f86`. `03_06` se inició en una A100 con `RUN_TRAINING=True`, pero todavía no muestra un checkpoint ni candidato completo; `03_02` y `03_06b` siguen pendientes. El test no fue abierto.
 
 La corrida clásica original consumió aproximadamente **924,28 segundos (15 min 24 s) de CPU local**. La reparación selectiva de los dos SVM añadió 1.891,18 s (31 min 31 s), para un total clásico observado aproximado de **2.815,46 s (46 min 55 s)**. El costo externo fue USD 0; no se midió electricidad local.
 
 La corrida original de `03_01` usó el límite predeterminado de 1.000 iteraciones de `LinearSVC` y emitió `ConvergenceWarning` durante la calibración de 22 salidas en tres pliegues. Los ocho candidatos no SVM se conservan y los dos SVM originales quedan **no elegibles**. La reparación usó `dual='auto'`, tolerancia `1e-3` y hasta 20.000 iteraciones. Ambos reemplazos registran cero ajustes en el límite y `fit_quality.converged=true`, por lo que ya son elegibles para `03_07`.
 
-Los tiempos neuronales registrados fueron 271,53 s para la invocación reanudada de `03_03`, 2.515,88 s (41 min 56 s) para `03_03b` y 1.294,07 s (21 min 34 s) para `03_04`, todos sobre NVIDIA L4. `03_05` registra 4,57 iteraciones/s en A100 después de restaurar la época 2; no se atribuye todavía un tiempo total porque la campaña sigue abierta y tuvo más de una sesión.
+Los tiempos neuronales registrados fueron 271,53 s para la invocación reanudada de `03_03`, 2.515,88 s (41 min 56 s) para `03_03b` y 1.294,07 s (21 min 34 s) para `03_04`, todos sobre NVIDIA L4. La invocación final de `03_05` en A100 registró 1.541,95 s (25 min 42 s), incluidos 1.453,40 s de ajuste; el tiempo acumulado de la campaña no está disponible porque abarcó más de una sesión.
 
 `03_08` no tiene una auditoría ejecutada sobre el snapshot vigente: la única salida guardada verifica el SHA anterior `24d3d8...ca783`. Debe repetirse y registrar tiempo de pared.
 
@@ -649,7 +669,7 @@ Las optimizaciones locales aprobadas quedaron así:
 
 ### 17.3. Hardware remoto de referencia
 
-`03_02`–`03_04` exigen una NVIDIA L4. NVIDIA especifica 24 GB de memoria, 300 GB/s de ancho de banda y soporte de FP16/BF16 mediante Tensor Cores [R21]. El *preflight* comprueba el nombre efectivo y rechaza otro runtime cuando `COLAB_REQUIRE_L4=True`. Los cuadernos Qwen (`03_05`–`03_06b`) desactivan esa exigencia específica y recomiendan A100 de 40 GB; `03_05` registró efectivamente una `NVIDIA A100-SXM4-40GB`, BF16 y 42.405.855.232 bytes de memoria reportada. La A100 acelera una corrida, pero no reparte automáticamente un mismo modelo entre varias GPU: esta ejecución usa una sola GPU con lotes, acumulación y *workers* ajustados.
+`03_02`–`03_04` exigen una NVIDIA L4. NVIDIA especifica 24 GB de memoria, 300 GB/s de ancho de banda y soporte de FP16/BF16 mediante Tensor Cores [R21]. El *preflight* comprueba el nombre efectivo y rechaza otro runtime cuando `COLAB_REQUIRE_L4=True`. Los cuadernos Qwen (`03_05`–`03_06b`) desactivan esa exigencia específica y recomiendan A100 de 40 GB; `03_05` entrenó efectivamente en una `NVIDIA A100-SXM4-40GB`, BF16 y 42.405.855.232 bytes de memoria reportada. `03_06` observó el mismo modelo de A100, seleccionó BF16 e inició la función de entrenamiento; el corte todavía no contiene una etapa o checkpoint completo. La A100 acelera una corrida, pero no reparte automáticamente un mismo modelo entre varias GPU: cada sesión observada expuso una sola GPU con lotes, acumulación y *workers* definidos por el cuaderno.
 
 Google advierte que los tipos de GPU, límites y disponibilidad de Colab personal varían, no están garantizados y que una sesión suele tener un máximo de 12 horas; el consumo efectivo depende del saldo de unidades de cómputo [R20]. Por ello, el hardware de Colab personal debe volver a registrarse al inicio de cada corrida. Como referencia reproducible de costo —no como factura de Colab personal— se usa la configuración oficial de Colab Enterprise en regiones L4: `g2-standard-4`, una L4 y 100 GB `pd-balanced` [R23]. El tipo `g2-standard-4` aporta cuatro vCPU, 16 GB de RAM y una L4 de 24 GB [R25].
 
@@ -673,8 +693,8 @@ La tabla separa tiempos observados y estimaciones previas. Los tiempos observado
 | `03_03` cascada | Colab NVIDIA L4, BF16/FP16 | compuerta + rama de daño | doble inferencia y diagnóstico de propagación | sellado | completo; 4 min 32 s en la invocación reanudada | estimación previa 1–2,5 h | ~USD 0,07 equivalentes L4 |
 | `03_03b` cascada v2 | Colab NVIDIA L4, BF16/FP16 | compuerta + rama de cinco salidas | doble inferencia y diagnóstico de propagación | sellado | completo; 41 min 56 s | sin estimación separada original | ~USD 0,60 equivalentes L4 |
 | `03_04` multitarea | Colab NVIDIA L4, BF16/FP16 | 5+14+3 salidas enmascaradas | early stopping y calibración | sellado | completo; 21 min 34 s | estimación previa 0,75–1,67 h | ~USD 0,31 equivalentes L4 |
-| `03_05` Qwen-LoRA | Colab NVIDIA A100 40 GB, adaptación LoRA | 51.205 filas, 22 salidas | 10.600 por época y calibración | sellado | en curso; época 2 preservada; 4,57 iteraciones/s en la sesión reanudada | retirar estimación L4; medir al terminar | no disponible sin saldo de unidades Colab |
-| `03_06` Qwen estructurado | Colab NVIDIA A100 40 GB | ajuste completo con penalización estructural | 10.600 y calibración | sellado | pendiente | medir con el perfil A100 actual | no disponible |
+| `03_05` Qwen-LoRA | Colab NVIDIA A100 40 GB, adaptación LoRA | 51.205 filas, 22 salidas | 10.600 por época y calibración | sellado | completo; época 2 restaurada y época 3 persistida; invocación final 25 min 42 s | tiempo acumulado entre sesiones no disponible | no disponible sin saldo de unidades Colab |
+| `03_06` Qwen estructurado | Colab NVIDIA A100 40 GB, BF16 observado | ajuste completo con penalización estructural | 10.600 y calibración | sellado | en curso (`RUN_TRAINING=True`); modelo inicializado, sin checkpoint completo visible al corte | medir al terminar | no disponible |
 | `03_06b` piloto | Colab NVIDIA A100 40 GB, LoRA causal | 5.000 filas | 1.000; no elegible para selección | no se abre | pendiente | medir antes de extrapolar | no disponible |
 | `03_06b` completo | Colab NVIDIA A100 40 GB, LoRA causal y checkpoint reanudable | 51.205 filas | 10.600 mediante generación JSON | sellado | pendiente | estimar solo desde el piloto A100 | no disponible |
 | `03_07` comparación | CPU local, cuatro hilos | no entrena | predicciones existentes + bootstrap agrupado | 22.684 filas naturales una vez; vista 4:1 sin reinferencia | pendiente de sincronizar candidatos y completar familias | 1–4 h para comparación | USD 0 externo |
@@ -705,8 +725,6 @@ No se asigna todavía un tiempo o costo al test porque depende del ganador conge
 [R7] Bi, W. y Kwok, J. T. (2014). “Multilabel Classification with Label Correlations and Missing Labels”. *Proceedings of the AAAI Conference on Artificial Intelligence*, 28(1). https://doi.org/10.1609/aaai.v28i1.8996.
 
 [R8] Durand, T., Mehrasa, N. y Mori, G. (2019). “Learning a Deep ConvNet for Multi-Label Classification With Partial Labels”. *CVPR 2019*. https://openaccess.thecvf.com/content_CVPR_2019/html/Durand_Learning_a_Deep_ConvNet_for_Multi-Label_Classification_With_Partial_Labels_CVPR_2019_paper.html.
-
-[R9] Tsoumakas, G., Spyromitros-Xioufis, E., Vilcek, J. y Vlahavas, I. (2011). “MULAN: A Java Library for Multi-Label Learning”. *Journal of Machine Learning Research*, 12, 2411–2414. https://www.jmlr.org/papers/v12/tsoumakas11a.html.
 
 [R10] Sechidis, K., Tsoumakas, G. y Vlahavas, I. (2011). “On the Stratification of Multi-label Data”. *ECML PKDD 2011*, 145–158. https://doi.org/10.1007/978-3-642-23808-6_10.
 

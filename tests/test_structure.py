@@ -67,6 +67,7 @@ def test_active_notebooks_are_ordered_and_clean():
         "01_015_ampliacion_dirigida_minorias.ipynb",
         "03_03b_transformer_cascada_segura.ipynb",
         "03_05_qwen_lora.ipynb",
+        "03_06_qwen_estructurado.ipynb",
     }
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
@@ -162,8 +163,8 @@ def test_training_architecture_report_cites_prior_applied_schemes():
     cited = set(map(int, BODY_CITATION.findall(body)))
     entries = list(map(int, REFERENCE_ENTRY.findall(references)))
 
-    assert cited == set(range(1, 29))
-    assert entries == list(range(1, 29))
+    assert cited == set(range(1, 37))
+    assert entries == list(range(1, 37))
     assert report.count("```mermaid") >= 5
     assert all(
         notebook_id in report
