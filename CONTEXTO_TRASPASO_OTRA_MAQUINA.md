@@ -1,6 +1,6 @@
 # Contexto de traspaso a otra instancia o máquina
 
-Actualizado: **2026-08-08**. Este documento no contiene credenciales ni secretos.
+Actualizado: **2026-08-12**. Este documento no contiene credenciales ni secretos.
 
 ## Punto de partida
 
@@ -214,15 +214,23 @@ usa Colab:
 1. ejecute `02_00_preparacion_bundle_colab.ipynb`;
 2. publique el bundle desde GitHub o mediante `local_upload`;
 3. configure `DEEPSEEK_API_KEY` como secreto de Colab;
-4. publique checkpoints coherentes con `PUBLISH_TO_DRIVE=True`.
+4. active deliberadamente el interruptor de entrenamiento. Cada época terminada
+   se publica automáticamente como checkpoint verificable y una nueva corrida
+   reanuda el último checkpoint válido; los resultados finales también se
+   publican automáticamente. `PUBLISH_TO_DRIVE=True` queda solo como reintento
+   manual.
 
 Bundle actualmente verificado:
 
-- `bundle_id`: `b03ac0357ec959a4ba38869cfc1d0b311366105e7fbc05edb605e7fe8d23fd9b`;
-- core SHA-256: `44b088fe2eacbe6b4ab473f0c535bbde01517791b13a2287430a5717f809f6f1`;
-- manifiesto SHA-256: `70eda720a69429abad7c4e9ae82a0059ffc9d7b36e0e50dad535f3493e199156`.
+- `bundle_id`: `57820ed6c4b2453e53cefb1fde9b8c4675b22bdf21db0159eaec08c315506691`;
+- core SHA-256: `cded349ce51da1421aab4a13f40de61bc471674151bf6a0b6178198b397ad1f2`;
+- manifiesto SHA-256: `6ed332fbadb5b05c81f27390d0892886e80a9747c02d39de01f85f125ee73d96`.
 
-Los cuadernos `03_02`–`03_06` sí requieren NVIDIA L4.
+Los cuadernos `03_02`–`03_06b` requieren CUDA en Colab (L4 o un perfil
+BF16 de 40 GB para los Qwen). `03_02` publica MiniLM y E5 inmediatamente al
+terminar cada uno; `03_06b` publica piloto y corrida completa por separado. La
+publicación final usa dos ranuras redundantes y nunca reemplaza la última copia
+verificada antes de comprobar tamaño y SHA-256 de la nueva.
 
 ## Documentos activos relevantes
 

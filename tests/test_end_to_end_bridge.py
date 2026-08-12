@@ -47,6 +47,29 @@ def test_flat_transformers_propagate_persistent_checkpoint_root(
     )
 
 
+def test_flat_transformers_reports_each_completed_model(tmp_path, monkeypatch):
+    completed = []
+
+    def fake_train_neural_experiment(*args, experiment, **kwargs):
+        return {
+            "status": "trained",
+            "candidate": {"experiment": experiment},
+        }
+
+    monkeypatch.setattr(
+        experiments, "train_neural_experiment", fake_train_neural_experiment
+    )
+
+    experiments.train_flat_transformers(
+        tmp_path / "dataset.jsonl",
+        tmp_path / "outputs",
+        completion_callback=completed.append,
+    )
+
+    assert [event["experiment"] for event in completed] == ["flat_minilm", "flat_e5"]
+    assert [(event["index"], event["total"]) for event in completed] == [(1, 2), (2, 2)]
+
+
 def test_human_events_close_annotation_to_versioned_snapshot_and_noop(tmp_path):
     chunks = tmp_path / "chunks.jsonl"
     write_jsonl_atomic(

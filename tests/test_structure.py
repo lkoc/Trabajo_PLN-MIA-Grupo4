@@ -295,12 +295,28 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
                     assert "drive_run_dir/'trainer_checkpoints'" in source
             else:
                 assert metadata["expected_gpu"] == "NVIDIA L4"
-            if metadata["notebook_id"] == "03_02":
+            if metadata["notebook_id"] in {
+                "03_02",
+                "03_03",
+                "03_03b",
+                "03_04",
+                "03_05",
+                "03_06",
+                "03_06b",
+            }:
                 assert "PERSISTENT_CHECKPOINT_ROOT" in source
                 assert (
                     "persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT" in source
                 )
                 assert "drive_run_dir/'trainer_checkpoints'" in source
+                if metadata["notebook_id"] == "03_06b":
+                    assert "Publicación final del piloto" in source
+                    assert "Publicación final del SFT completo" in source
+                else:
+                    assert "Publicación final automática" in source
+                if metadata["notebook_id"] == "03_02":
+                    assert "completion_callback=publish_completed_flat_model" in source
+                    assert "event['index'] >= event['total']" not in source
     assert observed == expected
 
 

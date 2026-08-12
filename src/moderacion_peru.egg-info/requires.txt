@@ -12,8 +12,10 @@ yt-dlp>=2025.1
 youtube-transcript-api<2,>=1.2
 
 [dev]
+black<27,>=26.5
 nbformat<6,>=5.10
 pytest<9,>=8.3
+ruff<0.17,>=0.16
 
 [entrenamiento]
 accelerate<2,>=1.2

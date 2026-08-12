@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import json
 import importlib.util
+import json
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
@@ -113,6 +112,123 @@ def test_ensure_prepared_bundle_rebuilds_only_when_local_inputs_change(
     assert third["status"] == "rebuilt"
     assert first["bundle_id"] != third["bundle_id"]
     assert "project_core.zip" in third["rebuild_reasons"][0]
+
+
+def test_core_rebuild_reuses_only_verified_archive_when_source_is_missing(
+    tmp_path, monkeypatch
+):
+    root = tmp_path / "project"
+    (root / "config").mkdir(parents=True)
+    (root / "requirements").mkdir()
+    (root / "src" / "moderacion_peru").mkdir(parents=True)
+    (root / "pyproject.toml").write_text("[project]\nname='fixture'\n", encoding="utf-8")
+    source_code = root / "src" / "moderacion_peru" / "fixture.py"
+    source_code.write_text("VALUE = 1\n", encoding="utf-8")
+    config = {
+        "schema_version": "1.0.0",
+        "taxonomy_contract": "fixture",
+        "taxonomy_version": "1.0.0",
+        "core_archive": "project_core.zip",
+        "manifest": "bundle_manifest.json",
+        "excluded_from_drive": [],
+        "inputs": {
+            "historical": {
+                "source": "datos/historical.jsonl",
+                "archive": "historical.jsonl.gz",
+                "required_by": ["fixture"],
+            }
+        },
+    }
+    (root / "config" / "colab_l4.json").write_text(
+        json.dumps(config), encoding="utf-8"
+    )
+    monkeypatch.setattr(bundle_tools, "ROOT", root)
+    destination = root / "resultados" / "colab_bundle"
+    destination.mkdir(parents=True)
+    archive = destination / "historical.jsonl.gz"
+    archive.write_bytes(b"verified historical archive")
+    manifest = {
+        "schema_version": "1.0.0",
+        "generated_at": "old",
+        "taxonomy_contract": "fixture",
+        "taxonomy_version": "1.0.0",
+        "core": bundle_tools.build_core_archive(destination / "project_core.zip"),
+        "inputs": {
+            "historical": {
+                "source": "datos/historical.jsonl",
+                "archive": archive.name,
+                "required_by": ["fixture"],
+                "source_sha256": "source-hash-preserved",
+                "source_bytes": 100,
+                "archive_sha256": bundle_tools.sha256_file(archive),
+                "archive_bytes": archive.stat().st_size,
+            }
+        },
+        "excluded_from_drive": [],
+    }
+    manifest["bundle_id"] = bundle_tools.bundle_id_for_manifest(manifest)
+    (destination / "bundle_manifest.json").write_text(
+        json.dumps(manifest), encoding="utf-8"
+    )
+
+    source_code.write_text("VALUE = 2\n", encoding="utf-8")
+    rebuilt = bundle_tools.ensure_prepared_bundle(destination)
+
+    assert rebuilt["status"] == "rebuilt"
+    assert rebuilt["inputs"]["historical"]["reused_verified_archive"] is True
+    assert archive.read_bytes() == b"verified historical archive"
+
+    archive.write_bytes(b"corrupted")
+    source_code.write_text("VALUE = 3\n", encoding="utf-8")
+    with __import__("pytest").raises(FileNotFoundError, match="previo verificable"):
+        bundle_tools.ensure_prepared_bundle(destination)
+
+
+def test_notebook_core_refresh_preserves_verified_experiment_inputs(
+    tmp_path, monkeypatch
+):
+    root = tmp_path / "project"
+    (root / "config").mkdir(parents=True)
+    (root / "requirements").mkdir()
+    (root / "src" / "moderacion_peru").mkdir(parents=True)
+    (root / "datos").mkdir()
+    (root / "pyproject.toml").write_text("[project]\nname='fixture'\n", encoding="utf-8")
+    code = root / "src" / "moderacion_peru" / "fixture.py"
+    code.write_text("VALUE = 1\n", encoding="utf-8")
+    data = root / "datos" / "dataset.jsonl"
+    data.write_text('{"version":1}\n', encoding="utf-8")
+    config = {
+        "schema_version": "1.0.0",
+        "taxonomy_contract": "fixture",
+        "taxonomy_version": "1.0.0",
+        "core_archive": "project_core.zip",
+        "manifest": "bundle_manifest.json",
+        "excluded_from_drive": [],
+        "inputs": {
+            "dataset": {
+                "source": "datos/dataset.jsonl",
+                "archive": "dataset.jsonl.gz",
+                "required_by": ["fixture"],
+            }
+        },
+    }
+    (root / "config" / "colab_l4.json").write_text(
+        json.dumps(config), encoding="utf-8"
+    )
+    monkeypatch.setattr(bundle_tools, "ROOT", root)
+    destination = root / "resultados" / "colab_bundle"
+    first = bundle_tools.ensure_prepared_bundle(destination)
+    original_input = first["inputs"]["dataset"]
+    data.write_text('{"version":2}\n', encoding="utf-8")
+    code.write_text("VALUE = 2\n", encoding="utf-8")
+
+    refreshed = bundle_tools.ensure_prepared_bundle(
+        destination, preserve_verified_inputs=True
+    )
+
+    assert refreshed["core"]["sha256"] != first["core"]["sha256"]
+    assert refreshed["inputs"]["dataset"]["source_sha256"] == original_input["source_sha256"]
+    assert refreshed["inputs"]["dataset"]["archive_sha256"] == original_input["archive_sha256"]
 
 
 def test_publish_drive_release_is_versioned_and_idempotent(tmp_path, monkeypatch):

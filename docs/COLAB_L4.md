@@ -97,7 +97,26 @@ Los cuadernos `02_01` y `03_02`–`03_06b` pueden ejecutarse en Colab. `02_01` u
 
 Los cuadernos `02_02`, `03_05`, `03_06` y `03_06b` están optimizados para una A100 de 40 GB. La detección se basa en CUDA, soporte BF16 y memoria observable (al menos 39 GB), no únicamente en el nombre comercial. En `03_05` y `03_06` el lote efectivo permanece en ocho (`8×1` en A100 frente a `2×4` en L4); `03_06b` usa `2×4` en A100 frente a `1×8` en L4 por sus secuencias de 4096 tokens.
 
-`03_05`, `03_06` y `03_06b` entrenan sobre el SSD efímero, pero reflejan automáticamente cada checkpoint que termina de escribir `Trainer` en `COLAB_CONTEXT.drive_run_dir/trainer_checkpoints/<firma-del-run>/trainer/`. Cada versión se conserva como `checkpoint-<step>.tar`, con época terminada, manifiesto y SHA-256; `latest.json` se actualiza al final de la copia. El TAR contiene también optimizador, scheduler, RNG y `trainer_state.json`, por lo que un checkpoint guardado al terminar la época 2 reanuda la época 3 sin reiniciar el ajuste. Al activar esta función también se migra inmediatamente el checkpoint local más nuevo que todavía no exista en Drive. Tras perder o reiniciar el kernel, la siguiente ejecución verifica y restaura al SSD el checkpoint persistente más nuevo antes de reanudar `Trainer`. Si el último archivo estuviera incompleto, intenta el checkpoint anterior verificado. La publicación final mediante `PUBLISH_TO_DRIVE` sigue siendo necesaria para conservar el candidato completo, sus métricas y artefactos de inferencia.
+Todos los entrenamientos `03_02`–`03_06b` se ejecutan sobre el SSD efímero, pero
+reflejan automáticamente cada checkpoint que termina de escribir `Trainer` en
+`COLAB_CONTEXT.drive_run_dir/trainer_checkpoints/<firma-del-run>/<trainer>/`.
+Cada versión se conserva con un nombre inmutable
+`checkpoint-<step>-<sha16>.tar`, un manifiesto independiente y SHA-256;
+`latest.json` solo cambia después de verificar la copia completa en Drive. El TAR
+contiene pesos o adaptadores, optimizador, scheduler, RNG y
+`trainer_state.json`, por lo que un checkpoint guardado al terminar la época 2
+reanuda la época 3 con `resume_from_checkpoint`, sin reiniciar el ajuste. Las
+cascadas mantienen separados sus trainers y `03_06b` separa piloto y corrida
+completa mediante la firma del run.
+
+Al activar esta función también se migra inmediatamente el checkpoint local más
+nuevo que todavía no exista en Drive. Tras perder o reiniciar el kernel, la
+siguiente ejecución verifica y restaura al SSD el checkpoint persistente más
+nuevo. Si el último archivo estuviera incompleto, intenta el anterior verificado.
+La publicación de resultados es automática al completar el entrenamiento;
+`03_02` publica MiniLM antes de comenzar E5, vuelve a publicar al terminar E5 y
+publica de nuevo si se ejecuta la evaluación por canal. `03_06b` publica por
+separado el piloto y la corrida completa.
 
 Si el bundle cambió después de que el kernel importó `moderacion_peru`, el
 cuaderno exige reiniciar el kernel para evitar mezclar versiones. Los modelos se
@@ -118,20 +137,39 @@ textos; `RUN_CALIBRATION`, `RUN_PRIMARY` y `RUN_DIRECTED_REVIEW` sí transmiten
 los chunks al proveedor. La barra registra velocidad, caché, costo por tokens y
 saldo periódico; los topes se configuran antes de activar cada fase.
 
-Los checkpoints se generan en `/content` y se publican como un TAR.GZ verificable bajo:
+Los checkpoints de entrenamiento y los resultados finales ocupan espacios
+distintos en Drive:
 
 ```text
 MyDrive/ModeracionPeru_Colab/runs/<notebook_id>/<run_id>/
-├── run_outputs.tar.gz
-└── run_manifest.json
+├── trainer_checkpoints/<firma-del-run>/<trainer>/
+│   ├── checkpoint-<step>-<sha16>.tar
+│   ├── checkpoint-<step>-<sha16>.json
+│   └── latest.json
+├── publications/
+│   ├── run_outputs-a.tar
+│   ├── run_outputs-b.tar
+│   ├── run_manifest-a.json
+│   └── run_manifest-b.json
+└── run_manifest.json                 # puntero activo
 ```
+
+La publicación final usa TAR sin compresión: los pesos ya comprimidos apenas se
+reducían con gzip y `03_02` podía quedar interrumpido durante horas al recomprimir
+varios GB. No duplica los directorios `trainer`, porque sus checkpoints completos
+ya están en `trainer_checkpoints`. Escribe siempre en la ranura inactiva, relee y
+verifica tamaño y SHA-256 desde Drive y solo entonces cambia
+`run_manifest.json`. Si la copia activa estuviera truncada, la recuperación prueba
+la ranura anterior. Las publicaciones históricas `run_outputs.tar.gz` siguen
+siendo compatibles y se conservan como respaldo durante la migración.
 
 En `02_01`, `AUTO_PUBLISH_CHECKPOINTS=True` publica automáticamente después de
 la recuperación histórica, cada diez ventanas de procesamiento, al cerrar una
 fase y ante `Ctrl+C`. Cada grupo de cinco respuestas se fuerza antes a disco con
 `fsync`, por lo que la siguiente ejecución restaura el TAR.GZ y omite todos los
-`chunk_id` ya válidos. Los demás cuadernos conservan la publicación manual con
-`PUBLISH_TO_DRIVE=True`.
+`chunk_id` ya válidos. En los cuadernos `03_x`, la celda
+`PUBLISH_TO_DRIVE=True` queda como reintento manual opcional; no es necesaria tras
+una terminación normal.
 
 `03_01` y `03_07`–`03_08` siguen siendo adecuados para CPU local. Activar Colab
 no inventa una corrida: los interruptores de entrenamiento permanecen en

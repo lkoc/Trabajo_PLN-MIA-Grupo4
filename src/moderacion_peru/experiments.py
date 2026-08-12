@@ -1968,6 +1968,7 @@ def train_flat_transformers(
     split_scheme: str = "video",
     sampling_seed: int = 20260805,
     persistent_checkpoint_root: str | Path | None = None,
+    completion_callback: Callable[[dict[str, Any]], None] | None = None,
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     experiments = ("flat_minilm", "flat_e5")
@@ -1980,8 +1981,7 @@ def train_flat_transformers(
     )
     results = []
     for experiment in experiments:
-        results.append(
-            train_neural_experiment(
+        result = train_neural_experiment(
                 dataset_path,
                 output_root,
                 experiment=experiment,
@@ -1992,7 +1992,16 @@ def train_flat_transformers(
                 sampling_seed=sampling_seed,
                 persistent_checkpoint_root=persistent_checkpoint_root,
             )
-        )
+        results.append(result)
+        if completion_callback is not None:
+            completion_callback(
+                {
+                    "experiment": experiment,
+                    "index": len(results),
+                    "total": len(experiments),
+                    "result": result,
+                }
+            )
         _notify_progress(
             progress_callback,
             status="progress",

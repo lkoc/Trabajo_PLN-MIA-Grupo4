@@ -236,8 +236,9 @@ def test_colab_stages_declared_input_and_restores_published_run(tmp_path, monkey
         '{"epoch":1}\n', encoding="utf-8"
     )
     published = colab.publish_colab_outputs(first)
+    archive_path = first.drive_run_dir / published["archive"]["name"]
     assert (
-        sha256_file(first.drive_run_dir / "run_outputs.tar.gz")
+        sha256_file(archive_path)
         == published["archive"]["sha256"]
     )
 
@@ -289,7 +290,7 @@ def test_colab_run_manifest_waits_for_drive_readback(tmp_path, monkeypatch):
 
     def corrupt_drive_readback(path):
         path = Path(path)
-        if path == context.drive_run_dir / "run_outputs.tar.gz":
+        if path.parent == context.drive_run_dir / "publications" and path.suffix == ".tar":
             return "0" * 64
         return real_sha256_file(path)
 
@@ -298,8 +299,199 @@ def test_colab_run_manifest_waits_for_drive_readback(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="no conserva SHA-256"):
         colab.publish_colab_outputs(context)
 
-    assert (context.drive_run_dir / "run_outputs.tar.gz").is_file()
+    assert len(list((context.drive_run_dir / "publications").glob("run_outputs-*.tar"))) == 1
     assert not (context.drive_run_dir / "run_manifest.json").exists()
+
+
+def test_colab_publication_uses_redundant_slots_and_excludes_trainer_state(tmp_path):
+    scratch = tmp_path / "runtime" / "runs" / "03_05" / "fixture"
+    (scratch / "runs" / "candidate" / "trainer" / "checkpoint-10").mkdir(
+        parents=True
+    )
+    (scratch / "runs" / "candidate" / "candidate.json").write_text(
+        '{"status":"complete"}\n', encoding="utf-8"
+    )
+    (scratch / "runs" / "candidate" / "trainer" / "checkpoint-10" / "optimizer.pt").write_bytes(
+        b"large transient state"
+    )
+    context = colab.ColabContext(
+        notebook_id="03_05",
+        run_id="fixture",
+        drive_root=tmp_path / "drive",
+        runtime_root=tmp_path / "runtime",
+        project_root=ROOT,
+        input_paths={},
+        scratch_output_dir=scratch,
+        drive_run_dir=tmp_path / "drive" / "runs" / "03_05" / "fixture",
+        hardware={"backend": "cuda", "device_name": "NVIDIA A100"},
+    )
+
+    first = colab.publish_colab_outputs(context)
+    (scratch / "result.json").write_text('{"version":2}\n', encoding="utf-8")
+    second = colab.publish_colab_outputs(context)
+
+    assert first["publication_slot"] == "a"
+    assert second["publication_slot"] == "b"
+    assert (context.drive_run_dir / first["archive"]["name"]).is_file()
+    assert (context.drive_run_dir / second["archive"]["name"]).is_file()
+    active = json.loads(
+        (context.drive_run_dir / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    assert active["archive"]["sha256"] == second["archive"]["sha256"]
+    restored = tmp_path / "restored"
+    restored.mkdir()
+    assert colab._restore_run(context.drive_run_dir, restored)
+    assert (restored / "runs" / "candidate" / "candidate.json").is_file()
+    assert not (restored / "runs" / "candidate" / "trainer").exists()
+
+
+def test_restore_falls_back_to_previous_publication_slot(tmp_path):
+    scratch = tmp_path / "runtime" / "runs" / "03_06" / "fixture"
+    scratch.mkdir(parents=True)
+    (scratch / "candidate.json").write_text('{"version":1}\n', encoding="utf-8")
+    context = colab.ColabContext(
+        notebook_id="03_06",
+        run_id="fixture",
+        drive_root=tmp_path / "drive",
+        runtime_root=tmp_path / "runtime",
+        project_root=ROOT,
+        input_paths={},
+        scratch_output_dir=scratch,
+        drive_run_dir=tmp_path / "drive" / "runs" / "03_06" / "fixture",
+        hardware={"backend": "cuda"},
+    )
+    first = colab.publish_colab_outputs(context)
+    (scratch / "candidate.json").write_text('{"version":2}\n', encoding="utf-8")
+    second = colab.publish_colab_outputs(context)
+    (context.drive_run_dir / second["archive"]["name"]).write_bytes(b"truncated")
+
+    restored = tmp_path / "restored"
+    restored.mkdir()
+    assert colab._restore_run(context.drive_run_dir, restored)
+    assert json.loads((restored / "candidate.json").read_text(encoding="utf-8")) == {
+        "version": 1
+    }
+    record = json.loads(
+        (restored / "colab_run_restore.json").read_text(encoding="utf-8")
+    )
+    assert record["archive"].endswith(first["archive"]["name"].replace("/", os.sep))
+
+
+def test_publish_preserves_verified_slot_when_active_pointer_is_corrupt(tmp_path):
+    scratch = tmp_path / "runtime" / "runs" / "03_06" / "fixture"
+    scratch.mkdir(parents=True)
+    (scratch / "candidate.json").write_text('{"version":1}\n', encoding="utf-8")
+    context = colab.ColabContext(
+        notebook_id="03_06",
+        run_id="fixture",
+        drive_root=tmp_path / "drive",
+        runtime_root=tmp_path / "runtime",
+        project_root=ROOT,
+        input_paths={},
+        scratch_output_dir=scratch,
+        drive_run_dir=tmp_path / "drive" / "runs" / "03_06" / "fixture",
+        hardware={"backend": "cuda"},
+    )
+    first = colab.publish_colab_outputs(context)
+    first_archive = context.drive_run_dir / first["archive"]["name"]
+    first_sha256 = sha256_file(first_archive)
+    (context.drive_run_dir / "run_manifest.json").write_text(
+        "{puntero truncado", encoding="utf-8"
+    )
+    (scratch / "candidate.json").write_text('{"version":2}\n', encoding="utf-8")
+
+    second = colab.publish_colab_outputs(context)
+
+    assert second["publication_slot"] == "b"
+    assert sha256_file(first_archive) == first_sha256
+
+
+def test_restore_and_publish_prefer_new_verified_slot_over_stale_pointer(tmp_path):
+    scratch = tmp_path / "runtime" / "runs" / "03_06b" / "fixture"
+    scratch.mkdir(parents=True)
+    (scratch / "candidate.json").write_text('{"version":1}\n', encoding="utf-8")
+    context = colab.ColabContext(
+        notebook_id="03_06b",
+        run_id="fixture",
+        drive_root=tmp_path / "drive",
+        runtime_root=tmp_path / "runtime",
+        project_root=ROOT,
+        input_paths={},
+        scratch_output_dir=scratch,
+        drive_run_dir=tmp_path / "drive" / "runs" / "03_06b" / "fixture",
+        hardware={"backend": "cuda"},
+    )
+    colab.publish_colab_outputs(context)
+    first_pointer = json.loads(
+        (context.drive_run_dir / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    (scratch / "candidate.json").write_text('{"version":2}\n', encoding="utf-8")
+    second = colab.publish_colab_outputs(context)
+    second_archive = context.drive_run_dir / second["archive"]["name"]
+    second_sha256 = sha256_file(second_archive)
+    # Simula una caída entre la escritura del manifiesto del slot nuevo y el
+    # cambio atómico del puntero activo.
+    (context.drive_run_dir / "run_manifest.json").write_text(
+        json.dumps(first_pointer), encoding="utf-8"
+    )
+
+    restored = tmp_path / "restored"
+    restored.mkdir()
+    assert colab._restore_run(context.drive_run_dir, restored)
+    assert json.loads((restored / "candidate.json").read_text(encoding="utf-8")) == {
+        "version": 2
+    }
+    (scratch / "candidate.json").write_text('{"version":3}\n', encoding="utf-8")
+    third = colab.publish_colab_outputs(context)
+
+    assert third["publication_slot"] == "a"
+    assert sha256_file(second_archive) == second_sha256
+
+
+def test_first_slot_publication_preserves_verified_legacy_manifest(tmp_path):
+    scratch = tmp_path / "runtime" / "runs" / "03_02" / "fixture"
+    scratch.mkdir(parents=True)
+    (scratch / "candidate.json").write_text('{"version":2}\n', encoding="utf-8")
+    context = colab.ColabContext(
+        notebook_id="03_02",
+        run_id="fixture",
+        drive_root=tmp_path / "drive",
+        runtime_root=tmp_path / "runtime",
+        project_root=ROOT,
+        input_paths={},
+        scratch_output_dir=scratch,
+        drive_run_dir=tmp_path / "drive" / "runs" / "03_02" / "fixture",
+        hardware={"backend": "cuda"},
+    )
+    context.drive_run_dir.mkdir(parents=True)
+    legacy_archive = context.drive_run_dir / "run_outputs.tar.gz"
+    with __import__("tarfile").open(legacy_archive, "w:gz") as handle:
+        legacy_file = tmp_path / "legacy.json"
+        legacy_file.write_text('{"version":1}\n', encoding="utf-8")
+        handle.add(legacy_file, arcname="candidate.json")
+    legacy = {
+        "schema_version": "1.1.0",
+        "archive": {
+            "name": legacy_archive.name,
+            "sha256": sha256_file(legacy_archive),
+            "bytes": legacy_archive.stat().st_size,
+        },
+    }
+    (context.drive_run_dir / "run_manifest.json").write_text(
+        json.dumps(legacy), encoding="utf-8"
+    )
+
+    published = colab.publish_colab_outputs(context)
+
+    preserved = json.loads(
+        (
+            context.drive_run_dir
+            / "publications"
+            / "run_manifest-legacy.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert preserved["archive"]["sha256"] == legacy["archive"]["sha256"]
+    assert published["publication_slot"] == "a"
 
 
 def test_local_bundle_input_is_restored_verified_and_never_silently_replaced(tmp_path):

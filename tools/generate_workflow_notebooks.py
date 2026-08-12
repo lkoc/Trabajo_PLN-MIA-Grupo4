@@ -592,7 +592,11 @@ def colab_bundle_identity() -> dict[str, str]:
     from prepare_colab_bundle import ensure_prepared_bundle
 
     bundle_dir = ROOT / "resultados" / "colab_bundle"
-    manifest = ensure_prepared_bundle(bundle_dir)
+    # Regenerar un cuaderno para corregir el core no debe cambiar silenciosamente
+    # el snapshot experimental. Las entradas ya empaquetadas se conservan solo
+    # después de verificar sus SHA-256; la preparación explícita del bundle sigue
+    # siendo la operación autorizada para incorporar datos nuevos.
+    manifest = ensure_prepared_bundle(bundle_dir, preserve_verified_inputs=True)
     _COLAB_BUNDLE_IDENTITY = {
         "bundle_id": str(manifest["bundle_id"]),
         "core_sha256": str(manifest["core"]["sha256"]),
@@ -1897,6 +1901,89 @@ def preserve_matching_execution_outputs(
         cell["outputs"] = previous_cell.get("outputs", [])
 
 
+PERSISTENT_COLAB_TRAINING_ACTIVITY = {
+    "03_02": "RUN_TRAINING or RUN_CHANNEL_ROBUSTNESS",
+    "03_03": "RUN_TRAINING",
+    "03_03b": "RUN_TRAINING",
+    "03_04": "RUN_TRAINING",
+    "03_05": "RUN_TRAINING",
+    "03_06": "RUN_TRAINING",
+    "03_06b": "RUN_PILOT or RUN_FULL_TRAINING",
+}
+
+
+def persistent_colab_training_source(source: str, notebook_id: str | None) -> str:
+    """Conecta checkpoints por época y publicación final en todos los 03_x GPU."""
+
+    activity = PERSISTENT_COLAB_TRAINING_ACTIVITY.get(str(notebook_id))
+    if activity is None:
+        return source
+    activity_names = {
+        token for token in activity.replace("(", " ").replace(")", " ").split()
+        if token.startswith("RUN_")
+    }
+    if not any(name in source for name in activity_names):
+        return source
+    if "PERSISTENT_CHECKPOINT_ROOT=" not in source:
+        device_line = "DEVICE='cuda' if COLAB_CONTEXT else 'auto'\n"
+        if device_line not in source:
+            raise ValueError(f"{notebook_id} no declara DEVICE de Colab")
+        source = source.replace(
+            device_line,
+            device_line
+            + "PERSISTENT_CHECKPOINT_ROOT=COLAB_CONTEXT.drive_run_dir/'trainer_checkpoints' if COLAB_CONTEXT else None\n",
+            1,
+        )
+        source = source.replace(
+            ",progress_unit=",
+            ",persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit=",
+        )
+    if notebook_id == "03_02" and "completion_callback=publish_completed_flat_model" not in source:
+        source = source.replace(
+            "RUN_CHANNEL_ROBUSTNESS=False\n",
+            "RUN_CHANNEL_ROBUSTNESS=False\n"
+            "def publish_completed_flat_model(event):\n"
+            "    if COLAB_CONTEXT is None: return\n"
+            "    from moderacion_peru.colab import publish_colab_outputs\n"
+            "    publication=publish_colab_outputs(COLAB_CONTEXT)\n"
+            "    show_result(f\"Checkpoint final {event['experiment']} ({event['index']}/{event['total']})\",publication,tone='success')\n",
+            1,
+        )
+        source = source.replace(
+            ",persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='modelo'",
+            ",persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,completion_callback=publish_completed_flat_model,progress_unit='modelo'",
+            1,
+        )
+    if notebook_id == "03_06b" and "Publicación final del piloto" not in source:
+        source = source.replace(
+            "    show_result('Piloto SFT no elegible para 03_07',pilot_result,tone='warning')\n",
+            "    show_result('Piloto SFT no elegible para 03_07',pilot_result,tone='warning')\n"
+            "    if COLAB_CONTEXT is not None:\n"
+            "        from moderacion_peru.colab import publish_colab_outputs\n"
+            "        show_result('Publicación final del piloto',publish_colab_outputs(COLAB_CONTEXT),tone='success')\n",
+            1,
+        )
+        source = source.replace(
+            "    show_result('SFT generativo completo condicionado por prompt v3.2',full_result,tone='success')\n",
+            "    show_result('SFT generativo completo condicionado por prompt v3.2',full_result,tone='success')\n"
+            "    if COLAB_CONTEXT is not None:\n"
+            "        from moderacion_peru.colab import publish_colab_outputs\n"
+            "        show_result('Publicación final del SFT completo',publish_colab_outputs(COLAB_CONTEXT),tone='success')\n",
+            1,
+        )
+    if notebook_id != "03_06b" and "Publicación final automática" not in source:
+        final_activity = "RUN_CHANNEL_ROBUSTNESS" if notebook_id == "03_02" else activity
+        source += (
+            "\nif COLAB_CONTEXT is not None and ("
+            + final_activity
+            + "):\n"
+            "    from moderacion_peru.colab import publish_colab_outputs\n"
+            "    final_publication=publish_colab_outputs(COLAB_CONTEXT)\n"
+            "    show_result('Publicación final automática',final_publication,tone='success')"
+        )
+    return source
+
+
 def create(
     path: str,
     title: str,
@@ -2026,13 +2113,19 @@ def create(
         notebook.cells.append(nbf.v4.new_code_cell(SETUP))
     for heading, source in code_cells:
         notebook.cells.append(nbf.v4.new_markdown_cell(f"## {heading}"))
-        notebook.cells.append(nbf.v4.new_code_cell(source))
+        notebook.cells.append(
+            nbf.v4.new_code_cell(
+                persistent_colab_training_source(source, colab_notebook_id)
+            )
+        )
     if colab_notebook_id:
         notebook.cells.append(
             nbf.v4.new_markdown_cell(
                 "## Publicación o checkpoint en Drive\n\n"
-                "Los archivos se generan en el SSD efímero de `/content`. Active esta celda después de "
-                "un checkpoint coherente o al finalizar; publica un solo TAR.GZ y luego su manifiesto."
+                "Cada época completa se guarda y verifica por separado en `trainer_checkpoints`. "
+                "Al terminar una corrida 03_x se publica automáticamente el candidato final en una "
+                "de dos ranuras redundantes. Esta celda permite repetir manualmente esa publicación; "
+                "no vuelve a incluir los directorios transitorios de `Trainer`."
             )
         )
         notebook.cells.append(
@@ -2042,9 +2135,9 @@ def create(
                 "    from moderacion_peru.colab import publish_colab_outputs\n"
                 "    show_result('Publicación en Drive', publish_colab_outputs(COLAB_CONTEXT), tone='success')\n"
                 "elif COLAB_CONTEXT is not None and globals().get('AUTO_PUBLISH_CHECKPOINTS'):\n"
-                "    show_callout('Checkpoint automático activo', 'La recuperación, los checkpoints periódicos, Ctrl+C y cada cierre de campaña ya publican un TAR.GZ atómico en Drive.', tone='success')\n"
+                "    show_callout('Checkpoint automático activo', 'La recuperación, los checkpoints periódicos, Ctrl+C y cada cierre de campaña ya publican una copia verificable en Drive.', tone='success')\n"
                 "elif COLAB_CONTEXT is not None:\n"
-                "    show_callout('Publicación desactivada', 'Cambie PUBLISH_TO_DRIVE=True tras guardar un checkpoint consistente.', tone='neutral')\n"
+                "    show_callout('Publicación manual desactivada', 'Los entrenamientos 03_x ya publican automáticamente al completar; active esta celda solo para repetir la publicación final.', tone='neutral')\n"
                 "else:\n"
                 "    show_callout('Backend local', 'Los artefactos ya permanecen en el workspace.', tone='success')"
             )

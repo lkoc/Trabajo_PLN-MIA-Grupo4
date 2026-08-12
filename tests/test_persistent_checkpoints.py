@@ -30,6 +30,10 @@ def _checkpoint(root, step: int, payload: str = "pesos", *, epoch: float | None 
     return checkpoint
 
 
+def _archive_path(persistent, manifest):
+    return persistent / manifest["archive"]["name"]
+
+
 def test_checkpoint_is_persisted_atomically_and_restored(tmp_path):
     checkpoint = _checkpoint(
         tmp_path / "source" / "trainer", 120, "modelo-120", epoch=2.0
@@ -40,8 +44,9 @@ def test_checkpoint_is_persisted_atomically_and_restored(tmp_path):
 
     assert manifest["step"] == 120
     assert manifest["epoch"] == 2.0
-    assert (persistent / "checkpoint-120.tar").is_file()
+    assert _archive_path(persistent, manifest).is_file()
     assert (persistent / "checkpoint-120.json").is_file()
+    assert len(list(persistent.glob("checkpoint-120-*.json"))) == 1
     assert (
         json.loads((persistent / "latest.json").read_text(encoding="utf-8"))["archive"][
             "sha256"
@@ -67,8 +72,10 @@ def test_restore_falls_back_to_previous_verified_checkpoint(tmp_path):
     trainer = tmp_path / "source" / "trainer"
     persistent = tmp_path / "drive" / "trainer_checkpoints"
     persist_trainer_checkpoint(_checkpoint(trainer, 10, "válido"), persistent)
-    persist_trainer_checkpoint(_checkpoint(trainer, 20, "se dañará"), persistent)
-    (persistent / "checkpoint-20.tar").write_bytes(b"archivo truncado")
+    latest = persist_trainer_checkpoint(
+        _checkpoint(trainer, 20, "se dañará"), persistent
+    )
+    _archive_path(persistent, latest).write_bytes(b"archivo truncado")
 
     restored = restore_latest_trainer_checkpoint(
         persistent, tmp_path / "new_runtime" / "trainer"
@@ -99,15 +106,16 @@ def test_restore_falls_back_when_latest_epoch_lacks_optimizer_state(tmp_path):
     (latest / "optimizer.pt").unlink()
     import tarfile
 
-    with tarfile.open(persistent / "checkpoint-20.tar", "w") as handle:
+    latest_archive = _archive_path(persistent, latest_manifest)
+    with tarfile.open(latest_archive, "w") as handle:
         handle.add(latest, arcname=latest.name)
     from moderacion_peru.io import sha256_file
 
     latest_manifest["archive"]["sha256"] = sha256_file(
-        persistent / "checkpoint-20.tar"
+        latest_archive
     )
     latest_manifest["archive"]["bytes"] = (
-        persistent / "checkpoint-20.tar"
+        latest_archive
     ).stat().st_size
     for name in ("checkpoint-20.json", "latest.json"):
         (persistent / name).write_text(
@@ -164,6 +172,8 @@ def test_hashless_archive_is_structurally_validated_and_manifest_is_repaired(tmp
     persistent = tmp_path / "drive" / "trainer_checkpoints"
     manifest = persist_trainer_checkpoint(checkpoint, persistent)
     (persistent / "checkpoint-6401.json").unlink()
+    for immutable_manifest in persistent.glob("checkpoint-6401-*.json"):
+        immutable_manifest.unlink()
     latest_path = persistent / "latest.json"
     latest = json.loads(latest_path.read_text(encoding="utf-8"))
     latest["archive"].pop("sha256")
@@ -192,8 +202,8 @@ def test_missing_archive_restarts_from_scratch_with_explicit_audit(tmp_path, cap
         tmp_path / "source" / "trainer", 6401, "época-uno", epoch=1.0
     )
     persistent = tmp_path / "drive" / "trainer_checkpoints"
-    persist_trainer_checkpoint(checkpoint, persistent)
-    (persistent / "checkpoint-6401.tar").unlink()
+    manifest = persist_trainer_checkpoint(checkpoint, persistent)
+    _archive_path(persistent, manifest).unlink()
 
     training = tmp_path / "new_runtime" / "trainer"
     restored = restore_latest_trainer_checkpoint(persistent, training)
@@ -208,7 +218,7 @@ def test_missing_archive_restarts_from_scratch_with_explicit_audit(tmp_path, cap
         == "no_recoverable_checkpoint_restart_from_scratch"
     )
     assert restore_record["skipped_newer_checkpoints"] == [
-        "step 6401: no existe checkpoint-6401.tar"
+        f"step 6401: no existe {manifest['archive']['name']}"
     ]
 
 
@@ -230,7 +240,7 @@ def test_manifest_is_not_published_until_drive_readback_matches(
     with pytest.raises(ValueError, match="relectura final desde Drive"):
         persist_trainer_checkpoint(checkpoint, persistent)
 
-    assert (persistent / "checkpoint-45.tar").is_file()
+    assert len(list(persistent.glob("checkpoint-45-*.tar"))) == 1
     assert not (persistent / "checkpoint-45.json").exists()
     assert not (persistent / "latest.json").exists()
 
@@ -255,7 +265,36 @@ def test_incomplete_local_copy_falls_back_to_verified_drive_epoch(tmp_path):
             encoding="utf-8"
         )
     )
-    assert restore_record["source"].endswith("checkpoint-10.tar")
+    assert "checkpoint-10-" in restore_record["source"]
+    assert restore_record["source"].endswith(".tar")
+
+
+def test_rewriting_same_step_keeps_previous_verified_archive(tmp_path):
+    persistent = tmp_path / "drive" / "trainer_checkpoints"
+    trainer = tmp_path / "source" / "trainer"
+    first = persist_trainer_checkpoint(
+        _checkpoint(trainer, 10, "primera copia", epoch=1.0), persistent
+    )
+    first_archive = _archive_path(persistent, first)
+    checkpoint = trainer / "checkpoint-10"
+    (checkpoint / "model.safetensors").write_text("segunda copia", encoding="utf-8")
+    second = persist_trainer_checkpoint(checkpoint, persistent)
+
+    assert first["archive"]["name"] != second["archive"]["name"]
+    assert first_archive.is_file()
+    assert _archive_path(persistent, second).is_file()
+    assert len(list(persistent.glob("checkpoint-10-*.json"))) == 2
+
+    # Si los punteros nuevos se dañan junto con el TAR nuevo, la versión
+    # inmutable del primer contenido sigue permitiendo reanudar ese mismo step.
+    (persistent / "latest.json").write_text("{", encoding="utf-8")
+    (persistent / "checkpoint-10.json").write_text("{", encoding="utf-8")
+    _archive_path(persistent, second).write_bytes(b"truncated")
+    restored = restore_latest_trainer_checkpoint(
+        persistent, tmp_path / "new_runtime" / "trainer"
+    )
+    assert restored is not None
+    assert (restored / "model.safetensors").read_text(encoding="utf-8") == "primera copia"
 
 
 def test_local_newer_checkpoint_is_not_replaced(tmp_path):
@@ -269,7 +308,8 @@ def test_local_newer_checkpoint_is_not_replaced(tmp_path):
 
     assert restored == local
     assert (local / "model.safetensors").read_text(encoding="utf-8") == "más nuevo"
-    assert (persistent / "checkpoint-20.tar").is_file()
+    latest = json.loads((persistent / "latest.json").read_text(encoding="utf-8"))
+    assert _archive_path(persistent, latest).is_file()
     assert (
         json.loads((persistent / "latest.json").read_text(encoding="utf-8"))["step"]
         == 20
@@ -297,7 +337,8 @@ def test_transformers_callback_persists_each_on_save_event(tmp_path, monkeypatch
     )
 
     assert returned is control
-    assert (persistent / "checkpoint-45.tar").is_file()
+    latest = json.loads((persistent / "latest.json").read_text(encoding="utf-8"))
+    assert _archive_path(persistent, latest).is_file()
     assert (
         json.loads((persistent / "latest.json").read_text(encoding="utf-8"))["step"]
         == 45

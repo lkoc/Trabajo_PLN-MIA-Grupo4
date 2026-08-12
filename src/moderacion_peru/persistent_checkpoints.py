@@ -35,6 +35,19 @@ def _checkpoint_step(path: Path) -> int:
     return int(path.name[len(prefix) :])
 
 
+def _checkpoint_manifest_step(path: Path) -> int:
+    """Admite punteros por step y manifiestos inmutables con sufijo de hash."""
+
+    parts = path.stem.split("-")
+    if len(parts) not in {2, 3} or parts[0] != "checkpoint" or not parts[1].isdigit():
+        raise ValueError(f"Nombre de manifiesto inesperado: {path.name}")
+    if len(parts) == 3 and (
+        len(parts[2]) != 16 or any(character not in "0123456789abcdef" for character in parts[2])
+    ):
+        raise ValueError(f"Hash de manifiesto inesperado: {path.name}")
+    return int(parts[1])
+
+
 def _checkpoint_resume_problems(checkpoint: Path, expected_step: int) -> list[str]:
     """Valida los artefactos que Trainer necesita para una reanudación exacta."""
 
@@ -164,10 +177,9 @@ def persist_trainer_checkpoint(
     epoch = float(epoch) if epoch is not None else None
     destination.mkdir(parents=True, exist_ok=True)
 
-    archive_name = f"checkpoint-{step}.tar"
-    target = destination / archive_name
+    archive_prefix = f"checkpoint-{step}"
     local_fd, local_name = tempfile.mkstemp(
-        prefix=f".{archive_name}.", suffix=".local", dir=checkpoint.parent
+        prefix=f".{archive_prefix}.", suffix=".local", dir=checkpoint.parent
     )
     os.close(local_fd)
     local_archive = Path(local_name)
@@ -176,10 +188,16 @@ def persist_trainer_checkpoint(
             handle.add(checkpoint, arcname=checkpoint.name)
         local_sha256 = sha256_file(local_archive)
         local_bytes = local_archive.stat().st_size
-        # Escribir directamente el nombre final evita que Drive FUSE deje en el
-        # servidor un placeholder .partial de 0 bytes tras un rename grande.
-        # Sin manifiesto, una copia interrumpida nunca se considera recuperable.
-        copied_sha256 = _copy_and_hash(local_archive, target)
+        # El nombre contiene el hash: una repetición de la misma época nunca
+        # sobrescribe el último TAR bueno antes de verificar el reemplazo.
+        archive_name = f"{archive_prefix}-{local_sha256[:16]}.tar"
+        target = destination / archive_name
+        if target.is_file() and target.stat().st_size == local_bytes:
+            copied_sha256 = sha256_file(target)
+        else:
+            # Escribir directamente el nombre final evita que Drive FUSE deje en
+            # el servidor un placeholder .partial de 0 bytes tras un rename.
+            copied_sha256 = _copy_and_hash(local_archive, target)
         if copied_sha256 != local_sha256:
             raise ValueError("La copia del checkpoint hacia Drive cambió su SHA-256")
         _sync_and_verify_persistent_copy(
@@ -202,6 +220,11 @@ def persist_trainer_checkpoint(
         }
         # El manifiesto por checkpoint permite recuperar una versión anterior si
         # el último archivo se dañara. El puntero latest se promueve al final.
+        # La versión ligada al hash nunca se reemplaza. Los otros dos JSON son
+        # punteros pequeños y reparables hacia una versión ya verificable.
+        write_json_atomic(
+            destination / f"checkpoint-{step}-{local_sha256[:16]}.json", manifest
+        )
         write_json_atomic(destination / f"checkpoint-{step}.json", manifest)
         write_json_atomic(destination / "latest.json", manifest)
         return {**manifest, "persistent_dir": str(destination)}
@@ -217,7 +240,7 @@ def _persistent_manifests(persistent_dir: Path) -> list[dict[str, Any]]:
     paths.extend(
         sorted(
             persistent_dir.glob("checkpoint-*.json"),
-            key=lambda path: _checkpoint_step(path.with_suffix("")),
+            key=_checkpoint_manifest_step,
             reverse=True,
         )
     )

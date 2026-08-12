@@ -55,28 +55,136 @@ def load_colab_config(project_root: str | Path) -> dict[str, Any]:
 
 def _safe_extract_tar(archive: Path, destination: Path) -> None:
     destination.mkdir(parents=True, exist_ok=True)
-    with tarfile.open(archive, "r:gz") as handle:
+    # Las publicaciones actuales usan TAR sin compresión porque los pesos
+    # safetensors ya son prácticamente incompresibles. ``r:*`` conserva la
+    # compatibilidad con los TAR.GZ publicados por versiones anteriores.
+    with tarfile.open(archive, "r:*") as handle:
         handle.extractall(destination, filter="data")
 
 
-def _restore_run(drive_run_dir: Path, scratch_output_dir: Path) -> bool:
-    manifest_path = drive_run_dir / "run_manifest.json"
-    archive_path = drive_run_dir / "run_outputs.tar.gz"
-    if not manifest_path.is_file() or not archive_path.is_file():
-        return False
-    with manifest_path.open("r", encoding="utf-8") as handle:
-        manifest = json.load(handle)
-    expected = manifest.get("archive", {}).get("sha256")
-    expected_bytes = int(manifest.get("archive", {}).get("bytes", 0))
-    if expected_bytes > 0 and archive_path.stat().st_size != expected_bytes:
-        raise ValueError(
-            f"Checkpoint de Drive truncado: {archive_path} tiene "
-            f"{archive_path.stat().st_size} de {expected_bytes} bytes"
+def _safe_run_archive_path(drive_run_dir: Path, archive_name: str) -> Path:
+    relative = Path(archive_name)
+    if relative.is_absolute() or ".." in relative.parts or not relative.name:
+        raise ValueError(f"Nombre inseguro de publicación en Drive: {archive_name!r}")
+    return drive_run_dir / relative
+
+
+def _run_manifest_candidates(drive_run_dir: Path) -> list[tuple[Path, dict[str, Any]]]:
+    """Devuelve primero las copias verificables potencialmente más recientes."""
+
+    paths = [drive_run_dir / "run_manifest.json"]
+    publications = drive_run_dir / "publications"
+    paths.extend(
+        publications / name
+        for name in ("run_manifest-a.json", "run_manifest-b.json", "run_manifest-legacy.json")
+    )
+    parsed: list[
+        tuple[int, str, Path, dict[str, Any], tuple[str, str]]
+    ] = []
+    for path in paths:
+        try:
+            manifest = json.loads(path.read_text(encoding="utf-8"))
+            archive = manifest["archive"]
+            identity = (str(archive["name"]), str(archive["sha256"]))
+        except (OSError, KeyError, TypeError, json.JSONDecodeError):
+            continue
+        parsed.append(
+            (
+                int(path == drive_run_dir / "run_manifest.json"),
+                str(manifest.get("published_at", "")),
+                path,
+                manifest,
+                identity,
+            )
         )
-    if not expected or sha256_file(archive_path) != expected:
-        raise ValueError(f"Checkpoint de Drive corrupto o incompleto: {archive_path}")
-    _safe_extract_tar(archive_path, scratch_output_dir)
-    return True
+    # Un slot puede haberse verificado justo antes de que el kernel muriera y
+    # dejara ``run_manifest.json`` apuntando a la publicación anterior. La fecha
+    # del manifiesto del slot debe prevalecer; el puntero solo desempata.
+    parsed.sort(key=lambda item: (item[1], item[0]), reverse=True)
+    candidates: list[tuple[Path, dict[str, Any]]] = []
+    seen: set[tuple[str, str]] = set()
+    for _, _, path, manifest, identity in parsed:
+        if identity not in seen:
+            candidates.append((path, manifest))
+            seen.add(identity)
+    return candidates
+
+
+def _run_publication_is_verified(
+    drive_run_dir: Path, manifest: dict[str, Any]
+) -> bool:
+    """Comprueba completamente una publicación antes de usar o reemplazar slots."""
+
+    try:
+        archive_entry = manifest["archive"]
+        archive_path = _safe_run_archive_path(
+            drive_run_dir, str(archive_entry["name"])
+        )
+        expected_bytes = int(archive_entry["bytes"])
+        expected_sha256 = str(archive_entry["sha256"]).lower()
+        return (
+            expected_bytes > 0
+            and len(expected_sha256) == 64
+            and archive_path.stat().st_size == expected_bytes
+            and sha256_file(archive_path) == expected_sha256
+        )
+    except (OSError, KeyError, TypeError, ValueError):
+        return False
+
+
+def _restore_run(drive_run_dir: Path, scratch_output_dir: Path) -> bool:
+    failures: list[str] = []
+    for manifest_path, manifest in _run_manifest_candidates(drive_run_dir):
+        archive_entry = manifest.get("archive", {})
+        archive_name = str(archive_entry.get("name") or "run_outputs.tar.gz")
+        try:
+            archive_path = _safe_run_archive_path(drive_run_dir, archive_name)
+            expected = str(archive_entry.get("sha256", "")).lower()
+            expected_bytes = int(archive_entry.get("bytes", 0))
+            actual_bytes = archive_path.stat().st_size
+            if expected_bytes > 0 and actual_bytes != expected_bytes:
+                raise ValueError(
+                    f"tamaño {actual_bytes} de {expected_bytes} bytes"
+                )
+            if len(expected) != 64 or sha256_file(archive_path) != expected:
+                raise ValueError("SHA-256 ausente o inválido")
+            with tempfile.TemporaryDirectory(
+                prefix=f".{scratch_output_dir.name}.restore-",
+                dir=scratch_output_dir.parent,
+            ) as staging_name:
+                staging = Path(staging_name)
+                _safe_extract_tar(archive_path, staging)
+                for restored_path in staging.iterdir():
+                    destination = scratch_output_dir / restored_path.name
+                    if destination.exists():
+                        if restored_path.name == "colab_context.json":
+                            # El contexto se regenera al final de
+                            # prepare_colab_context y no contiene trabajo.
+                            continue
+                        raise FileExistsError(
+                            f"La restauración intentaría reemplazar {destination}"
+                        )
+                    os.replace(restored_path, destination)
+            if failures:
+                write_json_atomic(
+                    scratch_output_dir / "colab_run_restore.json",
+                    {
+                        "schema_version": "1.2.0",
+                        "restored_at": datetime.now(UTC).isoformat(),
+                        "manifest": str(manifest_path),
+                        "archive": str(archive_path),
+                        "skipped_publications": failures,
+                    },
+                )
+            return True
+        except (OSError, ValueError, tarfile.TarError) as exc:
+            failures.append(f"{manifest_path.name}: {type(exc).__name__}: {exc}")
+    if failures:
+        raise ValueError(
+            "Ninguna publicación del run en Drive es recuperable: "
+            + "; ".join(failures)
+        )
+    return False
 
 
 def _has_local_run_payload(scratch_output_dir: Path) -> bool:
@@ -246,51 +354,129 @@ def prepare_colab_context(
     return context
 
 
+def _include_in_run_publication(relative: Path) -> bool:
+    """Excluye estados reanudables que ya se reflejan por separado en Drive."""
+
+    return relative.as_posix() != "colab_context.json" and not any(
+        part.startswith("checkpoint-")
+        or part in {"trainer", "trainer_gate", "trainer_damage", "trainer_branch"}
+        for part in relative.parts
+    )
+
+
 def publish_colab_outputs(context: ColabContext) -> dict[str, Any]:
-    """Publica el run y solo anuncia el TAR.GZ tras releerlo desde Drive."""
+    """Publica artefactos finales en dos ranuras sin invalidar la copia anterior.
+
+    Los checkpoints completos de ``Trainer`` viven en ``trainer_checkpoints`` y
+    no se vuelven a comprimir aquí. Esto evita TAR.GZ de varios GB y permite que
+    la publicación final sea rápida. Cada intento escribe en la ranura inactiva;
+    el puntero ``run_manifest.json`` cambia solo tras releer el archivo completo
+    desde Drive.
+    """
 
     context.drive_run_dir.mkdir(parents=True, exist_ok=True)
-    local_archive = context.runtime_root / f".{context.notebook_id}.{context.run_id}.tar.gz"
-    with tarfile.open(local_archive, "w:gz", compresslevel=6) as handle:
-        for path in sorted(context.scratch_output_dir.rglob("*")):
-            if path.is_file():
-                handle.add(path, arcname=path.relative_to(context.scratch_output_dir))
-    archive_sha = sha256_file(local_archive)
-    archive_bytes = local_archive.stat().st_size
-    target = context.drive_run_dir / "run_outputs.tar.gz"
-    # Drive FUSE puede dejar un placeholder de 0 bytes si se renombra una copia
-    # grande aún pendiente. Escribir el nombre final y publicar el manifiesto
-    # solo tras una relectura completa evita declarar durable una copia ausente.
-    shutil.copyfile(local_archive, target)
-    sync = getattr(os, "sync", None)
-    if sync is not None:
-        try:
-            sync()
-        except OSError:
-            pass
-    if target.stat().st_size != archive_bytes:
-        raise ValueError(
-            "Google Drive no conserva el tamaño completo de run_outputs.tar.gz"
-        )
-    if sha256_file(target) != archive_sha:
-        raise ValueError("La copia del run a Google Drive no conserva SHA-256")
-    manifest = {
-        "schema_version": "1.1.0",
-        "published_at": datetime.now(UTC).isoformat(),
-        "notebook_id": context.notebook_id,
-        "run_id": context.run_id,
-        "taxonomy_contract": "moderacion_peru_5_salidas_v2",
-        "hardware": context.hardware,
-        "archive": {
-            "name": target.name,
-            "sha256": archive_sha,
-            "bytes": archive_bytes,
-            "verification": "full_readback_after_close",
-        },
-    }
-    write_json_atomic(context.drive_run_dir / "run_manifest.json", manifest)
-    local_archive.unlink(missing_ok=True)
-    return manifest
+    publications = context.drive_run_dir / "publications"
+    publications.mkdir(parents=True, exist_ok=True)
+    active_slot = None
+    for _, candidate in _run_manifest_candidates(context.drive_run_dir):
+        candidate_slot = candidate.get("publication_slot")
+        if candidate_slot in {"a", "b"} and _run_publication_is_verified(
+            context.drive_run_dir, candidate
+        ):
+            active_slot = candidate_slot
+            break
+    slot = "b" if active_slot == "a" else "a"
+    archive_name = f"publications/run_outputs-{slot}.tar"
+    manifest_name = f"run_manifest-{slot}.json"
+    local_archive = context.runtime_root / f".{context.notebook_id}.{context.run_id}.{slot}.tar"
+    included_files = 0
+    excluded_files = 0
+    try:
+        with tarfile.open(local_archive, "w") as handle:
+            for path in sorted(context.scratch_output_dir.rglob("*")):
+                if not path.is_file():
+                    continue
+                relative = path.relative_to(context.scratch_output_dir)
+                if not _include_in_run_publication(relative):
+                    excluded_files += 1
+                    continue
+                handle.add(path, arcname=relative)
+                included_files += 1
+        archive_sha = sha256_file(local_archive)
+        archive_bytes = local_archive.stat().st_size
+        target = context.drive_run_dir / archive_name
+        # Se escribe el nombre final de la ranura inactiva. Si el runtime muere,
+        # el manifiesto activo sigue apuntando a la ranura anterior verificada.
+        shutil.copyfile(local_archive, target)
+        sync = getattr(os, "sync", None)
+        if sync is not None:
+            try:
+                sync()
+            except OSError:
+                pass
+        if target.stat().st_size != archive_bytes:
+            raise ValueError(
+                f"Google Drive no conserva el tamaño completo de {archive_name}"
+            )
+        if sha256_file(target) != archive_sha:
+            raise ValueError("La copia del run a Google Drive no conserva SHA-256")
+        manifest = {
+            "schema_version": "1.2.0",
+            "published_at": datetime.now(UTC).isoformat(),
+            "notebook_id": context.notebook_id,
+            "run_id": context.run_id,
+            "taxonomy_contract": "moderacion_peru_5_salidas_v2",
+            "hardware": context.hardware,
+            "publication_slot": slot,
+            "included_files": included_files,
+            "excluded_trainer_checkpoint_files": excluded_files,
+            "trainer_checkpoint_storage": "trainer_checkpoints",
+            "archive": {
+                "name": archive_name,
+                "sha256": archive_sha,
+                "bytes": archive_bytes,
+                "format": "tar_uncompressed",
+                "verification": "full_readback_after_close",
+            },
+        }
+        slot_manifest = publications / manifest_name
+        write_json_atomic(slot_manifest, manifest)
+        # En la primera migración conserva el manifiesto del TAR.GZ histórico
+        # como tercera copia recuperable. No se modifica su archivo grande.
+        legacy_manifest = publications / "run_manifest-legacy.json"
+        active_manifest = context.drive_run_dir / "run_manifest.json"
+        if active_manifest.is_file() and not legacy_manifest.exists():
+            try:
+                previous = json.loads(active_manifest.read_text(encoding="utf-8"))
+                if previous.get("publication_slot") in {"a", "b"}:
+                    raise ValueError("el puntero previo ya pertenece al esquema por slots")
+                previous_archive = str(
+                    previous.get("archive", {}).get("name") or "run_outputs.tar.gz"
+                )
+                previous_path = _safe_run_archive_path(
+                    context.drive_run_dir, previous_archive
+                )
+                previous_sha256 = str(
+                    previous.get("archive", {}).get("sha256", "")
+                ).lower()
+                previous_bytes = int(previous.get("archive", {}).get("bytes", 0))
+                if (
+                    previous_path.is_file()
+                    and previous_bytes > 0
+                    and previous_path.stat().st_size == previous_bytes
+                    and len(previous_sha256) == 64
+                    and sha256_file(previous_path) == previous_sha256
+                ):
+                    write_json_atomic(legacy_manifest, previous)
+            except (OSError, TypeError, ValueError, json.JSONDecodeError):
+                # La publicación nueva ya fue verificada; un legado inválido no
+                # debe impedir promoverla ni presentarse como recuperable.
+                pass
+        # El puntero activo se promueve al final; nunca anuncia una copia parcial.
+        write_json_atomic(active_manifest, manifest)
+        return manifest
+    finally:
+        local_archive.unlink(missing_ok=True)
 
 
 def colab_runtime_diagnostics() -> dict[str, Any]:

@@ -10,9 +10,8 @@ import os
 import shutil
 import tempfile
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 CORE_TEXT_SUFFIXES = {".json", ".py", ".toml", ".txt"}
@@ -78,7 +77,7 @@ def latest_pointer_for_release(release_dir: Path, manifest: dict[str, object]) -
         "bundle_id": str(manifest["bundle_id"]),
         "core_sha256": str(manifest["core"]["sha256"]),
         "manifest_sha256": sha256_file(release_dir / "bundle_manifest.json"),
-        "published_at": datetime.now(timezone.utc).isoformat(),
+        "published_at": datetime.now(UTC).isoformat(),
     }
 
 
@@ -166,7 +165,11 @@ def build_core_archive(destination: Path) -> dict[str, object]:
     }
 
 
-def bundle_rebuild_reasons(destination: str | Path) -> tuple[str, ...]:
+def bundle_rebuild_reasons(
+    destination: str | Path,
+    *,
+    compare_local_inputs: bool = True,
+) -> tuple[str, ...]:
     """Explica si el bundle dejó de representar el código o las entradas locales."""
 
     target = Path(destination).expanduser().resolve()
@@ -189,16 +192,17 @@ def bundle_rebuild_reasons(destination: str | Path) -> tuple[str, ...]:
 
     declared_inputs = manifest.get("inputs", {})
     for key, specification in config["inputs"].items():
-        source = ROOT / specification["source"]
-        if not source.is_file():
-            reasons.append(f"falta la entrada requerida {key}: {source}")
-            continue
         declared = declared_inputs.get(key)
         if not isinstance(declared, dict):
             reasons.append(f"el manifiesto no declara la entrada {key}")
             continue
-        if declared.get("source_sha256") != sha256_file(source):
-            reasons.append(f"cambió la entrada local {key}")
+        if compare_local_inputs:
+            source = ROOT / specification["source"]
+            if not source.is_file():
+                reasons.append(f"falta la entrada requerida {key}: {source}")
+                continue
+            if declared.get("source_sha256") != sha256_file(source):
+                reasons.append(f"cambió la entrada local {key}")
         if declared.get("archive") != specification["archive"]:
             reasons.append(f"cambió el nombre de archivo configurado para {key}")
     unexpected = sorted(set(declared_inputs) - set(config["inputs"]))
@@ -207,13 +211,23 @@ def bundle_rebuild_reasons(destination: str | Path) -> tuple[str, ...]:
     return tuple(reasons)
 
 
-def ensure_prepared_bundle(destination: str | Path) -> dict[str, object]:
+def ensure_prepared_bundle(
+    destination: str | Path,
+    *,
+    preserve_verified_inputs: bool = False,
+) -> dict[str, object]:
     """Reconstruye el bundle solo cuando su código, entradas o artefactos cambiaron."""
 
     target = Path(destination).expanduser().resolve()
-    reasons = bundle_rebuild_reasons(target)
+    reasons = bundle_rebuild_reasons(
+        target, compare_local_inputs=not preserve_verified_inputs
+    )
     if reasons:
-        result = prepare(target)
+        result = prepare(
+            target,
+            reuse_verified_missing_sources=True,
+            preserve_verified_inputs=preserve_verified_inputs,
+        )
         return {**result, "status": "rebuilt", "rebuild_reasons": list(reasons)}
     manifest = verify_bundle_directory(target)
     return {
@@ -225,9 +239,22 @@ def ensure_prepared_bundle(destination: str | Path) -> dict[str, object]:
     }
 
 
-def prepare(destination: str | Path, *, progress_callback=None) -> dict[str, object]:
+def prepare(
+    destination: str | Path,
+    *,
+    progress_callback=None,
+    reuse_verified_missing_sources: bool = False,
+    preserve_verified_inputs: bool = False,
+) -> dict[str, object]:
     target = Path(destination).expanduser().resolve()
     target.mkdir(parents=True, exist_ok=True)
+    previous_manifest_path = target / "bundle_manifest.json"
+    try:
+        previous_manifest = json.loads(
+            previous_manifest_path.read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError):
+        previous_manifest = {}
     if progress_callback is not None:
         progress_callback({"status": "started", "total": 9, "stage": "prepare"})
     with (ROOT / "config" / "colab_l4.json").open("r", encoding="utf-8") as handle:
@@ -238,21 +265,49 @@ def prepare(destination: str | Path, *, progress_callback=None) -> dict[str, obj
     inputs: dict[str, dict[str, object]] = {}
     for key, specification in config["inputs"].items():
         source = ROOT / specification["source"]
-        if not source.is_file():
-            raise FileNotFoundError(f"Falta la entrada requerida {key}: {source}")
         archive = target / specification["archive"]
-        entry = atomic_gzip(source, archive)
-        inputs[key] = {
-            "source": specification["source"],
-            "archive": specification["archive"],
-            "required_by": specification["required_by"],
-            **entry,
-        }
+        previous = previous_manifest.get("inputs", {}).get(key, {})
+        reusable = (
+            (preserve_verified_inputs or reuse_verified_missing_sources)
+            and previous.get("source") == specification["source"]
+            and previous.get("archive") == specification["archive"]
+            and archive.is_file()
+            and previous.get("archive_sha256") == sha256_file(archive)
+            and previous.get("source_sha256")
+        )
+        if preserve_verified_inputs and reusable:
+            inputs[key] = {
+                **previous,
+                "source": specification["source"],
+                "archive": specification["archive"],
+                "required_by": specification["required_by"],
+            }
+        elif source.is_file():
+            entry = atomic_gzip(source, archive)
+            inputs[key] = {
+                "source": specification["source"],
+                "archive": specification["archive"],
+                "required_by": specification["required_by"],
+                **entry,
+            }
+        else:
+            if not reusable:
+                raise FileNotFoundError(
+                    f"Falta la entrada requerida {key}: {source}; no existe un "
+                    "archivo previo verificable que pueda conservarse"
+                )
+            inputs[key] = {
+                **previous,
+                "source": specification["source"],
+                "archive": specification["archive"],
+                "required_by": specification["required_by"],
+                "reused_verified_archive": True,
+            }
         if progress_callback is not None:
             progress_callback({"status": "progress", "advance": 1, "stage": f"compress:{key}"})
     manifest = {
         "schema_version": config["schema_version"],
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "taxonomy_contract": config["taxonomy_contract"],
         "taxonomy_version": config["taxonomy_version"],
         "core": core,
