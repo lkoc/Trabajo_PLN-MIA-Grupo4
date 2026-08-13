@@ -1912,6 +1912,40 @@ PERSISTENT_COLAB_TRAINING_ACTIVITY = {
 }
 
 
+QWEN_LORA_BASE_SOURCE = (
+    "from moderacion_peru.experiments import train_neural_experiment\n"
+    "DATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\n"
+    "OUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_lora'\n"
+    "DEVICE='cuda' if COLAB_CONTEXT else 'auto'\n"
+    "PERSISTENT_CHECKPOINT_ROOT=COLAB_CONTEXT.drive_run_dir/'trainer_checkpoints' if COLAB_CONTEXT else None\n"
+    "RUN_TRAINING=False  # Solo actívelo si falta el candidato base de 128 tokens\n"
+    "if RUN_TRAINING:\n"
+    "    qwen_lora_result=run_with_progress('Qwen-LoRA 128 tokens',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='qwen_lora',device=DEVICE,safe_to_damage_ratio=4.0,persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='etapa')\n"
+    "    show_result('Qwen-LoRA base de 128 tokens',qwen_lora_result,tone='success')\n"
+    "else:\n"
+    "    show_summary('Candidato base conservado',{'acción':'no se reentrena ni reemplaza el candidato de 128 tokens','método':'clasificador supervisado, no condicionado por prompt','longitud':128,'salidas':'5+14+3 enmascaradas','perfil_GPU':'A100: BF16, lote 8×1, validation 32 y 2 workers; fallback 2×4','checkpoints_drive':PERSISTENT_CHECKPOINT_ROOT,'SEGURO_train_validation':'4:1 fijo','test':'natural completo, sellado'},tone='neutral')"
+)
+
+
+QWEN_LORA_256_SOURCE = (
+    "from moderacion_peru.experiments import select_qwen_lora_warm_start_candidate, train_neural_experiment\n"
+    "CONTINUATION_MAX_LENGTH=256\n"
+    "CONTINUATION_EPOCHS=4  # máximo adicional; early stopping conserva la mejor validation\n"
+    "CONTINUATION_VARIANT_ID='context256_from128'\n"
+    "RUN_CONTINUATION_256=True\n"
+    "if RUN_CONTINUATION_256:\n"
+    "    base_128=select_qwen_lora_warm_start_candidate(OUTPUT_ROOT,DATA,max_length=128)\n"
+    "    show_result('Warm-start Qwen-LoRA verificado',{'candidate_id':base_128['candidate_id'],'candidate_path':base_128['candidate_path'],'dataset_sha256':base_128['dataset_sha256'],'longitud_origen':base_128['truncation_diagnostic']['max_length'],'longitud_destino':CONTINUATION_MAX_LENGTH,'optimizador':'nuevo; no reutiliza estado del Trainer'},tone='success')\n"
+    "    qwen_lora_256_result=run_with_progress('Qwen-LoRA 256 desde 128',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='qwen_lora',device=DEVICE,max_length=CONTINUATION_MAX_LENGTH,epochs=CONTINUATION_EPOCHS,variant_id=CONTINUATION_VARIANT_ID,warm_start_candidate_path=base_128['candidate_path'],safe_to_damage_ratio=4.0,persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='etapa')\n"
+    "    show_result('Candidato adicional Qwen-LoRA de 256 tokens',qwen_lora_256_result,tone='success')\n"
+    "    if COLAB_CONTEXT is not None:\n"
+    "        from moderacion_peru.colab import publish_colab_outputs\n"
+    "        show_result('Publicación del candidato 256',publish_colab_outputs(COLAB_CONTEXT),tone='success')\n"
+    "else:\n"
+    "    show_summary('Continuación 256 desactivada',{'padre_requerido':'Qwen-LoRA completo de 128 tokens y mismo dataset','variante':CONTINUATION_VARIANT_ID,'longitud':CONTINUATION_MAX_LENGTH,'épocas_adicionales_máximas':CONTINUATION_EPOCHS,'selección':'validation; 03_07 comparará ambos candidatos','test':'permanece sellado'},tone='neutral')"
+)
+
+
 def persistent_colab_training_source(source: str, notebook_id: str | None) -> str:
     """Conecta checkpoints por época y publicación final en todos los 03_x GPU."""
 
@@ -3233,13 +3267,16 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         (
             "03_05_qwen_lora.ipynb",
             "Qwen-LoRA",
-            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_lora'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nPERSISTENT_CHECKPOINT_ROOT=COLAB_CONTEXT.drive_run_dir/'trainer_checkpoints' if COLAB_CONTEXT else None\nRUN_TRAINING=False\nif RUN_TRAINING:\n    qwen_lora_result=run_with_progress('Qwen-LoRA',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='qwen_lora',device=DEVICE,safe_to_damage_ratio=4.0,persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='etapa')\n    show_result('Qwen-LoRA clasificador de 22 salidas',qwen_lora_result,tone='success')\nelse:\n    show_summary('Configuración preliminar',{'método':'clasificador supervisado, no condicionado por prompt','salidas':'5+14+3 enmascaradas','perfil_GPU':'A100: BF16, lote 8×1, validation 32 y 2 workers; fallback 2×4','checkpoints_drive':PERSISTENT_CHECKPOINT_ROOT,'progreso':'tokenización visible + Trainer por lote/época + barra por etapa','SEGURO_train_validation':'4:1 fijo','reanuda_colab':bool(COLAB_CONTEXT and COLAB_CONTEXT.resumed),'test':'natural completo, sellado'},tone='neutral')",
+            QWEN_LORA_BASE_SOURCE,
             "03_05",
             "LoRA introduce actualizaciones entrenables de bajo rango sobre un modelo preentrenado "
             "[@hu2022lora]. El backbone pertenece a la familia Qwen3 [@qwen2025qwen3] y se fija en el "
             "checkpoint `Qwen/Qwen3-0.6B-Base` [@hf2026qwen06bcard]; la inyección de adaptadores usa PEFT "
             "0.18.0 [@hf2026peft018]. El rango 8, los módulos objetivo, la cabeza de cinco salidas y la "
-            "recalibración son decisiones locales.",
+            "recalibración son decisiones locales. Además del candidato base de 128 tokens, el "
+            "cuaderno puede continuar sus pesos LoRA con 256 tokens y un optimizador nuevo. Esa "
+            "continuación conserva el mismo snapshot y mantiene test sellado; produce un candidato "
+            "independiente cuya posible ventaja debe decidirse exclusivamente en validation.",
         ),
         (
             "03_06_qwen_estructurado.ipynb",
@@ -3295,15 +3332,28 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         ),
     ]
     for filename, subtitle, source, colab_id, academic_context in training_notebooks:
+        code_cells = [
+            ("Restauración reproducible del dataset", DATASET_CHECKPOINT),
+            ("Configuración y candidato base de 128 tokens", source),
+        ]
+        if filename == "03_05_qwen_lora.ipynb":
+            code_cells.append(
+                (
+                    "Continuación opcional a 256 tokens\n\n"
+                    "Este bloque no modifica el candidato base. Verifica el manifiesto y el "
+                    "snapshot del modelo de 128 tokens, carga su adaptador como entrenable y "
+                    "crea una corrida distinta. Reinicia optimizador y scheduler para no mezclar "
+                    "un estado construido con secuencias de otra longitud. `03_07` descubrirá "
+                    "ambos candidatos y los comparará sobre las mismas filas de validation.",
+                    QWEN_LORA_256_SOURCE,
+                )
+            )
         create(
             f"flujo/03_entrenamiento/{filename}",
             f"03 · {subtitle}",
             "Entrena o audita el contrato de etiquetas v2.1 sin consultar test para seleccionar modelos, épocas o umbrales.",
             academic_context,
-            [
-                ("Restauración reproducible del dataset", DATASET_CHECKPOINT),
-                ("Configuración y ejecución", source),
-            ],
+            code_cells,
             colab_notebook_id=colab_id,
         )
     create(

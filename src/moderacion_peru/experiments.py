@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import time
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import asdict
@@ -1094,6 +1095,93 @@ def _candidate_asset(candidate: dict[str, Any], value: str | Path | None) -> str
     return str(Path(candidate["candidate_path"]).parent / path)
 
 
+def select_qwen_lora_warm_start_candidate(
+    output_root: str | Path,
+    dataset_path: str | Path,
+    *,
+    max_length: int = 128,
+) -> dict[str, Any]:
+    """Selecciona un Qwen-LoRA completo y verificable como punto de partida.
+
+    La selección exige el mismo snapshot del dataset y la longitud solicitada. De
+    este modo una variante de 256 tokens no puede inicializar accidentalmente otra
+    variante de 256 ni un candidato entrenado sobre datos distintos.
+    """
+
+    output = Path(output_root)
+    dataset = Path(dataset_path).resolve()
+    dataset_sha = sha256_file(dataset)
+    candidates: list[dict[str, Any]] = []
+    for candidate_path in output.rglob("candidate.json") if output.exists() else []:
+        try:
+            raw = json.loads(candidate_path.read_text(encoding="utf-8"))
+            signature = str(raw["run_signature"])
+            candidate = _complete_candidate(candidate_path, signature)
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError):
+            continue
+        if candidate is None:
+            continue
+        diagnostic = candidate.get("truncation_diagnostic") or {}
+        if (
+            candidate.get("experiment") == "qwen_lora"
+            and candidate.get("model_family") == "qwen_lora"
+            and candidate.get("dataset_sha256") == dataset_sha
+            and candidate.get("output_count") == 22
+            and int(diagnostic.get("max_length", -1)) == int(max_length)
+        ):
+            candidates.append(candidate)
+    if not candidates:
+        raise FileNotFoundError(
+            "No existe un candidato Qwen-LoRA completo y verificable de "
+            f"{max_length} tokens para el snapshot {dataset_sha[:12]} bajo {output}. "
+            "Restaure la publicación de 03_05 o ejecute primero el bloque base."
+        )
+    return max(
+        candidates,
+        key=lambda row: (str(row.get("completed_at", "")), str(row["candidate_path"])),
+    )
+
+
+def _load_explicit_qwen_warm_start_candidate(
+    candidate_path: str | Path,
+    *,
+    dataset_sha: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    path = Path(candidate_path).resolve()
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        candidate = _complete_candidate(path, str(raw["run_signature"]))
+    except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise ValueError(f"Candidato warm-start inválido: {path}") from exc
+    if candidate is None:
+        raise ValueError(f"Candidato warm-start incompleto o con hashes inválidos: {path}")
+    if (
+        candidate.get("experiment") != "qwen_lora"
+        or candidate.get("model_family") != "qwen_lora"
+        or candidate.get("output_count") != 22
+    ):
+        raise ValueError("El warm-start explícito debe ser un Qwen-LoRA de 22 salidas")
+    if candidate.get("dataset_sha256") != dataset_sha:
+        raise ValueError("El warm-start y la continuación deben usar exactamente el mismo dataset")
+    model_path = _candidate_asset(candidate, candidate.get("inference", {}).get("model"))
+    if model_path is None or not Path(model_path).is_dir():
+        raise ValueError("El candidato warm-start no contiene el adaptador PEFT declarado")
+    manifest_path = _candidate_asset(candidate, candidate.get("checkpoint_manifest"))
+    if manifest_path is None:
+        raise ValueError("El candidato warm-start no declara checkpoint_manifest")
+    identity = {
+        "candidate_id": str(candidate["candidate_id"]),
+        "run_signature": str(candidate["run_signature"]),
+        "checkpoint_manifest_sha256": sha256_file(manifest_path),
+        "max_length": int(
+            (candidate.get("truncation_diagnostic") or {}).get("max_length", -1)
+        ),
+        "optimizer_state_reused": False,
+        "policy": "trainable_peft_adapter_with_fresh_optimizer_and_scheduler",
+    }
+    return candidate, identity
+
+
 def _hf_validation_metrics(
     logits: Any,
     label_ids: Any,
@@ -1392,6 +1480,10 @@ def train_neural_experiment(
     device: str = "auto",
     force: bool = False,
     spec_key: str | None = None,
+    max_length: int | None = None,
+    epochs: int | None = None,
+    variant_id: str | None = None,
+    warm_start_candidate_path: str | Path | None = None,
     safe_to_damage_ratio: float | None = 4.0,
     split_scheme: str = "video",
     sampling_seed: int = 20260805,
@@ -1418,6 +1510,18 @@ def train_neural_experiment(
     }
     if experiment not in allowed:
         raise ValueError(f"Experimento desconocido: {experiment}")
+    if max_length is not None and (
+        isinstance(max_length, bool) or not isinstance(max_length, int) or max_length < 8
+    ):
+        raise ValueError("max_length debe ser un entero de al menos 8 tokens")
+    if epochs is not None and (
+        isinstance(epochs, bool) or not isinstance(epochs, int) or epochs < 1
+    ):
+        raise ValueError("epochs debe ser un entero positivo")
+    if variant_id is not None and not re.fullmatch(r"[a-z0-9][a-z0-9_-]*", variant_id):
+        raise ValueError("variant_id solo admite minúsculas, números, guion y subrayado")
+    if warm_start_candidate_path is not None and experiment != "qwen_lora":
+        raise ValueError("warm_start_candidate_path solo está habilitado para qwen_lora")
     if experiment == "cascade_v2":
         if not 0 < cascade_gate_min_damage_recall <= 1:
             raise ValueError("cascade_gate_min_damage_recall debe pertenecer a (0, 1]")
@@ -1439,10 +1543,27 @@ def train_neural_experiment(
         key = "minilm"
     if experiment == "flat_e5":
         key = "e5"
-    spec = TrainingSpecification(
-        **{**asdict(TRANSFORMER_SPECS[key]), "seed": sampling_seed}
-    )
+    spec_values = {**asdict(TRANSFORMER_SPECS[key]), "seed": sampling_seed}
+    if max_length is not None:
+        spec_values["max_length"] = max_length
+    if epochs is not None:
+        spec_values["epochs"] = epochs
+    spec = TrainingSpecification(**spec_values)
     dataset = Path(dataset_path).resolve()
+    dataset_sha = sha256_file(dataset)
+    explicit_warm_start = None
+    warm_start_identity = None
+    if warm_start_candidate_path is not None:
+        explicit_warm_start, warm_start_identity = _load_explicit_qwen_warm_start_candidate(
+            warm_start_candidate_path,
+            dataset_sha=dataset_sha,
+        )
+        parent_max_length = int(warm_start_identity["max_length"])
+        if parent_max_length < 0 or spec.max_length <= parent_max_length:
+            raise ValueError(
+                "La continuación debe ampliar la longitud del candidato padre: "
+                f"padre={parent_max_length}, solicitada={spec.max_length}"
+            )
     output = Path(output_root)
     hardware = resolve_device(device)
     performance_profile = cuda_performance_profile(hardware)
@@ -1493,8 +1614,13 @@ def train_neural_experiment(
         ),
         "test_status": "sealed_not_evaluated",
     }
+    if variant_id is not None:
+        configuration["variant_id"] = variant_id
+    if warm_start_identity is not None:
+        configuration["explicit_warm_start"] = warm_start_identity
     signature = _experiment_signature(dataset, experiment, configuration)
-    run_dir = output / "runs" / f"{experiment}-{signature[:16]}"
+    run_prefix = f"{experiment}-{variant_id}" if variant_id else experiment
+    run_dir = output / "runs" / f"{run_prefix}-{signature[:16]}"
 
     def persistent_trainer_dir(name: str) -> Path | None:
         if persistent_checkpoint_root is None:
@@ -1528,7 +1654,7 @@ def train_neural_experiment(
     )
     run_dir.mkdir(parents=True, exist_ok=True)
     write_json_atomic(run_dir / "training_sampling.json", sampling)
-    previous = _last_candidate(output, experiment, sha256_file(dataset))
+    previous = explicit_warm_start or _last_candidate(output, experiment, dataset_sha)
     taxonomy = load_taxonomy()
     cascade_diagnostics: dict[str, Any] | None = None
     training_elapsed = 0.0
@@ -1893,9 +2019,12 @@ def train_neural_experiment(
     manifest = _checkpoint_manifest(run_dir, [*checkpoint_paths, bundle])
     candidate = {
         "schema_version": "2.1.0",
-        "candidate_id": f"{experiment}-{signature[:12]}",
+        "candidate_id": f"{run_prefix}-{signature[:12]}",
         "experiment": experiment,
         "model_family": experiment,
+        "variant_id": variant_id or "default",
+        "context_max_length": spec.max_length,
+        "initialization": warm_start_identity,
         "run_signature": signature,
         "dataset": str(dataset),
         "dataset_sha256": sha256_file(dataset),

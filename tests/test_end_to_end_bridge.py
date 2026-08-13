@@ -594,3 +594,83 @@ def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(
             }
 
     assert fit_primary_counts == [5, 5, 1, 4, 1, 5, 5, 5, 5]
+
+
+def test_qwen_lora_256_continues_verified_128_as_distinct_candidate(
+    tmp_path, monkeypatch
+):
+    dataset = tmp_path / "dataset.jsonl"
+    _fixture_dataset(dataset)
+    build_calls = []
+
+    class DummyModel:
+        pass
+
+    def fake_build(*args, **kwargs):
+        build_calls.append(kwargs)
+        return object(), DummyModel()
+
+    def fake_predict(model, tokenizer, rows, max_length, hardware, output_count):
+        coarse = experiments.encode_targets(rows).astype(float)
+        output = __import__("numpy").zeros((len(rows), output_count), dtype=float) + 0.1
+        output[:, :5] = coarse * 0.8 + 0.1
+        return output
+
+    def fake_save(model, tokenizer, model_dir):
+        model_dir.mkdir(parents=True, exist_ok=True)
+        (model_dir / "adapter_config.json").write_text("{}\n", encoding="utf-8")
+        (model_dir / "adapter_model.safetensors").write_bytes(b"fixture")
+
+    monkeypatch.setattr(experiments, "_build_hf_model", fake_build)
+    monkeypatch.setattr(experiments, "_fit_hf", lambda *args, **kwargs: {})
+    monkeypatch.setattr(experiments, "_predict_hf", fake_predict)
+    monkeypatch.setattr(experiments, "_save_hf", fake_save)
+
+    output = tmp_path / "qwen_lora"
+    base = experiments.train_neural_experiment(
+        dataset,
+        output,
+        experiment="qwen_lora",
+        device="cpu",
+    )
+    parent = experiments.select_qwen_lora_warm_start_candidate(
+        output, dataset, max_length=128
+    )
+    continuation = experiments.train_neural_experiment(
+        dataset,
+        output,
+        experiment="qwen_lora",
+        device="cpu",
+        max_length=256,
+        epochs=4,
+        variant_id="context256_from128",
+        warm_start_candidate_path=parent["candidate_path"],
+    )
+    repeated = experiments.train_neural_experiment(
+        dataset,
+        output,
+        experiment="qwen_lora",
+        device="cpu",
+        max_length=256,
+        epochs=4,
+        variant_id="context256_from128",
+        warm_start_candidate_path=parent["candidate_path"],
+    )
+
+    child = continuation["candidate"]
+    assert base["candidate"]["candidate_id"] != child["candidate_id"]
+    assert child["candidate_id"].startswith("qwen_lora-context256_from128-")
+    assert child["model_family"] == "qwen_lora"
+    assert child["variant_id"] == "context256_from128"
+    assert child["context_max_length"] == 256
+    assert child["truncation_diagnostic"]["max_length"] == 256
+    assert child["warm_start_from"] == parent["candidate_id"]
+    assert child["initialization"]["candidate_id"] == parent["candidate_id"]
+    assert child["initialization"]["max_length"] == 128
+    assert child["initialization"]["optimizer_state_reused"] is False
+    assert repeated["status"] == "noop"
+    assert len(build_calls) == 2
+    assert build_calls[0].get("adapter_source") is None
+    assert Path(build_calls[1]["adapter_source"]) == (
+        Path(parent["candidate_path"]).parent / "model"
+    )
