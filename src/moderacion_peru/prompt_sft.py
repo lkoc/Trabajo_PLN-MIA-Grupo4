@@ -37,9 +37,16 @@ from .taxonomy import load_taxonomy
 PROMPT_SFT_MODEL_ID = "Qwen/Qwen3-0.6B"
 PROMPT_SFT_MODEL_REVISION = "6130ef31402718485ca4d80a6234f70d9a4cf362"
 PROMPT_SFT_GRADIENT_CHECKPOINTING = "non_reentrant_input_grad_v1"
+PROMPT_SFT_TRAINING_REGIMES = {
+    "full",
+    "diagnostic_pilot",
+    "budgeted_comparable",
+}
 
 
-def _configure_lora_gradient_checkpointing(model: Any) -> dict[str, Any]:
+def _configure_lora_gradient_checkpointing(
+    model: Any, *, enabled: bool = True
+) -> dict[str, Any]:
     """Conserva el grafo LoRA cuando el backbone causal está congelado.
 
     El checkpointing reentrante de PyTorch exige que al menos una entrada tenga
@@ -64,6 +71,17 @@ def _configure_lora_gradient_checkpointing(model: Any) -> dict[str, Any]:
             "Qwen SFT esperaba entrenar solo adaptadores LoRA; parámetros inesperados: "
             + ", ".join(non_lora[:5])
         )
+
+    if not enabled:
+        return {
+            "policy": "disabled_for_short_sequence_budget_profile",
+            "trainable_parameter_tensors": len(trainable),
+            "trainable_parameters": int(
+                sum(parameter.numel() for _name, parameter in trainable)
+            ),
+            "input_gradient_method": None,
+            "checkpointing_mode": "disabled",
+        }
 
     input_gradient_method = "enable_input_require_grads"
     if hasattr(model, "enable_input_require_grads"):
@@ -99,7 +117,20 @@ def _configure_lora_gradient_checkpointing(model: Any) -> dict[str, Any]:
     }
 
 
-def compile_operational_prompt_capsule(prompt: str, *, max_chars: int = 9000) -> str:
+def _prompt_section(prompt: str, heading: str) -> str:
+    selected: list[str] = []
+    active = False
+    for line in prompt.splitlines():
+        if line.startswith("## "):
+            if active:
+                break
+            active = line.strip() == heading
+        if active:
+            selected.append(line)
+    return "\n".join(selected).strip()
+
+
+def compile_operational_prompt_capsule(prompt: str, *, max_chars: int = 6200) -> str:
     """Compila v3.2 conservando contrato, jerarquía, categorías y JSON.
 
     La procedencia se prueba con el SHA del archivo completo. La cápsula evita
@@ -107,39 +138,41 @@ def compile_operational_prompt_capsule(prompt: str, *, max_chars: int = 9000) ->
     costoso; no crea criterios nuevos ni sustituye el prompt fuente.
     """
 
-    headings = {
-        "## Tarea y salidas permitidas",
-        "## Principio rector: clasificar el evento de habla, no la palabra",
-        "## Jerarquía obligatoria de decisión",
-        "## Reglas transversales",
-        "## Formato JSON obligatorio",
-    }
-    lines = prompt.splitlines()
-    selected: list[str] = []
-    active = False
-    for line in lines:
-        if line.startswith("## "):
-            active = line.strip() in headings or line.startswith("## Jerarquía")
-        if active or line.startswith(("Versión del prompt", "Contrato y taxonomía")):
-            selected.append(line)
-    capsule = "\n".join(selected).strip()
-    if len(capsule) > max_chars:
-        capsule = capsule[:max_chars].rsplit("\n", 1)[0]
-        capsule += (
-            "\n\n[La cápsula termina aquí; el SHA remite al prompt v3.2 completo.]"
-        )
+    preamble = "\n".join(
+        line
+        for line in prompt.splitlines()
+        if line.startswith(("Versión del prompt", "Contrato y taxonomía"))
+    )
+    task = _prompt_section(prompt, "## Tarea y salidas permitidas")
+    principle = _prompt_section(
+        prompt, "## Principio rector: clasificar el evento de habla, no la palabra"
+    )
+    hierarchy = _prompt_section(prompt, "## Jerarquía obligatoria de decisión")
+    consistency = _prompt_section(prompt, "## Consistencia obligatoria")
+    response_format = _prompt_section(prompt, "## Formato de respuesta")
+    fixed = "\n\n".join(
+        part for part in (preamble, task, principle, consistency, response_format) if part
+    )
+    hierarchy_budget = max(0, max_chars - len(fixed) - 2)
+    if len(hierarchy) > hierarchy_budget:
+        hierarchy = hierarchy[:hierarchy_budget].rsplit("\n", 1)[0]
+        hierarchy += "\n[Jerarquía abreviada; el SHA identifica el prompt v3.2 completo.]"
+    capsule = "\n\n".join(part for part in (fixed, hierarchy) if part).strip()
+    if not task or not consistency or not response_format:
+        raise ValueError("El prompt operacional no contiene las secciones obligatorias")
     return capsule
 
 
 def _json_target(row: dict[str, Any]) -> str:
     return json.dumps(
         {
+            "chunk_id": row["chunk_id"],
             "coarse_labels": row["coarse_labels"],
             "fine_labels": row.get("fine_labels", []),
             "flags": row.get("flags_reference_only", []),
-            "confidence": 1.0,
+            "score_confianza": 1.0,
             "needs_review": False,
-            "reasoning": "decisión supervisada del snapshot",
+            "justification": "decisión supervisada del snapshot",
         },
         ensure_ascii=False,
         separators=(",", ":"),
@@ -187,8 +220,7 @@ class PromptCompletionDataset:
                 {"role": "system", "content": self.system_prompt},
                 {
                     "role": "user",
-                    "content": "Clasifica este chunk y devuelve solo JSON:\n"
-                    + str(row["text"]),
+                    "content": _user_message(row),
                 },
             ],
             tokenize=False,
@@ -235,6 +267,7 @@ def _generate_json_scores(
     device: str,
     max_input_length: int,
     batch_size: int = 1,
+    max_new_tokens: int = 192,
     progress_callback: ProgressCallback | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     import torch
@@ -263,8 +296,7 @@ def _generate_json_scores(
                         {"role": "system", "content": system_prompt},
                         {
                             "role": "user",
-                            "content": "Clasifica este chunk y devuelve solo JSON:\n"
-                            + str(row["text"]),
+                            "content": _user_message(row),
                         },
                     ],
                     tokenize=False,
@@ -287,7 +319,7 @@ def _generate_json_scores(
             with torch.no_grad():
                 generated = model.generate(
                     **encoded,
-                    max_new_tokens=256,
+                    max_new_tokens=max_new_tokens,
                     do_sample=False,
                     pad_token_id=tokenizer.pad_token_id,
                     eos_token_id=tokenizer.eos_token_id,
@@ -312,8 +344,17 @@ def _generate_json_scores(
                         for flag in payload.get("flags", ())
                         if flag in taxonomy.flags
                     )
+                    returned_chunk_id = payload.get("chunk_id")
+                    if returned_chunk_id != batch_rows[offset]["chunk_id"]:
+                        raise ValueError("chunk_id no coincide")
                     confidence = float(
-                        np.clip(payload.get("confidence", 0.5), 0.0, 1.0)
+                        np.clip(
+                            payload.get(
+                                "score_confianza", payload.get("confidence", 0.5)
+                            ),
+                            0.0,
+                            1.0,
+                        )
                     )
                     if not coarse:
                         raise ValueError("coarse_labels vacío")
@@ -347,6 +388,7 @@ def _generate_json_scores(
         "valid_json_contract": valid,
         "schema_valid_rate": valid / max(1, len(rows)),
         "schema_errors": schema_errors,
+        "max_new_tokens": max_new_tokens,
         "score_semantics": "self_reported_confidence_for_selected_labels_and_one_minus_for_others",
     }
 
@@ -360,9 +402,15 @@ def train_prompt_conditioned_sft(
     safe_to_damage_ratio: float | None = 4.0,
     seed: int = 20260805,
     epochs: int = 2,
-    max_length: int = 4096,
+    max_length: int = 2560,
     train_limit: int | None = None,
     validation_limit: int | None = None,
+    training_regime: str = "full",
+    eligible_for_03_07: bool | None = None,
+    max_training_seconds: float | None = None,
+    generation_max_new_tokens: int = 192,
+    gradient_checkpointing: bool | None = None,
+    run_label: str | None = None,
     force: bool = False,
     persistent_checkpoint_root: str | Path | None = None,
     progress_callback: ProgressCallback | None = None,
@@ -370,6 +418,22 @@ def train_prompt_conditioned_sft(
     """LoRA SFT generativo condicionado por una cápsula trazable de v3.2."""
 
     safe_to_damage_ratio = _require_project_safe_ratio(safe_to_damage_ratio)
+    if training_regime not in PROMPT_SFT_TRAINING_REGIMES:
+        raise ValueError(
+            "training_regime debe ser full, diagnostic_pilot o budgeted_comparable"
+        )
+    if epochs <= 0 or max_length < 512 or generation_max_new_tokens < 32:
+        raise ValueError("epochs, max_length o generation_max_new_tokens inválidos")
+    if max_training_seconds is not None and max_training_seconds <= 0:
+        raise ValueError("max_training_seconds debe ser positivo")
+    if eligible_for_03_07 is None:
+        eligible_for_03_07 = training_regime in {"full", "budgeted_comparable"}
+    if eligible_for_03_07 and validation_limit is not None:
+        raise ValueError(
+            "Un candidato elegible para 03_07 debe inferir validation completa"
+        )
+    if training_regime == "diagnostic_pilot" and eligible_for_03_07:
+        raise ValueError("El piloto diagnóstico no puede entrar a 03_07")
     try:
         import torch
         from peft import LoraConfig, TaskType, get_peft_model
@@ -390,11 +454,22 @@ def train_prompt_conditioned_sft(
     system_prompt = compile_operational_prompt_capsule(prompt_text)
     hardware = resolve_device(device)
     high_memory_profile = high_memory_bf16_cuda(hardware)
-    train_batch_size = 2 if high_memory_profile else 1
+    budgeted = training_regime == "budgeted_comparable"
+    train_batch_size = 4 if high_memory_profile and budgeted else (2 if high_memory_profile else 1)
     eval_batch_size = 2 if high_memory_profile else 1
-    gradient_accumulation = 4 if high_memory_profile else 8
+    gradient_accumulation = 2 if high_memory_profile and budgeted else (4 if high_memory_profile else 8)
     dataloader_num_workers = 2 if high_memory_profile else 0
-    generation_batch_size = 4 if high_memory_profile else 1
+    generation_batch_size = 8 if high_memory_profile and budgeted else (4 if high_memory_profile else 1)
+    if gradient_checkpointing is None:
+        gradient_checkpointing = not (budgeted and high_memory_profile)
+    training_disclaimer = (
+        "Candidato de presupuesto computacional limitado: se entrenó con un "
+        "subconjunto determinista y/o menos épocas, pero se evaluó sobre la misma "
+        "validation completa. No equivale al SFT exhaustivo ni permite atribuir "
+        "su diferencia únicamente a la arquitectura."
+        if budgeted
+        else None
+    )
     configuration = {
         "experiment": "qwen_prompt_sft",
         "model_id": PROMPT_SFT_MODEL_ID,
@@ -410,6 +485,11 @@ def train_prompt_conditioned_sft(
         "max_length": max_length,
         "train_limit": train_limit,
         "validation_limit": validation_limit,
+        "training_regime": training_regime,
+        "eligible_for_03_07": bool(eligible_for_03_07),
+        "max_training_seconds": max_training_seconds,
+        "generation_max_new_tokens": generation_max_new_tokens,
+        "run_label": run_label,
         "seed": seed,
         "performance_profile": cuda_performance_profile(hardware),
         "per_device_train_batch_size": train_batch_size,
@@ -417,7 +497,11 @@ def train_prompt_conditioned_sft(
         "gradient_accumulation_steps": gradient_accumulation,
         "dataloader_num_workers": dataloader_num_workers,
         "generation_batch_size": generation_batch_size,
-        "lora_gradient_checkpointing": PROMPT_SFT_GRADIENT_CHECKPOINTING,
+        "lora_gradient_checkpointing": (
+            PROMPT_SFT_GRADIENT_CHECKPOINTING
+            if gradient_checkpointing
+            else "disabled_for_short_sequence_budget_profile"
+        ),
         "test_status": "sealed_not_evaluated",
     }
     signature = _experiment_signature(dataset, "qwen_prompt_sft", configuration)
@@ -427,8 +511,8 @@ def train_prompt_conditioned_sft(
         if persistent_checkpoint_root is not None
         else None
     )
-    pilot = train_limit is not None or validation_limit is not None
-    candidate_path = run_dir / ("pilot_candidate.json" if pilot else "candidate.json")
+    diagnostic_pilot = training_regime == "diagnostic_pilot"
+    candidate_path = run_dir / ("pilot_candidate.json" if diagnostic_pilot else "candidate.json")
     if candidate_path.is_file() and not force:
         candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
         if candidate.get("run_signature") == signature:
@@ -491,15 +575,48 @@ def train_prompt_conditioned_sft(
             target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
         ),
     )
+
+
+def _user_message(row: dict[str, Any]) -> str:
+    return (
+        "Clasifica este chunk y devuelve solo JSON. "
+        f"Copia chunk_id exactamente: {row['chunk_id']}\nTexto:\n{row['text']}"
+    )
     model.config.use_cache = False
-    gradient_diagnostics = _configure_lora_gradient_checkpointing(model)
+    gradient_diagnostics = _configure_lora_gradient_checkpointing(
+        model, enabled=gradient_checkpointing
+    )
     train_dataset = PromptCompletionDataset(
         tokenizer, train, system_prompt, max_length=max_length
     )
     validation_dataset = PromptCompletionDataset(
         tokenizer, validation, system_prompt, max_length=max_length
     )
-    callbacks = [EarlyStoppingCallback(early_stopping_patience=1)]
+    callbacks = []
+    if not budgeted:
+        callbacks.append(EarlyStoppingCallback(early_stopping_patience=1))
+    if max_training_seconds is not None:
+        from transformers import TrainerCallback
+
+        class WallClockBudgetCallback(TrainerCallback):
+            def __init__(self, seconds: float) -> None:
+                self.seconds = seconds
+                self.started_at: float | None = None
+
+            def on_train_begin(self, args, state, control, **kwargs):
+                self.started_at = time.perf_counter()
+                return control
+
+            def on_step_end(self, args, state, control, **kwargs):
+                if (
+                    self.started_at is not None
+                    and time.perf_counter() - self.started_at >= self.seconds
+                ):
+                    control.should_training_stop = True
+                    control.should_save = True
+                return control
+
+        callbacks.append(WallClockBudgetCallback(max_training_seconds))
     persistent_callback = build_persistent_checkpoint_callback(
         persistent_checkpoint_dir
     )
@@ -514,11 +631,11 @@ def train_prompt_conditioned_sft(
             per_device_eval_batch_size=eval_batch_size,
             gradient_accumulation_steps=gradient_accumulation,
             learning_rate=1e-4,
-            eval_strategy="epoch",
+            eval_strategy="no" if budgeted else "epoch",
             save_strategy="epoch",
-            load_best_model_at_end=True,
-            metric_for_best_model="eval_loss",
-            greater_is_better=False,
+            load_best_model_at_end=not budgeted,
+            metric_for_best_model=None if budgeted else "eval_loss",
+            greater_is_better=None if budgeted else False,
             save_total_limit=2,
             report_to=[],
             seed=seed,
@@ -564,6 +681,7 @@ def train_prompt_conditioned_sft(
         device=torch_device,
         max_input_length=max_length - 256,
         batch_size=generation_batch_size,
+        max_new_tokens=generation_max_new_tokens,
         progress_callback=progress_callback,
     )
     validation_generation_elapsed = time.perf_counter() - validation_started
@@ -592,6 +710,9 @@ def train_prompt_conditioned_sft(
         "base_revision": PROMPT_SFT_MODEL_REVISION,
         "prompt_sha256": prompt_sha,
         "prompt_capsule": "prompt_provenance.json",
+        "max_input_length": max_length - generation_max_new_tokens,
+        "max_new_tokens": generation_max_new_tokens,
+        "batch_size": generation_batch_size,
     }
     bundle = run_dir / "inference.json"
     write_json_atomic(bundle, inference)
@@ -603,6 +724,23 @@ def train_prompt_conditioned_sft(
         "candidate_id": f"qwen-prompt-sft-{signature[:12]}",
         "experiment": "qwen_prompt_sft",
         "model_family": "qwen_prompt_sft",
+        "training_regime": training_regime,
+        "eligible_for_03_07": bool(eligible_for_03_07),
+        "comparison_disclaimer": training_disclaimer,
+        "training_budget": {
+            "run_label": run_label,
+            "train_limit": train_limit,
+            "validation_limit": validation_limit,
+            "epochs": epochs,
+            "max_training_seconds": max_training_seconds,
+            "max_length": max_length,
+            "generation_max_new_tokens": generation_max_new_tokens,
+            "validation_scope": (
+                "full_common_validation" if validation_limit is None else "diagnostic_subset"
+            ),
+            "actual_train_rows": len(train),
+            "actual_validation_rows": len(validation),
+        },
         "conditioning": "operational_prompt_v3_2_capsule_plus_chunk_to_strict_json",
         "run_signature": signature,
         "dataset": str(dataset),
@@ -635,8 +773,8 @@ def train_prompt_conditioned_sft(
             "validation_metrics_and_thresholds": validation_metrics_elapsed,
             "total_before_candidate_write": time.perf_counter() - run_started,
         },
-        "status": "pilot_complete" if pilot else "complete",
-        "pilot_not_eligible_for_03_07": pilot,
+        "status": "pilot_complete" if diagnostic_pilot else "complete",
+        "pilot_not_eligible_for_03_07": diagnostic_pilot,
         "completed_at": datetime.now(UTC).isoformat(),
         "engine": TRAINING_ENGINE_VERSION,
         "test_rows_sealed": test_count,

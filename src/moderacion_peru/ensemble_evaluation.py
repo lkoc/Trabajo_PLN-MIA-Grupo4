@@ -667,6 +667,8 @@ def compare_and_freeze_validation(
         reasons = []
         if candidate.get("status") != "complete":
             reasons.append("incomplete")
+        if candidate.get("eligible_for_03_07") is False:
+            reasons.append("explicitly_not_eligible_for_03_07")
         if candidate.get("dataset_sha256") != dataset_sha:
             reasons.append("different_snapshot")
         if tuple(candidate.get("target_labels", ())) != taxonomy.target_labels:
@@ -782,6 +784,21 @@ def compare_and_freeze_validation(
                 "model_family": family,
                 "members": member_ids,
                 "weights": weights,
+                "training_regime": (
+                    eligible_by_id[identifier].get("training_regime", "standard")
+                    if kind == "individual"
+                    else "ensemble_of_reported_members"
+                ),
+                "comparison_disclaimer": (
+                    eligible_by_id[identifier].get("comparison_disclaimer")
+                    if kind == "individual"
+                    else None
+                ),
+                "training_budget": (
+                    eligible_by_id[identifier].get("training_budget")
+                    if kind == "individual"
+                    else None
+                ),
                 "validation_metrics": metrics,
                 "crossfit": {
                     "method": "group_k_fold_by_video",
@@ -791,6 +808,7 @@ def compare_and_freeze_validation(
             }
         )
 
+    eligible_by_id = {str(row["candidate_id"]): row for row in eligible}
     for candidate in eligible:
         rows, scores = _load_validation_predictions(candidate)
         _, aligned = _align_predictions([reference_loaded, (candidate, rows, scores)])
@@ -1202,7 +1220,9 @@ def _score_candidate(
             rows,
             provenance["capsule"],
             device=torch_device,
-            max_input_length=3840,
+            max_input_length=int(inference.get("max_input_length", 3840)),
+            batch_size=int(inference.get("batch_size", 1)),
+            max_new_tokens=int(inference.get("max_new_tokens", 256)),
             progress_callback=relay_generation_progress,
         )
         return values[:, :5]
