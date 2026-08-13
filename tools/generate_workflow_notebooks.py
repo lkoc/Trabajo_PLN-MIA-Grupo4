@@ -3488,7 +3488,7 @@ PERSISTENT_CHECKPOINT_ROOT=COLAB_CONTEXT.drive_run_dir/'trainer_checkpoints' if 
 # Perfil recomendado: candidato comparable bajo un presupuesto aproximado de una hora A100.
 BUDGET_TRAIN_ROWS=3000
 BUDGET_EPOCHS=1
-BUDGET_MAX_LENGTH=2560
+BUDGET_MAX_LENGTH=2048
 BUDGET_TRAINING_SECONDS=1500  # 25 min; deja el resto a validation generativa completa
 BUDGET_TOTAL_SECONDS=4500  # corte duro total de 75 min; si vence, no crea candidate.json
 ESTIMATED_A100_HOURS=(0.75,1.25)
@@ -3509,7 +3509,7 @@ show_summary('Preflight de costo y comparabilidad',{
     'test':'sellado; no se abre en esta corrida',
 },tone='warning')
 if RUN_BUDGETED_COMPARABLE:
-    budgeted_result=run_with_progress('Qwen SFT budgeted comparable',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT/'budgeted_comparable',device=DEVICE,safe_to_damage_ratio=4.0,training_regime='budgeted_comparable',eligible_for_03_07=True,train_limit=BUDGET_TRAIN_ROWS,validation_limit=None,epochs=BUDGET_EPOCHS,max_length=BUDGET_MAX_LENGTH,max_training_seconds=BUDGET_TRAINING_SECONDS,max_total_seconds=BUDGET_TOTAL_SECONDS,generation_max_new_tokens=192,prompt_capsule_max_chars=6200,run_label='a100_about_one_hour_v1',persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='fila')
+    budgeted_result=run_with_progress('Qwen SFT budgeted comparable',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT/'budgeted_comparable',device=DEVICE,safe_to_damage_ratio=4.0,training_regime='budgeted_comparable',eligible_for_03_07=True,train_limit=BUDGET_TRAIN_ROWS,validation_limit=None,epochs=BUDGET_EPOCHS,max_length=BUDGET_MAX_LENGTH,max_training_seconds=BUDGET_TRAINING_SECONDS,max_total_seconds=BUDGET_TOTAL_SECONDS,generation_max_new_tokens=160,prompt_capsule_max_chars=4800,run_label='a100_about_one_hour_v2_memory_safe',persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='fila')
     show_result('Candidato SFT budgeted elegible para 03_07',budgeted_result,tone='warning')
 if RUN_DIAGNOSTIC_PILOT:
     pilot_result=run_with_progress('Piloto diagnóstico Qwen SFT',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT/'diagnostic_pilot',device=DEVICE,safe_to_damage_ratio=4.0,training_regime='diagnostic_pilot',eligible_for_03_07=False,train_limit=500,validation_limit=200,epochs=1,max_length=2560,generation_max_new_tokens=192,run_label='diagnostic_only',persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='fila')

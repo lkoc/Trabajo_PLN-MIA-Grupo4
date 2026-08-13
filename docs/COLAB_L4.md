@@ -95,7 +95,7 @@ Los cuadernos `02_01` y `03_02`–`03_06b` pueden ejecutarse en Colab. `02_01` u
 6. extrae e instala el core en el SSD efímero `/content`;
 7. exige una `NVIDIA L4` solo si el cuaderno declara `requires_cuda=true` y `COLAB_REQUIRE_L4=True`; los cuadernos Qwen usan `False`, exigen CUDA y activan automáticamente el perfil BF16 de 40 GB en A100/H100/H200 o hardware equivalente.
 
-Los cuadernos `02_02`, `03_05`, `03_06` y `03_06b` están optimizados para una A100 de 40 GB. La detección se basa en CUDA, soporte BF16 y memoria observable (al menos 39 GB), no únicamente en el nombre comercial. En `03_05` y `03_06` el lote efectivo permanece en ocho (`8×1` en A100 frente a `2×4` en L4). El perfil corto recomendado de `03_06b` usa secuencias de 2.560 tokens, lote efectivo `4×2`, inferencia por lotes de 16 y desactiva *gradient checkpointing*; la corrida completa conserva el perfil reanudable `2×4`.
+Los cuadernos `02_02`, `03_05`, `03_06` y `03_06b` están optimizados para una A100 de 40 GB. La detección se basa en CUDA, soporte BF16 y memoria observable (al menos 39 GB), no únicamente en el nombre comercial. En `03_05` y `03_06` el lote efectivo permanece en ocho (`8×1` en A100 frente a `2×4` en L4). El perfil corto recomendado de `03_06b` usa secuencias de 2.048 tokens, lote efectivo `2×4`, inferencia por lotes de ocho y *gradient checkpointing*. Además exige por lo menos 24 GB decimales de VRAM libre antes de cargar Qwen; si el kernel retuvo modelos anteriores, pide reiniciar la sesión antes de consumir el entrenamiento.
 
 Los entrenamientos `03_02`–`03_06b` se ejecutan sobre el SSD efímero. Los perfiles
 reanudables reflejan automáticamente cada checkpoint que termina de escribir `Trainer` en

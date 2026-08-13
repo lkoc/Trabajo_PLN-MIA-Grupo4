@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import hashlib
 import json
 import re
@@ -42,6 +43,35 @@ PROMPT_SFT_TRAINING_REGIMES = {
     "diagnostic_pilot",
     "budgeted_comparable",
 }
+PROMPT_SFT_BUDGETED_MIN_FREE_CUDA_BYTES = 24_000_000_000
+
+
+def _cuda_memory_preflight(
+    torch_module: Any,
+    *,
+    minimum_free_bytes: int | None = None,
+) -> dict[str, int]:
+    """Libera caché huérfana y bloquea una corrida con VRAM ya ocupada."""
+
+    gc.collect()
+    torch_module.cuda.empty_cache()
+    free_bytes, total_bytes = torch_module.cuda.mem_get_info()
+    diagnostics = {
+        "free_bytes": int(free_bytes),
+        "total_bytes": int(total_bytes),
+        "allocated_by_torch_bytes": int(torch_module.cuda.memory_allocated()),
+        "reserved_by_torch_bytes": int(torch_module.cuda.memory_reserved()),
+    }
+    if minimum_free_bytes is not None and free_bytes < minimum_free_bytes:
+        free_gib = free_bytes / 1024**3
+        required_gib = minimum_free_bytes / 1024**3
+        raise RuntimeError(
+            "VRAM insuficiente antes de cargar Qwen: "
+            f"{free_gib:.1f} GiB libres; se requieren al menos {required_gib:.1f} GiB. "
+            "Reinicie por completo el runtime de Colab para liberar modelos de una "
+            "corrida anterior y vuelva a ejecutar desde la primera celda."
+        )
+    return diagnostics
 
 
 def _configure_lora_gradient_checkpointing(
@@ -495,19 +525,15 @@ def train_prompt_conditioned_sft(
     hardware = resolve_device(device)
     high_memory_profile = high_memory_bf16_cuda(hardware)
     budgeted = training_regime == "budgeted_comparable"
-    train_batch_size = (
-        4 if high_memory_profile and budgeted else (2 if high_memory_profile else 1)
-    )
+    train_batch_size = 2 if high_memory_profile else 1
     eval_batch_size = 2 if high_memory_profile else 1
-    gradient_accumulation = (
-        2 if high_memory_profile and budgeted else (4 if high_memory_profile else 8)
-    )
+    gradient_accumulation = 4 if high_memory_profile else 8
     dataloader_num_workers = 2 if high_memory_profile else 0
     generation_batch_size = (
-        16 if high_memory_profile and budgeted else (4 if high_memory_profile else 1)
+        8 if high_memory_profile and budgeted else (4 if high_memory_profile else 1)
     )
     if gradient_checkpointing is None:
-        gradient_checkpointing = not (budgeted and high_memory_profile)
+        gradient_checkpointing = True
     training_disclaimer = (
         "Candidato de presupuesto computacional limitado: se entrenó con un "
         "subconjunto determinista y/o menos épocas, pero se evaluó sobre la misma "
@@ -575,6 +601,16 @@ def train_prompt_conditioned_sft(
                 completed=1,
             )
             return {"status": "noop", "candidate": candidate}
+    cuda_memory_preflight = None
+    if hardware.backend == "cuda":
+        cuda_memory_preflight = _cuda_memory_preflight(
+            torch,
+            minimum_free_bytes=(
+                PROMPT_SFT_BUDGETED_MIN_FREE_CUDA_BYTES
+                if budgeted and high_memory_profile
+                else None
+            ),
+        )
     train, validation, test_sealed, sampling = _dataset_splits(
         dataset,
         split_scheme="video",
@@ -810,6 +846,7 @@ def train_prompt_conditioned_sft(
         "checkpoint_manifest": manifest.name,
         "inference": {**inference, "bundle": bundle.name},
         "hardware": hardware.model_dump(),
+        "cuda_memory_preflight": cuda_memory_preflight,
         "training_metrics": dict(training_result.metrics),
         "gradient_diagnostics": gradient_diagnostics,
         "resumed_from_checkpoint": checkpoint,

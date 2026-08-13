@@ -165,7 +165,7 @@ tope artificial; persiste por `chunk_id` y puede continuar con una recarga.
 Los cuadernos `03_01`–`03_06b` completan `fit → calibración/evaluación en validation → manifiesto` y dejan test sellado. `03_07` compara individuos y ensembles, congela candidatos, umbrales y regla; un segundo interruptor infiere una sola vez sobre el test natural completo. Train y validation conservan todo el daño y seleccionan `SEGURO` de forma determinista, aproximadamente proporcional por canal, con ratio 4:1: quedan 51.205/10.600 chunks. Test conserva sus 22.684 chunks y su prevalencia natural. De la misma inferencia se deriva además una vista secundaria determinista 4:1 de 9.010 chunks; no se vuelve a abrir ni ejecutar el modelo. La publicación permanece bloqueada por defecto.
 
 `03_06b` ofrece además `RUN_BUDGETED_COMPARABLE`: ajusta LoRA con 3.000 filas
-deterministas, una época y contexto 2.560, pero genera predicciones sobre las
+deterministas, una época y contexto 2.048, pero genera predicciones sobre las
 10.600 filas completas de `validation`. Por eso puede entrar a `03_07` como
 candidato de presupuesto limitado; el ranking arrastra ese régimen y su
 advertencia metodológica. No representa el SFT exhaustivo ni permite atribuir

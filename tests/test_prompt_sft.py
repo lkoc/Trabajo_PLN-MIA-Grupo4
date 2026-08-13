@@ -7,6 +7,7 @@ import pytest
 
 from moderacion_peru.prompt_sft import (
     _configure_lora_gradient_checkpointing,
+    _cuda_memory_preflight,
     _json_target,
     compile_operational_prompt_capsule,
     train_prompt_conditioned_sft,
@@ -64,6 +65,46 @@ def test_prompt_sft_can_disable_checkpointing_for_short_a100_profile():
     assert model.checkpointing_kwargs is None
     assert diagnostics["checkpointing_mode"] == "disabled"
     assert diagnostics["trainable_parameters"] == 16
+
+
+class _CudaMemory:
+    def __init__(self, free_bytes: int) -> None:
+        self.free_bytes = free_bytes
+        self.empty_cache_called = False
+
+    def empty_cache(self) -> None:
+        self.empty_cache_called = True
+
+    def mem_get_info(self):
+        return self.free_bytes, 40_000_000_000
+
+    def memory_allocated(self) -> int:
+        return 12_000_000_000
+
+    def memory_reserved(self) -> int:
+        return 13_000_000_000
+
+
+def test_prompt_sft_rejects_a_contaminated_cuda_runtime_before_model_load():
+    cuda = _CudaMemory(5_000_000)
+    torch_module = type("Torch", (), {"cuda": cuda})()
+
+    with pytest.raises(RuntimeError, match="Reinicie por completo el runtime"):
+        _cuda_memory_preflight(torch_module, minimum_free_bytes=24_000_000_000)
+
+    assert cuda.empty_cache_called is True
+
+
+def test_prompt_sft_accepts_a_clean_cuda_runtime_and_records_memory():
+    cuda = _CudaMemory(31_000_000_000)
+    torch_module = type("Torch", (), {"cuda": cuda})()
+
+    diagnostics = _cuda_memory_preflight(
+        torch_module, minimum_free_bytes=24_000_000_000
+    )
+
+    assert diagnostics["free_bytes"] == 31_000_000_000
+    assert diagnostics["allocated_by_torch_bytes"] == 12_000_000_000
 
 
 def test_prompt_capsule_keeps_contract_and_strict_response_format():

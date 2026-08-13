@@ -911,6 +911,10 @@ def test_qwen_prompt_sft_exposes_budgeted_comparable_profile():
     assert "validation_limit=None" in source
     assert "BUDGET_TRAINING_SECONDS=1500" in source
     assert "BUDGET_TOTAL_SECONDS=4500" in source
+    assert "BUDGET_MAX_LENGTH=2048" in source
+    assert "generation_max_new_tokens=160" in source
+    assert "prompt_capsule_max_chars=4800" in source
+    assert "a100_about_one_hour_v2_memory_safe" in source
     assert "Publicación final budgeted" in source
     assert "unidades_estimadas_a_5.4_CU_h" in source
 
