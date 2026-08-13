@@ -1009,7 +1009,13 @@ def _build_hf_model(
         adapter = str(adapter_source)
         peft_config = PeftConfig.from_pretrained(adapter)
         source = peft_config.base_model_name_or_path
-        tokenizer = AutoTokenizer.from_pretrained(adapter)
+        tokenizer = AutoTokenizer.from_pretrained(
+            adapter,
+            # Transformers 4.57.3--4.57.6 interpreta como Mistral cualquier
+            # tokenizador local cuyo config fue guardado por esas versiones.
+            # Los backbones de este proyecto son BERT/E5/Qwen, no Mistral.
+            fix_mistral_regex=False,
+        )
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token = tokenizer.eos_token
         id2label = {index: label for index, label in enumerate(labels)}
@@ -1031,6 +1037,10 @@ def _build_hf_model(
         # explicit also prevents huggingface_hub from probing Colab's secret
         # vault when the notebook is executed through the VS Code extension.
         token=False,
+        # Evita el falso positivo Mistral de Transformers 4.57.3--4.57.6 al
+        # recargar un tokenizer local guardado por la misma versión. Aplicar
+        # el parche Mistral a WordPiece/SentencePiece cambiaría el contrato.
+        fix_mistral_regex=False,
     )
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token

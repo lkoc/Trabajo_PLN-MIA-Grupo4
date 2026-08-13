@@ -69,6 +69,8 @@ def test_public_hf_model_load_does_not_probe_for_an_implicit_token(monkeypatch):
 
     assert [kind for kind, _source, _kwargs in calls] == ["tokenizer", "model"]
     assert all(kwargs["token"] is False for _kind, _source, kwargs in calls)
+    tokenizer_call = next(call for call in calls if call[0] == "tokenizer")
+    assert tokenizer_call[2]["fix_mistral_regex"] is False
 
 
 def test_fit_hf_keeps_label_mask_for_structured_loss(monkeypatch, tmp_path):
