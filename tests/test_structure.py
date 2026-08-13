@@ -824,17 +824,29 @@ def test_minilm_notebook_exposes_bounded_context_seed_and_focal_campaign():
         as_version=4,
     )
     source = "\n".join(cell.source for cell in notebook.cells)
+    generator = (ROOT / "tools/generate_workflow_notebooks.py").read_text(
+        encoding="utf-8"
+    )
 
-    assert "RUN_MINILM_CONTEXT_SCREEN=False" in source
-    assert "RUN_MINILM_SEED_CONFIRMATION=False" in source
-    assert "RUN_MINILM_FOCAL_ABLATION=False" in source
-    assert "CONTEXT_SCREEN_LENGTHS=(192,256)" in source
-    assert "ADDITIONAL_TRAINING_SEEDS=(20260817,20260829)" in source
-    assert "SAMPLING_SEED=20260805" in source
-    assert "training_seed=training_seed" in source
-    assert "loss_mode='focal'" in source
-    assert "warm_start_candidate_path=minilm_parent['candidate_path']" in source
-    assert "test':'natural completo, sellado'" in source
+    for payload in (source, generator):
+        assert "RUN_MINILM_CONTEXT_SCREEN=False" in payload
+        assert "RUN_MINILM_SEED_CONFIRMATION=False" in payload
+        assert "RUN_MINILM_FOCAL_ABLATION=False" in payload
+        assert "CONTEXT_SCREEN_LENGTHS=(192,256)" in payload
+        assert "ADDITIONAL_TRAINING_SEEDS=(20260817,20260829)" in payload
+        assert "SAMPLING_SEED=20260805" in payload
+        assert "training_seed=training_seed" in payload
+        assert "loss_mode='focal'" in payload
+        assert "warm_start_candidate_path=minilm_parent['candidate_path']" in payload
+        assert "test':'natural completo, sellado'" in payload
+
+        assert "Guía reproducible de la campaña MiniLM" in payload
+        assert "siempre con el mismo `COLAB_RUN_ID`" in payload
+        assert "Etapa 1 · Pantalla pareada de contexto" in payload
+        assert "Etapa 2 · Confirmación con tres semillas" in payload
+        assert "Etapa 3 · Ablación focal" in payload
+        assert "no borre artefactos ni salidas anteriores" in payload
+        assert "No establezca ese parámetro en `True`" in payload
 
 
 def test_qwen_structured_notebook_uses_verified_03_05_lora_and_penalty_sweep():

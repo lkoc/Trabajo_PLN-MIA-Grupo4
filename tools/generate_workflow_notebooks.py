@@ -2051,9 +2051,11 @@ if not (RUN_LEGACY_FULL_TRAINING or RUN_STRUCTURED_LORA_SWEEP):
     show_summary('Qwen estructurado de bajo costo preparado',{'recomendado':'LoRA entrenable restaurado desde el candidato 03_05','comparación':'penalización 0, 0.02 y 0.05 sobre las mismas filas','épocas':STRUCTURED_EPOCHS,'learning_rate':STRUCTURED_LEARNING_RATE,'semillas':f'sampling={SAMPLING_SEED}; training={TRAINING_SEED}','estado_optimizador':'nuevo en cada candidato','candidato_full_histórico':'se conserva; no se sobrescribe','test':'natural completo, sellado'},tone='neutral')"""
 
 
-MINILM_EXECUTION_GUIDE = """## Guía reproducible de la campaña MiniLM
+MINILM_EXECUTION_GUIDE = """Guía reproducible de la campaña MiniLM
 
 Esta campaña se ejecuta **por etapas y siempre con el mismo `COLAB_RUN_ID`**. El valor vacío reanuda `03_02_working_v2_1`. No borre `runs/`, `trainer_checkpoints` ni las publicaciones de Drive: cada configuración tiene `variant_id` y firma propios; al repetir una ya terminada devuelve `status=noop`, y una interrumpida continúa desde el checkpoint verificable más reciente.
+
+Tampoco limpie las salidas del cuaderno: constituyen el registro de la ejecución. Antes de cada etapa ejecute en orden el bootstrap y la restauración del dataset. Mantenga sin cambios el `COLAB_RUN_ID`, el SHA-256 del dataset, `SAMPLING_SEED` y los hiperparámetros indicados. Conserve el resumen que muestra identificador del bundle, firma del candidato, semillas y métricas de `validation`; eso permite auditar y repetir la comparación en otra sesión o máquina.
 
 ### Etapa 0 · Baseline, solo si falta el padre
 
@@ -2107,7 +2109,7 @@ Compara focal `gamma=2` contra BCE ponderada usando la semilla primaria y las mi
 
 ### Cierre, interrupciones y recuperación
 
-Al terminar deje los tres interruptores en `False`. Si Colab se desconecta, vuelva a ejecutar desde la primera celda con el mismo `COLAB_RUN_ID` y la misma etapa activa; no use `force`, no cambie semillas y no borre artefactos. La publicación es automática por variante; `PUBLISH_TO_DRIVE=True` solo repite manualmente la última publicación. Los candidatos históricos de 128, 192, 256, BCE y focal permanecen coexistiendo para `03_07`.
+Al terminar deje los tres interruptores en `False`. Si Colab se desconecta, vuelva a ejecutar desde la primera celda con el mismo `COLAB_RUN_ID` y la misma etapa activa; no use `force`, no cambie semillas y no borre artefactos ni salidas anteriores. La publicación es automática por variante; `PUBLISH_TO_DRIVE=True` solo repite manualmente la última publicación. Los candidatos históricos de 128, 192, 256, BCE y focal permanecen coexistiendo para `03_07` y para comparaciones futuras.
 
 El aviso de Transformers 4.57.6 sobre `fix_mistral_regex` al leer el MiniLM local es un falso positivo: MiniLM usa BERT/WordPiece, no Mistral. No establezca ese parámetro en `True`. El cargador vigente lo fija en `False`; una corrida que ya mostró el aviso puede continuar porque Transformers tampoco aplicó el parche."""
 
@@ -3507,7 +3509,9 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
     ]
     for filename, subtitle, source, colab_id, academic_context in training_notebooks:
         execution_heading = (
-            "Configuración y candidato base de 128 tokens"
+            MINILM_EXECUTION_GUIDE
+            if filename == "03_02_transformers_planos.ipynb"
+            else "Configuración y candidato base de 128 tokens"
             if filename == "03_05_qwen_lora.ipynb"
             else "Configuración y ejecución"
         )
