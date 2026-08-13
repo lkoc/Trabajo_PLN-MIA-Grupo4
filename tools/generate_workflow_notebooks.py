@@ -3332,9 +3332,14 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         ),
     ]
     for filename, subtitle, source, colab_id, academic_context in training_notebooks:
+        execution_heading = (
+            "Configuración y candidato base de 128 tokens"
+            if filename == "03_05_qwen_lora.ipynb"
+            else "Configuración y ejecución"
+        )
         code_cells = [
             ("Restauración reproducible del dataset", DATASET_CHECKPOINT),
-            ("Configuración y candidato base de 128 tokens", source),
+            (execution_heading, source),
         ]
         if filename == "03_05_qwen_lora.ipynb":
             code_cells.append(

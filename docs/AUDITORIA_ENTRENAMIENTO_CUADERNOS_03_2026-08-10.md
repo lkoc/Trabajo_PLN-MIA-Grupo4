@@ -353,7 +353,7 @@ Los Transformers ahora evalúan por época con macro-AUPRC de daños, guardan ch
 
 #### H. Máximo de 128 tokens sin diagnóstico — severidad media
 
-El diagnóstico ya se registra por tokenizador. En los tres Transformers codificadores completos, 20.114 de 51.205 filas de entrenamiento se truncaron a 128 tokens (39,28 %; P50 121, P95 164, máximo 217); la rama de daño de la cascada original llegó a 44,35 %. En Qwen-LoRA se truncaron 28.740 filas (56,13 %; P50 133, P95 179, máximo 302). El truncamiento es material, por lo que permanece pendiente comparar 128 contra 256 en un piloto estratificado.
+El diagnóstico ya se registra por tokenizador. En los tres Transformers codificadores completos, 20.114 de 51.205 filas de entrenamiento se truncaron a 128 tokens (39,28 %; P50 121, P95 164, máximo 217); la rama de daño de la cascada original llegó a 44,35 %. En Qwen-LoRA se truncaron 28.740 filas (56,13 %; P50 133, P95 179, máximo 302). El truncamiento es material. `03_05` dispone ahora de un brazo opcional que conserva el candidato completo de 128 tokens, verifica su manifiesto y el SHA-256 del dataset, continúa sus pesos LoRA con `max_length=256` y un optimizador nuevo, y materializa un candidato distinto. La comparación permanece pendiente hasta ejecutar ese brazo y evaluarlo sobre las mismas filas de validation mediante `03_07`; no se atribuye todavía ninguna mejora al contexto mayor.
 
 #### I. Generalización por canal no medida — severidad media-alta
 

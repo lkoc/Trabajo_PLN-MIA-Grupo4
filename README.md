@@ -156,7 +156,7 @@ tope artificial; persiste por `chunk_id` y puede continuar con una recarga.
 | `03_03_transformer_cascada` | compuerta de cualquier daño con auxiliares, seguida de cuatro salidas de daño | candidato de dos etapas y diagnóstico de propagación |
 | `03_03b_transformer_cascada_segura` | compuerta E5 calibrada por recall de daño y NPV segura, seguida de `SEGURO` más cuatro daños | candidato de seguridad primero, fallback a la rama completa y diagnóstico de cobertura |
 | `03_04_transformer_multitarea` | cinco salidas principales, 14 etiquetas finas y tres flags auxiliares | candidato multitarea |
-| `03_05_qwen_lora` | Qwen3-0.6B-Base con adaptación LoRA y cabeza clasificadora | adaptador y candidato de 22 salidas; no se presenta como prompting |
+| `03_05_qwen_lora` | Qwen3-0.6B-Base con adaptación LoRA y cabeza clasificadora | conserva el candidato de 128 tokens y permite crear otro de 256 mediante continuación verificable; ambos tienen 22 salidas y no se presentan como prompting |
 | `03_06_qwen_estructurado` | Qwen clasificador con penalización del conflicto `SEGURO+daño` | checkpoint estructurado de 22 salidas |
 | `03_06b_qwen_prompt_sft` | Qwen3-0.6B conversacional, LoRA causal y cápsula trazable del prompt v3.2 | JSON estricto y candidato realmente condicionado por prompt |
 | `03_07_comparacion_final` | individuos, ensembles, diversidad, bootstrap por video y pruebas pareadas | comparación en validation y manifiesto congelado; test/publicación separados |
@@ -315,7 +315,7 @@ Antes de una corrida costosa, revise los interruptores deliberados:
 | `03_01`–`03_06b` | `RUN_TRAINING=False`; ratio `SEGURO`/daño = 4:1 en train/validation; test natural completo | active la familia; `03_07` reutiliza una inferencia de test para las vistas natural y 4:1 |
 | `03_07` | `RUN_COMPARE_AND_FREEZE=False`, `RUN_TEST_ONCE=False`, `RUN_PUBLISH=False` | compare/congele, revise evidencia, abra test una vez; publicación sigue bloqueada hasta aprobación posterior |
 
-`03_01`–`03_06b` no forman una cadena: son alternativas comparables. `03_05`/`03_06` son clasificadores supervisados; solo `03_06b` recibe el prompt como condición de entrada. `03_07` requiere candidatos completos del mismo snapshot y rechaza cualquiera que haya abierto test antes de congelar.
+`03_01`–`03_06b` no forman una cadena: son alternativas comparables. Dentro de `03_05`, el brazo opcional de 256 tokens sí continúa explícitamente los pesos LoRA del candidato de 128 sobre el mismo snapshot, reinicia optimizador y scheduler, y genera otro candidato sin sobrescribir al padre. `03_05`/`03_06` son clasificadores supervisados; solo `03_06b` recibe el prompt como condición de entrada. `03_07` requiere candidatos completos del mismo snapshot y rechaza cualquiera que haya abierto test antes de congelar.
 
 ### 7. Reconciliar, entrenar y publicar mediante la CLI
 

@@ -815,7 +815,7 @@ def test_qwen_lora_notebook_preserves_128_and_adds_256_warm_start_candidate():
         assert "select_qwen_lora_warm_start_candidate" in payload
         assert "warm_start_candidate_path=base_128['candidate_path']" in payload
     assert "optimizador':'nuevo; no reutiliza estado del Trainer" in source
-    assert "03_07 descubrirá" in source
+    assert "`03_07` descubrirá" in source
 
 
 def test_active_long_running_notebooks_expose_progress_indicators():
