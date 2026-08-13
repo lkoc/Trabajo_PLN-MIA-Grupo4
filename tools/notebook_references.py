@@ -269,6 +269,18 @@ REFERENCE_LIBRARY = {
         'Classification Tasks," Inf. Process. Manage., vol. 45, no. 4, pp. 427–437, 2009, '
         "doi: 10.1016/j.ipm.2009.03.002."
     ),
+    "brodersen2010balanced": (
+        'K. H. Brodersen, C. S. Ong, K. E. Stephan, et al., "The Balanced '
+        'Accuracy and Its Posterior Distribution," in Proc. 20th Int. Conf. '
+        "Pattern Recognition, 2010, pp. 3121–3124, "
+        "doi: 10.1109/ICPR.2010.764."
+    ),
+    "jin2008pareto": (
+        'Y. Jin and B. Sendhoff, "Pareto-Based Multiobjective Machine Learning: '
+        'An Overview and Case Studies," IEEE Trans. Syst., Man, Cybern. C, '
+        "vol. 38, no. 3, pp. 397–415, 2008, "
+        "doi: 10.1109/TSMCC.2008.919172."
+    ),
     "guo2017calibration": (
         'C. Guo, G. Pleiss, Y. Sun, et al., "On Calibration of Modern Neural Networks," '
         "in Proc. ICML, vol. 70, 2017, pp. 1321–1330. [Online]. Available: "

@@ -55,7 +55,12 @@ def _selection_key(metrics: Mapping[str, Any]) -> tuple[float, ...]:
     return (
         float(binary.get("balanced_accuracy", 0.0)),
         -float(binary.get("risk_lambda", {}).get("0.67", 1.0)),
-        float(metrics.get("average_precision_macro_damage", 0.0)),
+        float(
+            metrics.get(
+                "average_precision_macro_damage_oof",
+                metrics.get("average_precision_macro_damage", 0.0),
+            )
+        ),
     )
 
 
@@ -108,7 +113,10 @@ def _pareto_front(rows: Sequence[dict[str, Any]]) -> list[str]:
                 row["validation_metrics"]["binary_any_damage_oof"][
                     "balanced_accuracy"
                 ],
-                row["validation_metrics"]["average_precision_macro_damage"],
+                row["validation_metrics"].get(
+                    "average_precision_macro_damage_oof",
+                    row["validation_metrics"]["average_precision_macro_damage"],
+                ),
             ],
             dtype=float,
         )
@@ -127,6 +135,337 @@ def _pareto_front(rows: Sequence[dict[str, Any]]) -> list[str]:
     return sorted(frontier)
 
 
+def _fit_sigmoid_calibrator(truth: np.ndarray, scores: np.ndarray) -> dict[str, Any]:
+    """Ajusta Platt univariado o una constante si el fold es degenerado."""
+
+    values = np.asarray(scores, dtype=float).reshape(-1)
+    labels = np.asarray(truth, dtype=np.int8).reshape(-1)
+    if np.unique(labels).size < 2:
+        return {
+            "type": "constant",
+            "value": float(np.clip(labels.mean() if len(labels) else 0.5, 1e-6, 1 - 1e-6)),
+        }
+    from sklearn.linear_model import LogisticRegression
+
+    model = LogisticRegression(C=1e6, solver="lbfgs", random_state=0)
+    model.fit(values[:, None], labels)
+    return {
+        "type": "sigmoid_platt",
+        "coefficient": float(model.coef_[0, 0]),
+        "intercept": float(model.intercept_[0]),
+    }
+
+
+def _apply_calibrator(scores: np.ndarray, calibrator: Mapping[str, Any]) -> np.ndarray:
+    values = np.asarray(scores, dtype=float)
+    if calibrator["type"] == "constant":
+        return np.full(values.shape, float(calibrator["value"]), dtype=float)
+    logits = float(calibrator["coefficient"]) * values + float(
+        calibrator["intercept"]
+    )
+    return 1.0 / (1.0 + np.exp(-np.clip(logits, -30, 30)))
+
+
+def _fit_score_calibrators(
+    truth: np.ndarray, scores: np.ndarray
+) -> list[dict[str, Any]]:
+    return [
+        _fit_sigmoid_calibrator(truth[:, index], scores[:, index])
+        for index in range(scores.shape[1])
+    ]
+
+
+def _apply_score_calibrators(
+    scores: np.ndarray, calibrators: Sequence[Mapping[str, Any]]
+) -> np.ndarray:
+    if scores.shape[1] != len(calibrators):
+        raise ValueError("La calibración no coincide con las salidas")
+    return np.column_stack(
+        [
+            _apply_calibrator(scores[:, index], calibrator)
+            for index, calibrator in enumerate(calibrators)
+        ]
+    )
+
+
+def _balanced_threshold(truth: np.ndarray, scores: np.ndarray) -> float:
+    """Maximiza BA; los empates favorecen menor FNR y luego mayor umbral."""
+
+    labels = np.asarray(truth, dtype=np.int8)
+    values = np.asarray(scores, dtype=float)
+    if np.unique(labels).size < 2:
+        raise ValueError("La compuerta ANY_DAMAGE requiere ambas clases")
+    candidates = np.unique(
+        np.concatenate(([0.0], np.linspace(0.01, 0.99, 99), values, [1.0]))
+    )
+    scored = []
+    for threshold in candidates:
+        predicted = values >= threshold
+        recall = float(predicted[labels == 1].mean())
+        specificity = float((~predicted[labels == 0]).mean())
+        scored.append(((recall + specificity) / 2, recall, float(threshold)))
+    return max(scored)[2]
+
+
+def _binary_metrics(
+    truth: np.ndarray, predicted: np.ndarray, scores: np.ndarray | None = None
+) -> dict[str, Any]:
+    from sklearn.metrics import average_precision_score, f1_score, matthews_corrcoef
+
+    labels = np.asarray(truth, dtype=np.int8)
+    decisions = np.asarray(predicted, dtype=np.int8)
+    positives = labels == 1
+    negatives = ~positives
+    tp = int(np.sum(decisions[positives] == 1))
+    fn = int(np.sum(decisions[positives] == 0))
+    fp = int(np.sum(decisions[negatives] == 1))
+    tn = int(np.sum(decisions[negatives] == 0))
+    recall = tp / max(1, tp + fn)
+    specificity = tn / max(1, tn + fp)
+    fnr = 1 - recall
+    fpr = 1 - specificity
+    payload: dict[str, Any] = {
+        "true_positive": tp,
+        "false_negative": fn,
+        "false_positive": fp,
+        "true_negative": tn,
+        "prevalence_any_damage": float(labels.mean()),
+        "recall": float(recall),
+        "specificity": float(specificity),
+        "false_negative_rate": float(fnr),
+        "false_positive_rate": float(fpr),
+        "balanced_error_rate": float((fnr + fpr) / 2),
+        "balanced_accuracy": float((recall + specificity) / 2),
+        "f1": float(f1_score(labels, decisions, zero_division=0)),
+        "matthews_correlation": float(matthews_corrcoef(labels, decisions)),
+        "risk_lambda": {
+            f"{weight:.2f}": float(weight * fnr + (1 - weight) * fpr)
+            for weight in (0.50, 0.67, 0.80)
+        },
+    }
+    if scores is not None:
+        payload["average_precision"] = float(average_precision_score(labels, scores))
+    return payload
+
+
+def _macro_damage_average_precision(
+    truth: np.ndarray, scores: np.ndarray, indices: np.ndarray | None = None
+) -> float:
+    """Calcula macro-AUPRC solo sobre daños; una etiqueta ausente aporta cero."""
+
+    from sklearn.metrics import average_precision_score
+
+    taxonomy = load_taxonomy()
+    selected = np.arange(len(truth), dtype=int) if indices is None else indices
+    selected_truth = truth[selected]
+    selected_scores = scores[selected]
+    values = []
+    for label in taxonomy.damage_labels:
+        label_index = taxonomy.target_labels.index(label)
+        label_truth = selected_truth[:, label_index]
+        values.append(
+            float(average_precision_score(label_truth, selected_scores[:, label_index]))
+            if label_truth.any()
+            else 0.0
+        )
+    return float(np.mean(values))
+
+
+def _review_mask(
+    calibrated_scores: np.ndarray,
+    category_thresholds: np.ndarray,
+    any_damage_scores: np.ndarray,
+    any_damage_thresholds: np.ndarray,
+    *,
+    delta: float,
+) -> tuple[np.ndarray, dict[str, float]]:
+    taxonomy = load_taxonomy()
+    safe_index = taxonomy.target_labels.index(taxonomy.safe_label)
+    damage_indices = np.asarray(
+        [taxonomy.target_labels.index(label) for label in taxonomy.damage_labels]
+    )
+    active = calibrated_scores >= category_thresholds
+    active_damage = active[:, damage_indices].any(axis=1)
+    gate_damage = any_damage_scores >= any_damage_thresholds
+    conflict = active[:, safe_index] & active_damage
+    empty = ~active.any(axis=1)
+    incoherent = gate_damage != active_damage
+    near_gate = np.abs(any_damage_scores - any_damage_thresholds) <= delta
+    near_category = np.any(
+        np.abs(calibrated_scores - category_thresholds) <= delta, axis=1
+    )
+    reasons = {
+        "safe_damage_conflict": conflict,
+        "empty_output": empty,
+        "gate_category_incoherence": incoherent,
+        "near_any_damage_threshold": near_gate,
+        "near_category_threshold": near_category,
+    }
+    review = np.logical_or.reduce(list(reasons.values()))
+    return review, {key: float(value.mean()) for key, value in reasons.items()}
+
+
+def _review_curve(
+    truth_any_damage: np.ndarray,
+    calibrated_scores: np.ndarray,
+    category_thresholds: np.ndarray,
+    any_damage_scores: np.ndarray,
+    any_damage_thresholds: np.ndarray,
+    *,
+    delta_grid: Sequence[float] = DEFAULT_REVIEW_DELTA_GRID,
+) -> list[dict[str, Any]]:
+    rows = []
+    decisions = any_damage_scores >= any_damage_thresholds
+    for delta in delta_grid:
+        review, reasons = _review_mask(
+            calibrated_scores,
+            category_thresholds,
+            any_damage_scores,
+            any_damage_thresholds,
+            delta=float(delta),
+        )
+        automatic = ~review
+        selected_truth = truth_any_damage[automatic]
+        selected_decisions = decisions[automatic]
+        has_both_classes = np.unique(selected_truth).size == 2
+        selective = (
+            _binary_metrics(selected_truth, selected_decisions)
+            if automatic.any() and has_both_classes
+            else None
+        )
+        rows.append(
+            {
+                "delta": float(delta),
+                "coverage": float(automatic.mean()),
+                "review_load_rate": float(review.mean()),
+                "automatic_rows": int(automatic.sum()),
+                "selective_binary_metrics": selective,
+                "review_reason_rates": reasons,
+            }
+        )
+    return rows
+
+
+def _select_review_policy(
+    curve: Sequence[Mapping[str, Any]], max_review_rate: float | None
+) -> dict[str, Any]:
+    if max_review_rate is None:
+        return {
+            "status": "pending_human_capacity",
+            "max_review_rate": None,
+            "selected_delta": None,
+        }
+    if not 0 <= max_review_rate < 1:
+        raise ValueError("max_review_rate debe estar en [0, 1)")
+    feasible = [
+        row
+        for row in curve
+        if float(row["review_load_rate"]) <= max_review_rate
+        and row["selective_binary_metrics"] is not None
+    ]
+    if not feasible:
+        return {
+            "status": "infeasible_human_capacity",
+            "max_review_rate": float(max_review_rate),
+            "selected_delta": None,
+            "minimum_observed_review_rate": float(
+                min(float(row["review_load_rate"]) for row in curve)
+            ),
+        }
+    selected = min(
+        feasible,
+        key=lambda row: (
+            row["selective_binary_metrics"]["balanced_error_rate"],
+            -float(row["coverage"]),
+            float(row["delta"]),
+        ),
+    )
+    return {
+        "status": "selected_on_validation_under_capacity",
+        "max_review_rate": float(max_review_rate),
+        "selected_delta": float(selected["delta"]),
+        "validation_operating_point": dict(selected),
+    }
+
+
+def _crossfit_binary_policy(
+    truth: np.ndarray,
+    scores: np.ndarray,
+    video_ids: Sequence[str],
+    *,
+    folds: int = DEFAULT_SELECTION_FOLDS,
+) -> dict[str, Any]:
+    from sklearn.model_selection import GroupKFold
+
+    taxonomy = load_taxonomy()
+    damage_indices = np.asarray(
+        [taxonomy.target_labels.index(label) for label in taxonomy.damage_labels]
+    )
+    truth_any = truth[:, damage_indices].max(axis=1)
+    groups = np.asarray([str(value) for value in video_ids])
+    split_count = min(int(folds), len(np.unique(groups)))
+    if split_count < 2:
+        raise ValueError("Cross-fitting requiere videos de al menos dos grupos")
+    oof_scores = np.zeros_like(scores, dtype=float)
+    oof_category_thresholds = np.zeros_like(scores, dtype=float)
+    oof_gate_thresholds = np.zeros(len(scores), dtype=float)
+    fold_rows = []
+    for fold, (train_indices, heldout_indices) in enumerate(
+        GroupKFold(n_splits=split_count).split(scores, truth_any, groups=groups), start=1
+    ):
+        calibrators = _fit_score_calibrators(
+            truth[train_indices], scores[train_indices]
+        )
+        calibrated_train = _apply_score_calibrators(scores[train_indices], calibrators)
+        calibrated_heldout = _apply_score_calibrators(
+            scores[heldout_indices], calibrators
+        )
+        category_thresholds = calibrate_thresholds(
+            truth[train_indices], calibrated_train
+        )
+        ordered_thresholds = np.asarray(
+            [category_thresholds[label] for label in taxonomy.target_labels]
+        )
+        train_any_scores = calibrated_train[:, damage_indices].max(axis=1)
+        gate_threshold = _balanced_threshold(
+            truth_any[train_indices], train_any_scores
+        )
+        oof_scores[heldout_indices] = calibrated_heldout
+        oof_category_thresholds[heldout_indices] = ordered_thresholds
+        oof_gate_thresholds[heldout_indices] = gate_threshold
+        fold_rows.append(
+            {
+                "fold": fold,
+                "train_rows": len(train_indices),
+                "heldout_rows": len(heldout_indices),
+                "train_videos": len(set(groups[train_indices])),
+                "heldout_videos": len(set(groups[heldout_indices])),
+                "any_damage_threshold": float(gate_threshold),
+            }
+        )
+    oof_any_scores = oof_scores[:, damage_indices].max(axis=1)
+    oof_decisions = oof_any_scores >= oof_gate_thresholds
+    full_calibrators = _fit_score_calibrators(truth, scores)
+    full_scores = _apply_score_calibrators(scores, full_calibrators)
+    full_category_thresholds = calibrate_thresholds(truth, full_scores)
+    full_any_scores = full_scores[:, damage_indices].max(axis=1)
+    full_gate_threshold = _balanced_threshold(truth_any, full_any_scores)
+    return {
+        "folds": split_count,
+        "fold_rows": fold_rows,
+        "truth_any_damage": truth_any,
+        "oof_calibrated_scores": oof_scores,
+        "oof_category_thresholds": oof_category_thresholds,
+        "oof_any_damage_scores": oof_any_scores,
+        "oof_any_damage_thresholds": oof_gate_thresholds,
+        "oof_decisions": oof_decisions.astype(np.int8),
+        "oof_metrics": _binary_metrics(truth_any, oof_decisions, oof_any_scores),
+        "deployment_calibrators": full_calibrators,
+        "deployment_category_thresholds": full_category_thresholds,
+        "deployment_any_damage_threshold": float(full_gate_threshold),
+    }
+
+
 def _grouped_bootstrap_macro_ap(
     truth: np.ndarray,
     scores: np.ndarray,
@@ -138,8 +477,6 @@ def _grouped_bootstrap_macro_ap(
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     from joblib import Parallel, delayed
-    from sklearn.metrics import average_precision_score
-
     if replicates < 1:
         raise ValueError("replicates debe ser al menos 1")
     if parallel_workers < 1:
@@ -148,30 +485,8 @@ def _grouped_bootstrap_macro_ap(
     for index, video_id in enumerate(video_ids):
         groups[str(video_id)].append(index)
     group_indices = [np.asarray(groups[key], dtype=int) for key in sorted(groups)]
-    damage_indices = np.asarray(
-        [
-            load_taxonomy().target_labels.index(label)
-            for label in load_taxonomy().damage_labels
-        ],
-        dtype=int,
-    )
-
     def macro_damage_ap(indices: np.ndarray) -> float:
-        values = []
-        selected_truth = truth[indices]
-        selected_scores = scores[indices]
-        for label_index in damage_indices:
-            label_truth = selected_truth[:, label_index]
-            values.append(
-                float(
-                    average_precision_score(
-                        label_truth, selected_scores[:, label_index]
-                    )
-                )
-                if label_truth.any()
-                else 0.0
-            )
-        return float(np.mean(values))
+        return _macro_damage_average_precision(truth, scores, indices)
 
     master_rng = np.random.default_rng(seed)
     replicate_seeds = master_rng.integers(
@@ -226,7 +541,6 @@ def _paired_bootstrap(
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     from joblib import Parallel, delayed
-    from sklearn.metrics import average_precision_score
 
     if replicates < 1:
         raise ValueError("replicates debe ser al menos 1")
@@ -236,28 +550,24 @@ def _paired_bootstrap(
     for index, video_id in enumerate(video_ids):
         groups[str(video_id)].append(index)
     group_indices = [np.asarray(groups[key], dtype=int) for key in sorted(groups)]
-    taxonomy = load_taxonomy()
-    damage_indices = np.asarray(
-        [taxonomy.target_labels.index(label) for label in taxonomy.damage_labels],
-        dtype=int,
-    )
+    labels = np.asarray(truth, dtype=np.int8).reshape(-1)
+    reference_decisions = np.asarray(reference, dtype=np.int8).reshape(-1)
+    challenger_decisions = np.asarray(challenger, dtype=np.int8).reshape(-1)
+    if not (
+        len(labels) == len(reference_decisions) == len(challenger_decisions)
+    ):
+        raise ValueError("Las decisiones binarias pareadas no coinciden")
 
-    def macro_damage_ap(scores: np.ndarray, indices: np.ndarray) -> float:
-        selected_truth = truth[indices]
-        selected_scores = scores[indices]
-        values = []
-        for label_index in damage_indices:
-            label_truth = selected_truth[:, label_index]
-            values.append(
-                float(
-                    average_precision_score(
-                        label_truth, selected_scores[:, label_index]
-                    )
-                )
-                if label_truth.any()
-                else 0.0
-            )
-        return float(np.mean(values))
+    def balanced_accuracy(decisions: np.ndarray, indices: np.ndarray) -> float:
+        selected_truth = labels[indices]
+        selected_decisions = decisions[indices]
+        positive = selected_truth == 1
+        negative = ~positive
+        if not positive.any() or not negative.any():
+            return float("nan")
+        recall = float(selected_decisions[positive].mean())
+        specificity = float((1 - selected_decisions[negative]).mean())
+        return (recall + specificity) / 2
 
     master_rng = np.random.default_rng(seed)
     replicate_seeds = master_rng.integers(
@@ -272,10 +582,11 @@ def _paired_bootstrap(
             rng = np.random.default_rng(int(replicate_seed))
             sampled = rng.integers(0, len(group_indices), size=len(group_indices))
             indices = np.concatenate([group_indices[index] for index in sampled])
-            values.append(
-                macro_damage_ap(challenger, indices)
-                - macro_damage_ap(reference, indices)
+            difference = balanced_accuracy(challenger_decisions, indices) - balanced_accuracy(
+                reference_decisions, indices
             )
+            if not np.isnan(difference):
+                values.append(difference)
         _notify_progress(
             progress_callback,
             status="progress",
@@ -288,11 +599,14 @@ def _paired_bootstrap(
         delayed(evaluate_chunk)(seed_chunk) for seed_chunk in seed_chunks
     )
     differences = [value for chunk in chunks for value in chunk]
+    if not differences:
+        raise ValueError("El bootstrap no produjo réplicas con ambas clases")
     values = np.asarray(differences)
-    p_value = min(
-        1.0, 2 * min(float((values <= 0).mean()), float((values >= 0).mean()))
-    )
+    lower = (int(np.sum(values <= 0)) + 1) / (len(values) + 1)
+    upper = (int(np.sum(values >= 0)) + 1) / (len(values) + 1)
+    p_value = min(1.0, 2 * min(lower, upper))
     return {
+        "metric": "balanced_accuracy_binary_any_damage_oof",
         "difference_challenger_minus_reference": float(values.mean()),
         "ci_low": float(np.quantile(values, 0.025)),
         "ci_high": float(np.quantile(values, 0.975)),
@@ -320,9 +634,13 @@ def compare_and_freeze_validation(
     comparison_path: str | Path,
     freeze_path: str | Path,
     *,
-    bootstrap_replicates: int = 1000,
+    bootstrap_replicates: int = 2000,
     seed: int = 20260805,
     parallel_workers: int = DEFAULT_BOOTSTRAP_WORKERS,
+    selection_folds: int = DEFAULT_SELECTION_FOLDS,
+    max_review_rate: float | None = None,
+    macro_auprc_noninferiority_margin: float | None = None,
+    review_delta_grid: Sequence[float] = DEFAULT_REVIEW_DELTA_GRID,
     progress_callback: ProgressCallback | None = None,
     force: bool = False,
 ) -> dict[str, Any]:
@@ -330,6 +648,14 @@ def compare_and_freeze_validation(
 
     comparison_started = time.perf_counter()
     dataset = Path(dataset_path).resolve()
+    if selection_folds < 2:
+        raise ValueError("selection_folds debe ser al menos 2")
+    if macro_auprc_noninferiority_margin is not None and not (
+        0 <= macro_auprc_noninferiority_margin <= 1
+    ):
+        raise ValueError("macro_auprc_noninferiority_margin debe estar en [0, 1]")
+    if max_review_rate is not None and not 0 <= max_review_rate < 1:
+        raise ValueError("max_review_rate debe estar en [0, 1)")
     if parallel_workers < 1:
         raise ValueError("parallel_workers debe ser al menos 1")
     parallel_workers = min(parallel_workers, os.cpu_count() or 1)
@@ -373,6 +699,11 @@ def compare_and_freeze_validation(
             "bootstrap_replicates": bootstrap_replicates,
             "bootstrap_engine": BOOTSTRAP_ENGINE,
             "parallel_workers": parallel_workers,
+            "selection_criterion_version": SELECTION_CRITERION_VERSION,
+            "selection_folds": selection_folds,
+            "max_review_rate": max_review_rate,
+            "macro_auprc_noninferiority_margin": macro_auprc_noninferiority_margin,
+            "review_delta_grid": [float(value) for value in review_delta_grid],
             "seed": seed,
         }
     )
@@ -387,44 +718,112 @@ def compare_and_freeze_validation(
                 "comparison": str(comparison),
             }
 
-    best_by_slot = {
-        slot: max(
-            (row for row in eligible if _candidate_slot(row) == slot),
-            key=lambda row: _selection_key(row["validation_metrics"]),
-        )
-        for slot in ("classical", "transformer", "qwen")
-        if any(_candidate_slot(row) == slot for row in eligible)
-    }
-    members = list(best_by_slot.values())
-    loaded = [
-        (candidate, *_load_validation_predictions(candidate)) for candidate in members
-    ]
-    validation_rows, score_matrices = _align_predictions(loaded)
+    reference_loaded = (eligible[0], *_load_validation_predictions(eligible[0]))
+    validation_rows, _reference_scores = _align_predictions([reference_loaded])
     truth_rows = [{"coarse_labels": row["true_labels"]} for row in validation_rows]
     truth = encode_targets(truth_rows)
     video_ids = [str(row["video_id"]) for row in validation_rows]
 
     evaluated: list[dict[str, Any]] = []
     score_by_id: dict[str, np.ndarray] = {}
+    deployment_score_by_id: dict[str, np.ndarray] = {}
     thresholds_by_id: dict[str, dict[str, float]] = {}
-    for candidate in eligible:
-        rows, scores = _load_validation_predictions(candidate)
-        _, aligned = _align_predictions([loaded[0], (candidate, rows, scores)])
-        candidate_scores = aligned[1]
-        thresholds = calibrate_thresholds(truth, candidate_scores)
-        metrics = classification_metrics(truth, candidate_scores, thresholds)
-        identifier = str(candidate["candidate_id"])
+    policy_by_id: dict[str, dict[str, Any]] = {}
+
+    def evaluate_scores(
+        identifier: str,
+        candidate_scores: np.ndarray,
+        *,
+        kind: str,
+        family: str,
+        member_ids: list[str],
+        weights: list[float] | None = None,
+    ) -> None:
+        policy = _crossfit_binary_policy(
+            truth,
+            candidate_scores,
+            video_ids,
+            folds=selection_folds,
+        )
+        deployment_scores = _apply_score_calibrators(
+            candidate_scores, policy["deployment_calibrators"]
+        )
+        deployment_thresholds = policy["deployment_category_thresholds"]
+        metrics = classification_metrics(
+            truth, deployment_scores, deployment_thresholds
+        )
+        metrics["binary_any_damage_oof"] = policy["oof_metrics"]
+        metrics["average_precision_macro_damage_oof"] = (
+            _macro_damage_average_precision(truth, policy["oof_calibrated_scores"])
+        )
+        curve = _review_curve(
+            policy["truth_any_damage"],
+            policy["oof_calibrated_scores"],
+            policy["oof_category_thresholds"],
+            policy["oof_any_damage_scores"],
+            policy["oof_any_damage_thresholds"],
+            delta_grid=review_delta_grid,
+        )
+        review_policy = _select_review_policy(curve, max_review_rate)
+        metrics["needs_review"] = {
+            "not_a_model_output": True,
+            "ranking_uses_full_coverage": True,
+            "risk_coverage_curve": curve,
+            "operating_policy": review_policy,
+        }
         score_by_id[identifier] = candidate_scores
-        thresholds_by_id[identifier] = thresholds
+        deployment_score_by_id[identifier] = deployment_scores
+        thresholds_by_id[identifier] = deployment_thresholds
+        policy_by_id[identifier] = policy
         evaluated.append(
             {
                 "candidate_id": identifier,
-                "kind": "individual",
-                "model_family": candidate["model_family"],
-                "members": [identifier],
+                "kind": kind,
+                "model_family": family,
+                "members": member_ids,
+                "weights": weights,
                 "validation_metrics": metrics,
+                "crossfit": {
+                    "method": "group_k_fold_by_video",
+                    "folds": policy["folds"],
+                    "fold_rows": policy["fold_rows"],
+                },
             }
         )
+
+    for candidate in eligible:
+        rows, scores = _load_validation_predictions(candidate)
+        _, aligned = _align_predictions([reference_loaded, (candidate, rows, scores)])
+        candidate_scores = aligned[1]
+        identifier = str(candidate["candidate_id"])
+        evaluate_scores(
+            identifier,
+            candidate_scores,
+            kind="individual",
+            family=str(candidate["model_family"]),
+            member_ids=[identifier],
+        )
+
+    individual_by_id = {
+        row["candidate_id"]: row for row in evaluated if row["kind"] == "individual"
+    }
+    best_by_slot = {
+        slot: max(
+            (
+                row
+                for row in eligible
+                if _candidate_slot(row) == slot
+            ),
+            key=lambda row: _selection_key(
+                individual_by_id[str(row["candidate_id"])]["validation_metrics"]
+            ),
+        )
+        for slot in ("classical", "transformer", "qwen")
+        if any(_candidate_slot(row) == slot for row in eligible)
+    }
+    members = list(best_by_slot.values())
+    member_ids = [str(row["candidate_id"]) for row in members]
+    score_matrices = [score_by_id[identifier] for identifier in member_ids]
 
     if len(score_matrices) >= 2:
         weights = np.asarray(
@@ -432,9 +831,9 @@ def compare_and_freeze_validation(
                 max(
                     1e-9,
                     float(
-                        row["validation_metrics"].get(
-                            "average_precision_macro_damage", 0.0
-                        )
+                        individual_by_id[str(row["candidate_id"])][
+                            "validation_metrics"
+                        ].get("average_precision_macro_damage_oof", 0.0)
                     ),
                 )
                 for row in members
@@ -443,14 +842,17 @@ def compare_and_freeze_validation(
         weights /= weights.sum()
         member_thresholds = np.asarray(
             [
-                [float(row["thresholds"][label]) for label in taxonomy.target_labels]
-                for row in members
+                [
+                    float(thresholds_by_id[identifier][label])
+                    for label in taxonomy.target_labels
+                ]
+                for identifier in member_ids
             ]
         )
         hard = np.asarray(
             [
-                scores >= member_thresholds[index]
-                for index, scores in enumerate(score_matrices)
+                deployment_score_by_id[identifier] >= member_thresholds[index]
+                for index, identifier in enumerate(member_ids)
             ],
             dtype=float,
         ).mean(axis=0)
@@ -463,26 +865,18 @@ def compare_and_freeze_validation(
             "ensemble_union": np.max(score_matrices, axis=0),
             "ensemble_intersection": np.min(score_matrices, axis=0),
         }
-        member_ids = [str(row["candidate_id"]) for row in members]
         for identifier, scores in ensemble_scores.items():
-            thresholds = calibrate_thresholds(truth, scores)
-            metrics = classification_metrics(truth, scores, thresholds)
-            score_by_id[identifier] = scores
-            thresholds_by_id[identifier] = thresholds
-            evaluated.append(
-                {
-                    "candidate_id": identifier,
-                    "kind": "ensemble",
-                    "model_family": "ensemble",
-                    "members": member_ids,
-                    "weights": weights.tolist() if "weighted" in identifier else None,
-                    "validation_metrics": metrics,
-                }
+            evaluate_scores(
+                identifier,
+                scores,
+                kind="ensemble",
+                family="ensemble",
+                member_ids=member_ids,
+                weights=weights.tolist() if "weighted" in identifier else None,
             )
 
     bootstrap_started = time.perf_counter()
-    ensemble_count = sum(row["kind"] == "ensemble" for row in evaluated)
-    bootstrap_total = bootstrap_replicates * (len(evaluated) + ensemble_count)
+    bootstrap_total = bootstrap_replicates * (2 * len(evaluated) - 1)
     _notify_progress(
         progress_callback,
         status="started",
@@ -490,32 +884,83 @@ def compare_and_freeze_validation(
         total=bootstrap_total,
         advance=0,
     )
+    macro_ap_samples_by_id: dict[str, np.ndarray] = {}
     for row in evaluated:
         bootstrap = _grouped_bootstrap_macro_ap(
             truth,
-            score_by_id[row["candidate_id"]],
+            policy_by_id[row["candidate_id"]]["oof_calibrated_scores"],
             video_ids,
             replicates=bootstrap_replicates,
             seed=seed,
             parallel_workers=parallel_workers,
             progress_callback=progress_callback,
         )
-        bootstrap.pop("samples")
+        macro_ap_samples_by_id[row["candidate_id"]] = np.asarray(
+            bootstrap.pop("samples"), dtype=float
+        )
+        row["validation_metrics"]["average_precision_macro_damage_oof"] = bootstrap[
+            "point"
+        ]
         row["bootstrap_grouped_by_video"] = bootstrap
     frontier = _pareto_front(evaluated)
-    selected = max(evaluated, key=lambda row: _selection_key(row["validation_metrics"]))
+    macro_ap_reference = max(
+        (row for row in evaluated if row["kind"] == "individual"),
+        key=lambda row: float(
+            row["validation_metrics"]["average_precision_macro_damage_oof"]
+        ),
+    )
+    best_individual_macro_ap = float(
+        macro_ap_reference["validation_metrics"][
+            "average_precision_macro_damage_oof"
+        ]
+    )
+    reference_samples = macro_ap_samples_by_id[macro_ap_reference["candidate_id"]]
+    for row in evaluated:
+        observed = float(
+            row["validation_metrics"]["average_precision_macro_damage_oof"]
+        )
+        differences = macro_ap_samples_by_id[row["candidate_id"]] - reference_samples
+        difference_ci_low = float(np.quantile(differences, 0.025))
+        difference_ci_high = float(np.quantile(differences, 0.975))
+        row["macro_auprc_safeguard"] = {
+            "method": "paired_video_cluster_bootstrap_noninferiority",
+            "reference_candidate": macro_ap_reference["candidate_id"],
+            "reference_best_individual": best_individual_macro_ap,
+            "difference_candidate_minus_reference": observed
+            - best_individual_macro_ap,
+            "difference_ci_low": difference_ci_low,
+            "difference_ci_high": difference_ci_high,
+            "margin": macro_auprc_noninferiority_margin,
+            "status": (
+                "pareto_only_margin_not_predeclared"
+                if macro_auprc_noninferiority_margin is None
+                else (
+                    "pass"
+                    if difference_ci_low >= -macro_auprc_noninferiority_margin
+                    else "fail"
+                )
+            ),
+        }
+    selectable = [
+        row
+        for row in evaluated
+        if row["macro_auprc_safeguard"]["status"] != "fail"
+    ]
+    selected = max(
+        selectable, key=lambda row: _selection_key(row["validation_metrics"])
+    )
     reference_individual = max(
         (row for row in evaluated if row["kind"] == "individual"),
         key=lambda row: _selection_key(row["validation_metrics"]),
     )
     tests = []
     for row in evaluated:
-        if row["kind"] != "ensemble":
+        if row["candidate_id"] == selected["candidate_id"]:
             continue
         test = _paired_bootstrap(
-            truth,
-            score_by_id[reference_individual["candidate_id"]],
-            score_by_id[row["candidate_id"]],
+            policy_by_id[selected["candidate_id"]]["truth_any_damage"],
+            policy_by_id[selected["candidate_id"]]["oof_decisions"],
+            policy_by_id[row["candidate_id"]]["oof_decisions"],
             video_ids,
             replicates=bootstrap_replicates,
             seed=seed + len(tests) + 1,
@@ -524,12 +969,29 @@ def compare_and_freeze_validation(
         )
         test.update(
             {
-                "reference": reference_individual["candidate_id"],
+                "reference": selected["candidate_id"],
                 "challenger": row["candidate_id"],
             }
         )
         tests.append(test)
     _holm_adjust(tests)
+    eligible_challengers = [
+        row for row in tests if row["challenger"] in {item["candidate_id"] for item in selectable}
+    ]
+    closest_challenger = max(
+        eligible_challengers,
+        key=lambda test: next(
+            _selection_key(row["validation_metrics"])
+            for row in selectable
+            if row["candidate_id"] == test["challenger"]
+        ),
+        default=None,
+    )
+    leader_confirmed = bool(
+        closest_challenger is not None
+        and closest_challenger["ci_high"] < 0
+        and closest_challenger["p_value_holm"] <= 0.05
+    )
     _notify_progress(
         progress_callback,
         status="finished",
@@ -569,9 +1031,23 @@ def compare_and_freeze_validation(
             "grouped_and_paired_bootstrap": bootstrap_elapsed,
             "comparison_total_before_write": time.perf_counter() - comparison_started,
         },
-        "selection_policy": "Pareto report; AP macro de daños como desempate predeclarado, luego F1/recall/falsas alarmas/review",
+        "selection_policy": {
+            "criterion_version": SELECTION_CRITERION_VERSION,
+            "aggregation": "lexicographic_not_weighted_sum",
+            "primary": "max binary_any_damage_oof.balanced_accuracy at full coverage",
+            "safeguard": "macro AUPRC damage noninferiority when margin predeclared; otherwise Pareto report",
+            "tie_breakers": ["min R_0.67", "max macro AUPRC damage"],
+            "sensitivity_lambdas": [0.50, 0.67, 0.80],
+            "needs_review": "post-inference policy selected after model under declared human capacity",
+            "max_review_rate": max_review_rate,
+            "macro_auprc_noninferiority_margin": macro_auprc_noninferiority_margin,
+        },
         "pareto_front": frontier,
         "selected_for_freeze": selected["candidate_id"],
+        "winner_status": (
+            "confirmed_on_validation" if leader_confirmed else "statistical_tie_or_inconclusive"
+        ),
+        "closest_eligible_challenger_test": closest_challenger,
         "best_individual": reference_individual["candidate_id"],
         "best_by_family_slot": {
             key: row["candidate_id"] for key, row in best_by_slot.items()
@@ -589,6 +1065,18 @@ def compare_and_freeze_validation(
         },
         "rejected": rejected,
     }
+    review_policy = selected["validation_metrics"]["needs_review"][
+        "operating_policy"
+    ]
+    policy_ready = (
+        macro_auprc_noninferiority_margin is not None
+        and review_policy["status"] == "selected_on_validation_under_capacity"
+    )
+    frozen_test_status = (
+        "sealed_ready_for_single_open"
+        if policy_ready
+        else "sealed_pending_predeclared_operating_policy"
+    )
     freeze_payload = {
         "schema_version": "4.0.0",
         "created_at": datetime.now(UTC).isoformat(),
@@ -605,7 +1093,27 @@ def compare_and_freeze_validation(
         },
         "ensemble_weights": selected.get("weights"),
         "thresholds": thresholds_by_id[selected["candidate_id"]],
-        "test_status": "sealed_ready_for_single_open",
+        "score_calibrators": policy_by_id[selected["candidate_id"]][
+            "deployment_calibrators"
+        ],
+        "member_score_calibrators": {
+            identifier: policy_by_id[identifier]["deployment_calibrators"]
+            for identifier in selected["members"]
+        },
+        "member_thresholds": {
+            identifier: thresholds_by_id[identifier]
+            for identifier in selected["members"]
+        },
+        "any_damage_threshold": policy_by_id[selected["candidate_id"]][
+            "deployment_any_damage_threshold"
+        ],
+        "needs_review_policy": review_policy,
+        "macro_auprc_noninferiority_margin": macro_auprc_noninferiority_margin,
+        "selection_criterion_version": SELECTION_CRITERION_VERSION,
+        "winner_status": (
+            "confirmed_on_validation" if leader_confirmed else "statistical_tie_or_inconclusive"
+        ),
+        "test_status": frozen_test_status,
         "publication_approved": False,
     }
     write_json_atomic(comparison, comparison_payload)
@@ -616,7 +1124,8 @@ def compare_and_freeze_validation(
         "pareto_front": frontier,
         "comparison": str(comparison),
         "freeze": str(freeze),
-        "test_status": "sealed_ready_for_single_open",
+        "winner_status": freeze_payload["winner_status"],
+        "test_status": frozen_test_status,
     }
 
 
@@ -807,6 +1316,11 @@ def evaluate_frozen_test(
     evaluation_started = time.perf_counter()
     freeze_path = Path(freeze_path)
     freeze = json.loads(freeze_path.read_text(encoding="utf-8"))
+    if freeze.get("test_status") != "sealed_ready_for_single_open":
+        raise RuntimeError(
+            "Test sigue sellado: declare antes el margen macro-AUPRC y una "
+            "capacidad NEEDS_REVIEW factible, vuelva a comparar y congele"
+        )
     destination = Path(destination_path)
     if destination.is_file() and not force:
         payload = json.loads(destination.read_text(encoding="utf-8"))
@@ -844,6 +1358,7 @@ def evaluate_frozen_test(
             progress_phase=f"test · {identifier}",
         )
     inference_elapsed = time.perf_counter() - inference_started
+    taxonomy = load_taxonomy()
     matrices = list(member_scores.values())
     selected_id = freeze["selected_id"]
     if freeze["selected_kind"] == "individual":
@@ -857,22 +1372,38 @@ def evaluate_frozen_test(
     elif selected_id == "ensemble_intersection":
         scores = np.min(matrices, axis=0)
     elif selected_id == "ensemble_hard_majority":
-        taxonomy = load_taxonomy()
         binary = []
         for identifier, matrix in member_scores.items():
+            calibrated_matrix = _apply_score_calibrators(
+                matrix, freeze["member_score_calibrators"][identifier]
+            )
             threshold = np.asarray(
                 [
-                    candidates[identifier]["thresholds"][label]
+                    freeze["member_thresholds"][identifier][label]
                     for label in taxonomy.target_labels
                 ]
             )
-            binary.append(matrix >= threshold)
+            binary.append(calibrated_matrix >= threshold)
         scores = np.mean(binary, axis=0)
     else:
         raise ValueError(f"Regla congelada desconocida: {selected_id}")
+    scores = _apply_score_calibrators(scores, freeze["score_calibrators"])
     metrics_started = time.perf_counter()
     truth = encode_targets(test_rows)
     metrics_natural = classification_metrics(truth, scores, freeze["thresholds"])
+    damage_indices = np.asarray(
+        [taxonomy.target_labels.index(label) for label in taxonomy.damage_labels]
+    )
+    truth_any_natural = truth[:, damage_indices].max(axis=1)
+    any_damage_scores_natural = scores[:, damage_indices].max(axis=1)
+    any_damage_decisions_natural = (
+        any_damage_scores_natural >= float(freeze["any_damage_threshold"])
+    )
+    metrics_natural["binary_any_damage_frozen_gate"] = _binary_metrics(
+        truth_any_natural,
+        any_damage_decisions_natural,
+        any_damage_scores_natural,
+    )
     controlled_ids = {row["chunk_id"] for row in test_4_to_1}
     controlled_indices = np.asarray(
         [
@@ -887,8 +1418,42 @@ def evaluate_frozen_test(
         scores[controlled_indices],
         freeze["thresholds"],
     )
+    metrics_4_to_1["binary_any_damage_frozen_gate"] = _binary_metrics(
+        truth_any_natural[controlled_indices],
+        any_damage_decisions_natural[controlled_indices],
+        any_damage_scores_natural[controlled_indices],
+    )
+    selected_delta = freeze.get("needs_review_policy", {}).get("selected_delta")
+    review_natural = None
+    if selected_delta is not None:
+        ordered_thresholds = np.asarray(
+            [freeze["thresholds"][label] for label in taxonomy.target_labels]
+        )
+        review_mask, review_reasons = _review_mask(
+            scores,
+            np.broadcast_to(ordered_thresholds, scores.shape),
+            any_damage_scores_natural,
+            np.full(len(scores), float(freeze["any_damage_threshold"])),
+            delta=float(selected_delta),
+        )
+        automatic = ~review_mask
+        review_natural = {
+            "delta": float(selected_delta),
+            "coverage": float(automatic.mean()),
+            "review_load_rate": float(review_mask.mean()),
+            "review_reason_rates": review_reasons,
+            "selective_binary_metrics": (
+                _binary_metrics(
+                    truth_any_natural[automatic],
+                    any_damage_decisions_natural[automatic],
+                )
+                if automatic.any()
+                and np.unique(truth_any_natural[automatic]).size == 2
+                else None
+            ),
+        }
+    metrics_natural["needs_review_frozen_policy"] = review_natural
     metrics_elapsed = time.perf_counter() - metrics_started
-    taxonomy = load_taxonomy()
     write_jsonl_atomic(
         destination.with_name(destination.stem + "_predictions.jsonl"),
         [
@@ -900,6 +1465,10 @@ def evaluate_frozen_test(
                     for label_index, label in enumerate(taxonomy.target_labels)
                 },
                 "true_labels": row["coarse_labels"],
+                "predicted_any_damage": bool(any_damage_decisions_natural[index]),
+                "needs_review": (
+                    bool(review_mask[index]) if selected_delta is not None else None
+                ),
             }
             for index, row in enumerate(test_rows)
         ],

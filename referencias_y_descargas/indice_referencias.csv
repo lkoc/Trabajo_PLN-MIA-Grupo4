@@ -41,6 +41,7 @@
 "guo2017calibration","On Calibration of Modern Neural Networks","inproceedings","","https://proceedings.mlr.press/v70/guo17a.html","referencias_y_descargas/guo2017calibration__guo_2017_calibration-neural-networks.pdf","pdf_oa_validado"
 "harris2020numpy","Array Programming with NumPy","article","10.1038/s41586-020-2649-2","https://doi.org/10.1038/s41586-020-2649-2","referencias_y_descargas/harris2020numpy__harris_2020_numpy.pdf","pdf_oa_validado"
 "holm1979multiple","A Simple Sequentially Rejective Multiple Test Procedure","article","10.2307/4615733","https://doi.org/10.2307/4615733","","fuente_editorial_verificada_sin_pdf_local"
+"jin2008pareto","Pareto-Based Multiobjective Machine Learning: An Overview and Case Studies","article","10.1109/TSMCC.2008.919172","https://doi.org/10.1109/TSMCC.2008.919172","","fuente_autor_y_editor_verificada_sin_pdf_local"
 "hevner2004dsr","Design Science in Information Systems Research","article","10.2307/25148625","https://aisel.aisnet.org/misq/vol28/iss1/6/","","repositorio_oficial_indica_documento_no_disponible"
 "hf2026e5card","Model Card: intfloat/multilingual-e5-small","misc","","https://huggingface.co/intfloat/multilingual-e5-small/blob/614241f622f53c4eeff9890bdc4f31cfecc418b3/README.md","","ficha_modelo_web_sin_pdf"
 "hf2026minilmcard","Model Card: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2","misc","","https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/blob/e8f8c211226b894fcb81acc59f3b34ba3efd5f42/README.md","","ficha_modelo_web_sin_pdf"

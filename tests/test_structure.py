@@ -68,6 +68,7 @@ def test_active_notebooks_are_ordered_and_clean():
         "03_03b_transformer_cascada_segura.ipynb",
         "03_05_qwen_lora.ipynb",
         "03_06_qwen_estructurado.ipynb",
+        "03_06b_qwen_prompt_sft.ipynb",
     }
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
@@ -791,7 +792,10 @@ def test_local_training_notebooks_expose_bounded_deterministic_parallelism():
     assert "svm_convergence_repair" in classical_source
     assert "PARALLEL_WORKERS=4" in comparison_source
     assert "parallel_workers=PARALLEL_WORKERS" in comparison_source
-    assert "inferencia_miembros':'secuencial" in comparison_source
+    assert "BOOTSTRAP_REPLICATES=2000" in comparison_source
+    assert "SELECTION_FOLDS=5" in comparison_source
+    assert "MAX_REVIEW_RATE=None" in comparison_source
+    assert "MACRO_AUPRC_NONINFERIORITY_MARGIN=None" in comparison_source
 
 
 def test_active_long_running_notebooks_expose_progress_indicators():

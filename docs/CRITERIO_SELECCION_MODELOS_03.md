@@ -30,6 +30,23 @@ decisión operativa finalmente adoptada. Por ello:
 4. la superioridad se decidirá con incertidumbre pareada y agrupada por video,
    no solo con diferencias puntuales.
 
+### 1.1. Por qué no se suman todas las métricas
+
+No se construirá una puntuación aditiva con BA, FNR, FPR, F1, AUPRC,
+calibración y carga de revisión. BA ya es una función de FNR y FPR; incluir las
+tres cantidades en una suma contaría dos veces los mismos errores. Además,
+AUPRC, ECE y carga humana representan propiedades distintas y sus escalas no
+son utilidades intercambiables. Una suma ponderada solo sería defendible si sus
+pesos provinieran de costos o preferencias explícitas de las partes interesadas
+y se acompañara de análisis de sensibilidad.
+
+El enfoque vigente es **lexicográfico con salvaguardas**: maximizar BA binaria
+a cobertura completa; aplicar la no inferioridad macro-AUPRC predeclarada;
+informar la frontera BA--macro-AUPRC; y usar menor (R_{0.67}), luego mayor
+macro-AUPRC, únicamente como desempates. Esto es coherente con la literatura de
+aprendizaje multiobjetivo, que distingue la agregación escalar de la selección
+Pareto y exige explicitar preferencias para escoger entre compromisos [14].
+
 ## 2. Proyección binaria inequívoca
 
 Sea \(Y_{i\ell}\) la referencia de la etiqueta de daño \(\ell\) para el chunk
@@ -316,10 +333,12 @@ natural.
 
 ## 9. Implicaciones para la implementación
 
-Antes de ejecutar definitivamente `RUN_COMPARE_AND_FREEZE` en `03_07`, su clave
-de selección debe coincidir con este documento. La implementación actual que
-prioriza macro-AUPRC de daño corresponde al criterio anterior y no debe
-presentarse como si ya aplicara BA primaria.
+La implementación vigente de `03_07` aplica este documento: cross-fitting
+agrupado por video, BA binaria como ranking primario, frontera y salvaguarda
+macro-AUPRC, desempate por (R_{0.67}), bootstrap pareado de BA y política
+`NEEDS_REVIEW` posterior. Si la capacidad humana o el margen de no inferioridad
+permanecen en `None`, genera el informe exploratorio pero mantiene `test`
+sellado; no inventa esos valores.
 
 El artefacto de comparación deberá persistir al menos:
 
@@ -392,3 +411,8 @@ Learning Research*, vol. 11, pp. 2079–2107, 2010.
 [13] S. Holm, “A Simple Sequentially Rejective Multiple Test Procedure,”
 *Scandinavian Journal of Statistics*, vol. 6, no. 2, pp. 65–70, 1979. doi:
 [10.2307/4615733](https://doi.org/10.2307/4615733).
+
+[14] Y. Jin y B. Sendhoff, “Pareto-Based Multiobjective Machine Learning: An
+Overview and Case Studies,” *IEEE Transactions on Systems, Man, and
+Cybernetics, Part C*, vol. 38, no. 3, pp. 397–415, 2008. doi:
+[10.1109/TSMCC.2008.919172](https://doi.org/10.1109/TSMCC.2008.919172).

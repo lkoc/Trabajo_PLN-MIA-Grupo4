@@ -36,6 +36,47 @@ def test_grouped_bootstrap_is_deterministic_across_worker_counts():
     assert parallel["parallel_workers"] == 4
 
 
+def test_crossfit_binary_policy_optimizes_balanced_accuracy_by_video():
+    truth = np.asarray(
+        [
+            [1, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0],
+            [1, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0],
+        ]
+        * 5,
+        dtype=np.int8,
+    )
+    scores = truth * 0.8 + 0.1
+    videos = [f"video-{index // 2}" for index in range(len(truth))]
+
+    policy = ensemble_evaluation._crossfit_binary_policy(
+        truth, scores, videos, folds=5
+    )
+
+    metrics = policy["oof_metrics"]
+    assert metrics["balanced_accuracy"] == 1.0
+    assert metrics["false_negative_rate"] == 0.0
+    assert metrics["false_positive_rate"] == 0.0
+    assert set(metrics["risk_lambda"]) == {"0.50", "0.67", "0.80"}
+
+
+def test_selection_key_does_not_double_count_component_metrics():
+    metrics = {
+        "binary_any_damage_oof": {
+            "balanced_accuracy": 0.81,
+            "risk_lambda": {"0.67": 0.22},
+            "false_negative_rate": 0.30,
+            "false_positive_rate": 0.08,
+        },
+        "average_precision_macro_damage": 0.44,
+        "f1_macro_damage": 0.99,
+        "review_load_rate": 0.0,
+    }
+
+    assert ensemble_evaluation._selection_key(metrics) == (0.81, -0.22, 0.44)
+
+
 def test_frozen_test_reports_natural_and_four_to_one_from_one_inference(
     tmp_path, monkeypatch
 ):
@@ -89,6 +130,13 @@ def test_frozen_test_reports_natural_and_four_to_one_from_one_inference(
             "member_candidate_paths": {"fixture": str(candidate_path)},
             "selected_id": "fixture",
             "selected_kind": "individual",
+            "test_status": "sealed_ready_for_single_open",
+            "score_calibrators": [
+                {"type": "sigmoid_platt", "coefficient": 10.0, "intercept": -5.0}
+                for _ in range(5)
+            ],
+            "any_damage_threshold": 0.5,
+            "needs_review_policy": {"selected_delta": 0.0},
             "thresholds": {
                 "SEGURO": 0.5,
                 "RACISMO_DISCRIMINACION": 0.5,
