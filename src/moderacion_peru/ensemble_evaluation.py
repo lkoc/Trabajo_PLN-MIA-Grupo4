@@ -27,7 +27,10 @@ from .taxonomy import load_taxonomy
 from .training import calibrate_thresholds, classification_metrics, encode_targets
 
 DEFAULT_BOOTSTRAP_WORKERS = 4
-BOOTSTRAP_ENGINE = "grouped-video-threaded-v2"
+DEFAULT_SELECTION_FOLDS = 5
+DEFAULT_REVIEW_DELTA_GRID = (0.0, 0.01, 0.02, 0.03, 0.05, 0.075, 0.10, 0.15)
+SELECTION_CRITERION_VERSION = "balanced-any-damage-oof-v1"
+BOOTSTRAP_ENGINE = "paired-balanced-accuracy-grouped-video-threaded-v3"
 ProgressCallback = Callable[[dict[str, Any]], None]
 
 
@@ -46,14 +49,13 @@ def _candidate_slot(candidate: Mapping[str, Any]) -> str:
 
 
 def _selection_key(metrics: Mapping[str, Any]) -> tuple[float, ...]:
-    """Ranking no degenerado: AP/F1 con control posterior de errores."""
+    """Orden lexicográfico predeclarado; no es una suma de métricas."""
 
+    binary = metrics.get("binary_any_damage_oof", metrics.get("any_damage", {}))
     return (
+        float(binary.get("balanced_accuracy", 0.0)),
+        -float(binary.get("risk_lambda", {}).get("0.67", 1.0)),
         float(metrics.get("average_precision_macro_damage", 0.0)),
-        float(metrics.get("f1_macro_damage", 0.0)),
-        float(metrics.get("any_damage", {}).get("recall", 0.0)),
-        -float(metrics.get("false_alarm_rate_on_safe", 1.0)),
-        -float(metrics.get("review_load_rate", 1.0)),
     )
 
 
@@ -98,11 +100,17 @@ def _align_predictions(
 
 
 def _pareto_front(rows: Sequence[dict[str, Any]]) -> list[str]:
-    """Frontera AP/F1/recall máximos y falsas alarmas/revisión mínimos."""
+    """Frontera no dominada BA binaria--macro-AUPRC de daños."""
 
     vectors = {
         row["candidate_id"]: np.asarray(
-            _selection_key(row["validation_metrics"]), dtype=float
+            [
+                row["validation_metrics"]["binary_any_damage_oof"][
+                    "balanced_accuracy"
+                ],
+                row["validation_metrics"]["average_precision_macro_damage"],
+            ],
+            dtype=float,
         )
         for row in rows
     }

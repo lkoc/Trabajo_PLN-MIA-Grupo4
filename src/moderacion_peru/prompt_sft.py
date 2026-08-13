@@ -36,6 +36,67 @@ from .taxonomy import load_taxonomy
 
 PROMPT_SFT_MODEL_ID = "Qwen/Qwen3-0.6B"
 PROMPT_SFT_MODEL_REVISION = "6130ef31402718485ca4d80a6234f70d9a4cf362"
+PROMPT_SFT_GRADIENT_CHECKPOINTING = "non_reentrant_input_grad_v1"
+
+
+def _configure_lora_gradient_checkpointing(model: Any) -> dict[str, Any]:
+    """Conserva el grafo LoRA cuando el backbone causal está congelado.
+
+    El checkpointing reentrante de PyTorch exige que al menos una entrada tenga
+    ``requires_grad=True``. En PEFT las entradas y el backbone están congelados,
+    aunque los adaptadores sí sean entrenables, y la pérdida puede quedar sin
+    ``grad_fn``. Se habilitan gradientes de entrada y se solicita la variante no
+    reentrante, recomendada por Transformers para este caso.
+    """
+
+    trainable = [
+        (name, parameter)
+        for name, parameter in model.named_parameters()
+        if parameter.requires_grad
+    ]
+    if not trainable:
+        raise RuntimeError(
+            "Qwen SFT no tiene parámetros entrenables después de insertar LoRA"
+        )
+    non_lora = [name for name, _parameter in trainable if "lora_" not in name]
+    if non_lora:
+        raise RuntimeError(
+            "Qwen SFT esperaba entrenar solo adaptadores LoRA; parámetros inesperados: "
+            + ", ".join(non_lora[:5])
+        )
+
+    input_gradient_method = "enable_input_require_grads"
+    if hasattr(model, "enable_input_require_grads"):
+        model.enable_input_require_grads()
+    else:
+        embeddings = model.get_input_embeddings()
+
+        def require_output_grad(_module: Any, _inputs: Any, output: Any) -> None:
+            output.requires_grad_(True)
+
+        embeddings.register_forward_hook(require_output_grad)
+        input_gradient_method = "embedding_forward_hook"
+
+    try:
+        model.gradient_checkpointing_enable(
+            gradient_checkpointing_kwargs={"use_reentrant": False}
+        )
+        checkpointing_mode = "non_reentrant"
+    except TypeError:
+        # Compatibilidad defensiva con Transformers antiguos. La entrada con
+        # gradiente evita igualmente que el checkpoint reentrante corte el grafo.
+        model.gradient_checkpointing_enable()
+        checkpointing_mode = "legacy_reentrant_with_input_grad"
+
+    return {
+        "policy": PROMPT_SFT_GRADIENT_CHECKPOINTING,
+        "trainable_parameter_tensors": len(trainable),
+        "trainable_parameters": int(
+            sum(parameter.numel() for _name, parameter in trainable)
+        ),
+        "input_gradient_method": input_gradient_method,
+        "checkpointing_mode": checkpointing_mode,
+    }
 
 
 def compile_operational_prompt_capsule(prompt: str, *, max_chars: int = 9000) -> str:
@@ -356,6 +417,7 @@ def train_prompt_conditioned_sft(
         "gradient_accumulation_steps": gradient_accumulation,
         "dataloader_num_workers": dataloader_num_workers,
         "generation_batch_size": generation_batch_size,
+        "lora_gradient_checkpointing": PROMPT_SFT_GRADIENT_CHECKPOINTING,
         "test_status": "sealed_not_evaluated",
     }
     signature = _experiment_signature(dataset, "qwen_prompt_sft", configuration)
@@ -430,7 +492,7 @@ def train_prompt_conditioned_sft(
         ),
     )
     model.config.use_cache = False
-    model.gradient_checkpointing_enable()
+    gradient_diagnostics = _configure_lora_gradient_checkpointing(model)
     train_dataset = PromptCompletionDataset(
         tokenizer, train, system_prompt, max_length=max_length
     )
@@ -560,6 +622,7 @@ def train_prompt_conditioned_sft(
         "inference": {**inference, "bundle": bundle.name},
         "hardware": hardware.model_dump(),
         "training_metrics": dict(training_result.metrics),
+        "gradient_diagnostics": gradient_diagnostics,
         "resumed_from_checkpoint": checkpoint,
         "persistent_checkpoint_dir": (
             str(persistent_checkpoint_dir)
