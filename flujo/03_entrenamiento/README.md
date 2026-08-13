@@ -24,4 +24,22 @@ Consulte [`docs/HARDWARE.md`](../../docs/HARDWARE.md) antes de instalar PyTorch:
 
 `03_02`–`03_06b` incluyen un backend Colab L4 reproducible desde VS Code. El snapshot se transfiere comprimido y verificado y se copia a `/content`. Cada época terminada publica en Drive un checkpoint completo e inmutable de `Trainer`; al reiniciar se recupera el más nuevo verificable y se continúa con optimizador, scheduler y RNG. Los candidatos y métricas finales se publican automáticamente en dos ranuras redundantes. `03_01`, `03_07` y `03_08` permanecen locales salvo que sea necesario regenerar inferencias. Véase [`docs/COLAB_L4.md`](../../docs/COLAB_L4.md).
 
-Active `RUN_TRAINING=True` en cada clasificador que quiera comparar. `03_05` es la excepción cuando ya existe el candidato Qwen-LoRA de 128 tokens: mantenga `RUN_TRAINING=False` y ejecute `RUN_CONTINUATION_256=True`. Ese bloque verifica el candidato padre y su manifiesto, continúa sus pesos LoRA con contexto de 256 tokens y un optimizador nuevo, y escribe un `candidate.json` independiente; no reemplaza el modelo de 128. Ambos conservan test sellado y `03_07` decide entre ellos usando las mismas filas de validation. En `03_06b`, ejecute primero `RUN_PILOT=True`; el piloto no es elegible para `03_07`. Train y validation usan una submuestra determinista `SEGURO`/daño 4:1. En `03_07`, active primero `RUN_COMPARE_AND_FREEZE`; después `RUN_TEST_ONCE` ejecuta una sola inferencia sobre todo el test natural. El informe presenta esa evaluación como principal y deriva de las mismas predicciones una vista secundaria 4:1. `RUN_PUBLISH` no publica: lanza un bloqueo hasta una aprobación posterior.
+Active solo las campañas que quiera comparar. En `03_02`,
+`RUN_MINILM_CONTEXT_SCREEN=True` crea candidatos 192/256 desde el MiniLM de 128
+tokens usando una época, `1e-5` y validation fija. Tras escoger el contexto en
+validation, ajuste `SELECTED_MINILM_CONTEXT` y active
+`RUN_MINILM_SEED_CONFIRMATION`; junto con la semilla primaria se obtienen tres
+semillas de entrenamiento sin cambiar las filas. `RUN_MINILM_FOCAL_ABLATION`
+crea la comparación focal `gamma=2` separada de BCE.
+
+`03_05` conserva el candidato Qwen-LoRA de 128 tokens con
+`RUN_TRAINING=False` y permite `RUN_CONTINUATION_256=True`. En `03_06`, la ruta
+recomendada es `RUN_STRUCTURED_LORA_SWEEP=True`: restaura la publicación
+verificable de `03_05`, reutiliza su adaptador entrenable con optimizador nuevo
+y produce tres candidatos de una época con penalizaciones `0`, `0.02` y `0.05`.
+`RUN_LEGACY_FULL_TRAINING` queda apagado y preserva el experimento completo
+histórico. En `03_06b`, ejecute primero `RUN_PILOT=True`; el piloto no es
+elegible para `03_07`. Train y validation usan una submuestra determinista
+`SEGURO`/daño 4:1. En `03_07`, active primero `RUN_COMPARE_AND_FREEZE`; después
+`RUN_TEST_ONCE` ejecuta una sola inferencia sobre todo el test natural.
+`RUN_PUBLISH` continúa bloqueado hasta una aprobación posterior.

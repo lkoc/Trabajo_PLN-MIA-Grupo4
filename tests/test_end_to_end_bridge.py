@@ -674,3 +674,135 @@ def test_qwen_lora_256_continues_verified_128_as_distinct_candidate(
     assert Path(build_calls[1]["adapter_source"]) == (
         Path(parent["candidate_path"]).parent / "model"
     )
+
+
+def test_minilm_context_focal_continuation_separates_sampling_and_training_seeds(
+    tmp_path, monkeypatch
+):
+    dataset = tmp_path / "dataset.jsonl"
+    _fixture_dataset(dataset)
+    build_calls = []
+    fit_calls = []
+
+    def fake_build(*args, **kwargs):
+        build_calls.append(kwargs)
+        return object(), object()
+
+    def fake_predict(model, tokenizer, rows, max_length, hardware, output_count):
+        coarse = experiments.encode_targets(rows).astype(float)
+        output = __import__("numpy").zeros((len(rows), output_count), dtype=float) + 0.1
+        output[:, :5] = coarse * 0.8 + 0.1
+        return output
+
+    def fake_save(model, tokenizer, model_dir):
+        model_dir.mkdir(parents=True, exist_ok=True)
+        (model_dir / "config.json").write_text("{}\n", encoding="utf-8")
+        (model_dir / "model.safetensors").write_bytes(b"fixture")
+
+    monkeypatch.setattr(experiments, "_build_hf_model", fake_build)
+    monkeypatch.setattr(
+        experiments,
+        "_fit_hf",
+        lambda *args, **kwargs: fit_calls.append(kwargs) or {},
+    )
+    monkeypatch.setattr(experiments, "_predict_hf", fake_predict)
+    monkeypatch.setattr(experiments, "_save_hf", fake_save)
+
+    output = tmp_path / "minilm"
+    experiments.train_neural_experiment(
+        dataset, output, experiment="flat_minilm", device="cpu"
+    )
+    parent = experiments.select_neural_warm_start_candidate(
+        output, dataset, experiment="flat_minilm", max_length=128
+    )
+    result = experiments.train_neural_experiment(
+        dataset,
+        output,
+        experiment="flat_minilm",
+        device="cpu",
+        max_length=192,
+        epochs=1,
+        learning_rate=1e-5,
+        sampling_seed=20260805,
+        training_seed=20260817,
+        variant_id="context192_focal_seed20260817",
+        warm_start_candidate_path=parent["candidate_path"],
+        loss_mode="focal",
+        focal_gamma=2.0,
+    )
+
+    candidate = result["candidate"]
+    assert candidate["sampling_seed"] == 20260805
+    assert candidate["training_seed"] == 20260817
+    assert candidate["learning_objective"]["loss"]["mode"] == "focal"
+    assert candidate["initialization"]["asset_kind"] == "full_model"
+    assert candidate["initialization"]["optimizer_state_reused"] is False
+    assert Path(build_calls[1]["model_source"]) == (
+        Path(parent["candidate_path"]).parent / "model"
+    )
+    assert fit_calls[1]["loss_mode"] == "focal"
+    assert fit_calls[1]["focal_gamma"] == 2.0
+
+
+def test_qwen_structured_lora_starts_from_03_05_adapter_and_sweeps_penalty(
+    tmp_path, monkeypatch
+):
+    dataset = tmp_path / "dataset.jsonl"
+    _fixture_dataset(dataset)
+    build_calls = []
+    fit_calls = []
+
+    def fake_build(*args, **kwargs):
+        build_calls.append(kwargs)
+        return object(), object()
+
+    def fake_predict(model, tokenizer, rows, max_length, hardware, output_count):
+        coarse = experiments.encode_targets(rows).astype(float)
+        output = __import__("numpy").zeros((len(rows), output_count), dtype=float) + 0.1
+        output[:, :5] = coarse * 0.8 + 0.1
+        return output
+
+    def fake_save(model, tokenizer, model_dir):
+        model_dir.mkdir(parents=True, exist_ok=True)
+        (model_dir / "adapter_config.json").write_text("{}\n", encoding="utf-8")
+        (model_dir / "adapter_model.safetensors").write_bytes(b"fixture")
+
+    monkeypatch.setattr(experiments, "_build_hf_model", fake_build)
+    monkeypatch.setattr(
+        experiments,
+        "_fit_hf",
+        lambda *args, **kwargs: fit_calls.append(kwargs) or {},
+    )
+    monkeypatch.setattr(experiments, "_predict_hf", fake_predict)
+    monkeypatch.setattr(experiments, "_save_hf", fake_save)
+
+    parent_root = tmp_path / "qwen_lora"
+    experiments.train_neural_experiment(
+        dataset, parent_root, experiment="qwen_lora", device="cpu"
+    )
+    parent = experiments.select_qwen_lora_warm_start_candidate(
+        parent_root, dataset, max_length=128
+    )
+    result = experiments.train_neural_experiment(
+        dataset,
+        tmp_path / "qwen_structured",
+        experiment="qwen_structured",
+        device="cpu",
+        max_length=128,
+        epochs=1,
+        learning_rate=2e-5,
+        variant_id="lora03_05_structured_p002",
+        warm_start_candidate_path=parent["candidate_path"],
+        structured_penalty=0.02,
+    )
+
+    candidate = result["candidate"]
+    assert candidate["inference"]["type"] == "hf_peft_sequence_classifier"
+    assert candidate["learning_objective"]["structured_penalty"] == 0.02
+    assert candidate["initialization"]["source_experiment"] == "qwen_lora"
+    assert candidate["initialization"]["target_experiment"] == "qwen_structured"
+    assert candidate["initialization"]["asset_kind"] == "peft_adapter"
+    assert Path(build_calls[1]["adapter_source"]) == (
+        Path(parent["candidate_path"]).parent / "model"
+    )
+    assert fit_calls[1]["structured_penalty"] == 0.02

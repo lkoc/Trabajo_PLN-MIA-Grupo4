@@ -47,7 +47,7 @@ from .training import (
     masked_multilabel_metrics,
 )
 
-TRAINING_ENGINE_VERSION = "4.2.0"
+TRAINING_ENGINE_VERSION = "4.3.0"
 PROJECT_SAFE_TO_DAMAGE_RATIO = 4.0
 DEFAULT_LOCAL_PARALLEL_WORKERS = 4
 DEFAULT_LINEAR_SVM_MAX_ITER = 20000
@@ -1066,26 +1066,6 @@ def _build_hf_model(
     return tokenizer, model
 
 
-def _last_candidate(
-    output_root: Path, experiment: str, dataset_sha: str
-) -> dict[str, Any] | None:
-    candidates = []
-    for path in output_root.rglob("candidate.json") if output_root.exists() else []:
-        try:
-            row = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            continue
-        if (
-            row.get("experiment") == experiment
-            and row.get("status") == "complete"
-            and row.get("dataset_sha256") != dataset_sha
-            and row.get("output_count", 5) == 22
-        ):
-            row["candidate_path"] = str(path)
-            candidates.append(row)
-    return max(candidates, key=lambda row: row.get("completed_at", ""), default=None)
-
-
 def _candidate_asset(candidate: dict[str, Any], value: str | Path | None) -> str | None:
     if not value:
         return None
@@ -1095,19 +1075,24 @@ def _candidate_asset(candidate: dict[str, Any], value: str | Path | None) -> str
     return str(Path(candidate["candidate_path"]).parent / path)
 
 
-def select_qwen_lora_warm_start_candidate(
+def select_neural_warm_start_candidate(
     output_root: str | Path,
     dataset_path: str | Path,
     *,
+    experiment: str,
     max_length: int = 128,
 ) -> dict[str, Any]:
-    """Selecciona un Qwen-LoRA completo y verificable como punto de partida.
+    """Selecciona un candidato completo y verificable como punto de partida.
 
-    La selección exige el mismo snapshot del dataset y la longitud solicitada. De
-    este modo una variante de 256 tokens no puede inicializar accidentalmente otra
-    variante de 256 ni un candidato entrenado sobre datos distintos.
+    La selección exige familia, snapshot y longitud exactos. El warm-start nunca se
+    infiere por cercanía temporal: el cuaderno debe declarar el candidato padre.
     """
 
+    supported = {"flat_minilm", "qwen_lora"}
+    if experiment not in supported:
+        raise ValueError(
+            "Solo flat_minilm y qwen_lora pueden actuar como warm-start explícito"
+        )
     output = Path(output_root)
     dataset = Path(dataset_path).resolve()
     dataset_sha = sha256_file(dataset)
@@ -1123,8 +1108,8 @@ def select_qwen_lora_warm_start_candidate(
             continue
         diagnostic = candidate.get("truncation_diagnostic") or {}
         if (
-            candidate.get("experiment") == "qwen_lora"
-            and candidate.get("model_family") == "qwen_lora"
+            candidate.get("experiment") == experiment
+            and candidate.get("model_family") == experiment
             and candidate.get("dataset_sha256") == dataset_sha
             and candidate.get("output_count") == 22
             and int(diagnostic.get("max_length", -1)) == int(max_length)
@@ -1132,9 +1117,9 @@ def select_qwen_lora_warm_start_candidate(
             candidates.append(candidate)
     if not candidates:
         raise FileNotFoundError(
-            "No existe un candidato Qwen-LoRA completo y verificable de "
+            f"No existe un candidato {experiment} completo y verificable de "
             f"{max_length} tokens para el snapshot {dataset_sha[:12]} bajo {output}. "
-            "Restaure la publicación de 03_05 o ejecute primero el bloque base."
+            "Restaure la publicación correspondiente o ejecute primero el bloque base."
         )
     return max(
         candidates,
@@ -1142,10 +1127,27 @@ def select_qwen_lora_warm_start_candidate(
     )
 
 
-def _load_explicit_qwen_warm_start_candidate(
+def select_qwen_lora_warm_start_candidate(
+    output_root: str | Path,
+    dataset_path: str | Path,
+    *,
+    max_length: int = 128,
+) -> dict[str, Any]:
+    """Compatibilidad: selecciona un Qwen-LoRA verificable."""
+
+    return select_neural_warm_start_candidate(
+        output_root,
+        dataset_path,
+        experiment="qwen_lora",
+        max_length=max_length,
+    )
+
+
+def _load_explicit_neural_warm_start_candidate(
     candidate_path: str | Path,
     *,
     dataset_sha: str,
+    target_experiment: str,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     path = Path(candidate_path).resolve()
     try:
@@ -1155,17 +1157,26 @@ def _load_explicit_qwen_warm_start_candidate(
         raise ValueError(f"Candidato warm-start inválido: {path}") from exc
     if candidate is None:
         raise ValueError(f"Candidato warm-start incompleto o con hashes inválidos: {path}")
+    parent_experiment = str(candidate.get("experiment"))
+    allowed_transitions = {
+        ("flat_minilm", "flat_minilm"),
+        ("qwen_lora", "qwen_lora"),
+        ("qwen_lora", "qwen_structured"),
+    }
     if (
-        candidate.get("experiment") != "qwen_lora"
-        or candidate.get("model_family") != "qwen_lora"
+        (parent_experiment, target_experiment) not in allowed_transitions
+        or candidate.get("model_family") != parent_experiment
         or candidate.get("output_count") != 22
     ):
-        raise ValueError("El warm-start explícito debe ser un Qwen-LoRA de 22 salidas")
+        raise ValueError(
+            "Transición warm-start no admitida; use MiniLM→MiniLM, "
+            "Qwen-LoRA→Qwen-LoRA o Qwen-LoRA→Qwen estructurado"
+        )
     if candidate.get("dataset_sha256") != dataset_sha:
         raise ValueError("El warm-start y la continuación deben usar exactamente el mismo dataset")
     model_path = _candidate_asset(candidate, candidate.get("inference", {}).get("model"))
     if model_path is None or not Path(model_path).is_dir():
-        raise ValueError("El candidato warm-start no contiene el adaptador PEFT declarado")
+        raise ValueError("El candidato warm-start no contiene el modelo declarado")
     manifest_path = _candidate_asset(candidate, candidate.get("checkpoint_manifest"))
     if manifest_path is None:
         raise ValueError("El candidato warm-start no declara checkpoint_manifest")
@@ -1176,8 +1187,15 @@ def _load_explicit_qwen_warm_start_candidate(
         "max_length": int(
             (candidate.get("truncation_diagnostic") or {}).get("max_length", -1)
         ),
+        "source_experiment": parent_experiment,
+        "target_experiment": target_experiment,
+        "asset_kind": "peft_adapter" if parent_experiment == "qwen_lora" else "full_model",
         "optimizer_state_reused": False,
-        "policy": "trainable_peft_adapter_with_fresh_optimizer_and_scheduler",
+        "policy": (
+            "trainable_peft_adapter_with_fresh_optimizer_and_scheduler"
+            if parent_experiment == "qwen_lora"
+            else "trainable_full_model_with_fresh_optimizer_and_scheduler"
+        ),
     }
     return candidate, identity
 
@@ -1238,6 +1256,8 @@ def _fit_hf(
     hardware: Any,
     *,
     structured_penalty: float = 0.0,
+    loss_mode: str = "weighted_bce",
+    focal_gamma: float = 2.0,
     output_weights: Sequence[float] | None = None,
     primary_output_count: int = 5,
     eval_batch_size: int = 8,
@@ -1292,6 +1312,14 @@ def _fit_hf(
                 reduction="none",
                 pos_weight=positive,
             )
+            if loss_mode == "focal":
+                probabilities = torch.sigmoid(logits)
+                probability_true_class = (
+                    probabilities * labels + (1 - probabilities) * (1 - labels)
+                )
+                elementwise = elementwise * (
+                    1 - probability_true_class
+                ).pow(focal_gamma)
             if output_weights is not None:
                 weights = torch.as_tensor(
                     output_weights, device=logits.device, dtype=logits.dtype
@@ -1482,8 +1510,13 @@ def train_neural_experiment(
     spec_key: str | None = None,
     max_length: int | None = None,
     epochs: int | None = None,
+    learning_rate: float | None = None,
+    training_seed: int | None = None,
     variant_id: str | None = None,
     warm_start_candidate_path: str | Path | None = None,
+    loss_mode: str = "weighted_bce",
+    focal_gamma: float = 2.0,
+    structured_penalty: float | None = None,
     safe_to_damage_ratio: float | None = 4.0,
     split_scheme: str = "video",
     sampling_seed: int = 20260805,
@@ -1518,10 +1551,43 @@ def train_neural_experiment(
         isinstance(epochs, bool) or not isinstance(epochs, int) or epochs < 1
     ):
         raise ValueError("epochs debe ser un entero positivo")
+    if learning_rate is not None and (
+        isinstance(learning_rate, bool)
+        or not isinstance(learning_rate, (int, float))
+        or not math.isfinite(learning_rate)
+        or learning_rate <= 0
+    ):
+        raise ValueError("learning_rate debe ser finito y positivo")
+    if training_seed is not None and (
+        isinstance(training_seed, bool) or not isinstance(training_seed, int)
+    ):
+        raise ValueError("training_seed debe ser un entero")
+    if loss_mode not in {"weighted_bce", "focal"}:
+        raise ValueError("loss_mode debe ser 'weighted_bce' o 'focal'")
+    if (
+        isinstance(focal_gamma, bool)
+        or not isinstance(focal_gamma, (int, float))
+        or not math.isfinite(focal_gamma)
+        or focal_gamma <= 0
+    ):
+        raise ValueError("focal_gamma debe ser finito y positivo")
+    if structured_penalty is not None and (
+        isinstance(structured_penalty, bool)
+        or not isinstance(structured_penalty, (int, float))
+        or not math.isfinite(structured_penalty)
+        or structured_penalty < 0
+    ):
+        raise ValueError("structured_penalty debe ser finito y no negativo")
     if variant_id is not None and not re.fullmatch(r"[a-z0-9][a-z0-9_-]*", variant_id):
         raise ValueError("variant_id solo admite minúsculas, números, guion y subrayado")
-    if warm_start_candidate_path is not None and experiment != "qwen_lora":
-        raise ValueError("warm_start_candidate_path solo está habilitado para qwen_lora")
+    if warm_start_candidate_path is not None and experiment not in {
+        "flat_minilm",
+        "qwen_lora",
+        "qwen_structured",
+    }:
+        raise ValueError(
+            "warm_start_candidate_path solo se admite para MiniLM y las ramas Qwen"
+        )
     if experiment == "cascade_v2":
         if not 0 < cascade_gate_min_damage_recall <= 1:
             raise ValueError("cascade_gate_min_damage_recall debe pertenecer a (0, 1]")
@@ -1543,25 +1609,38 @@ def train_neural_experiment(
         key = "minilm"
     if experiment == "flat_e5":
         key = "e5"
-    spec_values = {**asdict(TRANSFORMER_SPECS[key]), "seed": sampling_seed}
+    resolved_training_seed = sampling_seed if training_seed is None else training_seed
+    spec_values = {**asdict(TRANSFORMER_SPECS[key]), "seed": resolved_training_seed}
     if max_length is not None:
         spec_values["max_length"] = max_length
     if epochs is not None:
         spec_values["epochs"] = epochs
+    if learning_rate is not None:
+        spec_values["learning_rate"] = float(learning_rate)
     spec = TrainingSpecification(**spec_values)
     dataset = Path(dataset_path).resolve()
     dataset_sha = sha256_file(dataset)
     explicit_warm_start = None
     warm_start_identity = None
     if warm_start_candidate_path is not None:
-        explicit_warm_start, warm_start_identity = _load_explicit_qwen_warm_start_candidate(
+        explicit_warm_start, warm_start_identity = _load_explicit_neural_warm_start_candidate(
             warm_start_candidate_path,
             dataset_sha=dataset_sha,
+            target_experiment=experiment,
         )
         parent_max_length = int(warm_start_identity["max_length"])
-        if parent_max_length < 0 or spec.max_length <= parent_max_length:
+        same_family_continuation = (
+            warm_start_identity["source_experiment"] == experiment
+        )
+        invalid_length = (
+            parent_max_length < 0
+            or spec.max_length < parent_max_length
+            or (same_family_continuation and spec.max_length <= parent_max_length)
+        )
+        if invalid_length:
             raise ValueError(
-                "La continuación debe ampliar la longitud del candidato padre: "
+                "La continuación de la misma familia debe ampliar la longitud y "
+                "una transferencia entre familias no puede reducirla: "
                 f"padre={parent_max_length}, solicitada={spec.max_length}"
             )
     output = Path(output_root)
@@ -1580,12 +1659,20 @@ def train_neural_experiment(
         )
     eval_batch_size = 32 if qwen_high_memory_profile else 8
     dataloader_num_workers = 2 if qwen_high_memory_profile else 0
+    resolved_structured_penalty = (
+        float(structured_penalty)
+        if structured_penalty is not None
+        else (0.2 if experiment in {"cascade_v2", "qwen_structured"} else 0.0)
+    )
     configuration = {
         "experiment": experiment,
         "specification": asdict(spec),
-        "structured_penalty": (
-            0.2 if experiment in {"cascade_v2", "qwen_structured"} else 0.0
-        ),
+        "structured_penalty": resolved_structured_penalty,
+        "loss": {
+            "mode": loss_mode,
+            "focal_gamma": float(focal_gamma) if loss_mode == "focal" else None,
+            "positive_class_weighting": "observed_negative_over_positive_clipped_1_20",
+        },
         "hardware_backend": hardware.backend,
         "dtype": hardware.dtype,
         "performance_profile": performance_profile,
@@ -1601,6 +1688,7 @@ def train_neural_experiment(
         "test_policy": "full_natural_plus_4_to_1_secondary_same_predictions",
         "split_scheme": split_scheme,
         "sampling_seed": sampling_seed,
+        "training_seed": resolved_training_seed,
         "early_stopping_selection": "best_validation_macro_auprc_damage",
         "cascade_v2_gate_constraints": (
             {
@@ -1654,7 +1742,9 @@ def train_neural_experiment(
     )
     run_dir.mkdir(parents=True, exist_ok=True)
     write_json_atomic(run_dir / "training_sampling.json", sampling)
-    previous = explicit_warm_start or _last_candidate(output, experiment, dataset_sha)
+    # Un candidato previo solo se reutiliza cuando el cuaderno lo declara y el
+    # manifiesto lo verifica. Esto evita continuaciones accidentales entre variantes.
+    previous = explicit_warm_start
     taxonomy = load_taxonomy()
     cascade_diagnostics: dict[str, Any] | None = None
     training_elapsed = 0.0
@@ -1786,7 +1876,9 @@ def train_neural_experiment(
             spec,
             run_dir / ("trainer_branch" if safety_first else "trainer_damage"),
             hardware,
-            structured_penalty=0.2 if safety_first else 0.0,
+            structured_penalty=resolved_structured_penalty if safety_first else 0.0,
+            loss_mode=loss_mode,
+            focal_gamma=focal_gamma,
             primary_output_count=5 if safety_first else 4,
             eval_batch_size=eval_batch_size,
             dataloader_num_workers=dataloader_num_workers,
@@ -1931,20 +2023,21 @@ def train_neural_experiment(
         targets, target_masks, labels = _output_targets_and_masks(train)
         validation_targets, validation_masks, _ = _output_targets_and_masks(validation)
         previous_source = None
-        if previous and experiment != "qwen_lora":
+        if previous and warm_start_identity["asset_kind"] == "full_model":
             previous_source = _candidate_asset(
                 previous, previous.get("inference", {}).get("model")
             )
         previous_adapter = (
             _candidate_asset(previous, previous.get("inference", {}).get("model"))
-            if previous and experiment == "qwen_lora"
+            if previous and warm_start_identity["asset_kind"] == "peft_adapter"
             else None
         )
+        use_lora = experiment == "qwen_lora" or previous_adapter is not None
         tokenizer, model = _build_hf_model(
             spec,
             labels,
             model_source=previous_source,
-            lora=experiment == "qwen_lora",
+            lora=use_lora,
             adapter_source=previous_adapter,
         )
         truncation = _token_truncation_diagnostic(tokenizer, train, spec.max_length)
@@ -1961,7 +2054,11 @@ def train_neural_experiment(
             spec,
             run_dir / "trainer",
             hardware,
-            structured_penalty=0.2 if experiment == "qwen_structured" else 0.0,
+            structured_penalty=(
+                resolved_structured_penalty if experiment == "qwen_structured" else 0.0
+            ),
+            loss_mode=loss_mode,
+            focal_gamma=focal_gamma,
             output_weights=[1.0] * 5
             + [0.3] * len(taxonomy.fine_labels)
             + [0.2] * len(taxonomy.flags),
@@ -1995,7 +2092,7 @@ def train_neural_experiment(
         inference = {
             "type": (
                 "hf_peft_sequence_classifier"
-                if experiment == "qwen_lora"
+                if use_lora
                 else "hf_sequence_classifier"
             ),
             "model": model_dir.name,
@@ -2025,6 +2122,12 @@ def train_neural_experiment(
         "variant_id": variant_id or "default",
         "context_max_length": spec.max_length,
         "initialization": warm_start_identity,
+        "learning_objective": {
+            "loss": configuration["loss"],
+            "structured_penalty": resolved_structured_penalty,
+        },
+        "sampling_seed": sampling_seed,
+        "training_seed": resolved_training_seed,
         "run_signature": signature,
         "dataset": str(dataset),
         "dataset_sha256": sha256_file(dataset),

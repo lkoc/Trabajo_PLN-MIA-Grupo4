@@ -152,17 +152,25 @@ tope artificial; persiste por `chunk_id` y puede continuar con una recarga.
 | Cuaderno | Familia o decisión | Resultado materializado |
 |---|---|---|
 | `03_01_modelos_clasicos` | cinco estimadores con TF-IDF palabra+carácter, en variantes base e informada por política | candidatos de 22 salidas con supervisión enmascarada |
-| `03_02_transformers_planos` | MiniLM multilingüe y E5-small multilingüe | checkpoints de 5+14+3 salidas y candidatos planos |
+| `03_02_transformers_planos` | MiniLM multilingüe y E5-small multilingüe; campaña MiniLM 192/256, tres semillas y ablación focal | checkpoints de 5+14+3 salidas; cada variante conserva candidato y firma independientes |
 | `03_03_transformer_cascada` | compuerta de cualquier daño con auxiliares, seguida de cuatro salidas de daño | candidato de dos etapas y diagnóstico de propagación |
 | `03_03b_transformer_cascada_segura` | compuerta E5 calibrada por recall de daño y NPV segura, seguida de `SEGURO` más cuatro daños | candidato de seguridad primero, fallback a la rama completa y diagnóstico de cobertura |
 | `03_04_transformer_multitarea` | cinco salidas principales, 14 etiquetas finas y tres flags auxiliares | candidato multitarea |
 | `03_05_qwen_lora` | Qwen3-0.6B-Base con adaptación LoRA y cabeza clasificadora | conserva el candidato de 128 tokens y permite crear otro de 256 mediante continuación verificable; ambos tienen 22 salidas y no se presentan como prompting |
-| `03_06_qwen_estructurado` | Qwen clasificador con penalización del conflicto `SEGURO+daño` | checkpoint estructurado de 22 salidas |
+| `03_06_qwen_estructurado` | Qwen-LoRA inicializado desde `03_05`, con una época y barrido de penalización del conflicto `SEGURO+daño` | tres candidatos PEFT (`0`, `0.02`, `0.05`); conserva separado el full fine-tuning histórico |
 | `03_06b_qwen_prompt_sft` | Qwen3-0.6B conversacional, LoRA causal y cápsula trazable del prompt v3.2 | JSON estricto y candidato realmente condicionado por prompt |
 | `03_07_comparacion_final` | individuos, ensembles, diversidad, bootstrap por video y pruebas pareadas | comparación en validation y manifiesto congelado; test/publicación separados |
 | `03_08_auditoria_finas_flags` | audita máscaras, cobertura, consistencia y métricas auxiliares observadas | informes del snapshot y de candidatos disponibles |
 
 Los cuadernos `03_01`–`03_06b` completan `fit → calibración/evaluación en validation → manifiesto` y dejan test sellado. `03_07` compara individuos y ensembles, congela candidatos, umbrales y regla; un segundo interruptor infiere una sola vez sobre el test natural completo. Train y validation conservan todo el daño y seleccionan `SEGURO` de forma determinista, aproximadamente proporcional por canal, con ratio 4:1: quedan 51.205/10.600 chunks. Test conserva sus 22.684 chunks y su prevalencia natural. De la misma inferencia se deriva además una vista secundaria determinista 4:1 de 9.010 chunks; no se vuelve a abrir ni ejecutar el modelo. La publicación permanece bloqueada por defecto.
+
+Las mejoras neuronales son opcionales. En `03_02`, la pantalla de contexto usa
+una semilla de muestreo fija para que validation no cambie; después confirma el
+contexto elegido con tres semillas de entrenamiento en total y compara focal
+contra BCE ponderada. En `03_06`, la ruta recomendada restaura y verifica por
+SHA-256 la publicación de `03_05`, carga su adaptador PEFT como entrenable y
+reinicia optimizador/scheduler para cada penalización. Ninguna de estas rutas
+reemplaza candidatos existentes ni consulta test.
 
 La explicación arquitectónica, los esquemas Mermaid, las diferencias de implementación y una matriz de antecedentes aplicados están en [Arquitecturas de entrenamiento 03_01–03_06b](docs/ARQUITECTURAS_MODELOS_03.md).
 

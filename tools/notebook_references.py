@@ -56,6 +56,11 @@ REFERENCE_LIBRARY = {
         'Text Classification with Long-Tailed Class Distribution," in Proc. EMNLP, 2021, '
         "pp. 8153–8161, doi: 10.18653/v1/2021.emnlp-main.643."
     ),
+    "lin2017focal": (
+        'T.-Y. Lin, P. Goyal, R. Girshick, K. He, and P. Dollár, "Focal Loss for Dense '
+        'Object Detection," in Proc. IEEE Int. Conf. Computer Vision, 2017, '
+        "pp. 2980–2988, doi: 10.1109/ICCV.2017.324."
+    ),
     "ollama2026structured": (
         'Ollama, "Structured Outputs," Ollama Documentation, 2026. [Online]. Available: '
         "https://docs.ollama.com/capabilities/structured-outputs. Accessed: Aug. 5, 2026."

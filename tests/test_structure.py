@@ -164,8 +164,8 @@ def test_training_architecture_report_cites_prior_applied_schemes():
     cited = set(map(int, BODY_CITATION.findall(body)))
     entries = list(map(int, REFERENCE_ENTRY.findall(references)))
 
-    assert cited == set(range(1, 37))
-    assert entries == list(range(1, 37))
+    assert cited == set(range(1, 38))
+    assert entries == list(range(1, 38))
     assert report.count("```mermaid") >= 5
     assert all(
         notebook_id in report
@@ -816,6 +816,44 @@ def test_qwen_lora_notebook_preserves_128_and_adds_256_warm_start_candidate():
         assert "warm_start_candidate_path=base_128['candidate_path']" in payload
     assert "optimizador':'nuevo; no reutiliza estado del Trainer" in source
     assert "`03_07` descubrirá" in source
+
+
+def test_minilm_notebook_exposes_bounded_context_seed_and_focal_campaign():
+    notebook = nbformat.read(
+        ROOT / "flujo/03_entrenamiento/03_02_transformers_planos.ipynb",
+        as_version=4,
+    )
+    source = "\n".join(cell.source for cell in notebook.cells)
+
+    assert "RUN_MINILM_CONTEXT_SCREEN=False" in source
+    assert "RUN_MINILM_SEED_CONFIRMATION=False" in source
+    assert "RUN_MINILM_FOCAL_ABLATION=False" in source
+    assert "CONTEXT_SCREEN_LENGTHS=(192,256)" in source
+    assert "ADDITIONAL_TRAINING_SEEDS=(20260817,20260829)" in source
+    assert "SAMPLING_SEED=20260805" in source
+    assert "training_seed=training_seed" in source
+    assert "loss_mode='focal'" in source
+    assert "warm_start_candidate_path=minilm_parent['candidate_path']" in source
+    assert "test':'natural completo, sellado'" in source
+
+
+def test_qwen_structured_notebook_uses_verified_03_05_lora_and_penalty_sweep():
+    notebook = nbformat.read(
+        ROOT / "flujo/03_entrenamiento/03_06_qwen_estructurado.ipynb",
+        as_version=4,
+    )
+    source = "\n".join(cell.source for cell in notebook.cells)
+
+    assert "RUN_LEGACY_FULL_TRAINING=False" in source
+    assert "RUN_STRUCTURED_LORA_SWEEP=False" in source
+    assert "STRUCTURED_PENALTIES=(0.0,0.02,0.05)" in source
+    assert "STRUCTURED_EPOCHS=1" in source
+    assert "STRUCTURED_LEARNING_RATE=2e-5" in source
+    assert "restore_colab_run_outputs" in source
+    assert "select_qwen_lora_warm_start_candidate" in source
+    assert "warm_start_candidate_path=qwen_lora_parent['candidate_path']" in source
+    assert "structured_penalty=penalty" in source
+    assert "test':'natural completo, sellado'" in source
 
 
 def test_active_long_running_notebooks_expose_progress_indicators():

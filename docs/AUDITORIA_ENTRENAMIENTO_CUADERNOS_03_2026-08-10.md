@@ -13,6 +13,13 @@ La serie ya produjo resultados comparables en *validation*, pero **todavía no p
 2. Qwen-LoRA lidera entre los candidatos completos el macro-F1 de cinco salidas (0,6275), micro-F1 (0,8396), macro-AUPRC de daño (0,5422), F1 de *any-damage* (0,6731) y macro-F1 fina observada (0,4286). No domina todo: el Transformer multitarea conserva la menor tasa de falso seguro (0,3939 frente a 0,4590 de Qwen), y otros modelos presentan mejor calibración.
 3. Qwen terminó tras restaurar la época 2 y persistir el checkpoint de la época 3 en Drive. El candidato final `qwen_lora-4aa5ce04df05` incluye calibración, umbrales y `candidate.json`; sus métricas finales reemplazan, para comparación, las cifras intermedias por época.
 4. Qwen estructurado (`03_06`) completó computacionalmente su primera época en A100, pero esa época **no quedó recuperable**: Drive conserva los manifiestos del paso 6401 y un archivo `.partial` de 0 bytes, no el TAR de 7.153.223.680 bytes declarado. Aún no existe candidato completo. El nuevo bundle evita publicar el manifiesto hasta releer y autenticar el archivo final de Drive y, al no haber una época anterior válida, reinicia explícita y automáticamente desde la época 1.
+
+   **Actualización 2026-08-13:** un reintento posterior completó las cuatro
+   épocas y produjo el candidato histórico
+   `qwen_structured-f3205f653819` (macro-AUPRC de daño `0.2431` y tasa de
+   falso `SEGURO` sobre daño `0.775` en validation). La descripción anterior se
+   conserva como incidente de persistencia. La ruta recomendada actual es el
+   barrido LoRA corto desde `03_05`, aún pendiente de ejecución.
 5. El test permanece sellado en todos los candidatos completos (`test_metrics=null`); no existe todavía registro final ni reporte `test_final_abierto_una_vez.json`.
 
 Los hallazgos metodológicos del inicio de la auditoría —máscaras de observación, calibración, pérdida balanceada, separación de test, rama condicionada por prompt y evaluación por canal— quedaron convertidos en controles de código. Los resultados de este corte son exclusivamente de *validation* 4:1 y no prueban generalización al test natural ni a canales retenidos.
@@ -157,7 +164,7 @@ La procedencia debe conservarse como variable de auditoría y estratificación d
 | `03_03b_transformer_cascada_segura` | puerta conservadora + rama especializada que vuelve a incluir `SEGURO` | **Completo:** `cascade_v2-af78eba77883`, publicado en Drive | minimiza bloqueo falso y permite corregir falsos positivos de la puerta |
 | `03_04_transformer_multitarea` | 5 gruesas + 14 finas + 3 flags | **Completo:** `multitask-5a9b00f79262`, publicado en Drive | pérdida enmascarada y ratio 4:1 fijo en train/validation |
 | `03_05_qwen_lora` | Qwen3-0.6B-Base clasificador LoRA de 22 salidas | **Completo:** `qwen_lora-4aa5ce04df05`, reanudado y finalizado en A100; publicado en Drive | checkpoint completo por época en Drive y clasificación supervisada explícita |
-| `03_06_qwen_estructurado` | Qwen clasificador de 22 salidas con penalización estructural | **Primera época no recuperable:** el TAR no llegó a Drive; sin candidato final y listo para recomputar con `c4513a...da63a52` | calibración, auxiliares enmascarados y checkpoint por época verificado por relectura |
+| `03_06_qwen_estructurado` | Qwen clasificador de 22 salidas con penalización estructural | full fine-tuning histórico completo en reintento; barrido LoRA `0/0.02/0.05` implementado y pendiente | calibración, auxiliares enmascarados, warm-start 03_05 verificable y checkpoint por época |
 | `03_06b_qwen_prompt_sft` | Qwen3-0.6B conversacional [R19], LoRA causal, prompt v3.2 y JSON | `RUN_PILOT=False`; `RUN_FULL_TRAINING=False` | piloto no elegible y corrida completa separada |
 | `03_07_comparacion_final` | individuos, voto duro, medias suaves, unión/intersección | tres compuertas en `False` | bootstrap determinista en cuatro hilos, pruebas pareadas/Holm y test único |
 | `03_08_auditoria_finas_flags` | cobertura, consistencia y calidad auxiliar disponible | **Pendiente para el snapshot vigente:** la salida guardada corresponde a `24d3d8...ca783` | métricas solo en posiciones observadas |
@@ -351,9 +358,21 @@ Minimizar primero `false_safe_rate_on_damage` puede favorecer un clasificador qu
 
 Los Transformers ahora evalúan por época con macro-AUPRC de daños, guardan checkpoints y cargan el mejor modelo cuando corresponde. Qwen conserva además cada época completa en Drive. Sigue pendiente repetir las arquitecturas finalistas con varias semillas para registrar media y desviación.
 
+`03_02` ya materializa esa repetición para MiniLM como una campaña acotada:
+pantalla pareada 192/256 con una semilla, confirmación del contexto elegido con
+dos semillas adicionales y focal como ablación separada. La semilla de muestreo
+permanece fija; solo cambia la aleatoriedad del entrenamiento. La ejecución y el
+reporte de media/desviación siguen pendientes.
+
 #### H. Máximo de 128 tokens sin diagnóstico — severidad media
 
 El diagnóstico ya se registra por tokenizador. En los tres Transformers codificadores completos, 20.114 de 51.205 filas de entrenamiento se truncaron a 128 tokens (39,28 %; P50 121, P95 164, máximo 217); la rama de daño de la cascada original llegó a 44,35 %. En Qwen-LoRA se truncaron 28.740 filas (56,13 %; P50 133, P95 179, máximo 302). El truncamiento es material. `03_05` dispone ahora de un brazo opcional que conserva el candidato completo de 128 tokens, verifica su manifiesto y el SHA-256 del dataset, continúa sus pesos LoRA con `max_length=256` y un optimizador nuevo, y materializa un candidato distinto. La comparación permanece pendiente hasta ejecutar ese brazo y evaluarlo sobre las mismas filas de validation mediante `03_07`; no se atribuye todavía ninguna mejora al contexto mayor.
+
+MiniLM dispone del análogo de menor costo con 192 y 256 tokens, una sola época
+adicional y `1e-5`, iniciado desde el candidato completo de 128. El valor 192
+queda como selección manual provisional porque supera el P95 observado (164)
+con menor costo que 256; no se considera ganador hasta ejecutar la pantalla de
+validation.
 
 #### I. Generalización por canal no medida — severidad media-alta
 
@@ -444,6 +463,13 @@ Se implementaron dos ramas claramente separadas:
 
 1. **Qwen clasificador:** conservar las cabezas de clasificación LoRA y estructurada; usar las 22 salidas con máscara.
 2. **LLM condicionado por prompt:** Qwen3-0.6B *instruction-tuned* con LoRA causal, ajustado para recibir el prompt v3.2, el chunk y devolver JSON válido con gruesas, finas, *flags* y confianza. El perfil operativo recomienda A100 y exige un piloto de memoria/velocidad antes de la corrida completa.
+
+Dentro de la primera rama, `03_06` conserva el full fine-tuning histórico pero
+implementa como ruta recomendada una continuación LoRA desde el candidato
+verificable de `03_05`. Entrena una época, reinicia optimizador y compara
+`lambda={0, 0.02, 0.05}` para el conflicto `SEGURO+daño`. Los tres candidatos
+tienen firmas distintas y test sellado; aún no existen resultados que permitan
+atribuir mejora a alguna penalización.
 
 Para la rama condicionada por prompt:
 
@@ -663,7 +689,12 @@ El corte confirma que las arquitecturas ofrecen compromisos distintos: Qwen lide
 
 ### 17.1. Estado de evidencia
 
-Al cierre actualizado, `03_01`, `03_03`, `03_03b`, `03_04` y `03_05` produjeron candidatos completos sobre `013d60...c1f86`. `03_02` conserva en Drive una corrida histórica completa de MiniLM y E5; sus candidatos todavía deben materializarse en el repositorio local y auditarse antes de sumarlos al inventario comparable. El rerun más reciente quedó incompleto en E5 y su estado nuevo dependía del SSD de esa sesión. `03_06` debe recomputar su primera época con el guardado corregido. `03_06b` sigue pendiente. El test no fue abierto.
+Al cierre actualizado, `03_01`, `03_03`, `03_03b`, `03_04`, `03_05` y el
+full fine-tuning histórico de `03_06` produjeron candidatos completos sobre
+`013d60...c1f86`. `03_02` conserva en Drive una corrida histórica completa de
+MiniLM y E5; la nueva campaña MiniLM de contexto/semillas/focal sigue pendiente.
+El barrido LoRA estructurado de `03_06` y `03_06b` también están pendientes. El
+test no fue abierto.
 
 La corrida clásica original consumió aproximadamente **924,28 segundos (15 min 24 s) de CPU local**. La reparación selectiva de los dos SVM añadió 1.891,18 s (31 min 31 s), para un total clásico observado aproximado de **2.815,46 s (46 min 55 s)**. El costo externo fue USD 0; no se midió electricidad local.
 

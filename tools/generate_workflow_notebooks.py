@@ -1907,7 +1907,7 @@ PERSISTENT_COLAB_TRAINING_ACTIVITY = {
     "03_03b": "RUN_TRAINING",
     "03_04": "RUN_TRAINING",
     "03_05": "RUN_TRAINING",
-    "03_06": "RUN_TRAINING",
+    "03_06": "RUN_LEGACY_FULL_TRAINING or RUN_STRUCTURED_LORA_SWEEP",
     "03_06b": "RUN_PILOT or RUN_FULL_TRAINING",
 }
 
@@ -1944,6 +1944,111 @@ QWEN_LORA_256_SOURCE = (
     "else:\n"
     "    show_summary('Continuación 256 desactivada',{'padre_requerido':'Qwen-LoRA completo de 128 tokens y mismo dataset','variante':CONTINUATION_VARIANT_ID,'longitud':CONTINUATION_MAX_LENGTH,'épocas_adicionales_máximas':CONTINUATION_EPOCHS,'selección':'validation; 03_07 comparará ambos candidatos','test':'permanece sellado'},tone='neutral')"
 )
+
+
+MINILM_IMPROVEMENTS_SOURCE = """from moderacion_peru.experiments import select_neural_warm_start_candidate,train_flat_transformers,train_neural_experiment
+DATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'
+OUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/transformers_planos'
+DEVICE='cuda' if COLAB_CONTEXT else 'auto'
+SAFE_TO_DAMAGE_RATIO=4.0
+SAMPLING_SEED=20260805  # fija exactamente las mismas filas train/validation en todas las comparaciones
+PRIMARY_TRAINING_SEED=20260805
+ADDITIONAL_TRAINING_SEEDS=(20260817,20260829)
+CONTEXT_SCREEN_LENGTHS=(192,256)
+SELECTED_MINILM_CONTEXT=192  # cámbielo solo después de comparar la pantalla en validation
+CONTINUATION_EPOCHS=1
+CONTINUATION_LEARNING_RATE=1e-5
+FOCAL_GAMMA=2.0
+RUN_TRAINING=False  # baselines MiniLM y E5 de 128 tokens
+RUN_CHANNEL_ROBUSTNESS=False
+RUN_MINILM_CONTEXT_SCREEN=False
+RUN_MINILM_SEED_CONFIRMATION=False
+RUN_MINILM_FOCAL_ABLATION=False
+
+def publish_minilm_variant(label):
+    if COLAB_CONTEXT is None: return
+    from moderacion_peru.colab import publish_colab_outputs
+    show_result(label,publish_colab_outputs(COLAB_CONTEXT),tone='success')
+
+if RUN_TRAINING:
+    flat_result=run_with_progress('Transformers planos',train_flat_transformers,DATA,OUTPUT_ROOT,device=DEVICE,safe_to_damage_ratio=SAFE_TO_DAMAGE_RATIO,sampling_seed=SAMPLING_SEED,progress_unit='modelo')
+    show_result('Transformers planos 22 salidas',flat_result,tone='success')
+if RUN_CHANNEL_ROBUSTNESS:
+    robustness_result=run_with_progress('MiniLM por canal',train_neural_experiment,DATA,OUTPUT_ROOT/'channel_heldout',experiment='flat_minilm',device=DEVICE,safe_to_damage_ratio=SAFE_TO_DAMAGE_RATIO,split_scheme='channel',sampling_seed=SAMPLING_SEED,training_seed=PRIMARY_TRAINING_SEED,progress_unit='etapa')
+    show_result('MiniLM con canales retenidos',robustness_result,tone='success')
+
+RUN_MINILM_IMPROVEMENTS=RUN_MINILM_CONTEXT_SCREEN or RUN_MINILM_SEED_CONFIRMATION or RUN_MINILM_FOCAL_ABLATION
+if RUN_MINILM_IMPROVEMENTS:
+    minilm_parent=select_neural_warm_start_candidate(OUTPUT_ROOT,DATA,experiment='flat_minilm',max_length=128)
+    show_result('MiniLM padre verificado',{'candidate_id':minilm_parent['candidate_id'],'dataset_sha256':minilm_parent['dataset_sha256'],'contexto_padre':128,'checkpoint':minilm_parent['candidate_path'],'optimizador':'nuevo en cada variante'},tone='success')
+
+if RUN_MINILM_CONTEXT_SCREEN:
+    for context_length in CONTEXT_SCREEN_LENGTHS:
+        variant=f'context{context_length}_bce_seed{PRIMARY_TRAINING_SEED}'
+        result=run_with_progress(f'MiniLM {context_length} tokens · BCE',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='flat_minilm',device=DEVICE,max_length=context_length,epochs=CONTINUATION_EPOCHS,learning_rate=CONTINUATION_LEARNING_RATE,training_seed=PRIMARY_TRAINING_SEED,sampling_seed=SAMPLING_SEED,variant_id=variant,warm_start_candidate_path=minilm_parent['candidate_path'],loss_mode='weighted_bce',safe_to_damage_ratio=SAFE_TO_DAMAGE_RATIO,progress_unit='etapa')
+        show_result(f'Candidato {variant}',result,tone='success')
+        publish_minilm_variant(f'Publicación {variant}')
+
+if RUN_MINILM_SEED_CONFIRMATION:
+    for training_seed in ADDITIONAL_TRAINING_SEEDS:
+        variant=f'context{SELECTED_MINILM_CONTEXT}_bce_seed{training_seed}'
+        result=run_with_progress(f'MiniLM {SELECTED_MINILM_CONTEXT} tokens · semilla {training_seed}',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='flat_minilm',device=DEVICE,max_length=SELECTED_MINILM_CONTEXT,epochs=CONTINUATION_EPOCHS,learning_rate=CONTINUATION_LEARNING_RATE,training_seed=training_seed,sampling_seed=SAMPLING_SEED,variant_id=variant,warm_start_candidate_path=minilm_parent['candidate_path'],loss_mode='weighted_bce',safe_to_damage_ratio=SAFE_TO_DAMAGE_RATIO,progress_unit='etapa')
+        show_result(f'Candidato {variant}',result,tone='success')
+        publish_minilm_variant(f'Publicación {variant}')
+
+if RUN_MINILM_FOCAL_ABLATION:
+    variant=f'context{SELECTED_MINILM_CONTEXT}_focal_g2_seed{PRIMARY_TRAINING_SEED}'
+    focal_result=run_with_progress(f'MiniLM {SELECTED_MINILM_CONTEXT} tokens · focal',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='flat_minilm',device=DEVICE,max_length=SELECTED_MINILM_CONTEXT,epochs=CONTINUATION_EPOCHS,learning_rate=CONTINUATION_LEARNING_RATE,training_seed=PRIMARY_TRAINING_SEED,sampling_seed=SAMPLING_SEED,variant_id=variant,warm_start_candidate_path=minilm_parent['candidate_path'],loss_mode='focal',focal_gamma=FOCAL_GAMMA,safe_to_damage_ratio=SAFE_TO_DAMAGE_RATIO,progress_unit='etapa')
+    show_result(f'Ablación {variant}',focal_result,tone='success')
+    publish_minilm_variant(f'Publicación {variant}')
+
+if not (RUN_TRAINING or RUN_CHANNEL_ROBUSTNESS or RUN_MINILM_IMPROVEMENTS):
+    show_summary('Campaña MiniLM preparada',{'baseline':'128 tokens, intacto','fase_1':'192 frente a 256; BCE, una época y la misma validation','fase_2':'contexto elegido con 3 semillas de entrenamiento en total','ablación':'focal gamma=2 frente a BCE con la semilla primaria','separación_semillas':f'sampling={SAMPLING_SEED} fijo; solo cambia inicialización/orden','warm_start':'mejor checkpoint completo del candidato 128; optimizador nuevo','learning_rate':CONTINUATION_LEARNING_RATE,'test':'natural completo, sellado'},tone='neutral')"""
+
+
+QWEN_STRUCTURED_IMPROVEMENTS_SOURCE = """from moderacion_peru.experiments import select_qwen_lora_warm_start_candidate,train_neural_experiment
+DATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'
+OUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_estructurado'
+DEVICE='cuda' if COLAB_CONTEXT else 'auto'
+PERSISTENT_CHECKPOINT_ROOT=COLAB_CONTEXT.drive_run_dir/'trainer_checkpoints' if COLAB_CONTEXT else None
+QWEN_LORA_PARENT_RUN_ID='03_05_working_v2_1'
+QWEN_LORA_PARENT_MAX_LENGTH=128
+STRUCTURED_PENALTIES=(0.0,0.02,0.05)
+STRUCTURED_EPOCHS=1
+STRUCTURED_LEARNING_RATE=2e-5
+SAMPLING_SEED=20260805
+TRAINING_SEED=20260805
+RUN_LEGACY_FULL_TRAINING=False  # conserva el experimento histórico; no es la opción recomendada
+RUN_STRUCTURED_LORA_SWEEP=False  # recomendado: tres adaptadores pequeños desde 03_05
+
+def publish_structured_variant(label):
+    if COLAB_CONTEXT is None: return
+    from moderacion_peru.colab import publish_colab_outputs
+    show_result(label,publish_colab_outputs(COLAB_CONTEXT),tone='success')
+
+if RUN_LEGACY_FULL_TRAINING:
+    legacy_result=run_with_progress('Qwen estructurado · full fine-tuning histórico',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='qwen_structured',device=DEVICE,safe_to_damage_ratio=4.0,persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='etapa')
+    show_result('Candidato histórico independiente',legacy_result,tone='warning')
+
+if RUN_STRUCTURED_LORA_SWEEP:
+    if COLAB_CONTEXT is not None:
+        from moderacion_peru.colab import restore_colab_run_outputs
+        QWEN_LORA_PARENT_ROOT=COLAB_CONTEXT.runtime_root/'warm_starts'/'03_05'/QWEN_LORA_PARENT_RUN_ID
+        restored_parent=restore_colab_run_outputs(COLAB_CONTEXT.drive_root,notebook_id='03_05',run_id=QWEN_LORA_PARENT_RUN_ID,destination=QWEN_LORA_PARENT_ROOT)
+        show_result('Publicación 03_05 restaurada',restored_parent,tone='success')
+    else:
+        QWEN_LORA_PARENT_ROOT=ROOT/'modelos/v2/qwen_lora'
+    qwen_lora_parent=select_qwen_lora_warm_start_candidate(QWEN_LORA_PARENT_ROOT,DATA,max_length=QWEN_LORA_PARENT_MAX_LENGTH)
+    show_result('Adaptador padre verificado',{'candidate_id':qwen_lora_parent['candidate_id'],'candidate_path':qwen_lora_parent['candidate_path'],'dataset_sha256':qwen_lora_parent['dataset_sha256'],'contexto':QWEN_LORA_PARENT_MAX_LENGTH,'optimizador':'nuevo por variante'},tone='success')
+    for penalty in STRUCTURED_PENALTIES:
+        penalty_code=f'{int(round(penalty*100)):03d}'
+        variant=f'lora03_05_structured_p{penalty_code}'
+        result=run_with_progress(f'Qwen estructurado LoRA · penalización {penalty:.2f}',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='qwen_structured',device=DEVICE,max_length=QWEN_LORA_PARENT_MAX_LENGTH,epochs=STRUCTURED_EPOCHS,learning_rate=STRUCTURED_LEARNING_RATE,training_seed=TRAINING_SEED,sampling_seed=SAMPLING_SEED,variant_id=variant,warm_start_candidate_path=qwen_lora_parent['candidate_path'],structured_penalty=penalty,loss_mode='weighted_bce',safe_to_damage_ratio=4.0,persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='etapa')
+        show_result(f'Candidato {variant}',result,tone='success')
+        publish_structured_variant(f'Publicación {variant}')
+
+if not (RUN_LEGACY_FULL_TRAINING or RUN_STRUCTURED_LORA_SWEEP):
+    show_summary('Qwen estructurado de bajo costo preparado',{'recomendado':'LoRA entrenable restaurado desde el candidato 03_05','comparación':'penalización 0, 0.02 y 0.05 sobre las mismas filas','épocas':STRUCTURED_EPOCHS,'learning_rate':STRUCTURED_LEARNING_RATE,'semillas':f'sampling={SAMPLING_SEED}; training={TRAINING_SEED}','estado_optimizador':'nuevo en cada candidato','candidato_full_histórico':'se conserva; no se sobrescribe','test':'natural completo, sellado'},tone='neutral')"""
 
 
 def persistent_colab_training_source(source: str, notebook_id: str | None) -> str:
@@ -3204,14 +3309,19 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         (
             "03_02_transformers_planos.ipynb",
             "Transformers planos",
-            "from moderacion_peru.experiments import train_flat_transformers,train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/transformers_planos'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nSAFE_TO_DAMAGE_RATIO=4.0\nRUN_TRAINING=False\nRUN_CHANNEL_ROBUSTNESS=False\nif RUN_TRAINING:\n    flat_result=run_with_progress('Transformers planos',train_flat_transformers,DATA,OUTPUT_ROOT,device=DEVICE,safe_to_damage_ratio=SAFE_TO_DAMAGE_RATIO,progress_unit='modelo')\n    show_result('Transformers planos 22 salidas',flat_result,tone='success')\nif RUN_CHANNEL_ROBUSTNESS:\n    robustness_result=run_with_progress('MiniLM por canal',train_neural_experiment,DATA,OUTPUT_ROOT/'channel_heldout',experiment='flat_minilm',device=DEVICE,safe_to_damage_ratio=SAFE_TO_DAMAGE_RATIO,split_scheme='channel',progress_unit='etapa')\n    show_result('MiniLM con canales retenidos',robustness_result,tone='success')\nif not (RUN_TRAINING or RUN_CHANNEL_ROBUSTNESS):\n    show_summary('Configuración preliminar',{'datos':DATA,'salida':OUTPUT_ROOT,'SEGURO_train_validation':'4:1 fijo','salidas':'5+14+3 enmascaradas','progreso':'Trainer por lote/época + barra exterior por modelo','test':'natural completo, sellado','acción':'Active RUN_TRAINING; early stopping usa solo validation.'},tone='neutral')",
+            MINILM_IMPROVEMENTS_SOURCE,
             "03_02",
             "La arquitectura Transformer procede de [@vaswani2017attention]. MiniLM se basa en "
             "destilación de autoatención [@wang2020minilm] y su extensión multilingüe en destilación "
             "entre lenguas [@reimers2020multilingual]; E5 multilingüe se documenta en "
             "[@wang2024e5]. Los checkpoints exactos son `paraphrase-multilingual-MiniLM-L12-v2` "
             "[@hf2026minilmcard] y `multilingual-e5-small` [@hf2026e5card], cargados mediante Transformers "
-            "[@wolf2020transformers]. La cabeza de cinco salidas y sus hiperparámetros son locales.",
+            "[@wolf2020transformers]. La continuación con baja tasa conserva el mejor checkpoint de "
+            "validation y reinicia el optimizador; las tres semillas separan el muestreo fijo de "
+            "`SEGURO` de la aleatoriedad del entrenamiento. La focal loss se mantiene como ablación "
+            "frente a BCE ponderada, siguiendo el principio de concentrarse en ejemplos difíciles "
+            "descrito por [@lin2017focal]. Estas elecciones y los contextos 192/256 son locales y deben "
+            "decidirse solo con validation.",
         ),
         (
             "03_03_transformer_cascada.ipynb",
@@ -3281,12 +3391,15 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         (
             "03_06_qwen_estructurado.ipynb",
             "Qwen estructurado",
-            "from moderacion_peru.experiments import train_neural_experiment\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_estructurado'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nPERSISTENT_CHECKPOINT_ROOT=COLAB_CONTEXT.drive_run_dir/'trainer_checkpoints' if COLAB_CONTEXT else None\nRUN_TRAINING=False\nif RUN_TRAINING:\n    qwen_structured_result=run_with_progress('Qwen estructurado',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='qwen_structured',device=DEVICE,safe_to_damage_ratio=4.0,persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='etapa')\n    show_result('Qwen estructurado 22 salidas',qwen_structured_result,tone='success')\nelse:\n    show_summary('Configuración preliminar',{'estructura':'penaliza conflicto SEGURO+daño','auxiliares':'enmascaradas','perfil_GPU':'A100: BF16, lote 8×1, validation 32 y 2 workers; fallback 2×4','checkpoints_drive':PERSISTENT_CHECKPOINT_ROOT,'progreso':'tokenización visible + Trainer por lote/época + barra por etapa','SEGURO_train_validation':'4:1 fijo','calibración':'validation','test':'natural completo, sellado'},tone='neutral')",
+            QWEN_STRUCTURED_IMPROVEMENTS_SOURCE,
             "03_06",
             "El backbone se documenta mediante el informe Qwen3 [@qwen2025qwen3] y la tarjeta exacta de "
             "`Qwen/Qwen3-0.6B-Base` [@hf2026qwen06bcard]. La separación entre compuerta y daños toma "
             "como antecedentes la clasificación jerárquica [@silla2011hierarchical] y multietiqueta "
-            "[@tsoumakas2007multilabel], pero la estructura concreta y su regla de selección son locales.",
+            "[@tsoumakas2007multilabel]. La mejora reutiliza como inicialización entrenable el "
+            "adaptador LoRA verificable de 03_05 [@hu2022lora], reinicia optimizador y compara una sola "
+            "época con penalizaciones 0, 0,02 y 0,05. La penalización de conflicto y su regla de "
+            "selección son locales y se deciden exclusivamente en validation.",
         ),
         (
             "03_06b_qwen_prompt_sft.ipynb",

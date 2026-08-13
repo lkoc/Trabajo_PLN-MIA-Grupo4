@@ -271,6 +271,50 @@ def test_colab_stages_declared_input_and_restores_published_run(tmp_path, monkey
     ) == '{"epoch":2}\n'
 
 
+def test_restore_colab_run_outputs_reuses_verified_foreign_publication(tmp_path):
+    drive = tmp_path / "drive"
+    scratch = tmp_path / "scratch_03_05"
+    scratch.mkdir()
+    (tmp_path / "runtime").mkdir()
+    (scratch / "candidate.json").write_text('{"status":"complete"}\n', encoding="utf-8")
+    drive_run = drive / "runs" / "03_05" / "03_05_working_v2_1"
+    context = colab.ColabContext(
+        notebook_id="03_05",
+        run_id="03_05_working_v2_1",
+        drive_root=drive,
+        runtime_root=tmp_path / "runtime",
+        project_root=ROOT,
+        input_paths={},
+        scratch_output_dir=scratch,
+        drive_run_dir=drive_run,
+        hardware={},
+    )
+    colab.publish_colab_outputs(context)
+    destination = tmp_path / "runtime" / "warm_starts" / "03_05"
+
+    restored = colab.restore_colab_run_outputs(
+        drive,
+        notebook_id="03_05",
+        run_id="03_05_working_v2_1",
+        destination=destination,
+    )
+    repeated = colab.restore_colab_run_outputs(
+        drive,
+        notebook_id="03_05",
+        run_id="03_05_working_v2_1",
+        destination=destination,
+    )
+
+    assert restored["status"] == "restored_and_sha256_verified"
+    assert (destination / "candidate.json").is_file()
+    assert repeated["status"] == "existing_runtime_copy_kept_candidate_will_be_verified"
+    with pytest.raises(ValueError, match="inseguro"):
+        colab.restore_colab_run_outputs(
+            drive,
+            notebook_id="../03_05",
+            run_id="bad",
+            destination=tmp_path / "unsafe",
+        )
 def test_colab_run_manifest_waits_for_drive_readback(tmp_path, monkeypatch):
     scratch = tmp_path / "runtime" / "runs" / "03_02" / "fixture"
     scratch.mkdir(parents=True)

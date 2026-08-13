@@ -115,8 +115,20 @@ siguiente ejecución verifica y restaura al SSD el checkpoint persistente más
 nuevo. Si el último archivo estuviera incompleto, intenta el anterior verificado.
 La publicación de resultados es automática al completar el entrenamiento;
 `03_02` publica MiniLM antes de comenzar E5, vuelve a publicar al terminar E5 y
-publica de nuevo si se ejecuta la evaluación por canal. `03_06b` publica por
-separado el piloto y la corrida completa.
+publica de nuevo si se ejecuta la evaluación por canal. La campaña MiniLM
+mejorada publica también cada variante 192/256, semilla o ablación focal antes
+de iniciar la siguiente. `03_06b` publica por separado el piloto y la corrida
+completa.
+
+`03_06` implementa además warm-start entre cuadernos. Antes del barrido
+estructurado, restaura desde
+`runs/03_05/03_05_working_v2_1` la ranura publicada más reciente cuyo TAR y
+SHA-256 sean válidos, en un directorio auxiliar del SSD. El selector vuelve a
+comprobar el `candidate.json`, el manifiesto del checkpoint, el SHA-256 del
+dataset, las 22 salidas y la longitud de contexto antes de cargar el adaptador.
+La copia auxiliar nunca reemplaza el run activo de `03_06` ni se incluye en su
+publicación final. Si `03_05` se ejecutó con otro `COLAB_RUN_ID`, actualice
+`QWEN_LORA_PARENT_RUN_ID` explícitamente.
 
 Si el bundle cambió después de que el kernel importó `moderacion_peru`, el
 cuaderno exige reiniciar el kernel para evitar mezclar versiones. Los modelos se

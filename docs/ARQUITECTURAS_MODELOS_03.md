@@ -70,6 +70,17 @@ el *early stopping* tiene paciencia 1. Por eso, tres épocas son un máximo
 razonable para el entrenamiento final de estas ramas, no una obligación de
 usar el checkpoint de la tercera época.
 
+La campaña de mejora de MiniLM no reabre ese entrenamiento completo. Carga el
+candidato verificable de 128 tokens —que ya contiene el mejor checkpoint de
+validation—, reinicia optimizador y scheduler, reduce la tasa a `1e-5` y ajusta
+una época a 192 y 256 tokens. La primera pantalla mantiene fijas tanto las filas
+como la semilla primaria. Solo después de escoger contexto en validation se
+repiten dos semillas de entrenamiento adicionales; `sampling_seed` permanece
+fija para no alterar qué filas `SEGURO` se comparan. La focal loss con
+`gamma=2` es una ablación independiente frente a BCE ponderada, no un cambio
+retrospectivo del baseline. Focal reduce la contribución de ejemplos fáciles
+para concentrar el gradiente en errores difíciles [37].
+
 ## Justificación de los modelos base
 
 ### Criterios de selección y límite de los benchmarks
@@ -362,19 +373,29 @@ un clasificador: no recibe el prompt operacional ni genera JSON. Llamarlo
 
 ## 03_06 · Qwen clasificador estructurado
 
-Usa el mismo checkpoint base de Qwen y las mismas 22 salidas, pero no activa
-LoRA: ajusta el modelo completo y su clasificador. Añade a la BCE una
-penalización por conflicto:
+El experimento histórico usó el mismo checkpoint base de Qwen y las 22 salidas,
+ajustó el modelo completo y añadió a la BCE una penalización fija `0.2`. Esa
+ruta se conserva como candidato independiente, pero deja de ser la opción
+recomendada por su costo y su pobre resultado preliminar.
+
+La mejora restaura por manifiesto y SHA-256 el candidato Qwen-LoRA de `03_05`,
+carga su adaptador PEFT como entrenable y crea tres candidatos pequeños. Cada
+uno reinicia optimizador/scheduler, entrena una sola época con `2e-5`, usa las
+mismas filas/semillas y cambia únicamente `lambda` en:
 
 \[
-L = L_{BCE} + 0.2\,p(SEGURO)\max_k p(daño_k).
+L = L_{BCE} + \lambda\,p(SEGURO)\max_k p(daño_k),
+\qquad \lambda \in \{0, 0.02, 0.05\}.
 \]
 
 La penalización codifica una regla propia de la taxonomía: `SEGURO` no debe
 coexistir con daños. No convierte las cuatro categorías de daño en mutuamente
 excluyentes. Puede reducir conflictos y carga de revisión, a cambio de mayor
 costo de ajuste y de introducir un hiperparámetro adicional. Ese beneficio debe
-medirse; la fórmula por sí sola no demuestra mejor generalización.
+medirse; la fórmula por sí sola no demuestra mejor generalización. El brazo
+`lambda=0` aísla el efecto de continuar el adaptador durante una época; los
+otros dos miden el aporte incremental de la estructura sin confundirlo con un
+full fine-tuning de cuatro épocas.
 
 ## 03_06b · Qwen SFT condicionado por prompt
 
@@ -408,12 +429,12 @@ debe incluir tanto calidad predictiva como tasa de parseo; no basta con AUPRC.
 | Cuaderno | Backbone/pasadas | Salida aprendida | Ajuste | Costo relativo | Riesgo característico |
 |---|---|---|---|---|---|
 | 03_01 | TF–IDF, sin Transformer | 22 binarias | modelos clásicos | bajo | contexto semántico limitado |
-| 03_02 | MiniLM o E5, 1 pasada | 22 binarias | modelo completo | medio | una cabeza resuelve todo |
+| 03_02 | MiniLM o E5, 1 pasada | 22 binarias | completo; MiniLM opcional 192/256 y focal | medio | una cabeza resuelve todo |
 | 03_03 | E5 + E5, 2 pasadas | gate 18 + rama 4 | ambos completos | alto | falso seguro bloquea daños |
 | 03_03b | E5 + E5, 2 pasadas | gate 18 + rama 5 | ambos completos | alto | poca cobertura si gate conservador |
 | 03_04 | E5, 1 pasada | 22 binarias | completo | medio | hoy duplica `flat_e5` |
 | 03_05 | Qwen Base, 1 pasada | 22 binarias | LoRA + cabeza | alto | más latencia; sin prompt |
-| 03_06 | Qwen Base, 1 pasada | 22 binarias estructuradas | modelo completo | muy alto | costo y peso de penalización |
+| 03_06 | Qwen Base, 1 pasada | 22 binarias estructuradas | LoRA desde 03_05; full histórico separado | alto | peso de penalización y dependencia del padre |
 | 03_06b | Qwen chat, generación | JSON | LoRA causal | muy alto | latencia y formato inválido |
 
 La AUPRC es preferible como lectura principal con salidas dañinas desbalanceadas
@@ -437,7 +458,7 @@ como hardware consumido.
 | `03_03b` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_04` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_05` | candidato completo; época 2 restaurada y época 3 persistida | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, lote 8×1, evaluación 32, dos *workers*, una GPU | no aplica |
-| `03_06` | primera época computada, pero no persistida: Drive conserva manifiestos y un `.partial` de 0 bytes; todavía sin candidato completo | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; debe recomputar la época 1 | A100 de 40 GB para el reintento con bundle `c4513a...da63a52` |
+| `03_06` | full fine-tuning histórico completado en un reintento posterior (4 épocas); nueva campaña LoRA pendiente | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; candidato histórico macro-AUPRC daño 0,2431 en validation | A100 de 40 GB para el barrido LoRA corto |
 | `03_06b` | piloto y corrida completa pendientes | **no disponible** | no observado | A100 de 40 GB recomendada; LoRA causal, lote 2×4 |
 | `03_07` | comparación pendiente | **no disponible** | no entrena modelos | CPU local, cuatro hilos para bootstrap |
 | `03_08` | pendiente para el SHA vigente | **no disponible** para el corte actual | no entrena modelos | CPU local |
@@ -570,3 +591,5 @@ antecedentes.
 [35] Gemma Team, “Model Card: `google/gemma-3-1b-pt`,” Hugging Face Hub, revision `fcf18a2a879aab110ca39f8bffbccd5d49d8eb29`. [Online]. Available: [Hugging Face](https://huggingface.co/google/gemma-3-1b-pt/tree/fcf18a2a879aab110ca39f8bffbccd5d49d8eb29). Accessed: Aug. 11, 2026.
 
 [36] Meta, “Model Card: `meta-llama/Llama-3.2-1B`,” Hugging Face Hub. [Online]. Available: [Hugging Face](https://huggingface.co/meta-llama/Llama-3.2-1B). Accessed: Aug. 11, 2026.
+
+[37] T.-Y. Lin, P. Goyal, R. Girshick, K. He, and P. Dollár, “Focal Loss for Dense Object Detection,” in *Proc. IEEE ICCV*, 2017, pp. 2980–2988, doi: [10.1109/ICCV.2017.324](https://doi.org/10.1109/ICCV.2017.324).

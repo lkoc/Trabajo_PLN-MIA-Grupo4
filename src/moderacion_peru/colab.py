@@ -3,6 +3,7 @@ from __future__ import annotations
 import gzip
 import json
 import os
+import re
 import shutil
 import subprocess
 import tarfile
@@ -193,6 +194,43 @@ def _has_local_run_payload(scratch_output_dir: Path) -> bool:
     return any(
         path.name != "colab_context.json" for path in scratch_output_dir.iterdir()
     )
+
+
+def restore_colab_run_outputs(
+    drive_root: str | Path,
+    *,
+    notebook_id: str,
+    run_id: str,
+    destination: str | Path,
+) -> dict[str, Any]:
+    """Restaura en un directorio auxiliar una publicación verificable de otro run.
+
+    Se usa para warm-start entre cuadernos (por ejemplo, 03_05→03_06) sin copiar
+    pesos al repositorio ni reemplazar archivos que ya existen en el runtime.
+    """
+
+    safe_component = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*")
+    for label, value in (("notebook_id", notebook_id), ("run_id", run_id)):
+        if not safe_component.fullmatch(value):
+            raise ValueError(f"{label} contiene una ruta o identificador inseguro")
+    target = Path(destination)
+    target.mkdir(parents=True, exist_ok=True)
+    if _has_local_run_payload(target):
+        return {
+            "status": "existing_runtime_copy_kept_candidate_will_be_verified",
+            "source": str(Path(drive_root) / "runs" / notebook_id / run_id),
+            "destination": str(target),
+        }
+    source = Path(drive_root) / "runs" / notebook_id / run_id
+    if not _restore_run(source, target):
+        raise FileNotFoundError(
+            f"No existe una publicación verificable para {notebook_id}/{run_id}"
+        )
+    return {
+        "status": "restored_and_sha256_verified",
+        "source": str(source),
+        "destination": str(target),
+    }
 
 
 def _stage_gzip(
