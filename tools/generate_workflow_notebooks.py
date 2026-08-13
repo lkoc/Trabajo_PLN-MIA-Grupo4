@@ -1913,7 +1913,7 @@ PERSISTENT_COLAB_TRAINING_ACTIVITY = {
     "03_04": "RUN_TRAINING",
     "03_05": "RUN_TRAINING",
     "03_06": "RUN_LEGACY_FULL_TRAINING or RUN_STRUCTURED_LORA_SWEEP",
-    "03_06b": "RUN_PILOT or RUN_FULL_TRAINING",
+    "03_06b": "RUN_BUDGETED_COMPARABLE or RUN_DIAGNOSTIC_PILOT or RUN_FULL_TRAINING",
 }
 
 
@@ -2161,13 +2161,13 @@ def persistent_colab_training_source(source: str, notebook_id: str | None) -> st
             ",persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,completion_callback=publish_completed_flat_model,progress_unit='modelo'",
             1,
         )
-    if notebook_id == "03_06b" and "Publicación final del piloto" not in source:
+    if notebook_id == "03_06b" and "Publicación final budgeted" not in source:
         source = source.replace(
-            "    show_result('Piloto SFT no elegible para 03_07',pilot_result,tone='warning')\n",
-            "    show_result('Piloto SFT no elegible para 03_07',pilot_result,tone='warning')\n"
+            "    show_result('Candidato SFT budgeted elegible para 03_07',budgeted_result,tone='warning')\n",
+            "    show_result('Candidato SFT budgeted elegible para 03_07',budgeted_result,tone='warning')\n"
             "    if COLAB_CONTEXT is not None:\n"
             "        from moderacion_peru.colab import publish_colab_outputs\n"
-            "        show_result('Publicación final del piloto',publish_colab_outputs(COLAB_CONTEXT),tone='success')\n",
+            "        show_result('Publicación final budgeted',publish_colab_outputs(COLAB_CONTEXT),tone='success')\n",
             1,
         )
         source = source.replace(
@@ -2330,7 +2330,12 @@ def create(
             nbf.v4.new_markdown_cell(
                 "## Publicación o checkpoint en Drive\n\n"
                 "Cada época completa se guarda y verifica por separado en `trainer_checkpoints`. "
-                "Al terminar una corrida 03_x se publica automáticamente el candidato final en una "
+                + (
+                    "El piloto diagnóstico no se publica automáticamente porque no es elegible para `03_07`. "
+                    if colab_notebook_id == "03_06b"
+                    else ""
+                )
+                + "Al terminar una corrida 03_x se publica automáticamente el candidato final en una "
                 "de dos ranuras redundantes. Esta celda permite repetir manualmente esa publicación; "
                 "no vuelve a incluir los directorios transitorios de `Trainer`."
             )
@@ -3473,7 +3478,47 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         (
             "03_06b_qwen_prompt_sft.ipynb",
             "Qwen SFT condicionado por prompt",
-            "from moderacion_peru.prompt_sft import train_prompt_conditioned_sft\nDATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nPROMPT=ROOT/'config/prompt_operacional_ollama_v3_2.md'\nOUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_prompt_sft'\nDEVICE='cuda' if COLAB_CONTEXT else 'auto'\nPERSISTENT_CHECKPOINT_ROOT=COLAB_CONTEXT.drive_run_dir/'trainer_checkpoints' if COLAB_CONTEXT else None\nRUN_PILOT=False\nRUN_FULL_TRAINING=False\nif RUN_PILOT:\n    pilot_result=run_with_progress('Piloto Qwen SFT',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT/'pilot',device=DEVICE,safe_to_damage_ratio=4.0,train_limit=5000,validation_limit=1000,persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='fila')\n    show_result('Piloto SFT no elegible para 03_07',pilot_result,tone='warning')\nif RUN_FULL_TRAINING:\n    full_result=run_with_progress('Qwen SFT completo',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT,device=DEVICE,safe_to_damage_ratio=4.0,persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='fila')\n    show_result('SFT generativo completo condicionado por prompt v3.2',full_result,tone='success')\nif not (RUN_PILOT or RUN_FULL_TRAINING):\n    show_summary('Configuración preliminar',{'método':'LoRA causal instruction-tuned','condicionamiento':'cápsula trazable del prompt v3.2 completo','piloto':'5.000 train + 1.000 validation; no entra a 03_07','completo':'51.205 train + 10.600 validation','perfil_GPU':'A100: BF16, entrenamiento 2×4, validation 2 y generación JSON en lotes de 4','checkpoints_drive':PERSISTENT_CHECKPOINT_ROOT,'progreso':'Trainer por lote/época + generación JSON por lotes','test':'22.684 naturales sellados; vista secundaria 4:1 sin reinferencia','costo':'alto; ejecutar después de los baselines'},tone='warning')",
+            """from moderacion_peru.prompt_sft import train_prompt_conditioned_sft
+DATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'
+PROMPT=ROOT/'config/prompt_operacional_ollama_v3_2.md'
+OUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_prompt_sft'
+DEVICE='cuda' if COLAB_CONTEXT else 'auto'
+PERSISTENT_CHECKPOINT_ROOT=COLAB_CONTEXT.drive_run_dir/'trainer_checkpoints' if COLAB_CONTEXT else None
+
+# Perfil recomendado: candidato comparable bajo un presupuesto aproximado de una hora A100.
+BUDGET_TRAIN_ROWS=3000
+BUDGET_EPOCHS=1
+BUDGET_MAX_LENGTH=2560
+BUDGET_TRAINING_SECONDS=1500  # 25 min; deja el resto a validation generativa completa
+BUDGET_TOTAL_SECONDS=4500  # corte duro total de 75 min; si vence, no crea candidate.json
+ESTIMATED_A100_HOURS=(0.75,1.25)
+REFERENCE_A100_CU_PER_HOUR=5.4  # solo referencia observada; use la tasa que muestre Colab
+ESTIMATED_COMPUTE_UNITS=tuple(round(hours*REFERENCE_A100_CU_PER_HOUR,1) for hours in ESTIMATED_A100_HOURS)
+
+RUN_BUDGETED_COMPARABLE=False
+RUN_DIAGNOSTIC_PILOT=False
+RUN_FULL_TRAINING=False
+show_summary('Preflight de costo y comparabilidad',{
+    'perfil_recomendado':'budgeted_comparable: 3.000 train, 1 época y validation común completa',
+    'tiempo_A100_estimado':f'{ESTIMATED_A100_HOURS[0]*60:.0f}–{ESTIMATED_A100_HOURS[1]*60:.0f} min; objetivo ≈60 min',
+    'corte_entrenamiento':f'{BUDGET_TRAINING_SECONDS/60:.0f} min',
+    'corte_total':f'{BUDGET_TOTAL_SECONDS/60:.0f} min; sin candidate.json si validation no termina',
+    'unidades_estimadas_a_5.4_CU_h':f'{ESTIMATED_COMPUTE_UNITS[0]}–{ESTIMATED_COMPUTE_UNITS[1]} CU',
+    'tarifa_real':'Colab es dinámico; multiplique las GPU-horas por la tasa CU/h visible en la sesión',
+    'elegibilidad_03_07':'sí, con disclaimer de presupuesto limitado y validation completa',
+    'test':'sellado; no se abre en esta corrida',
+},tone='warning')
+if RUN_BUDGETED_COMPARABLE:
+    budgeted_result=run_with_progress('Qwen SFT budgeted comparable',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT/'budgeted_comparable',device=DEVICE,safe_to_damage_ratio=4.0,training_regime='budgeted_comparable',eligible_for_03_07=True,train_limit=BUDGET_TRAIN_ROWS,validation_limit=None,epochs=BUDGET_EPOCHS,max_length=BUDGET_MAX_LENGTH,max_training_seconds=BUDGET_TRAINING_SECONDS,max_total_seconds=BUDGET_TOTAL_SECONDS,generation_max_new_tokens=192,prompt_capsule_max_chars=6200,run_label='a100_about_one_hour_v1',persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='fila')
+    show_result('Candidato SFT budgeted elegible para 03_07',budgeted_result,tone='warning')
+if RUN_DIAGNOSTIC_PILOT:
+    pilot_result=run_with_progress('Piloto diagnóstico Qwen SFT',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT/'diagnostic_pilot',device=DEVICE,safe_to_damage_ratio=4.0,training_regime='diagnostic_pilot',eligible_for_03_07=False,train_limit=500,validation_limit=200,epochs=1,max_length=2560,generation_max_new_tokens=192,run_label='diagnostic_only',persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='fila')
+    show_result('Piloto SFT no elegible para 03_07',pilot_result,tone='warning')
+if RUN_FULL_TRAINING:
+    full_result=run_with_progress('Qwen SFT completo',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT/'full',device=DEVICE,safe_to_damage_ratio=4.0,training_regime='full',eligible_for_03_07=True,validation_limit=None,persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='fila')
+    show_result('SFT generativo completo condicionado por prompt v3.2',full_result,tone='success')
+if not (RUN_BUDGETED_COMPARABLE or RUN_DIAGNOSTIC_PILOT or RUN_FULL_TRAINING):
+    show_callout('Listo pero desactivado','Para la corrida solicitada active únicamente RUN_BUDGETED_COMPARABLE=True. No active piloto y full a la vez.',tone='success')""",
             "03_06b",
             "La rama usa el modelo conversacional oficial `Qwen/Qwen3-0.6B` "
             "[@hf2026qwen06binstructcard] y LoRA [@hu2022lora]. A diferencia de los clasificadores "

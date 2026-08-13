@@ -95,10 +95,10 @@ Los cuadernos `02_01` y `03_02`–`03_06b` pueden ejecutarse en Colab. `02_01` u
 6. extrae e instala el core en el SSD efímero `/content`;
 7. exige una `NVIDIA L4` solo si el cuaderno declara `requires_cuda=true` y `COLAB_REQUIRE_L4=True`; los cuadernos Qwen usan `False`, exigen CUDA y activan automáticamente el perfil BF16 de 40 GB en A100/H100/H200 o hardware equivalente.
 
-Los cuadernos `02_02`, `03_05`, `03_06` y `03_06b` están optimizados para una A100 de 40 GB. La detección se basa en CUDA, soporte BF16 y memoria observable (al menos 39 GB), no únicamente en el nombre comercial. En `03_05` y `03_06` el lote efectivo permanece en ocho (`8×1` en A100 frente a `2×4` en L4); `03_06b` usa `2×4` en A100 frente a `1×8` en L4 por sus secuencias de 4096 tokens.
+Los cuadernos `02_02`, `03_05`, `03_06` y `03_06b` están optimizados para una A100 de 40 GB. La detección se basa en CUDA, soporte BF16 y memoria observable (al menos 39 GB), no únicamente en el nombre comercial. En `03_05` y `03_06` el lote efectivo permanece en ocho (`8×1` en A100 frente a `2×4` en L4). El perfil corto recomendado de `03_06b` usa secuencias de 2.560 tokens, lote efectivo `4×2`, inferencia por lotes de 16 y desactiva *gradient checkpointing*; la corrida completa conserva el perfil reanudable `2×4`.
 
-Todos los entrenamientos `03_02`–`03_06b` se ejecutan sobre el SSD efímero, pero
-reflejan automáticamente cada checkpoint que termina de escribir `Trainer` en
+Los entrenamientos `03_02`–`03_06b` se ejecutan sobre el SSD efímero. Los perfiles
+reanudables reflejan automáticamente cada checkpoint que termina de escribir `Trainer` en
 `COLAB_CONTEXT.drive_run_dir/trainer_checkpoints/<firma-del-run>/<trainer>/`.
 Cada versión se conserva con un nombre inmutable
 `checkpoint-<step>-<sha16>.tar`, un manifiesto independiente y SHA-256;
@@ -106,8 +106,11 @@ Cada versión se conserva con un nombre inmutable
 contiene pesos o adaptadores, optimizador, scheduler, RNG y
 `trainer_state.json`, por lo que un checkpoint guardado al terminar la época 2
 reanuda la época 3 con `resume_from_checkpoint`, sin reiniciar el ajuste. Las
-cascadas mantienen separados sus trainers y `03_06b` separa piloto y corrida
-completa mediante la firma del run.
+cascadas mantienen separados sus trainers y `03_06b` separa piloto, corrida
+presupuestada y corrida completa mediante la firma del run. La corrida corta
+`budgeted_comparable` desactiva deliberadamente la reanudación de `Trainer`: así
+otra sesión no puede sumar otros 25 minutos y dejar de ser el mismo tratamiento
+experimental. Su candidato final sí se publica automáticamente.
 
 Al activar esta función también se migra inmediatamente el checkpoint local más
 nuevo que todavía no exista en Drive. Tras perder o reiniciar el kernel, la
@@ -117,8 +120,8 @@ La publicación de resultados es automática al completar el entrenamiento;
 `03_02` publica MiniLM antes de comenzar E5, vuelve a publicar al terminar E5 y
 publica de nuevo si se ejecuta la evaluación por canal. La campaña MiniLM
 mejorada publica también cada variante 192/256, semilla o ablación focal antes
-de iniciar la siguiente. `03_06b` publica por separado el piloto y la corrida
-completa.
+de iniciar la siguiente. `03_06b` publica automáticamente la corrida presupuestada
+y la completa; el piloto diagnóstico queda fuera de `03_07` y no se autopublica.
 
 `03_06` implementa además warm-start entre cuadernos. Antes del barrido
 estructurado, restaura desde

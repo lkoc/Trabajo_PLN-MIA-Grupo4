@@ -77,6 +77,76 @@ def test_selection_key_does_not_double_count_component_metrics():
     assert ensemble_evaluation._selection_key(metrics) == (0.81, -0.22, 0.44)
 
 
+def test_prompt_sft_test_inference_reuses_budgeted_generation_profile(
+    tmp_path, monkeypatch
+):
+    adapter = tmp_path / "adapter"
+    adapter.mkdir()
+    provenance = tmp_path / "prompt_provenance.json"
+    write_json_atomic(provenance, {"capsule": "prompt"})
+    captured = {}
+
+    class _Model:
+        def to(self, device):
+            return self
+
+    class _Peft:
+        @staticmethod
+        def from_pretrained(path):
+            return _Model()
+
+    class _Tokenizer:
+        @staticmethod
+        def from_pretrained(path):
+            return object()
+
+    monkeypatch.setitem(
+        __import__("sys").modules,
+        "peft",
+        type("PeftModule", (), {"AutoPeftModelForCausalLM": _Peft}),
+    )
+    monkeypatch.setitem(
+        __import__("sys").modules,
+        "transformers",
+        type("TransformersModule", (), {"AutoTokenizer": _Tokenizer}),
+    )
+    monkeypatch.setattr(
+        ensemble_evaluation,
+        "resolve_device",
+        lambda device: type("Hardware", (), {"backend": "cpu"})(),
+    )
+    monkeypatch.setattr(ensemble_evaluation, "torch_device_name", lambda hardware: "cpu")
+
+    from moderacion_peru import prompt_sft
+
+    def fake_generate(model, tokenizer, rows, prompt, **kwargs):
+        captured.update(kwargs)
+        return np.zeros((len(rows), 22)), {}
+
+    monkeypatch.setattr(prompt_sft, "_generate_json_scores", fake_generate)
+    candidate_path = tmp_path / "candidate.json"
+    candidate = {
+        "candidate_path": str(candidate_path),
+        "inference": {
+            "type": "hf_prompt_sft_json",
+            "model": "adapter",
+            "prompt_capsule": "prompt_provenance.json",
+            "max_input_length": 2368,
+            "max_new_tokens": 192,
+            "batch_size": 8,
+        },
+    }
+
+    scores = ensemble_evaluation._score_candidate(
+        candidate, [{"text": "texto"}], device="cpu"
+    )
+
+    assert scores.shape == (1, 5)
+    assert captured["max_input_length"] == 2368
+    assert captured["max_new_tokens"] == 192
+    assert captured["batch_size"] == 8
+
+
 def test_frozen_test_reports_natural_and_four_to_one_from_one_inference(
     tmp_path, monkeypatch
 ):

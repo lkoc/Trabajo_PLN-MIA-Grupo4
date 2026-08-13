@@ -155,10 +155,17 @@ def compile_operational_prompt_capsule(prompt: str, *, max_chars: int = 6200) ->
     )
     hierarchy_budget = max(0, max_chars - len(fixed) - 2)
     if len(hierarchy) > hierarchy_budget:
-        hierarchy = hierarchy[:hierarchy_budget].rsplit("\n", 1)[0]
-        hierarchy += "\n[Jerarquía abreviada; el SHA identifica el prompt v3.2 completo.]"
-    capsule = "\n\n".join(part for part in (fixed, hierarchy) if part).strip()
-    if not task or not consistency or not response_format:
+        trace = "\n[Jerarquía abreviada; el SHA identifica el prompt v3.2 completo.]"
+        hierarchy = hierarchy[: max(0, hierarchy_budget - len(trace))].rsplit(
+            "\n", 1
+        )[0]
+        hierarchy += trace
+    capsule = "\n\n".join(
+        part
+        for part in (preamble, task, principle, hierarchy, consistency, response_format)
+        if part
+    ).strip()
+    if not task or not principle or not hierarchy or not consistency or not response_format:
         raise ValueError("El prompt operacional no contiene las secciones obligatorias")
     return capsule
 
@@ -258,6 +265,13 @@ class PromptCompletionDataset:
         }
 
 
+def _user_message(row: dict[str, Any]) -> str:
+    return (
+        "Clasifica este chunk y devuelve solo JSON. "
+        f"Copia chunk_id exactamente: {row['chunk_id']}\nTexto:\n{row['text']}"
+    )
+
+
 def _generate_json_scores(
     model: Any,
     tokenizer: Any,
@@ -268,6 +282,7 @@ def _generate_json_scores(
     max_input_length: int,
     batch_size: int = 1,
     max_new_tokens: int = 192,
+    deadline_monotonic: float | None = None,
     progress_callback: ProgressCallback | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     import torch
@@ -289,6 +304,14 @@ def _generate_json_scores(
     tokenizer.padding_side = "left"
     try:
         for start in range(0, len(rows), batch_size):
+            if (
+                deadline_monotonic is not None
+                and time.perf_counter() >= deadline_monotonic
+            ):
+                raise TimeoutError(
+                    "El presupuesto total venció antes de completar validation. "
+                    "No se escribió candidate.json y esta corrida todavía no puede entrar a 03_07."
+                )
             batch_rows = rows[start : start + batch_size]
             prompts = [
                 tokenizer.apply_chat_template(
@@ -408,7 +431,9 @@ def train_prompt_conditioned_sft(
     training_regime: str = "full",
     eligible_for_03_07: bool | None = None,
     max_training_seconds: float | None = None,
+    max_total_seconds: float | None = None,
     generation_max_new_tokens: int = 192,
+    prompt_capsule_max_chars: int = 6200,
     gradient_checkpointing: bool | None = None,
     run_label: str | None = None,
     force: bool = False,
@@ -422,10 +447,23 @@ def train_prompt_conditioned_sft(
         raise ValueError(
             "training_regime debe ser full, diagnostic_pilot o budgeted_comparable"
         )
-    if epochs <= 0 or max_length < 512 or generation_max_new_tokens < 32:
+    if (
+        epochs <= 0
+        or max_length < 512
+        or generation_max_new_tokens < 32
+        or prompt_capsule_max_chars < 3000
+    ):
         raise ValueError("epochs, max_length o generation_max_new_tokens inválidos")
     if max_training_seconds is not None and max_training_seconds <= 0:
         raise ValueError("max_training_seconds debe ser positivo")
+    if max_total_seconds is not None and max_total_seconds <= 0:
+        raise ValueError("max_total_seconds debe ser positivo")
+    if (
+        max_training_seconds is not None
+        and max_total_seconds is not None
+        and max_training_seconds >= max_total_seconds
+    ):
+        raise ValueError("El presupuesto de entrenamiento debe dejar tiempo a validation")
     if eligible_for_03_07 is None:
         eligible_for_03_07 = training_regime in {"full", "budgeted_comparable"}
     if eligible_for_03_07 and validation_limit is not None:
@@ -451,15 +489,23 @@ def train_prompt_conditioned_sft(
     prompt_path = Path(prompt_path).resolve()
     prompt_text = prompt_path.read_text(encoding="utf-8")
     prompt_sha = sha256_file(prompt_path)
-    system_prompt = compile_operational_prompt_capsule(prompt_text)
+    system_prompt = compile_operational_prompt_capsule(
+        prompt_text, max_chars=prompt_capsule_max_chars
+    )
     hardware = resolve_device(device)
     high_memory_profile = high_memory_bf16_cuda(hardware)
     budgeted = training_regime == "budgeted_comparable"
-    train_batch_size = 4 if high_memory_profile and budgeted else (2 if high_memory_profile else 1)
+    train_batch_size = (
+        4 if high_memory_profile and budgeted else (2 if high_memory_profile else 1)
+    )
     eval_batch_size = 2 if high_memory_profile else 1
-    gradient_accumulation = 2 if high_memory_profile and budgeted else (4 if high_memory_profile else 8)
+    gradient_accumulation = (
+        2 if high_memory_profile and budgeted else (4 if high_memory_profile else 8)
+    )
     dataloader_num_workers = 2 if high_memory_profile else 0
-    generation_batch_size = 8 if high_memory_profile and budgeted else (4 if high_memory_profile else 1)
+    generation_batch_size = (
+        16 if high_memory_profile and budgeted else (4 if high_memory_profile else 1)
+    )
     if gradient_checkpointing is None:
         gradient_checkpointing = not (budgeted and high_memory_profile)
     training_disclaimer = (
@@ -488,7 +534,9 @@ def train_prompt_conditioned_sft(
         "training_regime": training_regime,
         "eligible_for_03_07": bool(eligible_for_03_07),
         "max_training_seconds": max_training_seconds,
+        "max_total_seconds": max_total_seconds,
         "generation_max_new_tokens": generation_max_new_tokens,
+        "prompt_capsule_max_chars": prompt_capsule_max_chars,
         "run_label": run_label,
         "seed": seed,
         "performance_profile": cuda_performance_profile(hardware),
@@ -508,11 +556,13 @@ def train_prompt_conditioned_sft(
     run_dir = Path(output_root) / "runs" / f"qwen-prompt-sft-{signature[:16]}"
     persistent_checkpoint_dir = (
         Path(persistent_checkpoint_root) / run_dir.name / "trainer"
-        if persistent_checkpoint_root is not None
+        if persistent_checkpoint_root is not None and not budgeted
         else None
     )
     diagnostic_pilot = training_regime == "diagnostic_pilot"
-    candidate_path = run_dir / ("pilot_candidate.json" if diagnostic_pilot else "candidate.json")
+    candidate_path = run_dir / (
+        "pilot_candidate.json" if diagnostic_pilot else "candidate.json"
+    )
     if candidate_path.is_file() and not force:
         candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
         if candidate.get("run_signature") == signature:
@@ -574,13 +624,6 @@ def train_prompt_conditioned_sft(
             lora_dropout=0.05,
             target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
         ),
-    )
-
-
-def _user_message(row: dict[str, Any]) -> str:
-    return (
-        "Clasifica este chunk y devuelve solo JSON. "
-        f"Copia chunk_id exactamente: {row['chunk_id']}\nTexto:\n{row['text']}"
     )
     model.config.use_cache = False
     gradient_diagnostics = _configure_lora_gradient_checkpointing(
@@ -673,15 +716,19 @@ def _user_message(row: dict[str, Any]) -> str:
     model.config.use_cache = True
     model.to(torch_device)
     validation_started = time.perf_counter()
+    generation_deadline = (
+        run_started + max_total_seconds if max_total_seconds is not None else None
+    )
     validation_scores, generation = _generate_json_scores(
         model,
         tokenizer,
         validation,
         system_prompt,
         device=torch_device,
-        max_input_length=max_length - 256,
+        max_input_length=max_length - generation_max_new_tokens,
         batch_size=generation_batch_size,
         max_new_tokens=generation_max_new_tokens,
+        deadline_monotonic=generation_deadline,
         progress_callback=progress_callback,
     )
     validation_generation_elapsed = time.perf_counter() - validation_started
@@ -733,10 +780,14 @@ def _user_message(row: dict[str, Any]) -> str:
             "validation_limit": validation_limit,
             "epochs": epochs,
             "max_training_seconds": max_training_seconds,
+            "max_total_seconds": max_total_seconds,
             "max_length": max_length,
             "generation_max_new_tokens": generation_max_new_tokens,
+            "prompt_capsule_max_chars": prompt_capsule_max_chars,
             "validation_scope": (
-                "full_common_validation" if validation_limit is None else "diagnostic_subset"
+                "full_common_validation"
+                if validation_limit is None
+                else "diagnostic_subset"
             ),
             "actual_train_rows": len(train),
             "actual_validation_rows": len(validation),

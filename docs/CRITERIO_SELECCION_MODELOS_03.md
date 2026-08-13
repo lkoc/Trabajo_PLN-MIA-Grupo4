@@ -6,6 +6,13 @@ comparados y congelados por `03_07`.
 **Estado:** criterio normativo para la comparación definitiva en `validation`.
 No autoriza a abrir `test` ni a publicar un modelo.
 
+Los candidatos con entrenamiento deliberadamente acotado pueden aparecer en
+la tabla principal si producen predicciones sobre la `validation` común
+completa, conservan el mismo snapshot y mantienen `test` sellado. Deben exponer
+`training_regime`, presupuesto y disclaimer en el manifiesto y en el ranking.
+La comparación describe el sistema efectivamente entrenado; no convierte una
+corrida corta en evidencia del desempeño que tendría un ajuste exhaustivo.
+
 ## 1. Decisión recomendada
 
 El ganador académico principal será el sistema que obtenga la mayor

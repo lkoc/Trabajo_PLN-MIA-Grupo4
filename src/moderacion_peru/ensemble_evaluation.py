@@ -669,6 +669,12 @@ def compare_and_freeze_validation(
             reasons.append("incomplete")
         if candidate.get("eligible_for_03_07") is False:
             reasons.append("explicitly_not_eligible_for_03_07")
+        if (
+            candidate.get("training_regime") == "budgeted_comparable"
+            and candidate.get("training_budget", {}).get("validation_scope")
+            != "full_common_validation"
+        ):
+            reasons.append("budgeted_candidate_without_full_common_validation")
         if candidate.get("dataset_sha256") != dataset_sha:
             reasons.append("different_snapshot")
         if tuple(candidate.get("target_labels", ())) != taxonomy.target_labels:
@@ -727,6 +733,7 @@ def compare_and_freeze_validation(
     video_ids = [str(row["video_id"]) for row in validation_rows]
 
     evaluated: list[dict[str, Any]] = []
+    eligible_by_id = {str(row["candidate_id"]): row for row in eligible}
     score_by_id: dict[str, np.ndarray] = {}
     deployment_score_by_id: dict[str, np.ndarray] = {}
     thresholds_by_id: dict[str, dict[str, float]] = {}
@@ -792,12 +799,21 @@ def compare_and_freeze_validation(
                 "comparison_disclaimer": (
                     eligible_by_id[identifier].get("comparison_disclaimer")
                     if kind == "individual"
-                    else None
+                    else [
+                        eligible_by_id[member].get("comparison_disclaimer")
+                        for member in member_ids
+                        if member in eligible_by_id
+                        and eligible_by_id[member].get("comparison_disclaimer")
+                    ]
                 ),
                 "training_budget": (
                     eligible_by_id[identifier].get("training_budget")
                     if kind == "individual"
-                    else None
+                    else {
+                        member: eligible_by_id[member].get("training_budget")
+                        for member in member_ids
+                        if member in eligible_by_id
+                    }
                 ),
                 "validation_metrics": metrics,
                 "crossfit": {
@@ -808,7 +824,6 @@ def compare_and_freeze_validation(
             }
         )
 
-    eligible_by_id = {str(row["candidate_id"]): row for row in eligible}
     for candidate in eligible:
         rows, scores = _load_validation_predictions(candidate)
         _, aligned = _align_predictions([reference_loaded, (candidate, rows, scores)])
@@ -1104,6 +1119,15 @@ def compare_and_freeze_validation(
         "selected_id": selected["candidate_id"],
         "selected_kind": selected["kind"],
         "members": selected["members"],
+        "selected_training_regime": selected.get("training_regime"),
+        "selected_comparison_disclaimer": selected.get("comparison_disclaimer"),
+        "selected_training_budget": selected.get("training_budget"),
+        "member_training_disclaimers": {
+            identifier: eligible_by_id[identifier].get("comparison_disclaimer")
+            for identifier in selected["members"]
+            if identifier in eligible_by_id
+            and eligible_by_id[identifier].get("comparison_disclaimer")
+        },
         "member_candidate_paths": {
             row["candidate_id"]: row["candidate_path"]
             for row in eligible

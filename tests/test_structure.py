@@ -313,8 +313,9 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
                 )
                 assert "drive_run_dir/'trainer_checkpoints'" in source
                 if metadata["notebook_id"] == "03_06b":
-                    assert "Publicación final del piloto" in source
+                    assert "Publicación final budgeted" in source
                     assert "Publicación final del SFT completo" in source
+                    assert "Publicación final del piloto" not in source
                 else:
                     assert "Publicación final automática" in source
                 if metadata["notebook_id"] == "03_02":
@@ -892,6 +893,26 @@ def test_active_long_running_notebooks_expose_progress_indicators():
         encoding="utf-8"
     )
     assert "progress_callback: ProgressCallback | None = None" in experiments_source
+
+
+def test_qwen_prompt_sft_exposes_budgeted_comparable_profile():
+    notebook = nbformat.read(
+        ROOT / "flujo/03_entrenamiento/03_06b_qwen_prompt_sft.ipynb",
+        as_version=4,
+    )
+    source = "\n".join(cell.source for cell in notebook.cells)
+
+    assert "RUN_BUDGETED_COMPARABLE=False" in source
+    assert "RUN_DIAGNOSTIC_PILOT=False" in source
+    assert "RUN_FULL_TRAINING=False" in source
+    assert "training_regime='budgeted_comparable'" in source
+    assert "eligible_for_03_07=True" in source
+    assert "train_limit=BUDGET_TRAIN_ROWS" in source
+    assert "validation_limit=None" in source
+    assert "BUDGET_TRAINING_SECONDS=1500" in source
+    assert "BUDGET_TOTAL_SECONDS=4500" in source
+    assert "Publicación final budgeted" in source
+    assert "unidades_estimadas_a_5.4_CU_h" in source
 
 
 def test_stage_02_notebooks_show_progress_for_long_operations():

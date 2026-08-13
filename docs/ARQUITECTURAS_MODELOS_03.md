@@ -403,11 +403,12 @@ Esta es la única rama que usa el prompt operacional como condición de entrada.
 Compila una cápsula trazable del prompt v3.2, construye una conversación
 `system + user`, concatena el chunk y enseña a `Qwen/Qwen3-0.6B` a generar un
 JSON estricto. La pérdida causal ignora los tokens del prompt y supervisa la
-respuesta; los campos auxiliares no observados se enmascaran. Usa LoRA con la
-misma configuración de rango, longitud máxima 4096, lote 1, acumulación 8, tasa
-`1e-4` y hasta dos épocas. En hardware de 40 GB, el perfil cambia a lote 2 y
-acumulación 4 —el lote efectivo sigue siendo ocho—, usa dos *workers* y genera
-en lotes de cuatro.
+respuesta; los campos auxiliares no observados se enmascaran. La corrida
+completa usa LoRA con la misma configuración de rango, longitud máxima 2.560,
+lote 1, acumulación 8, tasa `1e-4` y hasta dos épocas. En hardware de 40 GB, ese
+perfil cambia a lote 2 y acumulación 4 —el lote efectivo sigue siendo ocho—,
+usa dos *workers* y genera en lotes de cuatro. El perfil corto descrito abajo
+usa lote `4×2` e inferencia por lotes de 16.
 
 ```mermaid
 flowchart LR
@@ -423,6 +424,15 @@ La ventaja es alinear explícitamente el entrenamiento con reglas y formato de
 operación. Las desventajas son secuencias mucho más largas, generación
 autoregresiva lenta y posibles JSON inválidos. Su comparación con clasificadores
 debe incluir tanto calidad predictiva como tasa de parseo; no basta con AUPRC.
+
+El perfil corto `budgeted_comparable` no es un piloto reducido de evaluación:
+limita el ajuste a 3.000 filas deterministas, una época y 25 minutos, pero
+conserva la `validation` común completa de 10.600 filas. Usa una cápsula
+abreviada y trazable, contexto 2.560 y lotes A100 más grandes. Puede participar
+en `03_07` porque todas las métricas se calculan sobre el mismo panel, aunque
+debe figurar como entrenamiento bajo presupuesto computacional limitado. Su
+resultado no equivale al SFT exhaustivo y mezcla el efecto arquitectónico con
+menor exposición a datos y optimización.
 
 ## Comparación resumida
 
@@ -459,7 +469,7 @@ como hardware consumido.
 | `03_04` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_05` | candidato completo; época 2 restaurada y época 3 persistida | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, lote 8×1, evaluación 32, dos *workers*, una GPU | no aplica |
 | `03_06` | full fine-tuning histórico completado en un reintento posterior (4 épocas); nueva campaña LoRA pendiente | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; candidato histórico macro-AUPRC daño 0,2431 en validation | A100 de 40 GB para el barrido LoRA corto |
-| `03_06b` | piloto y corrida completa pendientes | **no disponible** | no observado | A100 de 40 GB recomendada; LoRA causal, lote 2×4 |
+| `03_06b` | corrida presupuestada y completa pendientes | **no disponible** | perfil corto estimado en 45–75 min; aún no observado | A100 de 40 GB recomendada; corto `4×2`, completo `2×4` |
 | `03_07` | comparación pendiente | **no disponible** | no entrena modelos | CPU local, cuatro hilos para bootstrap |
 | `03_08` | pendiente para el SHA vigente | **no disponible** para el corte actual | no entrena modelos | CPU local |
 
