@@ -798,6 +798,26 @@ def test_local_training_notebooks_expose_bounded_deterministic_parallelism():
     assert "MACRO_AUPRC_NONINFERIORITY_MARGIN=None" in comparison_source
 
 
+def test_qwen_lora_notebook_preserves_128_and_adds_256_warm_start_candidate():
+    notebook = nbformat.read(
+        ROOT / "flujo/03_entrenamiento/03_05_qwen_lora.ipynb", as_version=4
+    )
+    source = "\n".join(cell.source for cell in notebook.cells)
+    generator = (ROOT / "tools/generate_workflow_notebooks.py").read_text(
+        encoding="utf-8"
+    )
+
+    for payload in (source, generator):
+        assert "RUN_TRAINING=False" in payload
+        assert "RUN_CONTINUATION_256=True" in payload
+        assert "CONTINUATION_MAX_LENGTH=256" in payload
+        assert "CONTINUATION_VARIANT_ID='context256_from128'" in payload
+        assert "select_qwen_lora_warm_start_candidate" in payload
+        assert "warm_start_candidate_path=base_128['candidate_path']" in payload
+    assert "optimizador':'nuevo; no reutiliza estado del Trainer" in source
+    assert "03_07 descubrirá" in source
+
+
 def test_active_long_running_notebooks_expose_progress_indicators():
     chunk_optimization = nbformat.read(
         ROOT / "flujo/01_datos/01_02_optimizacion_longitud_chunks.ipynb",
