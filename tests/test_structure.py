@@ -244,6 +244,7 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
             assert metadata["expected_core_sha256"] == expected_core_sha256
             if metadata["notebook_id"] == "02_00":
                 assert "raw.githubusercontent.com" in source
+                assert "?bundle_id={cache_key}" in source
                 assert "files.upload()" in source
                 assert "RUN_PUBLISH_BUNDLE=" in source
                 assert metadata["expected_gpu"] is None
@@ -268,6 +269,7 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
             assert "_ensure_expected_drive_release" in source
             assert "_publish_expected_bundle" in source
             assert "raw.githubusercontent.com" in source.lower()
+            assert "?bundle_id={cache_key}" in source
             assert "urllib.request" in source
             assert "files.upload()" in source
             assert "GITHUB_TOKEN" not in source

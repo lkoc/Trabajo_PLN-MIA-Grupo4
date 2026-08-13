@@ -348,8 +348,11 @@ def _acquire_expected_bundle():
             f"https://raw.githubusercontent.com/{COLAB_GITHUB_REPOSITORY}/"
             f"{encoded_ref}/{COLAB_GITHUB_BUNDLE_PATH}"
         )
+        cache_key = urllib.parse.quote(COLAB_NOTEBOOK_BUILD_BUNDLE_ID, safe="")
         manifest_path = staging / "bundle_manifest.json"
-        _download_bundle_file(f"{base}/bundle_manifest.json", manifest_path)
+        _download_bundle_file(
+            f"{base}/bundle_manifest.json?bundle_id={cache_key}", manifest_path
+        )
         manifest = _read_manifest(manifest_path)
         if manifest.get("bundle_id") != _bundle_id_for_manifest(manifest):
             raise ValueError("El manifiesto descargado desde GitHub no es válido")
@@ -362,7 +365,9 @@ def _acquire_expected_bundle():
             raise RuntimeError("GitHub contiene un project_core.zip distinto al esperado")
         for name, _ in _bundle_specs(manifest):
             encoded_name = urllib.parse.quote(name, safe="")
-            _download_bundle_file(f"{base}/{encoded_name}", staging / name)
+            _download_bundle_file(
+                f"{base}/{encoded_name}?bundle_id={cache_key}", staging / name
+            )
     elif COLAB_BUNDLE_SOURCE == "local_upload":
         from google.colab import files
 
@@ -2736,8 +2741,9 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
                 "    if BUNDLE_SOURCE=='github':\n"
                 "        encoded_ref=urllib.parse.quote(GITHUB_REF,safe='')\n"
                 "        base=f'https://raw.githubusercontent.com/{GITHUB_REPOSITORY}/{encoded_ref}/{GITHUB_BUNDLE_PATH}'\n"
+                "        cache_key=urllib.parse.quote(COLAB_NOTEBOOK_BUILD_BUNDLE_ID,safe='')\n"
                 "        for name in ('bundle_manifest.json',*REQUIRED_BUNDLE_FILES[:-1]):\n"
-                "            _download_file(f'{base}/{name}',STAGING/name)\n"
+                "            _download_file(f'{base}/{name}?bundle_id={cache_key}',STAGING/name)\n"
                 "    else:\n"
                 "        from google.colab import files\n"
                 "        show_callout('Seleccione nueve archivos','Abra resultados/colab_bundle en su PC y seleccione simultáneamente los nueve archivos indicados. El navegador es el puente; Colab no puede leer D: directamente.',tone='info')\n"
