@@ -2051,6 +2051,67 @@ if not (RUN_LEGACY_FULL_TRAINING or RUN_STRUCTURED_LORA_SWEEP):
     show_summary('Qwen estructurado de bajo costo preparado',{'recomendado':'LoRA entrenable restaurado desde el candidato 03_05','comparación':'penalización 0, 0.02 y 0.05 sobre las mismas filas','épocas':STRUCTURED_EPOCHS,'learning_rate':STRUCTURED_LEARNING_RATE,'semillas':f'sampling={SAMPLING_SEED}; training={TRAINING_SEED}','estado_optimizador':'nuevo en cada candidato','candidato_full_histórico':'se conserva; no se sobrescribe','test':'natural completo, sellado'},tone='neutral')"""
 
 
+MINILM_EXECUTION_GUIDE = """## Guía reproducible de la campaña MiniLM
+
+Esta campaña se ejecuta **por etapas y siempre con el mismo `COLAB_RUN_ID`**. El valor vacío reanuda `03_02_working_v2_1`. No borre `runs/`, `trainer_checkpoints` ni las publicaciones de Drive: cada configuración tiene `variant_id` y firma propios; al repetir una ya terminada devuelve `status=noop`, y una interrumpida continúa desde el checkpoint verificable más reciente.
+
+### Etapa 0 · Baseline, solo si falta el padre
+
+El flujo normal ya dispone del candidato MiniLM de 128 tokens. Si la selección informa que falta, ejecute una sola vez:
+
+```python
+RUN_TRAINING=True
+RUN_CHANNEL_ROBUSTNESS=False
+RUN_MINILM_CONTEXT_SCREEN=False
+RUN_MINILM_SEED_CONFIRMATION=False
+RUN_MINILM_FOCAL_ABLATION=False
+```
+
+Esto vuelve a materializar MiniLM y E5 base. Después restaure `RUN_TRAINING=False`. No active esta etapa si el padre de 128 tokens ya fue verificado.
+
+### Etapa 1 · Pantalla pareada de contexto
+
+```python
+RUN_TRAINING=False
+RUN_CHANNEL_ROBUSTNESS=False
+RUN_MINILM_CONTEXT_SCREEN=True
+RUN_MINILM_SEED_CONFIRMATION=False
+RUN_MINILM_FOCAL_ABLATION=False
+```
+
+Produce 192 y 256 tokens desde **el mismo** padre de 128, con una época, `learning_rate=1e-5`, `sampling_seed=20260805` y `training_seed=20260805`. Cada candidato se publica antes de iniciar el siguiente. Para escoger contexto use exclusivamente `validation`: gana la mayor `average_precision_macro_damage`; ante empate exacto, elija 192 por menor costo. Registre además macro-F1 y falso `SEGURO` como salvaguardas; test continúa sellado.
+
+### Etapa 2 · Confirmación con tres semillas
+
+Asigne a `SELECTED_MINILM_CONTEXT` el ganador de la etapa 1 y ejecute:
+
+```python
+RUN_MINILM_CONTEXT_SCREEN=False
+RUN_MINILM_SEED_CONFIRMATION=True
+RUN_MINILM_FOCAL_ABLATION=False
+```
+
+El candidato de la semilla primaria ya existe desde la etapa 1. Esta etapa añade `20260817` y `20260829`; no cambia `sampling_seed`, de modo que train/validation contienen las mismas filas. Informe media, desviación y resultados individuales de las tres semillas.
+
+### Etapa 3 · Ablación focal
+
+Conserve el mismo `SELECTED_MINILM_CONTEXT` y ejecute por separado:
+
+```python
+RUN_MINILM_CONTEXT_SCREEN=False
+RUN_MINILM_SEED_CONFIRMATION=False
+RUN_MINILM_FOCAL_ABLATION=True
+```
+
+Compara focal `gamma=2` contra BCE ponderada usando la semilla primaria y las mismas filas. No mezcle esta corrida con la confirmación de semillas.
+
+### Cierre, interrupciones y recuperación
+
+Al terminar deje los tres interruptores en `False`. Si Colab se desconecta, vuelva a ejecutar desde la primera celda con el mismo `COLAB_RUN_ID` y la misma etapa activa; no use `force`, no cambie semillas y no borre artefactos. La publicación es automática por variante; `PUBLISH_TO_DRIVE=True` solo repite manualmente la última publicación. Los candidatos históricos de 128, 192, 256, BCE y focal permanecen coexistiendo para `03_07`.
+
+El aviso de Transformers 4.57.6 sobre `fix_mistral_regex` al leer el MiniLM local es un falso positivo: MiniLM usa BERT/WordPiece, no Mistral. No establezca ese parámetro en `True`. El cargador vigente lo fija en `False`; una corrida que ya mostró el aviso puede continuar porque Transformers tampoco aplicó el parche."""
+
+
 def persistent_colab_training_source(source: str, notebook_id: str | None) -> str:
     """Conecta checkpoints por época y publicación final en todos los 03_x GPU."""
 
