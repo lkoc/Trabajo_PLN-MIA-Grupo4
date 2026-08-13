@@ -98,7 +98,8 @@ seguro:
 \frac{FP_D}{TN_D+FP_D}.
 \]
 
-Con costos iguales, el error balanceado y la exactitud balanceada son:
+Con igual peso normativo para las dos clases, el error balanceado y la
+exactitud balanceada son:
 
 \[
 \operatorname{BER}_{0.5}
@@ -297,7 +298,7 @@ otro modelo.
 Con los candidatos completos actualmente visibles y la proyección binaria
 anterior, las estimaciones puntuales de `validation` 4:1 son:
 
-| Candidato | FNR daño | FPR sobre seguro | BER igual costo | Balanced accuracy |
+| Candidato | FNR daño | FPR sobre seguro | BER con peso 1:1 por clase | Balanced accuracy |
 | --- | ---: | ---: | ---: | ---: |
 | Qwen LoRA | 0,3142 | 0,0880 | **0,2011** | **0,7989** |
 | Multitarea | 0,3302 | 0,0929 | 0,2116 | 0,7884 |
