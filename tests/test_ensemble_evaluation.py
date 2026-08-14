@@ -41,6 +41,7 @@ def test_validation_candidate_audit_explains_eligible_and_rejected_rows(tmp_path
             "dataset_sha256": "0" * 64,
             "target_labels": list(taxonomy.target_labels),
             "test_metrics": None,
+            "training_sampling": {"split_scheme": "channel"},
         },
     )
 
@@ -55,6 +56,7 @@ def test_validation_candidate_audit_explains_eligible_and_rejected_rows(tmp_path
     assert set(audit["rejected"][0]["reasons"]) == {
         "incomplete",
         "different_snapshot",
+        "non_common_validation_split",
         "validation_predictions_missing",
     }
 

@@ -2227,6 +2227,8 @@ Esta campaña se ejecuta **por etapas y siempre con el mismo `COLAB_RUN_ID`**. E
 
 Tampoco limpie las salidas del cuaderno: constituyen el registro de la ejecución. Antes de cada etapa ejecute en orden el bootstrap y la restauración del dataset. Mantenga sin cambios el `COLAB_RUN_ID`, el SHA-256 del dataset, `SAMPLING_SEED` y los hiperparámetros indicados. Conserve el resumen que muestra identificador del bundle, firma del candidato, semillas y métricas de `validation`; eso permite auditar y repetir la comparación en otra sesión o máquina.
 
+La suite principal (`RUN_TRAINING`) y la robustez por canal (`RUN_CHANNEL_ROBUSTNESS`) se ejecutan por separado. La segunda usa otra partición, es diagnóstica y no entra en la validation común de `03_07`. Para la campaña MiniLM descrita abajo, mantenga ambas en `False` y active solo la subetapa correspondiente de `RUN_MINILM_IMPROVEMENTS`.
+
 ### Etapa 0 · Baseline, solo si falta el padre
 
 El flujo normal ya dispone del candidato MiniLM de 128 tokens. Si la selección informa que falta, ejecute una sola vez:
@@ -2282,6 +2284,82 @@ Compara focal `gamma=2` contra BCE ponderada usando la semilla primaria y las mi
 Al terminar deje los tres interruptores en `False`. Si Colab se desconecta, vuelva a ejecutar desde la primera celda con el mismo `COLAB_RUN_ID` y la misma etapa activa; no use `force`, no cambie semillas y no borre artefactos ni salidas anteriores. La publicación es automática por variante; `PUBLISH_TO_DRIVE=True` solo repite manualmente la última publicación. Los candidatos históricos de 128, 192, 256, BCE y focal permanecen coexistiendo para `03_07` y para comparaciones futuras.
 
 El aviso de Transformers 4.57.6 sobre `fix_mistral_regex` al leer el MiniLM local es un falso positivo: MiniLM usa BERT/WordPiece, no Mistral. No establezca ese parámetro en `True`. El cargador vigente lo fija en `False`; una corrida que ya mostró el aviso puede continuar porque Transformers tampoco aplicó el parche."""
+
+
+MULTI_RUN_GUIDES = {
+    "flujo/01_datos/01_02_optimizacion_longitud_chunks.ipynb": """Este cuaderno materializa resultados por etapa. En una sesión nueva ejecute siempre desde la primera celda y conserve las semillas, los paneles y las rutas de salida. `FORCE_*=False` reutiliza artefactos cuya firma coincida; no elimine los JSON consolidados entre corridas.
+
+1. **Inspección o reutilización.** Mantenga `APPLY_CHUNK_SELECTION=False`. Los interruptores activos pueden leer resultados existentes sin recalcular; revise primero los paneles que indican si cada etapa está completa.
+2. **Diagnósticos clásicos opcionales.** Ejecute el *smoke* o la confirmación corta por separado. Nunca active `RUN_CHUNK_LENGTH_CONFIRMATORY_TEST` y `RUN_CHUNK_LENGTH_ROBUST_TEST` a la vez.
+3. **Perfil clásico decisorio.** Para reconstruirlo active solo `RUN_CHUNK_LENGTH_ROBUST_TEST=True`. Debe terminar y escribir `robust_comparison.json` antes del perfil neuronal.
+4. **Perfil neuronal pareado.** Active `RUN_NEURAL_ROBUST_TEST=True` con `FORCE_NEURAL_ROBUST_RECOMPUTE=False`. Si se interrumpe, repita la misma corrida: MiniLM y Ollama reutilizan checkpoints con firma compatible.
+5. **No inferioridad MiniLM 20 s–30 s.** Active `RUN_MINILM_20_30_NONINFERIORITY_TEST=True` después del perfil clásico. Conserve `FORCE_MINILM_20_30_RECOMPUTE=False` para reanudar por pliegue.
+6. **Activación.** Solo después de revisar los informes cambie `APPLY_CHUNK_SELECTION=True`. Esta corrida modifica la configuración activa; manténgala separada de las corridas experimentales.
+
+`test` no participa en ninguna decisión. Registre qué interruptor estuvo activo y el SHA-256 de los artefactos usados en cada corrida.""",
+    "flujo/02_etiquetado/02_01_etiquetado_deepseek_flash_pro.ipynb": """Use siempre el mismo `COLAB_RUN_ID` para continuar una campaña y ejecute el bootstrap desde la primera celda al cambiar de runtime. Mantenga `RECOVER_HISTORICAL=True` y `AUTO_PUBLISH_CHECKPOINTS=True`; no borre el run, los JSONL ni sus publicaciones de Drive.
+
+1. **Preflight sin etiquetado.** Active `RUN_API_PREFLIGHT=True` y deje las tres fases de etiquetado en `False`. Verifique modelos, modo *non-thinking*, contrato JSON y saldo visible.
+2. **Calibración pareada.** Active solo `RUN_CALIBRATION=True`. No inicie la campaña completa hasta revisar acuerdo, enrutamiento y costo del panel Flash–Pro.
+3. **Primera pasada Flash.** Active `RUN_PRIMARY=True`, con calibración y revisión en `False`. `PRIMARY_LIMIT=20` sirve para un *smoke* reanudable; `None` procesa toda y solo la cola pendiente.
+4. **Revisión dirigida Pro.** Cuando exista la cola enrutada, active solo `RUN_DIRECTED_REVIEW=True`. Use `REVIEW_LIMIT=20` para el *smoke* o `None` para completar pendientes.
+5. **Cierre.** Confirme que las colas previstas quedaron en cero y que la publicación verificable está en Drive. Después deje todos los `RUN_*` en `False`.
+
+Una desconexión no obliga a empezar de nuevo: vuelva a ejecutar desde arriba con el mismo run. Los límites nunca se dejan en blanco y no se cambia el prompt, proveedor o semilla dentro de una campaña iniciada.""",
+    "flujo/02_etiquetado/02_02_etiquetado_hf_qwen_colab.ipynb": """Este flujo es un respaldo local Hugging Face y se mantiene separado de la campaña DeepSeek. Use el mismo `COLAB_RUN_ID`, el mismo snapshot y los mismos límites al reanudar; ejecute desde la primera celda después de una desconexión.
+
+1. **Primera pasada.** Active solo `RUN_PRIMARY=True`. Empiece con `PRIMARY_LIMIT=20`; si el contrato JSON y el checkpoint son correctos, use `None` para todos los pendientes.
+2. **Construcción de la cola.** Ejecute la celda de enrutamiento con los artefactos de la primera pasada ya persistidos. No cambie los umbrales durante la misma campaña.
+3. **Revisión dirigida.** Desactive `RUN_PRIMARY`, active `RUN_REVIEW=True` y use primero `REVIEW_LIMIT=20`; luego `None` para completar la cola.
+4. **Cierre.** Verifique la publicación del run y deje ambos interruptores en `False`.
+
+No active las dos fases a la vez en una corrida de diagnóstico y no mezcle ni promedie estos resultados con `02_01`: son campañas alternativas con procedencia distinta.""",
+    "flujo/03_entrenamiento/03_01_modelos_clasicos.ipynb": """Todas las corridas deben usar el mismo dataset verificado. Ejecute primero la restauración del dataset y active una sola fase por vez; cada fase escribe en un subdirectorio distinto y una firma idéntica produce `status=noop`.
+
+1. **Suite principal.** Active solo `RUN_TRAINING=True`. Esta es la corrida comparable que crea los candidatos base e informados por política.
+2. **Reparación SVM.** Ejecútela solo si el candidato SVM informa convergencia no verificada: desactive la suite y active `RUN_SVM_CONVERGENCE_REPAIR=True`. No sustituye silenciosamente los otros estimadores.
+3. **Robustez por canal.** Active solo `RUN_CHANNEL_ROBUSTNESS=True`. Es un diagnóstico con otra partición y no entra en la comparación común de `03_07`.
+4. **Cierre.** Revise que los candidatos principales tengan `status=complete`, predicciones de validation y test sellado; después deje todos los interruptores en `False`.
+
+No mueva candidatos entre snapshots ni copie métricas del diagnóstico por canal al ranking principal.""",
+    "flujo/03_entrenamiento/03_02_transformers_planos.ipynb": MINILM_EXECUTION_GUIDE,
+    "flujo/03_entrenamiento/03_05_qwen_lora.ipynb": """Conserve el mismo `COLAB_RUN_ID` (`03_05_working_v2_1` por defecto), dataset, semillas e hiperparámetros. En una sesión nueva ejecute desde el bootstrap: el run se restaura desde Drive y una variante completa devuelve `status=noop`.
+
+1. **Candidato base de 128 tokens.** Active `RUN_TRAINING=True` solo si falta. Espere `status=complete` y la publicación verificable antes de continuar; luego vuelva a `False`.
+2. **Continuación a 256 tokens.** Mantenga el entrenamiento base en `False` y active `RUN_CONTINUATION_256=True`. La celda verifica el padre de 128, conserva sus pesos, reinicia optimizador y crea otro candidato sin sobrescribirlo.
+3. **Reanudación.** Si Colab se interrumpe, repita desde la primera celda con el mismo run y la misma fase activa. No use `force` ni elimine `trainer_checkpoints`.
+4. **Cierre.** Compruebe que ambos candidatos completos coexisten en la publicación y deje los interruptores en `False`.
+
+Las longitudes 128 y 256 son candidatos independientes para validation; nunca se decide entre ellas con test.""",
+    "flujo/03_entrenamiento/03_06_qwen_estructurado.ipynb": """Use el mismo `COLAB_RUN_ID`, snapshot y semillas en todas las reanudaciones. El run padre debe permanecer en `QWEN_LORA_PARENT_RUN_ID='03_05_working_v2_1'`; su publicación se restaura y verifica antes de entrenar.
+
+1. **Ruta recomendada.** Deje `RUN_LEGACY_FULL_TRAINING=False` y active solo `RUN_STRUCTURED_LORA_SWEEP=True`. Se crean tres candidatos separados con penalizaciones `0`, `0.02` y `0.05`, cada uno con optimizador nuevo y publicación propia.
+2. **Ruta histórica.** `RUN_LEGACY_FULL_TRAINING=True` existe solo para reproducir el full fine-tuning antiguo. Ejecútelo en una corrida separada y nunca junto al barrido LoRA.
+3. **Reanudación.** Ante una desconexión, vuelva al bootstrap con el mismo run y repita la fase: variantes y checkpoints completos se reutilizan por firma.
+4. **Cierre.** Verifique los `candidate.json`, las predicciones de validation y test sellado; deje ambos interruptores en `False`.
+
+La penalización se selecciona exclusivamente con validation y el candidato histórico se informa por separado.""",
+    "flujo/03_entrenamiento/03_06b_qwen_prompt_sft.ipynb": """Conserve el mismo `COLAB_RUN_ID`, snapshot, cápsula de prompt y semillas al reanudar. Active un solo perfil por corrida; piloto, presupuesto corto y entrenamiento completo responden preguntas distintas.
+
+1. **Piloto diagnóstico opcional.** Active solo `RUN_DIAGNOSTIC_PILOT=True`. Valida memoria y contrato JSON, pero usa validation parcial, no se publica como candidato final y nunca entra en `03_07`.
+2. **Corrida corta comparable.** Desactive el piloto y active solo `RUN_BUDGETED_COMPARABLE=True`. Entrena con el presupuesto declarado y debe completar la validation común para producir un `candidate.json` elegible con su *disclaimer*.
+3. **Entrenamiento completo opcional.** Active solo `RUN_FULL_TRAINING=True` si se aprueba el costo. No lo ejecute junto con el perfil presupuestado ni lo presente como la misma intervención.
+4. **Interrupciones.** Si se corta durante entrenamiento, vuelva a ejecutar desde arriba con el mismo run. Si vence el tiempo durante validation y no existe candidato completo, la corrida no es elegible y debe reanudarse o repetirse.
+5. **Cierre.** Confirme publicación, validation completa y test sellado; deje los tres interruptores en `False`.
+
+`03_07` incluirá automáticamente solo los candidatos completos y elegibles; la ausencia de `03_06b` no bloquea las demás familias.""",
+    "flujo/03_entrenamiento/03_07_comparacion_final.ipynb": """Este cuaderno se ejecuta por compuertas deliberadas. Use el mismo `COLAB_RUN_ID='03_07_working_v2_1'` para que la selección congelada se restaure desde Drive. Nunca active comparación y test en la misma corrida.
+
+1. **Disponibilidad del bundle.** Si la revisión ya está sincronizada, conserve `COLAB_BUNDLE_SOURCE='github'`. Si aún es local, use `'local_upload'` y seleccione los nueve archivos de `resultados/colab_bundle`. Ejecute siempre desde la primera celda.
+2. **Preflight de candidatos.** Mantenga `RUN_COMPARE_AND_FREEZE=False`, `RUN_TEST_ONCE=False` y `RUN_PUBLISH=False`. La restauración verifica los manifiestos y SHA-256 de `03_01`–`03_06`; `03_06b` solo se agrega si existe y es elegible. No avance hasta ver `listo_para_comparar=True`.
+3. **Predeclaración.** Fije `MAX_REVIEW_RATE` y `MACRO_AUPRC_NONINFERIORITY_MARGIN` antes de comparar. Si permanecen en `None`, se genera el informe/Pareto, pero test sigue bloqueado.
+4. **Comparación en validation.** Active solo `RUN_COMPARE_AND_FREEZE=True`. Mantenga test y publicación en `False`. El resultado y la selección congelada se guardan como checkpoint verificable del run `03_07` en Drive.
+5. **Revisión humana del congelado.** Vuelva a dejar la comparación en `False` y revise candidatos, umbrales, capacidad, margen y advertencias. No cambie estos valores después de mirar test.
+6. **Apertura única de test.** Solo con la selección aprobada active `RUN_TEST_ONCE=True`. Si el modelo elegido necesita GPU, cambie el runtime pero conserve el mismo run y ejecute de nuevo desde arriba. Test se infiere una vez y se vuelve a guardar en Drive.
+7. **Publicación.** `RUN_PUBLISH` permanece en `False`; la publicación productiva requiere una aprobación posterior separada.
+
+Si una sesión se desconecta antes de terminar el bootstrap o la comparación, reanude desde la primera celda. No borre el run ni copie manualmente candidatos entre snapshots.""",
+}
 
 
 def persistent_colab_training_source(source: str, notebook_id: str | None) -> str:
@@ -2483,6 +2561,13 @@ def create(
         notebook.cells.append(nbf.v4.new_code_cell(colab_setup(colab_notebook_id)))
     else:
         notebook.cells.append(nbf.v4.new_code_cell(SETUP))
+    multi_run_guide = MULTI_RUN_GUIDES.get(path)
+    if multi_run_guide:
+        notebook.cells.append(
+            nbf.v4.new_markdown_cell(
+                "## Procedimiento reproducible por corridas\n\n" + multi_run_guide
+            )
+        )
     for heading, source in code_cells:
         notebook.cells.append(nbf.v4.new_markdown_cell(f"## {heading}"))
         notebook.cells.append(
@@ -3726,9 +3811,7 @@ if not (RUN_BUDGETED_COMPARABLE or RUN_DIAGNOSTIC_PILOT or RUN_FULL_TRAINING):
     ]
     for filename, subtitle, source, colab_id, academic_context in training_notebooks:
         execution_heading = (
-            MINILM_EXECUTION_GUIDE
-            if filename == "03_02_transformers_planos.ipynb"
-            else "Configuración y candidato base de 128 tokens"
+            "Configuración y candidato base de 128 tokens"
             if filename == "03_05_qwen_lora.ipynb"
             else "Configuración y ejecución"
         )

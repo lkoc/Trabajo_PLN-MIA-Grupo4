@@ -82,6 +82,11 @@ def audit_validation_candidate_eligibility(
             reasons.append("wrong_contract")
         if candidate.get("test_metrics") not in (None, {}):
             reasons.append("test_was_opened_before_freeze")
+        if (
+            candidate.get("training_sampling", {}).get("split_scheme", "video")
+            != "video"
+        ):
+            reasons.append("non_common_validation_split")
         family = str(candidate.get("model_family", "")).casefold()
         if (
             family.endswith(":linear_svm")

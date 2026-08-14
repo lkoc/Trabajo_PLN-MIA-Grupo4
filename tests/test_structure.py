@@ -778,6 +778,63 @@ def test_dataset_consumers_restore_and_verify_the_synced_checkpoint():
         assert "Dataset descomprimido y verificado" in source, path
 
 
+def test_multi_run_notebooks_explain_the_reproducible_sequence_in_place():
+    expected = {
+        "flujo/01_datos/01_02_optimizacion_longitud_chunks.ipynb": (
+            "RUN_CHUNK_LENGTH_ROBUST_TEST",
+            "APPLY_CHUNK_SELECTION",
+        ),
+        "flujo/02_etiquetado/02_01_etiquetado_deepseek_flash_pro.ipynb": (
+            "RUN_API_PREFLIGHT",
+            "RUN_DIRECTED_REVIEW",
+        ),
+        "flujo/02_etiquetado/02_02_etiquetado_hf_qwen_colab.ipynb": (
+            "RUN_PRIMARY",
+            "RUN_REVIEW",
+        ),
+        "flujo/03_entrenamiento/03_01_modelos_clasicos.ipynb": (
+            "RUN_TRAINING",
+            "RUN_SVM_CONVERGENCE_REPAIR",
+        ),
+        "flujo/03_entrenamiento/03_02_transformers_planos.ipynb": (
+            "RUN_MINILM_CONTEXT_SCREEN",
+            "RUN_MINILM_SEED_CONFIRMATION",
+        ),
+        "flujo/03_entrenamiento/03_05_qwen_lora.ipynb": (
+            "RUN_TRAINING",
+            "RUN_CONTINUATION_256",
+        ),
+        "flujo/03_entrenamiento/03_06_qwen_estructurado.ipynb": (
+            "RUN_LEGACY_FULL_TRAINING",
+            "RUN_STRUCTURED_LORA_SWEEP",
+        ),
+        "flujo/03_entrenamiento/03_06b_qwen_prompt_sft.ipynb": (
+            "RUN_DIAGNOSTIC_PILOT",
+            "RUN_BUDGETED_COMPARABLE",
+        ),
+        "flujo/03_entrenamiento/03_07_comparacion_final.ipynb": (
+            "listo_para_comparar=True",
+            "RUN_TEST_ONCE",
+        ),
+    }
+    for relative, controls in expected.items():
+        notebook = nbformat.read(ROOT / relative, as_version=4)
+        markdown = "\n".join(
+            cell.source for cell in notebook.cells if cell.cell_type == "markdown"
+        )
+        assert "## Procedimiento reproducible por corridas" in markdown, relative
+        assert any(
+            marker in markdown
+            for marker in (
+                "primera celda",
+                "restauración del dataset",
+                "bootstrap",
+                "desde arriba",
+            )
+        )
+        assert all(control in markdown for control in controls), relative
+
+
 def test_local_training_notebooks_expose_bounded_deterministic_parallelism():
     classical = nbformat.read(
         ROOT / "flujo/03_entrenamiento/03_01_modelos_clasicos.ipynb", as_version=4

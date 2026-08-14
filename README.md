@@ -321,6 +321,8 @@ El recorrido completo contiene 21 cuadernos:
 
 Antes de una corrida costosa, revise los interruptores deliberados:
 
+Todo cuaderno activo que exige varias corridas contiene una sección **Procedimiento reproducible por corridas** inmediatamente después del bootstrap. Esa sección es la fuente operativa: fija el orden, las combinaciones de interruptores, el criterio para avanzar, la reanudación y los artefactos que deben conservarse. No se deben inferir secuencias distintas a partir de una celda aislada.
+
 | Cuaderno | Interruptor inicial | Acción para ejecutar |
 |---|---|---|
 | `01_01` | continuación actual: `DISCOVER_NEW=False`, `FETCH_NEW=True`, `BACKFILL_MISSING_VTT=True` | reanuda primero todos los VTT faltantes y después los candidatos; usa lotes de 10, pausas internas de 2.5–10 s y 15 s entre lotes; cambie `FETCH_NEW=False` si solo desea inspeccionar sin red |

@@ -16,6 +16,8 @@ La selección de familia, checkpoint, época y umbrales utiliza validation. Test
 
 Cada rama ejecuta `fit → calibración/evaluación en validation → checkpoint/manifiesto → candidate.json`; ninguna abre test. `03_07` compara individuos y ensembles del mismo SHA, congela la decisión y deja en interruptores separados la apertura única de test y una publicación que permanece bloqueada. Las ramas compatibles usan 5+14+3 salidas y máscaras observadas.
 
+Los cuadernos con más de una corrida deliberada incluyen dentro del propio archivo una sección **Procedimiento reproducible por corridas**. Ejecútela como protocolo: active solo la fase indicada, conserve el mismo snapshot/run/semillas al reanudar y no avance hasta cumplir el criterio de cierre de la etapa anterior.
+
 En ejecución local, `03_01` materializa TF–IDF una vez por variante y reutiliza la misma matriz dispersa para sus cinco estimadores; las 22 cabezas se procesan con cuatro hilos compartiendo memoria. `03_07` usa cuatro hilos para el bootstrap agrupado por video, con semillas independientes por réplica para conservar resultados idénticos entre ejecución serial y paralela. La inferencia de miembros del ensemble sigue secuencial para controlar RAM/VRAM. Cada candidato y el reporte final guardan tiempos por etapa.
 
 Los encoders o backbones anteriores pueden servir de inicialización, pero la primera cabeza principal de cinco salidas se entrena de nuevo. En incrementos posteriores, Transformers y Qwen reanudan una interrupción del mismo run o usan el checkpoint compatible anterior como *warm start*, siempre entrenando con datos anteriores+nuevos. Una firma idéntica produce `status="noop"`.
