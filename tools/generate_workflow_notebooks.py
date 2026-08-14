@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
+import subprocess
 from pathlib import Path
 
 import nbformat as nbf
@@ -682,6 +684,165 @@ else:
         'bytes': dataset_path.stat().st_size,
     }
 show_result('Dataset descomprimido y verificado', dataset_checkpoint, tone='success')
+"""
+
+
+CLASSICAL_RECOVERY_AND_PUBLICATION_SOURCE = """from pathlib import Path
+import shutil
+import tempfile
+
+from moderacion_peru.colab import ColabContext, publish_colab_outputs, restore_colab_run_outputs
+from moderacion_peru.device import resolve_device
+from moderacion_peru.ensemble_evaluation import audit_validation_candidate_eligibility
+
+# La salida histórica visible en la ejecución guardada del cuaderno. Si se movió,
+# edite únicamente esta ruta; no reconstruya archivos a partir de la salida HTML.
+LEGACY_CLASSICAL_ROOT=Path('D:/trabajo_PLN/Trabajo_PLN-MIA-Grupo4/modelos/v2/clasicos')
+CURRENT_CLASSICAL_ROOT=ROOT/'modelos/v2/clasicos'
+LOCAL_DRIVE_STAGING_ROOT=ROOT/'resultados/drive_staging/ModeracionPeru_Colab'
+LOCAL_PUBLICATION_RUNTIME=ROOT/'resultados/local_publication_runtime'
+DRIVE_NOTEBOOK_ID='03_01'
+DRIVE_RUN_ID='03_01_working_v2_1'
+DRIVE_RUN_DIR=LOCAL_DRIVE_STAGING_ROOT/'runs'/DRIVE_NOTEBOOK_ID/DRIVE_RUN_ID
+DRIVE_WEB_DESTINATION='Mi unidad/ModeracionPeru_Colab/runs/03_01/03_01_working_v2_1'
+
+# Active una sola compuerta por ejecución y vuelva a dejarla en False al terminar.
+RUN_RECOVER_LEGACY_03_01=False
+RUN_AUDIT_03_01=False
+RUN_PREPARE_03_01_DRIVE_PUBLICATION=False
+
+active_recovery_actions=sum((
+    RUN_RECOVER_LEGACY_03_01,
+    RUN_AUDIT_03_01,
+    RUN_PREPARE_03_01_DRIVE_PUBLICATION,
+))
+if active_recovery_actions>1:
+    raise ValueError('Active una sola compuerta de recuperación/publicación de 03_01 por vez')
+
+def audit_classical_candidates(root):
+    audit=audit_validation_candidate_eligibility(DATA,(root,))
+    eligible_classical=[
+        row for row in audit['eligible']
+        if str(row.get('model_family','')).casefold().startswith('classical:')
+    ]
+    return audit,eligible_classical
+
+show_summary('Preflight de recuperación y publicación de 03_01',{
+    'carpeta_actual':CURRENT_CLASSICAL_ROOT,
+    'carpeta_actual_existe':CURRENT_CLASSICAL_ROOT.is_dir(),
+    'carpeta_historica':LEGACY_CLASSICAL_ROOT,
+    'carpeta_historica_existe':LEGACY_CLASSICAL_ROOT.is_dir(),
+    'staging_local_para_drive_web':DRIVE_RUN_DIR,
+    'destino_en_drive_web':DRIVE_WEB_DESTINATION,
+    'acciones_activas':active_recovery_actions,
+},tone='neutral')
+
+if RUN_RECOVER_LEGACY_03_01:
+    if not LEGACY_CLASSICAL_ROOT.is_dir():
+        raise FileNotFoundError(
+            f'No existe {LEGACY_CLASSICAL_ROOT}. Edite LEGACY_CLASSICAL_ROOT si la carpeta se movió; '
+            'si fue eliminada, ejecute nuevamente la suite principal.'
+        )
+    if CURRENT_CLASSICAL_ROOT.exists():
+        raise FileExistsError(
+            f'{CURRENT_CLASSICAL_ROOT} ya existe. No se reemplazará ni mezclará automáticamente; '
+            'audítela o elija deliberadamente otra carpeta de destino.'
+        )
+    CURRENT_CLASSICAL_ROOT.parent.mkdir(parents=True,exist_ok=True)
+    shutil.copytree(LEGACY_CLASSICAL_ROOT,CURRENT_CLASSICAL_ROOT)
+    recovery_audit,recovery_eligible=audit_classical_candidates(CURRENT_CLASSICAL_ROOT)
+    show_result('Carpeta histórica de 03_01 recuperada y auditada',{
+        'origen':LEGACY_CLASSICAL_ROOT,
+        'destino':CURRENT_CLASSICAL_ROOT,
+        'descubiertos':recovery_audit['discovered_count'],
+        'elegibles_clasicos':[row.get('candidate_id') for row in recovery_eligible],
+        'rechazados':recovery_audit['rejected'],
+    },tone='success' if recovery_eligible else 'warning')
+    if not recovery_eligible:
+        raise ValueError(
+            'La copia histórica no contiene candidatos clásicos elegibles para el dataset activo. '
+            'Conserve la auditoría y reconstruya 03_01 mediante las fases de entrenamiento indicadas.'
+        )
+
+if RUN_AUDIT_03_01:
+    current_audit,current_eligible=audit_classical_candidates(CURRENT_CLASSICAL_ROOT)
+    show_result('Auditoría local de 03_01',{
+        'dataset_sha256':current_audit['dataset_sha256'],
+        'descubiertos':current_audit['discovered_count'],
+        'elegibles_clasicos':[{
+            'candidate_id':row.get('candidate_id'),
+            'model_family':row.get('model_family'),
+        } for row in current_eligible],
+        'rechazados':current_audit['rejected'],
+        'listo_para_publicar':bool(current_eligible),
+    },tone='success' if current_eligible else 'warning')
+    if not current_eligible:
+        raise ValueError(
+            '03_01 aún no tiene un candidato clásico completo con validation común y test sellado.'
+        )
+
+if RUN_PREPARE_03_01_DRIVE_PUBLICATION:
+    publication_audit,publication_eligible=audit_classical_candidates(CURRENT_CLASSICAL_ROOT)
+    if not publication_eligible:
+        raise ValueError(
+            'No se publicará: primero complete RUN_AUDIT_03_01 con al menos un candidato clásico elegible.'
+        )
+    LOCAL_DRIVE_STAGING_ROOT.mkdir(parents=True,exist_ok=True)
+    LOCAL_PUBLICATION_RUNTIME.mkdir(parents=True,exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix='03_01-publication-payload-',dir=LOCAL_PUBLICATION_RUNTIME
+    ) as scratch_name:
+        scratch_output_dir=Path(scratch_name)
+        shutil.copytree(CURRENT_CLASSICAL_ROOT,scratch_output_dir,dirs_exist_ok=True)
+        local_context=ColabContext(
+            notebook_id=DRIVE_NOTEBOOK_ID,
+            run_id=DRIVE_RUN_ID,
+            drive_root=LOCAL_DRIVE_STAGING_ROOT,
+            runtime_root=LOCAL_PUBLICATION_RUNTIME,
+            project_root=ROOT,
+            input_paths={'dataset_5_salidas':DATA},
+            scratch_output_dir=scratch_output_dir,
+            drive_run_dir=DRIVE_RUN_DIR,
+            hardware=resolve_device('cpu').model_dump(mode='json'),
+            resumed=False,
+        )
+        publication_manifest=publish_colab_outputs(local_context)
+    with tempfile.TemporaryDirectory(
+        prefix='03_01-publication-verify-',dir=LOCAL_PUBLICATION_RUNTIME
+    ) as verification_name:
+        verification_root=Path(verification_name)
+        restoration=restore_colab_run_outputs(
+            LOCAL_DRIVE_STAGING_ROOT,
+            notebook_id=DRIVE_NOTEBOOK_ID,
+            run_id=DRIVE_RUN_ID,
+            destination=verification_root,
+        )
+        verification_audit,verification_eligible=audit_classical_candidates(verification_root)
+    if not verification_eligible:
+        raise ValueError('La publicación se restauró, pero perdió la elegibilidad de los candidatos clásicos')
+    show_result('Publicación local de 03_01 restaurada y verificada',{
+        'manifest':publication_manifest,
+        'restauracion_de_prueba':restoration,
+        'dataset_sha256':verification_audit['dataset_sha256'],
+        'candidatos_elegibles':[row.get('candidate_id') for row in verification_eligible],
+        'carpeta_que_debe_subirse':DRIVE_RUN_DIR,
+        'destino_exacto_en_drive_web':DRIVE_WEB_DESTINATION,
+    },tone='success')
+    show_callout(
+        'Siguiente paso en Google Drive web',
+        'Abra drive.google.com, cree Mi unidad/ModeracionPeru_Colab/runs/03_01 si falta y '
+        'suba allí la carpeta completa 03_01_working_v2_1. No seleccione archivos sueltos y no '
+        'necesita Google Drive para escritorio. Después abra una copia nueva de 03_07 en Colab web.',
+        tone='success',
+    )
+
+if active_recovery_actions==0:
+    show_callout(
+        'Recuperación inactiva',
+        'Elija una sola compuerta según el procedimiento: recuperar, auditar o preparar la publicación. '
+        'Estas compuertas no entrenan modelos.',
+        tone='neutral',
+    )
 """
 
 
@@ -1922,18 +2083,54 @@ SCRAPING_MINORITY_CANDIDATES = _replace_required(
 def preserve_matching_execution_outputs(
     notebook: nbf.NotebookNode, target: Path
 ) -> None:
-    """Keep executed evidence when regenerating a notebook with unchanged code cells."""
+    """Keep user evidence while returning execution gates to their inert defaults.
+
+    An executed notebook can differ from its generated source only because one
+    ``RUN_*`` switch was set to ``True``. That output remains valid provenance,
+    even though a fresh copy must put the switch back in ``False``. The committed
+    notebook is also inspected as a fallback when an interrupted regeneration
+    already replaced the working copy before evidence could be matched.
+    """
 
     if not target.is_file():
         return
-    previous = nbf.read(target, as_version=4)
+    previous_notebooks = [nbf.read(target, as_version=4)]
+    try:
+        committed = subprocess.check_output(
+            ["git", "show", f"HEAD:{target.relative_to(ROOT).as_posix()}"],
+            cwd=ROOT,
+            text=True,
+            encoding="utf-8",
+            stderr=subprocess.DEVNULL,
+        )
+        previous_notebooks.append(nbf.reads(committed, as_version=4))
+    except (OSError, subprocess.CalledProcessError, ValueError):
+        pass
+
+    def evidence_key(source: str) -> str:
+        return re.sub(
+            r"(?m)^(RUN_[A-Z0-9_]+\s*=\s*)(?:True|False)(\s*(?:#.*)?)$",
+            r"\1__RUN_GATE__\2",
+            source,
+        )
+
     previous_by_source: dict[str, list[nbf.NotebookNode]] = {}
-    for cell in previous.cells:
-        if cell.cell_type != "code" or not cell.get("outputs"):
-            continue
-        previous_by_source.setdefault(cell.source, []).append(cell)
+    previous_by_evidence_key: dict[str, list[nbf.NotebookNode]] = {}
+    seen_cells: set[tuple[str, str]] = set()
+    for previous in previous_notebooks:
+        for cell in previous.cells:
+            if cell.cell_type != "code" or not cell.get("outputs"):
+                continue
+            identity = (cell.source, repr(cell.get("outputs", [])))
+            if identity in seen_cells:
+                continue
+            seen_cells.add(identity)
+            previous_by_source.setdefault(cell.source, []).append(cell)
+            previous_by_evidence_key.setdefault(evidence_key(cell.source), []).append(cell)
     for cell in notebook.cells:
         candidates = previous_by_source.get(cell.source, [])
+        if not candidates:
+            candidates = previous_by_evidence_key.get(evidence_key(cell.source), [])
         if cell.cell_type != "code" or len(candidates) != 1:
             continue
         previous_cell = candidates[0]
@@ -2372,14 +2569,31 @@ Una desconexión no obliga a empezar de nuevo: vuelva a ejecutar desde arriba co
 4. **Cierre.** Verifique la publicación del run y deje ambos interruptores en `False`.
 
 No active las dos fases a la vez en una corrida de diagnóstico y no mezcle ni promedie estos resultados con `02_01`: son campañas alternativas con procedencia distinta.""",
-    "flujo/03_entrenamiento/03_01_modelos_clasicos.ipynb": """Todas las corridas deben usar el mismo dataset verificado. Ejecute primero la restauración del dataset y active una sola fase por vez; cada fase escribe en un subdirectorio distinto y una firma idéntica produce `status=noop`.
+    "flujo/03_entrenamiento/03_01_modelos_clasicos.ipynb": """Este cuaderno se ejecuta **localmente** desde el repositorio completo. Todas las corridas deben usar el mismo dataset verificado: ejecute desde la primera celda y active una sola fase por vez. Cada fase escribe en un subdirectorio distinto y una firma idéntica produce `status=noop`.
 
-1. **Suite principal.** Active solo `RUN_TRAINING=True`. Esta es la corrida comparable que crea los candidatos base e informados por política.
-2. **Reparación SVM.** Ejecútela solo si el candidato SVM informa convergencia no verificada: desactive la suite y active `RUN_SVM_CONVERGENCE_REPAIR=True`. No sustituye silenciosamente los otros estimadores.
-3. **Robustez por canal.** Active solo `RUN_CHANNEL_ROBUSTNESS=True`. Es un diagnóstico con otra partición y no entra en la comparación común de `03_07`.
-4. **Cierre.** Revise que los candidatos principales tengan `status=complete`, predicciones de validation y test sellado; después deje todos los interruptores en `False`.
+### Ruta A · recuperar el entrenamiento local anterior
 
-No mueva candidatos entre snapshots ni copie métricas del diagnóstico por canal al ranking principal.""",
+La ejecución guardada del cuaderno demuestra que el dataset usado tuvo SHA-256 `013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86` y que la raíz anterior fue `D:/trabajo_PLN/Trabajo_PLN-MIA-Grupo4`. Los pesos no están en GitHub porque `modelos/*` está excluido; la salida HTML del cuaderno no permite reconstruirlos.
+
+1. Ejecute la última celda con sus tres compuertas en `False` y revise `carpeta_actual_existe` y `carpeta_historica_existe`. Si la carpeta actual ya existe, no la copie: salte directamente a la auditoría.
+2. Si la actual falta, compruebe `D:/trabajo_PLN/Trabajo_PLN-MIA-Grupo4/modelos/v2/clasicos`. Si se movió, edite solo `LEGACY_CLASSICAL_ROOT`; luego active únicamente `RUN_RECOVER_LEGACY_03_01=True`. La celda copia sin reemplazar una salida actual y exige candidatos clásicos completos, con validation común, el mismo SHA-256 y test sellado.
+3. Vuelva a dejar la recuperación en `False`; active solo `RUN_AUDIT_03_01=True`. No continúe si `listo_para_publicar` no es `true`.
+
+### Ruta B · reconstruir si la carpeta anterior ya no existe
+
+1. **Suite principal.** Active solo `RUN_TRAINING=True`. Esta es la corrida comparable que crea los candidatos base e informados por política. Al terminar vuelva a `False`.
+2. **Reparación SVM.** Ejecútela solo si el candidato SVM informa convergencia no verificada: mantenga la suite en `False` y active `RUN_SVM_CONVERGENCE_REPAIR=True`. No sustituye silenciosamente los otros estimadores.
+3. **Robustez por canal opcional.** Active solo `RUN_CHANNEL_ROBUSTNESS=True`. Es un diagnóstico con otra partición y no entra en la comparación común de `03_07`; no es necesario para recuperar la publicación.
+4. Deje las tres fases de entrenamiento en `False` y ejecute únicamente `RUN_AUDIT_03_01=True` en la celda de recuperación/publicación.
+
+### Publicación local para `03_07` sin Drive para escritorio
+
+1. Después de una auditoría correcta, deje `RUN_AUDIT_03_01=False` y active solo `RUN_PREPARE_03_01_DRIVE_PUBLICATION=True`. La celda empaqueta los artefactos en dos ranuras, relee el TAR completo, verifica tamaño y SHA-256, lo restaura en un directorio temporal y repite la auditoría.
+2. Suba mediante <https://drive.google.com> la **carpeta completa** `resultados/drive_staging/ModeracionPeru_Colab/runs/03_01/03_01_working_v2_1` a `Mi unidad/ModeracionPeru_Colab/runs/03_01/`. El resultado exacto debe ser `Mi unidad/ModeracionPeru_Colab/runs/03_01/03_01_working_v2_1/run_manifest.json` junto con `publications/`; no seleccione archivos sueltos.
+3. Abra una copia nueva de `03_07` en **Colab web**, runtime CPU, y ejecute el preflight desde la primera celda. `03_01` debe aparecer como `restored_and_sha256_verified` y la familia `classical:` no debe figurar como ausente.
+4. Al terminar deje `RUN_RECOVER_LEGACY_03_01`, `RUN_AUDIT_03_01` y `RUN_PREPARE_03_01_DRIVE_PUBLICATION` en `False`.
+
+No mueva candidatos entre snapshots, no reconstruya pesos desde las métricas impresas y no copie métricas del diagnóstico por canal al ranking principal.""",
     "flujo/03_entrenamiento/03_02_transformers_planos.ipynb": MINILM_EXECUTION_GUIDE,
     "flujo/03_entrenamiento/03_05_qwen_lora.ipynb": """Conserve el mismo `COLAB_RUN_ID` (`03_05_working_v2_1` por defecto), dataset, semillas e hiperparámetros. En una sesión nueva ejecute desde el bootstrap: el run se restaura desde Drive y una variante completa devuelve `status=noop`.
 
@@ -3904,6 +4118,16 @@ if not (RUN_BUDGETED_COMPARABLE or RUN_DIAGNOSTIC_PILOT or RUN_FULL_TRAINING):
                 )
             )
         code_cells.append((execution_heading, source))
+        if filename == "03_01_modelos_clasicos.ipynb":
+            code_cells.append(
+                (
+                    "Recuperación, auditoría y publicación verificable de 03_01\n\n"
+                    "Use esta celda después del entrenamiento o para recuperar la carpeta histórica. "
+                    "Prepara una publicación local que se carga como carpeta completa mediante "
+                    "Google Drive web; no requiere Google Drive para escritorio.",
+                    CLASSICAL_RECOVERY_AND_PUBLICATION_SOURCE,
+                )
+            )
         if filename == "03_05_qwen_lora.ipynb":
             code_cells.append(
                 (

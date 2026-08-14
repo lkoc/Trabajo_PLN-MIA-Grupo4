@@ -795,6 +795,7 @@ def test_multi_run_notebooks_explain_the_reproducible_sequence_in_place():
         "flujo/03_entrenamiento/03_01_modelos_clasicos.ipynb": (
             "RUN_TRAINING",
             "RUN_SVM_CONVERGENCE_REPAIR",
+            "RUN_PREPARE_03_01_DRIVE_PUBLICATION",
         ),
         "flujo/03_entrenamiento/03_02_transformers_planos.ipynb": (
             "RUN_MINILM_CONTEXT_SCREEN",
@@ -863,6 +864,34 @@ def test_local_training_notebooks_expose_bounded_deterministic_parallelism():
     assert "SELECTION_FOLDS=5" in comparison_source
     assert "MAX_REVIEW_RATE=None" in comparison_source
     assert "MACRO_AUPRC_NONINFERIORITY_MARGIN=None" in comparison_source
+
+
+def test_classical_notebook_can_recover_a_local_run_and_stage_a_verified_drive_publication():
+    notebook = nbformat.read(
+        ROOT / "flujo/03_entrenamiento/03_01_modelos_clasicos.ipynb", as_version=4
+    )
+    source = "\n".join(cell.source for cell in notebook.cells)
+    markdown = "\n".join(
+        cell.source for cell in notebook.cells if cell.cell_type == "markdown"
+    )
+
+    for gate in (
+        "RUN_RECOVER_LEGACY_03_01=False",
+        "RUN_AUDIT_03_01=False",
+        "RUN_PREPARE_03_01_DRIVE_PUBLICATION=False",
+    ):
+        assert gate in source
+    assert "active_recovery_actions>1" in source
+    assert "audit_validation_candidate_eligibility" in source
+    assert "publish_colab_outputs" in source
+    assert "restore_colab_run_outputs" in source
+    assert "DRIVE_RUN_ID='03_01_working_v2_1'" in source
+    assert "resolve_device('cpu').model_dump(mode='json')" in source
+    assert "verification_eligible" in source
+    assert "carpeta_que_debe_subirse" in source
+    assert "drive.google.com" in markdown
+    assert "no seleccione archivos sueltos" in markdown
+    assert "no requiere Google Drive para escritorio" in source
 
 
 def test_final_comparison_reports_restore_progress_and_corrupt_publications():
