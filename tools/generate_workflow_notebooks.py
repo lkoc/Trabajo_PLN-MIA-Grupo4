@@ -2092,6 +2092,8 @@ if not (RUN_LEGACY_FULL_TRAINING or RUN_STRUCTURED_LORA_SWEEP):
 
 
 COMPARISON_DRIVE_RESTORE_SOURCE = """from pathlib import Path
+import shutil
+import time
 from moderacion_peru.colab import restore_colab_run_outputs
 from moderacion_peru.ensemble_evaluation import audit_validation_candidate_eligibility
 
@@ -2137,19 +2139,40 @@ drive_root=(
 CANDIDATE_ROOTS=[LOCAL_CANDIDATE_ROOT]
 restoration=[]
 if RESTORE_CANDIDATES_FROM_DRIVE and drive_root is not None:
-    for notebook_id,run_id in DRIVE_RUN_IDS.items():
+    for restore_index,(notebook_id,run_id) in enumerate(DRIVE_RUN_IDS.items(),start=1):
         destination=drive_candidate_root/notebook_id/run_id
+        show_callout(
+            f'Restauración {restore_index}/{len(DRIVE_RUN_IDS)} · {notebook_id}',
+            f'Verificando SHA-256 y extrayendo {run_id}. Esta etapa puede tardar varios minutos.',
+            tone='info',
+        )
+        restore_started=time.perf_counter()
         try:
             restored=restore_colab_run_outputs(drive_root,notebook_id=notebook_id,run_id=run_id,destination=destination)
-            restoration.append({'notebook_id':notebook_id,'run_id':run_id,**restored})
-        except FileNotFoundError as exc:
-            restoration.append({
+            restore_entry={'notebook_id':notebook_id,'run_id':run_id,**restored}
+        except (FileNotFoundError,ValueError) as exc:
+            corrupt=isinstance(exc,ValueError)
+            restore_entry={
                 'notebook_id':notebook_id,
                 'run_id':run_id,
-                'status':'missing_optional' if notebook_id in OPTIONAL_DRIVE_RUNS else 'missing_required',
+                'status':(
+                    'corrupt_optional' if corrupt and notebook_id in OPTIONAL_DRIVE_RUNS else
+                    'corrupt_required' if corrupt else
+                    'missing_optional' if notebook_id in OPTIONAL_DRIVE_RUNS else
+                    'missing_required'
+                ),
                 'source':str(Path(drive_root)/'runs'/notebook_id/run_id),
                 'detail':str(exc),
-            })
+            }
+        restoration.append(restore_entry)
+        disk=shutil.disk_usage(drive_candidate_root)
+        show_result(f'Estado {restore_index}/{len(DRIVE_RUN_IDS)} · {notebook_id}',{
+            'status':restore_entry['status'],
+            'minutos':round((time.perf_counter()-restore_started)/60,2),
+            'disco_usado_GiB':round((disk.total-disk.free)/(1024**3),2),
+            'disco_libre_GiB':round(disk.free/(1024**3),2),
+            'detalle':restore_entry.get('detail'),
+        },tone='success' if restore_entry['status'].startswith(('restored','existing')) else 'warning')
     CANDIDATE_ROOTS.append(drive_candidate_root)
 elif RESTORE_CANDIDATES_FROM_DRIVE:
     show_callout(
@@ -2183,8 +2206,14 @@ missing_required_families={
 }
 missing_required_families={key:value for key,value in missing_required_families.items() if value}
 prompt_sft_active=family_is_present('qwen_prompt_sft')
+required_restore_failures=[
+    row for row in restoration
+    if row.get('status') in {'missing_required','corrupt_required'}
+]
 CANDIDATE_PREFLIGHT_READY=(
-    candidate_audit['eligible_count']>0 and not missing_required_families
+    candidate_audit['eligible_count']>0
+    and not missing_required_families
+    and not required_restore_failures
 )
 show_result('Restauración de publicaciones 03_01–03_06b',{
     'drive_root':drive_root,
@@ -2196,6 +2225,7 @@ show_result('Elegibilidad previa a 03_07',{
     'descubiertos':candidate_audit['discovered_count'],
     'elegibles':eligible_candidates,
     'rechazados':candidate_audit['rejected'],
+    'publicaciones_requeridas_fallidas':required_restore_failures,
     'familias_requeridas_ausentes':missing_required_families,
     'listo_para_comparar':CANDIDATE_PREFLIGHT_READY,
 },tone='success' if CANDIDATE_PREFLIGHT_READY else 'warning')

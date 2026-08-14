@@ -865,6 +865,21 @@ def test_local_training_notebooks_expose_bounded_deterministic_parallelism():
     assert "MACRO_AUPRC_NONINFERIORITY_MARGIN=None" in comparison_source
 
 
+def test_final_comparison_reports_restore_progress_and_corrupt_publications():
+    notebook = nbformat.read(
+        ROOT / "flujo/03_entrenamiento/03_07_comparacion_final.ipynb", as_version=4
+    )
+    source = "\n".join(cell.source for cell in notebook.cells)
+
+    assert "Restauración {restore_index}/{len(DRIVE_RUN_IDS)}" in source
+    assert "except (FileNotFoundError,ValueError) as exc" in source
+    assert "'corrupt_optional'" in source
+    assert "'corrupt_required'" in source
+    assert "required_restore_failures" in source
+    assert "'publicaciones_requeridas_fallidas':required_restore_failures" in source
+    assert "'disco_libre_GiB'" in source
+
+
 def test_qwen_lora_notebook_preserves_128_and_adds_256_warm_start_candidate():
     notebook = nbformat.read(
         ROOT / "flujo/03_entrenamiento/03_05_qwen_lora.ipynb", as_version=4
