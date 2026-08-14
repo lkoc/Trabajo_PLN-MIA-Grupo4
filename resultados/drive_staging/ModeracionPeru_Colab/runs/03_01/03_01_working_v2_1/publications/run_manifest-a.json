@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.2.0",
+  "published_at": "2026-08-14T21:46:59.396022+00:00",
+  "notebook_id": "03_01",
+  "run_id": "03_01_working_v2_1",
+  "taxonomy_contract": "moderacion_peru_5_salidas_v2",
+  "hardware": {
+    "backend": "cpu",
+    "requested": "cpu",
+    "device_name": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+    "torch_version": "2.9.0+xpu",
+    "runtime_version": null,
+    "total_memory_bytes": null,
+    "dtype": "float32",
+    "fallback_reason": null
+  },
+  "publication_slot": "a",
+  "included_files": 135,
+  "excluded_trainer_checkpoint_files": 0,
+  "trainer_checkpoint_storage": "trainer_checkpoints",
+  "archive": {
+    "name": "publications/run_outputs-a.tar",
+    "sha256": "7da0a79832228dc8788e27932f633e4dd779d9f58484a70c1afb86ff709b14bb",
+    "bytes": 1605488640,
+    "format": "tar_uncompressed",
+    "verification": "full_readback_after_close"
+  }
+}
