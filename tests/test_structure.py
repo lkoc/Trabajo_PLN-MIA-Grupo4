@@ -860,6 +860,9 @@ def test_local_training_notebooks_expose_bounded_deterministic_parallelism():
     assert "RUN_SVM_CONVERGENCE_REPAIR=False" in generator_source
     assert "svm_convergence_repair" in classical_source
     assert "RUN_REGULARIZATION_SCREEN=False" in classical_source
+    assert "inspect.signature(train_classical_experiments).parameters" in classical_source
+    assert "importlib.reload(classical_experiments_module)" in classical_source
+    assert "El kernel sigue usando una API anterior" in classical_source
     assert "REGULARIZATION_C_VALUES=(0.5,1.0,2.0)" in classical_source
     assert "regularization_c_values=REGULARIZATION_C_VALUES" in classical_source
     assert "model_names=('logistic_regression','linear_svm')" in classical_source
@@ -974,9 +977,16 @@ def test_qwen_structured_notebook_uses_verified_03_05_lora_and_penalty_sweep():
         as_version=4,
     )
     source = "\n".join(cell.source for cell in notebook.cells)
+    generator = (ROOT / "tools" / "generate_workflow_notebooks.py").read_text(
+        encoding="utf-8"
+    )
 
-    assert "RUN_LEGACY_FULL_TRAINING=False" in source
-    assert "RUN_STRUCTURED_LORA_SWEEP=False" in source
+    # El cuaderno versionado puede conservar un RUN_*=True ejecutado por el
+    # usuario como evidencia. El generador debe mantener inerte una copia nueva.
+    assert "RUN_LEGACY_FULL_TRAINING=" in source
+    assert "RUN_STRUCTURED_LORA_SWEEP=" in source
+    assert "RUN_LEGACY_FULL_TRAINING=False" in generator
+    assert "RUN_STRUCTURED_LORA_SWEEP=False" in generator
     assert "STRUCTURED_PENALTIES=(0.0,0.02,0.05)" in source
     assert "STRUCTURED_EPOCHS=1" in source
     assert "STRUCTURED_LEARNING_RATE=2e-5" in source

@@ -687,7 +687,23 @@ show_result('Dataset descomprimido y verificado', dataset_checkpoint, tone='succ
 """
 
 
-CLASSICAL_REGULARIZATION_SCREEN_SOURCE = """REGULARIZATION_C_VALUES=(0.5,1.0,2.0)
+CLASSICAL_REGULARIZATION_SCREEN_SOURCE = """import importlib
+import inspect
+import moderacion_peru.experiments as classical_experiments_module
+
+# Un notebook puede actualizarse mientras el kernel conserva la función anterior
+# en memoria. Recarga únicamente si la API todavía no expone el barrido de C.
+REGULARIZATION_API_RELOADED=False
+if 'regularization_c_values' not in inspect.signature(train_classical_experiments).parameters:
+    classical_experiments_module=importlib.reload(classical_experiments_module)
+    train_classical_experiments=classical_experiments_module.train_classical_experiments
+    REGULARIZATION_API_RELOADED=True
+if 'regularization_c_values' not in inspect.signature(train_classical_experiments).parameters:
+    raise RuntimeError(
+        'El kernel sigue usando una API anterior. Reinicie el kernel y ejecute desde la primera celda.'
+    )
+
+REGULARIZATION_C_VALUES=(0.5,1.0,2.0)
 REGULARIZATION_OUTPUT=OUTPUT/'regularization_screen'
 RUN_REGULARIZATION_SCREEN=False
 
@@ -745,6 +761,7 @@ else:
         'variante':'base; mismo TF-IDF compartido por los seis candidatos',
         'selección':'solo validation; 03_07 conserva test sellado',
         'salida':REGULARIZATION_OUTPUT,
+        'API_recargada_por_kernel_antiguo':REGULARIZATION_API_RELOADED,
     },tone='neutral')
 """
 
