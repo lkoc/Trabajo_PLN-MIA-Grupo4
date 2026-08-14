@@ -14,6 +14,7 @@ ONLY_NOTEBOOKS: set[str] | None = None
 _COLAB_BUNDLE_IDENTITY: dict[str, str] | None = None
 OPERATIONAL_PROMPT_RELATIVE = "config/prompt_operacional_ollama_v3_2.md"
 QWEN_A100_NOTEBOOKS = {"02_02", "03_05", "03_06", "03_06b"}
+CPU_COLAB_NOTEBOOKS = {"03_07"}
 
 PROJECT_TITLE = (
     "Moderación semiautomática de videos peruanos de YouTube mediante modelos "
@@ -613,7 +614,13 @@ def colab_setup(notebook_id: str) -> str:
     identity = colab_bundle_identity()
     return (
         COLAB_SETUP.replace("__NOTEBOOK_ID__", notebook_id)
-        .replace("__REQUIRE_L4__", str(notebook_id not in QWEN_A100_NOTEBOOKS))
+        .replace(
+            "__REQUIRE_L4__",
+            str(
+                notebook_id not in QWEN_A100_NOTEBOOKS
+                and notebook_id not in CPU_COLAB_NOTEBOOKS
+            ),
+        )
         .replace("__EXPECTED_BUNDLE_ID__", identity["bundle_id"])
         .replace("__EXPECTED_CORE_SHA256__", identity["core_sha256"])
     )
@@ -2056,6 +2063,164 @@ if not (RUN_LEGACY_FULL_TRAINING or RUN_STRUCTURED_LORA_SWEEP):
     show_summary('Qwen estructurado de bajo costo preparado',{'recomendado':'LoRA entrenable restaurado desde el candidato 03_05','comparación':'penalización 0, 0.02 y 0.05 sobre las mismas filas','épocas':STRUCTURED_EPOCHS,'learning_rate':STRUCTURED_LEARNING_RATE,'semillas':f'sampling={SAMPLING_SEED}; training={TRAINING_SEED}','estado_optimizador':'nuevo en cada candidato','candidato_full_histórico':'se conserva; no se sobrescribe','test':'natural completo, sellado'},tone='neutral')"""
 
 
+COMPARISON_DRIVE_RESTORE_SOURCE = """from pathlib import Path
+from moderacion_peru.colab import restore_colab_run_outputs
+from moderacion_peru.ensemble_evaluation import audit_validation_candidate_eligibility
+
+DATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'
+LOCAL_CANDIDATE_ROOT=ROOT/'modelos/v2'
+# Si usa Google Drive para escritorio, indique aquí la carpeta ModeracionPeru_Colab.
+# En un kernel Colab se monta y detecta automáticamente; no requiere Drive Desktop.
+LOCAL_GOOGLE_DRIVE_ROOT=None  # p. ej. Path('G:/My Drive/ModeracionPeru_Colab')
+RESTORE_CANDIDATES_FROM_DRIVE=True
+DRIVE_RUN_IDS={
+    '03_01':'03_01_working_v2_1',
+    '03_02':'03_02_working_v2_1',
+    '03_03':'03_03_working_v2_1',
+    '03_03b':'03_03b_working_v2_1',
+    '03_04':'03_04_working_v2_1',
+    '03_05':'03_05_working_v2_1',
+    '03_06':'03_06_working_v2_1',
+    '03_06b':'03_06b_working_v2_1',
+}
+OPTIONAL_DRIVE_RUNS={'03_06b'}
+REQUIRED_FAMILIES={
+    '03_01':('classical:',),
+    '03_02':('flat_minilm','flat_e5'),
+    '03_03':('cascade',),
+    '03_03b':('cascade_v2',),
+    '03_04':('multitask',),
+    '03_05':('qwen_lora',),
+    '03_06':('qwen_structured',),
+}
+
+drive_candidate_root=(
+    COLAB_CONTEXT.runtime_root/'comparison_inputs'/'03_07'
+    if COLAB_CONTEXT is not None
+    else ROOT/'modelos/v2/restored_from_drive'
+)
+drive_root=(
+    COLAB_CONTEXT.drive_root
+    if COLAB_CONTEXT is not None
+    else Path(LOCAL_GOOGLE_DRIVE_ROOT).expanduser()
+    if LOCAL_GOOGLE_DRIVE_ROOT is not None
+    else None
+)
+CANDIDATE_ROOTS=[LOCAL_CANDIDATE_ROOT]
+restoration=[]
+if RESTORE_CANDIDATES_FROM_DRIVE and drive_root is not None:
+    for notebook_id,run_id in DRIVE_RUN_IDS.items():
+        destination=drive_candidate_root/notebook_id/run_id
+        try:
+            restored=restore_colab_run_outputs(drive_root,notebook_id=notebook_id,run_id=run_id,destination=destination)
+            restoration.append({'notebook_id':notebook_id,'run_id':run_id,**restored})
+        except FileNotFoundError as exc:
+            restoration.append({
+                'notebook_id':notebook_id,
+                'run_id':run_id,
+                'status':'missing_optional' if notebook_id in OPTIONAL_DRIVE_RUNS else 'missing_required',
+                'source':str(Path(drive_root)/'runs'/notebook_id/run_id),
+                'detail':str(exc),
+            })
+    CANDIDATE_ROOTS.append(drive_candidate_root)
+elif RESTORE_CANDIDATES_FROM_DRIVE:
+    show_callout(
+        'Drive no está montado en el kernel local',
+        'Seleccione un kernel Google Colab y ejecute desde la primera celda, o configure LOCAL_GOOGLE_DRIVE_ROOT si usa Drive para escritorio.',
+        tone='warning',
+    )
+
+candidate_audit=audit_validation_candidate_eligibility(DATA,CANDIDATE_ROOTS)
+eligible_candidates=[
+    {
+        'candidate_id':row.get('candidate_id'),
+        'model_family':row.get('model_family'),
+        'training_regime':row.get('training_regime','full'),
+        'candidate_path':row.get('candidate_path'),
+    }
+    for row in candidate_audit['eligible']
+]
+eligible_families={str(row.get('model_family','')).casefold() for row in candidate_audit['eligible']}
+
+def family_is_present(expected_family):
+    expected=str(expected_family).casefold()
+    return any(
+        family.startswith(expected) if expected.endswith(':') else family==expected
+        for family in eligible_families
+    )
+
+missing_required_families={
+    notebook_id:[family for family in families if not family_is_present(family)]
+    for notebook_id,families in REQUIRED_FAMILIES.items()
+}
+missing_required_families={key:value for key,value in missing_required_families.items() if value}
+prompt_sft_active=family_is_present('qwen_prompt_sft')
+CANDIDATE_PREFLIGHT_READY=(
+    candidate_audit['eligible_count']>0 and not missing_required_families
+)
+show_result('Restauración de publicaciones 03_01–03_06b',{
+    'drive_root':drive_root,
+    'runs':restoration,
+    '03_06b':'incluido' if prompt_sft_active else 'no encontrado o no elegible; omitido',
+},tone='success' if CANDIDATE_PREFLIGHT_READY else 'warning')
+show_result('Elegibilidad previa a 03_07',{
+    'dataset_sha256':candidate_audit['dataset_sha256'],
+    'descubiertos':candidate_audit['discovered_count'],
+    'elegibles':eligible_candidates,
+    'rechazados':candidate_audit['rejected'],
+    'familias_requeridas_ausentes':missing_required_families,
+    'listo_para_comparar':CANDIDATE_PREFLIGHT_READY,
+},tone='success' if CANDIDATE_PREFLIGHT_READY else 'warning')
+if prompt_sft_active:
+    show_callout('03_06b activado','Existe un candidato completo, con validation común y test sellado; entrará en la comparación.',tone='success')
+else:
+    show_callout('03_06b omitido','Su ausencia o inelegibilidad no bloquea la comparación de 03_01–03_06.',tone='neutral')"""
+
+
+COMPARISON_RUN_SOURCE = """from moderacion_peru.ensemble_evaluation import compare_and_freeze_validation,evaluate_frozen_test
+RESULT_ROOT=(COLAB_CONTEXT.scratch_output_dir/'resultados_modelos' if COLAB_CONTEXT else ROOT/'resultados/modelos')
+COMPARISON=RESULT_ROOT/'comparacion_individual_ensemble_validation.json'
+FREEZE=RESULT_ROOT/'seleccion_congelada.json'
+TEST_REPORT=RESULT_ROOT/'test_final_abierto_una_vez.json'
+PARALLEL_WORKERS=4  # bootstrap pareado por video
+BOOTSTRAP_REPLICATES=2000
+SELECTION_FOLDS=5
+# Deben acordarse ANTES de comparar. None permite el informe/Pareto, pero mantiene test sellado.
+MAX_REVIEW_RATE=None  # p. ej. 0.10 solo si capacidad humana <=10% fue aprobada
+MACRO_AUPRC_NONINFERIORITY_MARGIN=None  # p. ej. 0.02 solo si fue predeclarado
+RUN_COMPARE_AND_FREEZE=False
+RUN_TEST_ONCE=False
+RUN_PUBLISH=False
+
+def checkpoint_03_07_to_drive(label):
+    if COLAB_CONTEXT is None:
+        return None
+    from moderacion_peru.colab import publish_colab_outputs
+    publication=publish_colab_outputs(COLAB_CONTEXT)
+    show_result(label,publication,tone='success')
+    return publication
+
+if RUN_COMPARE_AND_FREEZE:
+    if not CANDIDATE_PREFLIGHT_READY:
+        raise RuntimeError(
+            'Preflight incompleto: faltan familias requeridas de 03_01–03_06. '
+            f'Revise familias_requeridas_ausentes={missing_required_families} y los run_id de Drive.'
+        )
+    comparison_result=run_with_progress('BA OOF, riesgo-cobertura y bootstrap',compare_and_freeze_validation,DATA,CANDIDATE_ROOTS,COMPARISON,FREEZE,bootstrap_replicates=BOOTSTRAP_REPLICATES,selection_folds=SELECTION_FOLDS,max_review_rate=MAX_REVIEW_RATE,macro_auprc_noninferiority_margin=MACRO_AUPRC_NONINFERIORITY_MARGIN,parallel_workers=PARALLEL_WORKERS,progress_unit='réplica')
+    show_result('Comparación y congelación en validation',comparison_result,tone='success')
+    checkpoint_03_07_to_drive('Checkpoint verificable de la comparación en Drive')
+if RUN_TEST_ONCE:
+    if not FREEZE.is_file():
+        raise FileNotFoundError('Falta la selección congelada; ejecute y revise primero RUN_COMPARE_AND_FREEZE.')
+    test_result=run_with_progress('Inferencia de test',evaluate_frozen_test,FREEZE,TEST_REPORT,confirm_single_test_open=True,progress_unit='lote')
+    show_result('Apertura única de test natural + vista 4:1',test_result,tone='warning')
+    checkpoint_03_07_to_drive('Checkpoint verificable del test abierto una vez')
+if RUN_PUBLISH:
+    raise RuntimeError('Publicación productiva bloqueada por diseño: habilítela solo tras aprobación posterior y revisión de FREEZE/TEST_REPORT.')
+if not (RUN_COMPARE_AND_FREEZE or RUN_TEST_ONCE or RUN_PUBLISH):
+    show_summary('Criterio vigente',{'candidatos_elegibles':candidate_audit['eligible_count'],'03_06b':'incluido' if prompt_sft_active else 'omitido','preflight_listo':CANDIDATE_PREFLIGHT_READY,'ranking':'BA binaria ANY_DAMAGE OOF a cobertura completa','agregación':'lexicográfica; no suma métricas redundantes','salvaguarda':'macro-AUPRC daños + frontera Pareto','desempate':'menor R_0.67; luego macro-AUPRC','NEEDS_REVIEW':'política posterior bajo capacidad humana declarada','bootstrap':f'{BOOTSTRAP_REPLICATES} réplicas pareadas por video en {PARALLEL_WORKERS} hilos','persistencia':'validation se publica como checkpoint verificable del run 03_07 en Drive','test':'bloqueado hasta fijar capacidad y margen antes de comparar'},tone='neutral')"""
+
+
 MINILM_EXECUTION_GUIDE = """Guía reproducible de la campaña MiniLM
 
 Esta campaña se ejecuta **por etapas y siempre con el mismo `COLAB_RUN_ID`**. El valor vacío reanuda `03_02_working_v2_1`. No borre `runs/`, `trainer_checkpoints` ni las publicaciones de Drive: cada configuración tiene `variant_id` y firma propios; al repetir una ya terminada devuelve `status=noop`, y una interrumpida continúa desde el checkpoint verificable más reciente.
@@ -2325,7 +2490,7 @@ def create(
                 persistent_colab_training_source(source, colab_notebook_id)
             )
         )
-    if colab_notebook_id:
+    if colab_notebook_id and colab_notebook_id != "03_07":
         notebook.cells.append(
             nbf.v4.new_markdown_cell(
                 "## Publicación o checkpoint en Drive\n\n"
@@ -2363,7 +2528,8 @@ def create(
         cell["id"] = f"{cell_prefix}-{index:02d}"
     target = ROOT / path
     target.parent.mkdir(parents=True, exist_ok=True)
-    preserve_matching_execution_outputs(notebook, target)
+    if path != "flujo/03_entrenamiento/03_07_comparacion_final.ipynb":
+        preserve_matching_execution_outputs(notebook, target)
     nbf.write(notebook, target)
 
 
@@ -3530,8 +3696,8 @@ if not (RUN_BUDGETED_COMPARABLE or RUN_DIAGNOSTIC_PILOT or RUN_FULL_TRAINING):
         (
             "03_07_comparacion_final.ipynb",
             "Comparación final",
-            "from moderacion_peru.ensemble_evaluation import compare_and_freeze_validation,evaluate_frozen_test\nDATA=ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'\nCANDIDATE_ROOTS=[ROOT/'modelos/v2']\nCOMPARISON=ROOT/'resultados/modelos/comparacion_individual_ensemble_validation.json'\nFREEZE=ROOT/'resultados/modelos/seleccion_congelada.json'\nTEST_REPORT=ROOT/'resultados/modelos/test_final_abierto_una_vez.json'\nPARALLEL_WORKERS=4  # bootstrap pareado por video\nBOOTSTRAP_REPLICATES=2000\nSELECTION_FOLDS=5\n# Deben acordarse ANTES de comparar. None permite el informe/Pareto, pero mantiene test sellado.\nMAX_REVIEW_RATE=None  # p. ej. 0.10 solo si capacidad humana <=10% fue aprobada\nMACRO_AUPRC_NONINFERIORITY_MARGIN=None  # p. ej. 0.02 solo si fue predeclarado\nRUN_COMPARE_AND_FREEZE=False\nRUN_TEST_ONCE=False\nRUN_PUBLISH=False\nif RUN_COMPARE_AND_FREEZE:\n    comparison_result=run_with_progress('BA OOF, riesgo-cobertura y bootstrap',compare_and_freeze_validation,DATA,CANDIDATE_ROOTS,COMPARISON,FREEZE,bootstrap_replicates=BOOTSTRAP_REPLICATES,selection_folds=SELECTION_FOLDS,max_review_rate=MAX_REVIEW_RATE,macro_auprc_noninferiority_margin=MACRO_AUPRC_NONINFERIORITY_MARGIN,parallel_workers=PARALLEL_WORKERS,progress_unit='réplica')\n    show_result('Comparación y congelación en validation',comparison_result,tone='success')\nif RUN_TEST_ONCE:\n    test_result=run_with_progress('Inferencia de test',evaluate_frozen_test,FREEZE,TEST_REPORT,confirm_single_test_open=True,progress_unit='lote')\n    show_result('Apertura única de test natural + vista 4:1',test_result,tone='warning')\nif RUN_PUBLISH:\n    raise RuntimeError('Publicación bloqueada por diseño: habilítela solo tras aprobación posterior y revisión de FREEZE/TEST_REPORT.')\nif not (RUN_COMPARE_AND_FREEZE or RUN_TEST_ONCE or RUN_PUBLISH):\n    show_summary('Criterio vigente',{'ranking':'BA binaria ANY_DAMAGE OOF a cobertura completa','agregación':'lexicográfica; no suma métricas redundantes','salvaguarda':'macro-AUPRC daños + frontera Pareto','desempate':'menor R_0.67; luego macro-AUPRC','NEEDS_REVIEW':'política posterior bajo capacidad humana declarada','bootstrap':f'{BOOTSTRAP_REPLICATES} réplicas pareadas por video en {PARALLEL_WORKERS} hilos','test':'bloqueado hasta fijar capacidad y margen antes de comparar'},tone='neutral')",
-            None,
+            COMPARISON_RUN_SOURCE,
+            "03_07",
             "Balanced accuracy pondera por igual el reconocimiento de daño y de seguro bajo desbalance "
             "[@brodersen2010balanced]. Las curvas precisión–recall siguen siendo salvaguardas informativas "
             "[@saito2015pr], pero no se suman a BA con pesos arbitrarios: el aprendizaje multiobjetivo "
@@ -3566,10 +3732,15 @@ if not (RUN_BUDGETED_COMPARABLE or RUN_DIAGNOSTIC_PILOT or RUN_FULL_TRAINING):
             if filename == "03_05_qwen_lora.ipynb"
             else "Configuración y ejecución"
         )
-        code_cells = [
-            ("Restauración reproducible del dataset", DATASET_CHECKPOINT),
-            (execution_heading, source),
-        ]
+        code_cells = [("Restauración reproducible del dataset", DATASET_CHECKPOINT)]
+        if filename == "03_07_comparacion_final.ipynb":
+            code_cells.append(
+                (
+                    "Restauración verificable de candidatos desde Drive",
+                    COMPARISON_DRIVE_RESTORE_SOURCE,
+                )
+            )
+        code_cells.append((execution_heading, source))
         if filename == "03_05_qwen_lora.ipynb":
             code_cells.append(
                 (
@@ -3589,6 +3760,7 @@ if not (RUN_BUDGETED_COMPARABLE or RUN_DIAGNOSTIC_PILOT or RUN_FULL_TRAINING):
             academic_context,
             code_cells,
             colab_notebook_id=colab_id,
+            colab_requires_gpu=filename != "03_07_comparacion_final.ipynb",
         )
     create(
         "flujo/04_produccion/04_01_frontend_produccion.ipynb",

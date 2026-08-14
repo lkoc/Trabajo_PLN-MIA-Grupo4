@@ -6,6 +6,57 @@ import numpy as np
 
 from moderacion_peru import ensemble_evaluation
 from moderacion_peru.io import sha256_file, write_json_atomic, write_jsonl_atomic
+from moderacion_peru.taxonomy import load_taxonomy
+
+
+def test_validation_candidate_audit_explains_eligible_and_rejected_rows(tmp_path):
+    dataset = tmp_path / "dataset.jsonl"
+    dataset.write_text('{"chunk_id":"c1"}\n', encoding="utf-8")
+    taxonomy = load_taxonomy()
+    candidate_root = tmp_path / "candidates"
+    eligible_dir = candidate_root / "eligible"
+    eligible_dir.mkdir(parents=True)
+    write_json_atomic(
+        eligible_dir / "candidate.json",
+        {
+            "candidate_id": "eligible-e5",
+            "model_family": "flat_e5",
+            "status": "complete",
+            "dataset_sha256": sha256_file(dataset),
+            "target_labels": list(taxonomy.target_labels),
+            "test_metrics": None,
+        },
+    )
+    (eligible_dir / "predictions_validation.jsonl").write_text(
+        "{}\n", encoding="utf-8"
+    )
+    rejected_dir = candidate_root / "rejected"
+    rejected_dir.mkdir()
+    write_json_atomic(
+        rejected_dir / "candidate.json",
+        {
+            "candidate_id": "incomplete-old-snapshot",
+            "model_family": "qwen_prompt_sft",
+            "status": "interrupted",
+            "dataset_sha256": "0" * 64,
+            "target_labels": list(taxonomy.target_labels),
+            "test_metrics": None,
+        },
+    )
+
+    audit = ensemble_evaluation.audit_validation_candidate_eligibility(
+        dataset, [candidate_root]
+    )
+
+    assert audit["discovered_count"] == 2
+    assert audit["eligible_count"] == 1
+    assert audit["eligible"][0]["candidate_id"] == "eligible-e5"
+    assert audit["rejected_count"] == 1
+    assert set(audit["rejected"][0]["reasons"]) == {
+        "incomplete",
+        "different_snapshot",
+        "validation_predictions_missing",
+    }
 
 
 def test_grouped_bootstrap_is_deterministic_across_worker_counts():

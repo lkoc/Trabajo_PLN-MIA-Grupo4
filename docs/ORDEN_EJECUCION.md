@@ -37,7 +37,7 @@ Todo el recorrido usa el contrato de etiquetas v2.1 con `SEGURO`, `RACISMO_DISCR
 - En `02_01`, deje `RECOVER_HISTORICAL=True`: solo las coincidencias exactas y unívocas por video/texto se marcan completas. Active luego `RUN_API_PREFLIGHT=True`, `RUN_CALIBRATION=True`, `RUN_PRIMARY=True` y finalmente `RUN_DIRECTED_REVIEW=True`. Los pilotos 300/500 ya concluyeron; la campaña completa usa `PRIMARY_LIMIT=None` y `REVIEW_LIMIT=None`. Cada grupo de cinco se sincroniza a disco y los checkpoints atómicos se publican periódicamente, al cerrar una fase o ante `Ctrl+C`.
 - `02_02` conserva `RUN_FALLBACK=False`; su Qwen3-1.7B es un diagnóstico local independiente, no una segunda campaña que deba promediarse.
 - En `03_01`–`03_06`, active `RUN_TRAINING=True`. Una segunda ejecución con el mismo snapshot devuelve `status="noop"`.
-- En `03_07`, active `RUN_PUBLISH=True` después de copiar bajo `modelos/v2` los runs neuronales devueltos por Colab.
+- En `03_07`, use un kernel Colab CPU y ejecute desde la primera celda. El cuaderno monta `ModeracionPeru_Colab`, restaura y verifica los runs `03_01`–`03_06`; intenta también `03_06b`, pero lo omite si no existe o no es elegible. Active `RUN_COMPARE_AND_FREEZE=True` solo cuando el preflight muestre todas las familias requeridas. `RUN_TEST_ONCE` y la publicación productiva permanecen separados.
 
 El corte documentado del 2026-08-08 recuperó 52 244 filas Flash y 9 912 Pro,
 completó la calibración pareada sin errores y registró 14 399 pendientes nuevos

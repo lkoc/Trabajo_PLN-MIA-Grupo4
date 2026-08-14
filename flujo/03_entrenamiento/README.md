@@ -22,7 +22,7 @@ Los encoders o backbones anteriores pueden servir de inicialización, pero la pr
 
 Consulte [`docs/HARDWARE.md`](../../docs/HARDWARE.md) antes de instalar PyTorch: una rueda CUDA no sustituye una rueda ROCm o XPU.
 
-`03_02`–`03_06b` incluyen un backend Colab L4 reproducible desde VS Code. El snapshot se transfiere comprimido y verificado y se copia a `/content`. Cada época terminada publica en Drive un checkpoint completo e inmutable de `Trainer`; al reiniciar se recupera el más nuevo verificable y se continúa con optimizador, scheduler y RNG. Los candidatos y métricas finales se publican automáticamente en dos ranuras redundantes. `03_01`, `03_07` y `03_08` permanecen locales salvo que sea necesario regenerar inferencias. Véase [`docs/COLAB_L4.md`](../../docs/COLAB_L4.md).
+`03_02`–`03_06b` incluyen un backend Colab reproducible desde VS Code. El snapshot se transfiere comprimido y verificado y se copia a `/content`. Cada época terminada publica en Drive un checkpoint completo e inmutable de `Trainer`; al reiniciar se recupera el más nuevo verificable y se continúa con optimizador, scheduler y RNG. Los candidatos y métricas finales se publican automáticamente en dos ranuras redundantes. `03_07` también admite Colab, pero en CPU: monta Drive, restaura por manifiesto y SHA-256 los runs `03_01_working_v2_1`–`03_06b_working_v2_1` y guarda su comparación como un checkpoint propio. `03_06b` es opcional y solo entra si contiene un candidato completo, con validation común y test sellado. El cuaderno vigente de `03_01` conserva sus artefactos localmente; para restaurarlo en Colab debe existir la copia convencional `runs/03_01/03_01_working_v2_1` o una copia local bajo `modelos/v2`. Véase [`docs/COLAB_L4.md`](../../docs/COLAB_L4.md).
 
 Active solo las campañas que quiera comparar. En `03_02`,
 `RUN_MINILM_CONTEXT_SCREEN=True` crea candidatos 192/256 desde el MiniLM de 128
@@ -38,8 +38,10 @@ recomendada es `RUN_STRUCTURED_LORA_SWEEP=True`: restaura la publicación
 verificable de `03_05`, reutiliza su adaptador entrenable con optimizador nuevo
 y produce tres candidatos de una época con penalizaciones `0`, `0.02` y `0.05`.
 `RUN_LEGACY_FULL_TRAINING` queda apagado y preserva el experimento completo
-histórico. En `03_06b`, ejecute primero `RUN_PILOT=True`; el piloto no es
-elegible para `03_07`. Train y validation usan una submuestra determinista
-`SEGURO`/daño 4:1. En `03_07`, active primero `RUN_COMPARE_AND_FREEZE`; después
+histórico. En `03_06b`, el piloto diagnóstico no es elegible para `03_07`; el
+candidato presupuestado solo entra si completó la validation común. Train y
+validation usan una submuestra determinista `SEGURO`/daño 4:1. En `03_07`,
+ejecute desde la primera celda con kernel Colab, confirme que
+`CANDIDATE_PREFLIGHT_READY=True` y active primero `RUN_COMPARE_AND_FREEZE`; después
 `RUN_TEST_ONCE` ejecuta una sola inferencia sobre todo el test natural.
 `RUN_PUBLISH` continúa bloqueado hasta una aprobación posterior.

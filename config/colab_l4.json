@@ -116,6 +116,13 @@
       "expected_gpu": "NVIDIA A100 40GB or equivalent CUDA BF16 GPU",
       "input_keys": ["dataset_5_salidas"],
       "reason": "SFT causal Qwen-LoRA con perfil A100 2×4, validación generativa por lotes y checkpoints atómicos en Drive."
+    },
+    "03_07": {
+      "colab_mode": "recommended",
+      "requires_cuda": false,
+      "expected_gpu": null,
+      "input_keys": ["dataset_5_salidas"],
+      "reason": "Restaura publicaciones verificadas de 03_01–03_06b desde Drive y compara sus predicciones de validation con bootstrap en CPU."
     }
   },
   "excluded_from_drive": [

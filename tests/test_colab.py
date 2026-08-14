@@ -148,10 +148,13 @@ def test_colab_config_syncs_only_declared_inputs_and_keeps_api_on_cpu():
         "03_05",
         "03_06",
         "03_06b",
+        "03_07",
     }
     assert "datos/raw/transcripts_raw.jsonl" in config["excluded_from_drive"]
     assert config["notebooks"]["02_01"]["requires_cuda"] is False
     assert config["notebooks"]["02_01"]["expected_gpu"] is None
+    assert config["notebooks"]["03_07"]["requires_cuda"] is False
+    assert config["notebooks"]["03_07"]["expected_gpu"] is None
     qwen_a100 = {"02_02", "03_05", "03_06", "03_06b"}
     assert all(
         config["notebooks"][notebook_id]["expected_gpu"]
@@ -162,7 +165,7 @@ def test_colab_config_syncs_only_declared_inputs_and_keeps_api_on_cpu():
         specification["requires_cuda"] is True
         and specification["expected_gpu"] == "NVIDIA L4"
         for notebook_id, specification in config["notebooks"].items()
-        if notebook_id not in {"02_01", *qwen_a100}
+        if notebook_id not in {"02_01", "03_07", *qwen_a100}
     )
 
 

@@ -48,6 +48,73 @@ def _candidate_slot(candidate: Mapping[str, Any]) -> str:
     return "transformer"
 
 
+def audit_validation_candidate_eligibility(
+    dataset_path: str | Path,
+    candidate_roots: Iterable[str | Path],
+) -> dict[str, Any]:
+    """Explica qué candidatos pueden entrar en la comparación de validation.
+
+    La auditoría comparte exactamente las mismas compuertas que
+    :func:`compare_and_freeze_validation`. No abre ``test`` ni carga pesos.
+    """
+
+    dataset = Path(dataset_path).resolve()
+    dataset_sha = sha256_file(dataset)
+    taxonomy = load_taxonomy()
+    discovered = discover_candidates(candidate_roots)
+    eligible: list[dict[str, Any]] = []
+    rejected: list[dict[str, Any]] = []
+    for candidate in discovered:
+        reasons: list[str] = []
+        if candidate.get("status") != "complete":
+            reasons.append("incomplete")
+        if candidate.get("eligible_for_03_07") is False:
+            reasons.append("explicitly_not_eligible_for_03_07")
+        if (
+            candidate.get("training_regime") == "budgeted_comparable"
+            and candidate.get("training_budget", {}).get("validation_scope")
+            != "full_common_validation"
+        ):
+            reasons.append("budgeted_candidate_without_full_common_validation")
+        if candidate.get("dataset_sha256") != dataset_sha:
+            reasons.append("different_snapshot")
+        if tuple(candidate.get("target_labels", ())) != taxonomy.target_labels:
+            reasons.append("wrong_contract")
+        if candidate.get("test_metrics") not in (None, {}):
+            reasons.append("test_was_opened_before_freeze")
+        family = str(candidate.get("model_family", "")).casefold()
+        if (
+            family.endswith(":linear_svm")
+            and candidate.get("fit_quality", {}).get("converged") is not True
+        ):
+            reasons.append("svm_convergence_not_verified")
+        predictions = (
+            Path(str(candidate["candidate_path"])).parent
+            / "predictions_validation.jsonl"
+        )
+        if not predictions.is_file():
+            reasons.append("validation_predictions_missing")
+        if reasons:
+            rejected.append(
+                {
+                    "candidate_id": candidate.get("candidate_id"),
+                    "model_family": candidate.get("model_family"),
+                    "candidate_path": candidate.get("candidate_path"),
+                    "reasons": reasons,
+                }
+            )
+        else:
+            eligible.append(candidate)
+    return {
+        "dataset_sha256": dataset_sha,
+        "discovered_count": len(discovered),
+        "eligible_count": len(eligible),
+        "eligible": eligible,
+        "rejected_count": len(rejected),
+        "rejected": rejected,
+    }
+
+
 def _selection_key(metrics: Mapping[str, Any]) -> tuple[float, ...]:
     """Orden lexicográfico predeclarado; no es una suma de métricas."""
 
@@ -659,47 +726,21 @@ def compare_and_freeze_validation(
     if parallel_workers < 1:
         raise ValueError("parallel_workers debe ser al menos 1")
     parallel_workers = min(parallel_workers, os.cpu_count() or 1)
-    dataset_sha = sha256_file(dataset)
+    eligibility = audit_validation_candidate_eligibility(dataset, candidate_roots)
+    dataset_sha = str(eligibility["dataset_sha256"])
     taxonomy = load_taxonomy()
-    eligible = []
-    rejected = []
-    for candidate in discover_candidates(candidate_roots):
-        reasons = []
-        if candidate.get("status") != "complete":
-            reasons.append("incomplete")
-        if candidate.get("eligible_for_03_07") is False:
-            reasons.append("explicitly_not_eligible_for_03_07")
-        if (
-            candidate.get("training_regime") == "budgeted_comparable"
-            and candidate.get("training_budget", {}).get("validation_scope")
-            != "full_common_validation"
-        ):
-            reasons.append("budgeted_candidate_without_full_common_validation")
-        if candidate.get("dataset_sha256") != dataset_sha:
-            reasons.append("different_snapshot")
-        if tuple(candidate.get("target_labels", ())) != taxonomy.target_labels:
-            reasons.append("wrong_contract")
-        if candidate.get("test_metrics") not in (None, {}):
-            reasons.append("test_was_opened_before_freeze")
-        family = str(candidate.get("model_family", "")).casefold()
-        if (
-            family.endswith(":linear_svm")
-            and candidate.get("fit_quality", {}).get("converged") is not True
-        ):
-            reasons.append("svm_convergence_not_verified")
-        predictions = (
-            Path(candidate["candidate_path"]).parent / "predictions_validation.jsonl"
-        )
-        if not predictions.is_file():
-            reasons.append("validation_predictions_missing")
-        if reasons:
-            rejected.append(
-                {"candidate_id": candidate.get("candidate_id"), "reasons": reasons}
-            )
-        else:
-            eligible.append(candidate)
+    eligible = eligibility["eligible"]
+    rejected = eligibility["rejected"]
     if not eligible:
-        raise ValueError("No hay candidatos elegibles con validation y test sellado")
+        reason_summary = "; ".join(
+            f"{row.get('candidate_id') or '<sin-id>'}: {','.join(row['reasons'])}"
+            for row in rejected[:12]
+        )
+        suffix = f" Rechazos: {reason_summary}." if reason_summary else ""
+        raise ValueError(
+            "No hay candidatos elegibles con validation y test sellado "
+            f"(descubiertos={eligibility['discovered_count']}).{suffix}"
+        )
     signature = canonical_json_sha256(
         {
             "dataset_sha256": dataset_sha,

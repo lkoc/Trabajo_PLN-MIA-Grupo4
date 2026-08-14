@@ -218,6 +218,7 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
         "03_05",
         "03_06",
         "03_06b",
+        "03_07",
     }
     expected = {"02_00", *expected_consumers}
     manifest = json.loads(
@@ -255,7 +256,13 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
                 continue
             assert "prepare_colab_context" in source
             assert "publish_colab_outputs" in source
-            if metadata["notebook_id"] in {"02_02", "03_05", "03_06", "03_06b"}:
+            if metadata["notebook_id"] in {
+                "02_02",
+                "03_05",
+                "03_06",
+                "03_06b",
+                "03_07",
+            }:
                 assert "COLAB_REQUIRE_L4 = False" in source
             else:
                 assert "COLAB_REQUIRE_L4 = True" in source
@@ -280,9 +287,9 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
                 == "github_or_browser_upload_with_drive_versioned_releases"
             )
             assert metadata["bundle_resolution"] == "auto_publish_missing_drive_release"
-            if metadata["notebook_id"] == "02_01":
+            if metadata["notebook_id"] in {"02_01", "03_07"}:
                 assert metadata["expected_gpu"] is None
-                assert "esta campaña API funciona con runtime CPU" in source
+                assert "funciona con runtime CPU" in source
             elif metadata["notebook_id"] in {"02_02", "03_05", "03_06", "03_06b"}:
                 assert (
                     metadata["expected_gpu"]
