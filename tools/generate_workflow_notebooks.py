@@ -341,6 +341,29 @@ def _prepare_bundle_staging():
     staging.mkdir(parents=True)
     return staging
 
+def _uploaded_bundle_member(uploaded, expected_name):
+    # Resuelve el nombre exacto o el sufijo (N) que agrega Colab al repetir una carga.
+    if expected_name in uploaded:
+        return expected_name
+    suffix = Path(expected_name).suffix
+    base = expected_name[:-len(suffix)] if suffix else expected_name
+    prefix = f"{base} ("
+    ending = f"){suffix}"
+    candidates = []
+    for actual_name in uploaded:
+        if not actual_name.startswith(prefix) or not actual_name.endswith(ending):
+            continue
+        duplicate_number = actual_name[len(prefix):-len(ending)]
+        if duplicate_number.isdigit():
+            candidates.append(actual_name)
+    if len(candidates) == 1:
+        return candidates[0]
+    if len(candidates) > 1:
+        raise ValueError(
+            f"La selección contiene varias copias de {expected_name}: {sorted(candidates)}"
+        )
+    return None
+
 def _acquire_expected_bundle():
     staging = _prepare_bundle_staging()
     if COLAB_BUNDLE_SOURCE == "github":
@@ -373,18 +396,23 @@ def _acquire_expected_bundle():
         from google.colab import files
 
         uploaded = files.upload()
-        if "bundle_manifest.json" not in uploaded:
+        manifest_upload = _uploaded_bundle_member(uploaded, "bundle_manifest.json")
+        if manifest_upload is None:
             raise FileNotFoundError("La selección no incluyó bundle_manifest.json")
-        (staging / "bundle_manifest.json").write_bytes(uploaded["bundle_manifest.json"])
+        (staging / "bundle_manifest.json").write_bytes(uploaded[manifest_upload])
         manifest = _read_manifest(staging / "bundle_manifest.json")
         if manifest.get("bundle_id") != COLAB_NOTEBOOK_BUILD_BUNDLE_ID:
             raise RuntimeError("Los archivos seleccionados no pertenecen al bundle esperado")
         required = {"bundle_manifest.json", *(name for name, _ in _bundle_specs(manifest))}
-        missing = sorted(required - set(uploaded))
+        resolved = {
+            name: _uploaded_bundle_member(uploaded, name)
+            for name in required - {"bundle_manifest.json"}
+        }
+        missing = sorted(name for name, actual_name in resolved.items() if actual_name is None)
         if missing:
             raise FileNotFoundError(f"Faltaron archivos del bundle: {missing}")
-        for name in required - {"bundle_manifest.json"}:
-            (staging / name).write_bytes(uploaded[name])
+        for name, actual_name in resolved.items():
+            (staging / name).write_bytes(uploaded[actual_name])
     else:
         raise ValueError("COLAB_BUNDLE_SOURCE debe ser 'github' o 'local_upload'")
     return staging, _verify_expected_bundle(staging)
