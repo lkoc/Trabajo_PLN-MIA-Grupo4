@@ -121,6 +121,12 @@ modelos/**/*.h5
 modelos/**/*.pkl
 PLN_clases/**/transformer_weights*
 
+# Publicaciones de runs para Drive: los manifiestos sí se versionan; los
+# archivos binarios y sus partes permanecen en Google Drive.
+resultados/drive_staging/**/publications/run_outputs-*.tar
+resultados/drive_staging/**/publications/run_outputs-*.tar.gz
+resultados/drive_staging/**/publications/run_outputs-*.part*
+
 # Datos de subtítulos generados (pueden ser voluminosos)
 datos/raw/subtitulos/
 datos/raw/transcripts_raw.jsonl
