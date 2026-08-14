@@ -687,6 +687,68 @@ show_result('Dataset descomprimido y verificado', dataset_checkpoint, tone='succ
 """
 
 
+CLASSICAL_REGULARIZATION_SCREEN_SOURCE = """REGULARIZATION_C_VALUES=(0.5,1.0,2.0)
+REGULARIZATION_OUTPUT=OUTPUT/'regularization_screen'
+RUN_REGULARIZATION_SCREEN=False
+
+other_classical_phases_active=any((
+    RUN_TRAINING,
+    RUN_SVM_CONVERGENCE_REPAIR,
+    RUN_CHANNEL_ROBUSTNESS,
+))
+if RUN_REGULARIZATION_SCREEN and other_classical_phases_active:
+    raise ValueError(
+        'Desactive RUN_TRAINING, RUN_SVM_CONVERGENCE_REPAIR y '
+        'RUN_CHANNEL_ROBUSTNESS antes del barrido de C'
+    )
+
+if RUN_REGULARIZATION_SCREEN:
+    regularization_result=run_with_progress(
+        'Regularización acotada de regresión logística y SVM',
+        train_classical_experiments,
+        DATA,
+        REGULARIZATION_OUTPUT,
+        model_names=('logistic_regression','linear_svm'),
+        variants=('base',),
+        regularization_c_values=REGULARIZATION_C_VALUES,
+        safe_to_damage_ratio=SAFE_TO_DAMAGE_RATIO,
+        parallel_workers=PARALLEL_WORKERS,
+        linear_svm_max_iter=LINEAR_SVM_MAX_ITER,
+        progress_unit='etapa',
+    )
+    regularization_candidates=regularization_result['candidates']
+    regularization_rows=[{
+        'candidate_id':candidate['candidate_id'],
+        'modelo':candidate['model_family'],
+        'C':candidate['hyperparameters']['regularization_C'],
+        'convergencia':candidate['fit_quality']['converged'],
+        'macro_AUPRC_daño_validation':candidate['validation_metrics']['average_precision_macro_damage'],
+        'falsos_seguros_sobre_daño':candidate['validation_metrics']['false_safe_rate_on_damage'],
+        'carga_revision':candidate['validation_metrics']['review_load_rate'],
+        'test':candidate['test_status'],
+    } for candidate in regularization_candidates]
+    show_result(
+        'Barrido acotado de C',
+        regularization_result,
+        tone=(
+            'success'
+            if all(candidate['fit_quality']['converged'] is True for candidate in regularization_candidates)
+            else 'warning'
+        ),
+    )
+    show_table('Comparación de regularización en validation',regularization_rows,max_rows=6)
+else:
+    show_summary('Barrido de regularización desactivado',{
+        'modelos':('logistic_regression','linear_svm'),
+        'C':REGULARIZATION_C_VALUES,
+        'candidatos':6,
+        'variante':'base; mismo TF-IDF compartido por los seis candidatos',
+        'selección':'solo validation; 03_07 conserva test sellado',
+        'salida':REGULARIZATION_OUTPUT,
+    },tone='neutral')
+"""
+
+
 CLASSICAL_RECOVERY_AND_PUBLICATION_SOURCE = """from pathlib import Path
 import shutil
 import tempfile
@@ -2586,12 +2648,23 @@ La ejecución guardada del cuaderno demuestra que el dataset usado tuvo SHA-256 
 3. **Robustez por canal opcional.** Active solo `RUN_CHANNEL_ROBUSTNESS=True`. Es un diagnóstico con otra partición y no entra en la comparación común de `03_07`; no es necesario para recuperar la publicación.
 4. Deje las tres fases de entrenamiento en `False` y ejecute únicamente `RUN_AUDIT_03_01=True` en la celda de recuperación/publicación.
 
+### Mejora acotada · regularización de los dos modelos lineales
+
+Esta fase no repite la suite completa. Mantiene la variante TF-IDF `base`, las mismas filas, semilla, muestreo 4:1 y test sellado; ajusta únicamente la intensidad inversa de regularización `C`.
+
+1. Deje `RUN_TRAINING=False`, `RUN_SVM_CONVERGENCE_REPAIR=False` y `RUN_CHANNEL_ROBUSTNESS=False`.
+2. En **Barrido acotado de regularización**, active solo `RUN_REGULARIZATION_SCREEN=True`. Se entrenan seis candidatos: regresión logística y SVM lineal para `C = 0.5, 1.0, 2.0`. El TF-IDF se extrae una vez y se comparte entre los seis.
+3. Espere la tabla completa y confirme `convergencia=True` en los tres SVM. Una repetición con la misma firma devuelve `status=noop`; no use `force`.
+4. Vuelva a `RUN_REGULARIZATION_SCREEN=False`, active únicamente `RUN_AUDIT_03_01=True` y prepare una publicación nueva. `03_07` comparará estos candidatos con los históricos usando la misma validation.
+
+No aumente `max_iter` si los SVM convergen: `20000` es un techo, no una cantidad obligatoria de iteraciones. Tampoco cambie `C`, TF-IDF y muestreo en una misma campaña.
+
 ### Publicación local para `03_07` sin Drive para escritorio
 
 1. Después de una auditoría correcta, deje `RUN_AUDIT_03_01=False` y active solo `RUN_PREPARE_03_01_DRIVE_PUBLICATION=True`. La celda empaqueta los artefactos en dos ranuras, relee el TAR completo, verifica tamaño y SHA-256, lo restaura en un directorio temporal y repite la auditoría.
 2. Suba mediante <https://drive.google.com> la **carpeta completa** `resultados/drive_staging/ModeracionPeru_Colab/runs/03_01/03_01_working_v2_1` a `Mi unidad/ModeracionPeru_Colab/runs/03_01/`. El resultado exacto debe ser `Mi unidad/ModeracionPeru_Colab/runs/03_01/03_01_working_v2_1/run_manifest.json` junto con `publications/`; no seleccione archivos sueltos.
 3. Abra una copia nueva de `03_07` en **Colab web**, runtime CPU, y ejecute el preflight desde la primera celda. `03_01` debe aparecer como `restored_and_sha256_verified` y la familia `classical:` no debe figurar como ausente.
-4. Al terminar deje `RUN_RECOVER_LEGACY_03_01`, `RUN_AUDIT_03_01` y `RUN_PREPARE_03_01_DRIVE_PUBLICATION` en `False`.
+4. Al terminar deje `RUN_REGULARIZATION_SCREEN`, `RUN_RECOVER_LEGACY_03_01`, `RUN_AUDIT_03_01` y `RUN_PREPARE_03_01_DRIVE_PUBLICATION` en `False`.
 
 No mueva candidatos entre snapshots, no reconstruya pesos desde las métricas impresas y no copie métricas del diagnóstico por canal al ranking principal.""",
     "flujo/03_entrenamiento/03_02_transformers_planos.ipynb": MINILM_EXECUTION_GUIDE,
@@ -4119,6 +4192,15 @@ if not (RUN_BUDGETED_COMPARABLE or RUN_DIAGNOSTIC_PILOT or RUN_FULL_TRAINING):
             )
         code_cells.append((execution_heading, source))
         if filename == "03_01_modelos_clasicos.ipynb":
+            code_cells.append(
+                (
+                    "Barrido acotado de regularización\n\n"
+                    "Compara regresión logística y SVM lineal con `C = 0.5, 1.0, 2.0`. "
+                    "Los seis candidatos reutilizan una sola extracción TF-IDF base, conservan "
+                    "las mismas filas y mantienen test sellado.",
+                    CLASSICAL_REGULARIZATION_SCREEN_SOURCE,
+                )
+            )
             code_cells.append(
                 (
                     "Recuperación, auditoría y publicación verificable de 03_01\n\n"

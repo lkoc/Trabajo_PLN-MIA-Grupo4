@@ -795,6 +795,7 @@ def test_multi_run_notebooks_explain_the_reproducible_sequence_in_place():
         "flujo/03_entrenamiento/03_01_modelos_clasicos.ipynb": (
             "RUN_TRAINING",
             "RUN_SVM_CONVERGENCE_REPAIR",
+            "RUN_REGULARIZATION_SCREEN",
             "RUN_PREPARE_03_01_DRIVE_PUBLICATION",
         ),
         "flujo/03_entrenamiento/03_02_transformers_planos.ipynb": (
@@ -858,6 +859,13 @@ def test_local_training_notebooks_expose_bounded_deterministic_parallelism():
     assert "RUN_SVM_CONVERGENCE_REPAIR=" in classical_source
     assert "RUN_SVM_CONVERGENCE_REPAIR=False" in generator_source
     assert "svm_convergence_repair" in classical_source
+    assert "RUN_REGULARIZATION_SCREEN=False" in classical_source
+    assert "REGULARIZATION_C_VALUES=(0.5,1.0,2.0)" in classical_source
+    assert "regularization_c_values=REGULARIZATION_C_VALUES" in classical_source
+    assert "model_names=('logistic_regression','linear_svm')" in classical_source
+    assert "variants=('base',)" in classical_source
+    assert "candidatos':6" in classical_source
+    assert "mismo TF-IDF compartido por los seis candidatos" in classical_source
     assert "PARALLEL_WORKERS=4" in comparison_source
     assert "parallel_workers=PARALLEL_WORKERS" in comparison_source
     assert "BOOTSTRAP_REPLICATES=2000" in comparison_source

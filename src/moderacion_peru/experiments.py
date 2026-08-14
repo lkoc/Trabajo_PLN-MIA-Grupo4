@@ -530,6 +530,7 @@ def train_classical_experiments(
     parallel_workers: int = DEFAULT_LOCAL_PARALLEL_WORKERS,
     linear_svm_max_iter: int = DEFAULT_LINEAR_SVM_MAX_ITER,
     linear_svm_tol: float = DEFAULT_LINEAR_SVM_TOL,
+    regularization_c_values: Iterable[float] | None = None,
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     """Entrena baselines enmascarados y produce evidencia solo de validation.
@@ -595,14 +596,89 @@ def train_classical_experiments(
         raise ValueError(f"Modelos clasicos desconocidos: {unknown}")
     if not selected_names:
         raise ValueError("Debe seleccionar al menos un modelo clasico")
+    regularization_values: list[float] | None = None
+    if regularization_c_values is not None:
+        unsupported = sorted(
+            set(selected_names) - {"logistic_regression", "linear_svm"}
+        )
+        if unsupported:
+            raise ValueError(
+                "regularization_c_values solo admite logistic_regression y "
+                f"linear_svm; incompatibles: {unsupported}"
+            )
+        regularization_values = []
+        for raw_value in regularization_c_values:
+            if isinstance(raw_value, bool):
+                raise TypeError("Cada C de regularización debe ser numérico, no booleano")
+            try:
+                value = float(raw_value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    "Cada C de regularización debe ser finito y positivo"
+                ) from exc
+            if not math.isfinite(value) or value <= 0:
+                raise ValueError("Cada C de regularización debe ser finito y positivo")
+            if value not in regularization_values:
+                regularization_values.append(value)
+        if not regularization_values:
+            raise ValueError("regularization_c_values no puede estar vacío")
     if max_features < 100:
         raise ValueError("max_features debe ser al menos 100")
     candidates_spec = {name: candidates_spec[name] for name in selected_names}
+
+    def regularized_estimator(name: str, regularization_c: float) -> Any:
+        if name == "logistic_regression":
+            return LogisticRegression(
+                C=regularization_c,
+                max_iter=2000,
+                class_weight="balanced",
+            )
+        return CalibratedClassifierCV(
+            LinearSVC(
+                C=regularization_c,
+                class_weight="balanced",
+                dual="auto",
+                max_iter=linear_svm_max_iter,
+                tol=linear_svm_tol,
+                random_state=sampling_seed,
+            ),
+            method="sigmoid",
+            cv=3,
+        )
+
+    candidate_jobs: list[dict[str, Any]] = []
+    if regularization_values is None:
+        candidate_jobs = [
+            {
+                "model_name": name,
+                "candidate_key": name,
+                "estimator": estimator,
+                "regularization_C": None,
+            }
+            for name, estimator in candidates_spec.items()
+        ]
+    else:
+        for name in selected_names:
+            for regularization_c in regularization_values:
+                c_slug = (
+                    format(regularization_c, ".12g")
+                    .replace(".", "p")
+                    .replace("-", "m")
+                    .replace("+", "")
+                )
+                candidate_jobs.append(
+                    {
+                        "model_name": name,
+                        "candidate_key": f"{name}_c{c_slug}",
+                        "estimator": regularized_estimator(name, regularization_c),
+                        "regularization_C": regularization_c,
+                    }
+                )
     selected_variants = list(dict.fromkeys(variants))
     unknown_variants = sorted(set(selected_variants) - {"base", "policy_informed"})
     if unknown_variants or not selected_variants:
         raise ValueError(f"Variantes clásicas inválidas: {unknown_variants}")
-    progress_total = 1 + len(selected_variants) * (1 + len(candidates_spec))
+    progress_total = 1 + len(selected_variants) * (1 + len(candidate_jobs))
     _notify_progress(
         progress_callback,
         status="started",
@@ -636,6 +712,17 @@ def train_classical_experiments(
                 "mode": "bounded_subset",
                 "models": selected_names,
                 "max_features": max_features,
+            }
+        )
+    if regularization_values is not None:
+        configuration.update(
+            {
+                "mode": "bounded_regularization_screen",
+                "regularization_screen": {
+                    "parameter": "inverse_regularization_strength_C",
+                    "values": regularization_values,
+                    "models": selected_names,
+                },
             }
         )
     signature = _experiment_signature(dataset, "classical_suite", configuration)
@@ -732,10 +819,16 @@ def train_classical_experiments(
             advance=1,
             details={"columnas": int(train_features.shape[1])},
         )
-        for name, estimator in candidates_spec.items():
+        for job in candidate_jobs:
+            name = str(job["model_name"])
+            candidate_key = str(job["candidate_key"])
+            estimator = job["estimator"]
+            regularization_c = job["regularization_C"]
             model_started = time.perf_counter()
             experiment_name = (
-                name if selected_variants == ["base"] else f"{variant}_{name}"
+                candidate_key
+                if selected_variants == ["base"]
+                else f"{variant}_{candidate_key}"
             )
             model_dir = run_dir / experiment_name
             model_dir.mkdir(parents=True, exist_ok=True)
@@ -773,6 +866,7 @@ def train_classical_experiments(
                     ),
                     "parallel_workers": parallel_workers,
                     "feature_extraction": "shared_fitted_transformer_per_variant",
+                    "regularization_C": regularization_c,
                 },
             )
             manifest = _checkpoint_manifest(model_dir, [checkpoint, bundle])
@@ -781,6 +875,7 @@ def train_classical_experiments(
                 "candidate_id": f"classical-{experiment_name}-{signature[:12]}",
                 "experiment": experiment_name,
                 "model_family": f"classical:{variant}:{name}",
+                "hyperparameters": {"regularization_C": regularization_c},
                 "conditioning": (
                     "supervised_policy_features"
                     if variant == "policy_informed"
@@ -842,7 +937,9 @@ def train_classical_experiments(
                         "engine": TRAINING_ENGINE_VERSION,
                         **configuration,
                         "model": name,
+                        "candidate_key": candidate_key,
                         "variant": variant,
+                        "regularization_C": regularization_c,
                     },
                     hardware=candidate["hardware"],
                     counters={
@@ -859,7 +956,7 @@ def train_classical_experiments(
             _notify_progress(
                 progress_callback,
                 status="progress",
-                phase=f"{variant} · {name}",
+                phase=f"{variant} · {candidate_key}",
                 advance=1,
                 details={"candidatos": len(candidates)},
             )

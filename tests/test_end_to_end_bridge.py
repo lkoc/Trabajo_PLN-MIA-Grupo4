@@ -511,6 +511,60 @@ def test_classical_smoke_subset_reuses_features_and_parallel_heads(
     )
 
 
+def test_classical_regularization_screen_reuses_one_tfidf_and_records_six_candidates(
+    tmp_path, monkeypatch
+):
+    from sklearn.pipeline import FeatureUnion
+
+    fit_transform_calls = []
+    original_fit_transform = FeatureUnion.fit_transform
+
+    def tracked_fit_transform(self, *args, **kwargs):
+        fit_transform_calls.append(1)
+        return original_fit_transform(self, *args, **kwargs)
+
+    monkeypatch.setattr(FeatureUnion, "fit_transform", tracked_fit_transform)
+    dataset = tmp_path / "dataset.jsonl"
+    _fixture_dataset(dataset)
+    output = tmp_path / "regularization_models"
+    trained = train_classical_experiments(
+        dataset,
+        output,
+        model_names=("logistic_regression", "linear_svm"),
+        variants=("base",),
+        max_features=500,
+        regularization_c_values=(0.5, 1.0, 2.0),
+    )
+    repeated = train_classical_experiments(
+        dataset,
+        output,
+        model_names=("logistic_regression", "linear_svm"),
+        variants=("base",),
+        max_features=500,
+        regularization_c_values=(0.5, 1.0, 2.0),
+    )
+
+    assert trained["status"] == "trained"
+    assert repeated["status"] == "noop"
+    assert len(trained["candidates"]) == 6
+    assert len(fit_transform_calls) == 1
+    assert {candidate["hyperparameters"]["regularization_C"] for candidate in trained["candidates"]} == {
+        0.5,
+        1.0,
+        2.0,
+    }
+    assert {candidate["model_family"] for candidate in trained["candidates"]} == {
+        "classical:base:logistic_regression",
+        "classical:base:linear_svm",
+    }
+    assert len({candidate["candidate_id"] for candidate in trained["candidates"]}) == 6
+    assert all(candidate["test_metrics"] is None for candidate in trained["candidates"])
+    assert all(
+        candidate["fit_quality"]["converged"] is True
+        for candidate in trained["candidates"]
+    )
+
+
 def test_each_neural_notebook_path_reaches_candidate_with_mocked_backbone(
     tmp_path, monkeypatch
 ):
