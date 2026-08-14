@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import gzip
+import hashlib
 import json
 import os
 import re
@@ -70,6 +71,111 @@ def _safe_run_archive_path(drive_run_dir: Path, archive_name: str) -> Path:
     return drive_run_dir / relative
 
 
+def _multipart_archive_entries(
+    drive_run_dir: Path, archive_entry: dict[str, Any]
+) -> list[tuple[Path, int, str]]:
+    raw_parts = archive_entry.get("parts")
+    if raw_parts is None:
+        return []
+    if not isinstance(raw_parts, list) or not raw_parts:
+        raise ValueError("La publicación multipart no declara partes válidas")
+    parts: list[tuple[Path, int, str]] = []
+    seen: set[Path] = set()
+    for index, entry in enumerate(raw_parts, start=1):
+        if not isinstance(entry, dict):
+            raise TypeError(f"La parte {index} no tiene metadatos válidos")
+        path = _safe_run_archive_path(drive_run_dir, str(entry.get("name", "")))
+        expected_bytes = int(entry.get("bytes", 0))
+        expected_sha256 = str(entry.get("sha256", "")).lower()
+        if path in seen:
+            raise ValueError(f"La parte {index} está duplicada")
+        if expected_bytes <= 0 or len(expected_sha256) != 64:
+            raise ValueError(f"La parte {index} no declara tamaño y SHA-256 válidos")
+        seen.add(path)
+        parts.append((path, expected_bytes, expected_sha256))
+    return parts
+
+
+def _copy_and_verify_archive_parts(
+    parts: list[tuple[Path, int, str]], destination: Path | None = None
+) -> tuple[int, str]:
+    """Verifica cada parte y el flujo concatenado; opcionalmente lo materializa."""
+
+    output = None
+    if destination is not None:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        output = destination.open("wb")
+    total_bytes = 0
+    archive_digest = hashlib.sha256()
+    try:
+        for index, (path, expected_bytes, expected_sha256) in enumerate(
+            parts, start=1
+        ):
+            actual_bytes = path.stat().st_size
+            if actual_bytes != expected_bytes:
+                raise ValueError(
+                    f"parte {index}: tamaño {actual_bytes} de {expected_bytes} bytes"
+                )
+            part_digest = hashlib.sha256()
+            read_bytes = 0
+            with path.open("rb") as source:
+                while chunk := source.read(8 * 1024 * 1024):
+                    part_digest.update(chunk)
+                    archive_digest.update(chunk)
+                    read_bytes += len(chunk)
+                    if output is not None:
+                        output.write(chunk)
+            if read_bytes != expected_bytes or part_digest.hexdigest() != expected_sha256:
+                raise ValueError(f"parte {index}: SHA-256 ausente o inválido")
+            total_bytes += read_bytes
+    finally:
+        if output is not None:
+            output.close()
+    return total_bytes, archive_digest.hexdigest()
+
+
+def _verified_run_archive(
+    drive_run_dir: Path,
+    archive_entry: dict[str, Any],
+    *,
+    materialize_to: Path | None = None,
+) -> Path:
+    archive_path = _safe_run_archive_path(
+        drive_run_dir, str(archive_entry["name"])
+    )
+    expected_bytes = int(archive_entry["bytes"])
+    expected_sha256 = str(archive_entry["sha256"]).lower()
+    if expected_bytes <= 0 or len(expected_sha256) != 64:
+        raise ValueError("La publicación no declara tamaño y SHA-256 válidos")
+
+    complete_failure: OSError | ValueError | None = None
+    try:
+        actual_bytes = archive_path.stat().st_size
+        if actual_bytes != expected_bytes:
+            raise ValueError(f"tamaño {actual_bytes} de {expected_bytes} bytes")
+        if sha256_file(archive_path) != expected_sha256:
+            raise ValueError("SHA-256 ausente o inválido")
+        return archive_path
+    except (OSError, ValueError) as exc:
+        complete_failure = exc
+
+    parts = _multipart_archive_entries(drive_run_dir, archive_entry)
+    if not parts:
+        raise complete_failure
+    total_bytes, actual_sha256 = _copy_and_verify_archive_parts(
+        parts, materialize_to
+    )
+    if total_bytes != expected_bytes:
+        raise ValueError(
+            f"partes concatenadas: tamaño {total_bytes} de {expected_bytes} bytes"
+        )
+    if actual_sha256 != expected_sha256:
+        raise ValueError("partes concatenadas: SHA-256 ausente o inválido")
+    if materialize_to is None:
+        return archive_path
+    return materialize_to
+
+
 def _run_manifest_candidates(drive_run_dir: Path) -> list[tuple[Path, dict[str, Any]]]:
     """Devuelve primero las copias verificables potencialmente más recientes."""
 
@@ -117,18 +223,8 @@ def _run_publication_is_verified(
     """Comprueba completamente una publicación antes de usar o reemplazar slots."""
 
     try:
-        archive_entry = manifest["archive"]
-        archive_path = _safe_run_archive_path(
-            drive_run_dir, str(archive_entry["name"])
-        )
-        expected_bytes = int(archive_entry["bytes"])
-        expected_sha256 = str(archive_entry["sha256"]).lower()
-        return (
-            expected_bytes > 0
-            and len(expected_sha256) == 64
-            and archive_path.stat().st_size == expected_bytes
-            and sha256_file(archive_path) == expected_sha256
-        )
+        _verified_run_archive(drive_run_dir, manifest["archive"])
+        return True
     except (OSError, KeyError, TypeError, ValueError):
         return False
 
@@ -139,21 +235,17 @@ def _restore_run(drive_run_dir: Path, scratch_output_dir: Path) -> bool:
         archive_entry = manifest.get("archive", {})
         archive_name = str(archive_entry.get("name") or "run_outputs.tar.gz")
         try:
-            archive_path = _safe_run_archive_path(drive_run_dir, archive_name)
-            expected = str(archive_entry.get("sha256", "")).lower()
-            expected_bytes = int(archive_entry.get("bytes", 0))
-            actual_bytes = archive_path.stat().st_size
-            if expected_bytes > 0 and actual_bytes != expected_bytes:
-                raise ValueError(
-                    f"tamaño {actual_bytes} de {expected_bytes} bytes"
-                )
-            if len(expected) != 64 or sha256_file(archive_path) != expected:
-                raise ValueError("SHA-256 ausente o inválido")
             with tempfile.TemporaryDirectory(
                 prefix=f".{scratch_output_dir.name}.restore-",
                 dir=scratch_output_dir.parent,
             ) as staging_name:
-                staging = Path(staging_name)
+                staging_root = Path(staging_name)
+                archive_path = _verified_run_archive(
+                    drive_run_dir,
+                    archive_entry,
+                    materialize_to=staging_root / "archive" / Path(archive_name).name,
+                )
+                staging = staging_root / "payload"
                 _safe_extract_tar(archive_path, staging)
                 for restored_path in staging.iterdir():
                     destination = scratch_output_dir / restored_path.name
@@ -173,12 +265,20 @@ def _restore_run(drive_run_dir: Path, scratch_output_dir: Path) -> bool:
                         "schema_version": "1.2.0",
                         "restored_at": datetime.now(UTC).isoformat(),
                         "manifest": str(manifest_path),
-                        "archive": str(archive_path),
+                        "archive": str(
+                            _safe_run_archive_path(drive_run_dir, archive_name)
+                        ),
+                        "archive_parts": [
+                            str(path)
+                            for path, _, _ in _multipart_archive_entries(
+                                drive_run_dir, archive_entry
+                            )
+                        ],
                         "skipped_publications": failures,
                     },
                 )
             return True
-        except (OSError, ValueError, tarfile.TarError) as exc:
+        except (OSError, TypeError, ValueError, tarfile.TarError) as exc:
             failures.append(f"{manifest_path.name}: {type(exc).__name__}: {exc}")
     if failures:
         raise ValueError(

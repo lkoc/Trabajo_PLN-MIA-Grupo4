@@ -318,6 +318,70 @@ def test_restore_colab_run_outputs_reuses_verified_foreign_publication(tmp_path)
             run_id="bad",
             destination=tmp_path / "unsafe",
         )
+
+
+def test_restore_colab_run_outputs_accepts_verified_multipart_archive(tmp_path):
+    drive = tmp_path / "drive"
+    scratch = tmp_path / "runtime" / "runs" / "03_01" / "fixture"
+    scratch.mkdir(parents=True)
+    (scratch / "candidate.json").write_text(
+        '{"status":"complete"}\n', encoding="utf-8"
+    )
+    context = colab.ColabContext(
+        notebook_id="03_01",
+        run_id="fixture",
+        drive_root=drive,
+        runtime_root=tmp_path / "runtime",
+        project_root=ROOT,
+        input_paths={},
+        scratch_output_dir=scratch,
+        drive_run_dir=drive / "runs" / "03_01" / "fixture",
+        hardware={"backend": "cpu"},
+    )
+    published = colab.publish_colab_outputs(context)
+    archive_path = context.drive_run_dir / published["archive"]["name"]
+    archive_bytes = archive_path.read_bytes()
+    midpoint = len(archive_bytes) // 2
+    part_payloads = (archive_bytes[:midpoint], archive_bytes[midpoint:])
+    parts = []
+    for index, payload in enumerate(part_payloads, start=1):
+        path = archive_path.with_name(f"{archive_path.name}.part{index:03d}")
+        path.write_bytes(payload)
+        parts.append(
+            {
+                "name": str(path.relative_to(context.drive_run_dir)).replace(
+                    os.sep, "/"
+                ),
+                "bytes": len(payload),
+                "sha256": sha256_file(path),
+            }
+        )
+    archive_path.unlink()
+    multipart = json.loads(
+        (context.drive_run_dir / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    multipart["archive"]["parts"] = parts
+    for manifest_path in (
+        context.drive_run_dir / "run_manifest.json",
+        context.drive_run_dir
+        / "publications"
+        / f"run_manifest-{published['publication_slot']}.json",
+    ):
+        manifest_path.write_text(json.dumps(multipart), encoding="utf-8")
+
+    assert colab._run_publication_is_verified(context.drive_run_dir, multipart)
+    restored = tmp_path / "restored_multipart"
+    restored.mkdir()
+    assert colab._restore_run(context.drive_run_dir, restored)
+    assert json.loads((restored / "candidate.json").read_text(encoding="utf-8")) == {
+        "status": "complete"
+    }
+
+    first_part = context.drive_run_dir / parts[0]["name"]
+    first_part.write_bytes(b"altered" + first_part.read_bytes())
+    assert not colab._run_publication_is_verified(context.drive_run_dir, multipart)
+
+
 def test_colab_run_manifest_waits_for_drive_readback(tmp_path, monkeypatch):
     scratch = tmp_path / "runtime" / "runs" / "03_02" / "fixture"
     scratch.mkdir(parents=True)
