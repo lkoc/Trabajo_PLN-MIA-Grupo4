@@ -17,6 +17,9 @@ from typing import Any
 from .device import resolve_device
 from .io import sha256_file, write_json_atomic
 
+RUN_PUBLICATION_MULTIPART_THRESHOLD_BYTES = 1024 * 1024 * 1024
+RUN_PUBLICATION_PART_BYTES = 256 * 1024 * 1024
+
 
 @dataclass
 class ColabContext:
@@ -128,6 +131,12 @@ def _copy_and_verify_archive_parts(
             if read_bytes != expected_bytes or part_digest.hexdigest() != expected_sha256:
                 raise ValueError(f"parte {index}: SHA-256 ausente o inválido")
             total_bytes += read_bytes
+            if len(parts) > 1:
+                print(
+                    f"Parte {index}/{len(parts)} verificada "
+                    f"({read_bytes / (1024**2):.1f} MiB)",
+                    flush=True,
+                )
     finally:
         if output is not None:
             output.close()
@@ -294,6 +303,71 @@ def _has_local_run_payload(scratch_output_dir: Path) -> bool:
     return any(
         path.name != "colab_context.json" for path in scratch_output_dir.iterdir()
     )
+
+
+def _has_declared_persistent_checkpoint(checkpoint_root: Path) -> bool:
+    """Exige al menos un archivo con tamaño coherente y manifiesto de checkpoint."""
+
+    if not checkpoint_root.is_dir():
+        return False
+    manifests = list(checkpoint_root.rglob("latest.json"))
+    manifests.extend(checkpoint_root.rglob("checkpoint-*.json"))
+    for manifest_path in manifests:
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            archive = manifest["archive"]
+            archive_name = str(archive["name"])
+            expected_bytes = int(archive["bytes"])
+            expected_sha256 = str(archive["sha256"]).lower()
+            relative = Path(archive_name)
+            archive_path = manifest_path.parent / relative
+            if (
+                relative.name != archive_name
+                or expected_bytes <= 0
+                or len(expected_sha256) != 64
+                or any(character not in "0123456789abcdef" for character in expected_sha256)
+            ):
+                continue
+            if archive_path.is_file() and archive_path.stat().st_size == expected_bytes:
+                return True
+        except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+            continue
+    return False
+
+
+def _restore_run_or_allow_checkpoint_rebuild(
+    drive_run_dir: Path, scratch_output_dir: Path
+) -> bool:
+    """Permite reconstruir artefactos finales si solo la publicación se truncó.
+
+    Los checkpoints persistentes se verifican de nuevo en la etapa de
+    entrenamiento. Sin ellos, un fallo de publicación sigue siendo fatal.
+    """
+
+    try:
+        return _restore_run(drive_run_dir, scratch_output_dir)
+    except ValueError as exc:
+        checkpoint_root = drive_run_dir / "trainer_checkpoints"
+        if not _has_declared_persistent_checkpoint(checkpoint_root):
+            raise
+        record = {
+            "schema_version": "1.0.0",
+            "status": "final_publication_invalid_rebuild_from_persistent_checkpoints",
+            "recorded_at": datetime.now(UTC).isoformat(),
+            "drive_run_dir": str(drive_run_dir),
+            "trainer_checkpoint_root": str(checkpoint_root),
+            "publication_error": str(exc),
+        }
+        write_json_atomic(
+            scratch_output_dir / "colab_run_publication_repair.json", record
+        )
+        print(
+            "La publicación final está incompleta, pero existen checkpoints "
+            "persistentes. Se reconstruirán los candidatos sin reiniciar el "
+            "entrenamiento desde cero.",
+            flush=True,
+        )
+        return False
 
 
 def restore_colab_run_outputs(
@@ -475,7 +549,11 @@ def prepare_colab_context(
             flush=True,
         )
     else:
-        resumed = _restore_run(drive_run, scratch) if resume else False
+        resumed = (
+            _restore_run_or_allow_checkpoint_rebuild(drive_run, scratch)
+            if resume
+            else False
+        )
     context = ColabContext(
         notebook_id=notebook_id,
         run_id=active_run_id,
@@ -500,6 +578,65 @@ def _include_in_run_publication(relative: Path) -> bool:
         or part in {"trainer", "trainer_gate", "trainer_damage", "trainer_branch"}
         for part in relative.parts
     )
+
+
+def _publish_archive_parts(
+    local_archive: Path,
+    drive_run_dir: Path,
+    archive_name: str,
+    *,
+    part_bytes: int = RUN_PUBLICATION_PART_BYTES,
+) -> list[dict[str, Any]]:
+    """Copia y relee partes acotadas para evitar truncamientos de Drive."""
+
+    if part_bytes <= 0:
+        raise ValueError("El tamaño de las partes debe ser positivo")
+    expected_total = local_archive.stat().st_size
+    expected_archive_sha256 = sha256_file(local_archive)
+    entries: list[dict[str, Any]] = []
+    with local_archive.open("rb") as source:
+        part_number = 1
+        while source.tell() < expected_total:
+            part_name = f"{archive_name}.part{part_number:04d}"
+            target = _safe_run_archive_path(drive_run_dir, part_name)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            digest = hashlib.sha256()
+            written = 0
+            with target.open("wb") as output:
+                while written < part_bytes:
+                    chunk = source.read(min(8 * 1024 * 1024, part_bytes - written))
+                    if not chunk:
+                        break
+                    output.write(chunk)
+                    digest.update(chunk)
+                    written += len(chunk)
+                output.flush()
+                os.fsync(output.fileno())
+            entries.append(
+                {
+                    "name": part_name,
+                    "sha256": digest.hexdigest(),
+                    "bytes": written,
+                }
+            )
+            part_number += 1
+    sync = getattr(os, "sync", None)
+    if sync is not None:
+        try:
+            sync()
+        except OSError:
+            pass
+    parts = _multipart_archive_entries(drive_run_dir, {"parts": entries})
+    actual_total, actual_archive_sha256 = _copy_and_verify_archive_parts(parts)
+    if actual_total != expected_total:
+        raise ValueError(
+            "Google Drive no conserva el tamaño completo de la publicación multipart"
+        )
+    if actual_archive_sha256 != expected_archive_sha256:
+        raise ValueError(
+            "La publicación multipart en Google Drive no conserva SHA-256"
+        )
+    return entries
 
 
 def publish_colab_outputs(context: ColabContext) -> dict[str, Any]:
@@ -542,22 +679,49 @@ def publish_colab_outputs(context: ColabContext) -> dict[str, Any]:
                 included_files += 1
         archive_sha = sha256_file(local_archive)
         archive_bytes = local_archive.stat().st_size
-        target = context.drive_run_dir / archive_name
-        # Se escribe el nombre final de la ranura inactiva. Si el runtime muere,
-        # el manifiesto activo sigue apuntando a la ranura anterior verificada.
-        shutil.copyfile(local_archive, target)
-        sync = getattr(os, "sync", None)
-        if sync is not None:
-            try:
-                sync()
-            except OSError:
-                pass
-        if target.stat().st_size != archive_bytes:
-            raise ValueError(
-                f"Google Drive no conserva el tamaño completo de {archive_name}"
+        archive_entry: dict[str, Any] = {
+            "name": archive_name,
+            "sha256": archive_sha,
+            "bytes": archive_bytes,
+        }
+        if archive_bytes > RUN_PUBLICATION_MULTIPART_THRESHOLD_BYTES:
+            archive_entry.update(
+                {
+                    "format": "tar_uncompressed_multipart",
+                    "verification": "per_part_and_concatenated_full_readback",
+                    "parts": _publish_archive_parts(
+                        local_archive,
+                        context.drive_run_dir,
+                        archive_name,
+                        part_bytes=RUN_PUBLICATION_PART_BYTES,
+                    ),
+                }
             )
-        if sha256_file(target) != archive_sha:
-            raise ValueError("La copia del run a Google Drive no conserva SHA-256")
+        else:
+            target = context.drive_run_dir / archive_name
+            # Se escribe el nombre final de la ranura inactiva. Si el runtime
+            # muere, el manifiesto activo conserva la ranura previa verificada.
+            shutil.copyfile(local_archive, target)
+            sync = getattr(os, "sync", None)
+            if sync is not None:
+                try:
+                    sync()
+                except OSError:
+                    pass
+            if target.stat().st_size != archive_bytes:
+                raise ValueError(
+                    f"Google Drive no conserva el tamaño completo de {archive_name}"
+                )
+            if sha256_file(target) != archive_sha:
+                raise ValueError(
+                    "La copia del run a Google Drive no conserva SHA-256"
+                )
+            archive_entry.update(
+                {
+                    "format": "tar_uncompressed",
+                    "verification": "full_readback_after_close",
+                }
+            )
         manifest = {
             "schema_version": "1.2.0",
             "published_at": datetime.now(UTC).isoformat(),
@@ -569,13 +733,7 @@ def publish_colab_outputs(context: ColabContext) -> dict[str, Any]:
             "included_files": included_files,
             "excluded_trainer_checkpoint_files": excluded_files,
             "trainer_checkpoint_storage": "trainer_checkpoints",
-            "archive": {
-                "name": archive_name,
-                "sha256": archive_sha,
-                "bytes": archive_bytes,
-                "format": "tar_uncompressed",
-                "verification": "full_readback_after_close",
-            },
+            "archive": archive_entry,
         }
         slot_manifest = publications / manifest_name
         write_json_atomic(slot_manifest, manifest)

@@ -2337,11 +2337,6 @@ TRAINING_SEED=20260805
 RUN_LEGACY_FULL_TRAINING=False  # conserva el experimento histórico; no es la opción recomendada
 RUN_STRUCTURED_LORA_SWEEP=False  # recomendado: tres adaptadores pequeños desde 03_05
 
-def publish_structured_variant(label):
-    if COLAB_CONTEXT is None: return
-    from moderacion_peru.colab import publish_colab_outputs
-    show_result(label,publish_colab_outputs(COLAB_CONTEXT),tone='success')
-
 if RUN_LEGACY_FULL_TRAINING:
     legacy_result=run_with_progress('Qwen estructurado · full fine-tuning histórico',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='qwen_structured',device=DEVICE,safe_to_damage_ratio=4.0,persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='etapa')
     show_result('Candidato histórico independiente',legacy_result,tone='warning')
@@ -2361,7 +2356,6 @@ if RUN_STRUCTURED_LORA_SWEEP:
         variant=f'lora03_05_structured_p{penalty_code}'
         result=run_with_progress(f'Qwen estructurado LoRA · penalización {penalty:.2f}',train_neural_experiment,DATA,OUTPUT_ROOT,experiment='qwen_structured',device=DEVICE,max_length=QWEN_LORA_PARENT_MAX_LENGTH,epochs=STRUCTURED_EPOCHS,learning_rate=STRUCTURED_LEARNING_RATE,training_seed=TRAINING_SEED,sampling_seed=SAMPLING_SEED,variant_id=variant,warm_start_candidate_path=qwen_lora_parent['candidate_path'],structured_penalty=penalty,loss_mode='weighted_bce',safe_to_damage_ratio=4.0,persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='etapa')
         show_result(f'Candidato {variant}',result,tone='success')
-        publish_structured_variant(f'Publicación {variant}')
 
 if not (RUN_LEGACY_FULL_TRAINING or RUN_STRUCTURED_LORA_SWEEP):
     show_summary('Qwen estructurado de bajo costo preparado',{'recomendado':'LoRA entrenable restaurado desde el candidato 03_05','comparación':'penalización 0, 0.02 y 0.05 sobre las mismas filas','épocas':STRUCTURED_EPOCHS,'learning_rate':STRUCTURED_LEARNING_RATE,'semillas':f'sampling={SAMPLING_SEED}; training={TRAINING_SEED}','estado_optimizador':'nuevo en cada candidato','candidato_full_histórico':'se conserva; no se sobrescribe','test':'natural completo, sellado'},tone='neutral')"""
@@ -2695,10 +2689,11 @@ No mueva candidatos entre snapshots, no reconstruya pesos desde las métricas im
 Las longitudes 128 y 256 son candidatos independientes para validation; nunca se decide entre ellas con test.""",
     "flujo/03_entrenamiento/03_06_qwen_estructurado.ipynb": """Use el mismo `COLAB_RUN_ID`, snapshot y semillas en todas las reanudaciones. El run padre debe permanecer en `QWEN_LORA_PARENT_RUN_ID='03_05_working_v2_1'`; su publicación se restaura y verifica antes de entrenar.
 
-1. **Ruta recomendada.** Deje `RUN_LEGACY_FULL_TRAINING=False` y active solo `RUN_STRUCTURED_LORA_SWEEP=True`. Se crean tres candidatos separados con penalizaciones `0`, `0.02` y `0.05`, cada uno con optimizador nuevo y publicación propia.
+1. **Ruta recomendada.** Deje `RUN_LEGACY_FULL_TRAINING=False` y active solo `RUN_STRUCTURED_LORA_SWEEP=True`. Se crean tres candidatos separados con penalizaciones `0`, `0.02` y `0.05`, cada uno con optimizador nuevo. Los checkpoints se persisten por variante y, al terminar el barrido, los tres candidatos se publican juntos una sola vez.
 2. **Ruta histórica.** `RUN_LEGACY_FULL_TRAINING=True` existe solo para reproducir el full fine-tuning antiguo. Ejecútelo en una corrida separada y nunca junto al barrido LoRA.
-3. **Reanudación.** Ante una desconexión, vuelva al bootstrap con el mismo run y repita la fase: variantes y checkpoints completos se reutilizan por firma.
-4. **Cierre.** Verifique los `candidate.json`, las predicciones de validation y test sellado; deje ambos interruptores en `False`.
+3. **Reanudación.** Ante una desconexión, vuelva al bootstrap con el mismo run y repita la fase: variantes y checkpoints completos se reutilizan por firma. Si el entrenamiento terminó pero Drive truncó el TAR final, el bootstrap detecta los `trainer_checkpoints`, registra el modo de reparación y reconstruye los candidatos sin entrenar desde cero.
+4. **Publicación grande.** Los artefactos mayores de 1 GiB se escriben automáticamente en partes de 256 MiB. Cada parte y el flujo concatenado se releen desde Drive y se verifican antes de promover el manifiesto; no una ni suba partes manualmente.
+5. **Cierre.** Verifique los `candidate.json`, las predicciones de validation, el test sellado y el mensaje de publicación verificada; deje ambos interruptores en `False`.
 
 La penalización se selecciona exclusivamente con validation y el candidato histórico se informa por separado.""",
     "flujo/03_entrenamiento/03_06b_qwen_prompt_sft.ipynb": """Conserve el mismo `COLAB_RUN_ID`, snapshot, cápsula de prompt y semillas al reanudar. Active un solo perfil por corrida; piloto, presupuesto corto y entrenamiento completo responden preguntas distintas.
@@ -2715,7 +2710,7 @@ La penalización se selecciona exclusivamente con validation y el candidato hist
 Este cuaderno se ejecuta por compuertas deliberadas. Use el mismo `COLAB_RUN_ID='03_07_working_v2_1'` para que la selección congelada se restaure desde Drive. Nunca active comparación y test en la misma corrida.
 
 1. **Inicio sin carga manual.** Abra <https://colab.research.google.com/github/lkoc/Trabajo_PLN-MIA-Grupo4/blob/main/flujo/03_entrenamiento/03_07_comparacion_final.ipynb>, confirme runtime CPU y conserve `COLAB_BUNDLE_SOURCE='github'`. `local_upload` queda solo como recuperación excepcional; la corrida normal no solicita nueve archivos.
-2. **Preflight de candidatos.** Mantenga `RUN_COMPARE_AND_FREEZE=False`, `RUN_TEST_ONCE=False` y `RUN_PUBLISH=False`. La restauración verifica los manifiestos y SHA-256 de `03_01`–`03_06`; `03_06b` solo se agrega si existe y es elegible. La publicación grande de `03_01` puede estar guardada en partes de hasta 96 MiB: el restaurador verifica el SHA-256 de cada parte, reconstruye temporalmente el `.tar.gz`, verifica también el SHA-256 concatenado y recién entonces lo extrae. No una las partes manualmente. Durante esta etapa el disco puede crecer unos 2,7 GB aunque la CPU parezca poco activa. No avance hasta ver `listo_para_comparar=True`.
+2. **Preflight de candidatos.** Mantenga `RUN_COMPARE_AND_FREEZE=False`, `RUN_TEST_ONCE=False` y `RUN_PUBLISH=False`. La restauración verifica los manifiestos, tamaños y SHA-256 de `03_01`–`03_06`; `03_06b` solo se agrega si existe y es elegible. Cualquier publicación grande puede estar guardada por partes (las históricas de `03_01`, hasta 96 MiB; las nuevas, 256 MiB): el restaurador verifica cada parte, reconstruye el TAR temporal y verifica también el SHA-256 concatenado antes de extraer. No una las partes manualmente. La descarga y verificación de todos los runs puede tardar decenas de minutos y usar más de 15 GB de disco aunque la CPU parezca poco activa. No avance hasta ver `listo_para_comparar=True`.
 3. **Predeclaración.** Fije `MAX_REVIEW_RATE` y `MACRO_AUPRC_NONINFERIORITY_MARGIN` antes de comparar. Si permanecen en `None`, se genera el informe/Pareto, pero test sigue bloqueado.
 4. **Comparación en validation.** Active solo `RUN_COMPARE_AND_FREEZE=True`. Mantenga test y publicación en `False`. El resultado y la selección congelada se guardan como checkpoint verificable del run `03_07` en Drive.
 5. **Revisión humana del congelado.** Vuelva a dejar la comparación en `False` y revise candidatos, umbrales, capacidad, margen y advertencias. No cambie estos valores después de mirar test.

@@ -382,6 +382,105 @@ def test_restore_colab_run_outputs_accepts_verified_multipart_archive(tmp_path):
     assert not colab._run_publication_is_verified(context.drive_run_dir, multipart)
 
 
+def test_publish_colab_outputs_uses_verified_multipart_for_large_archive(
+    tmp_path, monkeypatch
+):
+    scratch = tmp_path / "runtime" / "runs" / "03_06" / "fixture"
+    scratch.mkdir(parents=True)
+    payload = b"candidate-payload" * 2048
+    (scratch / "candidate.bin").write_bytes(payload)
+    context = colab.ColabContext(
+        notebook_id="03_06",
+        run_id="fixture",
+        drive_root=tmp_path / "drive",
+        runtime_root=tmp_path / "runtime",
+        project_root=ROOT,
+        input_paths={},
+        scratch_output_dir=scratch,
+        drive_run_dir=tmp_path / "drive" / "runs" / "03_06" / "fixture",
+        hardware={"backend": "cuda", "device_name": "NVIDIA A100"},
+    )
+    monkeypatch.setattr(colab, "RUN_PUBLICATION_MULTIPART_THRESHOLD_BYTES", 1)
+    monkeypatch.setattr(colab, "RUN_PUBLICATION_PART_BYTES", 4096)
+
+    published = colab.publish_colab_outputs(context)
+
+    archive = published["archive"]
+    assert archive["format"] == "tar_uncompressed_multipart"
+    assert archive["verification"] == "per_part_and_concatenated_full_readback"
+    assert len(archive["parts"]) > 1
+    assert not (context.drive_run_dir / archive["name"]).exists()
+    assert sum(part["bytes"] for part in archive["parts"]) == archive["bytes"]
+    assert colab._run_publication_is_verified(context.drive_run_dir, published)
+
+    restored = tmp_path / "restored_automatic_multipart"
+    restored.mkdir()
+    assert colab._restore_run(context.drive_run_dir, restored)
+    assert (restored / "candidate.bin").read_bytes() == payload
+
+
+def test_invalid_publication_can_rebuild_only_with_persistent_checkpoints(tmp_path):
+    drive_run = tmp_path / "drive" / "runs" / "03_06" / "fixture"
+    drive_run.mkdir(parents=True)
+    invalid = {
+        "schema_version": "1.2.0",
+        "published_at": "2026-08-14T00:00:00+00:00",
+        "archive": {
+            "name": "publications/run_outputs-a.tar",
+            "bytes": 1024,
+            "sha256": "0" * 64,
+        },
+    }
+    (drive_run / "run_manifest.json").write_text(
+        json.dumps(invalid), encoding="utf-8"
+    )
+    without_checkpoints = tmp_path / "scratch_without_checkpoints"
+    without_checkpoints.mkdir()
+    with pytest.raises(ValueError, match="Ninguna publicación"):
+        colab._restore_run_or_allow_checkpoint_rebuild(
+            drive_run, without_checkpoints
+        )
+
+    checkpoint_root = (
+        drive_run
+        / "trainer_checkpoints"
+        / "candidate"
+        / "trainer"
+    )
+    checkpoint_root.mkdir(parents=True)
+    checkpoint_archive = checkpoint_root / "checkpoint-10-fixture.tar"
+    checkpoint_archive.write_bytes(b"valid-persistent-checkpoint")
+    checkpoint_manifest = {
+        "step": 10,
+        "archive": {
+            "name": checkpoint_archive.name,
+            "bytes": checkpoint_archive.stat().st_size,
+            "sha256": sha256_file(checkpoint_archive),
+        },
+    }
+    (checkpoint_root / "checkpoint-10.json").write_text(
+        json.dumps(checkpoint_manifest), encoding="utf-8"
+    )
+    repair_scratch = tmp_path / "scratch_repair"
+    repair_scratch.mkdir()
+
+    assert not colab._restore_run_or_allow_checkpoint_rebuild(
+        drive_run, repair_scratch
+    )
+    repair = json.loads(
+        (repair_scratch / "colab_run_publication_repair.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert (
+        repair["status"]
+        == "final_publication_invalid_rebuild_from_persistent_checkpoints"
+    )
+    assert repair["trainer_checkpoint_root"] == str(
+        drive_run / "trainer_checkpoints"
+    )
+
+
 def test_colab_run_manifest_waits_for_drive_readback(tmp_path, monkeypatch):
     scratch = tmp_path / "runtime" / "runs" / "03_02" / "fixture"
     scratch.mkdir(parents=True)
