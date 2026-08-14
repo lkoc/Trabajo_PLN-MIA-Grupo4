@@ -2376,9 +2376,11 @@ La penalización se selecciona exclusivamente con validation y el candidato hist
 5. **Cierre.** Confirme publicación, validation completa y test sellado; deje los tres interruptores en `False`.
 
 `03_07` incluirá automáticamente solo los candidatos completos y elegibles; la ausencia de `03_06b` no bloquea las demás familias.""",
-    "flujo/03_entrenamiento/03_07_comparacion_final.ipynb": """Este cuaderno se ejecuta por compuertas deliberadas. Use el mismo `COLAB_RUN_ID='03_07_working_v2_1'` para que la selección congelada se restaure desde Drive. Nunca active comparación y test en la misma corrida.
+    "flujo/03_entrenamiento/03_07_comparacion_final.ipynb": """**Entorno recomendado.** Abra una copia nueva de este cuaderno desde GitHub en **Google Colab web**, seleccione un runtime **CPU** y ejecute desde la primera celda. No use para esta corrida el kernel local ni Colab desde VS Code: los candidatos están publicados únicamente en Google Drive y la autorización integrada de `drive.mount()` es más confiable en la interfaz web. Mantenga `COLAB_BUNDLE_SOURCE='github'`; el bundle se descarga y verifica automáticamente, sin selector manual de archivos ni Google Drive para escritorio.
 
-1. **Disponibilidad del bundle.** Si la revisión ya está sincronizada, conserve `COLAB_BUNDLE_SOURCE='github'`. Si aún es local, use `'local_upload'` y seleccione los nueve archivos de `resultados/colab_bundle`. Ejecute siempre desde la primera celda.
+Este cuaderno se ejecuta por compuertas deliberadas. Use el mismo `COLAB_RUN_ID='03_07_working_v2_1'` para que la selección congelada se restaure desde Drive. Nunca active comparación y test en la misma corrida.
+
+1. **Inicio sin carga manual.** Abra <https://colab.research.google.com/github/lkoc/Trabajo_PLN-MIA-Grupo4/blob/main/flujo/03_entrenamiento/03_07_comparacion_final.ipynb>, confirme runtime CPU y conserve `COLAB_BUNDLE_SOURCE='github'`. `local_upload` queda solo como recuperación excepcional; la corrida normal no solicita nueve archivos.
 2. **Preflight de candidatos.** Mantenga `RUN_COMPARE_AND_FREEZE=False`, `RUN_TEST_ONCE=False` y `RUN_PUBLISH=False`. La restauración verifica los manifiestos y SHA-256 de `03_01`–`03_06`; `03_06b` solo se agrega si existe y es elegible. No avance hasta ver `listo_para_comparar=True`.
 3. **Predeclaración.** Fije `MAX_REVIEW_RATE` y `MACRO_AUPRC_NONINFERIORITY_MARGIN` antes de comparar. Si permanecen en `None`, se genera el informe/Pareto, pero test sigue bloqueado.
 4. **Comparación en validation.** Active solo `RUN_COMPARE_AND_FREEZE=True`. Mantenga test y publicación en `False`. El resultado y la selección congelada se guardan como checkpoint verificable del run `03_07` en Drive.
@@ -2561,31 +2563,50 @@ def create(
         )
         notebook.cells.append(nbf.v4.new_code_cell(colab_publisher_setup()))
     elif colab_notebook_id:
-        notebook.cells.append(
-            nbf.v4.new_markdown_cell(
-                "## Backend opcional Google Colab desde VS Code\n\n"
-                "Instale la extensión oficial **Google Colab** (`google.colab`), seleccione "
-                + (
-                    "`Select Kernel > Colab` y asigne una **NVIDIA A100 de 40 GB** "
-                    "para Qwen. "
-                    if colab_notebook_id in QWEN_A100_NOTEBOOKS
-                    else "`Select Kernel > Colab` y asigne una **NVIDIA L4**. "
-                    if colab_requires_gpu
-                    else "`Select Kernel > Colab`; esta campaña API funciona con runtime CPU. "
+        if colab_notebook_id == "03_07":
+            notebook.cells.append(
+                nbf.v4.new_markdown_cell(
+                    "## Entorno recomendado: Google Colab web\n\n"
+                    "Abra una copia nueva desde [GitHub en Google Colab web]"
+                    "(https://colab.research.google.com/github/lkoc/Trabajo_PLN-MIA-Grupo4/"
+                    "blob/main/flujo/03_entrenamiento/03_07_comparacion_final.ipynb), "
+                    "seleccione un runtime **CPU** y ejecute desde la primera celda. Para esta "
+                    "comparación no use el kernel local ni Colab desde VS Code: los candidatos "
+                    "están publicados únicamente en Google Drive y la autorización integrada de "
+                    "`drive.mount()` es más confiable en la interfaz web.\n\n"
+                    "Conserve `COLAB_BUNDLE_SOURCE='github'`. El bootstrap descarga el bundle fijado, "
+                    "verifica todos sus SHA-256, monta Drive y restaura las publicaciones; no solicita "
+                    "seleccionar nueve archivos y no requiere Google Drive para escritorio. "
+                    "`local_upload` queda únicamente como recuperación excepcional si GitHub no "
+                    "contuviera el bundle esperado."
                 )
-                + "El notebook permanece local; "
-                "Drive transporta solo versiones inmutables del bundle. La celda detecta si falta el "
-                "release exacto: en ese único caso lo obtiene desde GitHub —o mediante `local_upload`—, "
-                "verifica todos sus SHA-256 y lo publica de forma atómica. Después promueve la copia "
-                "activa cuando sea necesario; ya no requiere ejecutar `02_00` previamente. Edite "
-                "`COLAB_RUN_ID` para separar "
-                "experimentos. La compatibilidad de `drive.mount()` desde VS Code requiere la extensión "
-                "v0.2.1 o posterior [@googlecolab2026vscode]. La integridad del bundle se comprueba con "
-                "SHA-256 [@nist2015sha]. No sincronice cachés de modelos ni entrene directamente "
-                "sobre Drive; los cuadernos de entrenamiento Qwen copian cada checkpoint terminado "
-                "mediante un TAR atómico y reanudable."
             )
-        )
+        else:
+            notebook.cells.append(
+                nbf.v4.new_markdown_cell(
+                    "## Backend opcional Google Colab desde VS Code\n\n"
+                    "Instale la extensión oficial **Google Colab** (`google.colab`), seleccione "
+                    + (
+                        "`Select Kernel > Colab` y asigne una **NVIDIA A100 de 40 GB** "
+                        "para Qwen. "
+                        if colab_notebook_id in QWEN_A100_NOTEBOOKS
+                        else "`Select Kernel > Colab` y asigne una **NVIDIA L4**. "
+                        if colab_requires_gpu
+                        else "`Select Kernel > Colab`; esta campaña API funciona con runtime CPU. "
+                    )
+                    + "El notebook permanece local; "
+                    "Drive transporta solo versiones inmutables del bundle. La celda detecta si falta el "
+                    "release exacto: en ese único caso lo obtiene desde GitHub —o mediante `local_upload`—, "
+                    "verifica todos sus SHA-256 y lo publica de forma atómica. Después promueve la copia "
+                    "activa cuando sea necesario; ya no requiere ejecutar `02_00` previamente. Edite "
+                    "`COLAB_RUN_ID` para separar "
+                    "experimentos. La compatibilidad de `drive.mount()` desde VS Code requiere la extensión "
+                    "v0.2.1 o posterior [@googlecolab2026vscode]. La integridad del bundle se comprueba con "
+                    "SHA-256 [@nist2015sha]. No sincronice cachés de modelos ni entrene directamente "
+                    "sobre Drive; los cuadernos de entrenamiento Qwen copian cada checkpoint terminado "
+                    "mediante un TAR atómico y reanudable."
+                )
+            )
         notebook.cells.append(nbf.v4.new_code_cell(colab_setup(colab_notebook_id)))
     else:
         notebook.cells.append(nbf.v4.new_code_cell(SETUP))
