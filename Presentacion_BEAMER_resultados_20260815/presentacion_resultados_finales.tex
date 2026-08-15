@@ -1,0 +1,907 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+
+% Nueva presentación orientada a resultados finales.
+% Fuente de verdad interna: artefactos 03_07/03_07a del 15-08-2026.
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{colortbl}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{amsmath}
+\usepackage{cite}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric}
+\pgfplotsset{compat=1.18}
+
+\usetheme{default}
+\usefonttheme{professionalfonts}
+\setbeamertemplate{navigation symbols}{}
+
+\definecolor{Navy}{HTML}{12304A}
+\definecolor{Blue}{HTML}{276FBF}
+\definecolor{Teal}{HTML}{148A8A}
+\definecolor{Coral}{HTML}{D95D4F}
+\definecolor{Gold}{HTML}{D79A22}
+\definecolor{Purple}{HTML}{7857A4}
+\definecolor{Green}{HTML}{1C8C5E}
+\definecolor{Ink}{HTML}{23313D}
+\definecolor{Muted}{HTML}{61717E}
+\definecolor{Line}{HTML}{D7E0E7}
+\definecolor{SoftBlue}{HTML}{EAF2FA}
+
+\setbeamercolor{normal text}{fg=Ink,bg=white}
+\setbeamercolor{structure}{fg=Blue}
+\setbeamercolor{frametitle}{fg=Navy,bg=white}
+\setbeamercolor{title}{fg=Navy}
+\setbeamercolor{subtitle}{fg=Muted}
+\setbeamercolor{footline}{fg=Muted,bg=white}
+\setbeamercolor{block body}{fg=Ink,bg=SoftBlue}
+\setbeamercolor{block title}{fg=Navy,bg=Blue!14}
+\setbeamercolor{epoch2}{fg=Ink,bg=Blue!7}
+\setbeamercolor{epoch3}{fg=Ink,bg=Teal!7}
+\setbeamerfont{frametitle}{series=\bfseries,size=\large}
+\setbeamerfont{title}{series=\bfseries,size=\LARGE}
+\setbeamersize{text margin left=7mm,text margin right=7mm}
+
+\setbeamertemplate{frametitle}{%
+  \vspace{2.3mm}\hspace{-1mm}\insertframetitle\par
+  \vspace{.8mm}{\color{Line}\rule{\textwidth}{0.5pt}}
+}
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{%
+    \begin{beamercolorbox}[wd=.80\paperwidth,ht=3.2ex,dp=1.2ex,leftskip=7mm]{footline}%
+      \scriptsize \insertsectionhead\hspace{1.5mm}\textcolor{Line}{|}\hspace{1.5mm}Moderación semiautomática mediante PLN
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.20\paperwidth,ht=3.2ex,dp=1.2ex,rightskip=7mm]{footline}%
+      \scriptsize\hfill\insertframenumber/\inserttotalframenumber
+    \end{beamercolorbox}%
+  }%
+}
+
+\newcommand{\externalNote}[1]{\par\vspace{.7mm}{\color{Muted}\tiny Evidencia externa: #1\par}}
+\newcommand{\resultNote}[1]{\par\vspace{.7mm}{\color{Muted}\tiny Resultado propio: #1\par}}
+\newcommand{\mixedNote}[2]{\par\vspace{.7mm}{\color{Muted}\tiny Evidencia externa: #1\quad\textbar\quad Resultado propio: #2\par}}
+\newcommand{\takeaway}[1]{%
+  \begin{beamercolorbox}[wd=\textwidth,sep=1.5mm,rounded=true]{block body}%
+    \color{Navy}\small\textbf{Síntesis:} #1
+  \end{beamercolorbox}%
+}
+\newcommand{\pill}[2]{%
+  \tikz[baseline=(x.base)]\node[rounded corners=2pt,fill=#1!12,text=#1,
+  inner xsep=5pt,inner ysep=2.2pt,font=\scriptsize\bfseries] (x) {#2};%
+}
+\newcommand{\metriccard}[4]{%
+  \begin{tikzpicture}[baseline]
+    \node[draw=#1!45,fill=#1!7,rounded corners=3pt,minimum height=17mm,
+      text width=.88\linewidth,align=center,inner sep=2pt] {
+      {\color{#1}\fontsize{16}{17}\selectfont\bfseries #2}\par
+      {\scriptsize\bfseries #3}\par
+      {\color{Muted}\tiny #4}};
+  \end{tikzpicture}%
+}
+\newcommand{\smallcard}[3]{%
+  \begin{beamercolorbox}[wd=\linewidth,sep=2.5mm,rounded=true]{epoch2}
+    \pill{#1}{#2}\par\smallskip\scriptsize #3
+  \end{beamercolorbox}%
+}
+
+\title{Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos, Transformers, Qwen y ensembles}
+\subtitle{Del etiquetado trazable a un sistema humano--IA con desempeño verificable}
+\author{Luis Enrique Koc Góngora; Alex Felipe Mancilla Antay; Herbert Antonio Meléndez García; Dennis Jack Paitán Cano}
+\institute{Maestría en Inteligencia Artificial · Universidad Nacional de Ingeniería · Lima, Perú · Grupo 4}
+\date{Agosto de 2026}
+
+\hypersetup{
+  pdftitle={Moderación semiautomática de videos peruanos de YouTube: resultados finales},
+  pdfauthor={Luis Enrique Koc Góngora; Alex Felipe Mancilla Antay; Herbert Antonio Meléndez García; Dennis Jack Paitán Cano}
+}
+
+\begin{document}
+\section{1. Problema y propuesta}
+
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[Navy] (current page.north west) rectangle ([yshift=-13mm]current page.north east);
+    \fill[Teal] (current page.south west) rectangle ([yshift=3mm]current page.south east);
+    \fill[SoftBlue] ([xshift=105mm,yshift=-13mm]current page.north west)
+      -- (current page.north east) -- ([yshift=-64mm]current page.north east) -- cycle;
+    \node[anchor=north west,align=left,text=Navy,font=\fontsize{15}{18}\selectfont\bfseries]
+      at ([xshift=7mm,yshift=-18mm]current page.north west)
+      {Moderación semiautomática de videos peruanos\\
+       de YouTube mediante modelos clásicos,\\
+       Transformers, Qwen y ensembles};
+    \node[anchor=north west,align=left,text=Ink,font=\small]
+      at ([xshift=7mm,yshift=-56mm]current page.north west)
+      {Luis Enrique Koc Góngora · Alex Felipe Mancilla Antay\\
+       Herbert Antonio Meléndez García · Dennis Jack Paitán Cano};
+    \node[anchor=north west,align=left,text=Muted,font=\footnotesize]
+      at ([xshift=7mm,yshift=-69mm]current page.north west)
+      {Maestría en Inteligencia Artificial · Universidad Nacional de Ingeniería\\
+       Procesamiento de Lenguaje Natural · Grupo 4 · 2026--1};
+    \node[anchor=north west]
+      at ([xshift=7mm,yshift=-84mm]current page.north west)
+      {\pill{Teal}{173\,240 chunks elegibles}\quad
+       \pill{Blue}{33 candidatos}\quad\pill{Purple}{Humano en control}};
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Resultados principales del sistema}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.31\textwidth}
+      \metriccard{Blue}{22\,684}{chunks en test natural}{674 videos; prevalencia de daño 7,94\,\%}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \metriccard{Teal}{0,846}{exactitud balanceada (BA)}{compuerta de cualquier daño; cobertura completa}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \metriccard{Green}{0,940}{BA en ruta automática}{65,2\,\% de cobertura; revisión 34,8\,\%}
+    \end{column}
+  \end{columns}
+  \vspace{4mm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \smallcard{Purple}{Valor técnico}{Texto y tiempo trazables, cinco salidas calibradas, comparación reproducible y abstención explícita.}
+    \end{column}
+    \begin{column}{.48\textwidth}
+      \smallcard{Coral}{Valor operativo}{Prioriza revisión humana; no automatiza sanciones ni oculta incertidumbre.}
+    \end{column}
+  \end{columns}
+  \takeaway{El producto no reemplaza al moderador: reduce el espacio de búsqueda y entrega evidencia localizada para decidir.}
+  \mixedNote{Moderación y responsabilidad~\cite{gorwa2020moderation}; clasificación selectiva~\cite{geifman2017selective,mozannar2020defer}.}{\texttt{test\_final\_abierto\_una\_vez.json}, test natural.}
+\end{frame}
+
+\begin{frame}{Formulación del problema en tres niveles}
+  \centering
+  \begin{tikzpicture}[
+    b/.style={draw,rounded corners=4pt,text width=42mm,minimum height=25mm,align=left,inner sep=3mm,font=\small},
+    a/.style={-{Stealth[length=2mm]},very thick,draw=Muted}]
+    \node[b,draw=Coral!50,fill=Coral!7] (real) {\pill{Coral}{Nivel real}\par\smallskip
+      Volumen, lenguaje local, ironía, citas y categorías infrecuentes vuelven inviable revisar cada video completo.};
+    \node[b,draw=Gold!55,fill=Gold!9,right=6mm of real] (sub) {\pill{Gold}{Nivel subyacente}\par\smallskip
+      Datos dispersos, rótulos subjetivos, desbalance, deriva y costo desigual entre omitir daño y revisar de más.};
+    \node[b,draw=Blue!50,fill=Blue!7,right=6mm of sub] (model) {\pill{Blue}{Nivel modelado}\par\smallskip
+      Clasificación multietiqueta de chunks, compuerta binaria, calibración y opción \texttt{NEEDS\_REVIEW}.};
+    \draw[a] (real)--(sub); \draw[a] (sub)--(model);
+  \end{tikzpicture}
+  \vspace{5mm}
+  \takeaway{El problema a resolver es una cadena reproducible que pase de subtítulos públicos a alertas temporales y, finalmente, a una decisión humana informada.}
+  \externalNote{Definición, muestreo y anotación condicionan el clasificador~\cite{vidgen2020directions}; el abuso puede ser dirigido/generalizado y explícito/implícito~\cite{waseem2017abuse,banko2020taxonomy}.}
+\end{frame}
+
+\begin{frame}{Objeto de estudio y unidad de análisis}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \begin{tikzpicture}[node distance=3mm,
+        b/.style={draw,rounded corners=3pt,text width=.86\linewidth,minimum height=17mm,align=left,inner sep=3mm,font=\small}]
+        \node[b,draw=Coral!45,fill=Coral!7] (o1) {\textbf{Objeto de estudio}\\Expresiones potencialmente dañinas en subtítulos de videos vinculados con el Perú.};
+        \node[b,draw=Gold!50,fill=Gold!9,below=of o1] (o2) {\textbf{Unidad de análisis}\\Chunk temporal con \texttt{video\_id}, texto, inicio, fin y contexto vecino.};
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{.48\textwidth}
+      \begin{tikzpicture}[node distance=3mm,
+        b/.style={draw,rounded corners=3pt,text width=.86\linewidth,minimum height=17mm,align=left,inner sep=3mm,font=\small}]
+        \node[b,draw=Blue!45,fill=Blue!7] (m1) {\textbf{Objeto modelado}\\Cinco salidas: \texttt{SEGURO} excluyente y cuatro daños que pueden coexistir.};
+        \node[b,draw=Teal!45,fill=Teal!7,below=of m1] (m2) {\textbf{Objeto de decisión}\\Alerta, evidencia temporal, incertidumbre y motivo de revisión para un supervisor.};
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \vspace{3mm}
+  \takeaway{La predicción nunca se separa del fragmento que la originó ni de la persona que resuelve el caso.}
+  \externalNote{Documentación de datos~\cite{bender2018datastatements,pushkarna2022datacards}; responsabilidad humana en moderación~\cite{gorwa2020moderation}.}
+\end{frame}
+
+\begin{frame}{Objetivos y capacidades evaluadas}
+  \centering
+  \begin{tikzpicture}[node distance=2.5mm,
+    b/.style={draw,rounded corners=3pt,text width=.88\textwidth,minimum height=11mm,align=left,inner sep=2.5mm,font=\scriptsize},
+    a/.style={-{Stealth[length=1.7mm]},thick,draw=Muted}]
+    \node[b,draw=Blue!45,fill=Blue!7] (o1) {\textbf{Corpus local reproducible} $\rightarrow$ 173\,240 chunks elegibles, cinco salidas y particiones separadas por video.};
+    \node[b,draw=Purple!45,fill=Purple!7,below=of o1] (o2) {\textbf{Comparación común} $\rightarrow$ 28 individuos + 5 ensembles bajo el mismo snapshot y criterio de validation.};
+    \node[b,draw=Gold!55,fill=Gold!9,below=of o2] (o3) {\textbf{Incertidumbre operable} $\rightarrow$ calibración, compuerta ANY\_DAMAGE y política de revisión congelada.};
+    \node[b,draw=Teal!45,fill=Teal!7,below=of o3] (o4) {\textbf{Artefacto utilizable} $\rightarrow$ frontends, evidencia temporal, correcciones y registros append-only.};
+    \draw[a] (o1)--(o2); \draw[a] (o2)--(o3); \draw[a] (o3)--(o4);
+  \end{tikzpicture}
+  \vspace{2mm}
+  \takeaway{La contribución es el sistema completo: datos + etiquetas + modelos + selección + supervisión.}
+  \externalNote{Diseño y evaluación iterativa de artefactos~\cite{hevner2004dsr,peffers2007dsrm}.}
+\end{frame}
+
+\begin{frame}{Estado del arte: tareas, corpus y evaluación}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \smallcard{Blue}{Español}{HatEval estudia odio contra mujeres e inmigrantes; EXIST, sexismo; DETOXIS, toxicidad; OffendES, ofensa en redes. Las etiquetas y plataformas no son intercambiables~\cite{basile2019hateval,rodriguez2021exist,taule2021detoxis,plaza2021offendes}.}
+      \vspace{2mm}
+      \smallcard{Purple}{Contexto y explicación}{HateXplain incorpora blanco y racionales; HateCheck demuestra que una cifra agregada puede ocultar fallas funcionales~\cite{mathew2021hatexplain,rottger2021hatecheck}.}
+    \end{column}
+    \begin{column}{.48\textwidth}
+      \smallcard{Gold}{Muestreo real}{NaijaHate muestra precisión promedio (AP) de 0,34 en muestra representativa frente a 0,83--0,90 en conjuntos enriquecidos: la evaluación puede sobreestimar la operación~\cite{tonneau2024naijahate}.}
+      \vspace{2mm}
+      \smallcard{Teal}{Brecha abordada}{Faltaba una cadena para subtítulos peruanos, categorías localizadas, comparación multifamilia y derivación humana trazable.}
+    \end{column}
+  \end{columns}
+  \takeaway{La evaluación distingue explícitamente entre un benchmark enriquecido y un test con prevalencia natural.}
+\end{frame}
+
+\section{2. Datos y etiquetado}
+
+\begin{frame}{Generación del dataset y trazabilidad}
+  \centering
+  \begin{tikzpicture}[
+    n/.style={draw,rounded corners=3pt,text width=22mm,minimum height=22mm,align=center,inner sep=1.5mm,font=\scriptsize},
+    a/.style={-{Stealth[length=2mm]},thick,draw=Muted}]
+    \node[n,draw=Blue!50,fill=Blue!7] (v) {\textbf{YouTube}\par videos y canales peruanos};
+    \node[n,draw=Blue!50,fill=Blue!7,right=3mm of v] (s) {\textbf{Subtítulos}\par texto, inicio, fin y procedencia};
+    \node[n,draw=Gold!55,fill=Gold!8,right=3mm of s] (c) {\textbf{Chunks}\par unidad estable y contextual};
+    \node[n,draw=Purple!50,fill=Purple!7,right=3mm of c] (l) {\textbf{Etiquetas}\par 4 daños + SEGURO};
+    \node[n,draw=Teal!50,fill=Teal!7,right=3mm of l] (p) {\textbf{Partición}\par por video, sin fuga};
+    \draw[a] (v)--(s); \draw[a] (s)--(c); \draw[a] (c)--(l); \draw[a] (l)--(p);
+  \end{tikzpicture}
+  \vspace{4mm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.31\textwidth}
+      \metriccard{Blue}{173\,240}{chunks elegibles}{de 182\,461 observados}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \metriccard{Purple}{4\,906}{videos efectivos}{322 canales en el alcance}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \metriccard{Teal}{5}{salidas operativas}{cuatro daños y SEGURO}
+    \end{column}
+  \end{columns}
+  \takeaway{La unidad de modelado es el chunk; la unidad de separación y bootstrap es el video. Así se reduce la fuga entre fragmentos correlacionados.}
+  \mixedNote{Documentación de datos y separación por grupos~\cite{bender2018datastatements,pushkarna2022datacards}; selección de modelo sin sesgo~\cite{cawley2010selection}.}{\texttt{auditoria\_estado\_final\_182461.json}.}
+\end{frame}
+
+\begin{frame}[shrink=8]{Distribución del corpus y particiones}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.57\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+          xbar, width=\linewidth,height=49mm,
+          xmin=0,xmax=165000,
+          symbolic y coords={Sexual,Género,Racismo,Acoso,SEGURO},
+          ytick=data,axis y line=none,axis x line*=bottom,
+          xtick={0,40000,80000,120000,160000},
+          xticklabels={0,40k,80k,120k,160k},
+          tick label style={font=\scriptsize},
+          nodes near coords,nodes near coords align={horizontal},
+          every node near coord/.append style={font=\scriptsize,color=Ink},
+          enlarge y limits=.12]
+          \addplot[fill=Teal!70,draw=Teal] coordinates {(159077,SEGURO)};
+          \addplot[fill=Coral!72,draw=Coral] coordinates {(8276,Acoso) (2570,Racismo) (2331,Género) (3875,Sexual)};
+        \end{axis}
+      \end{tikzpicture}
+      {\tiny Frecuencias de etiquetas; los daños pueden coexistir en un chunk.}
+    \end{column}
+    \begin{column}{.40\textwidth}
+      \smallcard{Coral}{Daño observado}{14\,163 chunks con al menos un daño; 2\,709 son multietiqueta.}
+      \vspace{1.4mm}
+      \smallcard{Blue}{Entrenamiento}{123\,239 chunks; 3\,478 videos.}
+      \vspace{1.4mm}
+      \smallcard{Gold}{Validación}{27\,317 chunks; 754 videos.}
+      \vspace{1.4mm}
+      \smallcard{Teal}{Test sellado}{22\,684 chunks; 674 videos.}
+    \end{column}
+  \end{columns}
+  \takeaway{El conjunto no oculta el caso difícil: la clase SEGURO domina y las cuatro categorías de daño son heterogéneas.}
+  \resultNote{Auditoría final del corpus v2.1; partición efectiva 71,1/15,8/13,1\,\% por chunks, agrupada por video.}
+\end{frame}
+
+\begin{frame}{Taxonomía de clasificación}
+  \centering
+  \begin{tikzpicture}[
+    root/.style={draw=Navy!60,fill=Navy!8,rounded corners=4pt,text width=29mm,minimum height=12mm,align=center,font=\small\bfseries},
+    leaf/.style={draw,rounded corners=3pt,text width=25mm,minimum height=20mm,align=center,inner sep=1.5mm,font=\tiny},
+    a/.style={-{Stealth[length=1.7mm]},thick,draw=Muted}]
+    \node[root] (chunk) {Chunk contextualizado};
+    \node[leaf,draw=Teal!55,fill=Teal!7] (safe) at (-60mm,-24mm) {\textbf{SEGURO}\par sin evidencia suficiente};
+    \node[leaf,draw=Coral!55,fill=Coral!7] (har) at (-30mm,-24mm) {\textbf{ACOSO / AMENAZA}\par hostigamiento o intimidación};
+    \node[leaf,draw=Gold!60,fill=Gold!9] (rac) at (0mm,-24mm) {\textbf{RACISMO / DISCRIMINACIÓN}\par origen o rasgo protegido};
+    \node[leaf,draw=Purple!55,fill=Purple!7] (gen) at (30mm,-24mm) {\textbf{GÉNERO / IDENTIDAD}\par violencia o menosprecio};
+    \node[leaf,draw=Blue!55,fill=Blue!7] (sex) at (60mm,-24mm) {\textbf{CONTENIDO SEXUAL}\par referencia explícita o inapropiada};
+    \draw[a] (chunk)--(safe); \draw[a] (chunk)--(har); \draw[a] (chunk)--(rac); \draw[a] (chunk)--(gen); \draw[a] (chunk)--(sex);
+  \end{tikzpicture}
+  \vspace{2mm}
+  \takeaway{Es una taxonomía multietiqueta: SEGURO es excluyente, pero un mismo chunk puede activar más de una categoría de daño.}
+  \externalNote{Contexto peruano sobre racismo y violencia digital~\cite{callirgos1993racismo,vich2018dinamicas,albornoz2018conocer,defensoria2021violenciaenlinea}; contrato interno: Taxonomía v2.}
+\end{frame}
+
+\begin{frame}[shrink=4]{Metodología de etiquetado}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.60\textwidth}
+      \centering
+      \begin{tikzpicture}[node distance=2.7mm,
+        n/.style={draw,rounded corners=3pt,text width=.82\linewidth,minimum height=12mm,align=left,inner sep=2.2mm,font=\scriptsize},
+        a/.style={-{Stealth[length=1.8mm]},thick,draw=Muted}]
+        \node[n,draw=Blue!50,fill=Blue!7] (d) {\textbf{1. Definición operacional}\quad criterios positivos, exclusiones y ejemplos fronterizos por daño.};
+        \node[n,draw=Purple!50,fill=Purple!7,below=of d] (c) {\textbf{2. Cascada contextual}\quad compuerta de daño y decisión por categoría con salida estructurada validable.};
+        \node[n,draw=Gold!55,fill=Gold!9,below=of c] (r) {\textbf{3. Revisión trazable}\quad desacuerdos, baja confianza y panel estratificado conservan evidencia.};
+        \node[n,draw=Teal!50,fill=Teal!7,below=of r] (v) {\textbf{4. Versionado}\quad correcciones append-only, taxonomía y manifiestos ligados al corpus.};
+        \draw[a] (d)--(c); \draw[a] (c)--(r); \draw[a] (r)--(v);
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{.37\textwidth}
+      \metriccard{Purple}{55\,966}{eventos trazables}{revisión humana/sistema registrados}
+      \vspace{2mm}
+      \metriccard{Gold}{16\,694}{panel congelado}{muestreo estratificado auditable}
+      \vspace{2mm}
+      \metriccard{Teal}{10,18\,\%}{cobertura combinada}{17\,635 chunks elegibles auditados}
+    \end{column}
+  \end{columns}
+  \takeaway{La fortaleza está en la trazabilidad: definición, predicción, revisión y corrección pueden reconstruirse.}
+  \mixedNote{Acuerdo y anotación deben reportarse con su diseño~\cite{artstein2008agreement,vidgen2020directions}.}{\texttt{docs/METODOLOGIA\_ETIQUETADO\_CASCADA.md} y auditoría v2.1.}
+\end{frame}
+
+\begin{frame}[shrink=5]{Frontend de etiquetado}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.64\textwidth}
+      \centering
+      \includegraphics[width=\linewidth,height=47mm,keepaspectratio]{assets/captura_entorno_etiquetado.png}
+    \end{column}
+    \begin{column}{.33\textwidth}
+      \smallcard{Blue}{Contexto visible}{Video, texto y tramo temporal se revisan juntos.}
+      \vspace{2mm}
+      \smallcard{Purple}{Decisión estructurada}{Categorías explícitas y observaciones reducen ambigüedad operativa.}
+      \vspace{2mm}
+      \smallcard{Teal}{Trazabilidad}{La acción queda vinculada a usuario, instante y versión.}
+    \end{column}
+  \end{columns}
+  \takeaway{El frontend implementa la taxonomía mediante una decisión estructurada, repetible y auditable.}
+  \resultNote{Captura histórica del frontend; la paridad funcional del frontend activo v2.1 está documentada en \texttt{docs/PARIDAD\_FRONTENDS\_ACTIVOS.md}.}
+\end{frame}
+
+\section{3. Entrenamiento y ensemble}
+
+\begin{frame}{Familias de modelos evaluadas}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \smallcard{Blue}{Modelos clásicos}{Frecuencia de término--frecuencia inversa de documento (TF--IDF) y clasificadores lineales: rápidos, interpretables y competitivos con señales léxicas fuertes~\cite{sparckjones1972idf,cox1958logistic,cortes1995svm}.}
+      \vspace{2mm}
+      \smallcard{Purple}{Transformers}{MiniLM/E5 y cascadas: representaciones contextuales con distinta relación entre costo y capacidad~\cite{vaswani2017attention,wang2020minilm,wang2022e5,wang2024e5}.}
+    \end{column}
+    \begin{column}{.48\textwidth}
+      \smallcard{Gold}{Qwen + LoRA}{Adaptación de bajo rango (LoRA) de un modelo Qwen para capturar lenguaje y categorías con más contexto, actualizando una fracción de parámetros~\cite{qwen2025qwen3,hu2022lora}.}
+      \vspace{2mm}
+      \smallcard{Teal}{Ensembles}{Combinan probabilidades o decisiones de miembros diversos para reducir errores no coincidentes~\cite{dietterich2000ensemble,lam1997majority}.}
+    \end{column}
+  \end{columns}
+  \vspace{3mm}
+  \begin{center}
+    \pill{Blue}{28 candidatos individuales}\quad
+    \pill{Teal}{5 ensembles}\quad
+    \pill{Purple}{33 comparados en validation}
+  \end{center}
+  \takeaway{La comparación conjunta aprovecha la complementariedad entre señales léxicas, representaciones contextuales y Qwen adaptado.}
+  \resultNote{Inventario verificable de \texttt{comparacion\_individual\_ensemble\_validation.json}; arquitectura: \texttt{docs/ARQUITECTURAS\_MODELOS\_03.md}.}
+\end{frame}
+
+\begin{frame}{Diseño del entrenamiento y evaluación}
+  \centering
+  \begin{tikzpicture}[
+    n/.style={draw,rounded corners=3pt,text width=27mm,minimum height=22mm,align=center,inner sep=2mm,font=\scriptsize},
+    a/.style={-{Stealth[length=2mm]},thick,draw=Muted},
+    lab/.style={font=\tiny,text=Muted,align=center}]
+    \node[n,draw=Blue!50,fill=Blue!7] (tr) {\textbf{TRAIN}\par ajuste de pesos\par 123\,239 chunks};
+    \node[n,draw=Purple!50,fill=Purple!7,right=5mm of tr] (oof) {\textbf{Fuera de muestra (OOF)}\par 5 pliegues por video};
+    \node[n,draw=Gold!55,fill=Gold!9,right=5mm of oof] (va) {\textbf{VALIDATION}\par comparación, bootstrap y congelación};
+    \node[n,draw=Teal!50,fill=Teal!7,right=5mm of va] (te) {\textbf{TEST}\par apertura única\par 22\,684 chunks};
+    \draw[a] (tr)-- node[lab,above]{aprende} (oof);
+    \draw[a] (oof)-- node[lab,above]{estima sin fuga} (va);
+    \draw[a] (va)-- node[lab,above]{congela antes de abrir} (te);
+  \end{tikzpicture}
+  \vspace{5mm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.31\textwidth}
+      \smallcard{Blue}{Unidad de grupo}{Un video completo pertenece a un solo split o fold.}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \smallcard{Gold}{Métricas adecuadas}{Área bajo la curva precisión--recall (AUPRC) para daños raros; BA para la compuerta desbalanceada~\cite{saito2015pr,davis2006pr,brodersen2010balanced}.}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \smallcard{Teal}{Evidencia temporal}{La selección queda firmada antes de consultar test.}
+    \end{column}
+  \end{columns}
+  \takeaway{El test no decide el ganador: estima una vez el desempeño de la política ya congelada.}
+\end{frame}
+
+\begin{frame}{Adaptación de Qwen mediante LoRA}
+  \centering
+  \begin{tikzpicture}[
+    n/.style={draw,rounded corners=3pt,text width=29mm,minimum height=17mm,align=center,inner sep=1.8mm,font=\scriptsize},
+    a/.style={-{Stealth[length=1.8mm]},thick,draw=Muted}]
+    \node[n,draw=Blue!50,fill=Blue!7] (x) {\textbf{Entrada}\par chunk + ventana + 5 salidas};
+    \node[n,draw=Purple!50,fill=Purple!7,right=5mm of x] (q) {\textbf{Qwen}\par contexto de lenguaje abierto};
+    \node[n,draw=Gold!55,fill=Gold!9,right=5mm of q] (l) {\textbf{LoRA}\par adaptación eficiente};
+    \node[n,draw=Teal!50,fill=Teal!7,right=5mm of l] (y) {\textbf{Salida}\par probabilidades calibradas};
+    \draw[a] (x)--(q); \draw[a] (q)--(l); \draw[a] (l)--(y);
+  \end{tikzpicture}
+  \vspace{3mm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.31\textwidth}
+      \metriccard{Purple}{0,831}{BA binaria OOF}{mejor Qwen individual}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \metriccard{Gold}{0,516}{macro-AUPRC OOF}{cuatro categorías de daño}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \metriccard{Teal}{0,553}{F1 macro}{media armónica de precisión y recall}
+    \end{column}
+  \end{columns}
+  \takeaway{Qwen fue el mejor individuo por familia y también una fuente de diversidad para el ensemble ganador.}
+  \mixedNote{Adaptación eficiente~\cite{hu2022lora}; familia Qwen~\cite{qwen2025qwen3}.}{Candidato \texttt{qwen\_lora-4aa5ce04df05}, métricas OOF de validation.}
+\end{frame}
+
+\begin{frame}[shrink=8]{Metodología del ensemble por promedio de probabilidades}
+  \centering
+  \begin{tikzpicture}[
+    n/.style={draw,rounded corners=4pt,text width=30mm,minimum height=16mm,align=center,inner sep=1.5mm,font=\scriptsize},
+    a/.style={-{Stealth[length=2mm]},very thick,draw=Muted}]
+    \node[n,draw=Blue!50,fill=Blue!7] (cl) {\textbf{Clásico}\par regresión logística};
+    \node[n,draw=Purple!50,fill=Purple!7,right=5mm of cl] (tr) {\textbf{Transformer}\par cascade v2};
+    \node[n,draw=Gold!55,fill=Gold!9,right=5mm of tr] (qw) {\textbf{Qwen}\par Qwen + LoRA};
+    \node[n,draw=Teal!60,fill=Teal!9,below=7mm of tr,text width=39mm,minimum height=18mm] (mean) {\textbf{Soft mean}\quad $\hat p_c=\frac{1}{3}\sum_m\hat p_{m,c}$};
+    \node[n,draw=Navy!60,fill=Navy!7,right=12mm of mean,text width=36mm,minimum height=18mm] (out) {\textbf{Política}\par 5 salidas + \texttt{NEEDS\_REVIEW}};
+    \draw[a] (cl.south)--(mean.north); \draw[a] (tr.south)--(mean.north); \draw[a] (qw.south)--(mean.north); \draw[a] (mean)--(out);
+  \end{tikzpicture}
+  \vspace{2mm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.47\textwidth}
+      \smallcard{Teal}{Fusión suave}{Conserva intensidad probabilística; no fuerza a que todos los miembros voten igual.}
+    \end{column}
+    \begin{column}{.47\textwidth}
+      \smallcard{Purple}{Cobertura completa para ranking}{La derivación a humano se evalúa después, bajo una capacidad declarada.}
+    \end{column}
+  \end{columns}
+  \takeaway{El producto combina tres fuentes distintas; su ventaja es cuantitativa y también arquitectónica: reduce dependencia de un único tipo de modelo.}
+  \externalNote{Los ensembles explotan errores diversos~\cite{dietterich2000ensemble,lam1997majority}; implementación interna: promedio de probabilidades por categoría.}
+\end{frame}
+
+\begin{frame}[shrink=7]{Criterio de selección y análisis estadístico}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.58\textwidth}
+      \begin{enumerate}\setlength\itemsep{1.2mm}
+        \item \textbf{Criterio primario:} mayor exactitud balanceada de ANY\_DAMAGE con predicciones OOF y cobertura completa.
+        \item \textbf{Salvaguarda:} macro-AUPRC de los cuatro daños dentro de un margen de no inferioridad predeclarado.
+        \item \textbf{Frontera de Pareto:} descarta opciones dominadas en sensibilidad/especificidad y desempeño por categoría.
+        \item \textbf{Desempate:} menor riesgo $R_{0,67}$ y luego mayor macro-AUPRC.
+        \item \textbf{Incertidumbre:} 2\,000 réplicas pareadas por video y ajuste de Holm.
+      \end{enumerate}
+    \end{column}
+    \begin{column}{.38\textwidth}
+      \smallcard{Blue}{Por qué BA}{Pondera sensibilidad y especificidad por igual ante desbalance~\cite{brodersen2010balanced}.}
+      \vspace{2mm}
+      \smallcard{Gold}{Por qué AUPRC}{Resume calidad de ranking donde el positivo es raro~\cite{saito2015pr,davis2006pr}.}
+      \vspace{2mm}
+      \smallcard{Purple}{Por qué por video}{Respeta correlación entre chunks del mismo contenido~\cite{field2007clusterbootstrap}.}
+    \end{column}
+  \end{columns}
+  \takeaway{El ganador se congela por un protocolo reproducible; un empate estadístico se declara, no se convierte artificialmente en superioridad.}
+  \externalNote{Comparación múltiple y significancia~\cite{dror2018significance,holm1979multiple}; criterio interno: \texttt{docs/CRITERIO\_SELECCION\_MODELOS\_03.md}.}
+\end{frame}
+
+\section{4. Resultados finales}
+
+\begin{frame}{Ranking global en validación}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.69\textwidth}
+      \centering
+      \includegraphics[width=\linewidth,height=50mm,keepaspectratio]{assets/ranking_global_validation.png}
+    \end{column}
+    \begin{column}{.28\textwidth}
+      \metriccard{Teal}{0,840}{BA OOF}{ANY\_DAMAGE; cobertura completa}
+      \vspace{2mm}
+      \metriccard{Purple}{0,555}{macro-AUPRC OOF}{cuatro daños}
+      \vspace{2mm}
+      \metriccard{Blue}{0,568}{macro-F1}{cuatro daños}
+    \end{column}
+  \end{columns}
+  \takeaway{El mejor punto global integra clásico + Transformer + Qwen; el resultado respalda la diversidad de la cartera, no una arquitectura única.}
+  \resultNote{03\_07a, \texttt{ranking\_validation.csv}; ganador congelado: \texttt{ensemble\_soft\_mean}.}
+\end{frame}
+
+\begin{frame}[shrink=6]{Mejor modelo por tipo}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.53\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+          xbar,width=\linewidth,height=52mm,
+          xmin=.76,xmax=.85,
+          symbolic y coords={Clásico,Transformer,Qwen,Ensemble},ytick=data,
+          axis y line=none,axis x line*=bottom,
+          xtick={.76,.78,.80,.82,.84},
+          tick label style={font=\scriptsize},
+          nodes near coords,nodes near coords align={horizontal},
+          every node near coord/.append style={font=\scriptsize\bfseries,color=Ink},
+          enlarge y limits=.18]
+          \addplot[fill=Blue!70,draw=Blue] coordinates {(.801415,Clásico) (.816981,Transformer) (.831368,Qwen) (.839976,Ensemble)};
+        \end{axis}
+      \end{tikzpicture}
+      {\tiny Exactitud balanceada binaria OOF, validación. Eje truncado para mostrar diferencias.}
+    \end{column}
+    \begin{column}{.44\textwidth}
+      \scriptsize
+      \begin{tabularx}{\linewidth}{@{}Xrr@{}}
+        \toprule
+        \textbf{Ganador de tipo} & \textbf{macro-AUPRC} & \textbf{F1 macro}\\
+        \midrule
+        Regresión logística & 0,479 & 0,503\\
+        Cascade v2 & 0,449 & 0,519\\
+        Qwen + LoRA & 0,516 & 0,553\\
+        \rowcolor{Teal!10}\textbf{Soft mean} & \textbf{0,555} & \textbf{0,568}\\
+        \bottomrule
+      \end{tabularx}
+      \vspace{3mm}
+      \smallcard{Teal}{Ganancia acumulada}{El ensemble supera al mejor clásico en +3,86 puntos de BA y +7,62 puntos de macro-AUPRC.}
+      \vspace{2mm}
+      \smallcard{Purple}{Lectura honesta}{Las diferencias entre familias no prueban causalidad arquitectónica: resumen los mejores candidatos ejecutados.}
+    \end{column}
+  \end{columns}
+  \resultNote{03\_07a, \texttt{mejores\_por\_tipo\_validation.csv}; cifras sin redondear conservadas en el archivo fuente.}
+\end{frame}
+
+\begin{frame}{Frontera de Pareto e incertidumbre estadística}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.62\textwidth}
+      \centering
+      \includegraphics[width=\linewidth,height=47mm,keepaspectratio]{assets/frontera_ba_macro_auprc_validation.png}
+    \end{column}
+    \begin{column}{.35\textwidth}
+      \smallcard{Teal}{Selección congelada}{\texttt{ensemble\_soft\_mean} ocupa el mejor punto lexicográfico y pasa la salvaguarda.}
+      \vspace{2mm}
+      \smallcard{Gold}{Rival más cercano}{El ensemble ponderado queda a $-0,00166$ de BA.}
+      \vspace{2mm}
+      \smallcard{Purple}{Incertidumbre}{Intervalo de confianza del 95\,\% (IC95\,\%) pareado: $[-0,00437;\ 0,00083]$; $p_{Holm}=0,229$.}
+    \end{column}
+  \end{columns}
+  \takeaway{El estado correcto es \emph{empate estadístico o evidencia inconclusa}: se elige un artefacto reproducible sin afirmar una superioridad no demostrada.}
+  \externalNote{Bootstrap agrupado~\cite{field2007clusterbootstrap}; pruebas pareadas y ajuste múltiple~\cite{dror2018significance,holm1979multiple}.}
+\end{frame}
+
+\begin{frame}[shrink=5]{Resultados en test de prevalencia natural}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.31\textwidth}
+      \metriccard{Teal}{0,846}{balanced accuracy}{cobertura completa}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \metriccard{Coral}{0,906}{sensibilidad al daño}{omite 9,43\,\% del daño}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \metriccard{Blue}{0,530}{AP de daño}{prevalencia natural 7,94\,\%}
+    \end{column}
+  \end{columns}
+  \vspace{4mm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.50\textwidth}
+      \centering\scriptsize
+      \begin{tabular}{lrr}
+        \toprule
+         & \textbf{Pred. daño} & \textbf{Pred. seguro}\\
+        \midrule
+        \textbf{Daño real} & \cellcolor{Teal!15}1\,632 & \cellcolor{Coral!12}170\\
+        \textbf{Seguro real} & \cellcolor{Gold!13}4\,466 & \cellcolor{Blue!12}16\,416\\
+        \bottomrule
+      \end{tabular}
+      \par\vspace{1mm}{\tiny Matriz de confusión de la compuerta ANY\_DAMAGE.}
+    \end{column}
+    \begin{column}{.46\textwidth}
+      \smallcard{Gold}{Costo del recall}{La especificidad es 0,786: la política prioriza detectar daño y envía más falsos positivos a revisión.}
+      \vspace{2mm}
+      \smallcard{Purple}{Desempeño por daños}{Macro-AUPRC = 0,415; macro-F1 = 0,435 sobre cuatro categorías.}
+    \end{column}
+  \end{columns}
+  \takeaway{A prevalencia natural, el sistema encuentra 1\,632 de 1\,802 chunks dañinos; su función es priorizar, no sancionar automáticamente.}
+  \resultNote{03\_07, \texttt{test\_final\_abierto\_una\_vez.json}; 22\,684 chunks de 674 videos.}
+\end{frame}
+
+\begin{frame}[shrink=5]{Política de revisión humana}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.55\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+          ybar,width=\linewidth,height=52mm,ymin=0,ymax=1,
+          symbolic x coords={BA,Sensibilidad,Especificidad,F1},xtick=data,
+          ylabel={proporción},
+          tick label style={font=\scriptsize},
+          legend style={font=\tiny,at={(.5,1.02)},anchor=south,legend columns=2,draw=none},
+          nodes near coords,point meta=y,
+          every node near coord/.append style={font=\tiny,/pgf/number format/fixed,/pgf/number format/precision=3}]
+          \addplot[fill=Blue!55,draw=Blue] coordinates {(BA,.845896) (Sensibilidad,.905660) (Especificidad,.786132) (F1,.413165)};
+          \addplot[fill=Teal!65,draw=Teal] coordinates {(BA,.939733) (Sensibilidad,.938272) (Especificidad,.941193) (F1,.676307)};
+          \legend{Cobertura completa,Ruta automática}
+        \end{axis}
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{.41\textwidth}
+      \metriccard{Green}{65,2\,\%}{cobertura automática}{14\,795 chunks resueltos sin derivación}
+      \vspace{2mm}
+      \metriccard{Gold}{34,8\,\%}{carga de revisión}{7\,889 chunks derivados}
+      \vspace{2mm}
+      \smallcard{Purple}{Política congelada}{$\delta=0,03$; revisa cercanía a umbrales e incoherencias entre compuerta y categorías.}
+    \end{column}
+  \end{columns}
+  \takeaway{0,940 de BA aplica solo al 65,2\,\% automático; el 34,8\,\% restante es precisamente la salvaguarda humana.}
+  \externalNote{Clasificación selectiva y aprendizaje con derivación~\cite{geifman2017selective,mozannar2020defer}; calibración~\cite{guo2017calibration}.}
+\end{frame}
+
+\begin{frame}[shrink=5]{Resultados por categoría en test natural}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.62\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+          xbar,width=\linewidth,height=53mm,xmin=0,xmax=.7,
+          symbolic y coords={Género,Racismo,Acoso,Sexual},ytick=data,
+          axis y line=none,axis x line*=bottom,
+          xtick={0,.1,.2,.3,.4,.5,.6,.7},
+          tick label style={font=\scriptsize},
+          legend style={font=\tiny,at={(.5,1.02)},anchor=south,legend columns=2,draw=none},
+          nodes near coords,point meta=x,
+          every node near coord/.append style={font=\tiny,/pgf/number format/fixed,/pgf/number format/precision=3},
+          enlarge y limits=.14]
+          \addplot[fill=Purple!58,draw=Purple] coordinates {(.273713,Género) (.356830,Racismo) (.450135,Acoso) (.579932,Sexual)};
+          \addplot[fill=Teal!63,draw=Teal] coordinates {(.327940,Género) (.387940,Racismo) (.453546,Acoso) (.569930,Sexual)};
+          \legend{AUPRC,F1}
+        \end{axis}
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{.34\textwidth}
+      \smallcard{Teal}{Mayor desempeño}{CONTENIDO SEXUAL: AUPRC 0,580 y F1 0,570.}
+      \vspace{2mm}
+      \smallcard{Blue}{Zona intermedia}{ACOSO/AMENAZA: AUPRC 0,450 y F1 0,454.}
+      \vspace{2mm}
+      \smallcard{Coral}{Prioridad de mejora}{GÉNERO/IDENTIDAD: AUPRC 0,274 y F1 0,328.}
+    \end{column}
+  \end{columns}
+  \takeaway{El promedio no basta: género/identidad y racismo requieren más ejemplos fronterizos, auditoría localizada y análisis de deriva.}
+  \resultNote{Test natural; métricas de la predicción congelada por categoría, \texttt{metricas\_por\_categoria\_test.csv}.}
+\end{frame}
+
+\begin{frame}[shrink=5]{Mejor modelo por categoría en validación}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.56\textwidth}
+      \centering
+      \includegraphics[width=\linewidth,height=49mm,keepaspectratio]{assets/seleccion_por_categoria_validation.png}
+    \end{column}
+    \begin{column}{.41\textwidth}
+      \scriptsize
+      \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}Xr@{}}
+        \toprule
+        \textbf{Categoría} & \textbf{Mejor AUPRC} & \textbf{Valor}\\
+        \midrule
+        Racismo & Qwen contexto 256 & 0,571\\
+        Género & Qwen contexto 256 & 0,402\\
+        Acoso & Ensemble ponderado & 0,614\\
+        Sexual & Soft mean & 0,688\\
+        \bottomrule
+      \end{tabularx}
+      \vspace{3mm}
+      \smallcard{Purple}{Ganadores por F1}{Qwen con contexto 256 gana racismo; voto mayoritario, género; ensemble por unión, acoso y sexual.}
+      \vspace{2mm}
+      \smallcard{Teal}{Decisión de producto}{Se congela un ganador global para operación reproducible y se conservan especialistas como evidencia para futuras rutas por categoría.}
+    \end{column}
+  \end{columns}
+  \takeaway{La diversidad tiene valor observable: Qwen domina categorías semánticas difíciles y los ensembles lideran acoso/sexual.}
+  \resultNote{Validation, \texttt{ganadores\_por\_categoria\_validation.csv}; estas selecciones descriptivas no reabren el test.}
+\end{frame}
+
+\begin{frame}[shrink=5]{Comparación contextual con el estado del arte}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.62\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+          xbar,width=\linewidth,height=54mm,xmin=.55,xmax=.84,
+          symbolic y coords={DETOXIS,Este trabajo,HateXplain,HatEval,OffendES,EXIST},ytick=data,
+          axis y line=none,axis x line*=bottom,
+          xtick={.55,.60,.65,.70,.75,.80},
+          tick label style={font=\scriptsize},
+          nodes near coords,point meta=x,
+          every node near coord/.append style={font=\tiny\bfseries,/pgf/number format/fixed,/pgf/number format/precision=3},
+          enlarge y limits=.12]
+          \addplot[fill=Muted!45,draw=Muted] coordinates {(.6461,DETOXIS) (.687,HateXplain) (.730,HatEval) (.7839,OffendES) (.7944,EXIST)};
+          \addplot[fill=Teal!75,draw=Teal] coordinates {(.655949,Este trabajo)};
+        \end{axis}
+      \end{tikzpicture}
+      {\tiny F1 reportado; este trabajo usa vista test 4:1 y compuerta binaria congelada.}
+    \end{column}
+    \begin{column}{.35\textwidth}
+      \smallcard{Teal}{Posición contextual}{F1 = 0,656: comparable con DETOXIS (0,646) y HateXplain (0,687).}
+      \vspace{2mm}
+      \smallcard{Gold}{No es una liga común}{HatEval 0,730; OffendES 0,784; EXIST 0,794, pero cambian corpus, idioma, prevalencia, etiquetas y partición.}
+      \vspace{2mm}
+      \smallcard{Purple}{Mayor amplitud local}{Aquí se integran cuatro daños peruanos, multietiqueta, marcas temporales y derivación humana.}
+    \end{column}
+  \end{columns}
+  \takeaway{La evidencia permite afirmar competitividad contextual, no superioridad directa: el sistema queda en el rango publicado mientras resuelve un alcance operativo más amplio.}
+  \externalNote{DETOXIS~\cite{taule2021detoxis}; HateXplain~\cite{mathew2021hatexplain}; HatEval~\cite{basile2019hateval}; OffendES~\cite{plaza2021offendes}; EXIST~\cite{rodriguez2021exist}.}
+\end{frame}
+
+\begin{frame}[shrink=7]{Efecto del diseño muestral sobre la evaluación}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.56\textwidth}
+      \centering
+      \begin{tikzpicture}[x=1mm,y=1mm]
+        \draw[very thick,Line] (5,27)--(82,27);
+        \foreach \x/\v/\lab/\col in {15/.34/NaijaHate representativo/Coral,38/.530/Este trabajo natural/Teal,72/.83--.90/NaijaHate enriquecido/Gold}{
+          \fill[\col] (\x,27) circle (3.3);
+          \node[font=\scriptsize\bfseries,text=\col,align=center,above=3mm] at (\x,27) {\v};
+          \node[font=\tiny,text=Ink,align=center,below=4mm,text width=24mm] at (\x,27) {\lab};
+        }
+        \node[font=\scriptsize,text=Muted] at (44,5) {average precision reportado};
+      \end{tikzpicture}
+      \vspace{2mm}
+      \smallcard{Blue}{Por qué AP}{La línea base de un ranking aleatorio cambia con la prevalencia; AP es informativa, pero no inmune al diseño muestral.}
+    \end{column}
+    \begin{column}{.40\textwidth}
+      \smallcard{Coral}{Hallazgo externo}{NaijaHate obtiene AP 0,34 en una muestra representativa y 0,83--0,90 en conjuntos enriquecidos~\cite{tonneau2024naijahate}.}
+      \vspace{2mm}
+      \smallcard{Teal}{Hallazgo propio}{En test natural, con 7,94\,\% de daño, la compuerta obtiene AP 0,530.}
+      \vspace{2mm}
+      \smallcard{Gold}{Interpretación}{No son datasets comparables; juntos muestran por qué reportar prevalencia y mantener una vista natural es una fortaleza metodológica.}
+    \end{column}
+  \end{columns}
+  \takeaway{El producto se evalúa donde operará: sobre abundancia de contenido seguro, no únicamente sobre un benchmark artificialmente balanceado.}
+\end{frame}
+
+\section{5. Producto y conclusiones}
+
+\begin{frame}[shrink=5]{Frontend de producción}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.64\textwidth}
+      \centering
+      \includegraphics[width=\linewidth,height=51mm,keepaspectratio]{assets/captura_entorno_operacion.png}
+    \end{column}
+    \begin{column}{.33\textwidth}
+      \smallcard{Teal}{Resultado accionable}{Categoría, probabilidad y tramo temporal permiten localizar el contenido.}
+      \vspace{2mm}
+      \smallcard{Gold}{Humano en control}{Los casos inciertos se derivan mediante \texttt{NEEDS\_REVIEW}; no hay sanción automática.}
+      \vspace{2mm}
+      \smallcard{Purple}{Ciclo de mejora}{La corrección autorizada alimenta auditoría y reentrenamiento versionado.}
+    \end{column}
+  \end{columns}
+  \takeaway{La salida útil es una decisión respaldada por contexto, incertidumbre y procedencia; eso vuelve al modelo gobernable.}
+  \mixedNote{Gobernanza de moderación~\cite{gorwa2020moderation}; derivación humano--IA~\cite{mozannar2020defer}.}{Captura histórica; paridad del frontend activo en \texttt{docs/PARIDAD\_FRONTENDS\_ACTIVOS.md}.}
+\end{frame}
+
+\begin{frame}{Componentes del producto}
+  \centering
+  \begin{tikzpicture}[
+    n/.style={draw,rounded corners=4pt,text width=27mm,minimum height=23mm,align=center,inner sep=2mm,font=\scriptsize},
+    a/.style={-{Stealth[length=2mm]},thick,draw=Muted}]
+    \node[n,draw=Blue!50,fill=Blue!7] (data) {\textbf{Datos}\par corpus local, tiempos y separación por video};
+    \node[n,draw=Purple!50,fill=Purple!7,right=3mm of data] (model) {\textbf{Inteligencia}\par 33 candidatos y ensemble multifamilia};
+    \node[n,draw=Gold!55,fill=Gold!9,right=3mm of model] (guard) {\textbf{Salvaguarda}\par calibración, abstención y auditoría};
+    \node[n,draw=Teal!55,fill=Teal!7,right=3mm of guard] (ux) {\textbf{Operación}\par frontends, checkpoint y evidencia temporal};
+    \draw[a] (data)--(model); \draw[a] (model)--(guard); \draw[a] (guard)--(ux);
+  \end{tikzpicture}
+  \vspace{5mm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.31\textwidth}
+      \smallcard{Blue}{Escalable}{La ruta automática procesa 65,2\,\% del test con BA de 0,940.}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \smallcard{Purple}{Especializable}{Los ganadores por categoría revelan rutas futuras con Qwen y ensembles.}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \smallcard{Teal}{Auditable}{Dataset, selección, prueba y correcciones conservan versión y procedencia.}
+    \end{column}
+  \end{columns}
+  \takeaway{La principal bondad es sistémica: desempeño competitivo, evidencia local, supervisión humana y reproducibilidad conviven en un solo flujo.}
+  \externalNote{Un artefacto de investigación debe ser útil y evaluado~\cite{hevner2004dsr,peffers2007dsrm}; documentación de datasets/modelos~\cite{bender2018datastatements,pushkarna2022datacards}.}
+\end{frame}
+
+\begin{frame}{Conclusiones vinculadas a los objetivos I}
+  \scriptsize
+  \begin{tabularx}{\textwidth}{@{}p{25mm}X X@{}}
+    \toprule
+    \textbf{Objetivo} & \textbf{Evidencia cuantitativa} & \textbf{Conclusión cualitativa}\\
+    \midrule
+    \rowcolor{Teal!8}
+    \textbf{General}\newline Diseñar un sistema semiautomático &
+    BA 0,846 a cobertura completa; BA 0,940 en 65,2\,\% automático; 34,8\,\% derivado. &
+    Se logró una cadena humano--IA funcional: prioriza daño con alto recall y conserva revisión para incertidumbre.\\[2mm]
+    \textbf{Específico 1}\newline Construir corpus local trazable &
+    173\,240 chunks elegibles, 4\,906 videos, cinco salidas; 22\,684 chunks en test natural. &
+    El objeto de estudio mantiene prevalencia, contexto temporal y separación por video, condiciones necesarias para una evaluación creíble.\\[2mm]
+    \rowcolor{Blue!7}
+    \textbf{Específico 2}\newline Comparar familias de modelos &
+    28 individuos + 5 ensembles; soft mean: BA 0,840 y macro-AUPRC 0,555 OOF. &
+    La complementariedad supera a los mejores representantes aislados; Qwen es el mejor individuo y mejora la representación contextual.\\
+    \bottomrule
+  \end{tabularx}
+  \vspace{3mm}
+  \takeaway{El objetivo general se cumple con una solución medible y utilizable que clasifica y deriva los casos inciertos.}
+  \mixedNote{Clasificación selectiva~\cite{geifman2017selective,mozannar2020defer}.}{Auditoría v2.1, comparación 03\_07a y test 03\_07 del 15-08-2026.}
+\end{frame}
+
+\begin{frame}{Conclusiones vinculadas a los objetivos II}
+  \scriptsize
+  \begin{tabularx}{\textwidth}{@{}p{25mm}X X@{}}
+    \toprule
+    \textbf{Objetivo} & \textbf{Evidencia cuantitativa} & \textbf{Conclusión cualitativa}\\
+    \midrule
+    \rowcolor{Gold!9}
+    \textbf{Específico 3}\newline Calibrar y gobernar incertidumbre &
+    2\,000 bootstraps pareados por video; diferencia BA con rival $-0,00166$, IC95\,\% cruza cero; $p_{Holm}=0,229$. &
+    La selección es reproducible y honesta: congela un ganador operativo, declara el empate estadístico y reserva capacidad humana.\\[2mm]
+    \textbf{Específico 4}\newline Integrar un flujo reutilizable &
+    Dos frontends, manifiestos/checkpoints y 55\,966 eventos trazables; panel congelado de 16\,694 chunks. &
+    El artefacto conecta etiquetado, entrenamiento, comparación, inferencia, revisión y corrección sin romper procedencia.\\[2mm]
+    \rowcolor{Purple!7}
+    \textbf{Contribución}\newline Competitividad contextual &
+    F1 0,656 en vista 4:1, dentro del rango publicado 0,646--0,794 para tareas relacionadas. &
+    El resultado es comparable en magnitud y más rico operacionalmente, aunque no constituye una comparación head-to-head.\\
+    \bottomrule
+  \end{tabularx}
+  \vspace{3mm}
+  \takeaway{La contribución defendible es unir rigor experimental y operación humana sobre contenido peruano, con límites explícitos y evidencia reproducible.}
+  \externalNote{Comparación contextual con~\cite{taule2021detoxis,mathew2021hatexplain,basile2019hateval,plaza2021offendes,rodriguez2021exist}.}
+\end{frame}
+
+\begin{frame}[shrink=5]{Limitaciones y trabajo futuro}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \smallcard{Coral}{1. Categorías difíciles}{Género (AUPRC 0,274) y racismo (0,357) requieren expansión focalizada, pruebas funcionales y revisión de falsos negativos~\cite{rottger2021hatecheck}.}
+      \vspace{2mm}
+      \smallcard{Gold}{2. Capacidad humana}{34,8\,\% de revisión es una política eficaz, pero debe validarse contra dotación, tiempo y costo reales~\cite{mozannar2020defer}.}
+    \end{column}
+    \begin{column}{.48\textwidth}
+      \smallcard{Purple}{3. Generalización}{YouTube peruano no representa automáticamente otras plataformas, países o periodos; medir deriva es parte del despliegue~\cite{vidgen2020directions}.}
+      \vspace{2mm}
+      \smallcard{Blue}{4. Validación humana}{Formalizar doble anotación independiente y acuerdo por categoría fortalecerá la validez de las etiquetas~\cite{artstein2008agreement}.}
+    \end{column}
+  \end{columns}
+  \vspace{4mm}
+  \centering
+  \begin{tikzpicture}[node distance=3mm,
+    n/.style={draw=Teal!45,fill=Teal!7,rounded corners=3pt,text width=29mm,minimum height=13mm,align=center,font=\scriptsize},
+    a/.style={-{Stealth[length=1.7mm]},thick,draw=Muted}]
+    \node[n] (a) {Ampliar casos frontera};
+    \node[n,right=of a] (b) {Validar capacidad humana};
+    \node[n,right=of b] (c) {Monitorear deriva};
+    \node[n,right=of c] (d) {Piloto operativo controlado};
+    \draw[a] (a)--(b); \draw[a] (b)--(c); \draw[a] (c)--(d);
+  \end{tikzpicture}
+  \takeaway{El sistema está listo como demostrador verificable; la siguiente etapa es validar capacidad humana, costos y deriva en un piloto controlado.}
+\end{frame}
+
+\begin{frame}{Conclusiones finales}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.60\textwidth}
+      {\Large\bfseries\color{Navy} Resultado del proyecto}\par
+      \vspace{4mm}
+      {\small El sistema transforma subtítulos peruanos en alertas temporales mediante una cartera clásica--Transformer--Qwen y un ensemble congelado. La evaluación natural, la abstención y la trazabilidad hacen que el desempeño sea útil fuera del laboratorio.}\par
+      \vspace{5mm}
+      \pill{Teal}{BA 0,846 completa}\quad
+      \pill{Green}{BA 0,940 automática}\quad
+      \pill{Purple}{4 daños + SEGURO}
+    \end{column}
+    \begin{column}{.36\textwidth}
+      \smallcard{Blue}{Propuesta de valor}{Menos búsqueda manual, evidencia localizada y una cola de revisión priorizada.}
+      \vspace{2mm}
+      \smallcard{Teal}{Garantía metodológica}{Separación por video, OOF, bootstrap y apertura única de test.}
+      \vspace{2mm}
+      \smallcard{Gold}{Principio operativo}{La IA recomienda; el humano conserva la decisión.}
+    \end{column}
+  \end{columns}
+  \vspace{5mm}
+  \centering{\large\color{Navy}\textbf{Gracias. Preguntas y discusión.}}
+\end{frame}
+
+\section{Referencias}
+\begin{frame}[allowframebreaks]{Referencias utilizadas}
+  \scriptsize
+  \bibliographystyle{IEEEtran}
+  \bibliography{referencias}
+\end{frame}
+
+\end{document}
