@@ -2,113 +2,103 @@
 
 \subsection{Diseño de investigación}
 
-DSR busca construir y evaluar artefactos relevantes con rigor \cite{hevner2004dsr}. El estudio sigue las seis actividades de Peffers \emph{et al.}: identificar la necesidad, definir objetivos, diseñar y desarrollar, demostrar, evaluar y comunicar \cite{peffers2007dsrm}. La Fig.~\ref{fig:dsr} muestra cómo cada evaluación alimenta una nueva iteración. Los cuadernos preliminares de Qwen con cinco categorías de moderación y de Transformers jerárquicos que no producen resultados se registran como diseños abandonados, no como experimentos ejecutados.
+La investigación sigue DSR: identifica una necesidad, define objetivos, construye el artefacto, lo demuestra, lo evalúa y comunica los resultados \cite{hevner2004dsr,peffers2007dsrm}. Cada iteración produjo evidencia versionada de datos, etiquetas, modelos o operación. Los experimentos anteriores con un contrato distinto se usan únicamente como antecedentes de diseño; la evaluación reportada en este artículo pertenece al snapshot v2.1 y a la comparación 03\_07.
 
-\begin{figure*}[!t]
+\begin{figure*}[t]
 \centering
 \resizebox{\textwidth}{!}{\input{figuras/ciclo_dsr.tex}}
-\caption{Ciclo DSR y evidencia producida por las iteraciones del proyecto. Elaboración propia basada en las seis actividades de Peffers \emph{et al.} \cite{peffers2007dsrm}.}
+\caption{Ciclo DSR aplicado al corpus v2.1, comparación común, congelación, apertura única de test y demostrador. Elaboración propia basada en Peffers \emph{et al.} \cite{peffers2007dsrm}.}
 \label{fig:dsr}
 \end{figure*}
 
-\subsection{Fuentes y criterios de selección}
+\subsection{Adquisición, limpieza y unidad de análisis}
 
-El universo de adquisición comprende videos públicos de YouTube vinculados con el contexto peruano. La búsqueda abarca registros políticos, periodísticos, humorísticos, de farándula, entretenimiento, deportes, gastronomía y viajes para no confundir un único estilo con daño. Un video es elegible si tiene subtítulos en español, al menos 200 caracteres útiles y metadatos suficientes para identificarlo. El corpus utilizado por los experimentos se reporta siempre mediante su total integrado final.
+El universo de adquisición comprende videos públicos de YouTube vinculados con el Perú y con subtítulos disponibles en español. La búsqueda incluye periodismo, política, opinión, humor, entretenimiento, deportes, gastronomía y viajes, además de búsquedas dirigidas para aumentar categorías poco frecuentes. Por ello el corpus permite entrenar y comparar, pero no estima la prevalencia de daño de toda la plataforma. La documentación de origen, anotación y límites sigue las recomendaciones de \emph{data statements} y \emph{data cards} \cite{bender2018datastatements,pushkarna2022datacards}.
 
-El corpus construido y utilizado en los experimentos corresponde al esquema 2.0 y al corte del 27 de julio de 2026. La Tabla~\ref{tab:fuentes} presenta sus totales finales. El Apéndice~\ref{app:fuentes_dataset} detalla las fuentes, la procedencia de las etiquetas y los canales. Un manifiesto registra el hash SHA-256 del corpus, según el estándar de hash seguro \cite{nist2015sha}, y la información necesaria para reconstruir la procedencia de cada fila. El corpus todavía no tiene DOI ni una licencia que autorice la redistribución de los textos.
+Las pistas VTT se recuperan con \texttt{yt-dlp} o YouTube Transcript API \cite{ytdlp2026,depoix2026transcript}. No se descarga audio ni se ejecuta reconocimiento de voz propio. La limpieza usa normalización Unicode NFKC \cite{unicode2025normalization}, unifica espacios y elimina repeticiones consecutivas del VTT. La unidad de análisis es el chunk: texto contiguo con \texttt{video\_id}, tiempos inicial/final, posición, canal y procedencia. La segmentación se cierra al alcanzar 30 segundos o 600 caracteres y exige al menos 90 caracteres; no introduce solapamiento deliberado.
 
-La adquisición combina un catálogo de canales con búsquedas dirigidas a clases minoritarias. La muestra es intencional: prioriza fuentes con mayor rendimiento previo de categorías de moderación y consultas temáticas. La selección informativa y el balance en aprendizaje activo son antecedentes generales \cite{settles2009active,fairstein2024balancing}; la regla concreta de búsqueda es una heurística del proyecto. El proceso excluye videos ya procesados, videos sin subtítulos, textos demasiado cortos, fallas de extracción y duplicados por \texttt{video\_id} o hash normalizado. El análisis utiliza texto y metadatos, sin descargar audio ni imagen. La Tabla~\ref{tab:fuentes} reporta el corpus integrado final como una sola unidad.
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{figuras/pipeline_moderacion.tex}}
+\caption{Flujo vigente de datos, etiquetado, entrenamiento, selección y operación. El test permanece sellado hasta congelar candidato, calibradores, umbrales y política. Elaboración propia.}
+\label{fig:pipeline}
+\end{figure*}
+
+\subsection{Corpus v2.1}
+
+Después de deduplicar y excluir 9\,221 decisiones no elegibles, el snapshot contiene 173\,240 chunks de 4\,906 videos y 276 canales efectivos. Hay 159\,077 chunks \texttt{SEGURO} y 14\,163 con al menos un daño; estos últimos reúnen 17\,052 asignaciones y 2\,709 casos multietiqueta. La Tabla~\ref{tab:fuentes} muestra la distribución operacional.
 
 \begin{table}[t]
 \centering
-\caption{Tamaño y distribución del corpus integrado final}
+\caption{Tamaño y distribución del corpus v2.1}
 \label{tab:fuentes}
 \small
 \begin{tabular}{@{}lr@{}}
 \toprule
 \textbf{Componente} & \textbf{Total} \\
 \midrule
-Videos & 3\,230 \\
-\multicolumn{2}{@{}c@{}}{\makebox[69mm]{\leaders\hbox{\rule{4pt}{0.35pt}\hspace{2.5pt}}\hfill\kern0pt}} \\[-0.4ex]
-Chunks (máx. observado: 170 palabras) & 117\,244 \\
-\multicolumn{2}{@{}c@{}}{\makebox[69mm]{\leaders\hbox{\rule{4pt}{0.35pt}\hspace{2.5pt}}\hfill\kern0pt}} \\[-0.4ex]
-\multicolumn{2}{@{}l}{\textbf{Etiquetas}} \\
-\hspace{1em}Seguro & 110\,181 \\
-\hspace{1em}Algún daño & 7\,063 \\
-\hspace{2em}\Rac & 1\,856 \\
-\hspace{2em}\Gen & 1\,961 \\
-\hspace{2em}\Ame & 3\,028 \\
-\hspace{2em}\Sex & 2\,282 \\
+Videos / canales efectivos & 4\,906 / 276 \\
+Chunks elegibles & 173\,240 \\
+\texttt{SEGURO} & 159\,077 \\
+Algún daño & 14\,163 \\
+\Rac & 2\,570 \\
+\Gen & 2\,331 \\
+\Ame & 8\,276 \\
+\Sex & 3\,875 \\
+Chunks con más de un daño & 2\,709 \\
 \bottomrule
 \end{tabular}
 \begin{minipage}{.98\columnwidth}\vspace{1mm}\footnotesize
-\emph{Nota:} el máximo observado cuenta palabras separadas por espacios en el corpus final; la segmentación se cierra a los 30 segundos o 600 caracteres y no fija un máximo de palabras. Las cuatro categorías subordinadas son incidencias multietiqueta y no suman “algún daño”. \Ame{} es la unión de acoso personal y amenaza directa; 514 chunks contienen ambos subtipos. Los conteos proceden del corpus canónico.
+\emph{Nota:} los cuatro daños son multietiqueta y no suman “algún daño”. \texttt{SEGURO} es excluyente.
 \end{minipage}
 \end{table}
 
-El Apéndice~\ref{app:fuentes_dataset} desagrega las categorías de fuente y la procedencia de las etiquetas. También presenta individualmente los canales con más de dos videos y agrupa los canales con uno o dos, cuyas direcciones permanecen en los metadatos del corpus.
+\subsection{Taxonomía y contrato de salida}
 
-\subsection{Subtítulos, limpieza y chunks}
+El contrato contiene cinco salidas principales: \texttt{SEGURO}, \Rac, \Gen, \Ame{} y \Sex. La primera es mutuamente excluyente con cualquier daño; las cuatro restantes pueden coexistir. Una salida vacía, la coexistencia seguro--daño o un score próximo al umbral activa revisión y no crea una sexta clase. Catorce etiquetas finas y tres flags de ironía, humor o contexto preservan detalle para auditoría y objetivos auxiliares.
 
-La fuente textual comprende pistas de subtítulos públicas, manuales o automáticas según disponibilidad. La extracción usa VTT con \texttt{yt-dlp} \cite{ytdlp2026} y, cuando hace falta, YouTube Transcript API \cite{depoix2026transcript}. El sistema intenta la familia \texttt{es-PE}/\texttt{es-419}/\texttt{es}; los manifiestos preservan el método, los identificadores y los hashes del resultado. El proyecto usa las pistas existentes y no realiza reconocimiento automático de voz propio.
-
-La limpieza aplica normalización Unicode NFKC \cite{unicode2025normalization}, unifica espacios y ajusta texto y tiempos. Antes de agrupar, elimina hasta 12 palabras repetidas entre segmentos VTT consecutivos. Después cierra cada chunk al alcanzar 30 segundos o 600 caracteres y exige al menos 90 caracteres. La regla de segmentación es propia del proyecto y genera chunks sin solapamiento intencional. Tras deduplicar y retirar decisiones no elegibles, el único total reportado para el corpus es el de la Tabla~\ref{tab:fuentes}.
-
-\subsection{Taxonomía y evolución del contrato}
-
-El archivo \path{archivo/taxonomia_v1_3/para_equiquetado_LLM} conserva el paquete histórico de anotación manual o asistida: guía v1.3, taxonomía, instrucciones, entrada y ejemplos de salida. El vocabulario fino y los criterios operativos coinciden con las copias auditadas del proyecto. Para los lotes anotados por API, el sistema combinó el prompt compacto v1.1, la taxonomía completa y las reglas técnicas de salida; sus manifiestos conservan la versión del prompt. El Anexo~\ref{app:prompt_operativo} reproduce ese texto y delimita las corridas que acredita. La auditoría muestra 14 etiquetas finas: 12 fenómenos de daño y dos estados seguros, además de tres flags transversales. La separación entre blanco individual/grupal y daño explícito/implícito sigue el marco de Waseem \emph{et al.} \cite{waseem2017abuse}; las definiciones generales de ataque por identidad, doxeo, insulto, agresión sexual y amenaza se contrastan con Banko \emph{et al.} \cite{banko2020taxonomy}. La Tabla~\ref{tab:taxonomia} documenta la adaptación y sus límites. No se atribuye a esos autores la lista exacta del proyecto.
-
-La Fig.~\ref{fig:datos} sintetiza la relación entre categorías operativas, fenómenos finos, estados seguros y señales de revisión. La Fig.~\ref{fig:pipeline} enlaza esa taxonomía con la adquisición, la preanotación, la adjudicación y la evaluación; ambas se sitúan aquí para acompañar la primera explicación del método.
-
-\begin{figure*}[!t]
-\centering
-\resizebox{.96\textwidth}{!}{\input{figuras/datos_taxonomia.tex}}
-\caption{Contrato activo v2: \texttt{SEGURO}, \texttt{RACISMO\_DISCRIMINACION}, \texttt{ATAQUE\_POR\_GENERO\_IDENTIDAD}, \texttt{ACOSO\_AMENAZA} y \texttt{CONTENIDO\_SEXUAL} se entrenan como cinco salidas. \texttt{SEGURO} es excluyente y los cuatro daños son multietiqueta; las 14 etiquetas finas y tres señales transversales se conservan. La fusión de acoso personal y amenaza es una decisión operativa, no una equivalencia legal. Elaboración propia informada por tipologías de abuso y contenido dañino \cite{waseem2017abuse,banko2020taxonomy} y por fuentes peruanas citadas en la Tabla~\ref{tab:taxonomia}.}
-\label{fig:datos}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-\resizebox{\textwidth}{!}{\input{figuras/pipeline_moderacion.tex}}
-\caption{Flujo de adquisición, preanotación, adjudicación y evaluación. La evaluación no retorna al corpus evaluado; la revisión operativa solo puede originar una versión futura y separada. Elaboración propia.}
-\label{fig:pipeline}
-\end{figure*}
-
-El contrato usado para los resultados de este artículo contiene cuatro salidas de daño: \Rac, \Gen, \Ame{} y \Sex. \Ame{} une acoso personal y amenaza directa mediante OR/máximo: la amenaza directa tiene menor soporte (688 incidencias frente a 2\,854 de acoso personal), de modo que la unión aumenta el soporte, pero no establece equivalencia semántica o legal. En ese baseline, \texttt{SEGURO} se derivó cuando ninguna salida de daño cruzó su umbral.
-
-El contrato reproducible v2.1 corrige esa asimetría: entrena cinco salidas desde el inicio, \texttt{SEGURO}, \Rac, \Gen, \Ame{} y \Sex. La salida canónica \texttt{ATAQUE\_POR\_GENERO\_IDENTIDAD} explicita que se clasifica daño dirigido por género, orientación o identidad; no presupone que todo caso sea acoso ni exige demostrar intención de odio. \texttt{SEGURO} tiene ejemplos, score, umbral y métricas propios y es mutuamente excluyente con cualquier daño; las cuatro salidas de daño siguen siendo multietiqueta. Un conflicto \texttt{SEGURO}+daño, ninguna salida o un score próximo al umbral obliga revisión. Los casos indeterminados usan \texttt{needs\_review=true} y \texttt{training\_eligible=false}; no forman una sexta clase ni se convierten en seguros. Esta revisión de contrato no altera retrospectivamente las métricas del baseline: requiere una cabeza nueva, reentrenamiento y recalibración.
+Las dimensiones generales se apoyan en tipologías de abuso y contenido dañino de Waseem \emph{et al.} y Banko \emph{et al.} \cite{waseem2017abuse,banko2020taxonomy}. La adaptación al contexto peruano incorpora los antecedentes de la Tabla~\ref{tab:taxonomia}. Las fuentes sustentan fenómenos y exclusiones; los nombres, fusiones y reglas finales son decisiones operativas del proyecto y no se atribuyen como taxonomía exacta a esos autores.
 
 \begin{table*}[t]
 \centering
-\caption{Definición y sustento de la taxonomía operativa multietiqueta}
+\caption{Definición y sustento de la taxonomía operativa}
 \label{tab:taxonomia}
-\small
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{27mm}>{\raggedright\arraybackslash}p{45mm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{38mm}}
+\footnotesize
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{28mm}>{\raggedright\arraybackslash}p{57mm}X}
 \toprule
-\textbf{Salida / señal} & \textbf{Etiquetas finas} & \textbf{Inclusión operacional y exclusiones} & \textbf{Antecedentes que orientan la decisión} \\
+\textbf{Salida} & \textbf{Definición operacional} & \textbf{Autores y fuentes utilizados} \\
 \midrule
-\Rac & \texttt{racismo\_etnico\_explicito}, \texttt{racismo\_linguistico}, \texttt{clasismo\_racial}, \texttt{discriminacion\_regional}, \texttt{racismo\_encubierto} & Ataque o inferiorización por identidad étnico-racial, origen regional, variedad lingüística o clase racializada; incluye formas encubiertas tras criterios de educación/cultura. Una mención identitaria, el español andino o una crítica no degradante no bastan. & Callirgos; Zavala y Zariquiey; Zavala y Back; Brañez; Zavala y Almeida; Salem; Portocarrero/Vich \cite{callirgos1993racismo,zavala2007discurso,zavala2017racismo,branez2012amixer,almeida2022motoso,salem2016amixer,portocarrero2009racismo,vich2018dinamicas}. \\
-\Gen & \texttt{misoginia\_acoso\_genero}, \texttt{homofobia\_transfobia} & Ataque, misoginia o machismo hostil, degradación sexualizada o exclusión por ser mujer, por género, orientación sexual, identidad o expresión. No activa por informar, apoyar o mencionar a una población. Puede coexistir con \Ame{} si además hay ataque interpersonal. & EXIST; Zeinert \emph{et al.}; Albornoz y Flores; Defensoría; Chakravarthi; Rottenbacher; Lovón-Cueva y Lovón-Cueva \cite{rodriguez2021exist,zeinert2021misogyny,albornoz2018conocer,defensoria2021violenciaenlinea,chakravarthi2024homotrans,rottenbacher2012homofobia,lovon2022lesbofobia}. \\
-\Ame & \texttt{acoso\_personal}, \texttt{amenaza\_directa} & Ataque dirigido a una persona identificable o exposición de datos privados; expresión de intención de daño físico y, por regla local, legal o económico. Una crítica aislada no degradante o una noticia que cita una amenaza sin respaldarla requiere contexto y no activa automáticamente. & Ataque dirigido, doxeo y amenaza \cite{waseem2017abuse,wulczyn2017exmachina,banko2020taxonomy,defensoria2021violenciaenlinea}. La extensión a daño legal/económico y la fusión son decisiones locales. \\
-\Sex & \texttt{sexual\_explicito}, \texttt{sexual\_cosificacion}, \texttt{sexual\_no\_consensual} & Descripción sexual gráfica sin fin informativo, reducción de una persona a objeto sexual o referencia a material íntimo sin consentimiento. No toda mención sexual es daño; se excluye el uso educativo, periodístico, documental, científico o artístico cuando el contexto lo sustenta. El sistema observa texto, no desnudez visual. & Tipología de daño, misoginia, violencia peruana en línea y política de plataforma \cite{banko2020taxonomy,zeinert2021misogyny,albornoz2018conocer,defensoria2021violenciaenlinea,youtube2026sexualpolicy}. \\
-\texttt{SEGURO} & \texttt{seguro}, \texttt{seguro\_ironia\_marcada} & Categoría aprendida, mutuamente excluyente con daño. El segundo estado fino exige que la ironía tenga por blanco una institución, política o situación y no ataque a una persona o grupo protegido. Una lista de daños vacía no basta para asignarla. & Regla operacional del proyecto; no es una categoría experta ni legal. \\
-Flags & \texttt{ironia\_ambigua}, \texttt{humor\_encubridor}, \texttt{contexto\_necesario} & Señalan sentido incierto, humor que acompaña daño o evidencia insuficiente en el chunk. Solo se conservan junto a un daño sustentado y activan revisión humana; no son clases de daño. & Abuso implícito, ironía, humor racializado y dependencia del contexto \cite{waseem2017abuse,elsherief2021implicit,ilic2018irony,salem2016amixer,bourgeade2024context,thakur2025quechua}. \\
+\texttt{SEGURO} & Ausencia de evidencia suficiente para los cuatro daños. Es una salida aprendida y exclusiva; ambigüedad o conflicto obliga revisión. & Regla operacional del proyecto, diferenciada de las dimensiones dañinas de Waseem \emph{et al.} y Banko \emph{et al.} \cite{waseem2017abuse,banko2020taxonomy}. \\
+\Rac & Ataque o inferiorización por identidad étnico-racial, origen regional, variedad lingüística o clase racializada; una mención identitaria no basta. & Callirgos; Zavala y Zariquiey; Zavala y Back; Brañez; Almeida y Zavala; Salem; Vich \cite{callirgos1993racismo,zavala2007discurso,zavala2017racismo,branez2012amixer,almeida2022motoso,salem2016amixer,vich2018dinamicas}. \\
+\Gen & Ataque, exclusión o degradación por género, orientación, identidad o expresión; puede coexistir con acoso. & Rodríguez-Sánchez \emph{et al.}; Zeinert, Inie y Derczynski; Albornoz y Flores; Defensoría del Pueblo; Chakravarthi \emph{et al.}; Rottenbacher; Lovón-Cueva y Lovón-Cueva \cite{rodriguez2021exist,zeinert2021misogyny,albornoz2018conocer,defensoria2021violenciaenlinea,chakravarthi2024homotrans,rottenbacher2012homofobia,lovon2022lesbofobia}. \\
+\Ame & Hostigamiento o ataque dirigido a una persona identificable, exposición privada o amenaza de daño. La unión conserva subtipos finos. & Waseem \emph{et al.}; Wulczyn, Thain y Dixon; Banko \emph{et al.}; Defensoría del Pueblo \cite{waseem2017abuse,wulczyn2017exmachina,banko2020taxonomy,defensoria2021violenciaenlinea}. \\
+\Sex & Descripción sexual gráfica sin fin informativo, cosificación o referencia a material íntimo no consentido; el sistema observa texto, no imagen. & Banko \emph{et al.}; Zeinert, Inie y Derczynski; Albornoz y Flores; Defensoría del Pueblo; política de YouTube \cite{banko2020taxonomy,zeinert2021misogyny,albornoz2018conocer,defensoria2021violenciaenlinea,youtube2026sexualpolicy}. \\
 \bottomrule
 \end{tabularx}
 \end{table*}
 
-La carpeta de diseño contiene la entrada, el esquema de salida y 60 casos de verificación que cumplen el formato previsto. La guía 1.3 se conserva como parte del protocolo de anotación y la Tabla~\ref{tab:taxonomia} presenta por separado el sustento académico de las categorías.
+\subsection{Etiquetado y control de calidad}
 
-En modelos clásicos y Transformers compactos, las finas y flags se reservaron para derivación o auditoría. En Qwen fueron objetivos auxiliares predichos desde texto, nunca variables \emph{gold} entregadas como entrada. Las reglas que limitan confianza a 0,65 ante ironía/contexto y activan revisión por debajo de 0,70 también pertenecen al protocolo local; no son umbrales tomados de la literatura.
+La preanotación combina definiciones versionadas, salida JSON validable y revisión por etapas. Un modelo amplio propone categorías; una segunda revisión atiende daños, baja confianza y negativos difíciles; la cola final permite aceptar, rechazar o modificar cada propuesta. El historial conserva 55\,966 eventos. Un panel estratificado congelado contiene 16\,694 chunks y la huella combinada de auditoría alcanza 17\,635 chunks únicos (10,18\% del universo elegible). Estas cifras representan decisiones asistidas y trazables; no equivalen a doble anotación humana independiente ni autorizan reportar acuerdo interanotador general.
 
-\subsection{Preanotación y adjudicación}
+La precedencia es revisión final asistida sobre las propuestas anteriores. Los casos sin resolución suficiente se excluyen del entrenamiento. Las etiquetas finas y flags actúan como objetivos auxiliares en modelos que los soportan; nunca se entregan como predictores \emph{gold} durante la inferencia.
 
-El flujo completo combina preanotación, revisión dirigida y adjudicación. DeepSeek Flash realiza la preanotación amplia y DeepSeek Pro revisa de forma selectiva las propuestas con daño, baja confianza o flags, además de un control reproducible de seguros y negativos difíciles. Buscar rótulos posiblemente erróneos responde a un riesgo conocido \cite{brodley1999mislabeled}, pero la minería concreta de este proyecto es una auditoría heurística propia. Los casos todavía inciertos pasan a revisión final asistida.
+\subsection{Partición y muestras de entrenamiento}
 
-La cola final presenta la propuesta de Pro durante la revisión y conserva la decisión resultante. La procedencia del corpus es 93\,636 chunks Flash (80\%), 20\,516 Pro o minería Pro (18\%) y 3\,092 revisiones humanas asistidas (2,6\%); los porcentajes se redondean de forma independiente. La precedencia es revisión humana final \(>\) Pro de minería \(>\) Pro \(>\) Flash.
+La separación se realiza por \texttt{video\_id}; ningún video cruza train, validation y test. El snapshot conserva la prevalencia de cada partición (Tabla~\ref{tab:splits}). Para el ajuste y la comparación se mantienen todos los daños y se seleccionan cuatro seguros por cada chunk dañino mediante hash y semilla declarada. Así, train usa 51\,205 filas (10\,241 daños + 40\,964 seguros) y validation 10\,600 (2\,120 + 8\,480). El test permanece completo y sellado con 22\,684 filas. Tras una sola inferencia se produce también una vista secundaria 4:1, sin reabrir test.
 
-El Apéndice~\ref{app:interfaces} muestra la vista final usada para contrastar el texto, su intervalo y la propuesta del LLM antes de aceptar, rechazar o modificar la decisión.
-
-\subsection{Particiones y control contra fuga}
-
-Para la comparación común se conservan todos los casos con daño y cuatro seguros elegidos por hash por cada caso positivo. La muestra resultante contiene 20\% de daño y, por ello, no representa la distribución natural de la plataforma \cite{huang2021balancing,tonneau2024naijahate}. Las particiones se forman por video con proporción 70/15/15, de modo que ningún video se comparte entre entrenamiento, validación y prueba \cite{sklearn2026groupshufflesplit}. Las puertas binarias incorporan negativos adicionales solo desde videos asignados a entrenamiento; las otras particiones no se reutilizan para ajustar modelos.
+\begin{table}[t]
+\centering
+\caption{Partición natural del snapshot por video}
+\label{tab:splits}
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\textbf{Split} & \textbf{Chunks} & \textbf{Videos} & \textbf{Daño} & \textbf{Seguro} \\
+\midrule
+Train & 123\,239 & 3\,478 & 10\,241 & 112\,998 \\
+Validation & 27\,317 & 754 & 2\,120 & 25\,197 \\
+Test & 22\,684 & 674 & 1\,802 & 20\,882 \\
+\bottomrule
+\end{tabular}
+\end{table}

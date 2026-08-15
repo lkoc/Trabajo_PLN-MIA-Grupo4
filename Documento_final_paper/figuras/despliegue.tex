@@ -1,38 +1,25 @@
 \begin{tikzpicture}[
-  font=\footnotesize,
-  node distance=5mm and 6mm,
-  box/.style={draw,rounded corners=2pt,text width=25mm,minimum height=10mm,align=center},
+  font=\scriptsize,
+  box/.style={draw,rounded corners=2pt,text width=24mm,minimum height=11mm,align=center,inner sep=2pt},
   input/.style={box,fill=blue!7},
-  model/.style={box,fill=orange!9},
-  human/.style={box,fill=green!10},
-  store/.style={box,fill=purple!8},
-  arr/.style={-{Stealth[length=2mm]},thick}
+  model/.style={box,fill=orange!9,text width=27mm},
+  human/.style={box,fill=green!10,text width=28mm},
+  store/.style={box,fill=purple!8,text width=28mm},
+  arr/.style={-{Stealth[length=1.8mm]},thick}
 ]
-\node[input] (entry) {Una caja\\texto o URL};
-\node[input,right=of entry] (detect) {Detección automática\\frase / YouTube};
-\node[input,right=of detect] (prep) {Subtítulos exigidos\\chunks + tiempos};
-\node[model,right=of prep,yshift=14mm] (svm) {SVM plano};
-\node[model,right=of prep] (e5) {E5 plano};
-\node[model,right=of prep,yshift=-14mm] (qwen) {Qwen3--LoRA\\plano};
-\node[model,right=10mm of e5] (rule) {Modelo único,\\comparación o\\consenso 2 de 3};
-\node[human,right=of rule] (decision) {Alerta + evidencia\\aceptar, rechazar\\o modificar};
-\node[store,below=8mm of decision] (store) {Base y registro versionado\\modelo, categoría,\\decisión y versión};
-\draw[arr] (entry)--(detect);
-\draw[arr] (detect)--(prep);
-% Dos buses en carriles vacíos sustituyen las diagonales de entrada y salida.
-\coordinate (inbus) at ([xshift=3mm]prep.east);
-\draw[thick] (prep.east)--(inbus);
-\draw[thick] (inbus |- svm.west)--(inbus |- qwen.west);
-\foreach \m in {svm,e5,qwen}{
-  \draw[arr] (inbus |- \m.west)--(\m.west);
-}
-\coordinate (outbus) at ([xshift=-3mm]rule.west);
-\foreach \m in {svm,e5,qwen}{
-  \draw[thick] (\m.east)--(outbus |- \m.east);
-}
-\draw[thick] (outbus |- svm.east)--(outbus |- qwen.east);
-\draw[arr] (outbus |- rule.west)--(rule.west);
-\draw[arr] (rule)--(decision);
-\draw[arr] (decision)--(store);
-\draw[arr,dashed] (store.south) -- ++(0,-5mm) -| node[pos=.5,below]{futura iteración} (prep.south);
+\node[input] (entry) {Texto o URL\\con subtítulos};
+\node[input,right=6mm of entry] (prep) {Limpieza y chunks\\con tiempos};
+\node[model,right=8mm of prep,yshift=21mm] (classic) {Clásico ganador\\logística ($C=0{,}5$)};
+\node[model,right=8mm of prep,yshift=7mm] (trans) {Transformer ganador\\cascada E5 v2};
+\node[model,right=8mm of prep,yshift=-7mm] (qwen) {Qwen ganador\\Qwen3--LoRA};
+\node[model,right=8mm of prep,yshift=-21mm] (ens) {Ensemble ganador\\promedio suave};
+\draw[arr] (entry)--(prep);
+\foreach \m in {classic,trans,qwen,ens}{\draw[arr] (prep.east) -- ++(4mm,0) |- (\m.west);}
+\node[human,right=16mm of qwen,yshift=7mm] (decision) {Resultado elegido\\categorías, scores\\y razón de revisión};
+\foreach \m in {classic,trans,qwen,ens}{\draw[arr] (\m.east) -- ++(4mm,0) |- (decision.west);}
+\node[human,right=7mm of decision] (review) {Supervisor\\acepta, rechaza\\o modifica};
+\node[store,below=8mm of review] (store) {Registro versionado\\modelo, evidencia\\y decisión};
+\draw[arr] (decision)--(review);
+\draw[arr] (review)--(store);
+\draw[arr,dashed] (store.south) -- ++(0,-5mm) -| node[pos=.55,below]{futura versión} (prep.south);
 \end{tikzpicture}

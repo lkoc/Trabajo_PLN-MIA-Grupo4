@@ -6,88 +6,47 @@
 
 ---
 
-## Documento final IEEE
+## Artículo IEEE actualizado
 
-> **Estado de contrato (2026-08-05).** Las métricas y tablas del manuscrito son la línea base ejecutada de cuatro salidas de daño, con `SEGURO` derivado. La implementación reproducible activa usa cinco salidas aprendidas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente y los cuatro daños son multietiqueta; los casos indeterminados se difieren y no entran al entrenamiento. Su reentrenamiento y evaluación integral están pendientes y no se sustituyen por las métricas históricas. El PDF anterior está preservado por SHA-256 en `Planning/inventario_pre_reorganizacion.json`.
+El manuscrito presenta el contrato v2.1 y los resultados vigentes de `03_07`/`03_07a`. Las versiones antiguas se mencionan únicamente como antecedentes de la mejora metodológica; sus métricas no se mezclan con la comparación actual.
 
-Esta carpeta contiene el artículo final del proyecto **Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural**. El manuscrito presenta el artefacto ya construido y evaluado mediante Design Science Research (DSR): modelos compactos priorizan y diagnostican preliminarmente fragmentos problemáticos, y un supervisor humano conserva la decisión.
+Las cinco salidas aprendidas son `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`.
 
-## Archivos
+## Resultado principal
 
-- `paper_moderador_contenido_youtube_ieee.tex`: fuente principal con clase `IEEEtran`, modo conferencia y hoja A4.
-- `secciones/`: contenido modular del resumen, introduccion, bases, problema/objetivos, metodologia, resultados, discusion, conclusiones y anexos.
-- `referencias.bib`: bibliografia comun en BibTeX y estilo numerico IEEE.
-- `figuras/`: figuras publicables y sus fuentes reproducibles.
-- `ontologia_moderacion.ttl`: vocabulario formal OWL/Turtle que enlaza video, subtitulo, chunk, anotacion, daño, prediccion, revision y artefacto.
-- `guia_estructura_paper_ieee.md`: contenido obligatorio y relacion entre problemas, objetivos, metodo y resultados.
-- `guia_redaccion_paper_ieee.md`: reglas de evidencia, citas y revision editorial.
-- `AUDITORIA_CITAS_Y_ESTILO.md`: cierre comprobable de citas, compilación y revisión visual.
-- `../archivo/taxonomia_v1_3/para_equiquetado_LLM/AUDITORIA_ACADEMICA_TAXONOMIA.md`: inventario histórico, definiciones, sustento y contradicciones del paquete v1.3.
-- `../docs/TAXONOMIA_V2.md` y `../docs/MATRIZ_TRAZABILIDAD.md`: contrato activo y trazabilidad de afirmaciones.
+- Corpus: 173 240 chunks elegibles de 4 906 videos; 14 163 contienen al menos un daño.
+- Comparación: 28 modelos individuales y cinco ensembles sobre una validación común de 10 600 filas.
+- Selección congelada: `ensemble_soft_mean`, compuesto por regresión logística TF--IDF, cascada E5 v2 y Qwen3--0.6B con LoRA.
+- Validation OOF: BA 0,840; macro-AUPRC de daños 0,555; macro-F1 de daños 0,568.
+- Test natural abierto una vez: 22 684 chunks; BA 0,846 y sensibilidad 0,906 para cualquier daño.
+- Política selectiva: 34,8 % a revisión; sobre el 65,2 % automático, BA 0,940.
 
-## Datos de autoría
+El estado inferencial sigue siendo `statistical_tie_or_inconclusive`: el ensemble ocupa el primer lugar por el criterio predeclarado, pero el contraste pareado no demuestra superioridad estadística frente al retador más cercano.
 
-La forma canónica de autoría es: Luis Enrique Koc Góngora, Alex Felipe Mancilla Antay, Herbert Antonio Meléndez García y Dennis Jack Paitán Cano. Todos comparten la afiliación Maestría en Inteligencia Artificial, Universidad Nacional de Ingeniería, Lima, Perú. La forma abreviada para una plantilla que admita encabezado corto es “L. Koc, A. Mancilla, H. Meléndez y D. Paitán”.
+## Archivos principales
 
-Los correos registrados son `luis.koc@gmail.com`, `amancillaa@uni.pe`, `hamg.94@gmail.com` y `dennis.paitan.c@uni.pe`. La clase `IEEEtran` los presenta en el bloque común de afiliación; no admite directamente los comandos `\shortauthors`, `\fnmark` y `\fntext` de otras plantillas. No se incorporan los valores `auid=000`, porque son marcadores sin un identificador de autor verificable.
-
-El `.tex` y `referencias.bib` son las fuentes del entregable. El PDF se considera un producto derivado y debe regenerarse despues de cualquier cambio.
-
-La revisión cerrada el 29 de julio de 2026 contiene 117 claves citadas y 117 entradas BibTeX, sin claves ausentes ni entradas sin uso. `../referencias_y_descargas/` conserva el índice de las fuentes y 81 PDF oficiales o de acceso abierto validados; las 36 fuentes restantes se documentan mediante su página canónica o la razón por la que no existe una copia local apropiada.
-
-El detalle visual del corpus aparece en la metodología, los resultados y los anexos: total integrado, embudo Flash--Pro--revisión humana final, tabla por categoría de fuente, procedencia de etiquetas y diagrama de selección. El cuerpo reporta el corpus como una sola unidad y evita desglosar su tamaño por campañas. Las cifras se recalculan desde el JSONL integrado y sus manifiestos; no deben sustituirse por totales de informes intermedios. La revisión humana se describe por su función, cantidad y procedencia, sin trasladar identificadores internos al artículo.
+- `paper_moderador_contenido_youtube_ieee.tex`: fuente principal IEEE A4.
+- `paper_moderador_contenido_youtube_ieee.pdf`: PDF compilado.
+- `secciones/`: resumen, problema, datos, modelos, resultados, discusión, conclusiones y anexos.
+- `referencias.bib`: bibliografía común.
+- `ontologia_moderacion.ttl`: vocabulario formal de trazabilidad.
+- `figuras/`: diagramas, gráficos de `03_07a` y capturas de interfaces.
+- `AUDITORIA_ACTUALIZACION_20260815.md`: control de cifras, citas, compilación y revisión visual.
 
 ## Fuentes de verdad
 
-No se deben reconstruir cifras desde la memoria ni desde salidas antiguas incrustadas en cuadernos. Use, en este orden:
+1. `../resultados/modelos/seleccion_congelada.json` para miembros, calibradores, umbrales y política de revisión.
+2. `../resultados/modelos/comparacion_individual_ensemble_validation.json` para ranking, Pareto y bootstrap.
+3. `../resultados/modelos/test_final_abierto_una_vez.json` para test natural y vista secundaria 4:1.
+4. `../resultados/modelos/resumen_03_07a.json` y sus tablas para la síntesis editorial.
+5. `../docs/artefactos/auditoria_estado_final_182461.json` para corpus, particiones y auditoría del etiquetado.
 
-1. `../README.md`, `../docs/` y `../flujo/*/README.md` para el contrato activo y su orden de ejecución.
-2. `../config/taxonomia_v2.json` para las cinco salidas entrenadas, etiquetas finas y reglas de exclusividad.
-3. `../archivo/estructura_anterior/Cuadernos/04_MATRIZ_ENTRENAMIENTO_4_ETIQUETAS.md` y `04_200_ORDEN_EJECUCION.md` para el contrato del baseline ejecutado.
-4. `../archivo/contrato_4_danos_seguro_derivado/resultados/metricas/comparacion_final_4/comparacion_todos_modelos_4.csv` para la comparación común histórica.
-5. `../archivo/contrato_4_danos_seguro_derivado/resultados/metricas/comparacion_final_4/registro_modelos_desplegables.json` para los modelos publicados por familia y sus hashes.
-6. Los informes en `../archivo/contrato_4_danos_seguro_derivado/resultados/` para configuración, resultados y limitaciones de esa línea base.
+## Compilación
 
-Los experimentos archivados de cinco daños y el baseline de cuatro daños deben identificarse por su contrato. No pueden compararse como si hubieran usado el mismo conjunto de prueba. El nuevo contrato de cinco salidas incluye `SEGURO` como objetivo aprendido y no hereda métricas hasta completar entrenamiento y recalibración.
-
-## Compilacion reproducible
-
-Desde la raiz del repositorio:
-
-```powershell
-latexmk -cd -pdf -interaction=nonstopmode -halt-on-error -file-line-error Documento_final_paper/paper_moderador_contenido_youtube_ieee.tex
-```
-
-O desde esta carpeta:
+Desde esta carpeta:
 
 ```powershell
 latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error paper_moderador_contenido_youtube_ieee.tex
 ```
 
-`latexmk` ejecuta automaticamente las pasadas necesarias de LaTeX y BibTeX. Una compilacion final aceptable debe satisfacer:
-
-- hoja física A4 de 210 × 297 mm, generada con la opción de clase `a4paper`;
-- cero referencias o citas indefinidas;
-- cero errores y cero cajas `Overfull` sin justificar;
-- todos los graficos presentes, legibles y citados en el texto;
-- bibliografia completa y numerada en orden de aparicion;
-- PDF generado despues del `.tex`, `.bib` y figuras que lo originan.
-
-Revise el archivo `paper_moderador_contenido_youtube_ieee.log`; los avisos `Underfull` requieren inspeccion visual, aunque no todos implican un defecto.
-
-## Afirmaciones que deben evitarse
-
-- No afirmar que se uso Whisper o ASR local si no existe una ejecucion y un artefacto verificables. El modo operativo 05 rechaza enlaces sin subtitulos descargables.
-- No describir todo el flujo como “sin APIs”. Debe distinguirse la recoleccion sin la API oficial de YouTube del pseudoetiquetado autorizado mediante modelos externos y de la inferencia operativa local.
-- No afirmar doble anotacion ni reportar Cohen kappa: la adjudicacion disponible no permite estimarlo.
-- No llamar “verdad de terreno humana independiente” al test actual, compuesto principalmente por etiquetas asistidas por LLM.
-- Presentar primero el logro validado: priorización semiautomática, diagnóstico preliminar y evidencia temporal para un supervisor con recursos asequibles. Después delimitar que el bloqueo o la sanción sin revisión pertenecen a otro alcance.
-
-## Cierre en dos revisiones
-
-1. **Revision cientifica y de trazabilidad:** comprobar cada cifra contra su artefacto; separar seleccion en validacion de evaluacion en test; declarar pseudoetiquetado, balance 4:1, reutilizacion historica del test y demas limitaciones; verificar internamente que el cierre responde al objetivo general y a cada objetivo específico, aunque la prosa publicada no use «objetivo» ni códigos `O1`/`O2`; clasificar cada distancia inicial como eliminada, reducida o pendiente y ligar cada pendiente con una acción posterior.
-2. **Revision editorial y visual:** comprobar estilo IEEE, ortografia, nombres oficiales de autores e institucion, citas, captions, legibilidad en dos columnas y compilacion limpia. Leer tambien el PDF completo, no solo el fuente.
-
-La declaración publicada de disponibilidad debe indicar qué datos, cuadernos, scripts y artefactos están disponibles y en qué repositorios. Los SHA, commits y hashes concretos pertenecen a manifiestos técnicos fuera del cuerpo.
-
-El manuscrito solo se considera cerrado cuando supera ambas revisiones y el Beamer se vuelve a alinear con su version final.
+El cierre exige cero errores, citas o referencias indefinidas y cajas `Overfull`, además de inspección visual de todas las páginas.

@@ -1,12 +1,12 @@
 \section{Interfaces de anotación y operación}
 \label{app:interfaces}
 
-La Fig.~\ref{fig:interfaz_etiquetado} muestra la versión final del entorno de revisión humana con un chunk real del corpus. La propuesta de DeepSeek Pro aparece antes de decidir y deja tres acciones explícitas: aceptarla, rechazar el caso o modificar las categorías y señales antes de guardar la versión humana. El contador corresponde a la campaña integrada que alimenta esta interfaz. La Fig.~\ref{fig:interfaz_operacion} compara cuatro ejecuciones reales del servidor con texto y video, mediante Qwen3--LoRA y consenso 2 de 3.
+La Fig.~\ref{fig:interfaz_etiquetado} documenta el entorno de etiquetado: texto, intervalo, propuesta previa, categorías y acciones quedan visibles antes de guardar. La Fig.~\ref{fig:interfaz_operacion} muestra la interfaz de producción, que conserva una única entrada para texto o URL y permite seleccionar los tres ganadores por tipo o el ensemble congelado. Cada resultado debe identificar modelo, versión, scores, umbrales y razón de revisión.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=.98\linewidth,height=.78\textheight,keepaspectratio]{figuras/captura_entorno_etiquetado.png}
-\caption{Entorno final de revisión humana: texto y contexto, propuesta visible del LLM y controles para aceptar, rechazar o modificar. Captura local del artefacto del proyecto con un registro real.}
+\includegraphics[width=.96\linewidth,height=.72\textheight,keepaspectratio]{figuras/captura_entorno_etiquetado.png}
+\caption{Entorno de revisión de etiquetas: contexto, propuesta y controles para aceptar, rechazar o modificar. Captura del artefacto del proyecto.}
 \label{fig:interfaz_etiquetado}
 \end{figure}
 
@@ -14,30 +14,7 @@ La Fig.~\ref{fig:interfaz_etiquetado} muestra la versión final del entorno de r
 
 \begin{figure}[H]
 \centering
-\setlength{\fboxsep}{1pt}
-\setlength{\fboxrule}{0.35pt}
-\begin{minipage}[t]{.498\linewidth}
-\centering
-\fbox{\includegraphics[width=\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax,height=.38\textheight,keepaspectratio]{figuras/captura_operacion_texto_qwen.png}}\\[-.2ex]
-{\footnotesize (a) Texto con Qwen3--LoRA}
-\end{minipage}\hfill
-\begin{minipage}[t]{.498\linewidth}
-\centering
-\fbox{\includegraphics[width=\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax,height=.38\textheight,keepaspectratio]{figuras/captura_operacion_texto_consenso.png}}\\[-.2ex]
-{\footnotesize (b) Texto con consenso 2 de 3}
-\end{minipage}
-
-\vspace{.5ex}
-\begin{minipage}[t]{.498\linewidth}
-\centering
-\fbox{\includegraphics[width=\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax,height=.38\textheight,keepaspectratio]{figuras/captura_operacion_youtube_qwen.png}}\\[-.2ex]
-{\footnotesize (c) Video real con Qwen3--LoRA}
-\end{minipage}\hfill
-\begin{minipage}[t]{.498\linewidth}
-\centering
-\fbox{\includegraphics[width=\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax,height=.38\textheight,keepaspectratio]{figuras/captura_operacion_youtube_consenso.png}}\\[-.2ex]
-{\footnotesize (d) El mismo video con consenso 2 de 3}
-\end{minipage}
-\caption{Panel de ejecuciones reales del servidor del paquete desplegable: (a) chunk de validación al que Qwen3--LoRA asigna 0,94 en contenido sexual; (b) el mismo texto con consenso 2 de 3; (c) URL del video \emph{Alias ``El Wichi'': extorsionaba a sus víctimas bajo amenaza de muerte}, del canal Panorama, procesada en 25 chunks de subtítulos automáticos con Qwen3--LoRA; y (d) la misma URL con consenso 2 de 3. Los recortes conservan entrada, resumen, fragmento, categorías y puntajes; omiten el reproductor y controles secundarios.}
+\fbox{\includegraphics[width=.94\linewidth,height=.74\textheight,keepaspectratio]{figuras/captura_entorno_operacion.png}}
+\caption{Frontend de producción: entrada textual o URL, selección de modelo, categorías, scores y evidencia temporal. La versión funcional se alinea con los candidatos congelados de 03\_07.}
 \label{fig:interfaz_operacion}
 \end{figure}

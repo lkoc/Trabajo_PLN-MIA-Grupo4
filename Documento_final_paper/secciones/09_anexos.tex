@@ -1,9 +1,114 @@
 \appendices
 \onecolumn
-\input{secciones/anexo_a_prompt}
 
-\clearpage
-\input{secciones/anexo_b_ejemplos}
+\section{Especificación del ensemble congelado}
+\label{app:ensemble}
+
+El artefacto \texttt{seleccion\_congelada.json}, esquema 4.0.0, fija la firma de comparación, el hash del dataset, los tres miembros, calibradores, umbrales y política de revisión. La Tabla~\ref{tab:ensemble_members_app} detalla la composición. Los nombres cortos usados en el cuerpo corresponden a identificadores inmutables de candidato.
+
+\begin{table}[H]
+\centering
+\caption{Miembros del ensemble de producción}
+\label{tab:ensemble_members_app}
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries}p{25mm}p{58mm}X rrr}
+\toprule
+\textbf{Tipo} & \textbf{Identificador} & \textbf{Arquitectura} & \textbf{BA} & \textbf{AUPRC} & \textbf{F1} \\
+\midrule
+Clásico & \path{classical-logistic_regression_c0p5-54f7971c6000} & TF--IDF palabra 1--2 + carácter 3--5; OVR enmascarado; logística $C=0,5$. & 0,8014 & 0,4787 & 0,5034 \\
+Transformer & \path{cascade_v2-af78eba77883} & E5 compuerta \texttt{ANY\_DAMAGE} + E5 rama de cinco salidas; enrutamiento seguro. & 0,8170 & 0,4489 & 0,5192 \\
+Qwen & \path{qwen_lora-4aa5ce04df05} & Qwen3--0.6B-Base; LoRA ($r=8$, $\alpha=16$, $p=0{,}05$) en Q/K/V/O; cabeza de 22 logits. & 0,8314 & 0,5158 & 0,5534 \\
+Ensemble & \path{ensemble_soft_mean} & Media simple de los tres scores por salida y calibración sigmoidal posterior. & 0,8400 & 0,5549 & 0,5683 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+La Tabla~\ref{tab:calibracion_app} permite reconstruir la salida final. Para cada categoría se calcula $\hat p_k=\sigma(a_k\bar{s}_k+b_k)$ y se activa cuando $\hat p_k\ge\theta_k$. La compuerta de cualquier daño usa además un corte congelado de 0,05817 sobre el máximo de las cuatro salidas dañinas calibradas.
+
+\begin{table}[H]
+\centering
+\caption{Calibradores y umbrales del ensemble congelado}
+\label{tab:calibracion_app}
+\small
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Salida} & $\boldsymbol{a_k}$ & $\boldsymbol{b_k}$ & $\boldsymbol{\theta_k}$ \\
+\midrule
+\texttt{SEGURO} & 6,2826 & -2,9738 & 0,39 \\
+\Rac & 7,1743 & -5,2129 & 0,20 \\
+\Gen & 5,9253 & -4,9025 & 0,19 \\
+\Ame & 5,7678 & -4,2600 & 0,32 \\
+\Sex & 6,9926 & -4,9314 & 0,50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El promedio ponderado, retador más cercano, usa pesos 0,3317, 0,3110 y 0,3573 para clásico, Transformer y Qwen, respectivamente. La diferencia de BA frente al promedio simple es $-0,00166$, con IC95\% que cruza cero. Por tanto, el promedio simple se conserva por el criterio predeclarado, no por una afirmación de superioridad absoluta.
+
+\section{Resultados ampliados}
+\label{app:resultados}
+
+\begin{table}[H]
+\centering
+\caption{Ganadores por categoría en validation, restringidos a candidatos que superan la salvaguarda global}
+\label{tab:ganadores_categoria_app}
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries}p{38mm}X r X r X rr}
+\toprule
+\textbf{Salida} & \textbf{Mejor AUPRC} & \textbf{Valor} & \textbf{Mejor F1} & \textbf{Valor} & \textbf{Mejor recall} & \textbf{Valor} & \textbf{Prec.} \\
+\midrule
+\texttt{SEGURO} & Ensemble ponderado & 0,9745 & Qwen ctx256 & 0,9240 & SVM $C=2$ & 0,9665 & 0,8640 \\
+\Rac & Qwen ctx256 & 0,5711 & Qwen ctx256 & 0,6222 & Qwen ctx256 & 0,6832 & 0,5711 \\
+\Gen & Qwen ctx256 & 0,4017 & Mayoría dura & 0,4695 & Ensemble ponderado & 0,5535 & 0,3884 \\
+\Ame & Ensemble ponderado & 0,6143 & Unión & 0,5839 & Unión & 0,6344 & 0,5409 \\
+\Sex & Promedio simple & 0,6876 & Unión & 0,6382 & Unión & 0,6382 & 0,6382 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Métricas globales de las dos vistas derivadas de una sola apertura de test}
+\label{tab:test_views_app}
+\small
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\textbf{Vista} & \textbf{Filas} & \textbf{BA} & \textbf{F1 any} & \textbf{AUPRC daño} & \textbf{F1 daño} & \textbf{F1 cinco} & \textbf{ECE} & \textbf{Brier} \\
+\midrule
+Natural & 22\,684 & 0,8459 & 0,4132 & 0,4152 & 0,4348 & 0,5393 & 0,0184 & 0,0283 \\
+4:1 secundaria & 9\,010 & 0,8459 & 0,6559 & 0,5694 & 0,5582 & 0,6318 & 0,0107 & 0,0452 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La vista 4:1 selecciona de forma determinista 7\,208 seguros y conserva los 1\,802 daños. Reutiliza exactamente los scores de la vista natural. La diferencia de F1 y AUPRC refleja prevalencia, no otro modelo ni otra inferencia.
+
+\begin{table}[H]
+\centering
+\caption{Matriz binaria de cualquier daño en test natural}
+\label{tab:confusion_app}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Política} & \textbf{TP} & \textbf{FN} & \textbf{FP} & \textbf{TN} \\
+\midrule
+Compuerta completa & 1\,632 & 170 & 4\,466 & 16\,416 \\
+Ruta automática selectiva & 912 & 60 & 813 & 13\,012 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Ontología y vocabulario controlado}
+\label{app:ontologia}
+
+La ontología liviana distingue evidencia, anotación, categoría operativa, predicción, decisión humana y registro reentrenable. El archivo \path{ontologia_moderacion.ttl} conserva la versión legible por máquina; la Fig.~\ref{fig:ontologia_app} resume las relaciones empleadas por el artículo y el demostrador.
+
+\begin{figure}[H]
+\centering
+\resizebox{.98\textwidth}{!}{\input{figuras/ontologia_trazabilidad.tex}}
+\caption{Ontología de trazabilidad desde el video hasta la decisión humana y la retroalimentación. Elaboración propia.}
+\label{fig:ontologia_app}
+\end{figure}
 
 \clearpage
 \begin{landscape}
@@ -11,140 +116,28 @@
 \end{landscape}
 
 \clearpage
-\begin{landscape}
-\section{Ontología de conceptos y trazabilidad}
-\label{app:ontologia}
-
-La Fig.~\ref{fig:ontologia} presenta la ontología del proyecto. Su función es semántica y de trazabilidad: cada predicción refiere a una categoría y a un chunk de evidencia; una decisión humana es un evento posterior, no otra palabra para predicción. El archivo \texttt{ontologia\_moderacion.ttl} expresa clases y propiedades en OWL~2, sintaxis RDF/Turtle y definiciones SKOS \cite{w3c2012owl2,w3c2014turtle,w3c2009skos}.
-
-\begin{figure}[H]
-\centering
-\resizebox{0.99\linewidth}{!}{\input{figuras/ontologia_trazabilidad.tex}}
-\caption{Grafo ontológico de trazabilidad. Línea continua: relación de proceso; discontinua: especialización o retorno a una iteración futura. Elaboración propia con base conceptual en \cite{gruber1993ontology,w3c2012owl2}.}
-\label{fig:ontologia}
-\end{figure}
-
-\clearpage
-La Tabla~\ref{tab:ontologia} fija la definición operacional y la regla de trazabilidad de cada término usado en el grafo.
-
-\begin{table}[H]
-\centering
-\caption{Vocabulario controlado y regla de uso en el artículo}
-\label{tab:ontologia}
-\normalsize
-\renewcommand{\arraystretch}{1.16}
-\begin{tabularx}{\linewidth}{>{\bfseries\raggedright\arraybackslash}p{40mm}X X}
-\toprule
-\textbf{Término} & \textbf{Definición operacional} & \textbf{Regla de trazabilidad / fundamento} \\
-\midrule
-Video público & Recurso de YouTube aceptado por los criterios de adquisición. & Conserva \texttt{video\_id}; no implica muestra representativa. \\
-Pista de subtítulos & Texto manual o automático con tiempos, disponible para el video. & No se denomina transcripción de audio propia; el proyecto no usó ASR. \\
-Chunk & Unidad textual cerrada al alcanzar 30 s o 600 caracteres, con mínimo 90; antes se depura repetición VTT de hasta 12 palabras. & Toda alerta debe enlazar \texttt{chunk\_id}, video e intervalo. No existe solapamiento intencional entre chunks. \\
-Anotación & Asignación versionada de conceptos a un chunk. & Distinguir Flash, Pro y revisión final asistida; documentar población y procedencia \cite{bender2018datastatements}. \\
-Daño operativo & Una o más de cuatro categorías activables. & Es multietiqueta \cite{tsoumakas2007multilabel}; no equivale a infracción legal. \\
-Fenómeno fino / flag & Subtipo descriptivo o indicador transversal de ambigüedad. & Un flag no es daño; gold fino no entra como predictor. \\
-SEGURO & En el baseline fue un estado derivado; en el contrato v2 es una quinta salida aprendida y exclusiva. & La migración histórica solo la asigna si existe una decisión segura explícita; no prueba ausencia universal de daño. \\
-Score / umbral & Salida continua y corte fijado en validación. & No llamar probabilidad sin calibración \cite{niculescu2005probabilities}. \\
-\(\AP\) & \(\sum_n(R_n-R_{n-1})P_n\), macro entre daños. & Precisión promedio no interpolada; los archivos dicen PR-AUC \cite{sklearn2026averageprecision}. \\
-Alerta / revisión & Enrutamiento selectivo de una predicción incierta o dañina. & No es sanción; el supervisor acepta, rechaza o modifica \cite{chow1970reject,geifman2017selective,andersen2021rem,mozannar2020defer}. \\
-Operación semiautomática & Servicio que prioriza, presenta evidencia y registra la decisión del supervisor. & Es el alcance implementado por el frontend; afectar usuarios exige validación prospectiva y gobierno operativo. \\
-Artefacto DSR & Conjunto de corpus, modelos, reglas, interfaz, registros y documentación. & Se construye y evalúa iterativamente \cite{hevner2004dsr,peffers2007dsrm}. \\
-\bottomrule
-\end{tabularx}
-\end{table}
-\end{landscape}
-
-\clearpage
-\section{Detalle de fuentes del corpus}
-\label{app:fuentes_dataset}
-
-La Tabla~\ref{tab:categoriasfuente} desagrega el tipo de contenido registrado en los metadatos del corpus integrado. “Muestreo dirigido” describe un régimen de adquisición y no un género editorial; por ello no debe interpretarse como prevalencia de YouTube. La identidad se reconstruye mediante el \texttt{channel\_id} y las URL preservadas en los metadatos de adquisición. Después de unificar aliases y variantes de escritura, los 3\,230 videos proceden de 250 canales únicos.
-
-\begin{table}[H]
-\centering
-\caption{Chunks y daños por categoría de fuente}
-\label{tab:categoriasfuente}
-\small
-\renewcommand{\arraystretch}{1.08}
-\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrrrrr@{}}
-\toprule
-\textbf{Categoría de fuente} & \textbf{Chunks} & \textbf{Videos} & \textbf{Algún daño} & \Rac & \Gen & \Ame & \Sex \\
-\midrule
-Muestreo dirigido & 47\,395 & 1\,374 & 3\,450 & 793 & 948 & 1\,687 & 1\,325 \\
-Humor streaming & 11\,812 & 72 & 1\,621 & 395 & 688 & 232 & 758 \\
-Política actualidad & 9\,212 & 449 & 102 & 32 & 8 & 69 & 0 \\
-Política análisis & 7\,858 & 150 & 233 & 32 & 21 & 193 & 3 \\
-Política periodismo & 7\,583 & 150 & 89 & 13 & 13 & 68 & 0 \\
-Humor podcast & 6\,223 & 69 & 108 & 22 & 39 & 20 & 39 \\
-Política opinión & 5\,895 & 173 & 282 & 59 & 42 & 194 & 21 \\
-Streaming opinión & 5\,155 & 148 & 879 & 378 & 128 & 462 & 76 \\
-Viajes & 4\,877 & 149 & 3 & 2 & 0 & 0 & 1 \\
-Viajes gastronomía & 4\,404 & 150 & 10 & 3 & 3 & 2 & 3 \\
-Deportes informal & 1\,867 & 66 & 4 & 2 & 1 & 1 & 0 \\
-Humor comedia & 1\,673 & 74 & 158 & 98 & 44 & 39 & 22 \\
-Farándula digital & 1\,478 & 44 & 32 & 5 & 4 & 12 & 12 \\
-Farándula & 1\,092 & 75 & 88 & 21 & 20 & 48 & 22 \\
-Deportes & 448 & 74 & 4 & 1 & 2 & 1 & 0 \\
-Gastronomía & 272 & 13 & 0 & 0 & 0 & 0 & 0 \\
-\bottomrule
-\end{tabular*}
-\end{table}
-
-La Tabla~\ref{tab:fuenteetiqueta} separa la fuente de adquisición de la procedencia de supervisión. Los casos con daño, baja confianza o discrepancias pasan a DeepSeek Pro o a revisión humana asistida.
-
-\begin{table}[H]
-\centering
-\caption{Procedencia de las etiquetas del corpus integrado}
-\label{tab:fuenteetiqueta}
-\small
-\begin{tabular}{lrrrrrr}
-\toprule
-\textbf{Fuente de etiqueta} & \textbf{Chunks} & \textbf{Seguro} & \textbf{Daño} & \textbf{Incidencias} & \textbf{Multidaño} & \textbf{Peso base} \\
-\midrule
-Flash pseudoetiqueta & 93\,636 & 93\,636 & 0 & 0 & 0 & \(0,50\times\) confianza \\
-Pro y minería Pro & 20\,516 & 15\,959 & 4\,557 & 5\,426 & 834 & 1 \\
-Revisión final asistida & 3\,092 & 586 & 2\,506 & 3\,701 & 961 & 1 \\
-\midrule
-\textbf{Total} & \textbf{117\,244} & \textbf{110\,181} & \textbf{7\,063} & \textbf{9\,127} & \textbf{1\,795} & \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Las filas de revisión humana final conservan la decisión y su procedencia para mantener la trazabilidad del corpus.
-
-\subsection*{Canales incluidos y direcciones web}
-
-El inventario se limita a los videos presentes en el corpus integrado. La Tabla~\ref{tab:canales_dataset} presenta por separado los canales con más de dos videos y reúne los canales con uno o dos en una fila final denominada ``Otros''. El conteo permite comprobar la concentración por canal; las direcciones individuales de los canales agrupados permanecen en los metadatos del corpus.
-
-\begingroup
-\footnotesize
-\setlength{\LTpre}{4pt}
-\setlength{\LTpost}{4pt}
-\input{secciones/anexo_d_canales}
-\endgroup
-
-\clearpage
-\section{Disponibilidad y reutilización}
+\section{Trazabilidad y disponibilidad}
 \label{app:disponibilidad}
 
-La Tabla~\ref{tab:repositorios} separa las dos ubicaciones del proyecto. GitHub ofrece el código y el historial de cambios; Drive preserva los bytes empleados por los experimentos y los pesos que no se versionan en Git. El acceso a Drive requiere autorización del equipo.
-
 \begin{table}[H]
 \centering
-\caption{Ubicación, contenido y condiciones de acceso de los artefactos}
-\label{tab:repositorios}
-\footnotesize
-\begin{tabularx}{\textwidth}{p{18mm}>{\raggedright\arraybackslash}p{82mm}>{\raggedright\arraybackslash}X p{25mm}}
+\caption{Artefactos fuente de los resultados vigentes}
+\label{tab:artefactos_app}
+\small
+\begin{tabularx}{\textwidth}{p{50mm}X p{45mm}}
 \toprule
-\textbf{Sitio} & \textbf{Enlace} & \textbf{Contenido y formatos} & \textbf{Acceso} \\
+\textbf{Artefacto} & \textbf{Contenido} & \textbf{Uso en el artículo} \\
 \midrule
-GitHub & \url{https://github.com/lkoc/Trabajo_PLN-MIA-Grupo4} & Scripts Python, cuadernos IPYNB, documentación y archivos de datos versionables. & Público; sin licencia explícita de reutilización \\
-Google Drive & \url{https://drive.google.com/drive/folders/1H3PKr7CWd-RwavZgEnfLhh94eq-NO9P3} & Corpus, modelos entrenados, resultados y demás artefactos de mayor tamaño. & Controlado; requiere permiso del equipo \\
+\path{docs/artefactos/auditoria_estado_final_182461.json} & Totales elegibles, etiquetas, videos, particiones y huella de auditoría. & Corpus y etiquetado. \\
+\path{resultados/modelos/comparacion_individual_ensemble_validation.json} & Ranking, OOF, calibración, Pareto, bootstrap y cinco ensembles. & Selección en validation. \\
+\path{resultados/modelos/seleccion_congelada.json} & Miembros, calibradores, umbrales y política \texttt{NEEDS\_REVIEW}. & Especificación desplegable. \\
+\path{resultados/modelos/test_final_abierto_una_vez.json} & Test natural, vista 4:1 y métricas selectivas. & Evaluación final. \\
+\path{resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md} & Tablas y análisis crítico legible. & Control editorial y reproducibilidad. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Los datos, cuadernos y scripts pueden recuperarse desde esos repositorios manteniendo la estructura de carpetas documentada. Los artefactos de mayor tamaño se conservan en Drive; el flujo activo se ejecuta en orden desde \path{flujo/01_datos/} hasta \path{flujo/04_produccion/}, mientras el cuaderno 05 anterior permanece archivado. La accesibilidad técnica no concede por sí sola permiso de reutilización: deben comprobarse las licencias de modelos y herramientas, los términos de YouTube, la privacidad y los derechos sobre los subtítulos \cite{youtube2023terms,aoir2020ethics}.
+GitHub (\url{https://github.com/lkoc/Trabajo_PLN-MIA-Grupo4}) conserva scripts, cuadernos y documentación. Google Drive (\url{https://drive.google.com/drive/folders/1H3PKr7CWd-RwavZgEnfLhh94eq-NO9P3}) conserva corpus, pesos y artefactos de mayor tamaño bajo acceso controlado. La disponibilidad técnica no concede por sí sola permiso de reutilización; deben revisarse licencias, privacidad y términos de YouTube \cite{youtube2023terms,aoir2020ethics}.
 
 \clearpage
 \twocolumn

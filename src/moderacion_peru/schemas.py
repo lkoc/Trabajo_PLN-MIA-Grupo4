@@ -214,6 +214,13 @@ class ModelRegistryEntry(BaseModel):
     inference: dict[str, Any] = Field(default_factory=dict)
     selection_metrics: dict[str, float] = Field(default_factory=dict)
     comparison_registries: dict[str, ArtifactReference] = Field(default_factory=dict)
+    score_calibrators: list[dict[str, Any]] = Field(default_factory=list)
+    ensemble_kind: Literal["soft_mean"] | None = None
+    selected_members: list[str] = Field(default_factory=list)
+    any_damage_threshold: float | None = None
+    needs_review_policy: dict[str, Any] = Field(default_factory=dict)
+    selection_artifact: ArtifactReference | None = None
+    winner_status: str | None = None
     consensus_min_votes: Literal[2] = 2
     status: Literal["candidate", "validated", "shadow_only", "archived"] = "candidate"
 
@@ -231,6 +238,16 @@ class ModelRegistryEntry(BaseModel):
         }
         if unknown_slots:
             raise ValueError(f"Slots productivos desconocidos: {sorted(unknown_slots)}")
+        if self.score_calibrators and len(self.score_calibrators) != len(
+            taxonomy.target_labels
+        ):
+            raise ValueError("Debe existir un calibrador por cada salida entrenada")
+        if self.ensemble_kind and set(self.comparison_registries) != {
+            "classical",
+            "transformer",
+            "qwen",
+        }:
+            raise ValueError("El ensemble productivo exige los tres registros miembro")
         return self
 
 

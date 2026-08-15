@@ -9,14 +9,17 @@ from moderacion_peru.io import (
     write_json_atomic,
     write_jsonl_atomic,
 )
-from moderacion_peru.registry import compare_and_publish_registry
+from moderacion_peru.registry import (
+    compare_and_publish_registry,
+    publish_frozen_ensemble_registry,
+)
 from moderacion_peru.schemas import ReviewEvent
 from moderacion_peru.servers import (
     _consensus_result,
+    _ensemble_soft_mean_result,
     _is_labeling_excluded,
     _is_labeling_priority,
     _is_labeling_urgent,
-    _requires_labeling_action,
     _labeling_bulk_events,
     _labeling_campaign_page,
     _labeling_dashboard,
@@ -24,6 +27,7 @@ from moderacion_peru.servers import (
     _labeling_scope_rows,
     _production_feedback,
     _production_registry_paths,
+    _requires_labeling_action,
 )
 from moderacion_peru.taxonomy import load_taxonomy
 
@@ -717,6 +721,59 @@ def test_registry_publishes_best_member_of_each_historical_frontend_slot(tmp_pat
         )
 
 
+def test_registry_materializes_the_frozen_soft_mean(tmp_path):
+    taxonomy = load_taxonomy()
+    dataset = tmp_path / "dataset.jsonl"
+    dataset.write_text('{"fixture":true}\n', encoding="utf-8")
+    candidates = tmp_path / "candidates"
+    _candidate(candidates, dataset, "classical:sgd", "classic", 0.7)
+    _candidate(candidates, dataset, "flat_minilm", "transformer", 0.8)
+    _candidate(candidates, dataset, "qwen_lora", "qwen", 0.9)
+    members = ["classic", "transformer", "qwen"]
+    calibrators = [
+        {"type": "sigmoid_platt", "coefficient": 1.0, "intercept": 0.0}
+        for _ in taxonomy.target_labels
+    ]
+    freeze = tmp_path / "freeze.json"
+    write_json_atomic(
+        freeze,
+        {
+            "selected_id": "ensemble_soft_mean",
+            "members": members,
+            "dataset_sha256": sha256_file(dataset),
+            "comparison_signature": "fixture-signature",
+            "thresholds": {label: 0.5 for label in taxonomy.target_labels},
+            "score_calibrators": calibrators,
+            "member_thresholds": {
+                member: {label: 0.5 for label in taxonomy.target_labels}
+                for member in members
+            },
+            "member_score_calibrators": {
+                member: calibrators for member in members
+            },
+            "any_damage_threshold": 0.2,
+            "needs_review_policy": {"selected_delta": 0.03},
+            "winner_status": "statistical_tie_or_inconclusive",
+        },
+    )
+    registry = tmp_path / "registro.json"
+
+    result = publish_frozen_ensemble_registry(freeze, [candidates], registry)
+    repeated = publish_frozen_ensemble_registry(freeze, [candidates], registry)
+    payload = json.loads(registry.read_text(encoding="utf-8"))
+
+    assert result["selected"] == "ensemble_soft_mean"
+    assert repeated["status"] == "noop"
+    assert payload["ensemble_kind"] == "soft_mean"
+    assert payload["status"] == "shadow_only"
+    assert payload["selected_members"] == members
+    assert set(payload["comparison_registries"]) == {
+        "classical",
+        "transformer",
+        "qwen",
+    }
+
+
 def _model_event(
     event_id: str, slot: str, labels: list[str], text: str = "texto uno"
 ) -> dict:
@@ -750,6 +807,39 @@ def test_consensus_is_two_of_three_and_routes_disagreement_to_review():
     assert result["votes"][taxonomy.safe_label] == 2
     assert result["requires_review"] is True
     assert "desacuerdo_entre_modelos" in result["review_reasons"]
+
+
+def test_frozen_soft_mean_averages_raw_scores_then_calibrates():
+    taxonomy = load_taxonomy()
+    events = [
+        _model_event("e1", "classical", [taxonomy.safe_label]),
+        _model_event("e2", "transformer", [taxonomy.safe_label]),
+        _model_event("e3", "qwen", [taxonomy.safe_label]),
+    ]
+    for event in events:
+        event["raw_scores"] = {
+            label: 0.8 if label == taxonomy.safe_label else 0.1
+            for label in taxonomy.target_labels
+        }
+    registry = {
+        "model_id": "ensemble_soft_mean",
+        "ensemble_kind": "soft_mean",
+        "thresholds": {label: 0.5 for label in taxonomy.target_labels},
+        "score_calibrators": [
+            {"type": "sigmoid_platt", "coefficient": 10.0, "intercept": -5.0}
+            for _ in taxonomy.target_labels
+        ],
+        "any_damage_threshold": 0.1,
+        "needs_review_policy": {"selected_delta": 0.03},
+    }
+
+    result = _ensemble_soft_mean_result(events, registry)
+
+    assert result["model_slot"] == "ensemble"
+    assert result["labels"] == [taxonomy.safe_label]
+    assert result["requires_review"] is False
+    assert result["scores"][taxonomy.safe_label] > 0.95
+    assert max(result["scores"][label] for label in taxonomy.damage_labels) < 0.02
 
 
 def test_production_feedback_is_append_only_linked_deduplicated_and_conflict_safe(

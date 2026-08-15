@@ -349,8 +349,8 @@ def test_required_frontends_are_small_templates():
     assert "/api/analyze" in production_source
     assert "/api/stats" in production_source
     assert "youtube.com" in production_source
-    assert "Consenso 2-de-3" in production_source
-    assert "Comparar familias" in production_source
+    assert "Ensemble ganador · promedio suave" in production_source
+    assert "Comparar los cuatro sistemas" in production_source
     assert "Dataset para reentrenar" in production_source
     assert "event.key.toLowerCase()==='r'" in human_source
     assert "action==='defer'" in human_source

@@ -11,7 +11,7 @@ import threading
 import urllib.parse
 import uuid
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -29,13 +29,13 @@ from .io import (
     write_jsonl_atomic,
 )
 from .paths import find_project_root
-from .registry import ProductionPredictor
+from .registry import ProductionPredictor, calibrate_score_mapping
 from .schemas import ModelRegistryEntry, ReviewEvent
 from .taxonomy import load_taxonomy
 from .training import resolve_prediction
 
 PRODUCTION_SLOTS = ("classical", "transformer", "qwen")
-PRODUCTION_MODES = (*PRODUCTION_SLOTS, "compare", "consensus")
+PRODUCTION_MODES = (*PRODUCTION_SLOTS, "ensemble", "compare", "consensus")
 RETRAIN_MINIMUM_TOTAL = 500
 RETRAIN_MINIMUM_SAFE = 200
 RETRAIN_MINIMUM_PER_DAMAGE = 100
@@ -631,7 +631,7 @@ def _labeling_dashboard(
         )
 
     return {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "live": {
             "corpus": {
                 "total": total,
@@ -1115,7 +1115,7 @@ def _production_feedback(
         "output": str(ready_path),
     }
     return {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "total_events": len(inferences),
         "total_human_reviews": len(reviews),
         "unlinked_human_reviews": len(reviews) - len(linked),
@@ -1174,7 +1174,86 @@ def _consensus_result(
         "votes": votes,
         "consensus_min_votes": minimum,
         "member_event_ids": [event["event_id"] for event in events],
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
+        **(metadata or {}),
+    }
+
+
+def _ensemble_soft_mean_result(
+    events: list[dict[str, Any]],
+    registry: dict[str, Any],
+    *,
+    metadata: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Reproduce la media de scores crudos congelada por 03_07."""
+
+    taxonomy = load_taxonomy()
+    if len(events) != 3 or registry.get("ensemble_kind") != "soft_mean":
+        raise ValueError("El ensemble suave requiere los tres miembros congelados")
+    raw_scores = {
+        label: sum(
+            float((event.get("raw_scores") or event["scores"])[label])
+            for event in events
+        )
+        / len(events)
+        for label in taxonomy.target_labels
+    }
+    scores = calibrate_score_mapping(
+        raw_scores,
+        list(registry.get("score_calibrators") or []),
+        taxonomy.target_labels,
+    )
+    thresholds = {
+        label: float(registry["thresholds"][label])
+        for label in taxonomy.target_labels
+    }
+    labels = [
+        label for label in taxonomy.target_labels if scores[label] >= thresholds[label]
+    ]
+    active_damage = any(label in labels for label in taxonomy.damage_labels)
+    any_damage_score = max(scores[label] for label in taxonomy.damage_labels)
+    any_damage_threshold = float(registry["any_damage_threshold"])
+    gate_damage = any_damage_score >= any_damage_threshold
+    delta = float(
+        (registry.get("needs_review_policy") or {}).get("selected_delta") or 0.0
+    )
+    reasons: list[str] = []
+    if taxonomy.safe_label in labels and active_damage:
+        reasons.append("safe_damage_conflict")
+    if not labels:
+        reasons.append("empty_output")
+    if gate_damage != active_damage:
+        reasons.append("gate_category_incoherence")
+    if delta and abs(any_damage_score - any_damage_threshold) <= delta:
+        reasons.append("near_any_damage_threshold")
+    if delta and any(
+        abs(scores[label] - thresholds[label]) <= delta
+        for label in taxonomy.target_labels
+    ):
+        reasons.append("near_category_threshold")
+    event_id = str(uuid.uuid4())
+    return {
+        "schema_version": "2.1.0",
+        "event_id": event_id,
+        "chunk_id": (metadata or {}).get("chunk_id") or f"production-{event_id}",
+        "text": events[0]["text"],
+        "model_id": str(registry["model_id"]),
+        "model_family": "ensemble:soft_mean",
+        "model_slot": "ensemble",
+        "model_label": "Ensemble ganador · promedio suave",
+        "taxonomy_contract": taxonomy.contract_id,
+        "raw_scores": raw_scores,
+        "scores": scores,
+        "thresholds": thresholds,
+        "any_damage_score": any_damage_score,
+        "any_damage_threshold": any_damage_threshold,
+        "labels": labels,
+        "confidence": "baja" if reasons else "alta",
+        "requires_review": bool(reasons),
+        "review_reasons": reasons,
+        "member_event_ids": [event["event_id"] for event in events],
+        "member_model_ids": [event["model_id"] for event in events],
+        "created_at": datetime.now(UTC).isoformat(),
         **(metadata or {}),
     }
 
@@ -1328,9 +1407,12 @@ def serve(
         return _production_registry_paths(registry_path, root)
 
     def default_production_mode() -> str:
-        _, paths = registry_state()
-        if set(paths) == set(PRODUCTION_SLOTS):
-            return "consensus"
+        payload, paths = registry_state()
+        if (
+            set(paths) == set(PRODUCTION_SLOTS)
+            and payload.get("ensemble_kind") == "soft_mean"
+        ):
+            return "ensemble"
         return next(slot for slot in PRODUCTION_SLOTS if slot in paths)
 
     def predict_slot(
@@ -1347,7 +1429,8 @@ def serve(
             if predictor is None:
                 predictor = ProductionPredictor(registry_paths[slot])
                 predictors[slot] = predictor
-            scores = predictor.scores(text)
+            raw_scores = predictor.raw_scores(text)
+            scores = predictor.calibrate_scores(raw_scores)
             decision = resolve_prediction(scores, predictor.entry.thresholds)
         event_id = str(uuid.uuid4())
         model_labels = {
@@ -1366,12 +1449,13 @@ def serve(
             "model_label": model_labels[slot],
             "taxonomy_contract": predictor.entry.taxonomy_contract,
             "scores": scores,
+            "raw_scores": raw_scores,
             "thresholds": predictor.entry.thresholds,
             "labels": list(decision.labels),
             "confidence": "baja" if decision.requires_review else "alta",
             "requires_review": decision.requires_review,
             "review_reasons": list(decision.review_reasons),
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             **(metadata or {}),
         }
         return event
@@ -1386,6 +1470,10 @@ def serve(
         mode_name = mode_name.casefold().strip()
         if mode_name not in PRODUCTION_MODES:
             raise ValueError(f"Modo productivo no válido: {mode_name}")
+        ensemble_available = (
+            set(registry_paths) == set(PRODUCTION_SLOTS)
+            and registry_payload.get("ensemble_kind") == "soft_mean"
+        )
         if mode_name in PRODUCTION_SLOTS:
             slots = [mode_name]
         elif mode_name == "compare":
@@ -1400,13 +1488,34 @@ def serve(
                     + ", ".join(sorted(missing))
                 )
             slots = list(PRODUCTION_SLOTS)
-        events = [
+        member_events = [
             predict_slot(text, slot, registry_paths, metadata=metadata)
             for slot in slots
         ]
-        if mode_name == "consensus":
+        if mode_name == "ensemble":
+            if not ensemble_available:
+                raise ValueError("No existe un ensemble suave congelado y verificable")
+            events = [
+                _ensemble_soft_mean_result(
+                    member_events, registry_payload, metadata=metadata
+                )
+            ]
+        elif mode_name == "compare":
+            events = list(member_events)
+            if ensemble_available:
+                events.append(
+                    _ensemble_soft_mean_result(
+                        member_events, registry_payload, metadata=metadata
+                    )
+                )
+        elif mode_name == "consensus":
             minimum = int(registry_payload.get("consensus_min_votes", 2))
-            events.append(_consensus_result(events, minimum, metadata=metadata))
+            events = [
+                *member_events,
+                _consensus_result(member_events, minimum, metadata=metadata),
+            ]
+        else:
+            events = member_events
         with persistence_lock:
             append_jsonl_once(inference_path, events, id_field="event_id")
         return events
@@ -1461,7 +1570,7 @@ def serve(
                 raise ValueError("El cuerpo JSON debe ser un objeto")
             return payload
 
-        def do_GET(self) -> None:  # noqa: N802
+        def do_GET(self) -> None:
             parsed = urllib.parse.urlparse(self.path)
             if parsed.path != "/api/health" and not self.require_authorization():
                 return
@@ -1503,8 +1612,18 @@ def serve(
                     ]
                     if len(registry_paths) >= 2:
                         available_modes.append("compare")
-                    if set(registry_paths) == set(PRODUCTION_SLOTS):
-                        available_modes.append("consensus")
+                    if (
+                        set(registry_paths) == set(PRODUCTION_SLOTS)
+                        and registry_payload.get("ensemble_kind") == "soft_mean"
+                    ):
+                        available_modes.append("ensemble")
+                        registry_models["ensemble"] = {
+                            "model_id": registry_payload["model_id"],
+                            "model_family": registry_payload["model_family"],
+                            "selection_metrics": registry_payload.get(
+                                "selection_metrics", {}
+                            ),
+                        }
                 self.send_json(
                     {
                         "mode": mode,
@@ -1550,8 +1669,8 @@ def serve(
                         "models": registry_models,
                         "available_modes": available_modes,
                         "default_production_mode": (
-                            "consensus"
-                            if "consensus" in available_modes
+                            "ensemble"
+                            if "ensemble" in available_modes
                             else available_modes[0] if available_modes else None
                         ),
                         "reviews": str(review_path),
@@ -1735,7 +1854,7 @@ def serve(
                 return
             self.send_error(HTTPStatus.NOT_FOUND)
 
-        def do_POST(self) -> None:  # noqa: N802
+        def do_POST(self) -> None:
             if not self.require_authorization():
                 return
             request_path = urllib.parse.urlparse(self.path).path
@@ -1934,7 +2053,7 @@ def serve(
                     pseudonym = (
                         "reviewer-"
                         + hashlib.sha256(
-                            f"{salt}|{reviewer}".encode("utf-8")
+                            f"{salt}|{reviewer}".encode()
                         ).hexdigest()[:16]
                     )
                     with persistence_lock:
@@ -1992,7 +2111,7 @@ def serve(
                 salt = os.getenv("MODPERU_REVIEW_SALT", taxonomy.contract_id)
                 pseudonym = (
                     "reviewer-"
-                    + hashlib.sha256(f"{salt}|{reviewer}".encode("utf-8")).hexdigest()[
+                    + hashlib.sha256(f"{salt}|{reviewer}".encode()).hexdigest()[
                         :16
                     ]
                 )

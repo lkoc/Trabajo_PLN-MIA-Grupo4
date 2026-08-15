@@ -107,7 +107,7 @@ def _registry_entry(
         candidate, candidate["checkpoint_manifest"]
     ).resolve()
     portable_inference = dict(candidate["inference"])
-    for key in ("bundle", "model", "gate_model", "damage_model"):
+    for key in ("bundle", "model", "gate_model", "damage_model", "branch_model"):
         if portable_inference.get(key):
             portable_inference[key] = relative_to_root(
                 _candidate_asset(candidate, portable_inference[key])
@@ -310,6 +310,119 @@ def compare_and_publish_registry(
     }
 
 
+def publish_frozen_ensemble_registry(
+    freeze_path: str | Path,
+    candidate_roots: Iterable[str | Path],
+    registry_path: str | Path,
+) -> dict[str, Any]:
+    """Materializa el ensemble congelado por 03_07 como registro de modo sombra."""
+
+    freeze_file = Path(freeze_path).resolve()
+    freeze = json.loads(freeze_file.read_text(encoding="utf-8"))
+    if freeze.get("selected_id") != "ensemble_soft_mean":
+        raise ValueError("El frontend vigente exige ensemble_soft_mean congelado")
+    members = [str(value) for value in freeze.get("members", [])]
+    if len(members) != 3:
+        raise ValueError("El ensemble congelado debe contener exactamente tres miembros")
+
+    discovered = {row["candidate_id"]: row for row in discover_candidates(candidate_roots)}
+    missing = [identifier for identifier in members if identifier not in discovered]
+    if missing:
+        raise FileNotFoundError(
+            "Faltan candidatos congelados para producción: " + ", ".join(missing)
+        )
+    dataset_sha = str(freeze["dataset_sha256"])
+    destination = Path(registry_path).resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    member_paths: dict[str, Path] = {}
+    member_status: dict[str, str] = {}
+    member_ids: dict[str, str] = {}
+
+    for identifier in members:
+        candidate = discovered[identifier]
+        candidate_sha = str(candidate.get("dataset_sha256") or "")
+        if candidate_sha and candidate_sha != dataset_sha:
+            raise ValueError(f"Snapshot incompatible en {identifier}")
+        slot = _model_slot(candidate)
+        if slot in member_paths:
+            raise ValueError(f"Hay más de un miembro congelado para el slot {slot}")
+        entry = _registry_entry(candidate, dataset_sha=dataset_sha)
+        payload = entry.model_dump(mode="json")
+        payload.update(
+            {
+                "thresholds": freeze["member_thresholds"][identifier],
+                "score_calibrators": freeze["member_score_calibrators"][identifier],
+                "status": "validated",
+            }
+        )
+        member_entry = ModelRegistryEntry.model_validate(payload)
+        member_path = destination.with_name(
+            f"{destination.stem}.{slot}{destination.suffix}"
+        )
+        member_paths[slot] = member_path
+        member_ids[slot] = identifier
+        member_status[slot] = _write_registry(member_path, member_entry)
+
+    if set(member_paths) != {"classical", "transformer", "qwen"}:
+        raise ValueError("El congelamiento no cubre clásico, Transformer y Qwen")
+    references = {
+        slot: artifact_reference(path, f"production_{slot}_registry")
+        for slot, path in member_paths.items()
+    }
+    taxonomy = load_taxonomy()
+    main = ModelRegistryEntry(
+        model_id=str(freeze["selected_id"]),
+        model_family="ensemble:soft_mean",
+        taxonomy_contract=taxonomy.contract_id,
+        taxonomy_version=taxonomy.version,
+        target_labels=list(taxonomy.target_labels),
+        thresholds=freeze["thresholds"],
+        dataset_sha256=dataset_sha,
+        run_signature=str(freeze.get("comparison_signature") or ""),
+        inference={"type": "ensemble_soft_mean", "member_ids": member_ids},
+        comparison_registries=references,
+        score_calibrators=freeze["score_calibrators"],
+        ensemble_kind="soft_mean",
+        selected_members=members,
+        any_damage_threshold=float(freeze["any_damage_threshold"]),
+        needs_review_policy=freeze.get("needs_review_policy") or {},
+        selection_artifact=artifact_reference(freeze_file, "frozen_model_selection"),
+        winner_status=freeze.get("winner_status"),
+        status="shadow_only",
+    )
+    status = _write_registry(destination, main)
+    return {
+        "status": status,
+        "registry": str(destination),
+        "selected": main.model_id,
+        "deployment_status": main.status,
+        "member_ids": member_ids,
+        "member_registries": {slot: str(path) for slot, path in member_paths.items()},
+        "member_status": member_status,
+    }
+
+
+def calibrate_score_mapping(
+    scores: dict[str, float],
+    calibrators: list[dict[str, Any]],
+    labels: Iterable[str],
+) -> dict[str, float]:
+    ordered = list(labels)
+    if not calibrators:
+        return {label: float(scores[label]) for label in ordered}
+    if len(calibrators) != len(ordered):
+        raise ValueError("El número de calibradores no coincide con las salidas")
+    calibrated: dict[str, float] = {}
+    for label, record in zip(ordered, calibrators, strict=True):
+        if record.get("type") != "sigmoid_platt":
+            raise ValueError(f"Calibrador no soportado para {label}: {record.get('type')}")
+        logit = float(record["coefficient"]) * float(scores[label]) + float(
+            record["intercept"]
+        )
+        calibrated[label] = float(1.0 / (1.0 + np.exp(-np.clip(logit, -30, 30))))
+    return calibrated
+
+
 class ProductionPredictor:
     def __init__(self, registry_path: str | Path, *, device: str = "auto") -> None:
         self.registry_path = Path(registry_path).resolve()
@@ -375,8 +488,14 @@ class ProductionPredictor:
             from peft import AutoPeftModelForSequenceClassification
 
             model_path = self._asset(inference["model"])
+            tokenizer_source: str | Path = model_path
+            if not (model_path / "tokenizer_config.json").is_file():
+                adapter_config = json.loads(
+                    (model_path / "adapter_config.json").read_text(encoding="utf-8")
+                )
+                tokenizer_source = str(adapter_config["base_model_name_or_path"])
             self._tokenizer = AutoTokenizer.from_pretrained(
-                model_path, token=False, fix_mistral_regex=False
+                tokenizer_source, token=False, fix_mistral_regex=False
             )
             output_count, output_labels = _peft_registry_output_contract(
                 inference, list(self.entry.target_labels)
@@ -410,7 +529,7 @@ class ProductionPredictor:
         else:
             raise ValueError(f"Tipo de inferencia no soportado: {kind}")
 
-    def scores(self, text: str) -> dict[str, float]:
+    def raw_scores(self, text: str) -> dict[str, float]:
         if not text.strip():
             raise ValueError("El texto no puede estar vacío")
         self._load()
@@ -463,3 +582,13 @@ class ProductionPredictor:
             else:
                 values = primary[:5]
         return {label: float(values[index]) for index, label in enumerate(labels)}
+
+    def calibrate_scores(self, scores: dict[str, float]) -> dict[str, float]:
+        return calibrate_score_mapping(
+            scores,
+            self.entry.score_calibrators,
+            self.entry.target_labels,
+        )
+
+    def scores(self, text: str) -> dict[str, float]:
+        return self.calibrate_scores(self.raw_scores(text))

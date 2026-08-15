@@ -1,133 +1,141 @@
 \section{Resultados}
 
-Todos los valores de esta sección corresponden al corte ejecutado de cuatro salidas de daño con \texttt{SEGURO} derivado. El contrato v2 de cinco salidas aprendidas se documenta como implementación posterior y no hereda estas métricas.
+Todos los resultados pertenecen al contrato v2.1 de cinco salidas y al mismo snapshot. Validation determina candidato, calibradores, umbrales y política; test solo estima el desempeño del artefacto ya congelado.
 
-\subsection{Resultado de construcción del corpus}
+\subsection{Comparación global en validation}
 
-La construcción produce el corpus resumido en la Tabla~\ref{tab:fuentes}. La Fig.~\ref{fig:pipeline} integra adquisición, segmentación, supervisión escalonada y separación por video; el Apéndice~\ref{app:fuentes_dataset} desagrega la composición y la procedencia de las etiquetas. En conjunto, estos resultados muestran un corpus trazable y una comparación sin videos compartidos entre particiones. La muestra enriquecida sirve para comparar modelos, no para estimar la prevalencia natural de YouTube.
-
-\subsection{Herramientas y entorno de cómputo}
-
-La Tabla~\ref{tab:hardware} distingue las etapas ejecutadas en una computadora de consumo de las realizadas en Google Colab. La adquisición, la preparación y los modelos clásicos se ejecutan localmente; los Transformers activos y las últimas épocas de Qwen3--LoRA usan CUDA en una GPU NVIDIA L4 según la bitácora del equipo. Las herramientas principales son Jupyter y pandas para el flujo de datos, scikit-learn y fastText para los modelos clásicos, y PyTorch, Transformers y PEFT/LoRA para los neuronales \cite{kluyver2016jupyter,mckinney2010pandas,pedregosa2011sklearn,joulin2017fasttext,paszke2019pytorch,wolf2020transformers,hu2022lora}. La tabla conserva el detalle suficiente para distinguir recursos y alcance sin tratar estas ejecuciones como un benchmark de hardware.
-
-\begin{table*}[t]
-\centering
-\caption{Herramientas y recursos de cómputo acreditados por etapa}
-\label{tab:hardware}
-\small
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{31mm}>{\raggedright\arraybackslash}p{42mm}>{\raggedright\arraybackslash}p{45mm}>{\raggedright\arraybackslash}X}
-\toprule
-\textbf{Etapa} & \textbf{Herramientas principales} & \textbf{Entorno} & \textbf{Resultado / alcance} \\
-\midrule
-Adquisición y corpus & Python/Jupyter, \texttt{yt-dlp}, YouTube Transcript API y pandas & Equipo local Windows & Corpus integrado final \\
-Etiquetado asistido & DeepSeek Flash/Pro; prueba local LM Studio/\texttt{llama.cpp} & Orquestación local; servicio DeepSeek remoto de hardware desconocido; prueba local en CPU & Tres niveles: Flash $\rightarrow$ Pro $\rightarrow$ revisión final asistida; el modelo local fue exploratorio \\
-Clásicos y rama preliminar & scikit-learn, fastText, joblib; PyTorch 2.6.0+cpu & Ryzen 7 8845HS, 8C/16T, 29~GiB; CPU, sin CUDA & SVM, regresión logística y experimentos preliminares de cinco categorías \\
-Transformers activos & PyTorch, Transformers, NumPy y pandas & Google Colab con CUDA; NVIDIA L4 según bitácora & MiniLM/E5 planos y estructurados \\
-Qwen3--LoRA & Transformers, PEFT/LoRA y PyTorch & Primeras épocas en CPU local; últimas épocas en Colab/CUDA & Adaptador compacto; época 3 seleccionada para operación \\
-Auditoría y paquete & SciPy/scikit-learn, NumPy, SQLite, HTML/JavaScript & Equipo local; inferencia empaquetada compatible con CPU & Comparación, métricas, trazabilidad y frontend con retroalimentación \\
-\bottomrule
-\end{tabularx}
-\end{table*}
-
-En este artículo, \emph{recursos asequibles} significa que el equipo no necesita poseer una GPU de centro de datos: combina una computadora de consumo con sesiones bajo demanda de Colab y produce un paquete de inferencia compatible con CPU. El estudio no mide el costo monetario total, el consumo energético ni la latencia en el equipo objetivo; por ello esta formulación no implica que Colab sea gratuito, garantizado o la opción más barata.
-
-\subsection{Resultados preliminares y baseline de cuatro daños}
-
-La primera iteración compara cinco categorías de moderación: \Rac, \Gen, acoso personal, amenaza directa y \Sex. Una referencia que siempre predice seguro alcanza 0,95 de coincidencia exacta, pero su recobrado de cualquier daño es cero; este contraste confirma que la coincidencia agregada oculta la clase minoritaria en datos desbalanceados \cite{sokolova2009metrics,saito2015pr}. La SVM inicial obtiene \(\AP=0,23\) y F1 macro de 0,28. En otro corte 4:1, no comparable de forma directa, MiniLM y E5 alcanzan \(\AP\) de 0,46 y 0,44. AEDA y el contexto concatenado no muestran una mejora consistente. Estos resultados preliminares orientan la ampliación del corpus y el uso de modelos contextuales, pero no forman una sola curva de aprendizaje porque cambian los datos y las particiones.
-
-La amenaza directa reúne 688 incidencias frente a 2\,854 de acoso personal. Para aumentar el soporte de la salida menos frecuente y mantener una comparación operativa estable, el contrato ejecutado unió ambas salidas mediante OR/máximo en \Ame. Esta fusión redujo de cinco a cuatro daños y conservó los subtipos para auditoría. Es una decisión estadística y operativa del proyecto; no establece equivalencia semántica o legal entre acoso y amenaza. El contrato v2 mantiene la unión, añade \texttt{SEGURO} como salida aprendida y queda pendiente de evaluación.
-
-\subsection{Comparación final de cuatro categorías de moderación}
-
-La Tabla~\ref{tab:final14} contiene las 14 configuraciones sobre el mismo test enriquecido 4:1 de 5\,290 chunks. Qwen3--LoRA plano presenta la mayor estimación puntual de \(\AP\) y F1; E5 plano lidera el recobrado de cualquier daño y deja 42 chunks dañinos menos como \texttt{SEGURO}. Ningún diseño jerárquico supera a su referencia plana en las tres métricas principales, aunque alguna puerta eleva la precisión a costa del recobrado. La auditoría fina cubre 13 modelos porque excluye la referencia E5 \emph{post hoc}; esa es la diferencia entre 13 modelos auditados y 14 filas comparadas. Confirmar una diferencia estadística entre Qwen3--LoRA y E5 requiere varias semillas y una prueba pareada final \cite{dror2018significance}.
-
-\begin{table*}[t]
-\centering
-\caption{Comparación final sobre test común enriquecido 4:1 de cuatro categorías de moderación}
-\label{tab:final14}
-\small
-\renewcommand{\arraystretch}{1.16}
-\begin{tabularx}{.92\textwidth}{>{\raggedright\arraybackslash}X>{\centering\arraybackslash}p{22mm}>{\centering\arraybackslash}p{22mm}>{\centering\arraybackslash}p{27mm}>{\centering\arraybackslash}p{25mm}}
-\toprule
-\textbf{Modelo y estructura} & \shortstack{\textbf{\(\AP\) macro}\\\textbf{de daños}} & \shortstack{\textbf{F1 macro}\\\textbf{de daños}} & \shortstack{\textbf{Recobrado}\\\textbf{de algún daño}} & \shortstack{\textbf{Daños como}\\\textbf{\texttt{SEGURO}}} \\
-\midrule
-\shortstack[l]{Qwen3--0.6B LoRA, época 3\\\emph{Plana}} & \textbf{0,55} & \textbf{0,52} & 0,70 & 312 \\
-\shortstack[l]{Qwen3--LoRA congelado\\\emph{Cascada calibrada}} & 0,54 & 0,52 & 0,63 & 385 \\
-\shortstack[l]{Qwen3--LoRA congelado\\\emph{Cabeza multitarea}} & 0,53 & 0,52 & 0,64 & 375 \\
-\shortstack[l]{E5 preliminar unido 5\(\rightarrow\)4\\\emph{Referencia post hoc}} & 0,49 & 0,52 & 0,64 & 378 \\
-\shortstack[l]{MiniLM multilingüe\\\emph{Plana}} & 0,48 & 0,50 & 0,65 & 362 \\
-\shortstack[l]{E5-small multilingüe\\\emph{Plana}} & 0,48 & 0,52 & \textbf{0,74} & \textbf{270} \\
-\shortstack[l]{SVM palabra + carácter\\\emph{Plana calibrada}} & 0,45 & 0,46 & 0,59 & 428 \\
-\shortstack[l]{SVM calibrada\\\emph{Cascada}} & 0,44 & 0,45 & 0,54 & 481 \\
-\shortstack[l]{Regresión logística calibrada\\\emph{Plana}} & 0,44 & 0,46 & 0,62 & 395 \\
-\shortstack[l]{SVM calibrada\\\emph{Jerarquía compartida}} & 0,43 & 0,42 & 0,43 & 591 \\
-\shortstack[l]{Regresión logística calibrada\\\emph{Cascada}} & 0,43 & 0,43 & 0,59 & 431 \\
-\shortstack[l]{E5\\\emph{Cascada Transformer}} & 0,42 & 0,41 & 0,36 & 666 \\
-\shortstack[l]{E5\\\emph{Jerarquía multitarea}} & 0,41 & 0,42 & 0,40 & 629 \\
-\shortstack[l]{Regresión logística calibrada\\\emph{Jerarquía compartida}} & 0,41 & 0,41 & 0,45 & 575 \\
-\bottomrule
-\end{tabularx}
-\end{table*}
-
-La Tabla~\ref{tab:ganadores_categoria} aplica el mismo criterio por categoría: selecciona el modelo mediante \(\AP\) en validación y consulta el test solo después de congelar esa elección. Qwen3--LoRA plano resulta ganador en \Rac, \Gen y \Ame; la cabeza multitarea entrenada sobre sus salidas congeladas obtiene el mayor \(\AP\) de validación en \Sex. Esta diferencia muestra que el mejor promedio general no tiene que dominar cada categoría.
-
-\begin{table*}[t]
-\centering
-\caption{Ganador por categoría seleccionado mediante \(\AP\) en validación y desempeño congelado en el test común}
-\label{tab:ganadores_categoria}
-\small
-\renewcommand{\arraystretch}{1.14}
-\begin{tabularx}{.98\textwidth}{>{\raggedright\arraybackslash}p{28mm}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}p{17mm}>{\centering\arraybackslash}p{17mm}>{\centering\arraybackslash}p{18mm}>{\centering\arraybackslash}p{19mm}>{\centering\arraybackslash}p{15mm}}
-\toprule
-\textbf{Categoría} & \textbf{Modelo seleccionado} & \shortstack{\textbf{\(\AP\)}\\\textbf{validación}} & \shortstack{\textbf{\(\AP\)}\\\textbf{test}} & \shortstack{\textbf{Precisión}\\\textbf{test}} & \shortstack{\textbf{Recobrado}\\\textbf{test}} & \shortstack{\textbf{F1}\\\textbf{test}} \\
-\midrule
-\Rac & Qwen3--LoRA plano & 0,63 & 0,56 & 0,52 & 0,59 & 0,56 \\
-\Gen & Qwen3--LoRA plano & 0,46 & 0,48 & 0,39 & 0,52 & 0,45 \\
-\Ame & Qwen3--LoRA plano & 0,45 & 0,48 & 0,43 & 0,57 & 0,49 \\
-\Sex & Qwen3--LoRA, cabeza multitarea congelada & 0,63 & 0,66 & 0,62 & 0,62 & 0,62 \\
-\bottomrule
-\end{tabularx}
-\end{table*}
-
-\FloatBarrier
-La Fig.~\ref{fig:resultados} concentra los ganadores desplegables por familia y hace visible la compensación principal: Qwen3--LoRA encabeza \(\AP\) y F1, mientras E5 recupera una mayor fracción de chunks con daño.
-
-\begin{figure}[t]
-\centering
-\input{figuras/resultados_finales.tex}
-\caption{Ganador desplegable de cada enfoque. Qwen3--LoRA presenta las mayores estimaciones puntuales de ranking y F1; E5 recupera más daños. Elaboración propia desde la comparación final.}
-\label{fig:resultados}
-\end{figure}
-
-En Qwen3--LoRA, la época 2 presenta el máximo \(\AP\) de validación (0,54). La época 3 queda a 0,00072, mantiene 0,95 de recobrado selectivo y los mismos 53 falsos negativos, pero eleva la precisión de 0,30 a 0,32 y reduce la revisión de 64\% a 61\%. La regla selecciona la época 3 usando únicamente esos valores de validación; aun así, la selección no es ciega porque ya existe la evaluación de test de la época 2.
-
-Con ese corte, la política selectiva cumple el propósito de alto recobrado: obtiene en test 0,97 (IC95\% de Wilson 0,96--0,98 \cite{wilson1927probable}), con 0,32 de precisión, 0,99 de valor predictivo negativo y 28 falsos negativos automáticos. Remite 60\% de los chunks al supervisor y excede en 0,40 puntos porcentuales el control de tasa de revisión \(\leq60\%\), la única puerta no satisfecha. La cifra convierte el resultado en una carga humana explícita para un piloto semiautomático, en lugar de ocultarla detrás del recobrado.
-
-La Tabla~\ref{tab:qwenclase} desagrega el desempeño ordinario de Qwen3--LoRA. Contenido sexual presenta el mayor F1 y ataque por género/identidad el menor, lo que impide resumir la utilidad del modelo con una sola métrica macro.
-
-El Anexo~\ref{app:ejemplos_scores} muestra extractos de tres chunks con valoración segura muy alta y tres por cada daño grueso. Son ilustraciones \emph{post hoc} de validación y no casos de prueba ni evidencia adicional de desempeño. En cada daño se informa el score calibrado de su salida; para los casos seguros se informa una medida descriptiva derivada, \(1-\max_k s_k\), porque \texttt{SEGURO} no es una quinta cabeza aprendida.
+La comparación contiene 28 candidatos individuales y cinco ensembles. La Tabla~\ref{tab:tipos} presenta el mejor representante de cada tipo según el ranking lexicográfico común. Qwen3--LoRA es el mejor individuo; el promedio suave ocupa el primer lugar general. Frente a Qwen, el ensemble aumenta 0,0086 la BA y 0,0392 la macro-AUPRC OOF de daños. La Fig.~\ref{fig:ranking_final} muestra los 33 candidatos.
 
 \begin{table}[t]
 \centering
-\caption{Desempeño ordinario de Qwen3--LoRA plano por categoría}
-\label{tab:qwenclase}
-\normalsize
-\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrr@{}}
+\caption{Mejor candidato por tipo en validation OOF}
+\label{tab:tipos}
+\footnotesize
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lrrrrr@{}}
 \toprule
-\textbf{Categoría} & \textbf{Precisión} & \textbf{Recobrado} & \textbf{F1} \\
+\textbf{Tipo} & \textbf{BA} & \textbf{AUPRC} & \textbf{F1} & \textbf{FNR} & \textbf{FPR} \\
 \midrule
-\Rac & 0,52 & 0,59 & 0,56 \\
-\Gen & 0,39 & 0,52 & 0,45 \\
-\Ame & 0,43 & 0,57 & 0,49 \\
-\Sex & 0,63 & 0,59 & 0,61 \\
+Clásico, logística $C=0,5$ & 0,801 & 0,479 & 0,503 & 0,177 & 0,220 \\
+Transformer, cascada v2 & 0,817 & 0,449 & 0,519 & 0,159 & 0,207 \\
+Qwen3--LoRA & 0,831 & 0,516 & 0,553 & 0,170 & 0,167 \\
+\textbf{Ensemble, promedio suave} & \textbf{0,840} & \textbf{0,555} & \textbf{0,568} & \textbf{0,127} & 0,193 \\
 \bottomrule
-\end{tabular*}
+\end{tabular}%
+}
+\begin{minipage}{.98\columnwidth}\vspace{1mm}\footnotesize
+\emph{Nota:} AUPRC y F1 son promedios macro de los cuatro daños; BA, FNR y FPR corresponden a \texttt{ANY\_DAMAGE} OOF a cobertura completa.
+\end{minipage}
 \end{table}
 
-\subsection{Jerarquía, fenómenos finos y lectura cualitativa}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=.92\textwidth]{figuras/ranking_global_validation_03_07.png}
+\caption{Comparación global de 28 individuos y cinco ensembles en validation. La BA determina el orden primario y la macro-AUPRC actúa como salvaguarda. Elaboración propia desde 03\_07a.}
+\label{fig:ranking_final}
+\end{figure*}
 
-La mejor variante jerárquica de Qwen3--LoRA es la cabeza conjunta: frente al plano cambia \(\AP\) en \(-0,017\), F1 en \(-0,0077\), recobrado en \(-0,061\) y añade 63 chunks con daño clasificados como \texttt{SEGURO}. En clásicos y E5 aparece el mismo patrón general: una puerta puede elevar precisión al filtrar casos, pero también impide que una categoría hija recupere un positivo rechazado antes. En este corpus, las jerarquías no reemplazan a los modelos planos.
+Las cinco estrategias usan los mismos tres miembros (Tabla~\ref{tab:ensembles}). El promedio ponderado obtiene una macro-AUPRC y F1 apenas mayores, pero una BA 0,0017 menor. La mayoría dura maximiza F1, aunque reduce AUPRC. Como la política no suma estas métricas, el promedio simple conserva la prioridad por BA y queda congelado.
 
-La auditoría por fenómeno revela dónde se pierde información. Qwen3--LoRA obtiene recobrado 0,70 en racismo étnico explícito (\(n=128\)), 0,46 en racismo encubierto (\(n=44\)), 0,33 en racismo lingüístico (\(n=6\)), 0,65 en acoso personal (\(n=326\)), 0,64 en amenaza directa (\(n=103\)) y 0,11 en contenido sexual no consensual (\(n=9\)). En misoginia/acoso de género obtiene 0,47 (\(n=159\)); la especificidad de ironía segura marcada es 0,72 (\(n=36\)). Los soportes pequeños impiden inferencias estables, pero orientan nueva anotación.
+\begin{table}[t]
+\centering
+\caption{Estrategias de ensemble en validation OOF}
+\label{tab:ensembles}
+\footnotesize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Regla} & \textbf{BA} & \textbf{Macro-AUPRC} & \textbf{Macro-F1} \\
+\midrule
+\textbf{Promedio suave} & \textbf{0,8400} & 0,5549 & 0,5683 \\
+Promedio ponderado & 0,8383 & \textbf{0,5560} & 0,5694 \\
+Unión / máximo & 0,8328 & 0,5236 & 0,5648 \\
+Mayoría dura & 0,8288 & 0,4606 & \textbf{0,5723} \\
+Intersección / mínimo & 0,8242 & 0,5165 & 0,5381 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-Una inspección exploratoria identifica cuatro situaciones recurrentes: 1) una noticia cita una amenaza; 2) el sentido depende del fragmento anterior o de una imagen; 3) la ironía y el humor encubren el blanco; y 4) las expresiones locales raras tienen poco soporte. DeepSeek Pro propone daño en 245 de los 2\,000 seguros más sospechosos (12\%), por lo que la depuración dirigida localiza casos útiles para revisión. Estas observaciones orientan nuevas muestras y una ablación con la misma arquitectura y semilla.
+\subsection{Frontera de Pareto e incertidumbre}
+
+El retador elegible más cercano es el promedio ponderado. En 2\,000 réplicas pareadas por video, la diferencia de BA retador menos referencia es $-0,00166$, IC95\% $[-0,00437,\,0,00083]$, con $p_{\mathrm{Holm}}=0,2289$. El intervalo incluye cero; por ello el estado congelado es \emph{empate estadístico o evidencia inconclusa}, no superioridad universal. La Fig.~\ref{fig:pareto_final} conserva la frontera completa.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=.78\textwidth]{figuras/frontera_ba_macro_auprc_validation_03_07.png}
+\caption{Frontera BA--macro-AUPRC en validation. La estrella identifica el candidato congelado y el retador cercano permanece compatible con la evidencia. Elaboración propia.}
+\label{fig:pareto_final}
+\end{figure*}
+
+\subsection{Desempeño del ensemble por salida}
+
+Con los calibradores de despliegue ajustados en toda validation, el ensemble alcanza macro-AUPRC 0,565 y macro-F1 0,568 sobre los cuatro daños (Tabla~\ref{tab:ensemble_categorias}). Contenido sexual obtiene el mayor F1 (0,631) y género/identidad el menor (0,455). La diferencia orienta expansión focalizada, no exclusión de la categoría.
+
+\begin{table}[t]
+\centering
+\caption{Ensemble seleccionado por categoría en validation}
+\label{tab:ensemble_categorias}
+\footnotesize
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Salida} & \textbf{Soporte} & \textbf{AUPRC} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} \\
+\midrule
+\texttt{SEGURO} & 8\,480 & 0,974 & 0,887 & 0,960 & 0,922 \\
+\Rac & 382 & 0,566 & 0,578 & 0,662 & 0,617 \\
+\Gen & 374 & 0,394 & 0,405 & 0,519 & 0,455 \\
+\Ame & 1\,146 & 0,613 & 0,544 & 0,599 & 0,570 \\
+\Sex & 633 & 0,688 & 0,711 & 0,567 & 0,631 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Los mejores candidatos dependen de la categoría. Qwen3--LoRA con contexto 256 lidera AUPRC en racismo (0,571) y género/identidad (0,402); el promedio ponderado lidera acoso/amenaza (0,614) y \texttt{SEGURO} (0,974); el promedio simple lidera contenido sexual (0,688). La Fig.~\ref{fig:categorias_final} muestra AUPRC y F1 de esos especialistas. Para operación se conserva un único ensemble global, evitando reglas por categoría elegidas \emph{post hoc}.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=.88\textwidth]{figuras/seleccion_por_categoria_validation_03_07.png}
+\caption{Mejor desempeño por categoría en validation entre candidatos que superan la salvaguarda global. Elaboración propia.}
+\label{fig:categorias_final}
+\end{figure*}
+
+\subsection{Apertura única de test natural}
+
+El test contiene 22\,684 chunks, 1\,802 con algún daño (7,94\%). La compuerta congelada identifica 1\,632 y omite 170: sensibilidad 0,9057, especificidad 0,7861 y BA 0,8459. La diferencia de BA respecto de validation OOF es (+0,0059); no se usa para recalibrar ni cambiar el modelo.
+
+En la tarea multietiqueta completa, la macro-AUPRC de daños es 0,415 y la macro-F1 0,435. La caída respecto de la vista 4:1 se concentra en precisión y AUPRC porque el test natural contiene 11,59 seguros por daño; sensibilidad y BA de la compuerta se mantienen. Esta diferencia confirma que AUPRC debe interpretarse junto con la prevalencia \cite{tonneau2024naijahate}.
+
+\begin{table}[t]
+\centering
+\caption{Desempeño por salida en el test natural}
+\label{tab:test_categorias}
+\footnotesize
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Salida} & \textbf{Soporte} & \textbf{AUPRC} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} \\
+\midrule
+\texttt{SEGURO} & 20\,882 & 0,992 & 0,964 & 0,951 & 0,957 \\
+\Rac & 308 & 0,357 & 0,281 & 0,627 & 0,388 \\
+\Gen & 283 & 0,274 & 0,236 & 0,537 & 0,328 \\
+\Ame & 1\,063 & 0,450 & 0,351 & 0,641 & 0,454 \\
+\Sex & 519 & 0,580 & 0,522 & 0,628 & 0,570 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Política de revisión humana}
+
+La política congelada deriva 7\,888 chunks (34,8\%) y deja 14\,796 (65,2\%) en la ruta automática. Dentro de esta ruta, la sensibilidad es 0,938, la especificidad 0,941 y la BA 0,940; quedan 60 daños como falsos negativos automáticos. La mejora no procede de cambiar el clasificador, sino de reservar para revisión los conflictos y márgenes inciertos. La carga queda por debajo del máximo predeclarado de 40\%, pero sigue siendo material y debe contrastarse con capacidad real.
+
+\begin{table}[t]
+\centering
+\caption{Compuerta completa y ruta automática en test natural}
+\label{tab:revision_test}
+\footnotesize
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Vista} & \textbf{Cobertura} & \textbf{BA} & \textbf{Sens.} & \textbf{Espec.} & \textbf{FN} \\
+\midrule
+Compuerta completa & 100,0\% & 0,846 & 0,906 & 0,786 & 170 \\
+Ruta automática & 65,2\% & 0,940 & 0,938 & 0,941 & 60 \\
+\bottomrule
+\end{tabular}
+\end{table}

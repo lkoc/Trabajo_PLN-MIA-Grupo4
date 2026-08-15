@@ -1,49 +1,28 @@
 \begin{tikzpicture}[
-  x=1cm,y=1cm,font=\scriptsize,
-  box/.style={draw,rounded corners=2pt,text width=21mm,minimum height=7.5mm,align=center,inner sep=1.7pt},
+  font=\scriptsize,
+  box/.style={draw,rounded corners=2pt,text width=26mm,minimum height=12mm,align=center,inner sep=2pt},
   family/.style={box,fill=blue!7},
-  map/.style={box,fill=purple!8,text width=23.5mm,minimum height=19mm},
-  struct/.style={box,fill=orange!9},
-  outputbox/.style={box,fill=green!10,text width=23.5mm,minimum height=13.5mm},
-  arr/.style={-{Stealth[length=1.8mm]},thick},
-  bus/.style={thick}
+  winner/.style={box,fill=orange!9},
+  final/.style={box,fill=green!10,text width=31mm},
+  arr/.style={-{Stealth[length=1.8mm]},thick}
 ]
-\node[box] (text) at (0,0) {Chunk textual};
-\node[family] (classic) at (3.2,2.1) {TF--IDF\\SVM y logística};
-\node[family] (minilm) at (3.2,.7) {MiniLM\\encoder de tokens};
-\node[family] (e5) at (3.2,-.7) {E5\\encoder contrastivo};
-\node[family] (qwen) at (3.2,-2.1) {Qwen3--0.6B\\LLM con LoRA};
+\node[box] (text) {Chunk textual};
+\node[family,right=8mm of text,yshift=20mm] (classic) {TF--IDF\\modelos clásicos};
+\node[family,right=8mm of text] (trans) {MiniLM / E5\\planos y cascadas};
+\node[family,right=8mm of text,yshift=-20mm] (qwen) {Qwen3--0.6B\\LoRA y estructurados};
+\draw[arr] (text.east) -- ++(4mm,0) |- (classic.west);
+\draw[arr] (text.east) -- (trans.west);
+\draw[arr] (text.east) -- ++(4mm,0) |- (qwen.west);
 
-\coordinate (inbus) at (1.55,0);
-\draw[bus] (text.east)--(inbus);
-\draw[bus] (inbus |- classic.west)--(inbus |- qwen.west);
-\foreach \m in {classic,minilm,e5,qwen}{
-  \draw[arr] (inbus |- \m.west)--(\m.west);
-}
+\node[winner,right=9mm of classic] (cw) {Ganador clásico\\logística ($C=0{,}5$)};
+\node[winner,right=9mm of trans] (tw) {Ganador Transformer\\cascada E5 v2};
+\node[winner,right=9mm of qwen] (qw) {Ganador Qwen\\Qwen3--LoRA};
+\draw[arr] (classic)--(cw); \draw[arr] (trans)--(tw); \draw[arr] (qwen)--(qw);
 
-\node[map] (tested) at (6.8,0) {\textbf{Diseños probados}\\Plano\\Cascada\\Jerarquía o multitarea};
-\coordinate (familybus) at (5.1,0);
-\foreach \m in {classic,minilm,e5,qwen}{
-  \draw[bus] (\m.east)--(familybus |- \m.east);
-}
-\draw[bus] (familybus |- classic.east)--(familybus |- qwen.east);
-\draw[arr] (familybus |- tested.west)--(tested.west);
-
-\node[struct] (flat) at (10.5,1.5) {Plano\\4 categorías};
-\node[struct] (cascade) at (10.5,0) {Cascada\\daño $\rightarrow$ categorías};
-\node[struct] (hier) at (10.5,-1.5) {Jerarquía compartida\\o multitarea};
-\coordinate (structbus) at (8.65,0);
-\draw[bus] (tested.east)--(structbus);
-\draw[bus] (structbus |- flat.west)--(structbus |- hier.west);
-\foreach \s in {flat,cascade,hier}{
-  \draw[arr] (structbus |- \s.west)--(\s.west);
-}
-
-\node[outputbox] (scores) at (14.2,0) {Scores\\umbrales por clase\\calibración indicada};
-\coordinate (scorebus) at (12.25,0);
-\foreach \s in {flat,cascade,hier}{
-  \draw[bus] (\s.east)--(scorebus |- \s.east);
-}
-\draw[bus] (scorebus |- flat.east)--(scorebus |- hier.east);
-\draw[arr] (scorebus |- scores.west)--(scores.west);
+\node[final,right=13mm of tw] (ens) {Ensemble ganador\\promedio suave\\+ calibración};
+\draw[arr] (cw.east) -- ++(5mm,0) |- (ens.west);
+\draw[arr] (tw)--(ens);
+\draw[arr] (qw.east) -- ++(5mm,0) |- (ens.west);
+\node[final,right=8mm of ens] (policy) {Cinco salidas\\+ \texttt{NEEDS\_REVIEW}\\+ evidencia temporal};
+\draw[arr] (ens)--(policy);
 \end{tikzpicture}
