@@ -16,17 +16,20 @@ Todo el recorrido usa el contrato de etiquetas v2.1 con `SEGURO`, `RACISMO_DISCR
 | 8 | `02_03_revision_llm_dirigida` | artefactos de `02_01` | tablas de calibración, cobertura y enrutamiento | solo lectura; no repite API |
 | 9 | `02_04_consolidacion_validacion_humana` | propuestas LLM + chunks | campaña consolidada + eventos humanos | precedencia, contenido estable y eventos append-only |
 | 10 | `02_05_cierre_humano_snapshot` | consolidado + eventos + chunks | anotaciones revisadas + snapshot inmutable | firma de insumos y SHA-256 del contenido |
-| 11 | `03_01_modelos_clasicos` | snapshot activo | cinco candidatos clásicos completos | firma dataset+configuración |
-| 12 | `03_02_transformers_planos` | mismo snapshot | MiniLM y E5 completos | checkpoint de interrupción, warm start o no-op |
-| 13 | `03_03_transformer_cascada` | mismo snapshot | compuerta + cuatro daños | checkpoint/warm start o no-op |
-| 14 | `03_04_transformer_multitarea` | mismo snapshot | cinco salidas + auxiliares | checkpoint/warm start o no-op |
-| 15 | `03_05_qwen_lora` | mismo snapshot | adaptador LoRA de cinco salidas | checkpoint/warm start o no-op |
-| 16 | `03_06_qwen_estructurado` | mismo snapshot | Qwen con penalización de conflicto | checkpoint/warm start o no-op |
-| 17 | `03_07_comparacion_final` | candidatos del mismo SHA-256 | comparación + registro productivo | no reescribe si la selección no cambia |
-| 18 | `03_08_auditoria_finas_flags` | snapshot activo | auditoría auxiliar | SHA-256 del snapshot |
-| 19 | `04_01_frontend_produccion` | registro validado | demostrador supervisado | caché de subtítulos + eventos append-only |
+| 11 | `03_08_auditoria_finas_flags` | snapshot activo | auditoría auxiliar previa | SHA-256 del snapshot |
+| 12 | `03_01_modelos_clasicos` | snapshot activo | candidatos clásicos completos | firma dataset+configuración |
+| 13 | `03_02_transformers_planos` | mismo snapshot | MiniLM y E5 completos | checkpoint de interrupción, warm start o no-op |
+| 14 | `03_03_transformer_cascada` | mismo snapshot | compuerta + cuatro daños | checkpoint/warm start o no-op |
+| 15 | `03_03b_transformer_cascada_segura` | mismo snapshot | compuerta conservadora + rama completa | checkpoint/warm start o no-op |
+| 16 | `03_04_transformer_multitarea` | mismo snapshot | cinco salidas + auxiliares | checkpoint/warm start o no-op |
+| 17 | `03_05_qwen_lora` | mismo snapshot | adaptadores LoRA de cinco salidas | checkpoint/warm start o no-op |
+| 18 | `03_06_qwen_estructurado` | mismo snapshot | Qwen LoRA con penalización de conflicto | checkpoint/warm start o no-op |
+| 19 | `03_06b_qwen_prompt_sft` | mismo snapshot + prompt v3.2 | candidato generativo condicionado | checkpoint/warm start o no-op; rama opcional |
+| 20 | `03_07_comparacion_final` | candidatos del mismo SHA-256 | comparación y selección congelada en validation; test separado | checkpoint verificable del run en Drive |
+| 21 | `03_07a_reporte_comparacion_modelos` | publicación Drive + estado local | JSON verificados, Markdown crítico, CSV y PNG | OAuth de solo lectura; descarga solo si fecha/SHA cambian; no extrae modelos ni abre test |
+| 22 | `04_01_frontend_produccion` | registro aprobado | demostrador supervisado | caché de subtítulos + eventos append-only |
 
-`03_01`–`03_06` son ramas comparables: no dependen entre sí y pueden omitirse las familias que no se quieran evaluar. `03_07` necesita al menos un candidato completo del snapshot activo. Test nunca participa en la selección; solo informa después de congelar modelo y umbrales con validation.
+`03_01`–`03_06b` son ramas comparables: no dependen entre sí. `03_07` exige las familias declaradas por su preflight y acepta `03_06b` como opcional. Test nunca participa en la selección; solo informa después de congelar modelo y umbrales con validation. `03_07a` es un consumidor analítico y puede repetirse después de cada sincronización sin repetir inferencia.
 
 ## Interruptores deliberados
 
@@ -38,6 +41,7 @@ Todo el recorrido usa el contrato de etiquetas v2.1 con `SEGURO`, `RACISMO_DISCR
 - `02_02` conserva `RUN_FALLBACK=False`; su Qwen3-1.7B es un diagnóstico local independiente, no una segunda campaña que deba promediarse.
 - En `03_01`–`03_06`, active `RUN_TRAINING=True`. Una segunda ejecución con el mismo snapshot devuelve `status="noop"`.
 - En `03_07`, use un kernel Colab CPU y ejecute desde la primera celda. El cuaderno monta `ModeracionPeru_Colab`, restaura y verifica los runs `03_01`–`03_06`; intenta también `03_06b`, pero lo omite si no existe o no es elegible. Active `RUN_COMPARE_AND_FREEZE=True` solo cuando el preflight muestre todas las familias requeridas. `RUN_TEST_ONCE` y la publicación productiva permanecen separados.
+- En `03_07a`, use un kernel local y conserve `AUTO_SYNC_FROM_GOOGLE_DRIVE=True`. En la primera ejecución guarde un cliente OAuth de escritorio como `config/google_drive_oauth_client.json` y acepte en el navegador el alcance Drive de solo lectura; el token queda en `.secrets/`, fuera de Git. Las siguientes ejecuciones comparan automáticamente el manifiesto remoto y descargan solo si `published_at` o el SHA-256 cambiaron. No use Drive Desktop ni descargue pesos.
 
 El corte documentado del 2026-08-08 recuperó 52 244 filas Flash y 9 912 Pro,
 completó la calibración pareada sin errores y registró 14 399 pendientes nuevos
@@ -52,8 +56,9 @@ Ejecute `python tools/restore_synced_checkpoints.py` una vez. El comando
 recompone `datos/raw/transcripts_raw.jsonl` desde
 `datos/raw/transcripts_by_channel/` y restaura desde el bundle los chunks y el
 dataset con verificación SHA-256. Es idempotente respecto del canónico. Los
-cuadernos `03_01`–`03_08` también verifican el dataset antes de usarlo y solo lo
+cuadernos consumidores `03_01`–`03_08` también verifican el dataset antes de usarlo y solo lo
 descomprimen si falta; una copia local divergente produce un error explícito.
+`03_07a` no restaura el dataset porque consume exclusivamente resultados agregados.
 
 No es necesario sincronizar `transcripts_cache/`. Los chunks se pueden volver a
 generar con `01_03`, pero la copia gzip permanece en el bundle porque `02_01` la

@@ -2549,6 +2549,80 @@ if not (RUN_COMPARE_AND_FREEZE or RUN_TEST_ONCE or RUN_PUBLISH):
     show_summary('Criterio vigente',{'candidatos_elegibles':candidate_audit['eligible_count'],'03_06b':'incluido' if prompt_sft_active else 'omitido','preflight_listo':CANDIDATE_PREFLIGHT_READY,'ranking':'BA binaria ANY_DAMAGE OOF a cobertura completa','agregación':'lexicográfica; no suma métricas redundantes','salvaguarda':'macro-AUPRC daños + frontera Pareto','desempate':'menor R_0.67; luego macro-AUPRC','NEEDS_REVIEW':'política posterior bajo capacidad humana declarada','bootstrap':f'{BOOTSTRAP_REPLICATES} réplicas pareadas por video en {PARALLEL_WORKERS} hilos','persistencia':'validation se publica como checkpoint verificable del run 03_07 en Drive','test':'bloqueado hasta fijar capacidad y margen antes de comparar'},tone='neutral')"""
 
 
+COMPARISON_REPORT_SYNC_SOURCE = """from moderacion_peru.comparison_reporting import synchronize_google_drive_results, synchronize_latest_local_results
+
+# OAuth usa permiso Drive de solo lectura. La primera autorización abre el navegador;
+# después reutiliza el token local ignorado por Git. Nunca usa Drive Desktop.
+AUTO_SYNC_FROM_GOOGLE_DRIVE=True
+INTERACTIVE_GOOGLE_DRIVE_AUTH=True
+SEARCH_ROOTS=(
+    ROOT/'resultados/sincronizados/03_07',
+    ROOT/'resultados/modelos',
+)
+drive_sync_result=None
+if AUTO_SYNC_FROM_GOOGLE_DRIVE:
+    try:
+        drive_sync_result=run_with_progress(
+            'Consulta y sincronización automática desde Google Drive',
+            synchronize_google_drive_results,
+            ROOT,
+            interactive_auth=INTERACTIVE_GOOGLE_DRIVE_AUTH,
+            progress_unit='publicación',
+        )
+        sync_result=drive_sync_result
+        show_result('Estado remoto de Google Drive',drive_sync_result,tone='success')
+    except (FileNotFoundError,PermissionError) as exc:
+        show_callout(
+            'Autorización de Drive pendiente',
+            f'{exc} Se continuará con los resultados locales; complete la autorización y repita esta celda para activar la actualización remota.',
+            tone='warning',
+        )
+        sync_result=run_with_progress(
+            'Selección de la comparación local más reciente',
+            synchronize_latest_local_results,
+            ROOT,
+            search_roots=SEARCH_ROOTS,
+            progress_unit='fuente',
+        )
+else:
+    sync_result=run_with_progress(
+        'Selección de la comparación local más reciente',
+        synchronize_latest_local_results,
+        ROOT,
+        search_roots=SEARCH_ROOTS,
+        progress_unit='fuente',
+    )
+show_result('Resultados 03_07 sincronizados localmente',sync_result,tone='success')"""
+
+
+COMPARISON_REPORT_GENERATION_SOURCE = """from IPython.display import Image, display
+from moderacion_peru.comparison_reporting import generate_comparison_report
+
+report_result=run_with_progress(
+    'Tablas, figuras y análisis crítico',
+    generate_comparison_report,
+    sync_result['comparison_path'],
+    freeze_path=sync_result.get('freeze_path'),
+    test_path=sync_result.get('test_path'),
+    output_dir=ROOT/'resultados/modelos',
+    generate_figures=True,
+    progress_unit='reporte',
+)
+show_summary('Reporte reproducible 03_07a',{
+    'seleccionado':report_result['selected_id'],
+    'estado_inferencial':report_result['winner_status'],
+    'test_disponible':report_result['test_available'],
+    'reporte_markdown':report_result['report_path'],
+    'tablas':report_result['table_paths'],
+    'figuras':report_result['figure_paths'],
+},tone='success')
+show_table('Ranking global completo',report_result['global_rows'],max_rows=40)
+show_table('Seleccionado por categoría',report_result['selected_category_rows'],max_rows=10)
+show_table('Mejores candidatos por categoría',report_result['category_winners'],max_rows=10)
+for figure_path in report_result['figure_paths']:
+    display(Image(filename=figure_path,width=1050))"""
+
+
 MINILM_EXECUTION_GUIDE = """Guía reproducible de la campaña MiniLM
 
 Esta campaña se ejecuta **por etapas y siempre con el mismo `COLAB_RUN_ID`**. El valor vacío reanuda `03_02_working_v2_1`. No borre `runs/`, `trainer_checkpoints` ni las publicaciones de Drive: cada configuración tiene `variant_id` y firma propios; al repetir una ya terminada devuelve `status=noop`, y una interrumpida continúa desde el checkpoint verificable más reciente.
@@ -4243,6 +4317,38 @@ if not (RUN_BUDGETED_COMPARABLE or RUN_DIAGNOSTIC_PILOT or RUN_FULL_TRAINING):
             colab_notebook_id=colab_id,
             colab_requires_gpu=filename != "03_07_comparacion_final.ipynb",
         )
+    create(
+        "flujo/03_entrenamiento/03_07a_reporte_comparacion_modelos.ipynb",
+        "03.07a · Reporte local de comparación de modelos",
+        "Consulta automáticamente la publicación 03_07 en Google Drive, la compara con el estado "
+        "local por fecha y SHA-256, descarga solo resultados cuando corresponde y publica tablas, "
+        "figuras y un informe Markdown crítico. Usa OAuth de solo lectura, no Drive Desktop; no "
+        "extrae pesos y no abre test.",
+        "Balanced accuracy evita que el desbalance de clases oculte el desempeño de ANY_DAMAGE "
+        "[@brodersen2010balanced], mientras AUPRC aporta una lectura apropiada para categorías "
+        "minoritarias [@saito2015pr]. Las pruebas y decisiones permanecen separadas de test para "
+        "evitar sesgo de selección [@cawley2010selection]. La síntesis presenta todas las métricas y "
+        "explicita incertidumbre, capacidad de revisión y limitaciones; no convierte un orden "
+        "lexicográfico en superioridad universal.",
+        [
+            (
+                "Sincronización automática y verificable desde Google Drive\n\n"
+                "La primera ejecución requiere un cliente OAuth de tipo **aplicación de escritorio** "
+                "para la Google Drive API. Descargue su JSON como "
+                "`config/google_drive_oauth_client.json`; esta ruta y el token "
+                "`.secrets/google_drive_token.json` están ignorados por Git. Al ejecutar, el navegador "
+                "solicitará una sola vez acceso de solo lectura. Las ejecuciones posteriores comparan "
+                "el manifiesto remoto con el local y solo descargan una publicación nueva o diferente. "
+                "Si aún no se configuró OAuth, la celda conserva el reporte local y muestra el paso pendiente. "
+                "La preparación está documentada en `docs/GOOGLE_DRIVE_03_07A.md`.",
+                COMPARISON_REPORT_SYNC_SOURCE,
+            ),
+            (
+                "Reporte tabular, gráfico y crítico",
+                COMPARISON_REPORT_GENERATION_SOURCE,
+            ),
+        ],
+    )
     create(
         "flujo/04_produccion/04_01_frontend_produccion.ipynb",
         "04.01 · Frontend de producción supervisada",

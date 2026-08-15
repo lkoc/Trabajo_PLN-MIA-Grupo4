@@ -461,7 +461,7 @@ métrica agregada.
 dispositivo efectivo. “Previsto” describe la configuración y no debe citarse
 como hardware consumido.
 
-| Cuaderno | Estado al 2026-08-11 | Hardware realmente usado | Precisión/perfil | Hardware previsto si está pendiente |
+| Cuaderno | Estado al 2026-08-15 | Hardware realmente usado | Precisión/perfil | Hardware previsto si está pendiente |
 |---|---|---|---|---|
 | `03_01` | completo | CPU local AMD Ryzen 7 8845HS; 8 núcleos/16 hilos, cuatro *workers*, ~28,83 GiB RAM | estimadores clásicos en `float64`; Radeon 780M no usada | no aplica |
 | `03_02` | corrida histórica MiniLM+E5 completa en Drive; rerun más reciente: MiniLM 3/3 y E5 2,89/3 | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU; SSD local tiene prioridad y checkpoints futuros se verifican por época | L4 para recuperar o terminar E5 con bundle `c4513a...da63a52` |
@@ -469,10 +469,11 @@ como hardware consumido.
 | `03_03b` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_04` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_05` | candidato completo; época 2 restaurada y época 3 persistida | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, lote 8×1, evaluación 32, dos *workers*, una GPU | no aplica |
-| `03_06` | full fine-tuning histórico completado en un reintento posterior (4 épocas); nueva campaña LoRA pendiente | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; candidato histórico macro-AUPRC daño 0,2431 en validation | A100 de 40 GB para el barrido LoRA corto |
-| `03_06b` | corrida presupuestada y completa pendientes | **no disponible** | perfil corto estimado en 45–75 min; aún no observado | A100 de 40 GB recomendada; corto `2×4`, completo `2×4` |
-| `03_07` | comparación pendiente | **no disponible** | no entrena modelos | CPU local, cuatro hilos para bootstrap |
-| `03_08` | pendiente para el SHA vigente | **no disponible** para el corte actual | no entrena modelos | CPU local |
+| `03_06` | full fine-tuning histórico y barrido LoRA `0/0.02/0.05` completos e incluidos en la comparación | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; cuatro candidatos Qwen estructurados conservados | no aplica |
+| `03_06b` | sin candidato elegible en el checkpoint comparado; omitido sin bloquear | **no disponible** | no aparece entre los 28 individuos comparados | A100 de 40 GB si se decide completar otra campaña |
+| `03_07` | comparación de `validation` completa: 28 individuos + 5 ensembles; `ensemble_soft_mean` congelado, empate estadístico/inconcluso; test sellado | CPU x86_64 del runtime Colab | 2 hilos efectivos, 2.000 réplicas por video; 1.397 s antes de escritura | test requiere una sola corrida posterior; no reentrena |
+| `03_07a` | reporte local completo con sincronización automática desde Drive | CPU local | OAuth de solo lectura; compara fecha/SHA-256; cuatro CSV, tres PNG y Markdown crítico; no carga modelos | se repite tras cada publicación de comparación o test |
+| `03_08` | auditoría del snapshot completa para `013d60…c1f86`; falta `calidad_predictiva_auxiliar_observada.json` | hardware no registrado en el artefacto | no entrena modelos; cobertura/consistencia disponibles, calidad de candidatos pendiente | CPU local para completar la segunda salida |
 
 Las L4 y A100 listadas son GPUs de sesiones distintas de Colab; no trabajaron
 en paralelo sobre una misma corrida. `03_05` usó una sola A100: Colab aportó el

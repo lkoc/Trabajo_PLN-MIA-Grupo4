@@ -3,8 +3,8 @@
 **Alcance:** candidatos individuales y *ensembles* de `03_01`–`03_06b`,
 comparados y congelados por `03_07`.
 
-**Estado:** criterio normativo para la comparación definitiva en `validation`.
-No autoriza a abrir `test` ni a publicar un modelo.
+**Estado:** criterio normativo aplicado a la comparación definitiva de
+`validation` del 2026-08-15. No autoriza a abrir `test` ni a publicar un modelo.
 
 Los candidatos con entrenamiento deliberadamente acotado pueden aparecer en
 la tabla principal si producen predicciones sobre la `validation` común
@@ -317,26 +317,28 @@ política `NEEDS_REVIEW`. Sus resultados estiman generalización y no permiten
 volver a rankear, reajustar \(\boldsymbol\delta\), cambiar \(\lambda\) ni escoger
 otro modelo.
 
-## 8. Lectura provisional de los resultados disponibles
+## 8. Resultado de la aplicación del criterio
 
-Con los candidatos completos actualmente visibles y la proyección binaria
-anterior, las estimaciones puntuales de `validation` 4:1 son:
+`03_07` comparó 28 modelos individuales y 5 *ensembles* sobre la misma
+`validation`. El ranking congeló `ensemble_soft_mean` con BA ANY_DAMAGE OOF
+`0,8400`, FNR `0,1274`, FPR `0,1927` y macro-AUPRC de daño OOF `0,5549`. El
+mejor individuo fue `qwen_lora-4aa5ce04df05`, con BA `0,8314` y macro-AUPRC
+`0,5158`; las diferencias puntuales del *ensemble* fueron `+0,0086` y `+0,0392`.
 
-| Candidato | FNR daño | FPR sobre seguro | BER con peso 1:1 por clase | Balanced accuracy |
-| --- | ---: | ---: | ---: | ---: |
-| Qwen LoRA | 0,3142 | 0,0880 | **0,2011** | **0,7989** |
-| Multitarea | 0,3302 | 0,0929 | 0,2116 | 0,7884 |
-| E5 plano | 0,3354 | 0,0915 | 0,2134 | 0,7866 |
-| Cascada v2 | 0,3599 | **0,0804** | 0,2202 | 0,7798 |
-| MiniLM plano | 0,3585 | 0,0863 | 0,2224 | 0,7776 |
+El retador más cercano, `ensemble_soft_validation_weighted`, tuvo una diferencia
+retador−referencia de BA `−0,00166`, IC 95 % `[−0,00437, 0,00083]` y
+`p_Holm=0,2289`. Como el intervalo incluye cero, el estado correcto es
+`statistical_tie_or_inconclusive`: el modelo congelado es la preferencia de la
+regla lexicográfica, no un ganador universal.
 
-Estas cifras reutilizan los umbrales por etiqueta del artefacto vigente; aún no
-son estimaciones *out-of-fold* de la nueva compuerta binaria. Bajo esa lectura
-provisional, Qwen LoRA ocupa el primer lugar puntual. No es todavía un ganador
-confirmado: `03_06` no ha producido un candidato final y faltan la recalibración
-alineada, el *cross-fitting* y el *bootstrap* pareado de BA de `03_07`. La tabla
-tampoco sustituye el análisis multietiqueta ni la apertura única del test
-natural.
+La ejecución fijó `MAX_REVIEW_RATE=0,40`; el punto seleccionado difiere
+`32,54 %` de los casos. También fijó un margen macro-AUPRC de no inferioridad de
+`0,10`. Ambos valores son permisivos frente a los ejemplos normativos de este
+documento y requieren una justificación explícita de capacidad y tolerancia al
+daño antes de interpretar la política como operable. Se ejecutaron 2.000
+réplicas pareadas por `video_id` con dos hilos efectivos. Test permanece sellado.
+El detalle reproducible y todas las métricas por modelo/categoría están en
+[`../resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md`](../resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md).
 
 ## 9. Implicaciones para la implementación
 

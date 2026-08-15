@@ -186,9 +186,19 @@ fase y ante `Ctrl+C`. Cada grupo de cinco respuestas se fuerza antes a disco con
 `PUBLISH_TO_DRIVE=True` queda como reintento manual opcional; no es necesaria tras
 una terminación normal.
 
-`03_01` y `03_07`–`03_08` siguen siendo adecuados para CPU local. Activar Colab
-no inventa una corrida: los interruptores de entrenamiento permanecen en
-`False` hasta que se complete el preflight y el smoke test.
+`03_01`, `03_08` y `03_07a` son adecuados para CPU local. `03_07` también usa
+CPU, pero debe abrirse en Colab web porque restaura allí los candidatos publicados
+en Drive. Activar Colab no inventa una corrida: los interruptores permanecen en
+`False` hasta completar el preflight correspondiente.
+
+El reporte `03_07a` no monta Drive ni usa Google Drive para escritorio. Consulta
+la Google Drive API desde el kernel local mediante OAuth de solo lectura. La
+primera ejecución requiere un cliente OAuth de escritorio en
+`config/google_drive_oauth_client.json` y consentimiento en el navegador; el
+token renovable se guarda en `.secrets/`, fuera de Git. Después compara fecha y
+SHA-256 con `sincronizacion_google_drive_03_07.json`, descarga solo una publicación
+nueva o diferente y extrae exclusivamente los JSON de resultados. No descarga
+modelos ni checkpoints de `Trainer`.
 
 ## Secuencia práctica
 

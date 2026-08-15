@@ -4,6 +4,8 @@ __pycache__/
 .ipynb_checkpoints/
 .env
 **/.env
+.secrets/
+config/google_drive_oauth_client.json
 
 # Datos y modelos generados
 datos/raw/*
@@ -16,6 +18,8 @@ resultados/metricas/*
 resultados/figuras/*
 resultados/logs/*
 resultados/operacion_05/*
+resultados/sincronizados/*
+!resultados/sincronizados/README.md
 archivo/05_frontend_despliegue/*
 archivo/chunk_rebuilds/
 artefactos/*

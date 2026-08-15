@@ -10,11 +10,13 @@
 
 **Contrato de etiquetas v2.1:** cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran al entrenamiento. Esta combinación, sus umbrales y sus reglas de exclusividad son decisiones operativas locales.
 
-Ejecute primero `03_08`, después las ramas `03_01`–`03_06b` que quiera comparar y al final `03_07`. Todos consumen snapshots del contrato `moderacion_peru_5_salidas_v2`, taxonomía `2.1.0`, y deben compartir la misma partición agrupada por `video_id`.
+Ejecute primero `03_08`, después las ramas `03_01`–`03_06b` que quiera comparar, luego `03_07` y finalmente `03_07a` para elaborar el reporte local. Los cuadernos de entrenamiento consumen snapshots del contrato `moderacion_peru_5_salidas_v2`, taxonomía `2.1.0`, y deben compartir la misma partición agrupada por `video_id`; `03_07a` consume únicamente los JSON de resultados ya firmados.
 
 La selección de familia, checkpoint, época y umbrales utiliza validation. Test se consulta después de congelar la decisión. Las métricas históricas de cuatro daños se mantienen separadas en `archivo/`.
 
 Cada rama ejecuta `fit → calibración/evaluación en validation → checkpoint/manifiesto → candidate.json`; ninguna abre test. `03_07` compara individuos y ensembles del mismo SHA, congela la decisión y deja en interruptores separados la apertura única de test y una publicación que permanece bloqueada. Las ramas compatibles usan 5+14+3 salidas y máscaras observadas.
+
+`03_07a_reporte_comparacion_modelos.ipynb` corre localmente y consulta la Google Drive API con OAuth de solo lectura. La primera vez necesita un cliente de escritorio guardado como `config/google_drive_oauth_client.json`; abre el consentimiento en el navegador y conserva el token en `.secrets/google_drive_token.json`. Ambas rutas están ignoradas por Git. Después compara automáticamente `published_at` y SHA-256, descarga el TAR solo cuando la publicación remota es nueva o diferente y extrae exclusivamente los JSON de comparación, selección y test bajo `resultados/sincronizados/03_07`. No usa Drive Desktop ni materializa pesos. Finalmente promueve el bundle válido más reciente a `resultados/modelos` y genera Markdown, cuatro CSV y tres PNG. La [guía de autorización y sincronización](../../docs/GOOGLE_DRIVE_03_07A.md) detalla la preparación única.
 
 Los cuadernos con más de una corrida deliberada incluyen dentro del propio archivo una sección **Procedimiento reproducible por corridas**. Ejecútela como protocolo: active solo la fase indicada, conserve el mismo snapshot/run/semillas al reanudar y no avance hasta cumplir el criterio de cierre de la etapa anterior.
 
@@ -47,3 +49,6 @@ ejecute desde la primera celda con kernel Colab, confirme que
 `CANDIDATE_PREFLIGHT_READY=True` y active primero `RUN_COMPARE_AND_FREEZE`; después
 `RUN_TEST_ONCE` ejecuta una sola inferencia sobre todo el test natural.
 `RUN_PUBLISH` continúa bloqueado hasta una aprobación posterior.
+Después de cada checkpoint publicado, ejecute `03_07a` localmente: el cuaderno
+consulta Drive y omite la descarga si el manifiesto remoto ya coincide con el
+estado local. No repite comparación, inferencia ni publicación productiva.

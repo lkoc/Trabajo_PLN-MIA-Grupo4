@@ -12,7 +12,7 @@ El proyecto construye un asistente de moderación semiautomática para fragmento
 
 La implementación activa usa el contrato `moderacion_peru_5_salidas_v2`, versión `2.1.0`, con cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es mutuamente excluyente con cualquier daño; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos sin evidencia suficiente se difieren mediante `needs_review=true` y no forman una sexta clase. Esta combinación, sus umbrales y sus reglas de exclusividad son decisiones operativas locales.
 
-El repositorio separa el flujo activo de la evidencia histórica. Las métricas conservadas en el paper y la presentación corresponden al contrato anterior de cuatro daños con `SEGURO` derivado. El rendimiento del contrato activo de cinco salidas permanece pendiente hasta ejecutar nuevamente el entrenamiento, la calibración y el test; el README no traslada las métricas históricas al contrato nuevo.
+El repositorio separa el flujo activo de la evidencia histórica. Las métricas conservadas en el paper y la presentación corresponden al contrato anterior de cuatro daños con `SEGURO` derivado. Para el contrato activo ya existe una comparación completa en `validation` de 28 modelos individuales y 5 *ensembles*; `test` todavía está sellado, por lo que estos resultados no sustituyen una estimación final de generalización ni se trasladan retrospectivamente al paper.
 
 ## Arquitectura del flujo
 
@@ -160,9 +160,12 @@ tope artificial; persiste por `chunk_id` y puede continuar con una recarga.
 | `03_06_qwen_estructurado` | Qwen-LoRA inicializado desde `03_05`, con una época y barrido de penalización del conflicto `SEGURO+daño` | tres candidatos PEFT (`0`, `0.02`, `0.05`); conserva separado el full fine-tuning histórico |
 | `03_06b_qwen_prompt_sft` | Qwen3-0.6B conversacional, LoRA causal y cápsula trazable del prompt v3.2 | JSON estricto y candidato realmente condicionado por prompt |
 | `03_07_comparacion_final` | individuos, ensembles, diversidad, bootstrap por video y pruebas pareadas | comparación en validation y manifiesto congelado; test/publicación separados |
+| `03_07a_reporte_comparacion_modelos` | consulta Drive por OAuth de solo lectura, compara fecha/SHA-256 y sincroniza solo resultados nuevos | Markdown crítico, CSV completos y PNG; no usa Drive Desktop, no extrae modelos ni abre test |
 | `03_08_auditoria_finas_flags` | audita máscaras, cobertura, consistencia y métricas auxiliares observadas | informes del snapshot y de candidatos disponibles |
 
 Los cuadernos `03_01`–`03_06b` completan `fit → calibración/evaluación en validation → manifiesto` y dejan test sellado. `03_07` compara individuos y ensembles, congela candidatos, umbrales y regla; un segundo interruptor infiere una sola vez sobre el test natural completo. Train y validation conservan todo el daño y seleccionan `SEGURO` de forma determinista, aproximadamente proporcional por canal, con ratio 4:1: quedan 51.205/10.600 chunks. Test conserva sus 22.684 chunks y su prevalencia natural. De la misma inferencia se deriva además una vista secundaria determinista 4:1 de 9.010 chunks; no se vuelve a abrir ni ejecutar el modelo. La publicación permanece bloqueada por defecto.
+
+El checkpoint de `validation` publicado el 2026-08-15 congeló `ensemble_soft_mean`: BA ANY_DAMAGE OOF `0,8400` y macro-AUPRC de daño OOF `0,5549`. El mejor individuo fue `qwen_lora-4aa5ce04df05` (`0,8314` y `0,5158`). El estado es `statistical_tie_or_inconclusive`; la selección expresa la política lexicográfica, no una superioridad universal. La corrida declaró capacidad máxima de revisión de `40 %` —el punto elegido usa `32,54 %`— y margen de no inferioridad `0,10`, ambos permisivos y sujetos a justificación operacional. El informe verificable está en [`resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md`](resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md).
 
 `03_06b` ofrece además `RUN_BUDGETED_COMPARABLE`: ajusta LoRA con 3.000 filas
 deterministas, una época y contexto 2.048, pero genera predicciones sobre las
@@ -183,7 +186,7 @@ reemplaza candidatos existentes ni consulta test.
 
 La explicación arquitectónica, los esquemas Mermaid, las diferencias de implementación y una matriz de antecedentes aplicados están en [Arquitecturas de entrenamiento 03_01–03_06b](docs/ARQUITECTURAS_MODELOS_03.md).
 
-Los cuadernos locales aprovechan cuatro hilos de forma acotada: `03_01` reutiliza una extracción TF–IDF por variante entre todos sus modelos y paraleliza las 22 cabezas; `03_07` paraleliza las réplicas bootstrap por video. Ambos registran tiempos por etapa. Los miembros del ensemble se infieren secuencialmente para evitar multiplicar RAM o VRAM.
+Los cuadernos locales paralelizan de forma acotada: `03_01` reutiliza una extracción TF–IDF por variante entre todos sus modelos y procesa las 22 cabezas con cuatro *workers*; `03_07` paraleliza las réplicas bootstrap por video. El checkpoint vigente de comparación registra dos hilos efectivos, aunque el cuaderno permite configurar cuatro. Ambos guardan tiempos por etapa. Los miembros del *ensemble* se infieren secuencialmente para evitar multiplicar RAM o VRAM.
 
 ### 04 · Operación supervisada
 
@@ -310,13 +313,13 @@ Desde VS Code, abra la carpeta clonada, seleccione como kernel el Python de `.ve
 .\.venv\Scripts\jupyter-lab.exe
 ```
 
-El recorrido completo contiene 21 cuadernos:
+El recorrido completo contiene 22 cuadernos:
 
 ```text
 01_01 → 01_015 ampliación minoritaria opcional → 01_02 opcional → 01_03
 → 02_00 en Colab → 02_01 (calibración→Flash→Pro) → 02_02 fallback opcional → 02_03 auditoría → 02_04 → 02_05 → 02_00 en Colab
 → 03_01 ... 03_06 clasificadores —incluida 03_03b— y 03_06b SFT condicionado por prompt en ramas comparables
-→ 03_07 → 03_08 → 04_01
+→ 03_07 → 03_07a → 03_08 → 04_01
 ```
 
 Antes de una corrida costosa, revise los interruptores deliberados:
@@ -333,6 +336,7 @@ Todo cuaderno activo que exige varias corridas contiene una sección **Procedimi
 | `02_02` | `RUN_FALLBACK=False`, `LIMIT=20` | active solo si necesita un diagnóstico local independiente; `None` procesa todos los pendientes |
 | `03_01`–`03_06b` | `RUN_TRAINING=False`; ratio `SEGURO`/daño = 4:1 en train/validation; test natural completo | active la familia; `03_07` reutiliza una inferencia de test para las vistas natural y 4:1 |
 | `03_07` | restauración de Drive activa; `RUN_COMPARE_AND_FREEZE=False`, `RUN_TEST_ONCE=False`, `RUN_PUBLISH=False` | ejecútelo desde la primera celda con kernel Colab CPU; restaura por SHA los runs `03_01`–`03_06`, agrega `03_06b` solo si es elegible, compare/congele y revise evidencia antes de abrir test una vez |
+| `03_07a` | `AUTO_SYNC_FROM_GOOGLE_DRIVE=True`, sin interruptores de entrenamiento o test | ejecútelo localmente; la primera vez autorice Drive con `config/google_drive_oauth_client.json`; después compara y actualiza automáticamente solo si la publicación remota es nueva o diferente |
 
 `03_01`–`03_06b` no forman una cadena: son alternativas comparables. Dentro de `03_05`, el brazo opcional de 256 tokens sí continúa explícitamente los pesos LoRA del candidato de 128 sobre el mismo snapshot, reinicia optimizador y scheduler, y genera otro candidato sin sobrescribir al padre. `03_05`/`03_06` son clasificadores supervisados; solo `03_06b` recibe el prompt como condición de entrada. `03_07` restaura las publicaciones versionadas de Drive, requiere las familias `03_01`–`03_06`, trata `03_06b` como opcional y rechaza candidatos de otro snapshot, incompletos, sin predicciones de validation o que hayan abierto test antes de congelar.
 
@@ -386,7 +390,7 @@ Ambos servidores escuchan por defecto en `127.0.0.1:8765`. Los eventos se guarda
 .\.venv\Scripts\python.exe tools/generate_workflow_notebooks.py
 ```
 
-Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, archivado reversible por longitud, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 21 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
+Las pruebas comprueban esquemas, exclusividad de `SEGURO`, migración, precedencia humana, idempotencia, archivado reversible por longitud, proveedores, entrenamiento, registro, frontends, citas y carátulas académicas. El auditor revisa los 22 cuadernos, sus referencias finales, enlaces Markdown, rutas, nombres de taxonomía y metadatos.
 
 El artículo y la presentación se recompilan de forma independiente:
 

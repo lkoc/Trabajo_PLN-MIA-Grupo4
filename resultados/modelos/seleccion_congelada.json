@@ -1,0 +1,212 @@
+{
+  "schema_version": "4.0.0",
+  "created_at": "2026-08-15T04:28:43.105240+00:00",
+  "comparison_signature": "ca06c9d74d95ccc33555e365186bfe07c57bad273e2f53d86c5451aab07e5baf",
+  "dataset": "/content/moderacion_peru/inputs/datos/model_ready/v2/dataset_5_salidas.jsonl",
+  "dataset_sha256": "013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86",
+  "selected_id": "ensemble_soft_mean",
+  "selected_kind": "ensemble",
+  "members": [
+    "classical-logistic_regression_c0p5-54f7971c6000",
+    "cascade_v2-af78eba77883",
+    "qwen_lora-4aa5ce04df05"
+  ],
+  "selected_training_regime": "ensemble_of_reported_members",
+  "selected_comparison_disclaimer": [],
+  "selected_training_budget": {
+    "classical-logistic_regression_c0p5-54f7971c6000": null,
+    "cascade_v2-af78eba77883": null,
+    "qwen_lora-4aa5ce04df05": null
+  },
+  "member_training_disclaimers": {},
+  "member_candidate_paths": {
+    "cascade_v2-af78eba77883": "/content/moderacion_peru/comparison_inputs/03_07/03_03b/03_03b_working_v2_1/runs/cascade_v2-af78eba77883921f/candidate.json",
+    "qwen_lora-4aa5ce04df05": "/content/moderacion_peru/comparison_inputs/03_07/03_05/03_05_working_v2_1/runs/qwen_lora-4aa5ce04df057144/candidate.json",
+    "classical-logistic_regression_c0p5-54f7971c6000": "/content/moderacion_peru/comparison_inputs/03_07/03_01/03_01_working_v2_1/regularization_screen/runs/classical-54f7971c6000eae5/logistic_regression_c0p5/candidate.json"
+  },
+  "ensemble_weights": null,
+  "thresholds": {
+    "SEGURO": 0.38999999999999996,
+    "RACISMO_DISCRIMINACION": 0.19999999999999996,
+    "ATAQUE_POR_GENERO_IDENTIDAD": 0.19,
+    "ACOSO_AMENAZA": 0.31999999999999995,
+    "CONTENIDO_SEXUAL": 0.49999999999999994
+  },
+  "score_calibrators": [
+    {
+      "type": "sigmoid_platt",
+      "coefficient": 6.28256234194777,
+      "intercept": -2.9738216449909114
+    },
+    {
+      "type": "sigmoid_platt",
+      "coefficient": 7.174342662884151,
+      "intercept": -5.2129299033572725
+    },
+    {
+      "type": "sigmoid_platt",
+      "coefficient": 5.925293708475164,
+      "intercept": -4.902509629109872
+    },
+    {
+      "type": "sigmoid_platt",
+      "coefficient": 5.767803382994432,
+      "intercept": -4.260017130863702
+    },
+    {
+      "type": "sigmoid_platt",
+      "coefficient": 6.992576647846624,
+      "intercept": -4.931350698023695
+    }
+  ],
+  "member_score_calibrators": {
+    "classical-logistic_regression_c0p5-54f7971c6000": [
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 6.062501778691229,
+        "intercept": -2.0468816853934824
+      },
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 7.004469041379698,
+        "intercept": -5.3929492140286746
+      },
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 5.65448377140763,
+        "intercept": -5.049583172030045
+      },
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 6.088692038401083,
+        "intercept": -4.566927361596717
+      },
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 7.070994500431642,
+        "intercept": -5.230404856955742
+      }
+    ],
+    "cascade_v2-af78eba77883": [
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 4.0244765960944795,
+        "intercept": -1.5720190800189697
+      },
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 5.119634471891009,
+        "intercept": -4.548829652160256
+      },
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 4.21399503194489,
+        "intercept": -4.356293870110785
+      },
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 3.8780688503178564,
+        "intercept": -3.413534889908675
+      },
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 4.841370469508846,
+        "intercept": -4.277678021770855
+      }
+    ],
+    "qwen_lora-4aa5ce04df05": [
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 5.551586257235025,
+        "intercept": -2.9069113359331173
+      },
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 5.618196254646527,
+        "intercept": -4.883755757680559
+      },
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 4.750648531427046,
+        "intercept": -4.548076510082603
+      },
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 4.732815788654442,
+        "intercept": -3.940474195199414
+      },
+      {
+        "type": "sigmoid_platt",
+        "coefficient": 5.466900502031251,
+        "intercept": -4.286982142850748
+      }
+    ]
+  },
+  "member_thresholds": {
+    "classical-logistic_regression_c0p5-54f7971c6000": {
+      "SEGURO": 0.38999999999999996,
+      "RACISMO_DISCRIMINACION": 0.18,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 0.16999999999999998,
+      "ACOSO_AMENAZA": 0.24999999999999994,
+      "CONTENIDO_SEXUAL": 0.25999999999999995
+    },
+    "cascade_v2-af78eba77883": {
+      "SEGURO": 0.4799999999999999,
+      "RACISMO_DISCRIMINACION": 0.4099999999999999,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 0.18,
+      "ACOSO_AMENAZA": 0.3999999999999999,
+      "CONTENIDO_SEXUAL": 0.48999999999999994
+    },
+    "qwen_lora-4aa5ce04df05": {
+      "SEGURO": 0.49999999999999994,
+      "RACISMO_DISCRIMINACION": 0.4499999999999999,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 0.26999999999999996,
+      "ACOSO_AMENAZA": 0.37999999999999995,
+      "CONTENIDO_SEXUAL": 0.33999999999999997
+    }
+  },
+  "any_damage_threshold": 0.05816635315491605,
+  "needs_review_policy": {
+    "status": "selected_on_validation_under_capacity",
+    "max_review_rate": 0.4,
+    "selected_delta": 0.03,
+    "validation_operating_point": {
+      "delta": 0.03,
+      "coverage": 0.674622641509434,
+      "review_load_rate": 0.32537735849056604,
+      "automatic_rows": 7151,
+      "selective_binary_metrics": {
+        "true_positive": 941,
+        "false_negative": 135,
+        "false_positive": 298,
+        "true_negative": 5777,
+        "prevalence_any_damage": 0.15046846594881835,
+        "recall": 0.8745353159851301,
+        "specificity": 0.9509465020576132,
+        "false_negative_rate": 0.12546468401486988,
+        "false_positive_rate": 0.04905349794238678,
+        "balanced_error_rate": 0.08725909097862833,
+        "balanced_accuracy": 0.9127409090213716,
+        "f1": 0.8129589632829374,
+        "matthews_correlation": 0.7798012426266568,
+        "risk_lambda": {
+          "0.50": 0.08725909097862833,
+          "0.67": 0.10024899261095045,
+          "0.80": 0.11018244680037326
+        }
+      },
+      "review_reason_rates": {
+        "safe_damage_conflict": 0.05537735849056604,
+        "empty_output": 0.002169811320754717,
+        "gate_category_incoherence": 0.1359433962264151,
+        "near_any_damage_threshold": 0.1538679245283019,
+        "near_category_threshold": 0.045283018867924525
+      }
+    }
+  },
+  "macro_auprc_noninferiority_margin": 0.1,
+  "selection_criterion_version": "balanced-any-damage-oof-v1",
+  "winner_status": "statistical_tie_or_inconclusive",
+  "test_status": "sealed_ready_for_single_open",
+  "publication_approved": false
+}

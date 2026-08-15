@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "notebook_id": "03_07",
+  "run_id": "03_07_working_v2_1",
+  "run_folder_url": "https://drive.google.com/drive/folders/1V-oHSklbHQ4sisVPdwayF-Tv66b6av0-",
+  "oauth_client_path": "config/google_drive_oauth_client.json",
+  "token_path": ".secrets/google_drive_token.json",
+  "oauth_scope": "https://www.googleapis.com/auth/drive.readonly",
+  "download_policy": "only_if_remote_publication_is_newer_or_different",
+  "extracted_files": [
+    "comparacion_individual_ensemble_validation.json",
+    "seleccion_congelada.json",
+    "test_final_abierto_una_vez.json"
+  ]
+}

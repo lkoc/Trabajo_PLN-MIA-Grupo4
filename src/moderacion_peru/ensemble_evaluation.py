@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import tempfile
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -182,9 +183,7 @@ def _pareto_front(rows: Sequence[dict[str, Any]]) -> list[str]:
     vectors = {
         row["candidate_id"]: np.asarray(
             [
-                row["validation_metrics"]["binary_any_damage_oof"][
-                    "balanced_accuracy"
-                ],
+                row["validation_metrics"]["binary_any_damage_oof"]["balanced_accuracy"],
                 row["validation_metrics"].get(
                     "average_precision_macro_damage_oof",
                     row["validation_metrics"]["average_precision_macro_damage"],
@@ -215,7 +214,9 @@ def _fit_sigmoid_calibrator(truth: np.ndarray, scores: np.ndarray) -> dict[str, 
     if np.unique(labels).size < 2:
         return {
             "type": "constant",
-            "value": float(np.clip(labels.mean() if len(labels) else 0.5, 1e-6, 1 - 1e-6)),
+            "value": float(
+                np.clip(labels.mean() if len(labels) else 0.5, 1e-6, 1 - 1e-6)
+            ),
         }
     from sklearn.linear_model import LogisticRegression
 
@@ -232,9 +233,7 @@ def _apply_calibrator(scores: np.ndarray, calibrator: Mapping[str, Any]) -> np.n
     values = np.asarray(scores, dtype=float)
     if calibrator["type"] == "constant":
         return np.full(values.shape, float(calibrator["value"]), dtype=float)
-    logits = float(calibrator["coefficient"]) * values + float(
-        calibrator["intercept"]
-    )
+    logits = float(calibrator["coefficient"]) * values + float(calibrator["intercept"])
     return 1.0 / (1.0 + np.exp(-np.clip(logits, -30, 30)))
 
 
@@ -483,7 +482,8 @@ def _crossfit_binary_policy(
     oof_gate_thresholds = np.zeros(len(scores), dtype=float)
     fold_rows = []
     for fold, (train_indices, heldout_indices) in enumerate(
-        GroupKFold(n_splits=split_count).split(scores, truth_any, groups=groups), start=1
+        GroupKFold(n_splits=split_count).split(scores, truth_any, groups=groups),
+        start=1,
     ):
         calibrators = _fit_score_calibrators(
             truth[train_indices], scores[train_indices]
@@ -499,9 +499,7 @@ def _crossfit_binary_policy(
             [category_thresholds[label] for label in taxonomy.target_labels]
         )
         train_any_scores = calibrated_train[:, damage_indices].max(axis=1)
-        gate_threshold = _balanced_threshold(
-            truth_any[train_indices], train_any_scores
-        )
+        gate_threshold = _balanced_threshold(truth_any[train_indices], train_any_scores)
         oof_scores[heldout_indices] = calibrated_heldout
         oof_category_thresholds[heldout_indices] = ordered_thresholds
         oof_gate_thresholds[heldout_indices] = gate_threshold
@@ -549,6 +547,7 @@ def _grouped_bootstrap_macro_ap(
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     from joblib import Parallel, delayed
+
     if replicates < 1:
         raise ValueError("replicates debe ser al menos 1")
     if parallel_workers < 1:
@@ -557,6 +556,7 @@ def _grouped_bootstrap_macro_ap(
     for index, video_id in enumerate(video_ids):
         groups[str(video_id)].append(index)
     group_indices = [np.asarray(groups[key], dtype=int) for key in sorted(groups)]
+
     def macro_damage_ap(indices: np.ndarray) -> float:
         return _macro_damage_average_precision(truth, scores, indices)
 
@@ -625,9 +625,7 @@ def _paired_bootstrap(
     labels = np.asarray(truth, dtype=np.int8).reshape(-1)
     reference_decisions = np.asarray(reference, dtype=np.int8).reshape(-1)
     challenger_decisions = np.asarray(challenger, dtype=np.int8).reshape(-1)
-    if not (
-        len(labels) == len(reference_decisions) == len(challenger_decisions)
-    ):
+    if not (len(labels) == len(reference_decisions) == len(challenger_decisions)):
         raise ValueError("Las decisiones binarias pareadas no coinciden")
 
     def balanced_accuracy(decisions: np.ndarray, indices: np.ndarray) -> float:
@@ -654,9 +652,9 @@ def _paired_bootstrap(
             rng = np.random.default_rng(int(replicate_seed))
             sampled = rng.integers(0, len(group_indices), size=len(group_indices))
             indices = np.concatenate([group_indices[index] for index in sampled])
-            difference = balanced_accuracy(challenger_decisions, indices) - balanced_accuracy(
-                reference_decisions, indices
-            )
+            difference = balanced_accuracy(
+                challenger_decisions, indices
+            ) - balanced_accuracy(reference_decisions, indices)
             if not np.isnan(difference):
                 values.append(difference)
         _notify_progress(
@@ -808,8 +806,8 @@ def compare_and_freeze_validation(
             truth, deployment_scores, deployment_thresholds
         )
         metrics["binary_any_damage_oof"] = policy["oof_metrics"]
-        metrics["average_precision_macro_damage_oof"] = (
-            _macro_damage_average_precision(truth, policy["oof_calibrated_scores"])
+        metrics["average_precision_macro_damage_oof"] = _macro_damage_average_precision(
+            truth, policy["oof_calibrated_scores"]
         )
         curve = _review_curve(
             policy["truth_any_damage"],
@@ -888,11 +886,7 @@ def compare_and_freeze_validation(
     }
     best_by_slot = {
         slot: max(
-            (
-                row
-                for row in eligible
-                if _candidate_slot(row) == slot
-            ),
+            (row for row in eligible if _candidate_slot(row) == slot),
             key=lambda row: _selection_key(
                 individual_by_id[str(row["candidate_id"])]["validation_metrics"]
             ),
@@ -989,9 +983,7 @@ def compare_and_freeze_validation(
         ),
     )
     best_individual_macro_ap = float(
-        macro_ap_reference["validation_metrics"][
-            "average_precision_macro_damage_oof"
-        ]
+        macro_ap_reference["validation_metrics"]["average_precision_macro_damage_oof"]
     )
     reference_samples = macro_ap_samples_by_id[macro_ap_reference["candidate_id"]]
     for row in evaluated:
@@ -1005,8 +997,7 @@ def compare_and_freeze_validation(
             "method": "paired_video_cluster_bootstrap_noninferiority",
             "reference_candidate": macro_ap_reference["candidate_id"],
             "reference_best_individual": best_individual_macro_ap,
-            "difference_candidate_minus_reference": observed
-            - best_individual_macro_ap,
+            "difference_candidate_minus_reference": observed - best_individual_macro_ap,
             "difference_ci_low": difference_ci_low,
             "difference_ci_high": difference_ci_high,
             "margin": macro_auprc_noninferiority_margin,
@@ -1021,9 +1012,7 @@ def compare_and_freeze_validation(
             ),
         }
     selectable = [
-        row
-        for row in evaluated
-        if row["macro_auprc_safeguard"]["status"] != "fail"
+        row for row in evaluated if row["macro_auprc_safeguard"]["status"] != "fail"
     ]
     selected = max(
         selectable, key=lambda row: _selection_key(row["validation_metrics"])
@@ -1055,7 +1044,9 @@ def compare_and_freeze_validation(
         tests.append(test)
     _holm_adjust(tests)
     eligible_challengers = [
-        row for row in tests if row["challenger"] in {item["candidate_id"] for item in selectable}
+        row
+        for row in tests
+        if row["challenger"] in {item["candidate_id"] for item in selectable}
     ]
     closest_challenger = max(
         eligible_challengers,
@@ -1124,7 +1115,9 @@ def compare_and_freeze_validation(
         "pareto_front": frontier,
         "selected_for_freeze": selected["candidate_id"],
         "winner_status": (
-            "confirmed_on_validation" if leader_confirmed else "statistical_tie_or_inconclusive"
+            "confirmed_on_validation"
+            if leader_confirmed
+            else "statistical_tie_or_inconclusive"
         ),
         "closest_eligible_challenger_test": closest_challenger,
         "best_individual": reference_individual["candidate_id"],
@@ -1144,9 +1137,7 @@ def compare_and_freeze_validation(
         },
         "rejected": rejected,
     }
-    review_policy = selected["validation_metrics"]["needs_review"][
-        "operating_policy"
-    ]
+    review_policy = selected["validation_metrics"]["needs_review"]["operating_policy"]
     policy_ready = (
         macro_auprc_noninferiority_margin is not None
         and review_policy["status"] == "selected_on_validation_under_capacity"
@@ -1199,7 +1190,9 @@ def compare_and_freeze_validation(
         "macro_auprc_noninferiority_margin": macro_auprc_noninferiority_margin,
         "selection_criterion_version": SELECTION_CRITERION_VERSION,
         "winner_status": (
-            "confirmed_on_validation" if leader_confirmed else "statistical_tie_or_inconclusive"
+            "confirmed_on_validation"
+            if leader_confirmed
+            else "statistical_tie_or_inconclusive"
         ),
         "test_status": frozen_test_status,
         "publication_approved": False,
@@ -1224,6 +1217,77 @@ def _asset(candidate: Mapping[str, Any], value: str | Path) -> Path:
         if path.is_absolute()
         else Path(str(candidate["candidate_path"])).parent / path
     )
+
+
+def _peft_saved_head_output_count(model_path: Path) -> int | None:
+    """Infiere la dimensión de una cabeza PEFT guardada sin cargar sus pesos."""
+
+    weights = model_path / "adapter_model.safetensors"
+    if not weights.is_file():
+        return None
+    try:
+        from safetensors import safe_open
+
+        with safe_open(weights, framework="pt", device="cpu") as handle:
+            dimensions = {
+                int(handle.get_slice(key).get_shape()[0])
+                for key in handle
+                if (
+                    key.endswith(".weight")
+                    and "modules_to_save" in key
+                    and any(
+                        head in key.casefold()
+                        for head in ("score", "classifier", "classification_head")
+                    )
+                    and len(handle.get_slice(key).get_shape()) == 2
+                )
+            }
+    except (ImportError, OSError, RuntimeError, ValueError):
+        return None
+    return next(iter(dimensions)) if len(dimensions) == 1 else None
+
+
+def _peft_sequence_output_contract(
+    candidate: Mapping[str, Any], model_path: Path
+) -> tuple[int, list[str]]:
+    """Resuelve 5 salidas primarias y cualquier cantidad auxiliar opcional."""
+
+    inference = candidate["inference"]
+    raw_labels = inference.get("output_labels") or candidate.get("output_labels") or ()
+    if isinstance(raw_labels, (str, bytes)) or not isinstance(raw_labels, Sequence):
+        raise ValueError("output_labels del candidato PEFT no es una secuencia")
+    labels = [str(label) for label in raw_labels]
+    raw_count = inference.get("output_count", candidate.get("output_count"))
+    if raw_count is None:
+        raw_count = len(labels) or _peft_saved_head_output_count(model_path) or 5
+    output_count = int(raw_count)
+    primary_count = int(inference.get("primary_output_count", 5))
+    primary_labels = list(load_taxonomy().target_labels)
+    if output_count < len(primary_labels) or primary_count < len(primary_labels):
+        raise ValueError(
+            "El candidato PEFT debe conservar al menos las cinco salidas primarias"
+        )
+    if primary_count > output_count:
+        raise ValueError(
+            "primary_output_count excede output_count en el candidato PEFT"
+        )
+    if labels and len(labels) != output_count:
+        raise ValueError(
+            f"El candidato PEFT declara {output_count} salidas pero {len(labels)} etiquetas"
+        )
+    if labels and labels[: len(primary_labels)] != primary_labels:
+        raise ValueError(
+            "Las primeras cinco salidas PEFT no respetan el contrato de categorías primarias"
+        )
+    if not labels:
+        labels = [
+            *primary_labels,
+            *[
+                f"AUXILIAR_{index:02d}"
+                for index in range(1, output_count - len(primary_labels) + 1)
+            ],
+        ]
+    return output_count, labels
 
 
 def _score_candidate(
@@ -1306,14 +1370,35 @@ def _score_candidate(
     hardware = resolve_device(device)
     torch_device = torch_device_name(hardware)
 
-    def sequence_scores(path: Path, count: int, phase: str) -> np.ndarray:
-        tokenizer = AutoTokenizer.from_pretrained(path)
-        if kind == "hf_peft_sequence_classifier":
+    def sequence_scores(
+        path: Path, count: int, phase: str, *, peft_adapter: bool = False
+    ) -> np.ndarray:
+        tokenizer = AutoTokenizer.from_pretrained(
+            path,
+            token=False,
+            # Los tokenizadores locales son BERT/E5/Qwen, no Mistral. Evita que
+            # Transformers aplique por heurística un regex ajeno al checkpoint.
+            fix_mistral_regex=False,
+        )
+        if peft_adapter:
             from peft import AutoPeftModelForSequenceClassification
 
-            model = AutoPeftModelForSequenceClassification.from_pretrained(path)
+            output_count, output_labels = _peft_sequence_output_contract(
+                candidate, path
+            )
+            id2label = dict(enumerate(output_labels))
+            model = AutoPeftModelForSequenceClassification.from_pretrained(
+                path,
+                num_labels=output_count,
+                id2label=id2label,
+                label2id={label: index for index, label in id2label.items()},
+                problem_type="multi_label_classification",
+                token=False,
+            )
         else:
-            model = AutoModelForSequenceClassification.from_pretrained(path)
+            model = AutoModelForSequenceClassification.from_pretrained(
+                path, token=False
+            )
         model.to(torch_device).eval()
         batches = []
         batch_size = 16
@@ -1337,9 +1422,13 @@ def _score_candidate(
                 encoded = {
                     key: value.to(torch_device) for key, value in encoded.items()
                 }
-                batches.append(
-                    torch.sigmoid(model(**encoded).logits).float().cpu().numpy()
-                )
+                logits = model(**encoded).logits
+                if logits.ndim != 2 or int(logits.shape[1]) < count:
+                    raise ValueError(
+                        f"{path}: se esperaban al menos {count} salidas y se obtuvo "
+                        f"{tuple(logits.shape)}"
+                    )
+                batches.append(torch.sigmoid(logits).float().cpu().numpy())
                 _notify_progress(
                     progress_callback,
                     status="progress",
@@ -1356,7 +1445,12 @@ def _score_candidate(
         return np.concatenate(batches, axis=0)[:, :count]
 
     if kind in {"hf_sequence_classifier", "hf_peft_sequence_classifier"}:
-        return sequence_scores(_asset(candidate, inference["model"]), 5, progress_phase)
+        return sequence_scores(
+            _asset(candidate, inference["model"]),
+            5,
+            progress_phase,
+            peft_adapter=kind == "hf_peft_sequence_classifier",
+        )
     if kind in {"hf_cascade", "hf_cascade_v2"}:
         gate = sequence_scores(
             _asset(candidate, inference["gate_model"]),
@@ -1364,19 +1458,14 @@ def _score_candidate(
             f"{progress_phase} · compuerta",
         )
         safety_first = kind == "hf_cascade_v2"
-        original_kind = inference["type"]
-        inference["type"] = "hf_sequence_classifier"
-        try:
-            specialist = sequence_scores(
-                _asset(
-                    candidate,
-                    inference["branch_model" if safety_first else "damage_model"],
-                ),
-                5 if safety_first else 4,
-                f"{progress_phase} · {'rama segura/daño' if safety_first else 'daño'}",
-            )
-        finally:
-            inference["type"] = original_kind
+        specialist = sequence_scores(
+            _asset(
+                candidate,
+                inference["branch_model" if safety_first else "damage_model"],
+            ),
+            5 if safety_first else 4,
+            f"{progress_phase} · {'rama segura/daño' if safety_first else 'daño'}",
+        )
         if safety_first:
             return combine_safety_first_cascade_scores(
                 gate[:, 0],
@@ -1385,6 +1474,151 @@ def _score_candidate(
             )
         return np.concatenate([1 - gate, gate * specialist], axis=1)
     raise ValueError(f"Inferencia no soportada en apertura de test: {kind}")
+
+
+def _partial_test_score_identity(
+    freeze: Mapping[str, Any],
+    identifier: str,
+    candidate: Mapping[str, Any],
+    rows_signature: str,
+) -> dict[str, Any]:
+    candidate_path = Path(str(candidate["candidate_path"]))
+    return {
+        "comparison_signature": freeze["comparison_signature"],
+        "dataset_sha256": freeze["dataset_sha256"],
+        "candidate_id": identifier,
+        "candidate_sha256": sha256_file(candidate_path),
+        "test_rows_signature": rows_signature,
+    }
+
+
+def _partial_test_score_paths(
+    destination: Path, identity: Mapping[str, Any]
+) -> tuple[Path, Path]:
+    cache_root = destination.with_name(destination.stem + "_member_scores_partial")
+    key = canonical_json_sha256(identity)
+    return cache_root / f"{key}.npy", cache_root / f"{key}.json"
+
+
+def _save_partial_test_member_scores(
+    destination: Path,
+    freeze: Mapping[str, Any],
+    identifier: str,
+    candidate: Mapping[str, Any],
+    rows_signature: str,
+    scores: np.ndarray,
+) -> Path:
+    values = np.asarray(scores, dtype=float)
+    identity = _partial_test_score_identity(
+        freeze, identifier, candidate, rows_signature
+    )
+    score_path, manifest_path = _partial_test_score_paths(destination, identity)
+    score_path.parent.mkdir(parents=True, exist_ok=True)
+    file_descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{score_path.name}.", dir=score_path.parent
+    )
+    try:
+        with os.fdopen(file_descriptor, "wb") as handle:
+            np.save(handle, values, allow_pickle=False)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary_name, score_path)
+    finally:
+        if os.path.exists(temporary_name):
+            os.unlink(temporary_name)
+    write_json_atomic(
+        manifest_path,
+        {
+            "schema_version": "1.0.0",
+            "created_at": datetime.now(UTC).isoformat(),
+            **identity,
+            "shape": list(values.shape),
+            "scores_sha256": sha256_file(score_path),
+            "purpose": "technical_resume_only_never_model_selection",
+        },
+    )
+    return score_path
+
+
+def _load_partial_test_member_scores(
+    destination: Path,
+    freeze: Mapping[str, Any],
+    identifier: str,
+    candidate: Mapping[str, Any],
+    rows_signature: str,
+    expected_rows: int,
+) -> np.ndarray | None:
+    identity = _partial_test_score_identity(
+        freeze, identifier, candidate, rows_signature
+    )
+    score_path, manifest_path = _partial_test_score_paths(destination, identity)
+    if not score_path.is_file() or not manifest_path.is_file():
+        return None
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if any(manifest.get(key) != value for key, value in identity.items()):
+            return None
+        if manifest.get("scores_sha256") != sha256_file(score_path):
+            return None
+        with score_path.open("rb") as handle:
+            values = np.load(handle, allow_pickle=False)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+    if values.shape != (expected_rows, 5) or not np.isfinite(values).all():
+        return None
+    return np.asarray(values, dtype=float)
+
+
+def recover_partial_test_scores_from_traceback(
+    traceback: Any,
+    freeze_path: str | Path,
+    destination_path: str | Path,
+) -> dict[str, Any]:
+    """Recupera scores ya calculados de una apertura fallida en el mismo kernel."""
+
+    recovered: Mapping[str, Any] | None = None
+    current = traceback
+    while current is not None:
+        frame = current.tb_frame
+        if frame.f_code.co_name == "evaluate_frozen_test" and isinstance(
+            frame.f_locals.get("member_scores"), Mapping
+        ):
+            recovered = dict(frame.f_locals["member_scores"])
+        current = current.tb_next
+    if not recovered:
+        return {"status": "nothing_to_recover", "recovered_members": []}
+
+    freeze = json.loads(Path(freeze_path).read_text(encoding="utf-8"))
+    dataset = Path(freeze["dataset"])
+    if sha256_file(dataset) != freeze["dataset_sha256"]:
+        raise ValueError("El snapshot cambió después de la apertura fallida")
+    candidates = {
+        identifier: json.loads(Path(path).read_text(encoding="utf-8"))
+        for identifier, path in freeze["member_candidate_paths"].items()
+    }
+    for identifier, path in freeze["member_candidate_paths"].items():
+        candidates[identifier]["candidate_path"] = path
+    first = next(iter(candidates.values()))
+    split_field = first.get("training_sampling", {}).get("split_field", "split")
+    test_rows = [row for row in read_jsonl(dataset) if row.get(split_field) == "test"]
+    rows_signature = canonical_json_sha256([str(row["chunk_id"]) for row in test_rows])
+    saved = []
+    for identifier, raw_scores in recovered.items():
+        if identifier not in candidates:
+            continue
+        scores = np.asarray(raw_scores, dtype=float)
+        if scores.shape != (len(test_rows), 5) or not np.isfinite(scores).all():
+            continue
+        _save_partial_test_member_scores(
+            Path(destination_path),
+            freeze,
+            identifier,
+            candidates[identifier],
+            rows_signature,
+            scores,
+        )
+        saved.append(identifier)
+    return {"status": "recovered", "recovered_members": sorted(saved)}
 
 
 def evaluate_frozen_test(
@@ -1438,14 +1672,57 @@ def evaluate_frozen_test(
     if not test_rows:
         raise ValueError("No hay filas en el test congelado")
     inference_started = time.perf_counter()
+    rows_signature = canonical_json_sha256([str(row["chunk_id"]) for row in test_rows])
     member_scores = {}
+    member_score_sources = {}
     for identifier, candidate in candidates.items():
-        member_scores[identifier] = _score_candidate(
+        cached_scores = _load_partial_test_member_scores(
+            destination,
+            freeze,
+            identifier,
+            candidate,
+            rows_signature,
+            len(test_rows),
+        )
+        if cached_scores is not None:
+            _notify_progress(
+                progress_callback,
+                status="started",
+                phase=f"test · {identifier} · checkpoint reanudado",
+                total=1,
+                advance=0,
+            )
+            member_scores[identifier] = cached_scores
+            member_score_sources[identifier] = "verified_partial_checkpoint"
+            _notify_progress(
+                progress_callback,
+                status="finished",
+                phase=f"test · {identifier} · checkpoint reanudado",
+                total=1,
+                completed=1,
+            )
+            continue
+        scores = _score_candidate(
             candidate,
             test_rows,
             device=device,
             progress_callback=progress_callback,
             progress_phase=f"test · {identifier}",
+        )
+        if scores.shape != (len(test_rows), 5) or not np.isfinite(scores).all():
+            raise ValueError(
+                f"{identifier}: la inferencia de test no produjo una matriz finita "
+                f"de forma {(len(test_rows), 5)}"
+            )
+        member_scores[identifier] = scores
+        member_score_sources[identifier] = "inferred_in_this_open"
+        _save_partial_test_member_scores(
+            destination,
+            freeze,
+            identifier,
+            candidate,
+            rows_signature,
+            scores,
         )
     inference_elapsed = time.perf_counter() - inference_started
     taxonomy = load_taxonomy()
@@ -1486,8 +1763,8 @@ def evaluate_frozen_test(
     )
     truth_any_natural = truth[:, damage_indices].max(axis=1)
     any_damage_scores_natural = scores[:, damage_indices].max(axis=1)
-    any_damage_decisions_natural = (
-        any_damage_scores_natural >= float(freeze["any_damage_threshold"])
+    any_damage_decisions_natural = any_damage_scores_natural >= float(
+        freeze["any_damage_threshold"]
     )
     metrics_natural["binary_any_damage_frozen_gate"] = _binary_metrics(
         truth_any_natural,
@@ -1537,8 +1814,7 @@ def evaluate_frozen_test(
                     truth_any_natural[automatic],
                     any_damage_decisions_natural[automatic],
                 )
-                if automatic.any()
-                and np.unique(truth_any_natural[automatic]).size == 2
+                if automatic.any() and np.unique(truth_any_natural[automatic]).size == 2
                 else None
             ),
         }
@@ -1573,6 +1849,11 @@ def evaluate_frozen_test(
         "inference_passes": 1,
         "test_rows_natural": len(test_rows),
         "test_rows_4_to_1": len(test_4_to_1),
+        "member_score_sources": member_score_sources,
+        "partial_checkpoint_policy": (
+            "Los scores por miembro solo permiten reanudar la misma apertura "
+            "congelada; nunca participan en selección ni recalibración."
+        ),
         "test_sampling_4_to_1": test_sampling_4_to_1,
         "primary_metrics_natural_prevalence": metrics_natural,
         "secondary_metrics_4_to_1": metrics_4_to_1,

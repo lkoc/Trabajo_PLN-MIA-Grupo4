@@ -49,7 +49,7 @@ CONTRACT_SUMMARY_DOCUMENTS = (
 
 def test_active_notebooks_are_ordered_and_clean():
     notebooks = sorted((ROOT / "flujo").rglob("*.ipynb"))
-    assert len(notebooks) == 21
+    assert len(notebooks) == 22
     executed_evidence_notebooks = {
         "01_03_limpieza_troceado_incremental.ipynb",
         "02_00_preparacion_bundle_colab.ipynb",
@@ -527,7 +527,7 @@ def test_root_readme_summarizes_and_reproduces_the_active_workflow():
     for folder, expected_count in {
         "01_datos": 4,
         "02_etiquetado": 6,
-        "03_entrenamiento": 10,
+        "03_entrenamiento": 11,
         "04_produccion": 1,
     }.items():
         notebooks = sorted((ROOT / "flujo" / folder).glob("*.ipynb"))
@@ -772,10 +772,38 @@ def test_chunk_length_pilot_is_optional_and_materialization_is_separate():
 
 def test_dataset_consumers_restore_and_verify_the_synced_checkpoint():
     for path in sorted((ROOT / "flujo" / "03_entrenamiento").glob("*.ipynb")):
+        if path.name == "03_07a_reporte_comparacion_modelos.ipynb":
+            continue
         notebook = nbformat.read(path, as_version=4)
         source = "\n".join(cell.source for cell in notebook.cells)
         assert "prepare_local_bundle_input('dataset_5_salidas'" in source, path
         assert "Dataset descomprimido y verificado" in source, path
+
+
+def test_03_07a_reports_synced_results_without_model_weights_or_drive_desktop():
+    path = (
+        ROOT
+        / "flujo"
+        / "03_entrenamiento"
+        / "03_07a_reporte_comparacion_modelos.ipynb"
+    )
+    notebook = nbformat.read(path, as_version=4)
+    source = "\n".join(cell.source for cell in notebook.cells)
+    assert "synchronize_google_drive_results" in source
+    assert "synchronize_latest_local_results" in source
+    assert "generate_comparison_report" in source
+    assert "AUTO_SYNC_FROM_GOOGLE_DRIVE=True" in source
+    assert "INTERACTIVE_GOOGLE_DRIVE_AUTH=True" in source
+    assert "config/google_drive_oauth_client.json" in source
+    assert ".secrets/google_drive_token.json" in source
+    assert "resultados/sincronizados/03_07" in source
+    assert "resultados/modelos" in source
+    assert "no Drive Desktop" in source
+    assert "no extrae pesos" in source
+    assert "Ranking global completo" in source
+    assert "Seleccionado por categoría" in source
+    assert "REPORTE_COMPARACION_MODELOS_03_07.md" not in source
+    assert "RUN_TEST_ONCE" not in source
 
 
 def test_multi_run_notebooks_explain_the_reproducible_sequence_in_place():
@@ -1028,15 +1056,23 @@ def test_qwen_prompt_sft_exposes_budgeted_comparable_profile():
     )
     source = "\n".join(cell.source for cell in notebook.cells)
 
-    assert "RUN_BUDGETED_COMPARABLE=False" in source
+    # El cuaderno puede conservar `True` como evidencia de una corrida del usuario;
+    # el generador mantiene `False` como valor seguro para una copia nueva.
+    assert "RUN_BUDGETED_COMPARABLE=" in source
+    generator_source = (
+        ROOT / "tools" / "generate_workflow_notebooks.py"
+    ).read_text(encoding="utf-8")
+    assert "RUN_BUDGETED_COMPARABLE=False" in generator_source
     assert "RUN_DIAGNOSTIC_PILOT=False" in source
     assert "RUN_FULL_TRAINING=False" in source
     assert "training_regime='budgeted_comparable'" in source
     assert "eligible_for_03_07=True" in source
     assert "train_limit=BUDGET_TRAIN_ROWS" in source
     assert "validation_limit=None" in source
-    assert "BUDGET_TRAINING_SECONDS=1500" in source
-    assert "BUDGET_TOTAL_SECONDS=4500" in source
+    assert "BUDGET_TRAINING_SECONDS=" in source
+    assert "BUDGET_TOTAL_SECONDS=" in source
+    assert "BUDGET_TRAINING_SECONDS=1500" in generator_source
+    assert "BUDGET_TOTAL_SECONDS=4500" in generator_source
     assert "BUDGET_MAX_LENGTH=2048" in source
     assert "generation_max_new_tokens=160" in source
     assert "prompt_capsule_max_chars=4800" in source

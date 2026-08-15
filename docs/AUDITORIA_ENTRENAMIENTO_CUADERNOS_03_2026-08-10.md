@@ -5,6 +5,22 @@
 **Fecha de corte:** 2026-08-11 (actualización del informe iniciado el 2026-08-10)
 **Estado:** corte de resultados actualizado; 14 candidatos elegibles completos en *validation*, incluido Qwen-LoRA, test todavía sellado
 
+> **Actualización 2026-08-15 — prevalece sobre los conteos y pendientes de este
+> corte.** La comparación definitiva de `validation` ya fue ejecutada sobre 28
+> modelos individuales y 5 *ensembles*. Se congeló `ensemble_soft_mean` (BA
+> ANY_DAMAGE OOF `0,8400`; macro-AUPRC de daño OOF `0,5549`) frente a Qwen-LoRA
+> como mejor individuo (`0,8314`; `0,5158`). El contraste con el *ensemble* suave
+> ponderado fue inconcluso (`Δ` retador−referencia `−0,00166`, IC 95 %
+> `[−0,00437, 0,00083]`, `p_Holm=0,2289`), por lo que no existe evidencia de un
+> ganador universal. La política usada declaró revisión máxima `40 %`, carga
+> seleccionada `32,54 %` y margen de no inferioridad `0,10`; estos supuestos
+> requieren justificación operacional. Test continúa sellado. `03_07a` consulta
+> Drive mediante OAuth de solo lectura y sincroniza solo JSON nuevos o distintos
+> —sin Drive Desktop ni pesos—; después publica el
+> [reporte completo](../resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md).
+> La auditoría de snapshot de `03_08` sí corresponde al SHA vigente
+> `013d60…c1f86`; falta todavía la salida predictiva de candidatos auxiliares.
+
 ## 1. Resumen ejecutivo
 
 La serie ya produjo resultados comparables en *validation*, pero **todavía no permite declarar un ganador final**. El snapshot está cerrado, tiene 173.240 chunks entrenables y no presenta solapamiento de videos entre `train`, `validation` y `test`. El corte verificable es el siguiente:
