@@ -1,6 +1,6 @@
 # Reporte de comparación de modelos — 03_07a
 
-**Generado:** 2026-08-15T13:33:50.915959+00:00
+**Generado:** 2026-08-15T13:40:34.869359+00:00
 **Comparación:** `comparacion_individual_ensemble_validation.json`
 **SHA-256 del artefacto:** `e0f688fbad23b71d742dcd6bb0ecfe99f233d9675b9c6b1a5caf6f2544cfd8ae`
 **Firma de comparación:** `ca06c9d74d95ccc33555e365186bfe07c57bad273e2f53d86c5451aab07e5baf`
@@ -70,6 +70,19 @@ Se compararon **28 modelos individuales** y **5 ensembles**. La política de sel
 | 33 | classical-policy_informed_dummy-347f3734fb9e | individual | classical:policy_informed:dummy | 0.5000 | 0.0530 | 0.0000 | 1.0000 | 0.0770 | 0.4792 |
 
 La tabla completa, con calibración, riesgo, carga de revisión y salvaguardas, está en [`tablas_03_07a/ranking_validation.csv`](tablas_03_07a/ranking_validation.csv).
+
+## Mejor modelo por tipo
+
+El mejor de cada tipo se toma del mismo ranking lexicográfico de validation usado para la congelación; no se recalculó un ranking alternativo por una sola métrica.
+
+| Tipo | Mejor modelo | Ranking global | BA OOF | Macro-AUPRC OOF | FNR | FPR | Macro-F1 daño | Seleccionado final |
+|---|---|---|---|---|---|---|---|---|
+| classical | classical-logistic_regression_c0p5-54f7971c6000 | 18 | 0.8014 | 0.4787 | 0.1769 | 0.2203 | 0.5034 | False |
+| transformer | cascade_v2-af78eba77883 | 11 | 0.8170 | 0.4489 | 0.1590 | 0.2071 | 0.5192 | False |
+| qwen | qwen_lora-4aa5ce04df05 | 4 | 0.8314 | 0.5158 | 0.1698 | 0.1675 | 0.5534 | False |
+| ensemble | ensemble_soft_mean | 1 | 0.8400 | 0.5549 | 0.1274 | 0.1927 | 0.5683 | True |
+
+El detalle reproducible está en [`tablas_03_07a/mejores_por_tipo_validation.csv`](tablas_03_07a/mejores_por_tipo_validation.csv).
 
 ## Mejor representante individual por familia
 

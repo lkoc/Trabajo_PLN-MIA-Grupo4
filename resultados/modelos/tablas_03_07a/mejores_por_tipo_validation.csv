@@ -1,0 +1,5 @@
+﻿model_type,candidate_id,kind,model_family,rank,balanced_accuracy_any_damage_oof,macro_auprc_damage_oof,fnr_any_damage_oof,fpr_any_damage_oof,macro_f1_damage,macro_auprc_safeguard,selected,selection_basis
+classical,classical-logistic_regression_c0p5-54f7971c6000,individual,classical:base:logistic_regression,18,0.8014150943396225,0.47871830642923996,0.17688679245283023,0.22028301886792456,0.5034212999084837,pass,False,global_lexicographic_ranking_validation
+transformer,cascade_v2-af78eba77883,individual,cascade_v2,11,0.8169811320754716,0.4488733259418173,0.1589622641509434,0.20707547169811324,0.5191532289123695,pass,False,global_lexicographic_ranking_validation
+qwen,qwen_lora-4aa5ce04df05,individual,qwen_lora,4,0.8313679245283019,0.5157547221950667,0.16981132075471694,0.1674528301886793,0.5534388227129415,pass,False,global_lexicographic_ranking_validation
+ensemble,ensemble_soft_mean,ensemble,ensemble,1,0.8399764150943396,0.5549281667336825,0.12735849056603776,0.192688679245283,0.5682777187873591,pass,True,global_lexicographic_ranking_validation

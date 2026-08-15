@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "created_at": "2026-08-15T13:33:50.922584+00:00",
+  "created_at": "2026-08-15T13:40:34.875183+00:00",
   "comparison_signature": "ca06c9d74d95ccc33555e365186bfe07c57bad273e2f53d86c5451aab07e5baf",
   "dataset_sha256": "013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86",
   "selected_id": "ensemble_soft_mean",
@@ -58,6 +58,68 @@
       "balanced_accuracy_any_damage_oof": 0.8313679245283019,
       "macro_auprc_damage_oof": 0.5157547221950667,
       "rank": 4
+    }
+  ],
+  "best_by_model_type": [
+    {
+      "model_type": "classical",
+      "candidate_id": "classical-logistic_regression_c0p5-54f7971c6000",
+      "kind": "individual",
+      "model_family": "classical:base:logistic_regression",
+      "rank": 18,
+      "balanced_accuracy_any_damage_oof": 0.8014150943396225,
+      "macro_auprc_damage_oof": 0.47871830642923996,
+      "fnr_any_damage_oof": 0.17688679245283023,
+      "fpr_any_damage_oof": 0.22028301886792456,
+      "macro_f1_damage": 0.5034212999084837,
+      "macro_auprc_safeguard": "pass",
+      "selected": false,
+      "selection_basis": "global_lexicographic_ranking_validation"
+    },
+    {
+      "model_type": "transformer",
+      "candidate_id": "cascade_v2-af78eba77883",
+      "kind": "individual",
+      "model_family": "cascade_v2",
+      "rank": 11,
+      "balanced_accuracy_any_damage_oof": 0.8169811320754716,
+      "macro_auprc_damage_oof": 0.4488733259418173,
+      "fnr_any_damage_oof": 0.1589622641509434,
+      "fpr_any_damage_oof": 0.20707547169811324,
+      "macro_f1_damage": 0.5191532289123695,
+      "macro_auprc_safeguard": "pass",
+      "selected": false,
+      "selection_basis": "global_lexicographic_ranking_validation"
+    },
+    {
+      "model_type": "qwen",
+      "candidate_id": "qwen_lora-4aa5ce04df05",
+      "kind": "individual",
+      "model_family": "qwen_lora",
+      "rank": 4,
+      "balanced_accuracy_any_damage_oof": 0.8313679245283019,
+      "macro_auprc_damage_oof": 0.5157547221950667,
+      "fnr_any_damage_oof": 0.16981132075471694,
+      "fpr_any_damage_oof": 0.1674528301886793,
+      "macro_f1_damage": 0.5534388227129415,
+      "macro_auprc_safeguard": "pass",
+      "selected": false,
+      "selection_basis": "global_lexicographic_ranking_validation"
+    },
+    {
+      "model_type": "ensemble",
+      "candidate_id": "ensemble_soft_mean",
+      "kind": "ensemble",
+      "model_family": "ensemble",
+      "rank": 1,
+      "balanced_accuracy_any_damage_oof": 0.8399764150943396,
+      "macro_auprc_damage_oof": 0.5549281667336825,
+      "fnr_any_damage_oof": 0.12735849056603776,
+      "fpr_any_damage_oof": 0.192688679245283,
+      "macro_f1_damage": 0.5682777187873591,
+      "macro_auprc_safeguard": "pass",
+      "selected": true,
+      "selection_basis": "global_lexicographic_ranking_validation"
     }
   ],
   "selected_category_metrics": [
@@ -156,6 +218,7 @@
     "ranking_validation": "tablas_03_07a/ranking_validation.csv",
     "categories_validation": "tablas_03_07a/metricas_por_categoria_validation.csv",
     "category_winners": "tablas_03_07a/ganadores_por_categoria_validation.csv",
+    "best_by_model_type": "tablas_03_07a/mejores_por_tipo_validation.csv",
     "paired_bootstrap": "tablas_03_07a/comparaciones_bootstrap_pareadas.csv",
     "test_global": "tablas_03_07a/metricas_globales_test.csv",
     "test_categories": "tablas_03_07a/metricas_por_categoria_test.csv"

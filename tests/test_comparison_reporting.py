@@ -129,13 +129,22 @@ def test_report_materializes_complete_tables_and_critical_markdown(tmp_path: Pat
     assert report.name == REPORT_FILENAME
     report_text = report.read_text(encoding="utf-8")
     assert "Comparación global de todos los modelos" in report_text
+    assert "Mejor modelo por tipo" in report_text
     assert "Desempeño del seleccionado por categoría" in report_text
     assert "Análisis crítico" in report_text
     assert "statistical_tie_or_inconclusive" in report_text
     assert "Test todavía no aparece" in report_text
     assert len(result["global_rows"]) == 1
+    assert [row["model_type"] for row in result["best_by_model_type_rows"]] == [
+        "classical"
+    ]
     assert len(result["selected_category_rows"]) == 5
     assert all(Path(path).is_file() for path in result["table_paths"].values())
+    best_by_type_csv = Path(result["table_paths"]["best_by_model_type"]).read_text(
+        encoding="utf-8-sig"
+    )
+    assert "model_type" in best_by_type_csv
+    assert "classical" in best_by_type_csv
     bootstrap_csv = Path(result["table_paths"]["paired_bootstrap"]).read_text(
         encoding="utf-8-sig"
     )

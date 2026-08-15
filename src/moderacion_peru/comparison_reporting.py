@@ -881,6 +881,72 @@ def _global_validation_rows(comparison: Mapping[str, Any]) -> list[dict[str, Any
     return rows
 
 
+def _best_by_model_type_rows(
+    comparison: Mapping[str, Any],
+    global_rows: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """Resume el mejor clásico, transformer, Qwen y ensemble.
+
+    "Mejor" conserva el orden lexicográfico global ya congelado en 03_07. Para
+    las tres familias individuales se prioriza ``best_by_family_slot``; si un
+    artefacto anterior no incluye ese campo, se usa el primer candidato del
+    tipo en el ranking. El ensemble se obtiene siempre del mismo ranking.
+    """
+
+    rows_by_id = {str(row.get("candidate_id")): row for row in global_rows}
+    declared = comparison.get("best_by_family_slot") or {}
+
+    def belongs_to_type(row: Mapping[str, Any], model_type: str) -> bool:
+        kind = str(row.get("kind") or "").lower()
+        family = str(row.get("model_family") or "").lower()
+        if model_type == "ensemble":
+            return kind == "ensemble" or family == "ensemble"
+        if kind == "ensemble":
+            return False
+        if model_type == "classical":
+            return family.startswith("classical")
+        if model_type == "qwen":
+            return "qwen" in family
+        if model_type == "transformer":
+            return not family.startswith("classical") and "qwen" not in family
+        return False
+
+    result: list[dict[str, Any]] = []
+    for model_type in ("classical", "transformer", "qwen", "ensemble"):
+        candidate = rows_by_id.get(str(declared.get(model_type)))
+        if candidate is None or not belongs_to_type(candidate, model_type):
+            candidate = next(
+                (row for row in global_rows if belongs_to_type(row, model_type)),
+                None,
+            )
+        if candidate is None:
+            continue
+        result.append(
+            {
+                "model_type": model_type,
+                "candidate_id": candidate.get("candidate_id"),
+                "kind": candidate.get("kind"),
+                "model_family": candidate.get("model_family"),
+                "rank": candidate.get("rank"),
+                "balanced_accuracy_any_damage_oof": candidate.get(
+                    "balanced_accuracy_any_damage_oof"
+                ),
+                "macro_auprc_damage_oof": candidate.get(
+                    "macro_auprc_damage_oof"
+                ),
+                "fnr_any_damage_oof": candidate.get("fnr_any_damage_oof"),
+                "fpr_any_damage_oof": candidate.get("fpr_any_damage_oof"),
+                "macro_f1_damage": candidate.get("macro_f1_damage"),
+                "macro_auprc_safeguard": candidate.get(
+                    "macro_auprc_safeguard"
+                ),
+                "selected": candidate.get("selected"),
+                "selection_basis": "global_lexicographic_ranking_validation",
+            }
+        )
+    return result
+
+
 def _category_validation_rows(
     comparison: Mapping[str, Any], labels: Sequence[str]
 ) -> list[dict[str, Any]]:
@@ -1393,6 +1459,7 @@ def generate_comparison_report(
     selected_categories = [
         row for row in category_rows if row.get("candidate_id") == selected_id
     ]
+    best_by_type_rows = _best_by_model_type_rows(comparison, global_rows)
     rows_by_id = {str(row.get("candidate_id")): row for row in global_rows}
     family_rows = []
     for family, candidate_id in (comparison.get("best_by_family_slot") or {}).items():
@@ -1414,12 +1481,14 @@ def generate_comparison_report(
         "ranking_validation": table_dir / "ranking_validation.csv",
         "categories_validation": table_dir / "metricas_por_categoria_validation.csv",
         "category_winners": table_dir / "ganadores_por_categoria_validation.csv",
+        "best_by_model_type": table_dir / "mejores_por_tipo_validation.csv",
         "paired_bootstrap": table_dir / "comparaciones_bootstrap_pareadas.csv",
     }
     for name, rows in (
         ("ranking_validation", global_rows),
         ("categories_validation", category_rows),
         ("category_winners", winners),
+        ("best_by_model_type", best_by_type_rows),
         ("paired_bootstrap", bootstrap_rows),
     ):
         _write_csv(table_paths[name], rows)
@@ -1524,6 +1593,29 @@ def generate_comparison_report(
         "",
         "La tabla completa, con calibración, riesgo, carga de revisión y salvaguardas, está en "
         "[`tablas_03_07a/ranking_validation.csv`](tablas_03_07a/ranking_validation.csv).",
+        "",
+        "## Mejor modelo por tipo",
+        "",
+        "El mejor de cada tipo se toma del mismo ranking lexicográfico de validation usado para "
+        "la congelación; no se recalculó un ranking alternativo por una sola métrica.",
+        "",
+        _markdown_table(
+            best_by_type_rows,
+            (
+                ("model_type", "Tipo"),
+                ("candidate_id", "Mejor modelo"),
+                ("rank", "Ranking global"),
+                ("balanced_accuracy_any_damage_oof", "BA OOF"),
+                ("macro_auprc_damage_oof", "Macro-AUPRC OOF"),
+                ("fnr_any_damage_oof", "FNR"),
+                ("fpr_any_damage_oof", "FPR"),
+                ("macro_f1_damage", "Macro-F1 daño"),
+                ("selected", "Seleccionado final"),
+            ),
+        ),
+        "",
+        "El detalle reproducible está en "
+        "[`tablas_03_07a/mejores_por_tipo_validation.csv`](tablas_03_07a/mejores_por_tipo_validation.csv).",
         "",
         "## Mejor representante individual por familia",
         "",
@@ -1643,6 +1735,7 @@ def generate_comparison_report(
         "test_available": bool(test),
         "selected_validation_metrics": selected_row,
         "best_by_family": family_rows,
+        "best_by_model_type": best_by_type_rows,
         "selected_category_metrics": selected_categories,
         "critical_analysis": analysis,
         "report_path": _relative_or_absolute(report_path, destination),
@@ -1662,6 +1755,7 @@ def generate_comparison_report(
         "test_available": bool(test),
         "global_rows": global_rows,
         "selected_category_rows": selected_categories,
+        "best_by_model_type_rows": best_by_type_rows,
         "category_winners": winners,
         "table_paths": {key: str(value) for key, value in table_paths.items()},
         "figure_paths": [str(path) for path in figures],
