@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "operation": "synchronize_03_07_results",
-  "synchronized_at": "2026-08-15T13:36:53.195722+00:00",
+  "synchronized_at": "2026-08-15T13:45:01.260192+00:00",
   "source_directory": "resultados/sincronizados/03_07/03_07_working_v2_1/6ac7ac71d417/extraido/resultados_modelos",
   "comparison_signature": "ca06c9d74d95ccc33555e365186bfe07c57bad273e2f53d86c5451aab07e5baf",
   "dataset_sha256": "013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86",

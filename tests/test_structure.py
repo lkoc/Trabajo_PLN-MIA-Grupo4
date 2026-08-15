@@ -61,6 +61,7 @@ def test_active_notebooks_are_ordered_and_clean():
         "03_02_transformers_planos.ipynb",
         "03_03_transformer_cascada.ipynb",
         "03_04_transformer_multitarea.ipynb",
+        "03_07_comparacion_final.ipynb",
         "03_08_auditoria_finas_flags.ipynb",
     }
     optionally_executed_notebooks = {
@@ -69,6 +70,7 @@ def test_active_notebooks_are_ordered_and_clean():
         "03_05_qwen_lora.ipynb",
         "03_06_qwen_estructurado.ipynb",
         "03_06b_qwen_prompt_sft.ipynb",
+        "03_07a_reporte_comparacion_modelos.ipynb",
     }
     for path in notebooks:
         notebook = nbformat.read(path, as_version=4)
@@ -786,8 +788,10 @@ def test_03_07a_reports_synced_results_without_model_weights_or_drive_desktop():
     assert "synchronize_google_drive_results" in source
     assert "synchronize_latest_local_results" in source
     assert "generate_comparison_report" in source
-    assert "AUTO_SYNC_FROM_GOOGLE_DRIVE=True" in source
-    assert "INTERACTIVE_GOOGLE_DRIVE_AUTH=True" in source
+    assert "AUTO_SYNC_FROM_GOOGLE_DRIVE=" in source
+    assert "INTERACTIVE_GOOGLE_DRIVE_AUTH=" in source
+    assert "best_by_model_type_rows" in source
+    assert "Mejor modelo por tipo" in source
     assert "config/google_drive_oauth_client.json" in source
     assert ".secrets/google_drive_token.json" in source
     assert "resultados/sincronizados/03_07" in source

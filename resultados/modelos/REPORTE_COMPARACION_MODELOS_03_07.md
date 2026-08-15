@@ -1,6 +1,6 @@
 # Reporte de comparación de modelos — 03_07a
 
-**Generado:** 2026-08-15T13:40:34.869359+00:00
+**Generado:** 2026-08-15T13:45:02.103643+00:00
 **Comparación:** `comparacion_individual_ensemble_validation.json`
 **SHA-256 del artefacto:** `e0f688fbad23b71d742dcd6bb0ecfe99f233d9675b9c6b1a5caf6f2544cfd8ae`
 **Firma de comparación:** `ca06c9d74d95ccc33555e365186bfe07c57bad273e2f53d86c5451aab07e5baf`
