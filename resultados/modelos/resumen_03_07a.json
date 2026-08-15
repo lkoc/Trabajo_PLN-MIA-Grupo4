@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "created_at": "2026-08-15T09:04:52.810922+00:00",
+  "created_at": "2026-08-15T13:33:50.922584+00:00",
   "comparison_signature": "ca06c9d74d95ccc33555e365186bfe07c57bad273e2f53d86c5451aab07e5baf",
   "dataset_sha256": "013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86",
   "selected_id": "ensemble_soft_mean",
@@ -8,7 +8,7 @@
   "winner_status": "statistical_tie_or_inconclusive",
   "individual_models": 28,
   "ensembles": 5,
-  "test_available": false,
+  "test_available": true,
   "selected_validation_metrics": {
     "rank": 1,
     "candidate_id": "ensemble_soft_mean",
@@ -149,14 +149,16 @@
     "La capacidad máxima de revisión declarada fue 40.0%; el punto elegido usa 0.3254. Es una carga humana alta y requiere justificar volumen, tiempo y error residual del revisor.",
     "El margen de no inferioridad macro-AUPRC fue 0.100. Es permisivo para una métrica en escala 0–1; el informe conserva la frontera completa para que esta decisión operacional no se confunda con equivalencia estadística.",
     "El artefacto registra 2 hilos efectivos para el bootstrap agrupado, con motor `paired-balanced-accuracy-grouped-video-threaded-v3`. Este valor observado prevalece sobre cualquier configuración ejemplificada en documentación anterior.",
-    "Test todavía no aparece en los artefactos sincronizados. Por tanto, este informe solo sustenta selección en validation; aún no estima desempeño final con prevalencia natural."
+    "La apertura única de test natural registró BA ANY_DAMAGE 0.8459, una diferencia de +0.0059 frente a validation OOF. Test informa generalización; no debe usarse para cambiar el modelo o reajustar umbrales."
   ],
   "report_path": "REPORTE_COMPARACION_MODELOS_03_07.md",
   "tables": {
     "ranking_validation": "tablas_03_07a/ranking_validation.csv",
     "categories_validation": "tablas_03_07a/metricas_por_categoria_validation.csv",
     "category_winners": "tablas_03_07a/ganadores_por_categoria_validation.csv",
-    "paired_bootstrap": "tablas_03_07a/comparaciones_bootstrap_pareadas.csv"
+    "paired_bootstrap": "tablas_03_07a/comparaciones_bootstrap_pareadas.csv",
+    "test_global": "tablas_03_07a/metricas_globales_test.csv",
+    "test_categories": "tablas_03_07a/metricas_por_categoria_test.csv"
   },
   "figures": [
     "figuras_03_07a/ranking_global_validation.png",

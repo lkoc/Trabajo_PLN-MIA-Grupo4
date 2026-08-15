@@ -1,12 +1,12 @@
 # Reporte de comparación de modelos — 03_07a
 
-**Generado:** 2026-08-15T09:04:52.804234+00:00
+**Generado:** 2026-08-15T13:33:50.915959+00:00
 **Comparación:** `comparacion_individual_ensemble_validation.json`
-**SHA-256 del artefacto:** `cc6378df9f0fd76fdb6ee226272fd4653ff2c8368378e228261985e63e0c71f5`
+**SHA-256 del artefacto:** `e0f688fbad23b71d742dcd6bb0ecfe99f233d9675b9c6b1a5caf6f2544cfd8ae`
 **Firma de comparación:** `ca06c9d74d95ccc33555e365186bfe07c57bad273e2f53d86c5451aab07e5baf`
 **SHA-256 del dataset:** `013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86`
 **Split de selección:** `validation`
-**Estado de test:** `sealed_not_evaluated`
+**Estado de test:** `evaluado_una_vez`
 
 ## Resumen ejecutivo
 
@@ -117,6 +117,15 @@ El detalle de cada modelo × categoría está en [`tablas_03_07a/metricas_por_ca
 
 ![frontera_ba_macro_auprc_validation](figuras_03_07a/frontera_ba_macro_auprc_validation.png)
 
+## Apertura única de test
+
+| Vista | Filas | BA ANY_DAMAGE | Macro-AUPRC daño | FNR | FPR | Macro-F1 daño | ECE |
+|---|---|---|---|---|---|---|---|
+| natural | 22684 | 0.8459 | 0.4152 | 0.0943 | 0.2139 | 0.4348 | 0.0184 |
+| 4_to_1 | 9010 | 0.8459 | 0.5694 | 0.0943 | 0.2139 | 0.5582 | 0.0107 |
+
+La vista natural es primaria. La vista 4:1 reutiliza las mismas predicciones y es secundaria; no constituye otra apertura de test.
+
 ## Análisis crítico
 
 1. La regla predeclarada seleccionó `ensemble_soft_mean`. Frente al mejor individuo (`qwen_lora-4aa5ce04df05`), la diferencia puntual es +0.0086 en BA ANY_DAMAGE OOF y +0.0392 en macro-AUPRC de daño OOF. Estas diferencias describen validation y no deben interpretarse aisladamente como ganancia de producción.
@@ -125,7 +134,7 @@ El detalle de cada modelo × categoría está en [`tablas_03_07a/metricas_por_ca
 4. La capacidad máxima de revisión declarada fue 40.0%; el punto elegido usa 0.3254. Es una carga humana alta y requiere justificar volumen, tiempo y error residual del revisor.
 5. El margen de no inferioridad macro-AUPRC fue 0.100. Es permisivo para una métrica en escala 0–1; el informe conserva la frontera completa para que esta decisión operacional no se confunda con equivalencia estadística.
 6. El artefacto registra 2 hilos efectivos para el bootstrap agrupado, con motor `paired-balanced-accuracy-grouped-video-threaded-v3`. Este valor observado prevalece sobre cualquier configuración ejemplificada en documentación anterior.
-7. Test todavía no aparece en los artefactos sincronizados. Por tanto, este informe solo sustenta selección en validation; aún no estima desempeño final con prevalencia natural.
+7. La apertura única de test natural registró BA ANY_DAMAGE 0.8459, una diferencia de +0.0059 frente a validation OOF. Test informa generalización; no debe usarse para cambiar el modelo o reajustar umbrales.
 
 ## Límites de interpretación
 

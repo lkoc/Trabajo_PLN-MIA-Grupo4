@@ -1,27 +1,38 @@
 {
   "schema_version": "1.0.0",
   "operation": "synchronize_03_07_results",
-  "synchronized_at": "2026-08-15T09:04:52.087158+00:00",
-  "source_directory": "resultados/sincronizados/03_07/03_07_working_v2_1/c8fc9a57021b/extraido/resultados_modelos",
+  "synchronized_at": "2026-08-15T13:33:50.227749+00:00",
+  "source_directory": "resultados/sincronizados/03_07/03_07_working_v2_1/6ac7ac71d417/extraido/resultados_modelos",
   "comparison_signature": "ca06c9d74d95ccc33555e365186bfe07c57bad273e2f53d86c5451aab07e5baf",
   "dataset_sha256": "013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86",
   "source_created_at": "2026-08-15T04:28:43.105012+00:00",
   "ranking_count": 33,
   "selected_id": "ensemble_soft_mean",
-  "has_test": false,
+  "has_test": true,
   "artifacts": {
     "comparison_path": {
       "path": "resultados/modelos/comparacion_individual_ensemble_validation.json",
-      "bytes": 646831,
-      "sha256": "cc6378df9f0fd76fdb6ee226272fd4653ff2c8368378e228261985e63e0c71f5"
+      "bytes": 646832,
+      "sha256": "e0f688fbad23b71d742dcd6bb0ecfe99f233d9675b9c6b1a5caf6f2544cfd8ae"
     },
     "freeze_path": {
       "path": "resultados/modelos/seleccion_congelada.json",
-      "bytes": 7024,
-      "sha256": "f50781a94475cb9d564013545cfcba1b1c9a8a62d5752b96a1bab8cb6f81352f"
+      "bytes": 7025,
+      "sha256": "c361288fdae32bde6c6b1be61ac81cc89928f7c5c4d6ff4f43a23027ae521443"
+    },
+    "test_path": {
+      "path": "resultados/modelos/test_final_abierto_una_vez.json",
+      "bytes": 15316,
+      "sha256": "d8b384141961ce8903b2fc8a922c65e16b0a719c5034f04f614b18c0ceeee658"
     }
   },
   "candidates_considered": [
+    {
+      "comparison_path": "resultados/sincronizados/03_07/03_07_working_v2_1/6ac7ac71d417/extraido/resultados_modelos/comparacion_individual_ensemble_validation.json",
+      "created_at": "2026-08-15T04:28:43.105012+00:00",
+      "has_test": true,
+      "comparison_signature": "ca06c9d74d95ccc33555e365186bfe07c57bad273e2f53d86c5451aab07e5baf"
+    },
     {
       "comparison_path": "resultados/sincronizados/03_07/03_07_working_v2_1/c8fc9a57021b/extraido/resultados_modelos/comparacion_individual_ensemble_validation.json",
       "created_at": "2026-08-15T04:28:43.105012+00:00",
