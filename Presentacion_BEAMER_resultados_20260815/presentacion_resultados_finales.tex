@@ -115,14 +115,14 @@
   \end{frame}%
 }
 
-\title{Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos, Transformers, Qwen y ensembles}
+\title{Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural}
 \subtitle{Del corpus local al ensemble con revisión humana y evidencia temporal}
 \author{Luis Enrique Koc Góngora; Alex Felipe Mancilla Antay; Herbert Antonio Meléndez García; Dennis Jack Paitán Cano}
 \institute{Maestría en Inteligencia Artificial · Universidad Nacional de Ingeniería · Lima, Perú · Grupo 4}
 \date{Agosto de 2026}
 
 \hypersetup{
-  pdftitle={Moderación semiautomática de videos peruanos de YouTube: resultados finales},
+  pdftitle={Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural},
   pdfauthor={Luis Enrique Koc Góngora; Alex Felipe Mancilla Antay; Herbert Antonio Meléndez García; Dennis Jack Paitán Cano}
 }
 
@@ -138,8 +138,8 @@
     \node[anchor=north west,align=left,text=Navy,font=\fontsize{15}{18}\selectfont\bfseries]
       at ([xshift=7mm,yshift=-18mm]current page.north west)
       {Moderación semiautomática de videos peruanos\\
-       de YouTube mediante modelos clásicos,\\
-       Transformers, Qwen y ensembles};
+       de YouTube mediante modelos clásicos y neuronales\\
+       de procesamiento del lenguaje natural};
     \node[anchor=north west,align=left,text=Muted,font=\small\bfseries]
       at ([xshift=7mm,yshift=-49mm]current page.north west)
       {Del corpus local al ensemble con revisión humana y evidencia temporal};
@@ -202,7 +202,7 @@
       Clasificación multietiqueta de chunks, compuerta binaria, calibración y opción \texttt{NEEDS\_REVIEW}.};
     \draw[a] (real)--(sub); \draw[a] (sub)--(model);
   \end{tikzpicture}
-  \vspace{5mm}
+  \vspace{2.5mm}
   \takeaway{El problema a resolver es una cadena reproducible que pase de subtítulos públicos a alertas temporales y, finalmente, a una decisión humana informada.}
   \externalNote{Definición, muestreo y anotación condicionan el clasificador~\cite{vidgen2020directions}; el abuso puede ser dirigido/generalizado y explícito/implícito~\cite{waseem2017abuse,banko2020taxonomy}.}
 \end{frame}
@@ -1011,7 +1011,7 @@
       {\Large\bfseries\color{Navy} Resultado del proyecto}\par
       \vspace{4mm}
       {\small El sistema transforma subtítulos peruanos en alertas temporales mediante una cartera clásica--Transformer--Qwen y un ensemble congelado. La evaluación natural, la abstención y la trazabilidad hacen que el desempeño sea útil fuera del laboratorio.}\par
-      \vspace{5mm}
+      \vspace{3mm}
       \pill{Teal}{BA 0,846 completa}\quad
       \pill{Green}{BA 0,940 automática}\quad
       \pill{Purple}{4 daños + SEGURO}
@@ -1024,7 +1024,7 @@
       \smallcard{Gold}{Principio operativo}{La IA recomienda; el humano conserva la decisión.}
     \end{column}
   \end{columns}
-  \vspace{5mm}
+  \vspace{2mm}
   \centering{\large\color{Navy}\textbf{Gracias. Preguntas y discusión.}}
 \end{frame}
 

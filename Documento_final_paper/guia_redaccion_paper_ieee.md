@@ -1,5 +1,7 @@
 # Guia de redaccion y control de evidencia
 
+> **Enmienda final v2.1 (2026-08-15).** La ejecución de las cinco salidas ya cuenta con comparación en validation, selección congelada y test natural abierto una vez. Por tanto, la cláusula histórica de “resultado pendiente” de la enmienda del 5 de agosto queda superada para la versión actual. Solo se publican métricas reproducibles desde los artefactos canónicos de `03_07`/`03_07a`, se mantiene la conclusión `statistical_tie_or_inconclusive` y se evita presentar el primer lugar del ensemble como superioridad estadística demostrada.
+
 > **Enmienda de contrato v2 (2026-08-05).** Las métricas existentes describen cuatro daños con `SEGURO` derivado. La implementación activa entrena cinco salidas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta. Hasta completar el nuevo entrenamiento debe escribirse siempre como resultado pendiente, no como rendimiento demostrado.
 
 El articulo debe leerse como investigacion aplicada terminada: directo, humano, verificable y prudente. Esta guia complementa la estructura IEEE/DSR y evita que resultados historicos, propuestas o supuestos aparezcan como hechos. La meta editorial es una prosa propia y natural; no se debe prometer que el texto superará detectores de IA ni usar esos detectores como prueba de autoría o ausencia de plagio.

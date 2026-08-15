@@ -2,7 +2,7 @@
 
 \subsection{Diseño de investigación}
 
-La investigación sigue DSR: identifica una necesidad, define objetivos, construye el artefacto, lo demuestra, lo evalúa y comunica los resultados \cite{hevner2004dsr,peffers2007dsrm}. Cada iteración produjo evidencia versionada de datos, etiquetas, modelos o operación. Los experimentos anteriores con un contrato distinto se usan únicamente como antecedentes de diseño; la evaluación reportada en este artículo pertenece al snapshot v2.1 y a la comparación 03\_07.
+La investigación sigue DSR: identifica una necesidad, define objetivos, construye el artefacto, lo demuestra, lo evalúa y comunica los resultados \cite{hevner2004dsr,peffers2007dsrm}. Cada iteración produjo evidencia versionada de datos, etiquetas, modelos o operación. Los experimentos anteriores con un contrato distinto se usan únicamente como antecedentes de diseño; la evaluación reportada en este artículo pertenece al snapshot v2.1 y a la comparación 03\_07. La Fig.~\ref{fig:dsr} resume las iteraciones que conducen desde el corpus hasta la evaluación y el demostrador vigentes.
 
 \begin{figure*}[t]
 \centering
@@ -15,7 +15,7 @@ La investigación sigue DSR: identifica una necesidad, define objetivos, constru
 
 El universo de adquisición comprende videos públicos de YouTube vinculados con el Perú y con subtítulos disponibles en español. La búsqueda incluye periodismo, política, opinión, humor, entretenimiento, deportes, gastronomía y viajes, además de búsquedas dirigidas para aumentar categorías poco frecuentes. Por ello el corpus permite entrenar y comparar, pero no estima la prevalencia de daño de toda la plataforma. La documentación de origen, anotación y límites sigue las recomendaciones de \emph{data statements} y \emph{data cards} \cite{bender2018datastatements,pushkarna2022datacards}.
 
-Las pistas VTT se recuperan con \texttt{yt-dlp} o YouTube Transcript API \cite{ytdlp2026,depoix2026transcript}. No se descarga audio ni se ejecuta reconocimiento de voz propio. La limpieza usa normalización Unicode NFKC \cite{unicode2025normalization}, unifica espacios y elimina repeticiones consecutivas del VTT. La unidad de análisis es el chunk: texto contiguo con \texttt{video\_id}, tiempos inicial/final, posición, canal y procedencia. La segmentación se cierra al alcanzar 30 segundos o 600 caracteres y exige al menos 90 caracteres; no introduce solapamiento deliberado.
+Las pistas VTT se recuperan con \texttt{yt-dlp} o YouTube Transcript API \cite{ytdlp2026,depoix2026transcript}. No se descarga audio ni se ejecuta reconocimiento de voz propio. La limpieza usa normalización Unicode NFKC \cite{unicode2025normalization}, unifica espacios y elimina repeticiones consecutivas del VTT. La unidad de análisis es el chunk: texto contiguo con \texttt{video\_id}, tiempos inicial/final, posición, canal y procedencia. La segmentación se cierra al alcanzar 30 segundos o 600 caracteres y exige al menos 90 caracteres; no introduce solapamiento deliberado. La Fig.~\ref{fig:pipeline} muestra la transformación y los controles que separan datos, particiones, selección y test.
 
 \begin{figure*}[t]
 \centering
@@ -79,7 +79,7 @@ Las dimensiones generales se apoyan en tipologías de abuso y contenido dañino 
 
 \subsection{Etiquetado y control de calidad}
 
-La preanotación combina definiciones versionadas, salida JSON validable y revisión por etapas. Un modelo amplio propone categorías; una segunda revisión atiende daños, baja confianza y negativos difíciles; la cola final permite aceptar, rechazar o modificar cada propuesta. El historial conserva 55\,966 eventos. Un panel estratificado congelado contiene 16\,694 chunks y la huella combinada de auditoría alcanza 17\,635 chunks únicos (10,18\% del universo elegible). Estas cifras representan decisiones asistidas y trazables; no equivalen a doble anotación humana independiente ni autorizan reportar acuerdo interanotador general.
+La preanotación combina definiciones versionadas, salida JSON validable y revisión por etapas. Un modelo amplio propone categorías; una segunda revisión atiende daños, baja confianza y negativos difíciles; la cola final permite aceptar, rechazar o modificar cada propuesta. El historial conserva 55\,966 eventos. Un panel estratificado congelado contiene 16\,694 chunks y la huella combinada de auditoría alcanza 17\,635 chunks únicos (10\% del universo elegible). Estas cifras representan decisiones asistidas y trazables; no equivalen a doble anotación humana independiente ni autorizan reportar acuerdo interanotador general.
 
 La precedencia es revisión final asistida sobre las propuestas anteriores. Los casos sin resolución suficiente se excluyen del entrenamiento. Las etiquetas finas y flags actúan como objetivos auxiliares en modelos que los soportan; nunca se entregan como predictores \emph{gold} durante la inferencia.
 

@@ -110,6 +110,8 @@ resultados/colab_bundle/*.gz
 # Temporales
 preview_*.png
 review_*.png
+Documento_final_paper/.audit_guides_20260815/
+datos/produccion/inference_events_v2.jsonl
 
 # Archivos grandes — modelos y pesos (>100 MB rechazados por GitHub)
 *.h5

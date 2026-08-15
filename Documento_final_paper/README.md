@@ -17,9 +17,9 @@ Las cinco salidas aprendidas son `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR
 - Corpus: 173 240 chunks elegibles de 4 906 videos; 14 163 contienen al menos un daño.
 - Comparación: 28 modelos individuales y cinco ensembles sobre una validación común de 10 600 filas.
 - Selección congelada: `ensemble_soft_mean`, compuesto por regresión logística TF--IDF, cascada E5 v2 y Qwen3--0.6B con LoRA.
-- Validation OOF: BA 0,840; macro-AUPRC de daños 0,555; macro-F1 de daños 0,568.
-- Test natural abierto una vez: 22 684 chunks; BA 0,846 y sensibilidad 0,906 para cualquier daño.
-- Política selectiva: 34,8 % a revisión; sobre el 65,2 % automático, BA 0,940.
+- Validation OOF: BA 0,84; macro-AUPRC de daños 0,55; macro-F1 de daños 0,57.
+- Test natural abierto una vez: 22 684 chunks; BA 0,85 y sensibilidad 0,91 para cualquier daño.
+- Política selectiva: 35 % a revisión; sobre el 65 % automático, BA 0,94.
 
 El estado inferencial sigue siendo `statistical_tie_or_inconclusive`: el ensemble ocupa el primer lugar por el criterio predeclarado, pero el contraste pareado no demuestra superioridad estadística frente al retador más cercano.
 
@@ -31,7 +31,8 @@ El estado inferencial sigue siendo `statistical_tie_or_inconclusive`: el ensembl
 - `referencias.bib`: bibliografía común.
 - `ontologia_moderacion.ttl`: vocabulario formal de trazabilidad.
 - `figuras/`: diagramas, gráficos de `03_07a` y capturas de interfaces.
-- `AUDITORIA_ACTUALIZACION_20260815.md`: control de cifras, citas, compilación y revisión visual.
+- `AUDITORIA_CITAS_Y_ESTILO.md`: auditoría integral vigente contra las guías generales y específicas.
+- `AUDITORIA_ACTUALIZACION_20260815.md`: síntesis del cierre cuantitativo, editorial y visual.
 
 ## Fuentes de verdad
 

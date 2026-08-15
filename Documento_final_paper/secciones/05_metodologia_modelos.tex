@@ -1,6 +1,6 @@
 \subsection{Familias de modelos}
 
-La comparación incluye 28 candidatos individuales procedentes de tres familias y cinco reglas de ensemble. Todos producen cinco scores principales; cuando la arquitectura lo permite, añade 14 etiquetas finas y tres flags, para un total de 22 logits con pérdidas enmascaradas. La implementación usa scikit-learn para los modelos clásicos \cite{pedregosa2011sklearn} y PyTorch/Transformers para las redes \cite{paszke2019pytorch,wolf2020transformers}.
+La comparación incluye 28 candidatos individuales procedentes de tres familias y cinco reglas de ensemble. Todos producen cinco scores principales; cuando la arquitectura lo permite, añade 14 etiquetas finas y tres flags, para un total de 22 logits con pérdidas enmascaradas. La implementación usa scikit-learn para los modelos clásicos \cite{pedregosa2011sklearn} y PyTorch/Transformers para las redes \cite{paszke2019pytorch,wolf2020transformers}. La Fig.~\ref{fig:modelos} contrasta los mecanismos de las tres familias y anticipa su composición en el ensemble.
 
 \begin{figure*}[t]
 \centering
@@ -55,7 +55,7 @@ El ensemble congelado combina los mejores representantes de cada familia: regres
 \hat p_k(x)=\sigma(a_k\bar{s}_k(x)+b_k).
 \]
 
-La decisión compara $\hat p_k$ con un umbral $\theta_k$ fijado en validation. Esta fusión suave aprovecha que las señales léxicas, contextuales y autoregresivas no fallan siempre en los mismos casos; los ensembles y el voto mayoritario cuentan con antecedentes generales \cite{dietterich2000ensemble,lam1997majority}. El experimento también evalúa promedio ponderado por validation, mayoría dura, unión (máximo) e intersección (mínimo). Solo el promedio simple se congela para test.
+La decisión compara $\hat p_k$ con un umbral $\theta_k$ fijado en validation. Esta fusión suave aprovecha que las señales léxicas, contextuales y autoregresivas no fallan siempre en los mismos casos; los ensembles y el voto mayoritario cuentan con antecedentes generales \cite{dietterich2000ensemble,lam1997majority}. El experimento también evalúa promedio ponderado por validation, mayoría dura, unión (máximo) e intersección (mínimo). Solo el promedio simple se congela para test. El Apéndice~\ref{app:ensemble} conserva los identificadores, calibradores, umbrales y demás parámetros necesarios para reconstruirlo.
 
 \subsection{Criterio de selección e inferencia estadística}
 
@@ -65,13 +65,13 @@ Las diferencias se estiman con 2\,000 réplicas bootstrap pareadas por video y a
 
 \subsection{Política selectiva y test sellado}
 
-\texttt{NEEDS\_REVIEW} es una política posterior al modelo. Se activa por conflicto seguro--daño, salida vacía, incoherencia compuerta--categoría o proximidad a los umbrales. La capacidad máxima declarada fue 40\% y validation eligió un margen $\delta=0,03$, con 32,5\% de revisión. Candidato, miembros, calibradores, umbrales y política se almacenaron en \texttt{seleccion\_congelada.json} antes de test.
+\texttt{NEEDS\_REVIEW} es una política posterior al modelo. Se activa por conflicto seguro--daño, salida vacía, incoherencia compuerta--categoría o proximidad a los umbrales. La capacidad máxima declarada fue 40\% y validation eligió un margen $\delta=0,03$, con 33\% de revisión. Candidato, miembros, calibradores, umbrales y política se almacenaron en \texttt{seleccion\_congelada.json} antes de test.
 
 El test natural contiene 22\,684 chunks y se abrió una sola vez. Los tres miembros se infirieron en esa apertura y sus scores se reutilizaron para calcular la vista secundaria 4:1; no hubo reinferencia, reajuste ni cambio de ganador. Este diseño separa selección y estimación final, y reduce el sesgo de selección discutido por Cawley y Talbot \cite{cawley2010selection}.
 
 \subsection{Artefacto de demostración}
 
-El frente de producción carga el registro de los tres ganadores por tipo y del ensemble. Acepta texto o URL con subtítulos, genera chunks temporales, permite elegir el modelo y muestra scores, categorías, razones de revisión y procedencia. Las acciones humanas se registran para auditoría y para una futura versión de entrenamiento separada. El demostrador puede operar localmente o en modo sombra; no está autorizado para afectar usuarios sin revisión.
+El frente de producción carga el registro de los tres ganadores por tipo y del ensemble. Acepta texto o URL con subtítulos, genera chunks temporales, permite elegir el modelo y muestra scores, categorías, razones de revisión y procedencia. Las acciones humanas se registran para auditoría y para una futura versión de entrenamiento separada. La Fig.~\ref{fig:deploy} resume esta arquitectura y el Apéndice~\ref{app:interfaces} documenta las interfaces. El demostrador opera localmente o en modo sombra; no está autorizado para afectar usuarios sin revisión.
 
 \begin{figure*}[t]
 \centering

@@ -27,11 +27,11 @@ Se revisaron las 46 páginas renderizadas de la presentación, incluidos portada
 1. La página final de referencias contenía una sola entrada. Se ajustó únicamente el tamaño tipográfico de la bibliografía a 6 pt y las 52 referencias quedaron distribuidas en siete páginas equilibradas.
 2. Se redujeron espacios verticales en “Resultados principales del sistema” y “Limitaciones y trabajo futuro”; la información principal ganó aire y no se pierde contenido.
 3. Se verificaron en vista individual las diapositivas de taxonomía y fundamento bibliográfico. La primera preserva el mapa visual de las cinco salidas y la segunda utiliza todo el ancho para documentar autores por dimensión.
-4. El archivo de compilación conserva dos avisos internos de caja vertical menores a 2,2 pt. La inspección del PDF confirma que no producen texto, gráficos ni pies cortados; no constituyen un defecto visual observable.
+4. La recompilación final eliminó los dos avisos internos de caja vertical menores a 2,2 pt. El registro termina sin cajas `Overfull`, texto cortado ni pies fuera del área útil.
 
 ## Evidencia de revisión
 
-Las páginas rasterizadas y hojas de contacto quedan en `.audit_final_visual/`. Los grupos `contacto_01_08.png` a `contacto_41_46.png` permiten repetir la revisión panorámica; `final-03.png` y `final-37.png` registran las dos páginas ajustadas al cierre.
+Las páginas rasterizadas y hojas de contacto quedan en `.audit_final_visual/`. Los grupos `contacto_01_08.png` a `contacto_41_46.png` permiten repetir la revisión panorámica; `portada_final.png`, `slide03_final.png` y `slide38_final.png` registran la portada y las páginas ajustadas al cierre.
 
 ## Dictamen
 

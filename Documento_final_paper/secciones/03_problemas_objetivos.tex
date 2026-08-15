@@ -8,7 +8,7 @@ El segundo problema es la falta de una comparación común entre modelos clásic
 
 El tercer problema es que una decisión obligatoria oculta incertidumbre y carga humana. La clasificación selectiva permite abstenerse, y el aprendizaje para diferir extiende esa decisión al envío a una persona experta \cite{chow1970reject,geifman2017selective,mozannar2020defer}. El tercer objetivo es congelar calibradores, umbrales y una política \texttt{NEEDS\_REVIEW} bajo capacidad declarada antes de abrir test.
 
-El cuarto problema es el aislamiento entre datos, pesos, predicciones y operación. DSR exige demostrar y evaluar el artefacto construido \cite{hevner2004dsr,peffers2007dsrm}; en moderación, la automatización no sustituye el gobierno ni la responsabilidad humana \cite{gorwa2020moderation}. El cuarto objetivo es integrar los tres ganadores por tipo y el ensamble congelado con evidencia temporal, revisión y registro trazable.
+El cuarto problema es el aislamiento entre datos, pesos, predicciones y operación. DSR exige demostrar y evaluar el artefacto construido \cite{hevner2004dsr,peffers2007dsrm}; en moderación, la automatización no sustituye el gobierno ni la responsabilidad humana \cite{gorwa2020moderation}. El cuarto objetivo es integrar los tres ganadores por tipo y el ensamble congelado con evidencia temporal, revisión y registro trazable. La Tabla~\ref{tab:problemas} relaciona los cuatro problemas con el método y la evidencia que permite examinarlos.
 
 \begin{table*}[t]
 \centering
@@ -21,7 +21,7 @@ El cuarto problema es el aislamiento entre datos, pesos, predicciones y operaci�
 \midrule
 P1/O1 & Datos locales dispersos y riesgo de fuga entre fragmentos. & Construir y documentar el corpus v2.1. & 173\,240 chunks, 4\,906 videos, cinco salidas y partición agrupada. \\
 P2/O2 & Resultados no comparables entre familias. & Comparar candidatos bajo un protocolo común. & 28 individuos + 5 ensambles; validación OOF de cinco pliegues. \\
-P3/O3 & Decisiones forzadas sin carga humana explícita. & Calibrar, congelar y evaluar una política selectiva. & Test abierto una vez; 65,2\% automático y 34,8\% a revisión. \\
+P3/O3 & Decisiones forzadas sin carga humana explícita. & Calibrar, congelar y evaluar una política selectiva. & Test abierto una vez; 65\% automático y 35\% a revisión. \\
 P4/O4 & Modelos y evidencia aislados de la operación. & Integrar ganadores, ensamble, tiempos y correcciones. & Registro congelado, frontend de producción y artefactos versionados. \\
 \bottomrule
 \end{tabularx}

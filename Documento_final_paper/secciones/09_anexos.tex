@@ -15,10 +15,10 @@ El artefacto \texttt{seleccion\_congelada.json}, esquema 4.0.0, fija la firma de
 \toprule
 \textbf{Tipo} & \textbf{Identificador} & \textbf{Arquitectura} & \textbf{BA} & \textbf{AUPRC} & \textbf{F1} \\
 \midrule
-Clásico & \path{classical-logistic_regression_c0p5-54f7971c6000} & TF--IDF palabra 1--2 + carácter 3--5; OVR enmascarado; logística $C=0,5$. & 0,8014 & 0,4787 & 0,5034 \\
-Transformer & \path{cascade_v2-af78eba77883} & E5 compuerta \texttt{ANY\_DAMAGE} + E5 rama de cinco salidas; enrutamiento seguro. & 0,8170 & 0,4489 & 0,5192 \\
-Qwen & \path{qwen_lora-4aa5ce04df05} & Qwen3--0.6B-Base; LoRA ($r=8$, $\alpha=16$, $p=0{,}05$) en Q/K/V/O; cabeza de 22 logits. & 0,8314 & 0,5158 & 0,5534 \\
-Ensemble & \path{ensemble_soft_mean} & Media simple de los tres scores por salida y calibración sigmoidal posterior. & 0,8400 & 0,5549 & 0,5683 \\
+Clásico & \path{classical-logistic_regression_c0p5-54f7971c6000} & TF--IDF palabra 1--2 + carácter 3--5; OVR enmascarado; logística $C=0,5$. & 0,80 & 0,48 & 0,50 \\
+Transformer & \path{cascade_v2-af78eba77883} & E5 compuerta \texttt{ANY\_DAMAGE} + E5 rama de cinco salidas; enrutamiento seguro. & 0,82 & 0,45 & 0,52 \\
+Qwen & \path{qwen_lora-4aa5ce04df05} & Qwen3--0.6B-Base; LoRA ($r=8$, $\alpha=16$, $p=0{,}05$) en Q/K/V/O; cabeza de 22 logits. & 0,83 & 0,52 & 0,55 \\
+Ensemble & \path{ensemble_soft_mean} & Media simple de los tres scores por salida y calibración sigmoidal posterior. & 0,84 & 0,55 & 0,57 \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -43,10 +43,13 @@ La Tabla~\ref{tab:calibracion_app} permite reconstruir la salida final. Para cad
 \end{tabular}
 \end{table}
 
-El promedio ponderado, retador más cercano, usa pesos 0,3317, 0,3110 y 0,3573 para clásico, Transformer y Qwen, respectivamente. La diferencia de BA frente al promedio simple es $-0,00166$, con IC95\% que cruza cero. Por tanto, el promedio simple se conserva por el criterio predeclarado, no por una afirmación de superioridad absoluta.
+El promedio ponderado, retador más cercano, usa pesos 0,3317, 0,3110 y 0,3573 para clásico, Transformer y Qwen, respectivamente. La diferencia de BA frente al promedio simple es $-0,0017$, con IC95\% que cruza cero. Por tanto, el promedio simple se conserva por el criterio predeclarado, no por una afirmación de superioridad absoluta.
 
+\clearpage
 \section{Resultados ampliados}
 \label{app:resultados}
+
+La Tabla~\ref{tab:ganadores_categoria_app} separa los líderes por salida y métrica sin reemplazar el ganador global usado en producción.
 
 \begin{table}[H]
 \centering
@@ -57,14 +60,16 @@ El promedio ponderado, retador más cercano, usa pesos 0,3317, 0,3110 y 0,3573 p
 \toprule
 \textbf{Salida} & \textbf{Mejor AUPRC} & \textbf{Valor} & \textbf{Mejor F1} & \textbf{Valor} & \textbf{Mejor recall} & \textbf{Valor} & \textbf{Prec.} \\
 \midrule
-\texttt{SEGURO} & Ensemble ponderado & 0,9745 & Qwen ctx256 & 0,9240 & SVM $C=2$ & 0,9665 & 0,8640 \\
-\Rac & Qwen ctx256 & 0,5711 & Qwen ctx256 & 0,6222 & Qwen ctx256 & 0,6832 & 0,5711 \\
-\Gen & Qwen ctx256 & 0,4017 & Mayoría dura & 0,4695 & Ensemble ponderado & 0,5535 & 0,3884 \\
-\Ame & Ensemble ponderado & 0,6143 & Unión & 0,5839 & Unión & 0,6344 & 0,5409 \\
-\Sex & Promedio simple & 0,6876 & Unión & 0,6382 & Unión & 0,6382 & 0,6382 \\
+\texttt{SEGURO} & Ensemble ponderado & 0,97 & Qwen ctx256 & 0,92 & SVM $C=2$ & 0,97 & 0,86 \\
+\Rac & Qwen ctx256 & 0,57 & Qwen ctx256 & 0,62 & Qwen ctx256 & 0,68 & 0,57 \\
+\Gen & Qwen ctx256 & 0,40 & Mayoría dura & 0,47 & Ensemble ponderado & 0,55 & 0,39 \\
+\Ame & Ensemble ponderado & 0,61 & Unión & 0,58 & Unión & 0,63 & 0,54 \\
+\Sex & Promedio simple & 0,69 & Unión & 0,64 & Unión & 0,64 & 0,64 \\
 \bottomrule
 \end{tabularx}
 \end{table}
+
+La Tabla~\ref{tab:test_views_app} compara la vista natural y la secundaria 4:1 obtenidas de la misma inferencia, por lo que sus diferencias no proceden de otro modelo ni de una reapertura de test.
 
 \begin{table}[H]
 \centering
@@ -75,13 +80,13 @@ El promedio ponderado, retador más cercano, usa pesos 0,3317, 0,3110 y 0,3573 p
 \toprule
 \textbf{Vista} & \textbf{Filas} & \textbf{BA} & \textbf{F1 any} & \textbf{AUPRC daño} & \textbf{F1 daño} & \textbf{F1 cinco} & \textbf{ECE} & \textbf{Brier} \\
 \midrule
-Natural & 22\,684 & 0,8459 & 0,4132 & 0,4152 & 0,4348 & 0,5393 & 0,0184 & 0,0283 \\
-4:1 secundaria & 9\,010 & 0,8459 & 0,6559 & 0,5694 & 0,5582 & 0,6318 & 0,0107 & 0,0452 \\
+Natural & 22\,684 & 0,85 & 0,41 & 0,42 & 0,43 & 0,54 & 0,018 & 0,028 \\
+4:1 secundaria & 9\,010 & 0,85 & 0,66 & 0,57 & 0,56 & 0,63 & 0,011 & 0,045 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-La vista 4:1 selecciona de forma determinista 7\,208 seguros y conserva los 1\,802 daños. Reutiliza exactamente los scores de la vista natural. La diferencia de F1 y AUPRC refleja prevalencia, no otro modelo ni otra inferencia.
+La vista 4:1 selecciona de forma determinista 7\,208 seguros y conserva los 1\,802 daños. Reutiliza exactamente los scores de la vista natural. La diferencia de F1 y AUPRC refleja prevalencia, no otro modelo ni otra inferencia. La Tabla~\ref{tab:confusion_app} conserva los conteos exactos que explican la compuerta completa y la ruta selectiva.
 
 \begin{table}[H]
 \centering
@@ -98,6 +103,7 @@ Ruta automática selectiva & 912 & 60 & 813 & 13\,012 \\
 \end{tabular}
 \end{table}
 
+\clearpage
 \section{Ontología y vocabulario controlado}
 \label{app:ontologia}
 
@@ -118,6 +124,8 @@ La ontología liviana distingue evidencia, anotación, categoría operativa, pre
 \clearpage
 \section{Trazabilidad y disponibilidad}
 \label{app:disponibilidad}
+
+La Tabla~\ref{tab:artefactos_app} identifica la fuente canónica usada para cada bloque del manuscrito y separa resultados, selección y evaluación final.
 
 \begin{table}[H]
 \centering

@@ -27,6 +27,6 @@ Desde esta carpeta:
 
     latexmk -pdf -interaction=nonstopmode -halt-on-error presentacion_resultados_finales.tex
 
-La presentación usa resultados de 03_07 y 03_07a disponibles localmente el 15 de agosto de 2026. Las capturas de los frontends son históricas y están identificadas como tales; no se presentan como capturas de la interfaz activa v2.1.
+La presentación usa resultados de 03_07 y 03_07a disponibles localmente el 15 de agosto de 2026. Las capturas documentan los entornos de etiquetado y producción; la de producción refleja el selector v2.1 con clásico, Transformer, Qwen y ensemble, pero no se usa como evidencia de desempeño.
 
 La versión compilada contiene 46 páginas: portada, seis separadores de capítulo, 32 diapositivas temáticas —incluidas las dedicadas al fundamento de la taxonomía y a las cinco estrategias de ensemble— y siete páginas de referencias.
