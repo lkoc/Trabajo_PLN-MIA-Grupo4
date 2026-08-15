@@ -296,7 +296,7 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
                     == "NVIDIA A100 40GB or equivalent CUDA BF16 GPU"
                 )
                 assert "NVIDIA A100 de 40 GB" in source
-                if metadata["notebook_id"] in {"03_05", "03_06", "03_06b"}:
+                if metadata["notebook_id"] in {"03_05", "03_06"}:
                     assert "PERSISTENT_CHECKPOINT_ROOT" in source
                     assert (
                         "persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT"
@@ -312,19 +312,13 @@ def test_colab_notebooks_embed_reproducible_drive_bootstrap():
                 "03_04",
                 "03_05",
                 "03_06",
-                "03_06b",
             }:
                 assert "PERSISTENT_CHECKPOINT_ROOT" in source
                 assert (
                     "persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT" in source
                 )
                 assert "drive_run_dir/'trainer_checkpoints'" in source
-                if metadata["notebook_id"] == "03_06b":
-                    assert "Publicación final budgeted" in source
-                    assert "Publicación final del SFT completo" in source
-                    assert "Publicación final del piloto" not in source
-                else:
-                    assert "Publicación final automática" in source
+                assert "Publicación final automática" in source
                 if metadata["notebook_id"] == "03_02":
                     assert "completion_callback=publish_completed_flat_model" in source
                     assert "event['index'] >= event['total']" not in source
@@ -839,8 +833,8 @@ def test_multi_run_notebooks_explain_the_reproducible_sequence_in_place():
             "RUN_STRUCTURED_LORA_SWEEP",
         ),
         "flujo/03_entrenamiento/03_06b_qwen_prompt_sft.ipynb": (
-            "RUN_DIAGNOSTIC_PILOT",
-            "RUN_BUDGETED_COMPARABLE",
+            "RUN_BUILD_TOY_DATASET",
+            "RUN_TRAIN_QWEN",
         ),
         "flujo/03_entrenamiento/03_07_comparacion_final.ipynb": (
             "listo_para_comparar=True",
@@ -941,7 +935,6 @@ def test_final_comparison_reports_restore_progress_and_corrupt_publications():
 
     assert "Restauración {restore_index}/{len(DRIVE_RUN_IDS)}" in source
     assert "except (FileNotFoundError,ValueError) as exc" in source
-    assert "'corrupt_optional'" in source
     assert "'corrupt_required'" in source
     assert "required_restore_failures" in source
     assert "'publicaciones_requeridas_fallidas':required_restore_failures" in source
@@ -1049,36 +1042,38 @@ def test_active_long_running_notebooks_expose_progress_indicators():
     assert "progress_callback: ProgressCallback | None = None" in experiments_source
 
 
-def test_qwen_prompt_sft_exposes_budgeted_comparable_profile():
+def test_qwen_prompt_sft_is_an_independent_stratified_toy_experiment():
     notebook = nbformat.read(
         ROOT / "flujo/03_entrenamiento/03_06b_qwen_prompt_sft.ipynb",
         as_version=4,
     )
     source = "\n".join(cell.source for cell in notebook.cells)
 
-    # El cuaderno puede conservar `True` como evidencia de una corrida del usuario;
-    # el generador mantiene `False` como valor seguro para una copia nueva.
-    assert "RUN_BUDGETED_COMPARABLE=" in source
     generator_source = (
         ROOT / "tools" / "generate_workflow_notebooks.py"
     ).read_text(encoding="utf-8")
-    assert "RUN_BUDGETED_COMPARABLE=False" in generator_source
-    assert "RUN_DIAGNOSTIC_PILOT=False" in source
-    assert "RUN_FULL_TRAINING=False" in source
-    assert "training_regime='budgeted_comparable'" in source
-    assert "eligible_for_03_07=True" in source
-    assert "train_limit=BUDGET_TRAIN_ROWS" in source
-    assert "validation_limit=None" in source
-    assert "BUDGET_TRAINING_SECONDS=" in source
-    assert "BUDGET_TOTAL_SECONDS=" in source
-    assert "BUDGET_TRAINING_SECONDS=1500" in generator_source
-    assert "BUDGET_TOTAL_SECONDS=4500" in generator_source
-    assert "BUDGET_MAX_LENGTH=2048" in source
-    assert "generation_max_new_tokens=160" in source
-    assert "prompt_capsule_max_chars=4800" in source
-    assert "a100_about_one_hour_v2_memory_safe" in source
-    assert "Publicación final budgeted" in source
-    assert "unidades_estimadas_a_5.4_CU_h" in source
+    for payload in (source, generator_source):
+        assert "RUN_BUILD_TOY_DATASET=True" in payload
+        assert "RUN_TRAIN_QWEN=True" in payload
+        assert "definiciones_dano_toy_03_06b.md" in payload
+        assert "train_and_evaluate_toy_qwen" in payload
+        assert "80:20:20" in payload
+        assert "800/200/200" in payload
+        assert "strict_macro_f1" in payload
+        assert "no se genera candidate.json" in payload
+    assert "RUN_BUDGETED_COMPARABLE" not in source
+    assert "eligible_for_03_07=True" not in source
+
+
+def test_final_comparison_excludes_the_independent_03_06b_toy_run():
+    notebook = nbformat.read(
+        ROOT / "flujo/03_entrenamiento/03_07_comparacion_final.ipynb", as_version=4
+    )
+    source = "\n".join(cell.source for cell in notebook.cells)
+
+    assert "'03_06':'03_06_working_v2_1'" in source
+    assert "03_06b_working_v2_1" not in source
+    assert "03_06b toy excluido por diseño" in source
 
 
 def test_stage_02_notebooks_show_progress_for_long_operations():

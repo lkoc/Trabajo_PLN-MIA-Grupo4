@@ -1290,6 +1290,40 @@ def _peft_sequence_output_contract(
     return output_count, labels
 
 
+def _ensure_sequence_padding_contract(tokenizer: Any, model: Any) -> int:
+    """Restaura el padding que PEFT puede perder al reconstruir Qwen.
+
+    El adaptador conserva la cabeza entrenada, pero algunas combinaciones de
+    Transformers/PEFT no propagan ``pad_token_id`` desde el tokenizer local al
+    config del backbone. Qwen rechaza entonces lotes mayores que uno aunque la
+    máscara de atención sea correcta. Se reutiliza EOS, igual que durante el
+    entrenamiento; no se añaden tokens ni se redimensionan embeddings.
+    """
+
+    if getattr(tokenizer, "pad_token_id", None) is None:
+        eos_token = getattr(tokenizer, "eos_token", None)
+        eos_token_id = getattr(tokenizer, "eos_token_id", None)
+        if eos_token is None or eos_token_id is None:
+            raise ValueError(
+                "El tokenizer no define pad_token ni eos_token; no se puede "
+                "inferir por lotes sin alterar el vocabulario"
+            )
+        tokenizer.pad_token = eos_token
+    pad_token_id = int(tokenizer.pad_token_id)
+    targets = [model]
+    get_base_model = getattr(model, "get_base_model", None)
+    if callable(get_base_model):
+        targets.append(get_base_model())
+    seen_configs: set[int] = set()
+    for target in targets:
+        config = getattr(target, "config", None)
+        if config is None or id(config) in seen_configs:
+            continue
+        config.pad_token_id = pad_token_id
+        seen_configs.add(id(config))
+    return pad_token_id
+
+
 def _score_candidate(
     candidate: Mapping[str, Any],
     rows: Sequence[dict[str, Any]],
@@ -1399,6 +1433,7 @@ def _score_candidate(
             model = AutoModelForSequenceClassification.from_pretrained(
                 path, token=False
             )
+        _ensure_sequence_padding_contract(tokenizer, model)
         model.to(torch_device).eval()
         batches = []
         batch_size = 16

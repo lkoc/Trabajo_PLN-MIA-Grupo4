@@ -1,7 +1,8 @@
 # Criterio de selección de modelos de moderación
 
-**Alcance:** candidatos individuales y *ensembles* de `03_01`–`03_06b`,
-comparados y congelados por `03_07`.
+**Alcance:** candidatos individuales y *ensembles* de `03_01`–`03_06`,
+comparados y congelados por `03_07`. `03_06b` es desde 2026-08-15 un
+experimento toy independiente y queda excluido por diseño, no por desempeño.
 
 **Estado:** criterio normativo aplicado a la comparación definitiva de
 `validation` del 2026-08-15. No autoriza a abrir `test` ni a publicar un modelo.

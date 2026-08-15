@@ -43,6 +43,8 @@ def test_peft_test_loader_restores_exact_head_and_keeps_five_primary_outputs(
     ]
 
     class FakeTokenizer:
+        pad_token_id = 0
+
         @staticmethod
         def from_pretrained(path, **kwargs):
             captured["tokenizer_kwargs"] = kwargs
@@ -112,6 +114,43 @@ def test_peft_test_loader_restores_exact_head_and_keeps_five_primary_outputs(
         "token": False,
         "fix_mistral_regex": False,
     }
+
+
+def test_qwen_peft_inference_restores_padding_on_wrapper_and_base_model():
+    class FakeTokenizer:
+        pad_token_id = None
+        eos_token = "<eos>"
+        eos_token_id = 17
+
+        @property
+        def pad_token(self):
+            return None
+
+        @pad_token.setter
+        def pad_token(self, value):
+            assert value == self.eos_token
+            self.pad_token_id = self.eos_token_id
+
+    base = SimpleNamespace(config=SimpleNamespace(pad_token_id=None))
+
+    class FakePeftModel:
+        config = SimpleNamespace(pad_token_id=None)
+
+        @staticmethod
+        def get_base_model():
+            return base
+
+    tokenizer = FakeTokenizer()
+    model = FakePeftModel()
+
+    pad_token_id = ensemble_evaluation._ensure_sequence_padding_contract(
+        tokenizer, model
+    )
+
+    assert pad_token_id == 17
+    assert tokenizer.pad_token_id == 17
+    assert model.config.pad_token_id == 17
+    assert base.config.pad_token_id == 17
 
 
 def test_validation_candidate_audit_explains_eligible_and_rejected_rows(tmp_path):

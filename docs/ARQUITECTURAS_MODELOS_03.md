@@ -21,7 +21,7 @@ flowchart LR
     X --> M[03_04<br/>E5 de 22 salidas]
     X --> QL[03_05<br/>Qwen + LoRA clasificador]
     X --> QS[03_06<br/>Qwen clasificador estructurado]
-    X --> QG[03_06b<br/>Qwen + LoRA generativo]
+    X --> QG[03_06b toy<br/>Qwen + LoRA generativo]
 
     C --> V[Scores y candidato<br/>evaluado en validation]
     F --> V
@@ -30,8 +30,9 @@ flowchart LR
     M --> V
     QL --> V
     QS --> V
-    QG --> V
+    QG --> TV[Validation + test toy<br/>800/200/200]
     V --> Z[03_07<br/>comparación y congelación]
+    TV -. excluido por diseño .- Z
     Z -. apertura única .-> T[Test natural sellado]
 ```
 
@@ -397,43 +398,46 @@ medirse; la fórmula por sí sola no demuestra mejor generalización. El brazo
 otros dos miden el aporte incremental de la estructura sin confundirlo con un
 full fine-tuning de cuatro épocas.
 
-## 03_06b · Qwen SFT condicionado por prompt
+## 03_06b · Toy Qwen condicionado por definiciones Markdown
 
-Esta es la única rama que usa el prompt operacional como condición de entrada.
-Compila una cápsula trazable del prompt v3.2, construye una conversación
-`system + user`, concatena el chunk y enseña a `Qwen/Qwen3-0.6B` a generar un
-JSON estricto. La pérdida causal ignora los tokens del prompt y supervisa la
-respuesta; los campos auxiliares no observados se enmascaran. La corrida
-completa usa LoRA con la misma configuración de rango, longitud máxima 2.560,
-lote 1, acumulación 8, tasa `1e-4` y hasta dos épocas. En hardware de 40 GB, ese
-perfil cambia a lote 2 y acumulación 4 —el lote efectivo sigue siendo ocho—,
-usa dos *workers* y genera en lotes de cuatro. El perfil corto descrito abajo
-usa contexto 2.048, lote `2×4`, *gradient checkpointing* e inferencia por lotes
-de ocho.
+Este cuaderno ya no es una rama candidata. Construye un ejercicio mutuamente
+excluyente de cinco clases con 1.200 videos distintos: 960 ejemplos `SEGURO` y
+60 de cada daño. `80:20:20` se interpreta como pesos normalizados `4:1:1`, de
+modo que train/validation/test contienen 800/200/200 filas. Dentro de cada
+combinación categoría/split, una prioridad pseudoaleatoria con semilla fija
+elige un chunk por video y conserva la partición original para impedir fuga.
+
+`Qwen/Qwen3-0.6B` recibe como mensaje de sistema el contenido completo de
+`config/definiciones_dano_toy_03_06b.md`. La conversación concatena ese contexto
+con el identificador y el texto; LoRA causal supervisa únicamente el objeto de
+respuesta. La configuración usa longitud máxima 1.536, tasa `1e-4`, hasta tres
+épocas y lote efectivo ocho. En una A100 el lote físico es ocho y la evaluación
+generativa usa lotes de 16.
 
 ```mermaid
 flowchart LR
-    P[Prompt v3.2<br/>cápsula + SHA] --> CHAT[Plantilla chat]
+    P[Markdown completo<br/>definiciones + SHA] --> CHAT[Plantilla chat]
     X[Chunk] --> CHAT
     CHAT --> Q[Qwen3-0.6B + LoRA causal]
-    Q --> J[JSON generado]
-    J --> V[Validación de esquema]
-    V --> S[Cinco scores + calidad de generación]
+    Q --> T[Trie de tokens<br/>cinco completaciones]
+    T --> J[JSON: chunk_id + categoría]
+    J --> V[Esquema exacto]
+    V --> S[strict macro-F1<br/>validation y test toy]
 ```
 
-La ventaja es alinear explícitamente el entrenamiento con reglas y formato de
-operación. Las desventajas son secuencias mucho más largas, generación
-autoregresiva lenta y posibles JSON inválidos. Su comparación con clasificadores
-debe incluir tanto calidad predictiva como tasa de parseo; no basta con AUPRC.
+La salida está restringida a nivel de decodificación: para cada fila se
+tokenizan exactamente cinco objetos posibles, todos con el `chunk_id` esperado
+y una categoría permitida, y `prefix_allowed_tokens_fn` solo habilita las ramas
+del trie. Después se exige el conjunto exacto de claves; cualquier fallo cuenta
+como error. La métrica principal `strict_macro_f1` promedia las cinco clases.
+También se guardan accuracy, balanced accuracy, validez JSON, métricas por clase,
+predicciones y matriz de confusión.
 
-El perfil corto `budgeted_comparable` no es un piloto reducido de evaluación:
-limita el ajuste a 3.000 filas deterministas, una época y 25 minutos, pero
-conserva la `validation` común completa de 10.600 filas. Usa una cápsula
-abreviada y trazable, contexto 2.048 y lotes A100 conservadores. Puede participar
-en `03_07` porque todas las métricas se calculan sobre el mismo panel, aunque
-debe figurar como entrenamiento bajo presupuesto computacional limitado. Su
-resultado no equivale al SFT exhaustivo y mezcla el efecto arquitectónico con
-menor exposición a datos y optimización.
+El diseño enriquecido no estima prevalencia natural. Cada daño tiene solo diez
+casos en test, por lo que un error mueve su recall en 0,10. En consecuencia, el
+resultado mide aprendizaje de definiciones y cumplimiento del contrato en un
+entorno toy; no debe compararse numéricamente con `03_01`–`03_06` ni presentarse
+como evidencia de superioridad.
 
 ## Comparación resumida
 
@@ -446,7 +450,7 @@ menor exposición a datos y optimización.
 | 03_04 | E5, 1 pasada | 22 binarias | completo | medio | hoy duplica `flat_e5` |
 | 03_05 | Qwen Base, 1 pasada | 22 binarias | LoRA + cabeza | alto | más latencia; sin prompt |
 | 03_06 | Qwen Base, 1 pasada | 22 binarias estructuradas | LoRA desde 03_05; full histórico separado | alto | peso de penalización y dependencia del padre |
-| 03_06b | Qwen chat, generación | JSON | LoRA causal | muy alto | latencia y formato inválido |
+| 03_06b | Qwen chat, generación restringida | una clase en JSON | LoRA causal toy | alto | muestra pequeña y prevalencia artificial; excluido de 03_07 |
 
 La AUPRC es preferible como lectura principal con salidas dañinas desbalanceadas
 [15]. La selección usa únicamente `validation`; reutilizar test para escoger
@@ -470,7 +474,7 @@ como hardware consumido.
 | `03_04` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_05` | candidato completo; época 2 restaurada y época 3 persistida | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, lote 8×1, evaluación 32, dos *workers*, una GPU | no aplica |
 | `03_06` | full fine-tuning histórico y barrido LoRA `0/0.02/0.05` completos e incluidos en la comparación | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; cuatro candidatos Qwen estructurados conservados | no aplica |
-| `03_06b` | sin candidato elegible en el checkpoint comparado; omitido sin bloquear | **no disponible** | no aparece entre los 28 individuos comparados | A100 de 40 GB si se decide completar otra campaña |
+| `03_06b` | rediseñado como experimento toy independiente; dataset 1.200 ya materializado, entrenamiento pendiente | **no disponible** | 800/200/200, Markdown completo y JSON restringido; no aparece entre los 28 individuos comparados | A100 de 40 GB para producir la primera métrica de eficacia |
 | `03_07` | comparación de `validation` completa: 28 individuos + 5 ensembles; `ensemble_soft_mean` congelado, empate estadístico/inconcluso; test sellado | CPU x86_64 del runtime Colab | 2 hilos efectivos, 2.000 réplicas por video; 1.397 s antes de escritura | test requiere una sola corrida posterior; no reentrena |
 | `03_07a` | reporte local completo con sincronización automática desde Drive | CPU local | OAuth de solo lectura; compara fecha/SHA-256; cuatro CSV, tres PNG y Markdown crítico; no carga modelos | se repite tras cada publicación de comparación o test |
 | `03_08` | auditoría del snapshot completa para `013d60…c1f86`; falta `calidad_predictiva_auxiliar_observada.json` | hardware no registrado en el artefacto | no entrena modelos; cobertura/consistencia disponibles, calidad de candidatos pendiente | CPU local para completar la segunda salida |
@@ -498,11 +502,11 @@ modifica y qué combinación pertenece al proyecto.
 | 03_04 | Chen *et al.* usaron aprendizaje multitarea jerárquico para los tres niveles de OffensEval [22] | encoder compartido y objetivos jerárquicamente relacionados | su HMTL conecta subtareas A/B/C; la implementación vigente del proyecto tiene una sola cabeza de 22 logits y hoy coincide con `flat_e5` |
 | 03_04 | Morgan *et al.* aplicaron Transformers multitarea a toxicidad, engagement y afirmaciones factuales [23] | representación compartida para objetivos relacionados | sus tres objetivos y datos alemanes no son nuestras categorías gruesas, finas y flags; sus resultados no prueban transferencia aquí |
 | 03_05 | Christodoulou ajustó Mistral para clasificación de odio, objetivo y postura mediante LoRA y *prompt tuning* [24] | PEFT/LoRA sobre un LLM usado como clasificador | aquí se usa Qwen3-0.6B-Base, un adaptador único de 22 salidas y no se usa *prompt tuning* |
-| 03_05/03_06b | Hasan *et al.* combinaron términos TF–IDF, prompts de clasificación y LoRA sobre Llama para odio en bengalí [25] | reglas léxicas o prompt más adaptación LoRA en moderación | `03_05` no recibe prompt; `03_06b` usa una cápsula versionada, Qwen y salida JSON, sin copiar su selección TF–IDF de términos |
+| 03_05/03_06b | Hasan *et al.* combinaron términos TF–IDF, prompts de clasificación y LoRA sobre Llama para odio en bengalí [25] | reglas léxicas o prompt más adaptación LoRA en moderación | `03_05` no recibe prompt; `03_06b` usa un Markdown versionado, Qwen y salida JSON restringida, sin copiar su selección TF–IDF de términos |
 | 03_06 | HiAGM [10] y HMTL [22] incorporan relaciones jerárquicas dentro del aprendizaje | uso de estructura de etiquetas para reducir incoherencias | la penalización `0.2·p(SEGURO)·max p(daño)` es una formulación local; no se atribuye a esos autores |
 | 03_06b | LlamaLens instruyó un LLM multilingüe con múltiples tareas de noticias y redes sociales, incluidas tareas ofensivas [26] | ajuste por instrucciones para clasificación de contenido social | aquí se ajusta una sola taxonomía peruana, se supervisa únicamente la respuesta y se exige JSON trazable |
 | 03_06b | Ghorbanpour *et al.* evaluaron prompting con LLaMA, Aya, Qwen y BloomZ para odio en ocho lenguas [27] | reglas expresadas en lenguaje natural y uso de Qwen para detección | su estudio es zero/few-shot; el proyecto realiza SFT LoRA supervisado y genera un contrato JSON |
-| 03_06b | Wu *et al.* combinaron prompt, SFT y fusión de LLM para odio fino en chino [28] | prompt contextual y SFT para clasificación fina | este proyecto no fusiona modelos, trabaja en español peruano y conserva procedencia por SHA de la cápsula |
+| 03_06b | Wu *et al.* combinaron prompt, SFT y fusión de LLM para odio fino en chino [28] | prompt contextual y SFT para clasificación fina | este proyecto no fusiona modelos, trabaja en español peruano y conserva procedencia por SHA del Markdown completo |
 
 Los diagramas Mermaid de este documento son esquemas originales elaborados a
 partir del código del repositorio; no son figuras redibujadas de [17]–[28]. Si

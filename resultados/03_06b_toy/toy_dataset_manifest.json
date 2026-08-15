@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "03_06b_toy_qwen_markdown_json",
+  "seed": 20260815,
+  "split_weights": {
+    "train": 80,
+    "validation": 20,
+    "test": 20
+  },
+  "label_totals": {
+    "SEGURO": 960,
+    "RACISMO_DISCRIMINACION": 60,
+    "ATAQUE_POR_GENERO_IDENTIDAD": 60,
+    "ACOSO_AMENAZA": 60,
+    "CONTENIDO_SEXUAL": 60
+  },
+  "source_sha256": "013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86",
+  "selection": "stable_random_priority_within_label_split_one_chunk_per_video",
+  "run_signature": "405ac696ea9468ec86b0b4c6d1b275e9c6bf301ad792ba85ef3185da41b85a14",
+  "created_at": "2026-08-15T11:43:59.497931+00:00",
+  "source_path": "C:\\usr\\ths_mia_fiis\\pln\\trabajo\\datos\\model_ready\\v2\\dataset_5_salidas.jsonl",
+  "source_rows_scanned": 173240,
+  "source_pure_rows_eligible": 170531,
+  "dataset_path": "C:\\usr\\ths_mia_fiis\\pln\\trabajo\\resultados\\03_06b_toy\\toy_dataset.jsonl",
+  "dataset_sha256": "30535a8cd4b4cb422c70c89184ea9f6a96c77e28c012f349a28a193afc48d545",
+  "rows": 1200,
+  "unique_videos": 1200,
+  "distribution": {
+    "train": {
+      "SEGURO": 640,
+      "RACISMO_DISCRIMINACION": 40,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 40,
+      "ACOSO_AMENAZA": 40,
+      "CONTENIDO_SEXUAL": 40
+    },
+    "validation": {
+      "SEGURO": 160,
+      "RACISMO_DISCRIMINACION": 10,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 10,
+      "ACOSO_AMENAZA": 10,
+      "CONTENIDO_SEXUAL": 10
+    },
+    "test": {
+      "SEGURO": 160,
+      "RACISMO_DISCRIMINACION": 10,
+      "ATAQUE_POR_GENERO_IDENTIDAD": 10,
+      "ACOSO_AMENAZA": 10,
+      "CONTENIDO_SEXUAL": 10
+    }
+  },
+  "split_rows": {
+    "train": 800,
+    "validation": 200,
+    "test": 200
+  },
+  "pure_single_label_rows": true,
+  "video_disjoint": true,
+  "split_interpretation": "80:20:20 son pesos normalizados 4:1:1, no porcentajes",
+  "independent_experiment": true,
+  "eligible_for_03_07": false
+}

@@ -10,11 +10,11 @@
 
 **Contrato de etiquetas v2.1:** cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran al entrenamiento. Esta combinación, sus umbrales y sus reglas de exclusividad son decisiones operativas locales.
 
-Ejecute primero `03_08`, después las ramas `03_01`–`03_06b` que quiera comparar, luego `03_07` y finalmente `03_07a` para elaborar el reporte local. Los cuadernos de entrenamiento consumen snapshots del contrato `moderacion_peru_5_salidas_v2`, taxonomía `2.1.0`, y deben compartir la misma partición agrupada por `video_id`; `03_07a` consume únicamente los JSON de resultados ya firmados.
+Ejecute primero `03_08`, después las ramas comparables `03_01`–`03_06`, luego `03_07` y finalmente `03_07a` para elaborar el reporte local. `03_06b` puede ejecutarse aparte como ejercicio toy y no cambia esa secuencia. Los cuadernos comparables consumen snapshots del contrato `moderacion_peru_5_salidas_v2`, taxonomía `2.1.0`, y deben compartir la misma partición agrupada por `video_id`; `03_07a` consume únicamente los JSON de resultados ya firmados.
 
 La selección de familia, checkpoint, época y umbrales utiliza validation. Test se consulta después de congelar la decisión. Las métricas históricas de cuatro daños se mantienen separadas en `archivo/`.
 
-Cada rama ejecuta `fit → calibración/evaluación en validation → checkpoint/manifiesto → candidate.json`; ninguna abre test. `03_07` compara individuos y ensembles del mismo SHA, congela la decisión y deja en interruptores separados la apertura única de test y una publicación que permanece bloqueada. Las cinco salidas gruesas son obligatorias; las 14 finas y 3 banderas son complementarias, enmascaradas y pueden faltar. Si existen, el cargador restaura la cabeza completa, pero la comparación siempre consume únicamente las cinco primeras.
+Cada rama de `03_01`–`03_06` ejecuta `fit → calibración/evaluación en validation → checkpoint/manifiesto → candidate.json`; ninguna abre test. `03_07` compara individuos y ensembles del mismo SHA, congela la decisión y deja en interruptores separados la apertura única de test y una publicación que permanece bloqueada. Las cinco salidas gruesas son obligatorias; las 14 finas y 3 banderas son complementarias, enmascaradas y pueden faltar. Si existen, el cargador restaura la cabeza completa, pero la comparación siempre consume únicamente las cinco primeras. `03_06b` no sigue este contrato de candidato: abre únicamente su propio test toy y escribe un manifiesto marcado como no elegible.
 
 `03_07a_reporte_comparacion_modelos.ipynb` corre localmente y consulta la Google Drive API con OAuth de solo lectura. La primera vez necesita un cliente de escritorio guardado como `config/google_drive_oauth_client.json`; abre el consentimiento en el navegador y conserva el token en `.secrets/google_drive_token.json`. Ambas rutas están ignoradas por Git. Después compara automáticamente `published_at` y SHA-256, descarga el TAR solo cuando la publicación remota es nueva o diferente y extrae exclusivamente los JSON de comparación, selección y test bajo `resultados/sincronizados/03_07`. No usa Drive Desktop ni materializa pesos. Finalmente promueve el bundle válido más reciente a `resultados/modelos` y genera Markdown, cuatro CSV y tres PNG. La [guía de autorización y sincronización](../../docs/GOOGLE_DRIVE_03_07A.md) detalla la preparación única.
 
@@ -26,7 +26,7 @@ Los encoders o backbones anteriores pueden servir de inicialización, pero la pr
 
 Consulte [`docs/HARDWARE.md`](../../docs/HARDWARE.md) antes de instalar PyTorch: una rueda CUDA no sustituye una rueda ROCm o XPU.
 
-`03_02`–`03_06b` incluyen un backend Colab reproducible desde VS Code. El snapshot se transfiere comprimido y verificado y se copia a `/content`. Cada época terminada publica en Drive un checkpoint completo e inmutable de `Trainer`; al reiniciar se recupera el más nuevo verificable y se continúa con optimizador, scheduler y RNG. Los candidatos y métricas finales se publican automáticamente en dos ranuras redundantes. `03_07` también admite Colab, pero en CPU: monta Drive, restaura por manifiesto y SHA-256 los runs `03_01_working_v2_1`–`03_06b_working_v2_1` y guarda su comparación como un checkpoint propio. `03_06b` es opcional y solo entra si contiene un candidato completo, con validation común y test sellado. El cuaderno vigente de `03_01` conserva sus artefactos localmente; para restaurarlo en Colab debe existir la copia convencional `runs/03_01/03_01_working_v2_1` o una copia local bajo `modelos/v2`. Véase [`docs/COLAB_L4.md`](../../docs/COLAB_L4.md).
+`03_02`–`03_06b` incluyen un backend Colab reproducible desde VS Code. El snapshot se transfiere comprimido y verificado y se copia a `/content`. En `03_02`–`03_06`, cada época terminada publica en Drive un checkpoint completo e inmutable de `Trainer`; al reiniciar se recupera el más nuevo verificable y se continúa con optimizador, scheduler y RNG. Los candidatos y métricas finales se publican automáticamente en dos ranuras redundantes. `03_06b` escribe el dataset, adaptador, predicciones y métricas en su propia salida y permite una copia manual a Drive, sin semántica de candidato. `03_07` usa CPU, monta Drive y restaura por manifiesto y SHA-256 solo los runs `03_01_working_v2_1`–`03_06_working_v2_1`. El cuaderno vigente de `03_01` conserva sus artefactos localmente; para restaurarlo en Colab debe existir la copia convencional `runs/03_01/03_01_working_v2_1` o una copia local bajo `modelos/v2`. Véase [`docs/COLAB_L4.md`](../../docs/COLAB_L4.md).
 
 Active solo las campañas que quiera comparar. En `03_02`,
 `RUN_MINILM_CONTEXT_SCREEN=True` crea candidatos 192/256 desde el MiniLM de 128
@@ -42,9 +42,11 @@ recomendada es `RUN_STRUCTURED_LORA_SWEEP=True`: restaura la publicación
 verificable de `03_05`, reutiliza su adaptador entrenable con optimizador nuevo
 y produce tres candidatos de una época con penalizaciones `0`, `0.02` y `0.05`.
 `RUN_LEGACY_FULL_TRAINING` queda apagado y preserva el experimento completo
-histórico. En `03_06b`, el piloto diagnóstico no es elegible para `03_07`; el
-candidato presupuestado solo entra si completó la validation común. Train y
-validation usan una submuestra determinista `SEGURO`/daño 4:1. En `03_07`,
+histórico. En `03_06b`, `RUN_BUILD_TOY_DATASET=True` selecciona 960 casos
+`SEGURO` y 60 por daño con un video único por fila; `RUN_TRAIN_QWEN=True` ajusta
+Qwen con el Markdown completo de definiciones. Los pesos 80:20:20 producen
+800/200/200 y la salida se restringe a un JSON de cinco clases. Este ejercicio
+no genera `candidate.json` ni entra en `03_07`. En `03_07`,
 ejecute desde la primera celda con kernel Colab, confirme que
 `CANDIDATE_PREFLIGHT_READY=True` y active primero `RUN_COMPARE_AND_FREEZE`; después
 `RUN_TEST_ONCE` ejecuta una sola inferencia sobre todo el test natural.

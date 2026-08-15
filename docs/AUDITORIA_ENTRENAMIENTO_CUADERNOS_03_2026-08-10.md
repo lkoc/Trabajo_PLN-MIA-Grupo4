@@ -2,6 +2,8 @@
 
 **Proyecto:** Moderación multietiqueta de videos peruanos
 **Alcance:** cuadernos `03_01` a `03_08`, incluida la nueva rama `03_06b`, código compartido de entrenamiento, snapshot entrenable y artefactos de evaluación
+
+> **Nota de vigencia (2026-08-15).** Esta auditoría conserva el diseño histórico de `03_06b` como evidencia de la campaña revisada. Ese diseño fue sustituido: el cuaderno actual es un experimento toy independiente de 1.200 filas, condicionado por un Markdown de definiciones y con JSON restringido; no genera candidato ni participa en `03_07`. Véanse el cuaderno vigente y `docs/ARQUITECTURAS_MODELOS_03.md`.
 **Fecha de corte:** 2026-08-11 (actualización del informe iniciado el 2026-08-10)
 **Estado:** corte de resultados actualizado; 14 candidatos elegibles completos en *validation*, incluido Qwen-LoRA, test todavía sellado
 

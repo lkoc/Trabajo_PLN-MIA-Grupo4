@@ -2224,7 +2224,6 @@ PERSISTENT_COLAB_TRAINING_ACTIVITY = {
     "03_04": "RUN_TRAINING",
     "03_05": "RUN_TRAINING",
     "03_06": "RUN_LEGACY_FULL_TRAINING or RUN_STRUCTURED_LORA_SWEEP",
-    "03_06b": "RUN_BUDGETED_COMPARABLE or RUN_DIAGNOSTIC_PILOT or RUN_FULL_TRAINING",
 }
 
 
@@ -2381,9 +2380,7 @@ DRIVE_RUN_IDS={
     '03_04':'03_04_working_v2_1',
     '03_05':'03_05_working_v2_1',
     '03_06':'03_06_working_v2_1',
-    '03_06b':'03_06b_working_v2_1',
 }
-OPTIONAL_DRIVE_RUNS={'03_06b'}
 REQUIRED_FAMILIES={
     '03_01':('classical:',),
     '03_02':('flat_minilm','flat_e5'),
@@ -2426,10 +2423,7 @@ if RESTORE_CANDIDATES_FROM_DRIVE and drive_root is not None:
                 'notebook_id':notebook_id,
                 'run_id':run_id,
                 'status':(
-                    'corrupt_optional' if corrupt and notebook_id in OPTIONAL_DRIVE_RUNS else
-                    'corrupt_required' if corrupt else
-                    'missing_optional' if notebook_id in OPTIONAL_DRIVE_RUNS else
-                    'missing_required'
+                    'corrupt_required' if corrupt else 'missing_required'
                 ),
                 'source':str(Path(drive_root)/'runs'/notebook_id/run_id),
                 'detail':str(exc),
@@ -2475,7 +2469,6 @@ missing_required_families={
     for notebook_id,families in REQUIRED_FAMILIES.items()
 }
 missing_required_families={key:value for key,value in missing_required_families.items() if value}
-prompt_sft_active=family_is_present('qwen_prompt_sft')
 required_restore_failures=[
     row for row in restoration
     if row.get('status') in {'missing_required','corrupt_required'}
@@ -2485,10 +2478,9 @@ CANDIDATE_PREFLIGHT_READY=(
     and not missing_required_families
     and not required_restore_failures
 )
-show_result('Restauración de publicaciones 03_01–03_06b',{
+show_result('Restauración de publicaciones 03_01–03_06',{
     'drive_root':drive_root,
     'runs':restoration,
-    '03_06b':'incluido' if prompt_sft_active else 'no encontrado o no elegible; omitido',
 },tone='success' if CANDIDATE_PREFLIGHT_READY else 'warning')
 show_result('Elegibilidad previa a 03_07',{
     'dataset_sha256':candidate_audit['dataset_sha256'],
@@ -2499,10 +2491,7 @@ show_result('Elegibilidad previa a 03_07',{
     'familias_requeridas_ausentes':missing_required_families,
     'listo_para_comparar':CANDIDATE_PREFLIGHT_READY,
 },tone='success' if CANDIDATE_PREFLIGHT_READY else 'warning')
-if prompt_sft_active:
-    show_callout('03_06b activado','Existe un candidato completo, con validation común y test sellado; entrará en la comparación.',tone='success')
-else:
-    show_callout('03_06b omitido','Su ausencia o inelegibilidad no bloquea la comparación de 03_01–03_06.',tone='neutral')"""
+show_callout('03_06b fuera de alcance','El toy Qwen es un ejercicio independiente y nunca se descubre ni compara en 03_07.',tone='neutral')"""
 
 
 COMPARISON_RUN_SOURCE = """from moderacion_peru.ensemble_evaluation import compare_and_freeze_validation,evaluate_frozen_test,recover_partial_test_scores_from_traceback
@@ -2551,7 +2540,7 @@ if RUN_TEST_ONCE:
 if RUN_PUBLISH:
     raise RuntimeError('Publicación productiva bloqueada por diseño: habilítela solo tras aprobación posterior y revisión de FREEZE/TEST_REPORT.')
 if not (RUN_COMPARE_AND_FREEZE or RUN_TEST_ONCE or RECOVER_TEST_FROM_LAST_TRACEBACK or RUN_PUBLISH):
-    show_summary('Criterio vigente',{'candidatos_elegibles':candidate_audit['eligible_count'],'03_06b':'incluido' if prompt_sft_active else 'omitido','preflight_listo':CANDIDATE_PREFLIGHT_READY,'ranking':'BA binaria ANY_DAMAGE OOF a cobertura completa','agregación':'lexicográfica; no suma métricas redundantes','salvaguarda':'macro-AUPRC daños + frontera Pareto','desempate':'menor R_0.67; luego macro-AUPRC','NEEDS_REVIEW':'política posterior bajo capacidad humana declarada','bootstrap':f'{BOOTSTRAP_REPLICATES} réplicas pareadas por video en {PARALLEL_WORKERS} hilos','persistencia':'validation se publica como checkpoint verificable del run 03_07 en Drive','test':'bloqueado hasta fijar capacidad y margen antes de comparar'},tone='neutral')"""
+    show_summary('Criterio vigente',{'candidatos_elegibles':candidate_audit['eligible_count'],'alcance':'03_01–03_06; 03_06b toy excluido por diseño','preflight_listo':CANDIDATE_PREFLIGHT_READY,'ranking':'BA binaria ANY_DAMAGE OOF a cobertura completa','agregación':'lexicográfica; no suma métricas redundantes','salvaguarda':'macro-AUPRC daños + frontera Pareto','desempate':'menor R_0.67; luego macro-AUPRC','NEEDS_REVIEW':'política posterior bajo capacidad humana declarada','bootstrap':f'{BOOTSTRAP_REPLICATES} réplicas pareadas por video en {PARALLEL_WORKERS} hilos','persistencia':'validation se publica como checkpoint verificable del run 03_07 en Drive','test':'bloqueado hasta fijar capacidad y margen antes de comparar'},tone='neutral')"""
 
 
 COMPARISON_REPORT_SYNC_SOURCE = """from moderacion_peru.comparison_reporting import synchronize_google_drive_results, synchronize_latest_local_results
@@ -2775,21 +2764,22 @@ Las longitudes 128 y 256 son candidatos independientes para validation; nunca se
 5. **Cierre.** Verifique los `candidate.json`, las predicciones de validation, el test sellado y el mensaje de publicación verificada; deje ambos interruptores en `False`.
 
 La penalización se selecciona exclusivamente con validation y el candidato histórico se informa por separado.""",
-    "flujo/03_entrenamiento/03_06b_qwen_prompt_sft.ipynb": """Conserve el mismo `COLAB_RUN_ID`, snapshot, cápsula de prompt y semillas al reanudar. Active un solo perfil por corrida; piloto, presupuesto corto y entrenamiento completo responden preguntas distintas.
+    "flujo/03_entrenamiento/03_06b_qwen_prompt_sft.ipynb": """Este cuaderno es un ejercicio toy independiente. No produce `candidate.json`, no restaura modelos ajenos y no participa en `03_07`.
 
-1. **Piloto diagnóstico opcional.** Active solo `RUN_DIAGNOSTIC_PILOT=True`. Valida memoria y contrato JSON, pero usa validation parcial, no se publica como candidato final y nunca entra en `03_07`.
-2. **Corrida corta comparable.** Desactive el piloto y active solo `RUN_BUDGETED_COMPARABLE=True`. Entrena con el presupuesto declarado y debe completar la validation común para producir un `candidate.json` elegible con su *disclaimer*.
-3. **Entrenamiento completo opcional.** Active solo `RUN_FULL_TRAINING=True` si se aprueba el costo. No lo ejecute junto con el perfil presupuestado ni lo presente como la misma intervención.
-4. **Interrupciones.** Si se corta durante entrenamiento, vuelva a ejecutar desde arriba con el mismo run. Si vence el tiempo durante validation y no existe candidato completo, la corrida no es elegible y debe reanudarse o repetirse.
-5. **Cierre.** Confirme publicación, validation completa y test sellado; deje los tres interruptores en `False`.
+1. **Partición declarada.** `80:20:20` se interpreta como pesos normalizados `4:1:1`, porque no son porcentajes válidos. El resultado exacto es 800 train, 200 validation y 200 test. Cada daño aporta 40/10/10 y `SEGURO` 640/160/160.
+2. **Muestreo.** `RUN_BUILD_TOY_DATASET=True` recorre el snapshot, conserva solo ejemplos puros, selecciona aleatoriamente dentro de cada categoría/split con semilla fija y usa como máximo un chunk por video. Revise que el panel confirme 1.200 videos únicos y cero fuga.
+3. **Entrenamiento.** En Colab seleccione A100 y mantenga `RUN_TRAIN_QWEN=True`. Qwen recibe como contexto completo `config/definiciones_dano_toy_03_06b.md`; LoRA se ajusta con 800 filas.
+4. **Salida estructurada.** La generación no depende solo de una instrucción: un trie de tokens limita cada respuesta a cinco objetos JSON posibles con `chunk_id` literal y una categoría válida.
+5. **Eficacia.** Validation y el test toy retenido se evalúan por separado. La métrica principal es `strict_macro_f1`; cualquier JSON inválido cuenta como error. También se guardan accuracy, balanced accuracy, tabla por categoría, predicciones y matriz de confusión.
+6. **Reanudación.** Conserve dataset, Markdown, semilla e hiperparámetros. Una firma idéntica devuelve `status=noop`; use `FORCE_REBUILD` o `FORCE_RETRAIN` solo para una repetición deliberada.
 
-`03_07` incluirá automáticamente solo los candidatos completos y elegibles; la ausencia de `03_06b` no bloquea las demás familias.""",
+Las métricas describen únicamente este conjunto enriquecido de 1.200 ejemplos; no estiman prevalencia natural ni superioridad frente a los modelos de `03_01`–`03_06`.""",
     "flujo/03_entrenamiento/03_07_comparacion_final.ipynb": """**Entorno recomendado.** Abra una copia nueva de este cuaderno desde GitHub en **Google Colab web**, seleccione un runtime **CPU** y ejecute desde la primera celda. No use para esta corrida el kernel local ni Colab desde VS Code: los candidatos están publicados únicamente en Google Drive y la autorización integrada de `drive.mount()` es más confiable en la interfaz web. Mantenga `COLAB_BUNDLE_SOURCE='github'`; el bundle se descarga y verifica automáticamente, sin selector manual de archivos ni Google Drive para escritorio.
 
 Este cuaderno se ejecuta por compuertas deliberadas. Use el mismo `COLAB_RUN_ID='03_07_working_v2_1'` para que la selección congelada se restaure desde Drive. Nunca active comparación y test en la misma corrida.
 
 1. **Inicio sin carga manual.** Abra <https://colab.research.google.com/github/lkoc/Trabajo_PLN-MIA-Grupo4/blob/main/flujo/03_entrenamiento/03_07_comparacion_final.ipynb>, confirme runtime CPU y conserve `COLAB_BUNDLE_SOURCE='github'`. `local_upload` queda solo como recuperación excepcional; la corrida normal no solicita nueve archivos.
-2. **Preflight de candidatos.** Mantenga `RUN_COMPARE_AND_FREEZE=False`, `RUN_TEST_ONCE=False` y `RUN_PUBLISH=False`. La restauración verifica los manifiestos, tamaños y SHA-256 de `03_01`–`03_06`; `03_06b` solo se agrega si existe y es elegible. Cualquier publicación grande puede estar guardada por partes (las históricas de `03_01`, hasta 96 MiB; las nuevas, 256 MiB): el restaurador verifica cada parte, reconstruye el TAR temporal y verifica también el SHA-256 concatenado antes de extraer. No una las partes manualmente. La descarga y verificación de todos los runs puede tardar decenas de minutos y usar más de 15 GB de disco aunque la CPU parezca poco activa. No avance hasta ver `listo_para_comparar=True`.
+2. **Preflight de candidatos.** Mantenga `RUN_COMPARE_AND_FREEZE=False`, `RUN_TEST_ONCE=False` y `RUN_PUBLISH=False`. La restauración verifica los manifiestos, tamaños y SHA-256 de `03_01`–`03_06`. `03_06b` está excluido por diseño porque ahora es un ejercicio toy independiente. Cualquier publicación grande puede estar guardada por partes (las históricas de `03_01`, hasta 96 MiB; las nuevas, 256 MiB): el restaurador verifica cada parte, reconstruye el TAR temporal y verifica también el SHA-256 concatenado antes de extraer. No una las partes manualmente. La descarga y verificación de todos los runs puede tardar decenas de minutos y usar más de 15 GB de disco aunque la CPU parezca poco activa. No avance hasta ver `listo_para_comparar=True`.
 3. **Predeclaración.** Fije `MAX_REVIEW_RATE` y `MACRO_AUPRC_NONINFERIORITY_MARGIN` antes de comparar. Si permanecen en `None`, se genera el informe/Pareto, pero test sigue bloqueado.
 4. **Comparación en validation.** Active solo `RUN_COMPARE_AND_FREEZE=True`. Mantenga test y publicación en `False`. El resultado y la selección congelada se guardan como checkpoint verificable del run `03_07` en Drive.
 5. **Revisión humana del congelado.** Vuelva a dejar la comparación en `False` y revise candidatos, umbrales, capacidad, margen y advertencias. No cambie estos valores después de mirar test.
@@ -2842,24 +2832,7 @@ def persistent_colab_training_source(source: str, notebook_id: str | None) -> st
             ",persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,completion_callback=publish_completed_flat_model,progress_unit='modelo'",
             1,
         )
-    if notebook_id == "03_06b" and "Publicación final budgeted" not in source:
-        source = source.replace(
-            "    show_result('Candidato SFT budgeted elegible para 03_07',budgeted_result,tone='warning')\n",
-            "    show_result('Candidato SFT budgeted elegible para 03_07',budgeted_result,tone='warning')\n"
-            "    if COLAB_CONTEXT is not None:\n"
-            "        from moderacion_peru.colab import publish_colab_outputs\n"
-            "        show_result('Publicación final budgeted',publish_colab_outputs(COLAB_CONTEXT),tone='success')\n",
-            1,
-        )
-        source = source.replace(
-            "    show_result('SFT generativo completo condicionado por prompt v3.2',full_result,tone='success')\n",
-            "    show_result('SFT generativo completo condicionado por prompt v3.2',full_result,tone='success')\n"
-            "    if COLAB_CONTEXT is not None:\n"
-            "        from moderacion_peru.colab import publish_colab_outputs\n"
-            "        show_result('Publicación final del SFT completo',publish_colab_outputs(COLAB_CONTEXT),tone='success')\n",
-            1,
-        )
-    if notebook_id != "03_06b" and "Publicación final automática" not in source:
+    if "Publicación final automática" not in source:
         final_activity = "RUN_CHANNEL_ROBUSTNESS" if notebook_id == "03_02" else activity
         source += (
             "\nif COLAB_CONTEXT is not None and ("
@@ -3034,18 +3007,20 @@ def create(
             )
         )
     if colab_notebook_id and colab_notebook_id != "03_07":
+        publication_description = (
+            "El dataset toy, el adaptador, las predicciones y las métricas pueden copiarse "
+            "como un resultado independiente. No se publica ningún candidato para `03_07`. "
+            "Esta celda permite guardar manualmente el resultado verificable en Drive."
+            if colab_notebook_id == "03_06b"
+            else "Cada época completa se guarda y verifica por separado en `trainer_checkpoints`. "
+            "Al terminar una corrida 03_x se publica automáticamente el candidato final en una "
+            "de dos ranuras redundantes. Esta celda permite repetir manualmente esa publicación; "
+            "no vuelve a incluir los directorios transitorios de `Trainer`."
+        )
         notebook.cells.append(
             nbf.v4.new_markdown_cell(
                 "## Publicación o checkpoint en Drive\n\n"
-                "Cada época completa se guarda y verifica por separado en `trainer_checkpoints`. "
-                + (
-                    "El piloto diagnóstico no se publica automáticamente porque no es elegible para `03_07`. "
-                    if colab_notebook_id == "03_06b"
-                    else ""
-                )
-                + "Al terminar una corrida 03_x se publica automáticamente el candidato final en una "
-                "de dos ranuras redundantes. Esta celda permite repetir manualmente esa publicación; "
-                "no vuelve a incluir los directorios transitorios de `Trainer`."
+                + publication_description
             )
         )
         notebook.cells.append(
@@ -4186,55 +4161,49 @@ def main(*, only_notebooks: set[str] | None = None) -> None:
         ),
         (
             "03_06b_qwen_prompt_sft.ipynb",
-            "Qwen SFT condicionado por prompt",
-            """from moderacion_peru.prompt_sft import train_prompt_conditioned_sft
-DATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'
-PROMPT=ROOT/'config/prompt_operacional_ollama_v3_2.md'
-OUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'modelos/v2/qwen_prompt_sft'
+            "Experimento toy Qwen condicionado por definiciones Markdown",
+            """from moderacion_peru.toy_prompt_sft import build_toy_prompt_dataset,train_and_evaluate_toy_qwen
+SOURCE_DATA=COLAB_CONTEXT.input('dataset_5_salidas') if COLAB_CONTEXT else ROOT/'datos/model_ready/v2/dataset_5_salidas.jsonl'
+DEFINITIONS=ROOT/'config/definiciones_dano_toy_03_06b.md'
+OUTPUT_ROOT=COLAB_CONTEXT.scratch_output_dir if COLAB_CONTEXT else ROOT/'resultados/03_06b_toy'
+TOY_DATA=OUTPUT_ROOT/'toy_dataset.jsonl'
 DEVICE='cuda' if COLAB_CONTEXT else 'auto'
-PERSISTENT_CHECKPOINT_ROOT=COLAB_CONTEXT.drive_run_dir/'trainer_checkpoints' if COLAB_CONTEXT else None
+SEED=20260815
+EPOCHS=3
+MAX_LENGTH=1536
+RUN_BUILD_TOY_DATASET=True
+RUN_TRAIN_QWEN=True
+FORCE_REBUILD=False
+FORCE_RETRAIN=False
 
-# Perfil recomendado: candidato comparable bajo un presupuesto aproximado de una hora A100.
-BUDGET_TRAIN_ROWS=3000
-BUDGET_EPOCHS=1
-BUDGET_MAX_LENGTH=2048
-BUDGET_TRAINING_SECONDS=1500  # 25 min; deja el resto a validation generativa completa
-BUDGET_TOTAL_SECONDS=4500  # corte duro total de 75 min; si vence, no crea candidate.json
-ESTIMATED_A100_HOURS=(0.75,1.25)
-REFERENCE_A100_CU_PER_HOUR=5.4  # solo referencia observada; use la tasa que muestre Colab
-ESTIMATED_COMPUTE_UNITS=tuple(round(hours*REFERENCE_A100_CU_PER_HOUR,1) for hours in ESTIMATED_A100_HOURS)
-
-RUN_BUDGETED_COMPARABLE=False
-RUN_DIAGNOSTIC_PILOT=False
-RUN_FULL_TRAINING=False
-show_summary('Preflight de costo y comparabilidad',{
-    'perfil_recomendado':'budgeted_comparable: 3.000 train, 1 época y validation común completa',
-    'tiempo_A100_estimado':f'{ESTIMATED_A100_HOURS[0]*60:.0f}–{ESTIMATED_A100_HOURS[1]*60:.0f} min; objetivo ≈60 min',
-    'corte_entrenamiento':f'{BUDGET_TRAINING_SECONDS/60:.0f} min',
-    'corte_total':f'{BUDGET_TOTAL_SECONDS/60:.0f} min; sin candidate.json si validation no termina',
-    'unidades_estimadas_a_5.4_CU_h':f'{ESTIMATED_COMPUTE_UNITS[0]}–{ESTIMATED_COMPUTE_UNITS[1]} CU',
-    'tarifa_real':'Colab es dinámico; multiplique las GPU-horas por la tasa CU/h visible en la sesión',
-    'elegibilidad_03_07':'sí, con disclaimer de presupuesto limitado y validation completa',
-    'test':'sellado; no se abre en esta corrida',
+show_summary('Diseño independiente 03_06b',{
+    'muestras':'1.200 = 960 SEGURO + 60 por cada uno de cuatro daños',
+    'partición':'80:20:20 como pesos 4:1:1 = 800/200/200',
+    'por_daño':'40 train, 10 validation, 10 test',
+    'SEGURO':'640 train, 160 validation, 160 test',
+    'contexto':DEFINITIONS,
+    'modelo':'Qwen/Qwen3-0.6B + LoRA causal',
+    'salida':'JSON restringido a cinco objetos válidos por trie de tokens',
+    'métrica_principal':'strict_macro_f1 en test toy; JSON inválido cuenta como error',
+    'comparación_03_07':'prohibida; no se genera candidate.json',
 },tone='warning')
-if RUN_BUDGETED_COMPARABLE:
-    budgeted_result=run_with_progress('Qwen SFT budgeted comparable',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT/'budgeted_comparable',device=DEVICE,safe_to_damage_ratio=4.0,training_regime='budgeted_comparable',eligible_for_03_07=True,train_limit=BUDGET_TRAIN_ROWS,validation_limit=None,epochs=BUDGET_EPOCHS,max_length=BUDGET_MAX_LENGTH,max_training_seconds=BUDGET_TRAINING_SECONDS,max_total_seconds=BUDGET_TOTAL_SECONDS,generation_max_new_tokens=160,prompt_capsule_max_chars=4800,run_label='a100_about_one_hour_v2_memory_safe',persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='fila')
-    show_result('Candidato SFT budgeted elegible para 03_07',budgeted_result,tone='warning')
-if RUN_DIAGNOSTIC_PILOT:
-    pilot_result=run_with_progress('Piloto diagnóstico Qwen SFT',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT/'diagnostic_pilot',device=DEVICE,safe_to_damage_ratio=4.0,training_regime='diagnostic_pilot',eligible_for_03_07=False,train_limit=500,validation_limit=200,epochs=1,max_length=2560,generation_max_new_tokens=192,run_label='diagnostic_only',persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='fila')
-    show_result('Piloto SFT no elegible para 03_07',pilot_result,tone='warning')
-if RUN_FULL_TRAINING:
-    full_result=run_with_progress('Qwen SFT completo',train_prompt_conditioned_sft,DATA,PROMPT,OUTPUT_ROOT/'full',device=DEVICE,safe_to_damage_ratio=4.0,training_regime='full',eligible_for_03_07=True,validation_limit=None,persistent_checkpoint_root=PERSISTENT_CHECKPOINT_ROOT,progress_unit='fila')
-    show_result('SFT generativo completo condicionado por prompt v3.2',full_result,tone='success')
-if not (RUN_BUDGETED_COMPARABLE or RUN_DIAGNOSTIC_PILOT or RUN_FULL_TRAINING):
-    show_callout('Listo pero desactivado','Para la corrida solicitada active únicamente RUN_BUDGETED_COMPARABLE=True. No active piloto y full a la vez.',tone='success')""",
+if RUN_BUILD_TOY_DATASET:
+    toy_result=run_with_progress('Muestreo estratificado toy',build_toy_prompt_dataset,SOURCE_DATA,TOY_DATA,seed=SEED,force=FORCE_REBUILD,progress_unit='fila')
+    show_result('Toy dataset verificado',toy_result,tone='success')
+if RUN_TRAIN_QWEN:
+    if not TOY_DATA.is_file():
+        raise FileNotFoundError('Falta toy_dataset.jsonl; active primero RUN_BUILD_TOY_DATASET.')
+    qwen_toy_result=run_with_progress('Qwen toy: LoRA + JSON restringido',train_and_evaluate_toy_qwen,TOY_DATA,DEFINITIONS,OUTPUT_ROOT,device=DEVICE,seed=SEED,epochs=EPOCHS,max_length=MAX_LENGTH,force=FORCE_RETRAIN,progress_unit='fila')
+    show_result('Eficacia independiente de Qwen toy',qwen_toy_result,tone='success')
+if not (RUN_BUILD_TOY_DATASET or RUN_TRAIN_QWEN):
+    show_callout('Ejecución desactivada','Active el muestreo, el entrenamiento o ambos. Mantenga ambos True para una corrida completa en A100.',tone='neutral')""",
             "03_06b",
-            "La rama usa el modelo conversacional oficial `Qwen/Qwen3-0.6B` "
-            "[@hf2026qwen06binstructcard] y LoRA [@hu2022lora]. A diferencia de los clasificadores "
-            "03_05 y 03_06, recibe una cápsula reproducible del prompt operacional v3.2 y genera JSON. "
-            "La compilación de la cápsula, la pérdida solo sobre la respuesta y el contrato JSON son "
-            "decisiones locales; sus resultados se comparan por separado para no confundir prompting "
-            "con supervisión por etiquetas.",
+            "El ejercicio usa el modelo conversacional oficial `Qwen/Qwen3-0.6B` "
+            "[@hf2026qwen06binstructcard] y LoRA [@hu2022lora]. El archivo Markdown completo con las "
+            "definiciones se incorpora como mensaje de sistema en todos los ejemplos. La pérdida se "
+            "calcula solo sobre el objeto de respuesta y la decodificación se restringe por un trie de "
+            "tokens a los cinco JSON permitidos. Es un estudio toy aislado: no genera candidatos ni "
+            "se incorpora a la selección de `03_07`.",
         ),
         (
             "03_07_comparacion_final.ipynb",

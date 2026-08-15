@@ -1,14 +1,15 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-15T09:58:54.886875+00:00",
+  "generated_at": "2026-08-15T12:50:02.136097+00:00",
   "taxonomy_contract": "moderacion_peru_5_salidas_v2",
   "taxonomy_version": "2.1.0",
   "core": {
     "name": "project_core.zip",
-    "sha256": "a07f8424c7e5058068e9945389ebaa2bd51ad0f2f7729d016a81fff4734bfc4a",
-    "bytes": 247169,
+    "sha256": "51d06e6ad1642c34315cdd58d26cccb3241ae9d1401133e1bad8b3bb840e2814",
+    "bytes": 259022,
     "files": [
       "config/colab_l4.json",
+      "config/definiciones_dano_toy_03_06b.md",
       "config/prompt_operacional_ollama_v3_2.md",
       "config/taxonomia_v2.json",
       "pyproject.toml",
@@ -49,6 +50,7 @@
       "src/moderacion_peru/schemas.py",
       "src/moderacion_peru/servers.py",
       "src/moderacion_peru/taxonomy.py",
+      "src/moderacion_peru/toy_prompt_sft.py",
       "src/moderacion_peru/training.py"
     ]
   },
@@ -150,5 +152,5 @@
     "modelos Ollama",
     "paper, presentación y frontends"
   ],
-  "bundle_id": "742a58a0f1f3ec674f6f104ecae245d41c32cfef1ef1667e3d9a304466970fa2"
+  "bundle_id": "45f01474e1dab847f6546a68609593c10a998a29187ef224e2599780dc039b78"
 }

@@ -158,23 +158,24 @@ tope artificial; persiste por `chunk_id` y puede continuar con una recarga.
 | `03_04_transformer_multitarea` | cinco salidas principales, 14 etiquetas finas y tres flags auxiliares | candidato multitarea |
 | `03_05_qwen_lora` | Qwen3-0.6B-Base con adaptación LoRA y cabeza clasificadora | conserva el candidato de 128 tokens y permite crear otro de 256 mediante continuación verificable; ambos tienen 22 salidas y no se presentan como prompting |
 | `03_06_qwen_estructurado` | Qwen-LoRA inicializado desde `03_05`, con una época y barrido de penalización del conflicto `SEGURO+daño` | tres candidatos PEFT (`0`, `0.02`, `0.05`); conserva separado el full fine-tuning histórico |
-| `03_06b_qwen_prompt_sft` | Qwen3-0.6B conversacional, LoRA causal y cápsula trazable del prompt v3.2 | JSON estricto y candidato realmente condicionado por prompt |
+| `03_06b_qwen_prompt_sft` | ejercicio toy independiente con Qwen3-0.6B, LoRA causal y definiciones de daño desde Markdown | 1.200 muestras, JSON restringido, métricas en 800/200/200; nunca produce un candidato para `03_07` |
 | `03_07_comparacion_final` | individuos, ensembles, diversidad, bootstrap por video y pruebas pareadas | comparación en validation y manifiesto congelado; test/publicación separados |
 | `03_07a_reporte_comparacion_modelos` | consulta Drive por OAuth de solo lectura, compara fecha/SHA-256 y sincroniza solo resultados nuevos | Markdown crítico, CSV completos y PNG; no usa Drive Desktop, no extrae modelos ni abre test |
 | `03_08_auditoria_finas_flags` | audita máscaras, cobertura, consistencia y métricas auxiliares observadas | informes del snapshot y de candidatos disponibles |
 
-Los cuadernos `03_01`–`03_06b` completan `fit → calibración/evaluación en validation → manifiesto` y dejan test sellado. `03_07` compara individuos y ensembles, congela candidatos, umbrales y regla; un segundo interruptor infiere una sola vez sobre el test natural completo. Train y validation conservan todo el daño y seleccionan `SEGURO` de forma determinista, aproximadamente proporcional por canal, con ratio 4:1: quedan 51.205/10.600 chunks. Test conserva sus 22.684 chunks y su prevalencia natural. De la misma inferencia se deriva además una vista secundaria determinista 4:1 de 9.010 chunks; no se vuelve a abrir ni ejecutar el modelo. La publicación permanece bloqueada por defecto.
+Los cuadernos `03_01`–`03_06` completan `fit → calibración/evaluación en validation → manifiesto` y dejan test sellado. `03_07` compara individuos y ensembles, congela candidatos, umbrales y regla; un segundo interruptor infiere una sola vez sobre el test natural completo. Train y validation conservan todo el daño y seleccionan `SEGURO` de forma determinista, aproximadamente proporcional por canal, con ratio 4:1: quedan 51.205/10.600 chunks. Test conserva sus 22.684 chunks y su prevalencia natural. De la misma inferencia se deriva además una vista secundaria determinista 4:1 de 9.010 chunks; no se vuelve a abrir ni ejecutar el modelo. La publicación permanece bloqueada por defecto.
 
 El checkpoint de `validation` publicado el 2026-08-15 congeló `ensemble_soft_mean`: BA ANY_DAMAGE OOF `0,8400` y macro-AUPRC de daño OOF `0,5549`. El mejor individuo fue `qwen_lora-4aa5ce04df05` (`0,8314` y `0,5158`). El estado es `statistical_tie_or_inconclusive`; la selección expresa la política lexicográfica, no una superioridad universal. La corrida declaró capacidad máxima de revisión de `40 %` —el punto elegido usa `32,54 %`— y margen de no inferioridad `0,10`, ambos permisivos y sujetos a justificación operacional. El informe verificable está en [`resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md`](resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md).
 
-`03_06b` ofrece además `RUN_BUDGETED_COMPARABLE`: ajusta LoRA con 3.000 filas
-deterministas, una época y contexto 2.048, pero genera predicciones sobre las
-10.600 filas completas de `validation`. Por eso puede entrar a `03_07` como
-candidato de presupuesto limitado; el ranking arrastra ese régimen y su
-advertencia metodológica. No representa el SFT exhaustivo ni permite atribuir
-una diferencia de métricas únicamente a la arquitectura. El perfil apunta a
-45–75 min en una A100 de 40 GB y aplica cortes de 25 min al ajuste y 75 min al
-total; si no completa `validation`, no crea `candidate.json` elegible.
+`03_06b` fue reemplazado por un ejercicio controlado ajeno a esa campaña. Toma
+960 ejemplos `SEGURO` y 60 de cada daño, seleccionados pseudoaleatoriamente
+dentro de cada categoría y split, con un solo chunk por video. Los pesos
+`80:20:20` se normalizan a `4:1:1`: 800 filas de train, 200 de validation y 200
+de test. Qwen recibe como contexto completo
+`config/definiciones_dano_toy_03_06b.md`; un trie de tokens limita la respuesta
+a un JSON con `chunk_id` literal y una de cinco categorías. Su métrica principal
+es `strict_macro_f1`, donde una salida inválida cuenta como error. No genera
+`candidate.json`, no se descubre desde `modelos/v2` y nunca entra en `03_07`.
 
 Las mejoras neuronales son opcionales. En `03_02`, la pantalla de contexto usa
 una semilla de muestreo fija para que validation no cambie; después confirma el
@@ -318,7 +319,7 @@ El recorrido completo contiene 22 cuadernos:
 ```text
 01_01 → 01_015 ampliación minoritaria opcional → 01_02 opcional → 01_03
 → 02_00 en Colab → 02_01 (calibración→Flash→Pro) → 02_02 fallback opcional → 02_03 auditoría → 02_04 → 02_05 → 02_00 en Colab
-→ 03_01 ... 03_06 clasificadores —incluida 03_03b— y 03_06b SFT condicionado por prompt en ramas comparables
+→ 03_01 ... 03_06 clasificadores comparables —incluida 03_03b—; 03_06b toy independiente
 → 03_07 → 03_07a → 03_08 → 04_01
 ```
 
@@ -334,11 +335,12 @@ Todo cuaderno activo que exige varias corridas contiene una sección **Procedimi
 | `02_00` | `RUN_PUBLISH_BUNDLE=False`, `BUNDLE_SOURCE='github'` | ábralo en Colab; use GitHub si el bundle está sincronizado o `'local_upload'` para seleccionar los nueve archivos locales, active y autorice `drive.mount()` |
 | `02_01` | recuperación histórica y checkpoints automáticos activos; cuatro interruptores de API controlan cada fase; panel 1 000, `PRIMARY_LIMIT=None`, `REVIEW_LIMIT=None` para la campaña completa | recupera solo coincidencias exactas 1:1, valida `/models`, ejecuta calibración, Flash y Pro sobre pendientes; `Ctrl+C` conserva grupos terminados y publica el run en Drive cuando esa opción está habilitada |
 | `02_02` | `RUN_FALLBACK=False`, `LIMIT=20` | active solo si necesita un diagnóstico local independiente; `None` procesa todos los pendientes |
-| `03_01`–`03_06b` | `RUN_TRAINING=False`; ratio `SEGURO`/daño = 4:1 en train/validation; test natural completo | active la familia; `03_07` reutiliza una inferencia de test para las vistas natural y 4:1 |
-| `03_07` | restauración de Drive activa; `RUN_COMPARE_AND_FREEZE=False`, `RUN_TEST_ONCE=False`, `RUN_PUBLISH=False` | ejecútelo desde la primera celda con kernel Colab CPU; restaura por SHA los runs `03_01`–`03_06`, agrega `03_06b` solo si es elegible, compare/congele y revise evidencia antes de abrir test una vez |
+| `03_01`–`03_06` | interruptores de entrenamiento apagados por defecto; ratio `SEGURO`/daño = 4:1 en train/validation; test natural completo | active la familia; `03_07` reutiliza una inferencia de test para las vistas natural y 4:1 |
+| `03_06b` | `RUN_BUILD_TOY_DATASET=True`, `RUN_TRAIN_QWEN=True` | en A100 crea 1.200 ejemplos independientes, entrena Qwen con contexto Markdown y evalúa JSON restringido; no se compara en `03_07` |
+| `03_07` | restauración de Drive activa; `RUN_COMPARE_AND_FREEZE=False`, `RUN_TEST_ONCE=False`, `RUN_PUBLISH=False` | ejecútelo desde la primera celda con kernel Colab CPU; restaura por SHA solo los runs `03_01`–`03_06`, compare/congele y revise evidencia antes de abrir test una vez |
 | `03_07a` | `AUTO_SYNC_FROM_GOOGLE_DRIVE=True`, sin interruptores de entrenamiento o test | ejecútelo localmente; la primera vez autorice Drive con `config/google_drive_oauth_client.json`; después compara y actualiza automáticamente solo si la publicación remota es nueva o diferente |
 
-`03_01`–`03_06b` no forman una cadena: son alternativas comparables. Dentro de `03_05`, el brazo opcional de 256 tokens sí continúa explícitamente los pesos LoRA del candidato de 128 sobre el mismo snapshot, reinicia optimizador y scheduler, y genera otro candidato sin sobrescribir al padre. `03_05`/`03_06` son clasificadores supervisados; solo `03_06b` recibe el prompt como condición de entrada. `03_07` restaura las publicaciones versionadas de Drive, requiere las familias `03_01`–`03_06`, trata `03_06b` como opcional y rechaza candidatos de otro snapshot, incompletos, sin predicciones de validation o que hayan abierto test antes de congelar.
+`03_01`–`03_06` son alternativas comparables, no una cadena. Dentro de `03_05`, el brazo opcional de 256 tokens sí continúa explícitamente los pesos LoRA del candidato de 128 sobre el mismo snapshot, reinicia optimizador y scheduler, y genera otro candidato sin sobrescribir al padre. `03_05`/`03_06` son clasificadores supervisados. `03_06b` recibe definiciones Markdown como contexto, pero usa otro diseño muestral y permanece aislado. `03_07` restaura únicamente las publicaciones versionadas de `03_01`–`03_06` y rechaza candidatos de otro snapshot, incompletos, sin predicciones de validation o que hayan abierto test antes de congelar.
 
 ### 7. Reconciliar, entrenar y publicar mediante la CLI
 

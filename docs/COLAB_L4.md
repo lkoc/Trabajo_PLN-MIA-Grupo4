@@ -85,7 +85,7 @@ descargar ni copiar sus archivos.
 
 ## Consumidores y GPU
 
-Los cuadernos `02_01` y `03_02`–`03_06b` pueden ejecutarse en Colab. `02_01` usa la API DeepSeek y funciona con un runtime CPU; no reserva una GPU innecesaria. `03_02`–`03_06b` sí requieren la L4. Su bootstrap:
+Los cuadernos `02_01` y `03_02`–`03_06b` pueden ejecutarse en Colab. `02_01` usa la API DeepSeek y funciona con un runtime CPU; no reserva una GPU innecesaria. `03_02`–`03_04` requieren L4; `03_05`, `03_06` y el toy `03_06b` recomiendan A100. Su bootstrap:
 
 1. monta Drive y busca el release exacto fijado por el cuaderno;
 2. si falta, lo descarga de GitHub —o abre `local_upload`— y lo publica atómicamente;
@@ -95,9 +95,9 @@ Los cuadernos `02_01` y `03_02`–`03_06b` pueden ejecutarse en Colab. `02_01` u
 6. extrae e instala el core en el SSD efímero `/content`;
 7. exige una `NVIDIA L4` solo si el cuaderno declara `requires_cuda=true` y `COLAB_REQUIRE_L4=True`; los cuadernos Qwen usan `False`, exigen CUDA y activan automáticamente el perfil BF16 de 40 GB en A100/H100/H200 o hardware equivalente.
 
-Los cuadernos `02_02`, `03_05`, `03_06` y `03_06b` están optimizados para una A100 de 40 GB. La detección se basa en CUDA, soporte BF16 y memoria observable (al menos 39 GB), no únicamente en el nombre comercial. En `03_05` y `03_06` el lote efectivo permanece en ocho (`8×1` en A100 frente a `2×4` en L4). El perfil corto recomendado de `03_06b` usa secuencias de 2.048 tokens, lote efectivo `2×4`, inferencia por lotes de ocho y *gradient checkpointing*. Además exige por lo menos 24 GB decimales de VRAM libre antes de cargar Qwen; si el kernel retuvo modelos anteriores, pide reiniciar la sesión antes de consumir el entrenamiento.
+Los cuadernos `02_02`, `03_05`, `03_06` y `03_06b` están optimizados para una A100 de 40 GB. La detección se basa en CUDA, soporte BF16 y memoria observable (al menos 39 GB), no únicamente en el nombre comercial. En `03_05` y `03_06` el lote efectivo permanece en ocho (`8×1` en A100 frente a `2×4` en L4). El toy `03_06b` usa secuencias de 1.536 tokens, LoRA causal, lote 8 en A100 y generación restringida por lotes de 16. Solo entrena con 800 filas y evalúa 200 de validation más 200 de test.
 
-Los entrenamientos `03_02`–`03_06b` se ejecutan sobre el SSD efímero. Los perfiles
+Los entrenamientos `03_02`–`03_06` se ejecutan sobre el SSD efímero. Los perfiles
 reanudables reflejan automáticamente cada checkpoint que termina de escribir `Trainer` en
 `COLAB_CONTEXT.drive_run_dir/trainer_checkpoints/<firma-del-run>/<trainer>/`.
 Cada versión se conserva con un nombre inmutable
@@ -106,11 +106,10 @@ Cada versión se conserva con un nombre inmutable
 contiene pesos o adaptadores, optimizador, scheduler, RNG y
 `trainer_state.json`, por lo que un checkpoint guardado al terminar la época 2
 reanuda la época 3 con `resume_from_checkpoint`, sin reiniciar el ajuste. Las
-cascadas mantienen separados sus trainers y `03_06b` separa piloto, corrida
-presupuestada y corrida completa mediante la firma del run. La corrida corta
-`budgeted_comparable` desactiva deliberadamente la reanudación de `Trainer`: así
-otra sesión no puede sumar otros 25 minutos y dejar de ser el mismo tratamiento
-experimental. Su candidato final sí se publica automáticamente.
+cascadas mantienen separados sus trainers. `03_06b` también entrena en el SSD,
+pero no usa la infraestructura de candidatos/checkpoints de esas familias: una
+firma que combina dataset, Markdown, semilla e hiperparámetros evita repetir una
+corrida completa ya materializada.
 
 Al activar esta función también se migra inmediatamente el checkpoint local más
 nuevo que todavía no exista en Drive. Tras perder o reiniciar el kernel, la
@@ -120,8 +119,9 @@ La publicación de resultados es automática al completar el entrenamiento;
 `03_02` publica MiniLM antes de comenzar E5, vuelve a publicar al terminar E5 y
 publica de nuevo si se ejecuta la evaluación por canal. La campaña MiniLM
 mejorada publica también cada variante 192/256, semilla o ablación focal antes
-de iniciar la siguiente. `03_06b` publica automáticamente la corrida presupuestada
-y la completa; el piloto diagnóstico queda fuera de `03_07` y no se autopublica.
+de iniciar la siguiente. `03_06b` permite copiar manualmente a Drive su dataset,
+adaptador, predicciones, métricas y reporte. Esa copia conserva el carácter
+independiente y nunca se restaura como entrada de `03_07`.
 
 `03_06` implementa además warm-start entre cuadernos. Antes del barrido
 estructurado, restaura desde
