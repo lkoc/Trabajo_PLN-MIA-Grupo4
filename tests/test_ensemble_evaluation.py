@@ -7,9 +7,26 @@ from types import ModuleType, SimpleNamespace
 import numpy as np
 import pytest
 
-from moderacion_peru import ensemble_evaluation
+from moderacion_peru import ensemble_evaluation, registry
 from moderacion_peru.io import sha256_file, write_json_atomic, write_jsonl_atomic
 from moderacion_peru.taxonomy import load_taxonomy
+
+
+@pytest.mark.parametrize("output_count", [5, 22])
+def test_production_peft_contract_accepts_optional_auxiliary_outputs(output_count):
+    primary_labels = list(load_taxonomy().target_labels)
+    output_labels = [
+        *primary_labels,
+        *[f"AUXILIAR_{index}" for index in range(output_count - 5)],
+    ]
+
+    resolved_count, resolved_labels = registry._peft_registry_output_contract(
+        {"output_count": output_count, "output_labels": output_labels},
+        primary_labels,
+    )
+
+    assert resolved_count == output_count
+    assert resolved_labels[:5] == primary_labels
 
 
 @pytest.mark.parametrize("output_count", [5, 22])

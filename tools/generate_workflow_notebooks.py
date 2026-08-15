@@ -2505,7 +2505,8 @@ else:
     show_callout('03_06b omitido','Su ausencia o inelegibilidad no bloquea la comparación de 03_01–03_06.',tone='neutral')"""
 
 
-COMPARISON_RUN_SOURCE = """from moderacion_peru.ensemble_evaluation import compare_and_freeze_validation,evaluate_frozen_test
+COMPARISON_RUN_SOURCE = """from moderacion_peru.ensemble_evaluation import compare_and_freeze_validation,evaluate_frozen_test,recover_partial_test_scores_from_traceback
+import sys
 RESULT_ROOT=(COLAB_CONTEXT.scratch_output_dir/'resultados_modelos' if COLAB_CONTEXT else ROOT/'resultados/modelos')
 COMPARISON=RESULT_ROOT/'comparacion_individual_ensemble_validation.json'
 FREEZE=RESULT_ROOT/'seleccion_congelada.json'
@@ -2518,6 +2519,7 @@ MAX_REVIEW_RATE=None  # p. ej. 0.10 solo si capacidad humana <=10% fue aprobada
 MACRO_AUPRC_NONINFERIORITY_MARGIN=None  # p. ej. 0.02 solo si fue predeclarado
 RUN_COMPARE_AND_FREEZE=False
 RUN_TEST_ONCE=False
+RECOVER_TEST_FROM_LAST_TRACEBACK=False  # solo tras un fallo previo y sin reiniciar el kernel
 RUN_PUBLISH=False
 
 def checkpoint_03_07_to_drive(label):
@@ -2528,6 +2530,9 @@ def checkpoint_03_07_to_drive(label):
     show_result(label,publication,tone='success')
     return publication
 
+if RECOVER_TEST_FROM_LAST_TRACEBACK:
+    recovery_result=recover_partial_test_scores_from_traceback(sys.last_traceback,FREEZE,TEST_REPORT)
+    show_result('Recuperación técnica de scores ya inferidos',recovery_result,tone='warning')
 if RUN_COMPARE_AND_FREEZE:
     if not CANDIDATE_PREFLIGHT_READY:
         raise RuntimeError(
@@ -2545,7 +2550,7 @@ if RUN_TEST_ONCE:
     checkpoint_03_07_to_drive('Checkpoint verificable del test abierto una vez')
 if RUN_PUBLISH:
     raise RuntimeError('Publicación productiva bloqueada por diseño: habilítela solo tras aprobación posterior y revisión de FREEZE/TEST_REPORT.')
-if not (RUN_COMPARE_AND_FREEZE or RUN_TEST_ONCE or RUN_PUBLISH):
+if not (RUN_COMPARE_AND_FREEZE or RUN_TEST_ONCE or RECOVER_TEST_FROM_LAST_TRACEBACK or RUN_PUBLISH):
     show_summary('Criterio vigente',{'candidatos_elegibles':candidate_audit['eligible_count'],'03_06b':'incluido' if prompt_sft_active else 'omitido','preflight_listo':CANDIDATE_PREFLIGHT_READY,'ranking':'BA binaria ANY_DAMAGE OOF a cobertura completa','agregación':'lexicográfica; no suma métricas redundantes','salvaguarda':'macro-AUPRC daños + frontera Pareto','desempate':'menor R_0.67; luego macro-AUPRC','NEEDS_REVIEW':'política posterior bajo capacidad humana declarada','bootstrap':f'{BOOTSTRAP_REPLICATES} réplicas pareadas por video en {PARALLEL_WORKERS} hilos','persistencia':'validation se publica como checkpoint verificable del run 03_07 en Drive','test':'bloqueado hasta fijar capacidad y margen antes de comparar'},tone='neutral')"""
 
 
@@ -2788,10 +2793,10 @@ Este cuaderno se ejecuta por compuertas deliberadas. Use el mismo `COLAB_RUN_ID=
 3. **Predeclaración.** Fije `MAX_REVIEW_RATE` y `MACRO_AUPRC_NONINFERIORITY_MARGIN` antes de comparar. Si permanecen en `None`, se genera el informe/Pareto, pero test sigue bloqueado.
 4. **Comparación en validation.** Active solo `RUN_COMPARE_AND_FREEZE=True`. Mantenga test y publicación en `False`. El resultado y la selección congelada se guardan como checkpoint verificable del run `03_07` en Drive.
 5. **Revisión humana del congelado.** Vuelva a dejar la comparación en `False` y revise candidatos, umbrales, capacidad, margen y advertencias. No cambie estos valores después de mirar test.
-6. **Apertura única de test.** Solo con la selección aprobada active `RUN_TEST_ONCE=True`. Si el modelo elegido necesita GPU, cambie el runtime pero conserve el mismo run y ejecute de nuevo desde arriba. Test se infiere una vez y se vuelve a guardar en Drive.
+6. **Apertura única de test.** Solo con la selección aprobada active `RUN_TEST_ONCE=True`. Si el modelo elegido necesita GPU, cambie el runtime pero conserve el mismo run y ejecute de nuevo desde arriba. El cargador PEFT reconstruye la dimensión realmente entrenada —cinco salidas primarias más las auxiliares que existan— y entrega únicamente las cinco primarias a la comparación. Después de cada miembro guarda un checkpoint técnico de scores ligado a la firma congelada; una reanudación exacta lo reutiliza sin convertirlo en insumo de selección. Test se vuelve a guardar en Drive al completar todos los miembros.
 7. **Publicación.** `RUN_PUBLISH` permanece en `False`; la publicación productiva requiere una aprobación posterior separada.
 
-Si una sesión se desconecta antes de terminar el bootstrap o la comparación, reanude desde la primera celda. No borre el run ni copie manualmente candidatos entre snapshots.""",
+Si una sesión se desconecta antes de terminar el bootstrap o la comparación, reanude desde la primera celda. Si una excepción de inferencia ocurre después de completar un miembro y el kernel sigue vivo, no lo reinicie: `recover_partial_test_scores_from_traceback(sys.last_traceback, FREEZE, TEST_REPORT)` puede rescatar su matriz desde el traceback antes de repetir la celda. No borre el run ni copie manualmente candidatos entre snapshots.""",
 }
 
 

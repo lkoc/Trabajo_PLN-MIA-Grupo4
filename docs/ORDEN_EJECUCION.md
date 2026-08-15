@@ -22,8 +22,8 @@ Todo el recorrido usa el contrato de etiquetas v2.1 con `SEGURO`, `RACISMO_DISCR
 | 14 | `03_03_transformer_cascada` | mismo snapshot | compuerta + cuatro daños | checkpoint/warm start o no-op |
 | 15 | `03_03b_transformer_cascada_segura` | mismo snapshot | compuerta conservadora + rama completa | checkpoint/warm start o no-op |
 | 16 | `03_04_transformer_multitarea` | mismo snapshot | cinco salidas + auxiliares | checkpoint/warm start o no-op |
-| 17 | `03_05_qwen_lora` | mismo snapshot | adaptadores LoRA de cinco salidas | checkpoint/warm start o no-op |
-| 18 | `03_06_qwen_estructurado` | mismo snapshot | Qwen LoRA con penalización de conflicto | checkpoint/warm start o no-op |
+| 17 | `03_05_qwen_lora` | mismo snapshot | adaptadores LoRA con cinco salidas primarias y auxiliares opcionales | checkpoint/warm start o no-op |
+| 18 | `03_06_qwen_estructurado` | mismo snapshot | Qwen LoRA con penalización de conflicto; comparación sobre cinco primarias | checkpoint/warm start o no-op |
 | 19 | `03_06b_qwen_prompt_sft` | mismo snapshot + prompt v3.2 | candidato generativo condicionado | checkpoint/warm start o no-op; rama opcional |
 | 20 | `03_07_comparacion_final` | candidatos del mismo SHA-256 | comparación y selección congelada en validation; test separado | checkpoint verificable del run en Drive |
 | 21 | `03_07a_reporte_comparacion_modelos` | publicación Drive + estado local | JSON verificados, Markdown crítico, CSV y PNG | OAuth de solo lectura; descarga solo si fecha/SHA cambian; no extrae modelos ni abre test |

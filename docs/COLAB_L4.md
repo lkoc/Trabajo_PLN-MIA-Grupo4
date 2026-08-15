@@ -200,6 +200,14 @@ SHA-256 con `sincronizacion_google_drive_03_07.json`, descarga solo una publicac
 nueva o diferente y extrae exclusivamente los JSON de resultados. No descarga
 modelos ni checkpoints de `Trainer`.
 
+La apertura de test de `03_07` acepta candidatos PEFT con cinco salidas primarias
+y cualquier número de auxiliares opcionales. Para restaurar pesos crea la cabeza
+con la dimensión declarada o inferida del adaptador; para las métricas y el
+ensemble conserva solo las primeras cinco en el orden de la taxonomía. Después
+de cada miembro persiste scores parciales firmados para reanudar exactamente la
+misma apertura si falla otro miembro. Esos scores no pueden intervenir en
+selección, calibración ni cambio de política.
+
 ## Secuencia práctica
 
 1. Genere el cuaderno requerido; el generador reconstruirá

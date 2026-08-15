@@ -28,6 +28,29 @@ def _classical_scores(model: Any, texts: list[str]) -> np.ndarray:
     return values[:, None] if values.ndim == 1 else values
 
 
+def _peft_registry_output_contract(
+    inference: dict[str, Any], primary_labels: list[str]
+) -> tuple[int, list[str]]:
+    raw_labels = inference.get("output_labels") or ()
+    labels = [str(label) for label in raw_labels]
+    output_count = int(inference.get("output_count") or len(labels) or 5)
+    if output_count < len(primary_labels):
+        raise ValueError("El adaptador PEFT no contiene las cinco salidas primarias")
+    if labels and len(labels) != output_count:
+        raise ValueError("output_count y output_labels del adaptador PEFT difieren")
+    if labels and labels[: len(primary_labels)] != primary_labels:
+        raise ValueError("El adaptador PEFT no respeta el orden de salidas primarias")
+    if not labels:
+        labels = [
+            *primary_labels,
+            *[
+                f"AUXILIAR_{index:02d}"
+                for index in range(1, output_count - len(primary_labels) + 1)
+            ],
+        ]
+    return output_count, labels
+
+
 def discover_candidates(roots: Iterable[str | Path]) -> list[dict[str, Any]]:
     candidates: list[dict[str, Any]] = []
     for root in roots:
@@ -342,32 +365,47 @@ class ProductionPredictor:
         self._torch_device = torch_device_name(hardware)
         if kind == "hf_sequence_classifier":
             model_path = self._asset(inference["model"])
-            self._tokenizer = AutoTokenizer.from_pretrained(model_path)
+            self._tokenizer = AutoTokenizer.from_pretrained(
+                model_path, token=False, fix_mistral_regex=False
+            )
             self._model = AutoModelForSequenceClassification.from_pretrained(
-                model_path
+                model_path, token=False
             ).to(self._torch_device)
         elif kind == "hf_peft_sequence_classifier":
             from peft import AutoPeftModelForSequenceClassification
 
             model_path = self._asset(inference["model"])
-            self._tokenizer = AutoTokenizer.from_pretrained(model_path)
+            self._tokenizer = AutoTokenizer.from_pretrained(
+                model_path, token=False, fix_mistral_regex=False
+            )
+            output_count, output_labels = _peft_registry_output_contract(
+                inference, list(self.entry.target_labels)
+            )
+            id2label = dict(enumerate(output_labels))
             self._model = AutoPeftModelForSequenceClassification.from_pretrained(
-                model_path
+                model_path,
+                num_labels=output_count,
+                id2label=id2label,
+                label2id={label: index for index, label in id2label.items()},
+                problem_type="multi_label_classification",
+                token=False,
             ).to(self._torch_device)
         elif kind in {"hf_cascade", "hf_cascade_v2"}:
             gate_path = self._asset(inference["gate_model"])
             specialist_path = self._asset(
-                inference[
-                    "branch_model" if kind == "hf_cascade_v2" else "damage_model"
-                ]
+                inference["branch_model" if kind == "hf_cascade_v2" else "damage_model"]
             )
-            self._tokenizer = AutoTokenizer.from_pretrained(gate_path)
+            self._tokenizer = AutoTokenizer.from_pretrained(
+                gate_path, token=False, fix_mistral_regex=False
+            )
             self._model = AutoModelForSequenceClassification.from_pretrained(
-                gate_path
+                gate_path, token=False
             ).to(self._torch_device)
-            self._damage_tokenizer = AutoTokenizer.from_pretrained(specialist_path)
+            self._damage_tokenizer = AutoTokenizer.from_pretrained(
+                specialist_path, token=False, fix_mistral_regex=False
+            )
             self._damage_model = AutoModelForSequenceClassification.from_pretrained(
-                specialist_path
+                specialist_path, token=False
             ).to(self._torch_device)
         else:
             raise ValueError(f"Tipo de inferencia no soportado: {kind}")
