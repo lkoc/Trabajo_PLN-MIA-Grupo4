@@ -8,7 +8,7 @@
 
 | Control | Resultado |
 |---|---:|
-| Llamadas `\cite{...}` | 77 |
+| Llamadas `\cite{...}` | 91 |
 | Claves bibliográficas únicas citadas | 52 |
 | Entradas incluidas en la bibliografía final | 52 |
 | Claves citadas ausentes de `referencias.bib` | 0 |
@@ -31,8 +31,11 @@ Se incorporó una precisión metodológica necesaria: esas fuentes sustentan las
 
 ## Correspondencia entre afirmaciones y fuentes
 
-- Las afirmaciones de estado del arte se presentan como comparación contextual y conservan autor, corpus y métrica; no se plantea equivalencia directa entre particiones con distinta prevalencia.
+- El capítulo inicial de estado del arte presenta la evolución de enfoques y luego DETOXIS, HatEval, OffendES, EXIST, HateXplain y NaijaHate con autores, aplicación, ámbito lingüístico/geográfico, plataforma, diseño, resultado y límites de comparabilidad. Un capítulo posterior separa el contraste cuantitativo de esa explicación previa.
+- Las cifras externas se comprobaron contra los artículos primarios: DETOXIS F1 0,6461; HatEval macro-F1 español 0,730; OffendES macro-F1 0,7839; EXIST F1 español 0,7944; HateXplain macro-F1 0,687; NaijaHate AP 0,34 representativa frente a 0,83--0,90 enriquecida.
+- La conclusión crítica separa “competitivo y alineado con prácticas del estado del arte aplicado” de “mejor resultado en un benchmark común”; no se plantea equivalencia directa entre particiones con distinta prevalencia.
 - Los métodos de modelos clásicos, Transformers, Qwen, LoRA, ensembles, calibración, bootstrap y clasificación selectiva tienen citas próximas a la afirmación correspondiente.
+- Las definiciones de exactitud balanceada (BA) y área bajo la curva precisión--sensibilidad (AUPRC), así como la decisión de no sumar métricas redundantes, remiten a fuentes metodológicas y al criterio predeclarado del proyecto.
 - Las cifras del corpus, validación, test natural y política de revisión se rotulan como “Resultado propio” y remiten a los artefactos del run 03_07/03_07a.
 - Las capturas de los frontends se identifican como evidencia interna y, cuando corresponde, como capturas históricas; no se usan como respaldo bibliográfico externo.
 - Las conclusiones cuantitativas reproducen los valores mostrados en las diapositivas de resultados: BA 0,840 y macro-AUPRC 0,555 en validación; BA 0,846 en test natural; BA 0,940 con 65,2 % de cobertura automática.
@@ -43,4 +46,4 @@ Se contrastaron los nombres mostrados en la nueva tabla taxonómica con las entr
 
 ## Dictamen
 
-La presentación tiene cobertura bibliográfica suficiente para sus afirmaciones externas, diferencia fuentes académicas, institucionales e internas, y compila sin citas pendientes. La taxonomía queda ahora trazable por categoría y con una atribución prudente de la contribución propia.
+La presentación tiene cobertura bibliográfica suficiente para sus afirmaciones externas, diferencia fuentes académicas, institucionales e internas, y compila sin citas pendientes. La taxonomía queda trazable por categoría; la comparación externa identifica los límites de cada paper; y la contribución propia se atribuye con prudencia, sin debilitar su posicionamiento favorable.

@@ -45,6 +45,12 @@ Para una categoría $k$, la precisión promedio resume la curva precisión--reco
 \AP_k=\sum_n(R_n-R_{n-1})P_n
 \), y el promedio macro asigna igual peso a los cuatro daños \cite{sklearn2026averageprecision,saito2015pr}. La compuerta \texttt{ANY\_DAMAGE} se evalúa con exactitud balanceada (BA), media de sensibilidad y especificidad, para no favorecer la clase segura mayoritaria.
 
+\subsection{Elección e interpretación de las métricas}
+
+Las métricas responden a decisiones distintas. La métrica principal del ranking es la BA de \texttt{ANY\_DAMAGE} OOF a cobertura completa: mide por igual la capacidad de detectar daño y reconocer contenido seguro. Una BA de 0,84 no significa que 84\% de todos los chunks sean correctos, sino que el promedio entre sensibilidad y especificidad es 0,84 \cite{brodersen2010balanced}. La macro-AUPRC promedia sin ponderación la precisión promedio de los cuatro daños a través de los umbrales; un valor de 0,55 no es un porcentaje de aciertos y solo se compara directamente sobre el mismo panel y prevalencia. La macro-F1 promedia por daño $2PR/(P+R)$ después de fijar umbrales y describe el compromiso entre precisión y recobrado, sin usar verdaderos negativos \cite{sokolova2009metrics}.
+
+La exactitud ordinaria y los promedios micro o ponderados no gobiernan el ranking porque la abundancia de \texttt{SEGURO} y de las etiquetas con mayor soporte puede ocultar omisiones en daños raros. ROC-AUC se conserva como diagnóstico secundario; ante positivos escasos, la curva precisión--recobrado muestra de forma más directa cuántas alertas relevantes aparecen entre las predicciones positivas \cite{saito2015pr,davis2006pr}. Tampoco se suman BA, FNR, FPR, AUPRC y F1 en una nota única: varias cantidades comparten errores y sus escalas no representan la misma utilidad. El riesgo $R_{0,67}=0,67\,\mathrm{FNR}+0,33\,\mathrm{FPR}$ expresa la decisión local de penalizar aproximadamente el doble una omisión que una falsa alerta, mientras la tasa de revisión mide capacidad humana y se interpreta junto con el error de la ruta automática.
+
 \subsection{Ensemble por promedio de probabilidades}
 
 El ensemble congelado combina los mejores representantes de cada familia: regresión logística $C=0,5$, cascada E5 v2 y Qwen3--LoRA. Para cada salida $k$, promedia los tres scores sin pesos y calibra el promedio:
@@ -60,6 +66,8 @@ La decisión compara $\hat p_k$ con un umbral $\theta_k$ fijado en validation. E
 \subsection{Criterio de selección e inferencia estadística}
 
 La política de selección es lexicográfica y no suma métricas redundantes. Primero maximiza BA \texttt{ANY\_DAMAGE} OOF a cobertura completa. Luego exige una salvaguarda de macro-AUPRC de daños frente al mejor individuo, con margen de no inferioridad predeclarado de 0,10; conserva la frontera de Pareto BA--macro-AUPRC; y desempata por menor riesgo $R_{0,67}=0,67\,\mathrm{FNR}+0,33\,\mathrm{FPR}$, seguido de mayor macro-AUPRC. El margen 0,10 es permisivo y se conserva como limitación, no como prueba de equivalencia.
+
+La aplicación al resultado final muestra la función de cada paso. El promedio simple obtiene BA 0,840, frente a 0,838 del promedio ponderado y 0,831 de Qwen3--LoRA; por ello lidera el criterio primario. Su macro-AUPRC es 0,555, superior en 0,039 a 0,516 del mejor individuo, de modo que supera la salvaguarda. El promedio ponderado alcanza AUPRC 0,556 pero BA menor, por lo que ambos ensembles permanecen en la frontera de Pareto: ninguno mejora simultáneamente las dos coordenadas. Si se requiere el desempate de costo, el promedio simple tiene $R_{0,67}=0,67(0,127)+0,33(0,193)=0,149$, menor que 0,152 del ponderado. Estas operaciones se aplican en secuencia; no se suman en una puntuación compuesta.
 
 Las diferencias se estiman con 2\,000 réplicas bootstrap pareadas por video y ajuste de Holm \cite{efron1979bootstrap,field2007clusterbootstrap,holm1979multiple}. El remuestreo respeta la correlación entre chunks de un mismo video; no sustituye la variación entre semillas.
 

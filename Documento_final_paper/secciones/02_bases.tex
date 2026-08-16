@@ -4,9 +4,36 @@
 
 La moderación de una plataforma combina reglas, trabajo humano y sistemas automáticos. La predicción de un modelo no resuelve por sí sola la política, la interpretación ni la responsabilidad de una decisión \cite{gorwa2020moderation}. La calidad de un clasificador de lenguaje abusivo depende de cómo se define el daño, cómo se toma la muestra y quién asigna las etiquetas; los errores de esas etapas pueden pasar al modelo \cite{vidgen2020directions}. Los \emph{data statements} y las \emph{data cards} proponen documentar el origen, el idioma, la recolección, la anotación, los usos previstos y los límites de un conjunto de datos \cite{bender2018datastatements,pushkarna2022datacards}.
 
-Los corpus previos muestran distintas formas de construir la tarea. Wulczyn \emph{et al.} estudian ataques personales a gran escala \cite{wulczyn2017exmachina}; HateXplain añade el blanco del abuso y explicaciones \cite{mathew2021hatexplain}; y HateCheck muestra que una métrica agregada puede ocultar fallas funcionales \cite{rottger2021hatecheck}. La literatura también muestra que las marcas de identidad o las variedades lingüísticas pueden confundirse con toxicidad \cite{sap2019racialbias}. En YouTube, un estudio analiza lenguaje abusivo en comentarios en inglés \cite{bertaglia2021youtube}; este trabajo, en cambio, usa subtítulos en español. Para español, HatEval \cite{basile2019hateval}, OffendES \cite{plaza2021offendes}, DETOXIS \cite{taule2021detoxis} y EXIST \cite{rodriguez2021exist} son antecedentes de odio, ofensa, toxicidad y sexismo. Ninguno forma parte del entrenamiento de este proyecto.
+\subsection{Enfoques de solución y trabajos comparables}
 
-NaijaHate compara datos representativos con conjuntos enriquecidos y muestra que el desempeño y la carga de revisión pueden cambiar entre ambos regímenes \cite{tonneau2024naijahate}. Por eso, el proyecto reporta como resultado principal el test con prevalencia natural y separa de él una vista secundaria enriquecida 4:1, derivada de las mismas predicciones. Los datos y el modelo de NaijaHate no forman parte del estudio.
+El estado del arte resuelve la detección de lenguaje dañino como una cadena y no como la elección aislada de un algoritmo. Primero delimita corpus, población, taxonomía y procedimiento de anotación; después representa el texto mediante rasgos léxicos o modelos contextuales; combina clasificadores cuando sus errores son complementarios; evalúa con métricas sensibles al desbalance y pruebas por fenómeno; y deriva los casos inciertos a revisión humana \cite{vidgen2020directions,bender2018datastatements,sparckjones1972idf,vaswani2017attention,dietterich2000ensemble,rottger2021hatecheck,mozannar2020defer}. Esta secuencia organiza el diseño del presente trabajo: datos locales documentados, tres familias de representación, ensemble, test con prevalencia explícita y supervisión humana.
+
+Los corpus previos muestran distintas formas de construir la tarea. Wulczyn \emph{et al.} estudian ataques personales a gran escala \cite{wulczyn2017exmachina}; HateXplain añade el blanco del abuso y explicaciones humanas \cite{mathew2021hatexplain}; y HateCheck muestra que una métrica agregada puede ocultar fallas funcionales \cite{rottger2021hatecheck}. La literatura también advierte que las marcas de identidad o las variedades lingüísticas pueden confundirse con toxicidad \cite{sap2019racialbias}. En YouTube, Bertaglia \emph{et al.} analizan lenguaje abusivo en comentarios en inglés \cite{bertaglia2021youtube}; este estudio usa, en cambio, habla transcrita en español y conserva el intervalo temporal de cada evidencia.
+
+La Tabla~\ref{tab:estado_arte} ubica seis antecedentes empleados para interpretar el resultado final. Sus cifras no forman una clasificación común: cambian la unidad de análisis, el idioma, el muestreo, la prevalencia, las categorías y la partición. Ninguno de estos datos o modelos interviene en el entrenamiento del proyecto.
+
+\begin{table*}[t]
+\centering
+\caption{Trabajos relacionados, ámbito de aplicación y relación con el estudio}
+\label{tab:estado_arte}
+\scriptsize
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{20mm}>{\raggedright\arraybackslash}p{31mm}>{\raggedright\arraybackslash}p{57mm}X}
+\toprule
+\textbf{Trabajo} & \textbf{País o ámbito} & \textbf{Datos, tarea y resultado publicado} & \textbf{Semejanza y diferencia principal} \\
+\midrule
+DETOXIS \cite{taule2021detoxis} & España; español & 4\,359 comentarios a noticias sobre inmigración; detección binaria de toxicidad; mejor F1 de 0,6461. & Coincide en idioma y daño textual. Cambian la unidad, el dominio temático y el contrato binario. \\
+HatEval \cite{basile2019hateval} & Tarea internacional; Twitter en español e inglés & Odio contra mujeres e inmigrantes, con rasgos de agresividad y blanco; mejor macro-F1 en español de 0,730. & Comparte categorías de racismo y género, pero usa mensajes breves y muestreo dirigido al blanco. \\
+OffendES \cite{plaza2021offendes} & España; español & 47\,128 comentarios de YouTube, Instagram y Twitter alrededor de influenciadores jóvenes; macro-F1 binario de 0,7839. & Es el antecedente más próximo por YouTube y español; clasifica comentarios escritos, no habla transcrita ni evidencia temporal. \\
+EXIST \cite{rodriguez2021exist} & Tarea internacional; español e inglés & Más de 11\,000 textos de Twitter y Gab; identificación y categorización de sexismo; mejor F1 español de 0,7944. & Se aproxima a género/identidad y emplea supervisión experta; no cubre los otros tres daños del proyecto. \\
+HateXplain \cite{mathew2021hatexplain} & Twitter y Gab en inglés; autores de India y Alemania & Cerca de 20 mil publicaciones con tres clases, blanco y racionales humanos; macro-F1 de 0,687 para BERT-HateXplain. & Comparte la necesidad de ligar decisión y evidencia; usa racionales por token, no intervalos de video ni español peruano. \\
+NaijaHate \cite{tonneau2024naijahate} & Nigeria; Twitter & 35\,976 tuits y una muestra representativa; AP cercana a 0,34 en la muestra aleatoria frente a 0,83--0,90 en conjuntos enriquecidos. & Comparte la preocupación por dominio local y prevalencia; país, idioma, etiqueta y diseño muestral impiden comparar AP de forma directa. \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+NaijaHate evidencia que el desempeño aparente y la carga de revisión pueden cambiar entre muestras representativas y enriquecidas \cite{tonneau2024naijahate}. Por ello el resultado principal de este proyecto corresponde al test con prevalencia natural del corpus, mientras una vista secundaria 4:1 se deriva de las mismas predicciones únicamente para contextualizar trabajos que emplean muestras enriquecidas.
+
+\subsection{Taxonomía de daño y adaptación peruana}
 
 Para ordenar el espacio de daño se parte de dos distinciones académicas. Waseem \emph{et al.} separan el abuso dirigido a una persona o entidad del dirigido a un grupo, y el abuso explícito del implícito \cite{waseem2017abuse}. Banko \emph{et al.} recomiendan categorías finas, criterios de inclusión y excepciones; su tipología distingue, entre otros, ataque por identidad, insulto, doxeo, agresión sexual y amenaza de violencia \cite{banko2020taxonomy}. El proyecto combina estas distinciones generales con antecedentes sociales e institucionales pertinentes al contexto peruano.
 

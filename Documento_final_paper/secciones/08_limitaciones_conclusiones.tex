@@ -22,7 +22,11 @@ La apertura única de 22\,684 chunks de test sitúa la BA de la compuerta en 0,8
 
 La integración reúne la regresión logística, la cascada E5, Qwen3--LoRA y el ensemble suave con calibradores, umbrales, evidencia temporal y registro de revisión. La verificación funcional local confirma que la interfaz invoca los tres miembros y devuelve también el promedio suave congelado. La combinación conserva una señal léxica rápida, una arquitectura contextual de dos etapas y un modelo de lenguaje adaptado, mientras mantiene la decisión final bajo supervisión humana.
 
-En conjunto, el sistema presenta un desempeño competitivo para detección y priorización de contenido peruano: F1 binario 0,66 en la vista 4:1, comparable en magnitud con resultados publicados de tareas relacionadas, y BA 0,85 bajo la prevalencia natural del corpus. Su principal fortaleza es sistémica: datos auditables, comparación común, selección congelada, test separado y supervisión humana conviven en un mismo flujo. El siguiente paso es validar ese flujo prospectivamente con capacidad, costos y deriva reales.
+\newpage
+
+En conjunto, el sistema presenta un desempeño competitivo para detección y priorización de contenido peruano: F1 binario 0,66 en la vista 4:1, comparable en magnitud con resultados publicados de tareas relacionadas, y BA 0,85 bajo la prevalencia natural del corpus. Su principal fortaleza es sistémica: datos auditables, comparación común, selección congelada, test separado y supervisión humana conviven en un mismo flujo. Esta combinación está alineada con el estado del arte aplicado, aunque la superioridad predictiva sobre un benchmark externo común permanece sin demostrar. El siguiente paso es validar el flujo prospectivamente con canales no observados, doble anotación independiente, varias semillas, capacidad, costos y deriva reales.
+
+Durante la demostración local, la interfaz de \href{http://127.0.0.1:8765/}{etiquetado} y el \href{http://127.0.0.1:8876/}{frontend de producción} permiten recorrer el control humano y comparar los tres ganadores por tipo con el ensemble congelado. Estas direcciones requieren que los servicios del proyecto estén activos en el equipo del lector; documentan el artefacto, pero no sustituyen una validación de campo.
 
 \section*{Disponibilidad y ética}
 

@@ -16,7 +16,7 @@ La auditoría utilizó la jerarquía y el alcance definidos por:
 - `guia_estructura_paper_ieee.md` y `guia_redaccion_paper_ieee.md`;
 - el inventario bibliográfico `../referencias_y_descargas/indice_referencias.csv` y las instrucciones de `figuras/README.md`.
 
-`busqueda-bibliografica-profunda.md` no se activó como protocolo completo porque este cierre no solicitó una nueva revisión sistemática; sí se volvieron a contrastar las fuentes primarias que sostienen el modelo Qwen y la comparación cuantitativa más visible. `presentacion-academica.md` se controla por separado en `../Presentacion_BEAMER_resultados_20260815/AUDITORIA_FINAL_VISUAL.md` y `AUDITORIA_FINAL_REFERENCIAS.md`.
+`busqueda-bibliografica-profunda.md` se aplicó como búsqueda narrativa dirigida, no como revisión sistemática: se partió de los trabajos centinela del proyecto y se contrastaron las fuentes primarias que sostienen Qwen, las métricas y la comparación cuantitativa externa. `presentacion-academica.md` se controla además en `../Presentacion_BEAMER_resultados_20260815/AUDITORIA_FINAL_VISUAL.md` y `AUDITORIA_FINAL_REFERENCIAS.md`; sus criterios sustantivos se trasladaron al artículo.
 
 Las enmiendas específicas del 5 de agosto describían correctamente un estado histórico en el que las métricas v2 estaban pendientes. Ambas guías recibieron una enmienda final v2.1 para dejar explícito que los artefactos canónicos actuales sustituyen esa cláusula en el manuscrito vigente.
 
@@ -29,10 +29,13 @@ Se aplicó la prioridad `artefacto canónico del run > síntesis 03_07a > docume
 3. `../resultados/modelos/test_final_abierto_una_vez.json`;
 4. `../resultados/modelos/resumen_03_07a.json` y sus tablas;
 5. `../docs/artefactos/auditoria_estado_final_182461.json`.
+6. `../docs/OPTIMIZACION_LONGITUD_CHUNKS.md` y `../docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md`.
 
 Controles reproducidos:
 
-- corpus: 173 240 chunks elegibles, 4 906 videos y 14 163 chunks con daño;
+- alcance inicial: 182 461 chunks, 5 385 videos y 322 canales; corpus efectivo: 173 240 chunks elegibles, 4 906 videos, 276 canales y 14 163 chunks con daño;
+- concentración: 33 203 chunks en el canal principal; 41 % en los cinco primeros y 56 % en los diez primeros;
+- ventana temporal: 30 s seleccionados en validation; AP macro de daño 0,12, IC95 % [0,11, 0,14], en el perfil clásico robusto;
 - comparación: 28 candidatos individuales y cinco ensembles sobre 10 600 filas de validation;
 - selección: `ensemble_soft_mean`, con clásico, cascada E5 v2 y Qwen3--LoRA;
 - validation OOF: BA 0,84, macro-AUPRC de daños 0,55 y macro-F1 de daños 0,57;
@@ -45,15 +48,15 @@ Los conteos, identificadores, hashes y parámetros de protocolo se conservan exa
 
 ## 3. Auditoría de citas y bibliografía
 
-La compilación efectiva contiene 18 fuentes TeX, 118 comandos de cita y 193 apariciones de claves. El resultado bibliográfico es:
+La compilación efectiva contiene 18 fuentes TeX, 125 comandos de cita y 208 apariciones de claves. El resultado bibliográfico es:
 
-- 99 referencias numeradas en el PDF, más una entrada de control `IEEEtranBSTCTL`;
+- 100 referencias numeradas en el PDF;
 - 141 registros en `referencias.bib`;
 - 41 registros inactivos que no se emiten en el PDF;
 - 0 claves citadas sin entrada BibTeX;
 - 0 claves BibTeX duplicadas;
 - 0 citas o referencias cruzadas indefinidas;
-- 31 etiquetas, sin duplicados, y 0 etiquetas sin referencia entrante.
+- 33 etiquetas, sin duplicados, y 0 etiquetas sin referencia entrante.
 
 El inventario de procedencia contiene 121 fuentes: 81 PDF de acceso abierto validados y presentes localmente, y 40 recursos sin PDF local con estado y justificación explícitos. No se interpreta la disponibilidad de un PDF como prueba de que toda tarea externa sea comparable con el corpus propio.
 
@@ -64,6 +67,7 @@ Se reabrieron las fuentes primarias de los números comparativos más visibles:
 - HatEval: macro-F1 máximo 0,7300 en español;
 - HateXplain: macro-F1 0,687 para BERT-HateXplain;
 - DETOXIS: F-measure 0,6461 del primer sistema.
+- NaijaHate: 35 976 tuits y AP cercana a 0,34 en una muestra representativa frente a 0,83--0,90 en conjuntos enriquecidos.
 
 El texto redondea esas cifras a 0,79, 0,78, 0,73, 0,69 y 0,65, respectivamente. La comparación se mantiene como contextual: cambian corpus, idioma, unidad, taxonomía, partición y prevalencia. El informe técnico de Qwen3 y la tarjeta versionada de `Qwen/Qwen3-0.6B-Base` respaldan la familia y el checkpoint; el artículo distingue esos documentos de la evidencia empírica del proyecto.
 
@@ -74,11 +78,14 @@ El texto redondea esas cifras a 0,79, 0,78, 0,73, 0,69 y 0,65, respectivamente. 
 | Guías específicas | La enmienda histórica aún decía que v2 no tenía métricas. | Alta | Jerarquía de fuentes y artefactos `03_07`/`03_07a`. | Se añadió una enmienda final v2.1 sin borrar el antecedente. | Cerrado |
 | Cuerpo y tablas | Varias métricas conservaban tres o más cifras aunque la guía exige dos significativas. | Media | Guía de redacción. | Se redondeó la presentación editorial; parámetros reproducibles siguen exactos. | Cerrado |
 | Conclusiones | La redacción anterior podía leerse como lista de cumplimiento de objetivos. | Alta | Guía de cierre narrativo. | Se reescribió como síntesis de brechas reducidas, evidencia, límites y siguiente paso. | Cerrado |
-| Figuras, tablas y anexos | Faltaban algunas llamadas explícitas desde el texto. | Media | Regla de referencia entrante. | Todas las 31 etiquetas reciben una referencia desde el discurso. | Cerrado |
+| Figuras, tablas y anexos | Faltaban algunas llamadas explícitas desde el texto. | Media | Regla de referencia entrante. | Todas las 33 etiquetas reciben una referencia desde el discurso. | Cerrado |
 | Anexos | Algunos anexos compartían página y se debilitaba la jerarquía editorial. | Media | Guía específica de anexos. | Los apéndices A--E comienzan en página nueva; D usa dos páginas por sus dos capturas. | Cerrado |
 | Transición a anexos | Una frase aislada ocupaba casi toda una página. | Baja | Auditoría visual de todas las páginas. | Se compactó disponibilidad y ética sin retirar contenido ni citas. | Cerrado |
 | Producción | La documentación previa aún marcaba el Transformer como pendiente. | Alta | Verificación funcional exigida para afirmar integración. | Se restauraron y verificaron los pesos; los cuatro modos respondieron por API local sobre CPU. | Cerrado |
 | Estado del arte | Un primer lugar interno podía confundirse con superioridad universal. | Alta | Validez externa y bootstrap inconcluso. | Se mantiene “competitividad contextual” y se explicitan las diferencias experimentales. | Cerrado |
+| Estado del arte | Faltaba describir ámbito, unidad, tarea y relación de cada trabajo usado como referencia cuantitativa. | Media | Correspondencia fuente--afirmación. | Se añadió una tabla con DETOXIS, HatEval, OffendES, EXIST, HateXplain y NaijaHate, seguida de un juicio crítico de comparabilidad. | Cerrado |
+| Corpus | Los totales efectivos no mostraban alcance inicial, concentración por canal ni dificultad de construcción. | Media | Reconciliación y estadística descriptiva. | Se incorporaron 182 461 observaciones iniciales, exclusiones, dispersión video/canal, top 5/top 10 y controles ante subtítulos, sesgo y contexto. | Cerrado |
+| Métricas | La fórmula no bastaba para explicar por qué BA gobierna y F1 no. | Alta | Justificación de variables y decisión. | Se añadió interpretación, dirección, dependencia del umbral y descarte razonado de accuracy, micro-F1, ROC-AUC y suma de métricas. | Cerrado |
 | Bibliografía maestra | 41 entradas no se citan en esta versión. | Baja | BibTeX solo emite las claves usadas. | Se conservan como catálogo compartido; ninguna aparece como referencia huérfana en el PDF. | Aceptado |
 | Registro LaTeX | Persisten avisos `Underfull` por URL e identificadores largos. | Baja | No implican recorte. | Inspección visual confirmó márgenes y legibilidad; no hay `Overfull`. | Aceptado |
 
@@ -97,9 +104,9 @@ El texto redondea esas cifras a 0,79, 0,78, 0,73, 0,69 y 0,65, respectivamente. 
 ## 6. Revisión visual y compilación
 
 - Documento `IEEEtran` en modo conferencia, papel A4 físico: 595,276 × 841,89 pt (210 × 297 mm).
-- PDF final: 20 páginas.
+- PDF final: 22 páginas.
 - 0 errores fatales, 0 citas indefinidas, 0 referencias indefinidas y 0 cajas `Overfull`.
-- Portada, texto a dos columnas, 15 tablas, 11 figuras, fórmulas, apéndices y 99 referencias fueron inspeccionados tras rasterizar las 20 páginas.
+- Portada, texto a dos columnas, 17 tablas, 11 figuras, fórmulas, apéndices y 100 referencias fueron inspeccionados tras rasterizar las 22 páginas.
 - Las tablas del ensemble y de resultados ampliados son legibles a tamaño normal.
 - Las capturas de etiquetado y producción ocupan el ancho útil y conservan texto reconocible.
 - Los apéndices y la bibliografía no contienen páginas vacías ni elementos cortados.

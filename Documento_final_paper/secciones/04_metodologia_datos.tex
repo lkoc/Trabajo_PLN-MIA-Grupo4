@@ -13,9 +13,13 @@ La investigación sigue DSR: identifica una necesidad, define objetivos, constru
 
 \subsection{Adquisición, limpieza y unidad de análisis}
 
-El universo de adquisición comprende videos públicos de YouTube vinculados con el Perú y con subtítulos disponibles en español. La búsqueda incluye periodismo, política, opinión, humor, entretenimiento, deportes, gastronomía y viajes, además de búsquedas dirigidas para aumentar categorías poco frecuentes. Por ello el corpus permite entrenar y comparar, pero no estima la prevalencia de daño de toda la plataforma. La documentación de origen, anotación y límites sigue las recomendaciones de \emph{data statements} y \emph{data cards} \cite{bender2018datastatements,pushkarna2022datacards}.
+El universo de adquisición comprende videos públicos de YouTube vinculados con el Perú y con subtítulos disponibles en español. La búsqueda incluye periodismo, política, opinión, humor, entretenimiento, deportes, gastronomía y viajes, además de búsquedas dirigidas para aumentar categorías poco frecuentes. El alcance previo a exclusiones reunió 182\,461 chunks, 5\,385 videos y 322 canales. Por ello el corpus permite entrenar y comparar, pero no estima la prevalencia de daño de toda la plataforma. La documentación de origen, anotación y límites sigue las recomendaciones de \emph{data statements} y \emph{data cards} \cite{bender2018datastatements,pushkarna2022datacards}.
 
 Las pistas VTT se recuperan con \texttt{yt-dlp} o YouTube Transcript API \cite{ytdlp2026,depoix2026transcript}. No se descarga audio ni se ejecuta reconocimiento de voz propio. La limpieza usa normalización Unicode NFKC \cite{unicode2025normalization}, unifica espacios y elimina repeticiones consecutivas del VTT. La unidad de análisis es el chunk: texto contiguo con \texttt{video\_id}, tiempos inicial/final, posición, canal y procedencia. La segmentación se cierra al alcanzar 30 segundos o 600 caracteres y exige al menos 90 caracteres; no introduce solapamiento deliberado. La Fig.~\ref{fig:pipeline} muestra la transformación y los controles que separan datos, particiones, selección y test.
+
+El tamaño temporal se selecciona en un ejercicio independiente con los mismos videos de referencia y ventanas de 15, 20, 25, 30 y 35 segundos. Los modelos se vuelven a entrenar y la decisión usa solo validation; 1\,000 réplicas pareadas por video cuantifican la incertidumbre. La ventana de 30 segundos alcanza AP macro de daño de 0,12, IC95\% [0,11, 0,14], en el perfil clásico robusto y queda congelada antes de consultar test. Las comprobaciones con MiniLM y un modelo generativo no aportan evidencia suficiente para sustituirla. Esta elección conserva más contexto que las ventanas cortas sin asumir que una duración observada es óptima fuera del corpus \cite{cawley2010selection,saito2015pr}.
+
+La construcción enfrenta tres dificultades principales: disponibilidad cambiante o incompleta de subtítulos; concentración por canal y búsquedas dirigidas que impiden interpretar el corpus como muestra probabilística; y modismos, ironía, humor, contexto truncado y daños coexistentes que vuelven insuficiente la coincidencia de palabras. La materialización de las transcripciones, las exclusiones trazables, la separación por video, las señales de revisión y la conservación del texto con sus tiempos controlan estos riesgos sin eliminarlos.
 
 \begin{figure*}[t]
 \centering
@@ -26,7 +30,7 @@ Las pistas VTT se recuperan con \texttt{yt-dlp} o YouTube Transcript API \cite{y
 
 \subsection{Corpus v2.1}
 
-Después de deduplicar y excluir 9\,221 decisiones no elegibles, el snapshot contiene 173\,240 chunks de 4\,906 videos y 276 canales efectivos. Hay 159\,077 chunks \texttt{SEGURO} y 14\,163 con al menos un daño; estos últimos reúnen 17\,052 asignaciones y 2\,709 casos multietiqueta. La Tabla~\ref{tab:fuentes} muestra la distribución operacional.
+Después de deduplicar y excluir 9\,221 decisiones no elegibles (5,1\% del alcance), el snapshot contiene 173\,240 chunks de 4\,906 videos y 276 canales efectivos. Hay 159\,077 chunks \texttt{SEGURO} (92\%) y 14\,163 con al menos un daño (8,2\%), una relación de 11:1; estos últimos reúnen 17\,052 asignaciones y 2\,709 casos multietiqueta. La Tabla~\ref{tab:fuentes} muestra la distribución operacional.
 
 \begin{table}[t]
 \centering
@@ -51,6 +55,29 @@ Chunks con más de un daño & 2\,709 \\
 \begin{minipage}{.98\columnwidth}\vspace{1mm}\footnotesize
 \emph{Nota:} los cuatro daños son multietiqueta y no suman “algún daño”. \texttt{SEGURO} es excluyente.
 \end{minipage}
+\end{table}
+
+La distribución por fuente presenta una cola larga. Un video aporta en promedio 35 chunks, con mediana de 19 y máximo de 767; un canal aporta en promedio 630, con mediana de 26 y máximo de 33\,203. Esta diferencia entre media y mediana revela concentración y justifica informar los canales principales (Tabla~\ref{tab:concentracion_canales}) y evaluar en el futuro generalización hacia canales no observados.
+
+\begin{table}[t]
+\centering
+\caption{Canales con mayor número de chunks elegibles y concentración acumulada}
+\label{tab:concentracion_canales}
+\footnotesize
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Canal o grupo} & \textbf{Chunks} & \textbf{Fracción} \\
+\midrule
+Hablando Huevadas & 33\,203 & 19\% \\
+Arde Troya con Juliana Oxenford & 12\,295 & 7,1\% \\
+Nunca MAS & 11\,364 & 6,6\% \\
+Goblinciano & 8\,166 & 4,7\% \\
+Nada Espacial & 6\,224 & 3,6\% \\
+\midrule
+Primeros cinco & 71\,252 & 41\% \\
+Primeros diez & 96\,845 & 56\% \\
+\bottomrule
+\end{tabular}
 \end{table}
 
 \subsection{Taxonomía y contrato de salida}

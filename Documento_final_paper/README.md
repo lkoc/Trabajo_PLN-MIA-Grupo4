@@ -14,12 +14,18 @@ Las cinco salidas aprendidas son `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR
 
 ## Resultado principal
 
-- Corpus: 173 240 chunks elegibles de 4 906 videos; 14 163 contienen al menos un daño.
+- Corpus: 182 461 chunks observados y 173 240 elegibles de 4 906 videos y 276 canales; 14 163 contienen al menos un daño.
+- Concentración: el canal principal aporta 19 %; los cinco primeros, 41 %; los diez primeros, 56 %.
+- Ventana temporal: 30 s, seleccionada en validation mediante comparación pareada de 15--35 s.
 - Comparación: 28 modelos individuales y cinco ensembles sobre una validación común de 10 600 filas.
 - Selección congelada: `ensemble_soft_mean`, compuesto por regresión logística TF--IDF, cascada E5 v2 y Qwen3--0.6B con LoRA.
 - Validation OOF: BA 0,84; macro-AUPRC de daños 0,55; macro-F1 de daños 0,57.
 - Test natural abierto una vez: 22 684 chunks; BA 0,85 y sensibilidad 0,91 para cualquier daño.
 - Política selectiva: 35 % a revisión; sobre el 65 % automático, BA 0,94.
+
+La métrica primaria es BA de `ANY_DAMAGE` OOF a cobertura completa. Macro-AUPRC de los cuatro daños actúa como salvaguarda; macro-F1 describe la decisión después de fijar umbrales y no gobierna el primer orden del ranking.
+
+La comparación externa describe DETOXIS, HatEval, OffendES, EXIST, HateXplain y NaijaHate por ámbito, tarea y diseño. El artículo concluye competitividad contextual y alineación con el estado del arte aplicado, sin afirmar superioridad sobre un benchmark común.
 
 El estado inferencial sigue siendo `statistical_tie_or_inconclusive`: el ensemble ocupa el primer lugar por el criterio predeclarado, pero el contraste pareado no demuestra superioridad estadística frente al retador más cercano.
 
@@ -41,6 +47,7 @@ El estado inferencial sigue siendo `statistical_tie_or_inconclusive`: el ensembl
 3. `../resultados/modelos/test_final_abierto_una_vez.json` para test natural y vista secundaria 4:1.
 4. `../resultados/modelos/resumen_03_07a.json` y sus tablas para la síntesis editorial.
 5. `../docs/artefactos/auditoria_estado_final_182461.json` para corpus, particiones y auditoría del etiquetado.
+6. `../docs/OPTIMIZACION_LONGITUD_CHUNKS.md` y `../docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md` para la ventana de 30 s.
 
 ## Compilación
 
@@ -50,4 +57,4 @@ Desde esta carpeta:
 latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error paper_moderador_contenido_youtube_ieee.tex
 ```
 
-El cierre exige cero errores, citas o referencias indefinidas y cajas `Overfull`, además de inspección visual de todas las páginas.
+El PDF vigente tiene 22 páginas A4. El cierre exige cero errores, citas o referencias indefinidas y cajas `Overfull`, además de inspección visual de todas las páginas.

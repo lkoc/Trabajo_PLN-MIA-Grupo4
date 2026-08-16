@@ -158,9 +158,31 @@
   \end{tikzpicture}
 \end{frame}
 
+\begin{frame}[shrink=10]{Índice}
+  \framesubtitle{Siete capítulos para recorrer el problema, la evidencia y el producto}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \smallcard{Blue}{01 · Problema y propuesta}{Problema real, objeto de estudio, objetivos y alcance de la solución.}
+      \vspace{1mm}
+      \smallcard{Coral}{02 · Estado del arte y enfoques}{Métodos vigentes, benchmarks y decisiones que orientan la solución.}
+      \vspace{1mm}
+      \smallcard{Teal}{03 · Datos y etiquetado}{Corpus final, canales, taxonomía, tamaño de chunk y revisión trazable.}
+      \vspace{1mm}
+      \smallcard{Purple}{04 · Entrenamiento y ensembles}{Familias de modelos, adaptación de Qwen, combinaciones y criterio de ranking.}
+    \end{column}
+    \begin{column}{.48\textwidth}
+      \smallcard{Gold}{05 · Resultados finales}{Ganadores globales, por tipo y categoría; test natural y revisión humana.}
+      \vspace{2mm}
+      \smallcard{Blue}{06 · Comparación externa}{Resultados publicados y análisis crítico de comparabilidad.}
+      \vspace{2mm}
+      \smallcard{Green}{07 · Producto y conclusiones}{Frontends, cumplimiento de objetivos, límites y siguientes pasos.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
 \chapterdivider{01}{Problema y propuesta}
-  {Formulación del problema, objeto de estudio, objetivos y posición frente al estado del arte.}
-  {PROBLEMA REAL \quad OBJETO DE ESTUDIO \quad OBJETIVOS \quad ESTADO DEL ARTE}{Blue}
+  {Formulación del problema, objeto de estudio, objetivos y alcance de la solución.}
+  {PROBLEMA REAL \quad OBJETO DE ESTUDIO \quad OBJETIVOS \quad PROPUESTA}{Blue}
 
 \begin{frame}[shrink=2]{Resultados principales del sistema}
   \framesubtitle{Desempeño competitivo con derivación humana explícita}
@@ -247,26 +269,112 @@
   \externalNote{Diseño y evaluación iterativa de artefactos~\cite{hevner2004dsr,peffers2007dsrm}.}
 \end{frame}
 
-\begin{frame}{Estado del arte: tareas, corpus y evaluación}
-  \framesubtitle{La evaluación realista constituye una ventaja metodológica}
+\section{2. Estado del arte y enfoques de solución}
+
+\chapterdivider{02}{Estado del arte y enfoques de solución}
+  {Cómo se resuelve el problema: datos, representación, combinación, evaluación y supervisión.}
+  {MÉTODOS \quad BENCHMARKS \quad EXPLICABILIDAD \quad OPERACIÓN}{Coral}
+
+\begin{frame}[shrink=5]{Cómo aborda el estado del arte este problema}
+  \framesubtitle{La solución actual es una cadena de decisiones, no un único algoritmo}
+  \centering
+  \begin{tikzpicture}[
+    n/.style={draw,rounded corners=3pt,text width=23mm,minimum height=25mm,align=left,inner sep=2mm,font=\tiny},
+    a/.style={-{Stealth[length=1.7mm]},thick,draw=Muted}]
+    \node[n,draw=Blue!50,fill=Blue!7] (d) {\textbf{1. Datos y taxonomía}\par\smallskip Muestreo, reglas de anotación, blancos y contexto definen qué aprende el sistema~\cite{vidgen2020directions,bender2018datastatements}.};
+    \node[n,draw=Purple!50,fill=Purple!7,right=3mm of d] (r) {\textbf{2. Representación}\par\smallskip TF--IDF y modelos lineales siguen siendo bases fuertes; BERT y Transformers capturan contexto~\cite{sparckjones1972idf,vaswani2017attention}.};
+    \node[n,draw=Gold!55,fill=Gold!9,right=3mm of r] (e) {\textbf{3. Combinación}\par\smallskip Ensembles de modelos diversos reducen errores coincidentes y estabilizan decisiones~\cite{dietterich2000ensemble,lam1997majority}.};
+    \node[n,draw=Teal!50,fill=Teal!7,right=3mm of e] (v) {\textbf{4. Evaluación}\par\smallskip AUPRC, pruebas funcionales y muestras representativas evitan depender de una cifra optimista~\cite{saito2015pr,rottger2021hatecheck,tonneau2024naijahate}.};
+    \node[n,draw=Coral!50,fill=Coral!7,right=3mm of v] (h) {\textbf{5. Operación humana}\par\smallskip Calibración, abstención y derivación conservan la decisión sensible en una persona~\cite{guo2017calibration,geifman2017selective,mozannar2020defer}.};
+    \draw[a] (d)--(r); \draw[a] (r)--(e); \draw[a] (e)--(v); \draw[a] (v)--(h);
+  \end{tikzpicture}
+  \vspace{3mm}
   \begin{columns}[T,onlytextwidth]
-    \begin{column}{.48\textwidth}
-      \smallcard{Blue}{Español}{HatEval estudia odio contra mujeres e inmigrantes; EXIST, sexismo; DETOXIS, toxicidad; OffendES, ofensa en redes. Las etiquetas y plataformas no son intercambiables~\cite{basile2019hateval,rodriguez2021exist,taule2021detoxis,plaza2021offendes}.}
-      \vspace{2mm}
-      \smallcard{Purple}{Contexto y explicación}{HateXplain incorpora blanco y racionales; HateCheck demuestra que una cifra agregada puede ocultar fallas funcionales~\cite{mathew2021hatexplain,rottger2021hatecheck}.}
+    \begin{column}{.31\textwidth}
+      \smallcard{Blue}{Primera generación}{Léxicos, bolsa de palabras, TF--IDF y clasificadores lineales: bajo costo y señales transparentes.}
     \end{column}
-    \begin{column}{.48\textwidth}
-      \smallcard{Gold}{Muestreo real}{NaijaHate muestra precisión promedio (AP) de 0,34 en muestra representativa frente a 0,83--0,90 en conjuntos enriquecidos: la evaluación puede sobreestimar la operación~\cite{tonneau2024naijahate}.}
-      \vspace{2mm}
-      \smallcard{Teal}{Brecha abordada}{Faltaba una cadena para subtítulos peruanos, categorías localizadas, comparación multifamilia y derivación humana trazable.}
+    \begin{column}{.31\textwidth}
+      \smallcard{Purple}{Generación contextual}{Transformers y adaptación eficiente: mejor lectura semántica, con mayor costo y necesidad de calibración.}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \smallcard{Teal}{Sistema contemporáneo}{Ensembles, evidencia, evaluación natural y humano en control: desempeño integrado con gobernanza.}
     \end{column}
   \end{columns}
-  \takeaway{La evaluación distingue explícitamente entre un benchmark enriquecido y un test con prevalencia natural.}
+  \takeaway{La propuesta adopta esta evolución completa: conserva un clásico eficiente, suma Transformer y Qwen, combina probabilidades y deriva la incertidumbre.}
 \end{frame}
 
-\section{2. Datos y etiquetado}
+\begin{frame}[shrink=7]{Antecedentes en español I: toxicidad y odio}
+  \framesubtitle{Toxicidad y odio dirigido: cercanía temática con unidades de análisis distintas}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.18}
+  \begin{tabularx}{\textwidth}{@{}>{\bfseries\color{Navy}}p{20mm}p{29mm}p{39mm}X@{}}
+    \toprule
+    Trabajo & Ámbito & Diseño y resultado publicado & Semejanza / diferencia \\
+    \midrule
+    DETOXIS\newline Taulé et al. (2021) & España; comentarios en español a noticias sobre inmigración & NewsCom-TOX: 4\,359 comentarios; detección binaria de toxicidad. Mejor F1 = 0,6461. & Coincide en español y contenido dañino. Cambia el dominio: comentarios escritos sobre noticias, una etiqueta binaria y muestra temática. \\
+    \rowcolor{Blue!5}
+    HatEval\newline Basile et al. (2019) & Twitter; español e inglés; mujeres e inmigrantes como blancos & Tarea compartida: odio binario y rasgos de agresividad/blanco. Mejor macro-F1 español = 0,730. & Comparte racismo y género. No usa transcripciones, taxonomía peruana ni cuatro daños coexistentes; su muestreo fue orientado al blanco. \\
+    \bottomrule
+  \end{tabularx}
+  \vspace{2.5mm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \smallcard{Blue}{Aplicación DETOXIS}{Priorizar o clasificar toxicidad en la conversación que sigue a noticias de inmigración.}
+    \end{column}
+    \begin{column}{.48\textwidth}
+      \smallcard{Purple}{Aplicación HatEval}{Detectar odio contra mujeres e inmigrantes y caracterizar agresividad y tipo de blanco.}
+    \end{column}
+  \end{columns}
+  \takeaway{Ambos trabajos justifican una referencia cuantitativa, pero no una competencia directa: la unidad, la prevalencia y el contrato de etiquetas cambian.}
+  \externalNote{DETOXIS~\cite{taule2021detoxis}; HatEval~\cite{basile2019hateval}.}
+\end{frame}
 
-\chapterdivider{02}{Datos y etiquetado}
+\begin{frame}[shrink=7]{Antecedentes en español II: ofensa y sexismo}
+  \framesubtitle{Ofensa y sexismo: mayor proximidad de plataforma o categoría, no equivalencia de tarea}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.16}
+  \begin{tabularx}{\textwidth}{@{}>{\bfseries\color{Navy}}p{20mm}p{29mm}p{39mm}X@{}}
+    \toprule
+    Trabajo & Ámbito & Diseño y resultado publicado & Semejanza / diferencia \\
+    \midrule
+    OffendES\newline Plaza-del-Arco et al. (2021) & España / español; YouTube, Instagram y Twitter alrededor de influencers jóvenes & 47\,128 comentarios manualmente anotados; línea base binaria de ofensa con macro-F1 = 0,7839. & Es el antecedente más próximo por YouTube y español. Clasifica comentarios de usuarios, no habla transcrita ni evidencia temporal; ofensa es una categoría más amplia. \\
+    \rowcolor{Blue!5}
+    EXIST\newline Rodríguez-Sánchez et al. (2021) & Contexto internacional; español e inglés; Twitter y Gab & Más de 11\,000 textos; identificación y categorización de sexismo. Mejor F1 español en identificación = 0,7944. & Se aproxima a género/identidad y usa supervisión de expertas. Cambian plataforma, balance, unidad y alcance: sexismo no cubre los cuatro daños del proyecto. \\
+    \bottomrule
+  \end{tabularx}
+  \vspace{2.5mm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \smallcard{Teal}{Aplicación OffendES}{Investigar y detectar lenguaje ofensivo en interacciones sociales en español.}
+    \end{column}
+    \begin{column}{.48\textwidth}
+      \smallcard{Gold}{Aplicación EXIST}{Identificar sexismo explícito o sutil y categorizar su forma en redes sociales.}
+    \end{column}
+  \end{columns}
+  \takeaway{OffendES aporta cercanía de plataforma; EXIST, cercanía conceptual. El presente trabajo integra ambas dimensiones con localización peruana y multietiqueta.}
+  \externalNote{OffendES~\cite{plaza2021offendes}; EXIST~\cite{rodriguez2021exist}.}
+\end{frame}
+
+\begin{frame}[shrink=6]{Explicabilidad, muestreo y evidencia}
+  \framesubtitle{Dos trabajos que orientan cómo interpretar el producto, además de cuánto puntúa}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \smallcard{Purple}{HateXplain · India/Alemania; inglés}{Cerca de 20 mil posts de Twitter y Gab, con tres clases, blanco y racionales humanos. BERT-HateXplain alcanza macro-F1 0,687, pero el artículo muestra que clasificar bien no garantiza explicaciones plausibles o fieles~\cite{mathew2021hatexplain}.}
+      \vspace{2mm}
+      \smallcard{Blue}{Relación con este trabajo}{Ambos vinculan la decisión con evidencia; aquí la explicación es el tramo temporal y el texto fuente. HateXplain opera sobre posts en inglés y racionales token a token, no videos peruanos.}
+    \end{column}
+    \begin{column}{.48\textwidth}
+      \smallcard{Coral}{NaijaHate · Nigeria; Twitter}{35\,976 tuits nigerianos y una muestra representativa. El mismo tipo de detector obtiene AP cercana a 0,34 en muestra aleatoria frente a 0,83--0,90 en muestras enriquecidas~\cite{tonneau2024naijahate}.}
+      \vspace{2mm}
+      \smallcard{Teal}{Relación con este trabajo}{Comparte la preocupación por idioma local, dominio y prevalencia real. Aquí se conserva un test natural peruano; las AP absolutas no son comparables porque cambian país, idioma, etiqueta y muestra.}
+    \end{column}
+  \end{columns}
+  \takeaway{La ventaja del proyecto no es solo un F1 competitivo: presenta evidencia temporal y mide el sistema bajo abundancia real de contenido seguro.}
+\end{frame}
+
+\section{3. Datos y etiquetado}
+
+\chapterdivider{03}{Datos y etiquetado}
   {Generación del corpus local, taxonomía, metodología de etiquetado y auditoría.}
   {DATASET \quad TAXONOMÍA \quad ETIQUETADO \quad FRONTEND}{Teal}
 
@@ -289,7 +397,7 @@
       \metriccard{Blue}{173\,240}{chunks elegibles}{de 182\,461 observados}
     \end{column}
     \begin{column}{.31\textwidth}
-      \metriccard{Purple}{4\,906}{videos efectivos}{322 canales en el alcance}
+      \metriccard{Purple}{4\,906}{videos efectivos}{276 canales; 322 en el alcance inicial}
     \end{column}
     \begin{column}{.31\textwidth}
       \metriccard{Teal}{5}{salidas operativas}{cuatro daños y SEGURO}
@@ -306,15 +414,16 @@
       \centering
       \begin{tikzpicture}
         \begin{axis}[
-          xbar, width=\linewidth,height=49mm,
+          xbar, width=.92\linewidth,height=49mm,
           xmin=0,xmax=165000,
           symbolic y coords={Sexual,Género,Racismo,Acoso,SEGURO},
-          ytick=data,axis y line=none,axis x line*=bottom,
+          ytick={Sexual,Género,Racismo,Acoso,SEGURO},axis y line*=left,ytick style={draw=none},axis x line*=bottom,
+          scaled x ticks=false,
           xtick={0,40000,80000,120000,160000},
           xticklabels={0,40k,80k,120k,160k},
           tick label style={font=\scriptsize},
           nodes near coords,nodes near coords align={horizontal},
-          every node near coord/.append style={font=\scriptsize,color=Ink},
+          every node near coord/.append style={font=\scriptsize,color=Ink,/pgf/number format/fixed,/pgf/number format/precision=0,/pgf/number format/1000 sep={\,}},
           enlarge y limits=.12]
           \addplot[fill=Teal!70,draw=Teal] coordinates {(159077,SEGURO)};
           \addplot[fill=Coral!72,draw=Coral] coordinates {(8276,Acoso) (2570,Racismo) (2331,Género) (3875,Sexual)};
@@ -334,6 +443,102 @@
   \end{columns}
   \takeaway{El conjunto no oculta el caso difícil: la clase SEGURO domina y las cuatro categorías de daño son heterogéneas.}
   \resultNote{Auditoría final del corpus v2.1; partición efectiva 71,1/15,8/13,1\,\% por chunks, agrupada por video.}
+\end{frame}
+
+\begin{frame}[shrink=4]{Radiografía del dataset final}
+  \framesubtitle{El universo efectivo se distingue del alcance previo a exclusiones}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.31\textwidth}
+      \metriccard{Blue}{173\,240}{chunks elegibles}{182\,461 observados; 9\,221 excluidos (5,05\,\%)}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \metriccard{Purple}{4\,906}{videos efectivos}{5\,385 en el alcance inicial}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \metriccard{Teal}{276}{canales efectivos}{322 en el alcance inicial}
+    \end{column}
+  \end{columns}
+  \vspace{2mm}
+  \scriptsize
+  \begin{tabularx}{\textwidth}{@{}>{\bfseries\color{Navy}}p{34mm}X X@{}}
+    \toprule
+    Dimensión & Distribución & Lectura descriptiva \\
+    \midrule
+    Seguridad / daño & 159\,077 SEGURO (91,82\,\%) y 14\,163 con daño (8,18\,\%) & Relación 11,23:1; la exactitud ordinaria puede ocultar fallas sobre daño. \\
+    \rowcolor{Blue!5}
+    Multietiqueta & 17\,052 asignaciones de daño; 2\,709 chunks dañinos con más de una categoría & Las frecuencias por etiqueta no deben sumarse como casos únicos. \\
+    Videos & media 35,3; mediana 19; máximo 767 chunks & La mediana describe mejor el video típico que la media. \\
+    \rowcolor{Blue!5}
+    Canales & media 627,7; mediana 25,5; máximo 33\,203 chunks & La diferencia media--mediana revela alta concentración por fuente. \\
+    \bottomrule
+  \end{tabularx}
+  \vspace{1.5mm}
+  \takeaway{El dataset final no es una muestra uniforme: conserva la prevalencia natural y exige métricas, particiones y remuestreo que respeten su desbalance.}
+  \resultNote{\texttt{docs/artefactos/auditoria\_estado\_final\_182461.json}; snapshot v2.1.0, corte 09-08-2026.}
+\end{frame}
+
+\begin{frame}[shrink=5]{Canales principales y concentración del corpus}
+  \framesubtitle{La diversidad de fuentes convive con una cola larga de canales pequeños}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.67\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+          xbar,width=.89\linewidth,height=59mm,xmin=0,xmax=35000,
+          ytick={1,2,3,4,5,6,7,8},
+          yticklabels={Todo Good,Sin Guion,PBO,Nada Espacial,Goblinciano,Nunca MÁS,Arde Troya,Hablando Huevadas},
+          axis y line*=left,ytick style={draw=none},axis x line*=bottom,
+          scaled x ticks=false,
+          xtick={0,10000,20000,30000},xticklabels={0,10k,20k,30k},
+          tick label style={font=\tiny},
+          nodes near coords,point meta=x,
+          every node near coord/.append style={font=\tiny,color=Ink,/pgf/number format/1000 sep={\,}},
+          enlarge y limits=.08]
+          \addplot[fill=Blue!68,draw=Blue] coordinates {(5148,1) (5623,2) (5970,3) (6224,4) (8166,5) (11364,6) (12295,7) (33203,8)};
+        \end{axis}
+      \end{tikzpicture}
+      {\tiny Ocho canales con más chunks elegibles; nombres abreviados solo para visualización.}
+    \end{column}
+    \begin{column}{.30\textwidth}
+      \smallcard{Coral}{Canal principal}{Hablando Huevadas aporta 19,17\,\% del corpus elegible.}
+      \vspace{1.5mm}
+      \smallcard{Gold}{Concentración}{Los cinco primeros reúnen 41,13\,\%; los diez primeros, 55,90\,\%.}
+      \vspace{1.5mm}
+      \smallcard{Teal}{Composición exploratoria}{Noticias/comentario 40,1\,\%; entretenimiento/comedia 36,7\,\%; otro/mixto 23,3\,\%.}
+    \end{column}
+  \end{columns}
+  \takeaway{La cobertura temática es amplia, pero la concentración obliga a separar por video y a medir después generalización por canal.}
+  \resultNote{Auditoría v2.1. La composición por tipo es una heurística descriptiva del proyecto, no metadato editorial de YouTube.}
+\end{frame}
+
+\begin{frame}[shrink=5]{Dificultades de construcción y tamaño de chunk}
+  \framesubtitle{Controles concretos para disponibilidad, sesgo y contexto lingüístico}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.31\textwidth}
+      \smallcard{Blue}{Disponibilidad y limpieza}{Subtítulos ausentes o incompletos, duplicados, segmentos demasiado cortos y cambios de disponibilidad exigieron materialización canónica y exclusiones trazables.}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \smallcard{Gold}{Desbalance y concentración}{SEGURO representa 91,82\,\%; el daño más frecuente supera 3,55 veces al menos frecuente y pocos canales aportan gran volumen.}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \smallcard{Purple}{Ambigüedad contextual}{Ironía, citas, habla peruana, fronteras temporales y coexistencia de daños requieren contexto vecino y revisión humana.}
+    \end{column}
+  \end{columns}
+  \vspace{3mm}
+  \centering
+  \begin{tikzpicture}[
+    n/.style={draw,rounded corners=3pt,text width=23mm,minimum height=13mm,align=center,inner sep=1.5mm,font=\tiny},
+    a/.style={-{Stealth[length=1.7mm]},thick,draw=Muted}]
+    \node[n,draw=Blue!50,fill=Blue!7] (a) {Mismos videos y referencias};
+    \node[n,draw=Purple!50,fill=Purple!7,right=3mm of a] (b) {Regenerar 15/20/25/30/35 s};
+    \node[n,draw=Gold!55,fill=Gold!9,right=3mm of b] (c) {Entrenar y decidir solo en validation};
+    \node[n,draw=Teal!50,fill=Teal!7,right=3mm of c] (d) {Bootstrap pareado por video};
+    \node[n,draw=Coral!50,fill=Coral!7,right=3mm of d] (e) {Congelar 30 s; test descriptivo};
+    \draw[a] (a)--(b); \draw[a] (b)--(c); \draw[a] (c)--(d); \draw[a] (d)--(e);
+  \end{tikzpicture}
+  \vspace{2mm}
+  \takeaway{Se conservaron 30 segundos: lideraron el perfil clásico robusto (AP macro de daño 0,123; IC95\,\% 0,110--0,145) y las comprobaciones neuronales no demostraron superioridad suficiente para cambiar el contrato.}
+  \mixedNote{Selección sin reutilizar test~\cite{cawley2010selection}; curvas precisión--sensibilidad ante desbalance~\cite{saito2015pr}.}{\texttt{docs/OPTIMIZACION\_LONGITUD\_CHUNKS.md} y \texttt{docs/ROBUSTEZ\_NEURONAL\_LONGITUD\_CHUNKS.md}.}
 \end{frame}
 
 \begin{frame}{Taxonomía de clasificación}
@@ -424,9 +629,9 @@
   \resultNote{Captura histórica del frontend; la paridad funcional del frontend activo v2.1 está documentada en \texttt{docs/PARIDAD\_FRONTENDS\_ACTIVOS.md}.}
 \end{frame}
 
-\section{3. Entrenamiento y ensembles}
+\section{4. Entrenamiento y ensembles}
 
-\chapterdivider{03}{Entrenamiento y ensembles}
+\chapterdivider{04}{Entrenamiento y ensembles}
   {Comparación de familias, adaptación de Qwen y estrategias de combinación de modelos.}
   {MODELOS CLÁSICOS \quad TRANSFORMERS \quad QWEN \quad ENSEMBLES}{Purple}
 
@@ -569,6 +774,49 @@
   \resultNote{03\_07a, validación OOF; implementación en \texttt{ensemble\_evaluation.py}; los cinco ensembles usan exactamente los mismos tres miembros.}
 \end{frame}
 
+\begin{frame}[shrink=4]{Métricas de ranking: qué miden}
+  \framesubtitle{BA es la métrica principal; macro-AUPRC protege los daños y F1 describe umbrales}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.18}
+  \begin{tabularx}{\textwidth}{@{}>{\bfseries\color{Navy}}p{30mm}p{36mm}X>{\centering\arraybackslash}p{15mm}@{}}
+    \toprule
+    Métrica & Definición operativa & Qué significa & Mejor \\
+    \midrule
+    Exactitud balanceada (BA) & $\tfrac{1}{2}(\text{sensibilidad}+\text{especificidad})$ en ANY\_DAMAGE & Promedia la capacidad de detectar daño y reconocer contenido seguro sin dejar que la clase mayoritaria domine. & $\uparrow$ \\
+    \rowcolor{Blue!5}
+    Macro-AUPRC de daño & Media no ponderada de las cuatro áreas bajo la curva precisión--sensibilidad & Evalúa el ordenamiento de positivos a través de todos los umbrales y da igual peso a cada daño raro. & $\uparrow$ \\
+    Macro-F1 de daño & Media del F1 por daño; $F1=2PR/(P+R)$ & Resume precisión y sensibilidad después de fijar umbrales; no incorpora verdaderos negativos. & $\uparrow$ \\
+    \rowcolor{Blue!5}
+    $R_{0,67}$ & $0,67\,\text{FNR}+0,33\,\text{FPR}$ & Sensibilidad local al costo: penaliza aproximadamente el doble omitir daño que alertar sobre contenido seguro. & $\downarrow$ \\
+    Carga de revisión & Fracción enviada a \texttt{NEEDS\_REVIEW} & Capacidad humana necesaria; siempre se interpreta junto con BA/riesgo de la ruta automática. & $\downarrow$ \\
+    \bottomrule
+  \end{tabularx}
+  \vspace{2mm}
+  \takeaway{La métrica principal es BA de ANY\_DAMAGE OOF a cobertura completa. Macro-AUPRC evita degradar los cuatro daños; F1 y revisión explican la decisión ya umbralizada.}
+  \externalNote{BA ante desbalance~\cite{brodersen2010balanced}; precisión--sensibilidad~\cite{saito2015pr,davis2006pr}; criterio local completo en \texttt{docs/CRITERIO\_SELECCION\_MODELOS\_03.md}.}
+\end{frame}
+
+\begin{frame}[shrink=5]{Cómo leer el ranking y por qué no usar otras métricas}
+  \framesubtitle{La interpretación evita convertir porcentajes distintos en una sola “nota”}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \smallcard{Teal}{BA 0,840}{No significa “84\,\% de chunks correctos”: es el promedio de sensibilidad y especificidad de la compuerta binaria, estimado fuera de muestra (OOF).}
+      \vspace{1.5mm}
+      \smallcard{Gold}{Macro-AUPRC 0,555}{No significa “55,5\,\% de aciertos”: es el área precisión--sensibilidad media de los cuatro daños; solo se compara sobre el mismo panel y prevalencia.}
+      \vspace{1.5mm}
+      \smallcard{Purple}{Macro-F1 0,568}{Describe las decisiones por categoría en los umbrales congelados; una categoría rara pesa lo mismo que una frecuente.}
+    \end{column}
+    \begin{column}{.48\textwidth}
+      \smallcard{Coral}{No accuracy ni micro-F1}{La abundancia de SEGURO puede producir una cifra alta aun cuando se omita daño; micro/weighted privilegia las etiquetas con mayor soporte.}
+      \vspace{1.5mm}
+      \smallcard{Blue}{No ROC-AUC como criterio principal}{Con positivos raros, precisión--sensibilidad muestra mejor cuántas alertas relevantes aparecen entre las predicciones positivas~\cite{saito2015pr,davis2006pr}.}
+      \vspace{1.5mm}
+      \smallcard{Green}{No suma de indicadores}{BA ya contiene FNR y FPR; sumarlos contaría dos veces errores correlacionados. Calibración y carga humana tienen escalas y utilidades distintas.}
+    \end{column}
+  \end{columns}
+  \takeaway{El ranking es lexicográfico con salvaguardas: primero equilibrio DAÑO--SEGURO, luego desempeño multietiqueta, frontera de Pareto y costos como desempate.}
+\end{frame}
+
 \begin{frame}[shrink=7]{Criterio de selección y análisis estadístico}
   \framesubtitle{Desempeño, salvaguardas e incertidumbre en un solo protocolo}
   \begin{columns}[T,onlytextwidth]
@@ -582,22 +830,22 @@
       \end{enumerate}
     \end{column}
     \begin{column}{.38\textwidth}
-      \smallcard{Blue}{Por qué BA}{Pondera sensibilidad y especificidad por igual ante desbalance~\cite{brodersen2010balanced}.}
+      \smallcard{Blue}{1 · BA decide}{Promedio simple 0,840; ponderado 0,838; Qwen 0,831. La diferencia simple--Qwen es +0,0086.}
       \vspace{2mm}
-      \smallcard{Gold}{Por qué AUPRC}{Resume calidad de ranking donde el positivo es raro~\cite{saito2015pr,davis2006pr}.}
+      \smallcard{Gold}{2 · Salvaguarda y Pareto}{AUPRC 0,555 frente a 0,516 del mejor individuo: +0,039 y salvaguarda superada. Simple y ponderado quedan en la frontera: uno lidera BA; el otro, AUPRC 0,556.}
       \vspace{2mm}
-      \smallcard{Purple}{Por qué por video}{Respeta correlación entre chunks del mismo contenido~\cite{field2007clusterbootstrap}.}
+      \smallcard{Purple}{3 · Desempate de riesgo}{$R_{0,67}=0,67(0,127)+0,33(0,193)=0,149$ para el simple; 0,152 para el ponderado. Menor es preferible.}
     \end{column}
   \end{columns}
-  \takeaway{El ganador se congela por un protocolo reproducible; un empate estadístico se declara, no se convierte artificialmente en superioridad.}
-  \externalNote{Comparación múltiple y significancia~\cite{dror2018significance,holm1979multiple}; criterio interno: \texttt{docs/CRITERIO\_SELECCION\_MODELOS\_03.md}.}
+  \takeaway{El promedio simple queda primero por BA y menor riesgo; el contraste con el ponderado sigue inconcluso: $\Delta$BA = $-0,0017$, IC95\,\% $[-0,0044;\,0,00083]$, $p_{Holm}=0,23$.}
+  \externalNote{Bootstrap pareado por video~\cite{field2007clusterbootstrap}; comparación múltiple~\cite{dror2018significance,holm1979multiple}; criterio interno: \texttt{docs/CRITERIO\_SELECCION\_MODELOS\_03.md}.}
 \end{frame}
 
-\section{4. Resultados finales}
+\section{5. Resultados finales}
 
-\chapterdivider{04}{Resultados finales}
-  {Ganadores globales, por tipo y por categoría; test natural y comparación externa.}
-  {VALIDACIÓN \quad TEST NATURAL \quad CATEGORÍAS \quad ESTADO DEL ARTE}{Gold}
+\chapterdivider{05}{Resultados finales}
+  {Ganadores globales, por tipo y por categoría; test natural y revisión humana.}
+  {VALIDACIÓN \quad TEST NATURAL \quad CATEGORÍAS \quad REVISIÓN}{Gold}
 
 \begin{frame}[shrink=5]{Ranking global en validación}
   \framesubtitle{La combinación multifamilia obtiene el mejor resultado global}
@@ -625,10 +873,11 @@
       \centering
       \begin{tikzpicture}
         \begin{axis}[
-          xbar,width=\linewidth,height=52mm,
+          xbar,width=.97\linewidth,height=52mm,
           xmin=.76,xmax=.85,
           symbolic y coords={Clásico,Transformer,Qwen,Ensemble},ytick=data,
-          axis y line=none,axis x line*=bottom,
+          axis y line*=left,ytick style={draw=none},axis x line*=bottom,
+          scaled x ticks=false,
           xtick={.76,.78,.80,.82,.84},
           tick label style={font=\scriptsize},
           nodes near coords,nodes near coords align={horizontal},
@@ -755,9 +1004,10 @@
       \centering
       \begin{tikzpicture}
         \begin{axis}[
-          xbar,width=\linewidth,height=53mm,xmin=0,xmax=.7,
+          xbar,width=.985\linewidth,height=53mm,xmin=0,xmax=.7,
           symbolic y coords={Género,Racismo,Acoso,Sexual},ytick=data,
-          axis y line=none,axis x line*=bottom,
+          axis y line*=left,ytick style={draw=none},axis x line*=bottom,
+          scaled x ticks=false,
           xtick={0,.1,.2,.3,.4,.5,.6,.7},
           tick label style={font=\scriptsize},
           legend style={font=\tiny,at={(.5,1.02)},anchor=south,legend columns=2,draw=none},
@@ -811,6 +1061,12 @@
   \resultNote{Validación, \texttt{ganadores\_por\_categoria\_validation.csv}; estas selecciones descriptivas no reabren el test.}
 \end{frame}
 
+\section{6. Comparación externa}
+
+\chapterdivider{06}{Comparación externa}
+  {Contraste de resultados publicados y análisis crítico de comparabilidad.}
+  {MÉTRICAS \quad CONTEXTO \quad RESULTADOS \quad BRECHAS}{Blue}
+
 \begin{frame}[shrink=5]{Comparación contextual con el estado del arte}
   \framesubtitle{Resultados del mismo orden que trabajos publicados relacionados}
   \begin{columns}[T,onlytextwidth]
@@ -818,9 +1074,11 @@
       \centering
       \begin{tikzpicture}
         \begin{axis}[
-          xbar,width=\linewidth,height=58mm,xmin=.55,xmax=.84,
-          symbolic y coords={DETOXIS,Este trabajo,HateXplain,HatEval,OffendES,EXIST},ytick=data,
-          axis y line=none,axis x line*=bottom,
+          xbar,width=.96\linewidth,height=58mm,xmin=.55,xmax=.84,
+          symbolic y coords={DETOXIS,Este trabajo,HateXplain,HatEval,OffendES,EXIST},
+          ytick={DETOXIS,Este trabajo,HateXplain,HatEval,OffendES,EXIST},
+          axis y line*=left,ytick style={draw=none},axis x line*=bottom,
+          scaled x ticks=false,
           xtick={.55,.60,.65,.70,.75,.80},
           tick label style={font=\scriptsize},
           nodes near coords,point meta=x,
@@ -872,9 +1130,31 @@
   \takeaway{El producto se evalúa donde operará: sobre abundancia de contenido seguro, no únicamente sobre un benchmark artificialmente balanceado.}
 \end{frame}
 
-\section{5. Producto y conclusiones}
+\begin{frame}[shrink=5]{Análisis crítico: ¿el trabajo está en el estado del arte?}
+  \framesubtitle{Competitivo como sistema aplicado; la supremacía en benchmark aún requiere evidencia externa}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.48\textwidth}
+      \smallcard{Green}{Sí es comparable en alcance científico}{Aborda clasificación de lenguaje dañino en contenido social, reporta F1/BA/AUPRC y obtiene F1 0,656 en una vista 4:1: magnitud próxima a DETOXIS y HateXplain.}
+      \vspace{2mm}
+      \smallcard{Teal}{Alineado con buenas prácticas actuales}{Incluye splits y bootstrap por video, predicciones fuera de muestra (OOF), test natural sellado, cinco familias de salida, evidencia temporal y revisión humana.}
+      \vspace{2mm}
+      \smallcard{Blue}{Diferenciación favorable}{El corpus peruano, la taxonomía localizada y la integración clásico--Transformer--Qwen resuelven un vacío que los benchmarks importados no cubren juntos.}
+    \end{column}
+    \begin{column}{.48\textwidth}
+      \smallcard{Gold}{No demuestra un nuevo récord común}{Los papers cambian país, idioma, plataforma, unidad, prevalencia, etiquetas y partición. Por ello la gráfica contextualiza magnitud, no establece superioridad head-to-head.}
+      \vspace{2mm}
+      \smallcard{Coral}{Qué falta para una afirmación fuerte}{Evaluación en benchmark externo compartido, réplica temporal y por canales no vistos, doble anotación independiente, estabilidad entre semillas y análisis multimodal.}
+      \vspace{2mm}
+      \smallcard{Purple}{Qué falta para madurez operativa}{Validar carga, costo, latencia y error humano residual en un piloto; monitorear deriva y desempeño por grupos/canales.}
+    \end{column}
+  \end{columns}
+  \takeaway{Conclusión crítica: el trabajo es competitivo y está metodológicamente alineado con el estado del arte aplicado; todavía no prueba ser el mejor modelo de un benchmark internacional común.}
+  \externalNote{Comparabilidad contextual~\cite{taule2021detoxis,mathew2021hatexplain,basile2019hateval,plaza2021offendes,rodriguez2021exist}; muestreo realista~\cite{tonneau2024naijahate}; pruebas funcionales~\cite{rottger2021hatecheck}.}
+\end{frame}
 
-\chapterdivider{05}{Producto y conclusiones}
+\section{7. Producto y conclusiones}
+
+\chapterdivider{07}{Producto y conclusiones}
   {Interfaces, capacidades del sistema y cumplimiento cuantitativo de los objetivos.}
   {OPERACIÓN \quad TRAZABILIDAD \quad OBJETIVOS \quad TRABAJO FUTURO}{Coral}
 
@@ -950,7 +1230,7 @@
   \mixedNote{Clasificación selectiva~\cite{geifman2017selective,mozannar2020defer}.}{Auditoría v2.1, comparación 03\_07a y test 03\_07 del 15-08-2026.}
 \end{frame}
 
-\begin{frame}{Conclusiones vinculadas a los objetivos II}
+\begin{frame}[shrink=5]{Conclusiones vinculadas a los objetivos II}
   \framesubtitle{Cumplimiento de los objetivos específicos 3 y 4}
   \scriptsize
   \begin{tabularx}{\textwidth}{@{}p{25mm}X X@{}}
@@ -962,15 +1242,21 @@
     2\,000 bootstraps pareados por video; diferencia BA con rival $-0,00166$, IC95\,\% cruza cero; $p_{Holm}=0,229$. &
     La selección es reproducible y honesta: congela un ganador operativo, declara el empate estadístico y reserva capacidad humana.\\[2mm]
     \textbf{Específico 4}\newline Integrar un flujo reutilizable &
-    Dos frontends, manifiestos/checkpoints y 55\,966 eventos trazables; panel congelado de 16\,694 chunks. &
-    El artefacto conecta etiquetado, entrenamiento, comparación, inferencia, revisión y corrección sin romper procedencia.\\[2mm]
+    Dos frontends activos, manifiestos/checkpoints y 55\,966 eventos trazables; panel congelado de 16\,694 chunks. &
+    El artefacto conecta \href{http://127.0.0.1:8765/}{etiquetado}, entrenamiento, comparación, \href{http://127.0.0.1:8876/}{inferencia de producción}, revisión y corrección sin romper procedencia.\\[2mm]
     \rowcolor{Purple!7}
     \textbf{Contribución}\newline Competitividad contextual &
     F1 0,656 en vista 4:1, dentro del rango publicado 0,646--0,794 para tareas relacionadas. &
     El resultado es comparable en magnitud y más rico operacionalmente, aunque no constituye una comparación head-to-head.\\
     \bottomrule
   \end{tabularx}
-  \vspace{3mm}
+  \vspace{1.5mm}
+  \begin{center}\normalsize
+    \href{http://127.0.0.1:8765/}{\beamergotobutton{Abrir servidor de etiquetado}}
+    \hspace{4mm}
+    \href{http://127.0.0.1:8876/}{\beamergotobutton{Abrir servidor de producción}}
+  \end{center}
+  \vspace{1mm}
   \takeaway{La contribución defendible es unir rigor experimental y operación humana sobre contenido peruano, con límites explícitos y evidencia reproducible.}
   \externalNote{Comparación contextual con~\cite{taule2021detoxis,mathew2021hatexplain,basile2019hateval,plaza2021offendes,rodriguez2021exist}.}
 \end{frame}
@@ -1029,7 +1315,7 @@
 \end{frame}
 
 \section{Referencias}
-\chapterdivider{06}{Referencias}
+\chapterdivider{08}{Referencias}
   {Fuentes académicas y documentos utilizados para fundamentar métodos y comparaciones.}
   {MODERACIÓN \quad DATOS \quad MODELOS \quad EVALUACIÓN}{Teal}
 \begin{frame}[allowframebreaks]{Referencias utilizadas}
