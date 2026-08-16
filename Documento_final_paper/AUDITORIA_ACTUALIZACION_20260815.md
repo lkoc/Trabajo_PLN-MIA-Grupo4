@@ -21,7 +21,9 @@ Se verificaron el alcance inicial (182 461 chunks, 5 385 videos y 322 canales), 
 
 El método describe los 28 candidatos individuales y cinco ensembles. Detalla la regresión logística TF--IDF, la cascada E5 v2 y Qwen3--0.6B con LoRA. El ensemble ganador se especifica mediante sus tres identificadores, promedio de scores crudos, cinco calibradores sigmoidales, cinco umbrales, compuerta binaria y razones de revisión.
 
-La BA de `ANY_DAMAGE` OOF a cobertura completa queda identificada como métrica primaria; macro-AUPRC de daños actúa como salvaguarda y F1 describe decisiones ya umbralizadas. El texto explica por qué exactitud ordinaria, micro-F1, ROC-AUC o una suma de indicadores no gobiernan el ranking.
+Las rutas Qwen se separan técnicamente: LoRA base a 128 tokens, continuación LoRA a 256, tres continuaciones LoRA con penalización estructural y una corrida histórica de ajuste completo sin LoRA. Se documentan inicialización, épocas, tasas, rango, matrices adaptadas y resultados. El LoRA base es el mejor Qwen y el miembro congelado del ensemble; la continuación a 256 solo lidera categorías específicas. También se declaran la escala exacta de Qwen y MiniLM, la ausencia de cuantización y el uso de BF16 mixto en A100.
+
+La BA de `ANY_DAMAGE` OOF a cobertura completa queda identificada como métrica primaria; macro-AUPRC de daños actúa como salvaguarda y F1 describe decisiones ya umbralizadas. El texto explica por qué exactitud ordinaria, micro-F1, ROC-AUC o una suma de indicadores no gobiernan el ranking. El desempate $R_{0,67}$ se define como $0,67\,\mathrm{FNR}+0,33\,\mathrm{FPR}$, con menor valor preferible y un peso aproximado 2,03 veces mayor para la omisión de daño.
 
 La integración ya no es solo una propuesta: clásico, Transformer, Qwen y ensemble respondieron a solicitudes reales de la API local sobre CPU. El despliegue permanece en modo sombra y no autoriza sanciones automáticas.
 
@@ -37,9 +39,9 @@ La integración ya no es solo una propuesta: clásico, Transformer, Qwen y ensem
 
 ## Compilación y revisión visual
 
-- PDF A4 de 22 páginas.
+- PDF A4 de 23 páginas.
 - 0 errores fatales y 0 cajas `Overfull`.
-- Inspección visual de las 22 páginas rasterizadas: 17 tablas, 11 figuras, fórmulas, diagramas, gráficos, capturas y referencias permanecen dentro de los márgenes.
+- Inspección visual de las 23 páginas rasterizadas: 17 tablas, 11 figuras, fórmulas, diagramas, gráficos, capturas y referencias permanecen dentro de los márgenes.
 - Los apéndices A--E comienzan en página nueva; se eliminó una página casi vacía en la transición desde las conclusiones.
 - La captura de producción documenta el selector vigente y los cuatro sistemas; la inferencia funcional se verificó además contra la API real.
 

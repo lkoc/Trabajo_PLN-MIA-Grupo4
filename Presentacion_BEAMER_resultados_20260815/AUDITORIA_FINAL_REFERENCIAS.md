@@ -8,9 +8,10 @@
 
 | Control | Resultado |
 |---|---:|
-| Llamadas `\cite{...}` | 91 |
-| Claves bibliográficas únicas citadas | 52 |
-| Entradas incluidas en la bibliografía final | 52 |
+| Llamadas `\cite{...}` | 92 |
+| Apariciones de claves dentro de las llamadas | 133 |
+| Claves bibliográficas únicas citadas | 54 |
+| Entradas incluidas en la bibliografía final | 54 |
 | Claves citadas ausentes de `referencias.bib` | 0 |
 | Citas indefinidas en LaTeX | 0 |
 | Advertencias de BibTeX | 0 |
@@ -35,6 +36,8 @@ Se incorporó una precisión metodológica necesaria: esas fuentes sustentan las
 - Las cifras externas se comprobaron contra los artículos primarios: DETOXIS F1 0,6461; HatEval macro-F1 español 0,730; OffendES macro-F1 0,7839; EXIST F1 español 0,7944; HateXplain macro-F1 0,687; NaijaHate AP 0,34 representativa frente a 0,83--0,90 enriquecida.
 - La conclusión crítica separa “competitivo y alineado con prácticas del estado del arte aplicado” de “mejor resultado en un benchmark común”; no se plantea equivalencia directa entre particiones con distinta prevalencia.
 - Los métodos de modelos clásicos, Transformers, Qwen, LoRA, ensembles, calibración, bootstrap y clasificación selectiva tienen citas próximas a la afirmación correspondiente.
+- La arquitectura de Qwen3--0.6B y MiniLM remite a sus tarjetas oficiales; los conteos exactos de parámetros, la fracción entrenable, la ausencia de cuantización y los hiperparámetros LoRA se contrastaron además con configuraciones y tensores locales.
+- La presentación diferencia las tres rutas LoRA realizadas del ajuste completo histórico sin LoRA. No atribuye independencia experimental a los dos identificadores de contexto 256 que reproducen las mismas métricas.
 - Las definiciones de exactitud balanceada (BA) y área bajo la curva precisión--sensibilidad (AUPRC), así como la decisión de no sumar métricas redundantes, remiten a fuentes metodológicas y al criterio predeclarado del proyecto.
 - Las cifras del corpus, validación, test natural y política de revisión se rotulan como “Resultado propio” y remiten a los artefactos del run 03_07/03_07a.
 - Las capturas de los frontends se identifican como evidencia interna y, cuando corresponde, como capturas históricas; no se usan como respaldo bibliográfico externo.

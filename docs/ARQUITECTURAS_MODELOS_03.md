@@ -1,4 +1,4 @@
-# Arquitecturas de entrenamiento 03_01–03_06b
+# Arquitecturas de entrenamiento 03_01–03_06
 
 Este documento describe lo que implementa el repositorio, no una arquitectura
 idealizada. Separa los antecedentes publicados de las decisiones propias del
@@ -21,7 +21,6 @@ flowchart LR
     X --> M[03_04<br/>E5 de 22 salidas]
     X --> QL[03_05<br/>Qwen + LoRA clasificador]
     X --> QS[03_06<br/>Qwen clasificador estructurado]
-    X --> QG[03_06b toy<br/>Qwen + LoRA generativo]
 
     C --> V[Scores y candidato<br/>evaluado en validation]
     F --> V
@@ -30,9 +29,7 @@ flowchart LR
     M --> V
     QL --> V
     QS --> V
-    QG --> TV[Validation + test toy<br/>800/200/200]
     V --> Z[03_07<br/>comparación y congelación]
-    TV -. excluido por diseño .- Z
     Z -. apertura única .-> T[Test natural sellado]
 ```
 
@@ -141,12 +138,11 @@ finales justifican ampliar el presupuesto.
 
 ### Por qué Qwen3-0.6B como LLM base
 
-La elección separa dos usos. `03_05` y `03_06` parten de
-`Qwen/Qwen3-0.6B-Base`, preentrenado pero no alineado a chat, para que la señal
-supervisada del proyecto controle una cabeza de clasificación nueva. `03_06b`
-usa `Qwen/Qwen3-0.6B`, la variante posentrenada, porque sí debe seguir el prompt
-operativo y generar JSON [33], [34]. No es correcto intercambiar sus resultados
-ni atribuir capacidad de *prompting* al clasificador Base.
+`03_05` y `03_06` parten de `Qwen/Qwen3-0.6B-Base`, preentrenado pero no
+alineado a chat, para que la señal supervisada del proyecto controle una cabeza
+de clasificación nueva. El modelo evaluado es un clasificador de 22 logits: no
+recibe la taxonomía Markdown ni genera JSON. No debe atribuírsele capacidad de
+*prompting* a partir de otro flujo de anotación [33], [34].
 
 Qwen3-0.6B es un Transformer causal denso de 0,6B parámetros —0,44B sin
 embeddings—, 28 capas, GQA de 16 cabezas Q y ocho KV, y contexto de 32.768
@@ -226,7 +222,13 @@ como probabilidades perfectas.
 El cuaderno entrena dos candidatos: `paraphrase-multilingual-MiniLM-L12-v2` y
 `multilingual-e5-small`. Cada candidato procesa el chunk una sola vez y aplica
 una cabeza de 22 logits: cinco salidas principales, 14 finas y tres *flags*. Las
-pérdidas reciben pesos `1.0`, `0.3` y `0.2`, respectivamente.
+pérdidas reciben pesos `1.0`, `0.3` y `0.2`, respectivamente. MiniLM tiene
+117.653.760 parámetros de *backbone* y 117.662.230 con la cabeza local; el
+candidato final de `03_07` ajusta todos esos parámetros con entrada máxima de
+128 tokens. No usa cuantización. BF16, cuando está disponible durante el
+ajuste, es precisión mixta de cálculo y no una representación de pesos en 4 u
+8 bits. El encoder congelado corresponde solo a los pilotos de longitud de
+chunks, no al candidato `flat_minilm-b22c5fc226c1` de la comparación final.
 
 MiniLM prioriza tamaño y velocidad. E5 es el encoder usado además como base de
 las cascadas y ofrece otra preinicialización multilingüe. En ambos casos la
@@ -355,8 +357,16 @@ los parámetros que se actualizan [13]. `03_05` carga
 `Qwen/Qwen3-0.6B-Base`, cuya familia se describe en el informe Qwen3 [14], y
 añade una cabeza clasificadora de 22 salidas. Los adaptadores se insertan en
 `q_proj`, `k_proj`, `v_proj` y `o_proj`, con rango 8, `alpha=16` y *dropout*
-0.05. La configuración usa tasa `1e-4` y hasta cuatro épocas. El perfil de
-fallback usa lote 2 y acumulación 4; en la A100 observada usa lote real 8 y
+0.05. La configuración usa tasa `1e-4` y hasta cuatro épocas. El candidato base
+se entrenó con 128 tokens; el ajuste se detuvo tras la época 3 y restauró la
+época 2 por macro-AUPRC de daño. Una continuación LoRA amplió luego el contexto
+a 256 con optimizador nuevo y hasta cuatro épocas adicionales. El modelo base
+contiene 596.049.920 parámetros; los adaptadores y la cabeza de 22 salidas
+publicados contienen 2.316.288 parámetros entrenables (0,389 % del clasificador)
+y ocupan 9.294.728 bytes en `adapter_model.safetensors`. Es LoRA estándar, no
+QLoRA: `use_qalora=false`, no se configura `bitsandbytes` y no se cargan pesos
+en 4 u 8 bits. La A100 usa cálculo mixto BF16; el adaptador se guarda en FP32.
+El perfil de fallback usa lote 2 y acumulación 4; en la A100 observada usa lote real 8 y
 acumulación 1, conservando el lote efectivo de ocho con menos micropasadas.
 
 ```mermaid
@@ -398,47 +408,6 @@ medirse; la fórmula por sí sola no demuestra mejor generalización. El brazo
 otros dos miden el aporte incremental de la estructura sin confundirlo con un
 full fine-tuning de cuatro épocas.
 
-## 03_06b · Toy Qwen condicionado por definiciones Markdown
-
-Este cuaderno ya no es una rama candidata. Construye un ejercicio mutuamente
-excluyente de cinco clases con 1.200 videos distintos: 960 ejemplos `SEGURO` y
-60 de cada daño. `80:20:20` se interpreta como pesos normalizados `4:1:1`, de
-modo que train/validation/test contienen 800/200/200 filas. Dentro de cada
-combinación categoría/split, una prioridad pseudoaleatoria con semilla fija
-elige un chunk por video y conserva la partición original para impedir fuga.
-
-`Qwen/Qwen3-0.6B` recibe como mensaje de sistema el contenido completo de
-`config/definiciones_dano_toy_03_06b.md`. La conversación concatena ese contexto
-con el identificador y el texto; LoRA causal supervisa únicamente el objeto de
-respuesta. La configuración usa longitud máxima 1.536, tasa `1e-4`, hasta tres
-épocas y lote efectivo ocho. En una A100 el lote físico es ocho y la evaluación
-generativa usa lotes de 16.
-
-```mermaid
-flowchart LR
-    P[Markdown completo<br/>definiciones + SHA] --> CHAT[Plantilla chat]
-    X[Chunk] --> CHAT
-    CHAT --> Q[Qwen3-0.6B + LoRA causal]
-    Q --> T[Trie de tokens<br/>cinco completaciones]
-    T --> J[JSON: chunk_id + categoría]
-    J --> V[Esquema exacto]
-    V --> S[strict macro-F1<br/>validation y test toy]
-```
-
-La salida está restringida a nivel de decodificación: para cada fila se
-tokenizan exactamente cinco objetos posibles, todos con el `chunk_id` esperado
-y una categoría permitida, y `prefix_allowed_tokens_fn` solo habilita las ramas
-del trie. Después se exige el conjunto exacto de claves; cualquier fallo cuenta
-como error. La métrica principal `strict_macro_f1` promedia las cinco clases.
-También se guardan accuracy, balanced accuracy, validez JSON, métricas por clase,
-predicciones y matriz de confusión.
-
-El diseño enriquecido no estima prevalencia natural. Cada daño tiene solo diez
-casos en test, por lo que un error mueve su recall en 0,10. En consecuencia, el
-resultado mide aprendizaje de definiciones y cumplimiento del contrato en un
-entorno toy; no debe compararse numéricamente con `03_01`–`03_06` ni presentarse
-como evidencia de superioridad.
-
 ## Comparación resumida
 
 | Cuaderno | Backbone/pasadas | Salida aprendida | Ajuste | Costo relativo | Riesgo característico |
@@ -450,7 +419,6 @@ como evidencia de superioridad.
 | 03_04 | E5, 1 pasada | 22 binarias | completo | medio | hoy duplica `flat_e5` |
 | 03_05 | Qwen Base, 1 pasada | 22 binarias | LoRA + cabeza | alto | más latencia; sin prompt |
 | 03_06 | Qwen Base, 1 pasada | 22 binarias estructuradas | LoRA desde 03_05; full histórico separado | alto | peso de penalización y dependencia del padre |
-| 03_06b | Qwen chat, generación restringida | una clase en JSON | LoRA causal toy | alto | muestra pequeña y prevalencia artificial; excluido de 03_07 |
 
 La AUPRC es preferible como lectura principal con salidas dañinas desbalanceadas
 [15]. La selección usa únicamente `validation`; reutilizar test para escoger
@@ -473,8 +441,7 @@ como hardware consumido.
 | `03_03b` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_04` | candidato completo | NVIDIA L4, 23.034 MiB reportados | BF16, una GPU | no aplica |
 | `03_05` | candidato completo; época 2 restaurada y época 3 persistida | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, lote 8×1, evaluación 32, dos *workers*, una GPU | no aplica |
-| `03_06` | full fine-tuning histórico y barrido LoRA `0/0.02/0.05` completos e incluidos en la comparación | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; cuatro candidatos Qwen estructurados conservados | no aplica |
-| `03_06b` | rediseñado como experimento toy independiente; dataset 1.200 ya materializado, entrenamiento pendiente | **no disponible** | 800/200/200, Markdown completo y JSON restringido; no aparece entre los 28 individuos comparados | A100 de 40 GB para producir la primera métrica de eficacia |
+| `03_06` | full fine-tuning histórico completo pero descartado; barrido LoRA `0/0.02/0.05` completo e incluido en la comparación | NVIDIA A100-SXM4-40GB, 40.960 MiB reportados | BF16, una GPU; tres candidatos estructurados LoRA en el ranking definitivo | no aplica |
 | `03_07` | comparación de `validation` completa: 28 individuos + 5 ensembles; `ensemble_soft_mean` congelado, empate estadístico/inconcluso; test sellado | CPU x86_64 del runtime Colab | 2 hilos efectivos, 2.000 réplicas por video; 1.397 s antes de escritura | test requiere una sola corrida posterior; no reentrena |
 | `03_07a` | reporte local completo con sincronización automática desde Drive | CPU local | OAuth de solo lectura; compara fecha/SHA-256; cuatro CSV, tres PNG y Markdown crítico; no carga modelos | se repite tras cada publicación de comparación o test |
 | `03_08` | auditoría del snapshot completa para `013d60…c1f86`; falta `calidad_predictiva_auxiliar_observada.json` | hardware no registrado en el artefacto | no entrena modelos; cobertura/consistencia disponibles, calidad de candidatos pendiente | CPU local para completar la segunda salida |
@@ -502,11 +469,8 @@ modifica y qué combinación pertenece al proyecto.
 | 03_04 | Chen *et al.* usaron aprendizaje multitarea jerárquico para los tres niveles de OffensEval [22] | encoder compartido y objetivos jerárquicamente relacionados | su HMTL conecta subtareas A/B/C; la implementación vigente del proyecto tiene una sola cabeza de 22 logits y hoy coincide con `flat_e5` |
 | 03_04 | Morgan *et al.* aplicaron Transformers multitarea a toxicidad, engagement y afirmaciones factuales [23] | representación compartida para objetivos relacionados | sus tres objetivos y datos alemanes no son nuestras categorías gruesas, finas y flags; sus resultados no prueban transferencia aquí |
 | 03_05 | Christodoulou ajustó Mistral para clasificación de odio, objetivo y postura mediante LoRA y *prompt tuning* [24] | PEFT/LoRA sobre un LLM usado como clasificador | aquí se usa Qwen3-0.6B-Base, un adaptador único de 22 salidas y no se usa *prompt tuning* |
-| 03_05/03_06b | Hasan *et al.* combinaron términos TF–IDF, prompts de clasificación y LoRA sobre Llama para odio en bengalí [25] | reglas léxicas o prompt más adaptación LoRA en moderación | `03_05` no recibe prompt; `03_06b` usa un Markdown versionado, Qwen y salida JSON restringida, sin copiar su selección TF–IDF de términos |
+| 03_05 | Hasan *et al.* combinaron términos TF–IDF, prompts de clasificación y LoRA sobre Llama para odio en bengalí [25] | adaptación LoRA de un LLM a moderación | `03_05` usa Qwen Base como clasificador de 22 logits y no recibe prompt ni aplica su selección TF–IDF de términos |
 | 03_06 | HiAGM [10] y HMTL [22] incorporan relaciones jerárquicas dentro del aprendizaje | uso de estructura de etiquetas para reducir incoherencias | la penalización `0.2·p(SEGURO)·max p(daño)` es una formulación local; no se atribuye a esos autores |
-| 03_06b | LlamaLens instruyó un LLM multilingüe con múltiples tareas de noticias y redes sociales, incluidas tareas ofensivas [26] | ajuste por instrucciones para clasificación de contenido social | aquí se ajusta una sola taxonomía peruana, se supervisa únicamente la respuesta y se exige JSON trazable |
-| 03_06b | Ghorbanpour *et al.* evaluaron prompting con LLaMA, Aya, Qwen y BloomZ para odio en ocho lenguas [27] | reglas expresadas en lenguaje natural y uso de Qwen para detección | su estudio es zero/few-shot; el proyecto realiza SFT LoRA supervisado y genera un contrato JSON |
-| 03_06b | Wu *et al.* combinaron prompt, SFT y fusión de LLM para odio fino en chino [28] | prompt contextual y SFT para clasificación fina | este proyecto no fusiona modelos, trabaja en español peruano y conserva procedencia por SHA del Markdown completo |
 
 Los diagramas Mermaid de este documento son esquemas originales elaborados a
 partir del código del repositorio; no son figuras redibujadas de [17]–[28]. Si
@@ -524,10 +488,6 @@ presentación, su leyenda debe decir “adaptado de [n]” y conservar la cita.
 - Para LoRA: “La adaptación eficiente sigue LoRA [13] y trabajos que la aplican
   a clasificación de odio [24], [25]; el backbone, la taxonomía y el régimen de
   entrenamiento difieren”.
-- Para SFT: “La formulación se relaciona con LLM instruidos para contenido de
-  redes [26] y prompting multilingüe de odio [27], pero usa una cápsula local
-  versionada y genera el JSON del contrato v2.1”.
-
 Debe evitarse “proponemos por primera vez” o “arquitectura novedosa” salvo que
 una revisión sistemática posterior lo sustente. La contribución defendible es
 la combinación, implementación reproducible y evaluación de estas alternativas

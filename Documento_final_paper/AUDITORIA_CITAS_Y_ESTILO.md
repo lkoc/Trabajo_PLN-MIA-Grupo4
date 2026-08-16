@@ -86,27 +86,30 @@ El texto redondea esas cifras a 0,79, 0,78, 0,73, 0,69 y 0,65, respectivamente. 
 | Estado del arte | Faltaba describir ámbito, unidad, tarea y relación de cada trabajo usado como referencia cuantitativa. | Media | Correspondencia fuente--afirmación. | Se añadió una tabla con DETOXIS, HatEval, OffendES, EXIST, HateXplain y NaijaHate, seguida de un juicio crítico de comparabilidad. | Cerrado |
 | Corpus | Los totales efectivos no mostraban alcance inicial, concentración por canal ni dificultad de construcción. | Media | Reconciliación y estadística descriptiva. | Se incorporaron 182 461 observaciones iniciales, exclusiones, dispersión video/canal, top 5/top 10 y controles ante subtítulos, sesgo y contexto. | Cerrado |
 | Métricas | La fórmula no bastaba para explicar por qué BA gobierna y F1 no. | Alta | Justificación de variables y decisión. | Se añadió interpretación, dirección, dependencia del umbral y descarte razonado de accuracy, micro-F1, ROC-AUC y suma de métricas. | Cerrado |
+| Entrenamientos Qwen | Las variantes podían leerse como un único ajuste o como si todas utilizaran LoRA. | Alta | Estados de entrenador, configuraciones de adaptador y ranking vigente. | Se separaron LoRA base 128, continuación LoRA 256, tres brazos LoRA estructurados y ajuste completo histórico sin LoRA; se identificó el ganador y el miembro usado por el ensemble. | Cerrado |
+| Especificaciones de modelos | BF16 podía confundirse con cuantización y faltaba precisar la escala de Qwen y MiniLM. | Media | Configuraciones, tensores locales y tarjetas oficiales. | Se añadieron parámetros, capas, fracción LoRA, ausencia de 4/8 bits, almacenamiento FP32 y significado de cálculo mixto BF16. | Cerrado |
 | Bibliografía maestra | 41 entradas no se citan en esta versión. | Baja | BibTeX solo emite las claves usadas. | Se conservan como catálogo compartido; ninguna aparece como referencia huérfana en el PDF. | Aceptado |
 | Registro LaTeX | Persisten avisos `Underfull` por URL e identificadores largos. | Baja | No implican recorte. | Inspección visual confirmó márgenes y legibilidad; no hay `Overfull`. | Aceptado |
 
 ## 5. Revisión científica y editorial
 
-- El resumen es autocontenido, declara método, muestra, resultados, conclusión de uso y límite operacional.
+- El resumen es autocontenido, contiene 236 palabras y declara método, muestra, resultados, conclusión de uso y límite operacional.
 - El problema se expone en los niveles real, subyacente y tecnológico.
 - Datos, particiones, pseudoetiquetado, revisión humana y límites de validez están separados de resultados.
 - Los 28 modelos y cinco ensembles se describen con atención especial a los tres miembros ganadores y al promedio suave.
 - La evaluación distingue validation OOF, test natural primario y vista 4:1 secundaria; test no modifica selección, calibradores ni umbrales.
 - El contrato aprende las cinco salidas literales `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`; `SEGURO` es excluyente y no se presenta como mero complemento.
 - La salida Qwen se describe correctamente como cabeza clasificadora de 22 logits; la taxonomía Markdown y el JSON estructurado pertenecen al proceso de anotación, no a esta inferencia.
+- Las cuatro rutas Qwen quedan diferenciadas por inicialización, longitud de contexto, objetivo y parámetros actualizados. Solo el ajuste completo histórico carece de LoRA; el LoRA base de 128 tokens es el ganador y miembro del ensemble.
 - El término “ganador” se limita al orden de la regla predeclarada; la inferencia estadística permanece inconclusa.
 - Las conclusiones son cualitativas y cuantitativas, responden a las brechas del trabajo y conservan límites sobre capacidad, doble anotación, deriva, privacidad y ausencia de sanción automática.
 
 ## 6. Revisión visual y compilación
 
 - Documento `IEEEtran` en modo conferencia, papel A4 físico: 595,276 × 841,89 pt (210 × 297 mm).
-- PDF final: 22 páginas.
+- PDF final: 23 páginas.
 - 0 errores fatales, 0 citas indefinidas, 0 referencias indefinidas y 0 cajas `Overfull`.
-- Portada, texto a dos columnas, 17 tablas, 11 figuras, fórmulas, apéndices y 100 referencias fueron inspeccionados tras rasterizar las 22 páginas.
+- Portada, texto a dos columnas, 17 tablas, 11 figuras, fórmulas, apéndices y 100 referencias fueron inspeccionados tras rasterizar las 23 páginas.
 - Las tablas del ensemble y de resultados ampliados son legibles a tamaño normal.
 - Las capturas de etiquetado y producción ocupan el ancho útil y conservan texto reconocible.
 - Los apéndices y la bibliografía no contienen páginas vacías ni elementos cortados.

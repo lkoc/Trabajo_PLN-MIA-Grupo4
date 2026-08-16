@@ -25,6 +25,8 @@ Las cinco salidas aprendidas son `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR
 
 La métrica primaria es BA de `ANY_DAMAGE` OOF a cobertura completa. Macro-AUPRC de los cuatro daños actúa como salvaguarda; macro-F1 describe la decisión después de fijar umbrales y no gobierna el primer orden del ranking.
 
+Los entrenamientos Qwen se separan por objetivo y alcance. El ganador es el LoRA base de 128 tokens, detenido después de la tercera época y restaurado en la segunda. La continuación LoRA a 256 tokens reduce el truncamiento y mejora AUPRC/F1, pero no supera su BA; tres continuaciones LoRA estructuradas ensayan una penalización de incoherencia `SEGURO`--daño; y una corrida histórica de ajuste completo, sin LoRA, se descarta por desempeño. El ensemble usa el LoRA base.
+
 La comparación externa describe DETOXIS, HatEval, OffendES, EXIST, HateXplain y NaijaHate por ámbito, tarea y diseño. El artículo concluye competitividad contextual y alineación con el estado del arte aplicado, sin afirmar superioridad sobre un benchmark común.
 
 El estado inferencial sigue siendo `statistical_tie_or_inconclusive`: el ensemble ocupa el primer lugar por el criterio predeclarado, pero el contraste pareado no demuestra superioridad estadística frente al retador más cercano.
@@ -57,4 +59,4 @@ Desde esta carpeta:
 latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error paper_moderador_contenido_youtube_ieee.tex
 ```
 
-El PDF vigente tiene 22 páginas A4. El cierre exige cero errores, citas o referencias indefinidas y cajas `Overfull`, además de inspección visual de todas las páginas.
+El PDF vigente tiene 23 páginas A4. El cierre exige cero errores, citas o referencias indefinidas y cajas `Overfull`, además de inspección visual de todas las páginas.

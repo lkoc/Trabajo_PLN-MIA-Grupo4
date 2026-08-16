@@ -689,32 +689,44 @@
   \takeaway{El test no decide el ganador: estima una vez el desempeño de la política ya congelada.}
 \end{frame}
 
-\begin{frame}{Adaptación de Qwen mediante LoRA}
-  \framesubtitle{El mejor modelo individual combina contexto y adaptación eficiente}
-  \centering
-  \begin{tikzpicture}[
-    n/.style={draw,rounded corners=3pt,text width=29mm,minimum height=17mm,align=center,inner sep=1.8mm,font=\scriptsize},
-    a/.style={-{Stealth[length=1.8mm]},thick,draw=Muted}]
-    \node[n,draw=Blue!50,fill=Blue!7] (x) {\textbf{Entrada}\par chunk + ventana + 5 salidas};
-    \node[n,draw=Purple!50,fill=Purple!7,right=5mm of x] (q) {\textbf{Qwen}\par contexto de lenguaje abierto};
-    \node[n,draw=Gold!55,fill=Gold!9,right=5mm of q] (l) {\textbf{LoRA}\par adaptación eficiente};
-    \node[n,draw=Teal!50,fill=Teal!7,right=5mm of l] (y) {\textbf{Salida}\par probabilidades calibradas};
-    \draw[a] (x)--(q); \draw[a] (q)--(l); \draw[a] (l)--(y);
-  \end{tikzpicture}
-  \vspace{3mm}
+\begin{frame}[shrink=5]{Qwen y MiniLM: escala, ajuste y precisión numérica}
+  \framesubtitle{LoRA reduce los parámetros ajustados; BF16 no equivale a cuantización}
   \begin{columns}[T,onlytextwidth]
-    \begin{column}{.31\textwidth}
-      \metriccard{Purple}{0,831}{BA binaria OOF}{mejor Qwen individual}
+    \begin{column}{.49\textwidth}
+      \smallcard{Purple}{Qwen3-0.6B-Base}{596,05 millones de parámetros de base; 28 capas, dimensión 1\,024 y atención agrupada 16Q/8KV. Contexto nativo 32\,768; entrada operativa 256 tokens~\cite{qwen2025qwen3,hf2026qwen06bcard}.}
+      \vspace{1.5mm}
+      \smallcard{Gold}{Adaptación LoRA}{Rango 8, $\alpha=16$, \emph{dropout} 0,05 y matrices Q/K/V/O. Se ajustan 2\,316\,288 parámetros (0,39\%); adaptador FP32 de 9,29 MB~\cite{hu2022lora}.}
+      \vspace{1.5mm}
+      \metriccard{Purple}{0,831}{BA binaria OOF}{mejor individuo del ranking}
     \end{column}
-    \begin{column}{.31\textwidth}
-      \metriccard{Gold}{0,516}{macro-AUPRC OOF}{cuatro categorías de daño}
-    \end{column}
-    \begin{column}{.31\textwidth}
-      \metriccard{Teal}{0,553}{F1 macro}{media armónica de precisión y sensibilidad}
+    \begin{column}{.49\textwidth}
+      \smallcard{Blue}{MiniLM-L12-v2}{117\,662\,230 parámetros con la cabeza local de 22 salidas; 12 capas, dimensión 384, 12 cabezas y entrada de 128 tokens~\cite{wang2020minilm,hf2026minilmcard}.}
+      \vspace{1.5mm}
+      \smallcard{Teal}{Ajuste completo}{El candidato de 03\_07 ajusta toda la red; solo el piloto de longitud congela el encoder. BA OOF 0,814 y macro-AUPRC 0,476.}
+      \vspace{1.5mm}
+      \smallcard{Coral}{Sin cuantización}{Ninguno usa 4/8 bits, NF4 ni QLoRA. BF16 es precisión mixta de cálculo en GPU; en CPU la carga estándar queda sin cuantizar.}
     \end{column}
   \end{columns}
-  \takeaway{Qwen fue el mejor individuo por familia y también una fuente de diversidad para el ensemble ganador.}
-  \mixedNote{Adaptación eficiente~\cite{hu2022lora}; familia Qwen~\cite{qwen2025qwen3}.}{Candidato \texttt{qwen\_lora-4aa5ce04df05}, métricas OOF de validación.}
+  \takeaway{Qwen logra el mejor resultado individual ajustando menos de 0,4\% del clasificador; MiniLM ofrece una referencia compacta, aunque no integra el ensemble final.}
+  \resultNote{Conteos verificados en los tensores y configuraciones locales. El miembro Transformer del ensemble es la cascada E5 v2, no MiniLM.}
+\end{frame}
+
+\begin{frame}[shrink=8]{Entrenamientos Qwen realizados}
+  \framesubtitle{La longitud y la pérdida cambian; el backbone y el contrato permanecen fijos}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.49\textwidth}
+      \smallcard{Purple}{03\_05 · LoRA base, 128 tokens}{BCE ponderada y 22 logits enmascarados; $10^{-4}$, lote efectivo 8 y hasta cuatro épocas. El ajuste paró tras la época 3 y restauró la época 2. \textbf{Ganador Qwen y mejor individuo}: BA 0,831; AUPRC 0,516.}
+      \vspace{1.5mm}
+      \smallcard{Blue}{03\_05 · LoRA continuado, 256}{Warm-start del anterior, optimizador nuevo y hasta cuatro épocas adicionales. Reduce truncamiento de 56,1\% a 0,002\%; AUPRC 0,523 y F1 0,572, pero BA 0,830.}
+    \end{column}
+    \begin{column}{.49\textwidth}
+      \smallcard{Gold}{03\_06 · barrido LoRA estructurado}{Tres continuaciones de una época, $2\times10^{-5}$ y $\lambda=0/0,02/0,05$ para penalizar \texttt{SEGURO}+daño. Gana $\lambda=0,05$ dentro del barrido: BA 0,819; AUPRC 0,500.}
+      \vspace{1.5mm}
+      \smallcard{Coral}{03\_06 · ajuste completo histórico}{Única ruta \textbf{sin LoRA}: cuatro épocas y $\lambda=0,2$. Fue más costosa y rindió peor: AUPRC 0,243; falso seguro 0,775. Se conserva como antecedente descartado.}
+    \end{column}
+  \end{columns}
+  \takeaway{El mejor Qwen no fue el más largo: el LoRA base maximiza BA; el contexto 256 mejora categorías específicas y los estructurados no compensan la pérdida global.}
+  \resultNote{Los dos identificadores de contexto 256 del ranking reproducen las mismas métricas; no constituyen réplicas independientes. El ensemble usa el LoRA base.}
 \end{frame}
 
 \begin{frame}[shrink=8]{Metodología del ensemble por promedio de probabilidades}
@@ -787,12 +799,12 @@
     Macro-AUPRC de daño & Media no ponderada de las cuatro áreas bajo la curva precisión--sensibilidad & Evalúa el ordenamiento de positivos a través de todos los umbrales y da igual peso a cada daño raro. & $\uparrow$ \\
     Macro-F1 de daño & Media del F1 por daño; $F1=2PR/(P+R)$ & Resume precisión y sensibilidad después de fijar umbrales; no incorpora verdaderos negativos. & $\uparrow$ \\
     \rowcolor{Blue!5}
-    $R_{0,67}$ & $0,67\,\text{FNR}+0,33\,\text{FPR}$ & Sensibilidad local al costo: penaliza aproximadamente el doble omitir daño que alertar sobre contenido seguro. & $\downarrow$ \\
+    $R_{0,67}$ & $0,67\,\text{FNR}+0,33\,\text{FPR}$ & FNR: daño omitido; FPR: falsa alerta. Penaliza la omisión $0,67/0,33\simeq2,03$ veces y se minimiza. & $\downarrow$ \\
     Carga de revisión & Fracción enviada a \texttt{NEEDS\_REVIEW} & Capacidad humana necesaria; siempre se interpreta junto con BA/riesgo de la ruta automática. & $\downarrow$ \\
     \bottomrule
   \end{tabularx}
   \vspace{2mm}
-  \takeaway{La métrica principal es BA de ANY\_DAMAGE OOF a cobertura completa. Macro-AUPRC evita degradar los cuatro daños; F1 y revisión explican la decisión ya umbralizada.}
+  \takeaway{La métrica principal es BA de ANY\_DAMAGE OOF a cobertura completa. Además, $R_{0,50}=1-\mathrm{BA}$; usar 0,67 desplaza el desempate hacia evitar daño omitido.}
   \externalNote{BA ante desbalance~\cite{brodersen2010balanced}; precisión--sensibilidad~\cite{saito2015pr,davis2006pr}; criterio local completo en \texttt{docs/CRITERIO\_SELECCION\_MODELOS\_03.md}.}
 \end{frame}
 
@@ -1319,7 +1331,7 @@
   {Fuentes académicas y documentos utilizados para fundamentar métodos y comparaciones.}
   {MODERACIÓN \quad DATOS \quad MODELOS \quad EVALUACIÓN}{Teal}
 \begin{frame}[allowframebreaks]{Referencias utilizadas}
-  \fontsize{6}{6.7}\selectfont
+  \fontsize{5.6}{6.1}\selectfont
   \bibliographystyle{IEEEtran}
   \bibliography{referencias}
 \end{frame}

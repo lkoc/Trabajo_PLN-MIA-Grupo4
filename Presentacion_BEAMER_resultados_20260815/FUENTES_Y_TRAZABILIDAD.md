@@ -14,9 +14,11 @@ Las métricas propias provienen de los artefactos más recientes de 03_07 y 03_0
 | 28 candidatos individuales y 5 ensembles; ganador ensemble_soft_mean | resultados/modelos/comparacion_individual_ensemble_validation.json | Ranking y selección global |
 | Composición y métricas de promedio simple, promedio ponderado, unión, mayoría e intersección | resultados/modelos/comparacion_individual_ensemble_validation.json y src/moderacion_peru/ensemble_evaluation.py | Diapositiva dedicada a estrategias de ensemble; copia tabular en datos_fuente/ensembles_validation.csv |
 | Mejores representantes clásico, Transformer, Qwen y ensemble | resultados/modelos/mejores_por_tipo_validation.csv | Comparación por tipo de modelo |
+| Arquitectura y precisión numérica de Qwen3--0.6B y MiniLM; 596 049 920 y 117 662 230 parámetros, respectivamente; LoRA estándar sin cuantización y cálculo mixto BF16 | Tarjetas versionadas de Hugging Face; configuraciones y tensores locales; `docs/ARQUITECTURAS_MODELOS_03.md` | Diapositiva de escala, ajuste, cuantización y precisión numérica |
+| LoRA base 128, continuación LoRA 256, tres brazos LoRA estructurados y ajuste completo histórico sin LoRA | Cuadernos `03_05`/`03_06`, estados de entrenador, `adapter_config.json` y ranking vigente de `03_07` | Diapositiva de diferencias entre entrenamientos Qwen; identificación del LoRA base como ganador y miembro del ensemble |
 | Ganadores de AUPRC y F1 por categoría | resultados/modelos/ganadores_por_categoria_validation.csv | Comparación por categoría |
 | Empate estadístico, 2 000 réplicas por video, intervalo y valor p ajustado | resultados/modelos/comparacion_individual_ensemble_validation.json | Frontera de Pareto e incertidumbre |
-| Definición, dirección e interpretación de BA, macro-AUPRC, macro-F1, R_0.67 y carga de revisión | docs/CRITERIO_SELECCION_MODELOS_03.md; Brodersen et al.; Saito y Rehmsmeier; Davis y Goadrich | Dos diapositivas previas al ranking y protocolo de selección |
+| Definición, dirección e interpretación de BA, macro-AUPRC, macro-F1, $R_{0,67}=0,67\,\mathrm{FNR}+0,33\,\mathrm{FPR}$ y carga de revisión | docs/CRITERIO_SELECCION_MODELOS_03.md; Brodersen et al.; Saito y Rehmsmeier; Davis y Goadrich | Dos diapositivas previas al ranking y protocolo de selección; ejemplo 0,149 frente a 0,152 |
 | Test natural de 22 684 chunks; BA 0,846; sensibilidad 0,906; AP 0,530 | resultados/modelos/test_final_abierto_una_vez.json | Evaluación final a cobertura completa |
 | Cobertura automática 65,2 %; revisión 34,8 %; BA selectiva 0,940 | resultados/modelos/test_final_abierto_una_vez.json | Política humano–IA |
 | Resultados por daño en test natural | resultados/modelos/metricas_por_categoria_test.csv | Gráfico por categoría |
@@ -33,3 +35,4 @@ Las métricas propias provienen de los artefactos más recientes de 03_07 y 03_0
 - El estado del ganador en validación es empate estadístico o evidencia inconclusa. La selección del ensemble es operativa y reproducible, no una afirmación de superioridad estadística.
 - Las capturas de etiquetado y producción son históricas; la paridad de la versión activa se sustenta documentalmente.
 - La calificación crítica es deliberadamente doble: competitividad contextual y alineamiento con prácticas del estado del arte aplicado, sin afirmar un récord común que requeriría un benchmark externo compartido.
+- Los entrenamientos Qwen se describen solo cuando existe un artefacto ejecutado y verificable; propuestas no ejecutadas no se presentan como método ni resultado del estudio.
