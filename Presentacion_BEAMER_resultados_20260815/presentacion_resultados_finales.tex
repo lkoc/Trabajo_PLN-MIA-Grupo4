@@ -194,7 +194,7 @@
       \metriccard{Teal}{0,846}{exactitud balanceada (BA)}{compuerta de cualquier daño; cobertura completa}
     \end{column}
     \begin{column}{.31\textwidth}
-      \metriccard{Green}{0,940}{BA en ruta automática}{65,2\,\% de cobertura; revisión 34,8\,\%}
+      \metriccard{Green}{0,925}{BA en ruta automática}{72,7\,\% de cobertura; revisión 27,3\,\%}
     \end{column}
   \end{columns}
   \vspace{2mm}
@@ -259,7 +259,7 @@
     b/.style={draw,rounded corners=3pt,text width=.88\textwidth,minimum height=11mm,align=left,inner sep=2.5mm,font=\scriptsize},
     a/.style={-{Stealth[length=1.7mm]},thick,draw=Muted}]
     \node[b,draw=Blue!45,fill=Blue!7] (o1) {\textbf{Corpus local reproducible} $\rightarrow$ 173\,240 chunks elegibles, cinco salidas y particiones separadas por video.};
-    \node[b,draw=Purple!45,fill=Purple!7,below=of o1] (o2) {\textbf{Comparación común} $\rightarrow$ 28 individuos + 5 ensembles bajo la misma instantánea y criterio de validación.};
+    \node[b,draw=Purple!45,fill=Purple!7,below=of o1] (o2) {\textbf{Comparación común} $\rightarrow$ 28 individuos + 5 reglas base + 2 mezclas optimizadas bajo la misma instantánea.};
     \node[b,draw=Gold!55,fill=Gold!9,below=of o2] (o3) {\textbf{Incertidumbre operable} $\rightarrow$ calibración, compuerta ANY\_DAMAGE y política de revisión congelada.};
     \node[b,draw=Teal!45,fill=Teal!7,below=of o3] (o4) {\textbf{Artefacto utilizable} $\rightarrow$ frontends, evidencia temporal, correcciones y registros append-only.};
     \draw[a] (o1)--(o2); \draw[a] (o2)--(o3); \draw[a] (o3)--(o4);
@@ -652,8 +652,8 @@
   \vspace{3mm}
   \begin{center}
     \pill{Blue}{28 candidatos individuales}\quad
-    \pill{Teal}{5 ensembles}\quad
-    \pill{Purple}{33 comparados en validación}
+    \pill{Teal}{5 reglas + 2 optimizadas}\quad
+    \pill{Purple}{validación anidada por vídeo}
   \end{center}
   \takeaway{La comparación conjunta aprovecha la complementariedad entre señales léxicas, representaciones contextuales y Qwen adaptado.}
   \resultNote{Inventario verificable de \texttt{comparacion\_individual\_ensemble\_validation.json}; arquitectura: \texttt{docs/ARQUITECTURAS\_MODELOS\_03.md}.}
@@ -729,8 +729,8 @@
   \resultNote{Los dos identificadores de contexto 256 del ranking reproducen las mismas métricas; no constituyen réplicas independientes. El ensemble usa el LoRA base.}
 \end{frame}
 
-\begin{frame}[shrink=8]{Metodología del ensemble por promedio de probabilidades}
-  \framesubtitle{Tres familias complementarias respaldan la decisión final}
+\begin{frame}[shrink=8]{Metodología del ensemble optimizado}
+  \framesubtitle{Calibración por miembro y pesos aprendidos sin consultar test}
   \centering
   \begin{tikzpicture}[
     n/.style={draw,rounded corners=4pt,text width=30mm,minimum height=16mm,align=center,inner sep=1.5mm,font=\scriptsize},
@@ -738,25 +738,25 @@
     \node[n,draw=Blue!50,fill=Blue!7] (cl) {\textbf{Clásico}\par regresión logística, $C=0,5$};
     \node[n,draw=Purple!50,fill=Purple!7,right=5mm of cl] (tr) {\textbf{Transformer}\par cascade v2};
     \node[n,draw=Gold!55,fill=Gold!9,right=5mm of tr] (qw) {\textbf{Qwen}\par Qwen + LoRA};
-    \node[n,draw=Teal!60,fill=Teal!9,below=7mm of tr,text width=39mm,minimum height=18mm] (mean) {\textbf{Soft mean}\quad $\hat p_c=\frac{1}{3}\sum_m\hat p_{m,c}$};
+    \node[n,draw=Teal!60,fill=Teal!9,below=7mm of tr,text width=43mm,minimum height=18mm] (mean) {\textbf{Mezcla convexa}\quad $E_c=0{,}10p_{C,c}+0{,}65p_{T,c}+0{,}25p_{Q,c}$};
     \node[n,draw=Navy!60,fill=Navy!7,right=12mm of mean,text width=36mm,minimum height=18mm] (out) {\textbf{Política}\par 5 salidas + \texttt{NEEDS\_REVIEW}};
     \draw[a] (cl.south)--(mean.north); \draw[a] (tr.south)--(mean.north); \draw[a] (qw.south)--(mean.north); \draw[a] (mean)--(out);
   \end{tikzpicture}
   \vspace{2mm}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{.47\textwidth}
-      \smallcard{Teal}{Fusión suave}{Conserva intensidad probabilística; no fuerza a que todos los miembros voten igual.}
+      \smallcard{Teal}{Fusión suave}{Cada score se calibra dentro del pliegue; los pesos no negativos suman uno.}
     \end{column}
     \begin{column}{.47\textwidth}
-      \smallcard{Purple}{Cobertura completa para ranking}{La derivación a humano se evalúa después, bajo una capacidad declarada.}
+      \smallcard{Purple}{Optimización anidada}{5 pliegues externos e internos por vídeo; grid 0,025 con 861 ternas.}
     \end{column}
   \end{columns}
-  \takeaway{El producto combina tres fuentes distintas; su ventaja es cuantitativa y también arquitectónica: reduce dependencia de un único tipo de modelo.}
-  \externalNote{Los ensembles explotan errores diversos~\cite{dietterich2000ensemble,lam1997majority}; implementación interna: promedio de probabilidades por categoría.}
+  \takeaway{Se optimizan todas las mezclas parametrizadas; unión e intersección no reciben coeficientes artificiales.}
+  \externalNote{Diversidad y voto~\cite{dietterich2000ensemble,lam1997majority}; combinación aprendida~\cite{wolpert1992stacked,vanderlaan2007superlearner}; objetivo lexicográfico: propuesta propia.}
 \end{frame}
 
-\begin{frame}[shrink=6]{Estrategias de ensemble evaluadas}
-  \framesubtitle{Cinco reglas combinan los mismos tres miembros con distintos criterios}
+\begin{frame}[shrink=9]{Estrategias de ensemble evaluadas}
+  \framesubtitle{Cinco reglas base y dos variantes optimizadas bajo el mismo protocolo}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{.31\textwidth}
       \smallcard{Blue}{Clásico}{Regresión logística con $C=0,5$.}
@@ -770,20 +770,22 @@
   \end{columns}
   \vspace{2.5mm}
   \centering\scriptsize
-  \begin{tabularx}{\textwidth}{@{}p{29mm}Xrrr@{}}
+  \begin{tabularx}{\textwidth}{@{}p{26mm}Xrrrr@{}}
     \toprule
-    \textbf{Regla} & \textbf{Operación por categoría} & \textbf{BA} & \textbf{macro-AUPRC} & \textbf{F1 macro}\\
+    \textbf{Regla} & \textbf{Operación / pesos C--T--Q} & \textbf{BA} & $\boldsymbol{R_{.67}}$ & \textbf{AP} & \textbf{F1}\\
     \midrule
-    \rowcolor{Teal!12}\textbf{Promedio simple} & Media de las tres probabilidades. & \textbf{0,840} & 0,555 & 0,568\\
-    Promedio ponderado & Pesos 0,332 / 0,311 / 0,357, proporcionales a macro-AUPRC. & 0,838 & \textbf{0,556} & 0,569\\
-    Unión & Máxima probabilidad entre los tres miembros. & 0,833 & 0,524 & 0,565\\
-    Mayoría & Promedio de decisiones binarias calibradas. & 0,829 & 0,461 & \textbf{0,572}\\
-    Intersección & Mínima probabilidad entre los tres miembros. & 0,824 & 0,516 & 0,538\\
+    \rowcolor{Teal!12}\textbf{Suave optimizado} & 0,100 / 0,650 / 0,250. & \textbf{0,8366} & \textbf{0,1587} & 0,5506 & 0,5618\\
+    Ponderado AUPRC & 0,332 / 0,311 / 0,357. & 0,8360 & 0,1612 & \textbf{0,5614} & 0,5675\\
+    Unión & Máximo; sin coeficientes. & 0,8334 & 0,1684 & 0,5369 & 0,5621\\
+    Promedio simple & 1/3 / 1/3 / 1/3. & 0,8328 & 0,1673 & 0,5604 & \textbf{0,5703}\\
+    Duro optimizado & 0,300 / 0,325 / 0,375 sobre votos. & 0,8272 & 0,1731 & 0,4547 & 0,5584\\
+    Mayoría dura & 1/3 / 1/3 / 1/3 sobre votos. & 0,8272 & 0,1731 & 0,4415 & 0,5638\\
+    Intersección & Mínimo; sin coeficientes. & 0,8149 & 0,1887 & 0,5131 & 0,5373\\
     \bottomrule
   \end{tabularx}
   \vspace{2mm}
-  \takeaway{El promedio simple gana por exactitud balanceada; el ponderado es el rival más cercano y la mayoría obtiene el mayor F1 macro entre ensembles.}
-  \resultNote{03\_07a, validación OOF; implementación en \texttt{ensemble\_evaluation.py}; los cinco ensembles usan exactamente los mismos tres miembros.}
+  \takeaway{La optimización cambia el ganador: se congela únicamente la mezcla suave 0,10/0,65/0,25.}
+  \resultNote{03\_07b, validación OOF externa anidada; cuaderno local ejecutado y hashes de entrada verificados.}
 \end{frame}
 
 \begin{frame}[shrink=4]{Métricas de ranking: qué miden}
@@ -812,11 +814,11 @@
   \framesubtitle{La interpretación evita convertir porcentajes distintos en una sola “nota”}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{.48\textwidth}
-      \smallcard{Teal}{BA 0,840}{No significa “84\,\% de chunks correctos”: es el promedio de sensibilidad y especificidad de la compuerta binaria, estimado fuera de muestra (OOF).}
+      \smallcard{Teal}{BA 0,8366}{No significa “83,66\,\% de chunks correctos”: es el promedio de sensibilidad y especificidad de la compuerta binaria, estimado en pliegues externos.}
       \vspace{1.5mm}
-      \smallcard{Gold}{Macro-AUPRC 0,555}{No significa “55,5\,\% de aciertos”: es el área precisión--sensibilidad media de los cuatro daños; solo se compara sobre el mismo panel y prevalencia.}
+      \smallcard{Gold}{Macro-AUPRC 0,5506}{No significa “55,06\,\% de aciertos”: es el área precisión--sensibilidad media de los cuatro daños; solo se compara sobre el mismo panel y prevalencia.}
       \vspace{1.5mm}
-      \smallcard{Purple}{Macro-F1 0,568}{Describe las decisiones por categoría en los umbrales congelados; una categoría rara pesa lo mismo que una frecuente.}
+      \smallcard{Purple}{Macro-F1 0,5618}{Describe las decisiones por categoría en umbrales aprendidos dentro de cada pliegue; una categoría rara pesa lo mismo que una frecuente.}
     \end{column}
     \begin{column}{.48\textwidth}
       \smallcard{Coral}{No accuracy ni micro-F1}{La abundancia de SEGURO puede producir una cifra alta aun cuando se omita daño; micro/weighted privilegia las etiquetas con mayor soporte.}
@@ -838,19 +840,19 @@
         \item \textbf{Salvaguarda:} macro-AUPRC de los cuatro daños dentro de un margen de no inferioridad predeclarado.
         \item \textbf{Frontera de Pareto:} descarta opciones dominadas en sensibilidad/especificidad y desempeño por categoría.
         \item \textbf{Desempate:} menor riesgo $R_{0,67}$ y luego mayor macro-AUPRC.
-        \item \textbf{Incertidumbre:} 2\,000 réplicas pareadas por video y ajuste de Holm.
+        \item \textbf{Incertidumbre:} 2\,000 réplicas pareadas por video; se reportan IC y $p$ sin inflar la evidencia.
       \end{enumerate}
     \end{column}
     \begin{column}{.38\textwidth}
-      \smallcard{Blue}{1 · BA decide}{Promedio simple 0,840; ponderado 0,838; Qwen 0,831. La diferencia simple--Qwen es +0,0086.}
+      \smallcard{Blue}{1 · BA decide}{Suave optimizado 0,8366; ponderado 0,8360; promedio simple 0,8328.}
       \vspace{2mm}
-      \smallcard{Gold}{2 · Salvaguarda y Pareto}{AUPRC 0,555 frente a 0,516 del mejor individuo: +0,039 y salvaguarda superada. Simple y ponderado quedan en la frontera: uno lidera BA; el otro, AUPRC 0,556.}
+      \smallcard{Gold}{2 · Salvaguarda}{AUPRC 0,5506; el ponderado alcanza 0,5614, pero no desplaza al líder del criterio primario.}
       \vspace{2mm}
-      \smallcard{Purple}{3 · Desempate de riesgo}{$R_{0,67}=0,67(0,127)+0,33(0,193)=0,149$ para el simple; 0,152 para el ponderado. Menor es preferible.}
+      \smallcard{Purple}{3 · Riesgo y pesos}{$R_{0,67}=0,1587$; ajuste final C/T/Q = 0,10/0,65/0,25.}
     \end{column}
   \end{columns}
-  \takeaway{El promedio simple queda primero por BA y menor riesgo; el contraste con el ponderado sigue inconcluso: $\Delta$BA = $-0,0017$, IC95\,\% $[-0,0044;\,0,00083]$, $p_{Holm}=0,23$.}
-  \externalNote{Bootstrap pareado por video~\cite{field2007clusterbootstrap}; comparación múltiple~\cite{dror2018significance,holm1979multiple}; criterio interno: \texttt{docs/CRITERIO\_SELECCION\_MODELOS\_03.md}.}
+  \takeaway{El suave optimizado es el único seleccionado; frente al ponderado, $\Delta$BA=+0,00059$, IC95\,\% $[-0,00367;0,00509]$, $p=0,804$: ventaja inconclusa.}
+  \externalNote{Bootstrap pareado por video~\cite{field2007clusterbootstrap}; criterio interno: \texttt{docs/CRITERIO\_SELECCION\_MODELOS\_03.md}.}
 \end{frame}
 
 \section{5. Resultados finales}
@@ -867,15 +869,15 @@
       \includegraphics[width=\linewidth,height=55mm,keepaspectratio]{assets/ranking_global_validation.png}
     \end{column}
     \begin{column}{.25\textwidth}
-      \metriccard{Teal}{0,840}{BA OOF}{ANY\_DAMAGE; cobertura completa}
+      \metriccard{Teal}{0,8366}{BA anidada}{ANY\_DAMAGE; cobertura completa}
       \vspace{2mm}
-      \metriccard{Purple}{0,555}{macro-AUPRC OOF}{cuatro daños}
+      \metriccard{Purple}{0,5506}{macro-AUPRC OOF}{cuatro daños}
       \vspace{2mm}
-      \metriccard{Blue}{0,568}{macro-F1}{cuatro daños}
+      \metriccard{Blue}{0,5618}{macro-F1}{cuatro daños}
     \end{column}
   \end{columns}
   \takeaway{El mejor punto global integra clásico + Transformer + Qwen; el resultado respalda la diversidad de la cartera, no una arquitectura única.}
-  \resultNote{03\_07a, \texttt{ranking\_validation.csv}; ganador congelado: \texttt{ensemble\_soft\_mean}.}
+  \resultNote{03\_07b, \texttt{optimizacion\_ensembles\_validation.json}; único ganador actual: \texttt{ensemble\_soft\_optimized}.}
 \end{frame}
 
 \begin{frame}[shrink=6]{Mejor modelo por tipo}
@@ -895,7 +897,7 @@
           nodes near coords,nodes near coords align={horizontal},
           every node near coord/.append style={font=\scriptsize\bfseries,color=Ink},
           enlarge y limits=.18]
-          \addplot[fill=Blue!70,draw=Blue] coordinates {(.801415,Clásico) (.816981,Transformer) (.831368,Qwen) (.839976,Ensemble)};
+          \addplot[fill=Blue!70,draw=Blue] coordinates {(.801415,Clásico) (.816981,Transformer) (.831368,Qwen) (.836557,Ensemble)};
         \end{axis}
       \end{tikzpicture}
       {\tiny Exactitud balanceada binaria OOF, validación. Eje truncado para mostrar diferencias.}
@@ -909,11 +911,11 @@
         Regresión logística & 0,479 & 0,503\\
         Cascade v2 & 0,449 & 0,519\\
         Qwen + LoRA & 0,516 & 0,553\\
-        \rowcolor{Teal!10}\textbf{Soft mean} & \textbf{0,555} & \textbf{0,568}\\
+        \rowcolor{Teal!10}\textbf{Suave optimizado} & \textbf{0,551} & \textbf{0,562}\\
         \bottomrule
       \end{tabularx}
       \vspace{3mm}
-      \smallcard{Teal}{Ganancia acumulada}{El ensemble supera al mejor clásico en +3,86 puntos de BA y +7,62 puntos de macro-AUPRC.}
+      \smallcard{Teal}{Ganancia acumulada}{El ensemble supera al mejor clásico en +3,51 puntos de BA y +7,16 puntos de macro-AUPRC.}
       \vspace{2mm}
       \smallcard{Purple}{Lectura honesta}{Las diferencias entre familias no prueban causalidad arquitectónica: resumen los mejores candidatos ejecutados.}
     \end{column}
@@ -929,14 +931,14 @@
       \includegraphics[width=\linewidth,height=55mm,keepaspectratio]{assets/frontera_ba_macro_auprc_validation.png}
     \end{column}
     \begin{column}{.47\textwidth}
-      \smallcard{Teal}{Selección congelada}{\texttt{ensemble\_soft\_mean} ocupa el mejor punto lexicográfico y pasa la salvaguarda.}
+      \smallcard{Teal}{Selección vigente}{\texttt{ensemble\_soft\_optimized} ocupa el rango uno y es el único ganador actual.}
       \vspace{2mm}
-      \smallcard{Gold}{Rival más cercano}{El ensemble ponderado queda a $-0,00166$ de BA.}
+      \smallcard{Gold}{Rival más cercano}{El ponderado por AUPRC queda a $-0,00059$ de BA.}
       \vspace{2mm}
-      \smallcard{Purple}{Incertidumbre}{Intervalo de confianza del 95\,\% (IC95\,\%) pareado: $[-0,00437;\ 0,00083]$; $p_{Holm}=0,229$.}
+      \smallcard{Purple}{Incertidumbre}{IC95\,\% pareado para ganador menos rival: $[-0,00367;\ 0,00509]$; $p=0,804$. Pesos suaves variables entre pliegues.}
     \end{column}
   \end{columns}
-  \takeaway{El estado correcto es \emph{empate estadístico o evidencia inconclusa}: se elige un artefacto reproducible sin afirmar una superioridad no demostrada.}
+  \takeaway{Hay un único seleccionado por la regla; su ventaja estadística permanece inconclusa y se reporta como limitación.}
   \externalNote{Bootstrap agrupado~\cite{field2007clusterbootstrap}; pruebas pareadas y ajuste múltiple~\cite{dror2018significance,holm1979multiple}.}
 \end{frame}
 
@@ -947,7 +949,7 @@
       \metriccard{Teal}{0,846}{exactitud balanceada}{cobertura completa}
     \end{column}
     \begin{column}{.31\textwidth}
-      \metriccard{Coral}{0,906}{sensibilidad al daño}{omite 9,43\,\% del daño}
+      \metriccard{Coral}{0,894}{sensibilidad al daño}{omite 10,60\,\% del daño}
     \end{column}
     \begin{column}{.31\textwidth}
       \metriccard{Blue}{0,530}{AP de daño}{prevalencia natural 7,94\,\%}
@@ -961,19 +963,19 @@
         \toprule
          & \textbf{Pred. daño} & \textbf{Pred. seguro}\\
         \midrule
-        \textbf{Daño real} & \cellcolor{Teal!15}1\,632 & \cellcolor{Coral!12}170\\
-        \textbf{Seguro real} & \cellcolor{Gold!13}4\,466 & \cellcolor{Blue!12}16\,416\\
+        \textbf{Daño real} & \cellcolor{Teal!15}1\,611 & \cellcolor{Coral!12}191\\
+        \textbf{Seguro real} & \cellcolor{Gold!13}4\,221 & \cellcolor{Blue!12}16\,661\\
         \bottomrule
       \end{tabular}
       \par\vspace{1mm}{\tiny Matriz de confusión de la compuerta ANY\_DAMAGE.}
     \end{column}
     \begin{column}{.46\textwidth}
-      \smallcard{Gold}{Costo de la sensibilidad}{La especificidad es 0,786: la política prioriza detectar daño y envía más falsos positivos a revisión.}
+      \smallcard{Gold}{Compromiso actualizado}{La especificidad sube a 0,798 frente al promedio simple, mientras la sensibilidad baja; BA cambia solo +0,00004.}
       \vspace{2mm}
-      \smallcard{Purple}{Desempeño por daños}{Macro-AUPRC = 0,415; macro-F1 = 0,435 sobre cuatro categorías.}
+      \smallcard{Purple}{Desempeño por daños}{Macro-AUPRC = 0,412; macro-F1 = 0,423 sobre cuatro categorías.}
     \end{column}
   \end{columns}
-  \takeaway{A prevalencia natural, el sistema encuentra 1\,632 de 1\,802 chunks dañinos; su función es priorizar, no sancionar automáticamente.}
+  \takeaway{A prevalencia natural, el sistema encuentra 1\,611 de 1\,802 chunks dañinos; el test evalúa la fórmula, no vuelve a escogerla.}
   \resultNote{03\_07, \texttt{test\_final\_abierto\_una\_vez.json}; 22\,684 chunks de 674 videos.}
 \end{frame}
 
@@ -991,21 +993,21 @@
           legend style={font=\tiny,at={(.5,1.02)},anchor=south,legend columns=2,draw=none},
           nodes near coords,point meta=y,
           every node near coord/.append style={font=\tiny,/pgf/number format/fixed,/pgf/number format/precision=3}]
-          \addplot[fill=Blue!55,draw=Blue] coordinates {(BA,.845896) (Sensibilidad,.905660) (Especificidad,.786132) (F1,.413165)};
-          \addplot[fill=Teal!65,draw=Teal] coordinates {(BA,.939733) (Sensibilidad,.938272) (Especificidad,.941193) (F1,.676307)};
+          \addplot[fill=Blue!55,draw=Blue] coordinates {(BA,.845935) (Sensibilidad,.894007) (Especificidad,.797864) (F1,.422059)};
+          \addplot[fill=Teal!65,draw=Teal] coordinates {(BA,.924894) (Sensibilidad,.902240) (Especificidad,.947548) (F1,.660701)};
           \legend{Cobertura completa,Ruta automática}
         \end{axis}
       \end{tikzpicture}
     \end{column}
     \begin{column}{.37\textwidth}
-      \metriccard{Green}{65,2\,\%}{cobertura automática}{14\,795 chunks resueltos sin derivación}
+      \metriccard{Green}{72,7\,\%}{cobertura automática}{16\,500 chunks resueltos sin derivación}
       \vspace{2mm}
-      \metriccard{Gold}{34,8\,\%}{carga de revisión}{7\,889 chunks derivados}
+      \metriccard{Gold}{27,3\,\%}{carga de revisión}{6\,184 chunks derivados}
       \vspace{2mm}
       \smallcard{Purple}{Política congelada}{$\delta=0,03$; revisa cercanía a umbrales e incoherencias entre compuerta y categorías.}
     \end{column}
   \end{columns}
-  \takeaway{0,940 de BA aplica solo al 65,2\,\% automático; el 34,8\,\% restante es precisamente la salvaguarda humana.}
+  \takeaway{0,925 de BA aplica al 72,7\,\% automático; el 27,3\,\% restante es la salvaguarda humana.}
   \externalNote{Clasificación selectiva y aprendizaje con derivación~\cite{geifman2017selective,mozannar2020defer}; calibración~\cite{guo2017calibration}.}
 \end{frame}
 
@@ -1026,18 +1028,18 @@
           nodes near coords,point meta=x,
           every node near coord/.append style={font=\tiny,/pgf/number format/fixed,/pgf/number format/precision=3},
           enlarge y limits=.14]
-          \addplot[fill=Purple!58,draw=Purple] coordinates {(.273713,Género) (.356830,Racismo) (.450135,Acoso) (.579932,Sexual)};
-          \addplot[fill=Teal!63,draw=Teal] coordinates {(.327940,Género) (.387940,Racismo) (.453546,Acoso) (.569930,Sexual)};
+          \addplot[fill=Purple!58,draw=Purple] coordinates {(.268188,Género) (.358377,Racismo) (.445964,Acoso) (.575239,Sexual)};
+          \addplot[fill=Teal!63,draw=Teal] coordinates {(.310484,Género) (.358608,Racismo) (.453441,Acoso) (.571429,Sexual)};
           \legend{AUPRC,F1}
         \end{axis}
       \end{tikzpicture}
     \end{column}
     \begin{column}{.30\textwidth}
-      \smallcard{Teal}{Mayor desempeño}{CONTENIDO SEXUAL: AUPRC 0,580 y F1 0,570.}
+      \smallcard{Teal}{Mayor desempeño}{CONTENIDO SEXUAL: AUPRC 0,575 y F1 0,571.}
       \vspace{2mm}
-      \smallcard{Blue}{Zona intermedia}{ACOSO/AMENAZA: AUPRC 0,450 y F1 0,454.}
+      \smallcard{Blue}{Zona intermedia}{ACOSO/AMENAZA: AUPRC 0,446 y F1 0,453.}
       \vspace{2mm}
-      \smallcard{Coral}{Prioridad de mejora}{GÉNERO/IDENTIDAD: AUPRC 0,274 y F1 0,328.}
+      \smallcard{Coral}{Prioridad de mejora}{GÉNERO/IDENTIDAD: AUPRC 0,268 y F1 0,310.}
     \end{column}
   \end{columns}
   \takeaway{El promedio no basta: género/identidad y racismo requieren más ejemplos fronterizos, auditoría localizada y análisis de deriva.}
@@ -1060,7 +1062,7 @@
         Racismo & Qwen contexto 256 & 0,571\\
         Género & Qwen contexto 256 & 0,402\\
         Acoso & Ensemble ponderado & 0,614\\
-        Sexual & Soft mean & 0,688\\
+        Sexual & Promedio simple (pantalla) & 0,688\\
         \bottomrule
       \end{tabularx}
       \vspace{3mm}
@@ -1196,7 +1198,7 @@
     n/.style={draw,rounded corners=4pt,text width=27mm,minimum height=23mm,align=center,inner sep=2mm,font=\scriptsize},
     a/.style={-{Stealth[length=2mm]},thick,draw=Muted}]
     \node[n,draw=Blue!50,fill=Blue!7] (data) {\textbf{Datos}\par corpus local, tiempos y separación por video};
-    \node[n,draw=Purple!50,fill=Purple!7,right=3mm of data] (model) {\textbf{Inteligencia}\par 33 candidatos y ensemble multifamilia};
+    \node[n,draw=Purple!50,fill=Purple!7,right=3mm of data] (model) {\textbf{Inteligencia}\par 28 individuos y 7 variantes de ensemble};
     \node[n,draw=Gold!55,fill=Gold!9,right=3mm of model] (guard) {\textbf{Salvaguarda}\par calibración, abstención y auditoría};
     \node[n,draw=Teal!55,fill=Teal!7,right=3mm of guard] (ux) {\textbf{Operación}\par frontends, checkpoint y evidencia temporal};
     \draw[a] (data)--(model); \draw[a] (model)--(guard); \draw[a] (guard)--(ux);
@@ -1204,7 +1206,7 @@
   \vspace{5mm}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{.31\textwidth}
-      \smallcard{Blue}{Escalable}{La ruta automática procesa 65,2\,\% del test con BA de 0,940.}
+      \smallcard{Blue}{Escalable}{La ruta automática procesa 72,7\,\% del test con BA de 0,925.}
     \end{column}
     \begin{column}{.31\textwidth}
       \smallcard{Purple}{Especializable}{Los ganadores por categoría revelan rutas futuras con Qwen y ensembles.}
@@ -1226,20 +1228,20 @@
     \midrule
     \rowcolor{Teal!8}
     \textbf{General}\newline Diseñar un sistema semiautomático &
-    BA 0,846 a cobertura completa; BA 0,940 en 65,2\,\% automático; 34,8\,\% derivado. &
+    BA 0,846 a cobertura completa; BA 0,925 en 72,7\,\% automático; 27,3\,\% derivado. &
     Se logró una cadena humano--IA funcional: prioriza daño con alta sensibilidad y conserva revisión para incertidumbre.\\[2mm]
     \textbf{Específico 1}\newline Construir corpus local trazable &
     173\,240 chunks elegibles, 4\,906 videos, cinco salidas; 22\,684 chunks en test natural. &
     El objeto de estudio mantiene prevalencia, contexto temporal y separación por video, condiciones necesarias para una evaluación creíble.\\[2mm]
     \rowcolor{Blue!7}
     \textbf{Específico 2}\newline Comparar familias de modelos &
-    28 individuos + 5 ensembles; soft mean: BA 0,840 y macro-AUPRC 0,555 OOF. &
+    28 individuos + 5 reglas base + 2 optimizadas; ganador: BA 0,8366 y macro-AUPRC 0,5506 anidadas. &
     La complementariedad supera a los mejores representantes aislados; Qwen es el mejor individuo y mejora la representación contextual.\\
     \bottomrule
   \end{tabularx}
   \vspace{3mm}
   \takeaway{El objetivo general se cumple con una solución medible y utilizable que clasifica y deriva los casos inciertos.}
-  \mixedNote{Clasificación selectiva~\cite{geifman2017selective,mozannar2020defer}.}{Auditoría v2.1, comparación 03\_07a y test 03\_07 del 15-08-2026.}
+  \mixedNote{Clasificación selectiva~\cite{geifman2017selective,mozannar2020defer}.}{Auditoría v2.1, comparación 03\_07b y test actualizado sin reinferencia, 17-08-2026.}
 \end{frame}
 
 \begin{frame}[shrink=5]{Conclusiones vinculadas a los objetivos II}
@@ -1251,8 +1253,8 @@
     \midrule
     \rowcolor{Gold!9}
     \textbf{Específico 3}\newline Calibrar y gobernar incertidumbre &
-    2\,000 bootstraps pareados por video; diferencia BA con rival $-0,00166$, IC95\,\% cruza cero; $p_{Holm}=0,229$. &
-    La selección es reproducible y honesta: congela un ganador operativo, declara el empate estadístico y reserva capacidad humana.\\[2mm]
+    2\,000 bootstraps pareados por video; diferencia BA ganador--rival $+0,00059$, IC95\,\% cruza cero; $p=0,804$. &
+    La selección es reproducible: congela un único ganador por la regla y declara que su ventaja estadística es inconclusa.\\[2mm]
     \textbf{Específico 4}\newline Integrar un flujo reutilizable &
     Dos frontends activos, manifiestos/checkpoints y 55\,966 eventos trazables; panel congelado de 16\,694 chunks. &
     El artefacto conecta \href{http://127.0.0.1:8765/}{etiquetado}, entrenamiento, comparación, \href{http://127.0.0.1:8876/}{inferencia de producción}, revisión y corrección sin romper procedencia.\\[2mm]
@@ -1277,9 +1279,9 @@
   \framesubtitle{Mejoras focalizadas para avanzar a un piloto controlado}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{.48\textwidth}
-      \smallcard{Coral}{1. Categorías difíciles}{Género (AUPRC 0,274) y racismo (0,357) requieren expansión focalizada, pruebas funcionales y revisión de falsos negativos~\cite{rottger2021hatecheck}.}
+      \smallcard{Coral}{1. Categorías difíciles}{Género (AUPRC 0,268) y racismo (0,358) requieren expansión focalizada, pruebas funcionales y revisión de falsos negativos~\cite{rottger2021hatecheck}.}
       \vspace{2mm}
-      \smallcard{Gold}{2. Capacidad humana}{34,8\,\% de revisión es una política eficaz, pero debe validarse contra dotación, tiempo y costo reales~\cite{mozannar2020defer}.}
+      \smallcard{Gold}{2. Capacidad humana}{27,3\,\% de revisión sigue siendo material y debe validarse contra dotación, tiempo y costo reales~\cite{mozannar2020defer}.}
     \end{column}
     \begin{column}{.48\textwidth}
       \smallcard{Purple}{3. Generalización}{YouTube peruano no representa automáticamente otras plataformas, países o periodos; medir deriva es parte del despliegue~\cite{vidgen2020directions}.}
@@ -1311,7 +1313,7 @@
       {\small El sistema transforma subtítulos peruanos en alertas temporales mediante una cartera clásica--Transformer--Qwen y un ensemble congelado. La evaluación natural, la abstención y la trazabilidad hacen que el desempeño sea útil fuera del laboratorio.}\par
       \vspace{3mm}
       \pill{Teal}{BA 0,846 completa}\quad
-      \pill{Green}{BA 0,940 automática}\quad
+      \pill{Green}{BA 0,925 automática}\quad
       \pill{Purple}{4 daños + SEGURO}
     \end{column}
     \begin{column}{.36\textwidth}

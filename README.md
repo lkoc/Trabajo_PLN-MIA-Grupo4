@@ -12,7 +12,7 @@ El proyecto construye un asistente de moderación semiautomática para fragmento
 
 La implementación activa usa el contrato `moderacion_peru_5_salidas_v2`, versión `2.1.0`, con cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es mutuamente excluyente con cualquier daño; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos sin evidencia suficiente se difieren mediante `needs_review=true` y no forman una sexta clase. Esta combinación, sus umbrales y sus reglas de exclusividad son decisiones operativas locales.
 
-El repositorio separa el flujo activo de la evidencia histórica. Las métricas conservadas en el paper y la presentación corresponden al contrato anterior de cuatro daños con `SEGURO` derivado. Para el contrato activo ya existe una comparación completa en `validation` de 28 modelos individuales y 5 *ensembles*; `test` todavía está sellado, por lo que estos resultados no sustituyen una estimación final de generalización ni se trasladan retrospectivamente al paper.
+El repositorio separa el flujo activo de la evidencia histórica. Para el contrato vigente existe una comparación de 28 modelos individuales, cinco reglas base de *ensemble* y dos mezclas optimizadas. `ensemble_soft_optimized` es el único seleccionado actual, con pesos clásico/Transformer/Qwen `0,10/0,65/0,25`; la fórmula congelada se aplicó a los checkpoints de la única apertura de test sin nueva inferencia. El paper y la presentación ya reflejan esta actualización.
 
 ## Arquitectura del flujo
 
@@ -160,12 +160,13 @@ tope artificial; persiste por `chunk_id` y puede continuar con una recarga.
 | `03_06_qwen_estructurado` | Qwen-LoRA inicializado desde `03_05`, con una época y barrido de penalización del conflicto `SEGURO+daño` | tres candidatos PEFT (`0`, `0.02`, `0.05`); conserva separado el full fine-tuning histórico |
 | `03_06b_qwen_prompt_sft` | ejercicio toy independiente con Qwen3-0.6B, LoRA causal y definiciones de daño desde Markdown | 1.200 muestras, JSON restringido, métricas en 800/200/200; nunca produce un candidato para `03_07` |
 | `03_07_comparacion_final` | individuos, ensembles, diversidad, bootstrap por video y pruebas pareadas | comparación en validation y manifiesto congelado; test/publicación separados |
+| `03_07b_optimizacion_ensembles` | calibración anidada y búsqueda convexa de mezclas suave/dura sobre predicciones originales | actualiza el mismo reporte 03_07, congela pesos y recombina checkpoints de test sin inferencia |
 | `03_07a_reporte_comparacion_modelos` | consulta Drive por OAuth de solo lectura, compara fecha/SHA-256 y sincroniza solo resultados nuevos | Markdown crítico, CSV completos y PNG; no usa Drive Desktop, no extrae modelos ni abre test |
 | `03_08_auditoria_finas_flags` | audita máscaras, cobertura, consistencia y métricas auxiliares observadas | informes del snapshot y de candidatos disponibles |
 
-Los cuadernos `03_01`–`03_06` completan `fit → calibración/evaluación en validation → manifiesto` y dejan test sellado. `03_07` compara individuos y ensembles, congela candidatos, umbrales y regla; un segundo interruptor infiere una sola vez sobre el test natural completo. Train y validation conservan todo el daño y seleccionan `SEGURO` de forma determinista, aproximadamente proporcional por canal, con ratio 4:1: quedan 51.205/10.600 chunks. Test conserva sus 22.684 chunks y su prevalencia natural. De la misma inferencia se deriva además una vista secundaria determinista 4:1 de 9.010 chunks; no se vuelve a abrir ni ejecutar el modelo. La publicación permanece bloqueada por defecto.
+Los cuadernos `03_01`–`03_06` completan `fit → calibración/evaluación en validation → manifiesto`. `03_07` realiza la pantalla común y `03_07b` actualiza esa misma comparación optimizando todas las mezclas parametrizadas con validación anidada por vídeo. Train y validation conservan todo el daño con ratio 4:1: quedan 51.205/10.600 chunks. Test conserva 22.684 chunks y su prevalencia natural; la vista secundaria 4:1 de 9.010 chunks y la fórmula optimizada reutilizan las matrices de la apertura original.
 
-El checkpoint de `validation` publicado el 2026-08-15 congeló `ensemble_soft_mean`: BA ANY_DAMAGE OOF `0,8400` y macro-AUPRC de daño OOF `0,5549`. El mejor individuo fue `qwen_lora-4aa5ce04df05` (`0,8314` y `0,5158`). El estado es `statistical_tie_or_inconclusive`; la selección expresa la política lexicográfica, no una superioridad universal. La corrida declaró capacidad máxima de revisión de `40 %` —el punto elegido usa `32,54 %`— y margen de no inferioridad `0,10`, ambos permisivos y sujetos a justificación operacional. El informe verificable está en [`resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md`](resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md).
+La actualización del 2026-08-17 seleccionó `ensemble_soft_optimized`: BA anidada `0,8366`, macro-AUPRC `0,5506` y pesos `0,10/0,65/0,25`. Frente al ponderado heurístico, ΔBA=`0,00059` con IC95 % `[-0,00367;0,00509]`; es el único ganador por la regla lexicográfica, aunque la ventaja estadística es inconclusa. En test natural obtiene BA `0,84594`, sensibilidad `0,89401` y carga de revisión `27,26 %`. El [reporte verificable](resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md) y el cuaderno ejecutado conservan el detalle.
 
 `03_06b` fue reemplazado por un ejercicio controlado ajeno a esa campaña. Toma
 960 ejemplos `SEGURO` y 60 de cada daño, seleccionados pseudoaleatoriamente
@@ -314,13 +315,13 @@ Desde VS Code, abra la carpeta clonada, seleccione como kernel el Python de `.ve
 .\.venv\Scripts\jupyter-lab.exe
 ```
 
-El recorrido completo contiene 22 cuadernos:
+El recorrido completo contiene 23 cuadernos:
 
 ```text
 01_01 → 01_015 ampliación minoritaria opcional → 01_02 opcional → 01_03
 → 02_00 en Colab → 02_01 (calibración→Flash→Pro) → 02_02 fallback opcional → 02_03 auditoría → 02_04 → 02_05 → 02_00 en Colab
 → 03_01 ... 03_06 clasificadores comparables —incluida 03_03b—; 03_06b toy independiente
-→ 03_07 → 03_07a → 03_08 → 04_01
+→ 03_07 → 03_07b → 03_07a → 03_08 → 04_01
 ```
 
 Antes de una corrida costosa, revise los interruptores deliberados:
@@ -338,6 +339,7 @@ Todo cuaderno activo que exige varias corridas contiene una sección **Procedimi
 | `03_01`–`03_06` | interruptores de entrenamiento apagados por defecto; ratio `SEGURO`/daño = 4:1 en train/validation; test natural completo | active la familia; `03_07` reutiliza una inferencia de test para las vistas natural y 4:1 |
 | `03_06b` | `RUN_BUILD_TOY_DATASET=True`, `RUN_TRAIN_QWEN=True` | en A100 crea 1.200 ejemplos independientes, entrena Qwen con contexto Markdown y evalúa JSON restringido; no se compara en `03_07` |
 | `03_07` | restauración de Drive activa; `RUN_COMPARE_AND_FREEZE=False`, `RUN_TEST_ONCE=False`, `RUN_PUBLISH=False` | ejecútelo desde la primera celda con kernel Colab CPU; restaura por SHA solo los runs `03_01`–`03_06`, compare/congele y revise evidencia antes de abrir test una vez |
+| `03_07b` | `RUN_NESTED_OPTIMIZATION=True`, `UPDATE_CURRENT_ARTIFACTS=True` | local; exige `run_outputs-a.tar` y `run_outputs-b.tar` en `Downloads`, verifica SHA-256 y actualiza el mismo reporte sin reinferir test |
 | `03_07a` | `AUTO_SYNC_FROM_GOOGLE_DRIVE=True`, sin interruptores de entrenamiento o test | ejecútelo localmente; la primera vez autorice Drive con `config/google_drive_oauth_client.json`; después compara y actualiza automáticamente solo si la publicación remota es nueva o diferente |
 
 `03_01`–`03_06` son alternativas comparables, no una cadena. Dentro de `03_05`, el brazo opcional de 256 tokens sí continúa explícitamente los pesos LoRA del candidato de 128 sobre el mismo snapshot, reinicia optimizador y scheduler, y genera otro candidato sin sobrescribir al padre. `03_05`/`03_06` son clasificadores supervisados. `03_06b` recibe definiciones Markdown como contexto, pero usa otro diseño muestral y permanece aislado. `03_07` restaura únicamente las publicaciones versionadas de `03_01`–`03_06` y rechaza candidatos de otro snapshot, incompletos, sin predicciones de validation o que hayan abierto test antes de congelar.

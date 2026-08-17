@@ -319,13 +319,21 @@ def publish_frozen_ensemble_registry(
 
     freeze_file = Path(freeze_path).resolve()
     freeze = json.loads(freeze_file.read_text(encoding="utf-8"))
-    if freeze.get("selected_id") != "ensemble_soft_mean":
-        raise ValueError("El frontend vigente exige ensemble_soft_mean congelado")
+    selected_id = str(freeze.get("selected_id") or "")
+    if selected_id not in {"ensemble_soft_mean", "ensemble_soft_optimized"}:
+        raise ValueError("El frontend exige un ensemble suave congelado")
+    ensemble_kind = (
+        "soft_optimized" if selected_id == "ensemble_soft_optimized" else "soft_mean"
+    )
     members = [str(value) for value in freeze.get("members", [])]
     if len(members) != 3:
-        raise ValueError("El ensemble congelado debe contener exactamente tres miembros")
+        raise ValueError(
+            "El ensemble congelado debe contener exactamente tres miembros"
+        )
 
-    discovered = {row["candidate_id"]: row for row in discover_candidates(candidate_roots)}
+    discovered = {
+        row["candidate_id"]: row for row in discover_candidates(candidate_roots)
+    }
     missing = [identifier for identifier in members if identifier not in discovered]
     if missing:
         raise FileNotFoundError(
@@ -371,18 +379,30 @@ def publish_frozen_ensemble_registry(
     }
     taxonomy = load_taxonomy()
     main = ModelRegistryEntry(
-        model_id=str(freeze["selected_id"]),
-        model_family="ensemble:soft_mean",
+        model_id=selected_id,
+        model_family=f"ensemble:{ensemble_kind}",
         taxonomy_contract=taxonomy.contract_id,
         taxonomy_version=taxonomy.version,
         target_labels=list(taxonomy.target_labels),
         thresholds=freeze["thresholds"],
         dataset_sha256=dataset_sha,
         run_signature=str(freeze.get("comparison_signature") or ""),
-        inference={"type": "ensemble_soft_mean", "member_ids": member_ids},
+        inference={
+            "type": f"ensemble_{ensemble_kind}",
+            "member_ids": member_ids,
+            "weights": (
+                {
+                    slot: float(freeze["ensemble_weights"][index])
+                    for index, slot in enumerate(("classical", "transformer", "qwen"))
+                }
+                if ensemble_kind == "soft_optimized"
+                else None
+            ),
+            "fusion_space": freeze.get("ensemble_fusion_space", "raw_scores"),
+        },
         comparison_registries=references,
-        score_calibrators=freeze["score_calibrators"],
-        ensemble_kind="soft_mean",
+        score_calibrators=freeze.get("score_calibrators") or [],
+        ensemble_kind=ensemble_kind,
         selected_members=members,
         any_damage_threshold=float(freeze["any_damage_threshold"]),
         needs_review_policy=freeze.get("needs_review_policy") or {},
@@ -415,7 +435,9 @@ def calibrate_score_mapping(
     calibrated: dict[str, float] = {}
     for label, record in zip(ordered, calibrators, strict=True):
         if record.get("type") != "sigmoid_platt":
-            raise ValueError(f"Calibrador no soportado para {label}: {record.get('type')}")
+            raise ValueError(
+                f"Calibrador no soportado para {label}: {record.get('type')}"
+            )
         logit = float(record["coefficient"]) * float(scores[label]) + float(
             record["intercept"]
         )

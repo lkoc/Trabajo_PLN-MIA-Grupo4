@@ -1407,8 +1407,21 @@ def _score_candidate(
     def sequence_scores(
         path: Path, count: int, phase: str, *, peft_adapter: bool = False
     ) -> np.ndarray:
+        tokenizer_source: str | Path = path
+        if peft_adapter and not any(
+            (path / name).is_file()
+            for name in ("tokenizer.json", "tokenizer_config.json", "tokenizer.model")
+        ):
+            adapter_config_path = path / "adapter_config.json"
+            if adapter_config_path.is_file():
+                adapter_config = json.loads(
+                    adapter_config_path.read_text(encoding="utf-8")
+                )
+                tokenizer_source = str(
+                    adapter_config.get("base_model_name_or_path") or path
+                ).strip()
         tokenizer = AutoTokenizer.from_pretrained(
-            path,
+            tokenizer_source,
             token=False,
             # Los tokenizadores locales son BERT/E5/Qwen, no Mistral. Evita que
             # Transformers aplique por heurística un regex ajeno al checkpoint.
@@ -1763,6 +1776,7 @@ def evaluate_frozen_test(
     taxonomy = load_taxonomy()
     matrices = list(member_scores.values())
     selected_id = freeze["selected_id"]
+    scores_already_calibrated = False
     if freeze["selected_kind"] == "individual":
         scores = member_scores[selected_id]
     elif selected_id == "ensemble_soft_mean":
@@ -1787,9 +1801,24 @@ def evaluate_frozen_test(
             )
             binary.append(calibrated_matrix >= threshold)
         scores = np.mean(binary, axis=0)
+    elif selected_id == "ensemble_soft_optimized":
+        calibrated = [
+            _apply_score_calibrators(
+                member_scores[identifier],
+                freeze["member_score_calibrators"][identifier],
+            )
+            for identifier in freeze["members"]
+        ]
+        scores = np.average(
+            np.stack(calibrated, axis=0),
+            axis=0,
+            weights=freeze["ensemble_weights"],
+        )
+        scores_already_calibrated = True
     else:
         raise ValueError(f"Regla congelada desconocida: {selected_id}")
-    scores = _apply_score_calibrators(scores, freeze["score_calibrators"])
+    if not scores_already_calibrated:
+        scores = _apply_score_calibrators(scores, freeze["score_calibrators"])
     metrics_started = time.perf_counter()
     truth = encode_targets(test_rows)
     metrics_natural = classification_metrics(truth, scores, freeze["thresholds"])

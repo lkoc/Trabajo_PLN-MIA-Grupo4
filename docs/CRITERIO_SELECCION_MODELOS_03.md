@@ -320,24 +320,25 @@ otro modelo.
 
 ## 8. Resultado de la aplicación del criterio
 
-`03_07` comparó 28 modelos individuales y 5 *ensembles* sobre la misma
-`validation`. El ranking congeló `ensemble_soft_mean` con BA ANY_DAMAGE OOF
-`0,8400`, FNR `0,1274`, FPR `0,1927` y macro-AUPRC de daño OOF `0,5549`. El
-mejor individuo fue `qwen_lora-4aa5ce04df05`, con BA `0,8314` y macro-AUPRC
-`0,5158`; las diferencias puntuales del *ensemble* fueron `+0,0086` y `+0,0392`.
+`03_07` comparó 28 individuos y cinco reglas base. `03_07b` actualizó la misma
+comparación optimizando de forma simétrica las mezclas suave y dura mediante
+cinco pliegues externos e internos agrupados por vídeo. La búsqueda recorrió 861
+ternas no negativas de suma uno (paso 0,025). Unión e intersección no se
+parametrizaron porque máximo/mínimo no tienen coeficientes.
 
-El retador más cercano, `ensemble_soft_validation_weighted`, tuvo una diferencia
-retador−referencia de BA `−0,00166`, IC 95 % `[−0,00437, 0,00083]` y
-`p_Holm=0,2289`. Como el intervalo incluye cero, el estado correcto es
-`statistical_tie_or_inconclusive`: el modelo congelado es la preferencia de la
-regla lexicográfica, no un ganador universal.
+El único ganador vigente es `ensemble_soft_optimized`: BA anidada `0,8366`,
+FNR `0,1495`, FPR `0,1774`, riesgo 0,67 `0,1587`, macro-AUPRC `0,5506` y
+macro-F1 `0,5618`. El ajuste final asigna `0,10/0,65/0,25` a clásico,
+Transformer y Qwen. El retador ponderado por AUPRC obtiene BA `0,8360`;
+la diferencia ganador−retador es `0,00059`, IC 95 %
+`[-0,00367,0,00509]`, `p=0,804` sin corrección. Por ello el estado es
+`selected_by_lexicographic_rule_pairwise_advantage_inconclusive`: hay un solo
+seleccionado, pero no superioridad universal demostrada.
 
-La ejecución fijó `MAX_REVIEW_RATE=0,40`; el punto seleccionado difiere
-`32,54 %` de los casos. También fijó un margen macro-AUPRC de no inferioridad de
-`0,10`. Ambos valores son permisivos frente a los ejemplos normativos de este
-documento y requieren una justificación explícita de capacidad y tolerancia al
-daño antes de interpretar la política como operable. Se ejecutaron 2.000
-réplicas pareadas por `video_id` con dos hilos efectivos. Test permanece sellado.
+La ejecución conserva `MAX_REVIEW_RATE=0,40` y `delta=0,03`. En test natural la
+carga observada es `27,26 %`. El ganador se fijó con validation antes de
+recombinar las tres matrices verificadas de la apertura original de test; hubo
+cero inferencias nuevas y ningún ajuste con test.
 El detalle reproducible y todas las métricas por modelo/categoría están en
 [`../resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md`](../resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md).
 

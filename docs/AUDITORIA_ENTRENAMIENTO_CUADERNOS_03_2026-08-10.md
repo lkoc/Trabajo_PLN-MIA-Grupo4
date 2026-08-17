@@ -23,6 +23,17 @@
 > La auditoría de snapshot de `03_08` sí corresponde al SHA vigente
 > `013d60…c1f86`; falta todavía la salida predictiva de candidatos auxiliares.
 
+> **Actualización 2026-08-17 — prevalece sobre la nota anterior para ensembles
+> y test.** `03_07b_optimizacion_ensembles.ipynb` fue ejecutado localmente sobre
+> las predicciones originales verificadas. Comparó las cinco reglas base y dos
+> variantes optimizadas con 5×5 `GroupKFold` por vídeo y grid del simplex 0,025.
+> El único seleccionado vigente es `ensemble_soft_optimized`, pesos
+> clásico/Transformer/Qwen `0,10/0,65/0,25`, BA anidada `0,8366` y macro-AUPRC
+> `0,5506`. La ventaja frente al ponderado heurístico es inconclusa. La fórmula
+> se aplicó después a checkpoints de la única apertura de test, con cero
+> inferencias nuevas: BA natural `0,84594`. El reporte 03_07 existente fue
+> actualizado; no se creó una segunda comparación editorial.
+
 ## 1. Resumen ejecutivo
 
 La serie ya produjo resultados comparables en *validation*, pero **todavía no permite declarar un ganador final**. El snapshot está cerrado, tiene 173.240 chunks entrenables y no presenta solapamiento de videos entre `train`, `validation` y `test`. El corte verificable es el siguiente:
@@ -521,7 +532,7 @@ El cuaderno debe cargar predicciones del mismo conjunto de ejemplos y comparar:
 3. voto duro 2-de-3;
 4. promedio suave de probabilidades calibradas;
 5. voto suave ponderado con pesos aprendidos solo en validación y restricciones simples;
-6. *stacking* opcional entrenado exclusivamente con predicciones OOF;
+6. *stacking* entrenado exclusivamente con predicciones OOF, implementado en `03_07b` mediante mezclas convexas suave y dura;
 7. unión e intersección como límites operativos de recall/precisión.
 
 También debe calcular diversidad:

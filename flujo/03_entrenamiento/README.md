@@ -10,11 +10,11 @@
 
 **Contrato de etiquetas v2.1:** cinco salidas entrenadas: `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`. `SEGURO` es excluyente; las cuatro categorías de daño son multietiqueta y pueden coexistir. Los casos indeterminados se difieren y no entran al entrenamiento. Esta combinación, sus umbrales y sus reglas de exclusividad son decisiones operativas locales.
 
-Ejecute primero `03_08`, después las ramas comparables `03_01`–`03_06`, luego `03_07` y finalmente `03_07a` para elaborar el reporte local. `03_06b` puede ejecutarse aparte como ejercicio toy y no cambia esa secuencia. Los cuadernos comparables consumen snapshots del contrato `moderacion_peru_5_salidas_v2`, taxonomía `2.1.0`, y deben compartir la misma partición agrupada por `video_id`; `03_07a` consume únicamente los JSON de resultados ya firmados.
+Ejecute primero `03_08`, después las ramas comparables `03_01`–`03_06`, luego `03_07`, el subpaso local `03_07b` y finalmente `03_07a` para renderizar/sincronizar el reporte. `03_06b` puede ejecutarse aparte como ejercicio toy y no cambia esa secuencia. Los cuadernos comparables consumen snapshots del contrato `moderacion_peru_5_salidas_v2`, taxonomía `2.1.0`, y deben compartir la misma partición agrupada por `video_id`.
 
 La selección de familia, checkpoint, época y umbrales utiliza validation. Test se consulta después de congelar la decisión. Las métricas históricas de cuatro daños se mantienen separadas en `archivo/`.
 
-Cada rama de `03_01`–`03_06` ejecuta `fit → calibración/evaluación en validation → checkpoint/manifiesto → candidate.json`; ninguna abre test. `03_07` compara individuos y ensembles del mismo SHA, congela la decisión y deja en interruptores separados la apertura única de test y una publicación que permanece bloqueada. Las cinco salidas gruesas son obligatorias; las 14 finas y 3 banderas son complementarias, enmascaradas y pueden faltar. Si existen, el cargador restaura la cabeza completa, pero la comparación siempre consume únicamente las cinco primeras. `03_06b` no sigue este contrato de candidato: abre únicamente su propio test toy y escribe un manifiesto marcado como no elegible.
+Cada rama de `03_01`–`03_06` ejecuta `fit → calibración/evaluación en validation → checkpoint/manifiesto → candidate.json`; ninguna abre test. `03_07` compara individuos y cinco reglas base del mismo SHA. `03_07b_optimizacion_ensembles.ipynb` actualiza esa misma comparación: calibra dentro de pliegues, optimiza de forma simétrica las mezclas suave y dura en validation anidada y congela `ensemble_soft_optimized` con pesos clásico/Transformer/Qwen `0,10/0,65/0,25`. No genera un segundo reporte. Tras congelar, reutiliza los checkpoints verificados de la apertura original de test sin nueva inferencia. Las cinco salidas gruesas son obligatorias; las 14 finas y 3 banderas son complementarias, enmascaradas y pueden faltar.
 
 `03_07a_reporte_comparacion_modelos.ipynb` corre localmente y consulta la Google Drive API con OAuth de solo lectura. La primera vez necesita un cliente de escritorio guardado como `config/google_drive_oauth_client.json`; abre el consentimiento en el navegador y conserva el token en `.secrets/google_drive_token.json`. Ambas rutas están ignoradas por Git. Después compara automáticamente `published_at` y SHA-256, descarga el TAR solo cuando la publicación remota es nueva o diferente y extrae exclusivamente los JSON de comparación, selección y test bajo `resultados/sincronizados/03_07`. No usa Drive Desktop ni materializa pesos. Finalmente promueve el bundle válido más reciente a `resultados/modelos` y genera Markdown, cuatro CSV y tres PNG. La [guía de autorización y sincronización](../../docs/GOOGLE_DRIVE_03_07A.md) detalla la preparación única.
 
@@ -59,3 +59,9 @@ cambiar umbrales.
 Después de cada checkpoint publicado, ejecute `03_07a` localmente: el cuaderno
 consulta Drive y omite la descarga si el manifiesto remoto ya coincide con el
 estado local. No repite comparación, inferencia ni publicación productiva.
+
+Para reproducir la actualización actual, coloque `run_outputs-b.tar` y
+`run_outputs-a.tar` en `~/Downloads` y ejecute `03_07b` desde la primera celda.
+El cuaderno exige los SHA-256 documentados, recorre 861 ternas por mezcla y
+actualiza `REPORTE_COMPARACION_MODELOS_03_07.md`. Su copia versionada ya fue
+ejecutada completa y conserva salidas sin errores.

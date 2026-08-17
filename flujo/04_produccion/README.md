@@ -17,9 +17,9 @@ El registro productivo debe provenir de `resultados/modelos/seleccion_congelada.
 1. Clásico: `classical-logistic_regression_c0p5-54f7971c6000`.
 2. Transformer: `cascade_v2-af78eba77883`.
 3. Qwen: `qwen_lora-4aa5ce04df05`.
-4. Ensemble ganador: `ensemble_soft_mean`.
+4. Ensemble ganador: `ensemble_soft_optimized`.
 
-El ensemble promedia los scores crudos de los tres miembros, aplica los cinco calibradores sigmoidales congelados y luego los umbrales de despliegue. La regla `NEEDS_REVIEW` reproduce el margen seleccionado en validation y revisa conflictos `SEGURO`--daño, salida vacía, incoherencia con la compuerta binaria y cercanía a los umbrales. El estado `statistical_tie_or_inconclusive` se conserva en el registro: el promedio suave ocupa el primer lugar por el criterio predeclarado, pero no se presenta como superioridad estadística demostrada.
+El ensemble calibra cada score por miembro y combina las probabilidades con pesos `0,10/0,65/0,25` para clásico/Transformer/Qwen; luego aplica los umbrales congelados. La regla `NEEDS_REVIEW` usa `delta=0,03`. El ganador es único bajo la regla lexicográfica, aunque su ventaja pareada sobre el ponderado heurístico es inconclusa; esto se conserva en `winner_status` sin reintroducir otro ganador vigente.
 
 ## Preparación del registro
 

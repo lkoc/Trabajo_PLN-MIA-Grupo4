@@ -4,7 +4,7 @@
 \section{Especificación del ensemble congelado}
 \label{app:ensemble}
 
-El artefacto \texttt{seleccion\_congelada.json}, esquema 4.0.0, fija la firma de comparación, el hash del dataset, los tres miembros, calibradores, umbrales y política de revisión. La Tabla~\ref{tab:ensemble_members_app} detalla la composición. Los nombres cortos usados en el cuerpo corresponden a identificadores inmutables de candidato.
+El artefacto \texttt{seleccion\_congelada.json}, esquema 5.0.0, fija la firma de comparación, el hash del dataset, los tres miembros, calibradores, pesos, umbrales y política de revisión. Los scores crudos se calibran por miembro y salida, $p_{mk}=\sigma(a_{mk}s_{mk}+b_{mk})$, antes de combinarlos. Esta capa común evita que la escala propia de un modelo domine la mezcla.
 
 \begin{table}[H]
 \centering
@@ -18,32 +18,80 @@ El artefacto \texttt{seleccion\_congelada.json}, esquema 4.0.0, fija la firma de
 Clásico & \path{classical-logistic_regression_c0p5-54f7971c6000} & TF--IDF palabra 1--2 + carácter 3--5; OVR enmascarado; logística $C=0,5$. & 0,80 & 0,48 & 0,50 \\
 Transformer & \path{cascade_v2-af78eba77883} & E5 compuerta \texttt{ANY\_DAMAGE} + E5 rama de cinco salidas; enrutamiento seguro. & 0,82 & 0,45 & 0,52 \\
 Qwen & \path{qwen_lora-4aa5ce04df05} & Qwen3--0.6B-Base; LoRA ($r=8$, $\alpha=16$, $p=0{,}05$) en Q/K/V/O; cabeza de 22 logits. & 0,83 & 0,52 & 0,55 \\
-Ensemble & \path{ensemble_soft_mean} & Media simple de los tres scores por salida y calibración sigmoidal posterior. & 0,84 & 0,55 & 0,57 \\
+Ensemble & \path{ensemble_soft_optimized} & Mezcla convexa de probabilidades calibradas: $0,10$ clásico $+0,65$ Transformer $+0,25$ Qwen. & 0,837 & 0,551 & 0,562 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-La Tabla~\ref{tab:calibracion_app} permite reconstruir la salida final. Para cada categoría se calcula $\hat p_k=\sigma(a_k\bar{s}_k+b_k)$ y se activa cuando $\hat p_k\ge\theta_k$. La compuerta de cualquier daño usa además un corte congelado de 0,05817 sobre el máximo de las cuatro salidas dañinas calibradas.
+La Tabla~\ref{tab:formulas_ensemble_app} especifica todas las reglas de la comparación actualizada. $D_{mk}=\mathbb{1}(p_{mk}\ge t_{mk})$ representa el voto binario de un miembro. Las dos mezclas optimizadas buscan pesos en el simplex de paso 0,025; máximo y mínimo no tienen coeficientes aplicables.
 
 \begin{table}[H]
 \centering
-\caption{Calibradores y umbrales del ensemble congelado}
-\label{tab:calibracion_app}
+\caption{Fórmulas, coeficientes y resultados de todos los ensembles actualizados}
+\label{tab:formulas_ensemble_app}
 \small
-\begin{tabular}{lrrr}
+\begin{tabularx}{\textwidth}{p{39mm}X p{40mm}rrrr}
 \toprule
-\textbf{Salida} & $\boldsymbol{a_k}$ & $\boldsymbol{b_k}$ & $\boldsymbol{\theta_k}$ \\
+\textbf{Caso} & \textbf{Fórmula por salida $k$} & \textbf{Pesos C/T/Q} & \textbf{BA} & $\boldsymbol{R_{0,67}}$ & \textbf{AP} & \textbf{F1} \\
 \midrule
-\texttt{SEGURO} & 6,2826 & -2,9738 & 0,39 \\
-\Rac & 7,1743 & -5,2129 & 0,20 \\
-\Gen & 5,9253 & -4,9025 & 0,19 \\
-\Ame & 5,7678 & -4,2600 & 0,32 \\
-\Sex & 6,9926 & -4,9314 & 0,50 \\
+Suave optimizado & $\sum_m w_mp_{mk}$ & 0,100 / 0,650 / 0,250 & 0,8366 & 0,1587 & 0,5506 & 0,5618 \\
+Ponderado por AUPRC & $\sum_m w_mp_{mk}$ & 0,3317 / 0,3110 / 0,3573 & 0,8360 & 0,1612 & 0,5614 & 0,5675 \\
+Unión & $\max_m p_{mk}$ & No aplica & 0,8334 & 0,1684 & 0,5369 & 0,5621 \\
+Promedio suave & $\sum_m p_{mk}/3$ & 0,3333 / 0,3333 / 0,3333 & 0,8328 & 0,1673 & 0,5604 & 0,5703 \\
+Duro optimizado & $\sum_m w_mD_{mk}$ & 0,300 / 0,325 / 0,375 & 0,8272 & 0,1731 & 0,4547 & 0,5584 \\
+Mayoría dura & $\sum_m D_{mk}/3$ & 0,3333 / 0,3333 / 0,3333 & 0,8272 & 0,1731 & 0,4415 & 0,5638 \\
+Intersección & $\min_m p_{mk}$ & No aplica & 0,8149 & 0,1887 & 0,5131 & 0,5373 \\
+\bottomrule
+\end{tabularx}
+\begin{minipage}{.98\textwidth}\vspace{1mm}\footnotesize
+\emph{Nota:} C/T/Q denota clásico/Transformer/Qwen; AP y F1 son macro sobre los cuatro daños. Todas las cifras son OOF de los cinco pliegues externos anidados. La ponderación por AUPRC, unión e intersección son propuestas exploratorias del trabajo; las mezclas convexas se fundamentan en \emph{stacking}/Super Learner \cite{wolpert1992stacked,vanderlaan2007superlearner}.
+\end{minipage}
+\end{table}
+
+La auditoría también conserva el resultado previo a introducir la capa común y la optimización: promedio suave (BA 0,8400; AP 0,5549; F1 0,5683), ponderado (0,8383; 0,5560; 0,5694), unión (0,8328; 0,5236; 0,5648), mayoría (0,8288; 0,4606; 0,5723) e intersección (0,8242; 0,5165; 0,5381). Esas cifras explican la decisión de investigar pesos, pero no constituyen un segundo ganador vigente; la Tabla~\ref{tab:formulas_ensemble_app} reemplaza la comparación de ensembles bajo el protocolo común.
+
+La Tabla~\ref{tab:pesos_pliegues_app} reporta los coeficientes efectivamente aprendidos. La dispersión del peso Transformer en la mezcla suave (0,15--0,775 entre pliegues) muestra que la ventaja es sensible a la partición; el ajuste completo 0,10/0,65/0,25 es el único congelado para inferencia. La mezcla dura resulta mucho más estable.
+
+\begin{table}[H]
+\centering
+\caption{Coeficientes optimizados por pliegue externo y ajuste final}
+\label{tab:pesos_pliegues_app}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{3}{c}{\textbf{Suave C/T/Q}} & \multicolumn{3}{c}{\textbf{Duro C/T/Q}} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Pliegue 1 & 0,225 & 0,200 & 0,575 & 0,300 & 0,325 & 0,375 \\
+Pliegue 2 & 0,250 & 0,150 & 0,600 & 0,300 & 0,325 & 0,375 \\
+Pliegue 3 & 0,225 & 0,200 & 0,575 & 0,325 & 0,300 & 0,375 \\
+Pliegue 4 & 0,075 & 0,775 & 0,150 & 0,325 & 0,300 & 0,375 \\
+Pliegue 5 & 0,250 & 0,175 & 0,575 & 0,300 & 0,325 & 0,375 \\
+\textbf{Ajuste final} & \textbf{0,100} & \textbf{0,650} & \textbf{0,250} & \textbf{0,300} & \textbf{0,325} & \textbf{0,375} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-El promedio ponderado, retador más cercano, usa pesos 0,3317, 0,3110 y 0,3573 para clásico, Transformer y Qwen, respectivamente. La diferencia de BA frente al promedio simple es $-0,0017$, con IC95\% que cruza cero. Por tanto, el promedio simple se conserva por el criterio predeclarado, no por una afirmación de superioridad absoluta.
+Para reproducir la fórmula ganadora se necesitan además los 15 calibradores de miembro (Tabla~\ref{tab:calibradores_miembro_app}). Cada celda informa $(a_{mk},b_{mk})$ en $p_{mk}=\sigma(a_{mk}s_{mk}+b_{mk})$.
+
+\begin{table}[H]
+\centering
+\caption{Calibradores de Platt del ensemble suave optimizado}
+\label{tab:calibradores_miembro_app}
+\small
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Salida} & \textbf{Clásico $(a,b)$} & \textbf{Transformer $(a,b)$} & \textbf{Qwen $(a,b)$} \\
+\midrule
+\texttt{SEGURO} & (6,0625; -2,0469) & (4,0245; -1,5720) & (5,5516; -2,9069) \\
+\Rac & (7,0045; -5,3929) & (5,1196; -4,5488) & (5,6182; -4,8838) \\
+\Gen & (5,6545; -5,0496) & (4,2140; -4,3563) & (4,7506; -4,5481) \\
+\Ame & (6,0887; -4,5669) & (3,8781; -3,4135) & (4,7328; -3,9405) \\
+\Sex & (7,0710; -5,2304) & (4,8414; -4,2777) & (5,4669; -4,2870) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La salida final es $E_k=0,10p_{Ck}+0,65p_{Tk}+0,25p_{Qk}$. Los umbrales de categoría son 0,46 (\texttt{SEGURO}), 0,17 (\Rac), 0,18 (\Gen), 0,39 (\Ame) y 0,47 (\Sex); la compuerta de cualquier daño usa 0,072919 sobre el máximo de las cuatro salidas dañinas. Estos valores, junto con $\delta=0,03$, se fijaron con validation antes de recombinar los checkpoints del test.
 
 \clearpage
 \section{Resultados ampliados}
@@ -80,8 +128,8 @@ La Tabla~\ref{tab:test_views_app} compara la vista natural y la secundaria 4:1 o
 \toprule
 \textbf{Vista} & \textbf{Filas} & \textbf{BA} & \textbf{F1 any} & \textbf{AUPRC daño} & \textbf{F1 daño} & \textbf{F1 cinco} & \textbf{ECE} & \textbf{Brier} \\
 \midrule
-Natural & 22\,684 & 0,85 & 0,41 & 0,42 & 0,43 & 0,54 & 0,018 & 0,028 \\
-4:1 secundaria & 9\,010 & 0,85 & 0,66 & 0,57 & 0,56 & 0,63 & 0,011 & 0,045 \\
+Natural & 22\,684 & 0,846 & 0,422 & 0,412 & 0,423 & 0,530 & 0,025 & 0,027 \\
+4:1 secundaria & 9\,010 & 0,846 & 0,662 & 0,564 & 0,545 & 0,621 & 0,019 & 0,047 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -97,8 +145,8 @@ La vista 4:1 selecciona de forma determinista 7\,208 seguros y conserva los 1\,8
 \toprule
 \textbf{Política} & \textbf{TP} & \textbf{FN} & \textbf{FP} & \textbf{TN} \\
 \midrule
-Compuerta completa & 1\,632 & 170 & 4\,466 & 16\,416 \\
-Ruta automática selectiva & 912 & 60 & 813 & 13\,012 \\
+Compuerta completa & 1\,611 & 191 & 4\,221 & 16\,661 \\
+Ruta automática selectiva & 886 & 96 & 814 & 14\,705 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -138,7 +186,7 @@ La Tabla~\ref{tab:artefactos_app} identifica la fuente canónica usada para cada
 \midrule
 \path{docs/artefactos/auditoria_estado_final_182461.json} & Totales elegibles, etiquetas, videos, particiones y huella de auditoría. & Corpus y etiquetado. \\
 \path{docs/OPTIMIZACION_LONGITUD_CHUNKS.md} y \path{docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md} & Comparación de 15--35 s, perfiles clásico y neuronal, bootstrap y decisión congelada. & Longitud temporal de 30 s. \\
-\path{resultados/modelos/comparacion_individual_ensemble_validation.json} & Ranking, OOF, calibración, Pareto, bootstrap y cinco ensembles. & Selección en validation. \\
+\path{resultados/modelos/comparacion_individual_ensemble_validation.json} y \path{resultados/modelos/optimizacion_ensembles/optimizacion_ensembles_validation.json} & Ranking inicial y comparación anidada de siete variantes, pesos, bootstrap y hashes de entrada. & Selección en validation. \\
 \path{resultados/modelos/seleccion_congelada.json} & Miembros, calibradores, umbrales y política \texttt{NEEDS\_REVIEW}. & Especificación desplegable. \\
 \path{resultados/modelos/test_final_abierto_una_vez.json} & Test natural, vista 4:1 y métricas selectivas. & Evaluación final. \\
 \path{resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md} & Tablas y análisis crítico legible. & Control editorial y reproducibilidad. \\

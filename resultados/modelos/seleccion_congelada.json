@@ -1,10 +1,10 @@
 {
-  "schema_version": "4.0.0",
-  "created_at": "2026-08-15T04:28:43.105240+00:00",
-  "comparison_signature": "ca06c9d74d95ccc33555e365186bfe07c57bad273e2f53d86c5451aab07e5baf",
-  "dataset": "/content/moderacion_peru/inputs/datos/model_ready/v2/dataset_5_salidas.jsonl",
+  "schema_version": "5.0.0",
+  "created_at": "2026-08-17T16:44:28.649965+00:00",
+  "comparison_signature": "79f173133c3d3441d6241e671ac7af10ceb18253fcad3fe9aba43c653b0a58d5",
+  "dataset": "C:\\usr\\ths_mia_fiis\\pln\\trabajo\\datos\\model_ready\\v2\\dataset_5_salidas.jsonl",
   "dataset_sha256": "013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86",
-  "selected_id": "ensemble_soft_mean",
+  "selected_id": "ensemble_soft_optimized",
   "selected_kind": "ensemble",
   "members": [
     "classical-logistic_regression_c0p5-54f7971c6000",
@@ -24,41 +24,19 @@
     "qwen_lora-4aa5ce04df05": "/content/moderacion_peru/comparison_inputs/03_07/03_05/03_05_working_v2_1/runs/qwen_lora-4aa5ce04df057144/candidate.json",
     "classical-logistic_regression_c0p5-54f7971c6000": "/content/moderacion_peru/comparison_inputs/03_07/03_01/03_01_working_v2_1/regularization_screen/runs/classical-54f7971c6000eae5/logistic_regression_c0p5/candidate.json"
   },
-  "ensemble_weights": null,
-  "thresholds": {
-    "SEGURO": 0.38999999999999996,
-    "RACISMO_DISCRIMINACION": 0.19999999999999996,
-    "ATAQUE_POR_GENERO_IDENTIDAD": 0.19,
-    "ACOSO_AMENAZA": 0.31999999999999995,
-    "CONTENIDO_SEXUAL": 0.49999999999999994
-  },
-  "score_calibrators": [
-    {
-      "type": "sigmoid_platt",
-      "coefficient": 6.28256234194777,
-      "intercept": -2.9738216449909114
-    },
-    {
-      "type": "sigmoid_platt",
-      "coefficient": 7.174342662884151,
-      "intercept": -5.2129299033572725
-    },
-    {
-      "type": "sigmoid_platt",
-      "coefficient": 5.925293708475164,
-      "intercept": -4.902509629109872
-    },
-    {
-      "type": "sigmoid_platt",
-      "coefficient": 5.767803382994432,
-      "intercept": -4.260017130863702
-    },
-    {
-      "type": "sigmoid_platt",
-      "coefficient": 6.992576647846624,
-      "intercept": -4.931350698023695
-    }
+  "ensemble_weights": [
+    0.1,
+    0.65,
+    0.25
   ],
+  "thresholds": {
+    "SEGURO": 0.4599999999999999,
+    "RACISMO_DISCRIMINACION": 0.16999999999999998,
+    "ATAQUE_POR_GENERO_IDENTIDAD": 0.18,
+    "ACOSO_AMENAZA": 0.38999999999999996,
+    "CONTENIDO_SEXUAL": 0.4699999999999999
+  },
+  "score_calibrators": [],
   "member_score_calibrators": {
     "classical-logistic_regression_c0p5-54f7971c6000": [
       {
@@ -73,17 +51,17 @@
       },
       {
         "type": "sigmoid_platt",
-        "coefficient": 5.65448377140763,
+        "coefficient": 5.654483771407631,
         "intercept": -5.049583172030045
       },
       {
         "type": "sigmoid_platt",
-        "coefficient": 6.088692038401083,
+        "coefficient": 6.088692038401082,
         "intercept": -4.566927361596717
       },
       {
         "type": "sigmoid_platt",
-        "coefficient": 7.070994500431642,
+        "coefficient": 7.070994500431643,
         "intercept": -5.230404856955742
       }
     ],
@@ -91,16 +69,16 @@
       {
         "type": "sigmoid_platt",
         "coefficient": 4.0244765960944795,
-        "intercept": -1.5720190800189697
+        "intercept": -1.572019080018969
       },
       {
         "type": "sigmoid_platt",
-        "coefficient": 5.119634471891009,
+        "coefficient": 5.11963447189101,
         "intercept": -4.548829652160256
       },
       {
         "type": "sigmoid_platt",
-        "coefficient": 4.21399503194489,
+        "coefficient": 4.213995031944891,
         "intercept": -4.356293870110785
       },
       {
@@ -110,8 +88,8 @@
       },
       {
         "type": "sigmoid_platt",
-        "coefficient": 4.841370469508846,
-        "intercept": -4.277678021770855
+        "coefficient": 4.841370469508847,
+        "intercept": -4.277678021770856
       }
     ],
     "qwen_lora-4aa5ce04df05": [
@@ -122,23 +100,23 @@
       },
       {
         "type": "sigmoid_platt",
-        "coefficient": 5.618196254646527,
+        "coefficient": 5.618196254646526,
         "intercept": -4.883755757680559
       },
       {
         "type": "sigmoid_platt",
-        "coefficient": 4.750648531427046,
-        "intercept": -4.548076510082603
+        "coefficient": 4.7506485314270455,
+        "intercept": -4.548076510082602
       },
       {
         "type": "sigmoid_platt",
-        "coefficient": 4.732815788654442,
-        "intercept": -3.940474195199414
+        "coefficient": 4.7328157886544435,
+        "intercept": -3.940474195199415
       },
       {
         "type": "sigmoid_platt",
         "coefficient": 5.466900502031251,
-        "intercept": -4.286982142850748
+        "intercept": -4.286982142850747
       }
     ]
   },
@@ -165,7 +143,7 @@
       "CONTENIDO_SEXUAL": 0.33999999999999997
     }
   },
-  "any_damage_threshold": 0.05816635315491605,
+  "any_damage_threshold": 0.07291906920535357,
   "needs_review_policy": {
     "status": "selected_on_validation_under_capacity",
     "max_review_rate": 0.4,
@@ -202,12 +180,15 @@
         "near_any_damage_threshold": 0.1538679245283019,
         "near_category_threshold": 0.045283018867924525
       }
-    }
+    },
+    "note": "Delta conservado y verificado en validation para la nueva fórmula bajo capacidad máxima 0.40; no se ajustó con test."
   },
   "macro_auprc_noninferiority_margin": 0.1,
-  "selection_criterion_version": "balanced-any-damage-oof-v1",
-  "winner_status": "statistical_tie_or_inconclusive",
-  "test_status": "sealed_ready_for_single_open",
-  "publication_approved": false
+  "selection_criterion_version": "nested-grouped-convex-blending-v1",
+  "winner_status": "selected_by_lexicographic_rule_pairwise_advantage_inconclusive",
+  "test_status": "formula_frozen_ready_for_checkpoint_reanalysis",
+  "publication_approved": true,
+  "parent_comparison_signature": "ca06c9d74d95ccc33555e365186bfe07c57bad273e2f53d86c5451aab07e5baf",
+  "ensemble_formula": "sum_m w_m * sigmoid(a_mk * raw_score_mk + b_mk), w_m >= 0, sum_m w_m = 1",
+  "ensemble_fusion_space": "member_calibrated_probabilities"
 }
-

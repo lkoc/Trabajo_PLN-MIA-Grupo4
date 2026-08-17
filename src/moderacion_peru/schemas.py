@@ -215,7 +215,7 @@ class ModelRegistryEntry(BaseModel):
     selection_metrics: dict[str, float] = Field(default_factory=dict)
     comparison_registries: dict[str, ArtifactReference] = Field(default_factory=dict)
     score_calibrators: list[dict[str, Any]] = Field(default_factory=list)
-    ensemble_kind: Literal["soft_mean"] | None = None
+    ensemble_kind: Literal["soft_mean", "soft_optimized"] | None = None
     selected_members: list[str] = Field(default_factory=list)
     any_damage_threshold: float | None = None
     needs_review_policy: dict[str, Any] = Field(default_factory=dict)

@@ -26,10 +26,11 @@ Todo el recorrido usa el contrato de etiquetas v2.1 con `SEGURO`, `RACISMO_DISCR
 | 18 | `03_06_qwen_estructurado` | mismo snapshot | Qwen LoRA con penalización de conflicto; comparación sobre cinco primarias | checkpoint/warm start o no-op |
 | 19 | `03_06b_qwen_prompt_sft` | snapshot + Markdown de definiciones | experimento toy 1.200 filas, adaptador, JSON restringidos y métricas 800/200/200 | firma/no-op; ejecución independiente, nunca candidato |
 | 20 | `03_07_comparacion_final` | candidatos del mismo SHA-256 | comparación y selección congelada en validation; test separado | checkpoint verificable del run en Drive |
-| 21 | `03_07a_reporte_comparacion_modelos` | publicación Drive + estado local | JSON verificados, Markdown crítico, CSV y PNG | OAuth de solo lectura; descarga solo si fecha/SHA cambian; no extrae modelos ni abre test |
-| 22 | `04_01_frontend_produccion` | registro aprobado | demostrador supervisado | caché de subtítulos + eventos append-only |
+| 21 | `03_07b_optimizacion_ensembles` | predicciones originales de los tres miembros + comparación 03_07 | comparación integrada de 5 reglas base + 2 optimizadas, pesos y test recombinado | local; hashes obligatorios; validación anidada; cero inferencias nuevas de test |
+| 22 | `03_07a_reporte_comparacion_modelos` | publicación Drive + estado local | JSON verificados, Markdown crítico, CSV y PNG | OAuth de solo lectura; descarga solo si fecha/SHA cambian; no extrae modelos ni abre test |
+| 23 | `04_01_frontend_produccion` | registro aprobado | demostrador supervisado | caché de subtítulos + eventos append-only |
 
-`03_01`–`03_06` son ramas comparables y no dependen entre sí. `03_06b` es un ejercicio toy separado y abre únicamente su test retenido de 200 filas; no interviene en el preflight ni en la selección de `03_07`. Para los modelos comparables, test nunca participa en la selección y solo informa después de congelar modelo y umbrales con validation. `03_07a` es un consumidor analítico y puede repetirse después de cada sincronización sin repetir inferencia.
+`03_01`–`03_06` son ramas comparables y no dependen entre sí. `03_06b` es un ejercicio toy separado. `03_07b` es un subpaso de la comparación, no otra pasada editorial: optimiza todas las mezclas parametrizadas antes de fijar un único ganador. Para los modelos comparables, test nunca participa en la selección; sus matrices originales solo se recombinan después del congelamiento. `03_07a` es un consumidor analítico.
 
 ## Interruptores deliberados
 
@@ -42,6 +43,7 @@ Todo el recorrido usa el contrato de etiquetas v2.1 con `SEGURO`, `RACISMO_DISCR
 - En `03_01`–`03_06`, active `RUN_TRAINING=True`. Una segunda ejecución con el mismo snapshot devuelve `status="noop"`.
 - En `03_06b`, mantenga `RUN_BUILD_TOY_DATASET=True` y `RUN_TRAIN_QWEN=True` para la corrida completa A100. Los pesos 80:20:20 se normalizan a 4:1:1; el cuaderno exige 1.200 videos únicos y genera `strict_macro_f1` sobre el test toy. No copie su salida bajo raíces de candidatos.
 - En `03_07`, use un kernel Colab CPU y ejecute desde la primera celda. El cuaderno monta `ModeracionPeru_Colab` y restaura y verifica solo los runs `03_01`–`03_06`. Active `RUN_COMPARE_AND_FREEZE=True` solo cuando el preflight muestre todas las familias requeridas. `RUN_TEST_ONCE` y la publicación productiva permanecen separados.
+- En `03_07b`, use kernel local. Coloque `run_outputs-b.tar` y `run_outputs-a.tar` en `Downloads`; el cuaderno verifica SHA-256, ejecuta cinco pliegues externos e internos con grid 0,025 y actualiza la comparación, congelación y test sin reinferencia.
 - En `03_07a`, use un kernel local y conserve `AUTO_SYNC_FROM_GOOGLE_DRIVE=True`. En la primera ejecución guarde un cliente OAuth de escritorio como `config/google_drive_oauth_client.json` y acepte en el navegador el alcance Drive de solo lectura; el token queda en `.secrets/`, fuera de Git. Las siguientes ejecuciones comparan automáticamente el manifiesto remoto y descargan solo si `published_at` o el SHA-256 cambiaron. No use Drive Desktop ni descargue pesos.
 
 El corte documentado del 2026-08-08 recuperó 52 244 filas Flash y 9 912 Pro,

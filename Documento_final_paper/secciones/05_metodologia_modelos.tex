@@ -1,6 +1,6 @@
 \subsection{Familias de modelos}
 
-La comparación incluye 28 candidatos individuales procedentes de tres familias y cinco reglas de ensemble. Todos producen cinco scores principales; cuando la arquitectura lo permite, añade 14 etiquetas finas y tres flags, para un total de 22 logits con pérdidas enmascaradas. La implementación usa scikit-learn para los modelos clásicos \cite{pedregosa2011sklearn} y PyTorch/Transformers para las redes \cite{paszke2019pytorch,wolf2020transformers}. La Fig.~\ref{fig:modelos} contrasta los mecanismos de las tres familias y anticipa su composición en el ensemble.
+La comparación incluye 28 candidatos individuales procedentes de tres familias, cinco reglas base de ensemble y dos variantes optimizadas. Todos producen cinco scores principales; cuando la arquitectura lo permite, añade 14 etiquetas finas y tres flags, para un total de 22 logits con pérdidas enmascaradas. La implementación usa scikit-learn para los modelos clásicos \cite{pedregosa2011sklearn} y PyTorch/Transformers para las redes \cite{paszke2019pytorch,wolf2020transformers}. La Fig.~\ref{fig:modelos} contrasta los mecanismos de las tres familias y anticipa su composición en el ensemble.
 
 \begin{figure*}[t]
 \centering
@@ -59,31 +59,32 @@ La exactitud ordinaria y los promedios micro o ponderados no gobiernan el rankin
 
 El riesgo $R_{0,67}=0,67\,\mathrm{FNR}+0,33\,\mathrm{FPR}$ combina la tasa de falsos negativos (FNR: daño real clasificado como seguro) y la tasa de falsos positivos (FPR: contenido seguro marcado como daño). Un valor menor es preferible. La razón $0,67/0,33\simeq2,03$ asigna a una omisión aproximadamente el doble del peso de una falsa alerta; es una preferencia operacional predeclarada, no una probabilidad ni un costo económico estimado. Para $\lambda=0,50$, $R_{0,50}=0,5(\mathrm{FNR}+\mathrm{FPR})=1-\mathrm{BA}$; usar 0,67 desplaza el desempate hacia evitar daño omitido. La tasa de revisión mide otra decisión ---capacidad humana--- y se interpreta junto con el error de la ruta automática.
 
-\subsection{Ensemble por promedio de probabilidades}
+\subsection{Ensembles y optimización de la mezcla}
 
-El ensemble congelado combina los mejores representantes de cada familia: regresión logística $C=0,5$, cascada E5 v2 y Qwen3--LoRA. Para cada salida $k$, promedia los tres scores sin pesos y calibra el promedio:
+Los ensembles combinan los mejores representantes de cada familia: regresión logística $C=0,5$, cascada E5 v2 y Qwen3--LoRA. Primero se transforma el score crudo $s_{mk}$ del miembro $m$ y salida $k$ mediante un calibrador de Platt ajustado sin fuga, $p_{mk}=\sigma(a_{mk}s_{mk}+b_{mk})$. Sobre esas probabilidades se comparan cinco reglas base. El promedio suave usa $E_k=\sum_m p_{mk}/3$; el ponderado usa $E_k=\sum_m w_m p_{mk}$, con pesos proporcionales a la macro-AUPRC de validation; la mayoría dura promedia decisiones $\mathbb{1}(p_{mk}\ge t_{mk})$; y unión e intersección usan, respectivamente, $\max_m p_{mk}$ y $\min_m p_{mk}$. La fusión suave y el voto aprovechan errores diversos y tienen fundamento general en la literatura de combinación de clasificadores \cite{dietterich2000ensemble,lam1997majority}. La ponderación proporcional a AUPRC y las reglas máximo/mínimo son diseños exploratorios propuestos en este trabajo; no se atribuyen a una referencia específica.
 
+Para evitar favorecer al ganador preliminar, se optimizan todas las familias con grados de libertad: una mezcla suave y una mezcla de votos duros. En ambos casos se buscan pesos no negativos que sumen uno,
 \[
-\bar{s}_k(x)=\frac{1}{3}\sum_{m=1}^{3}s_{mk}(x),
-\qquad
-\hat p_k(x)=\sigma(a_k\bar{s}_k(x)+b_k).
+E_k(x;\mathbf w)=\sum_{m=1}^{3}w_m z_{mk}(x),
+\qquad w_m\ge0,\quad \sum_mw_m=1,
 \]
+donde $z_{mk}=p_{mk}$ en la versión suave y $z_{mk}=\mathbb{1}(p_{mk}\ge t_{mk})$ en la dura. Esta combinación aprendida corresponde al principio de \emph{stacked generalization}/Super Learner \cite{wolpert1992stacked,vanderlaan2007superlearner}; la función objetivo concreta es una propuesta del trabajo: maximizar lexicográficamente BA, minimizar $R_{0,67}$ y maximizar macro-AUPRC. La búsqueda exhaustiva recorre el simplex con paso 0,025 (861 ternas) y, si persiste un empate, prefiere la solución más próxima a pesos iguales. Unión e intersección se recalibran y reevalúan, pero no se ``optimizan'' inventándoles coeficientes que no poseen.
 
-La decisión compara $\hat p_k$ con un umbral $\theta_k$ fijado en validation. Esta fusión suave aprovecha que las señales léxicas, contextuales y autoregresivas no fallan siempre en los mismos casos; los ensembles y el voto mayoritario cuentan con antecedentes generales \cite{dietterich2000ensemble,lam1997majority}. El experimento también evalúa promedio ponderado por validation, mayoría dura, unión (máximo) e intersección (mínimo). Solo el promedio simple se congela para test. El Apéndice~\ref{app:ensemble} conserva los identificadores, calibradores, umbrales y demás parámetros necesarios para reconstruirlo.
+La evaluación usa validación anidada \texttt{GroupKFold} por video: cinco pliegues externos estiman desempeño y, dentro de cada entrenamiento externo, cinco pliegues internos ajustan calibradores, umbrales y pesos. Después de elegir la regla, un ajuste final sobre toda validation fija $\mathbf w$, los calibradores de miembro y los umbrales de despliegue. El cuaderno local \path{03_07b_optimizacion_ensembles.ipynb} reproduce desde las tres predicciones originales los hashes, la búsqueda, el bootstrap y la actualización del mismo reporte 03\_07; no constituye una segunda comparación editorial. El Apéndice~\ref{app:ensemble} conserva fórmulas, coeficientes y resultados de todos los casos.
 
 \subsection{Criterio de selección e inferencia estadística}
 
 La política de selección es lexicográfica y no suma métricas redundantes. Primero maximiza BA \texttt{ANY\_DAMAGE} OOF a cobertura completa. Luego exige una salvaguarda de macro-AUPRC de daños frente al mejor individuo, con margen de no inferioridad predeclarado de 0,10; conserva la frontera de Pareto BA--macro-AUPRC; y desempata por menor riesgo $R_{0,67}=0,67\,\mathrm{FNR}+0,33\,\mathrm{FPR}$, seguido de mayor macro-AUPRC. El margen 0,10 es permisivo y se conserva como limitación, no como prueba de equivalencia.
 
-La aplicación al resultado final muestra la función de cada paso. El promedio simple obtiene BA 0,840, frente a 0,838 del promedio ponderado y 0,831 de Qwen3--LoRA; por ello lidera el criterio primario. Su macro-AUPRC es 0,555, superior en 0,039 a 0,516 del mejor individuo, de modo que supera la salvaguarda. El promedio ponderado alcanza AUPRC 0,556 pero BA menor, por lo que ambos ensembles permanecen en la frontera de Pareto: ninguno mejora simultáneamente las dos coordenadas. Si se requiere el desempate de costo, el promedio simple tiene $R_{0,67}=0,67(0,127)+0,33(0,193)=0,149$, menor que 0,152 del ponderado. Estas operaciones se aplican en secuencia; no se suman en una puntuación compuesta.
+La comparación actualizada aplica esa regla a siete variantes de ensemble bajo el mismo protocolo anidado. La mezcla suave optimizada obtiene BA 0,8366, $R_{0,67}=0,1587$ y macro-AUPRC 0,5506; el ponderado heurístico obtiene 0,8360, 0,1612 y 0,5614. Por ello la primera ocupa el rango uno, aunque no domina todas las métricas. Estas operaciones se aplican en secuencia; no se suman en una puntuación compuesta.
 
-Las diferencias se estiman con 2\,000 réplicas bootstrap pareadas por video y ajuste de Holm \cite{efron1979bootstrap,field2007clusterbootstrap,holm1979multiple}. El remuestreo respeta la correlación entre chunks de un mismo video; no sustituye la variación entre semillas.
+Las diferencias se estiman con 2\,000 réplicas bootstrap pareadas por video \cite{efron1979bootstrap,field2007clusterbootstrap}. El remuestreo respeta la correlación entre chunks de un mismo video; no sustituye la variación entre semillas. Frente al ponderado heurístico, la diferencia de BA es 0,00059, IC95\% $[-0,00367,0,00509]$, por lo que la selección expresa la regla lexicográfica y no superioridad estadística demostrada.
 
 \subsection{Política selectiva y test sellado}
 
-\texttt{NEEDS\_REVIEW} es una política posterior al modelo. Se activa por conflicto seguro--daño, salida vacía, incoherencia compuerta--categoría o proximidad a los umbrales. La capacidad máxima declarada fue 40\% y validation eligió un margen $\delta=0,03$, con 33\% de revisión. Candidato, miembros, calibradores, umbrales y política se almacenaron en \texttt{seleccion\_congelada.json} antes de test.
+\texttt{NEEDS\_REVIEW} es una política posterior al modelo. Se activa por conflicto seguro--daño, salida vacía, incoherencia compuerta--categoría o proximidad a los umbrales. La capacidad máxima declarada fue 40\% y validation conservó un margen $\delta=0,03$. Candidato, miembros, calibradores, pesos, umbrales y política se almacenaron en \texttt{seleccion\_congelada.json} antes de aplicar la fórmula actualizada a test.
 
-El test natural contiene 22\,684 chunks y se abrió una sola vez. Los tres miembros se infirieron en esa apertura y sus scores se reutilizaron para calcular la vista secundaria 4:1; no hubo reinferencia, reajuste ni cambio de ganador. Este diseño separa selección y estimación final, y reduce el sesgo de selección discutido por Cawley y Talbot \cite{cawley2010selection}.
+El test natural contiene 22\,684 chunks y se abrió una sola vez. Los tres miembros se infirieron en esa apertura; tras congelar la comparación ampliada exclusivamente con validation, sus matrices verificadas se recombinaron con la nueva fórmula. No hubo nueva inferencia ni ajuste con test, y la vista secundaria 4:1 reutiliza esos mismos scores. Este diseño separa selección y estimación final, y reduce el sesgo discutido por Cawley y Talbot \cite{cawley2010selection}.
 
 \subsection{Artefacto de demostración}
 

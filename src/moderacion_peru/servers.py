@@ -891,12 +891,16 @@ def _labeling_bulk_events(
         event_labels = (
             proposed_labels
             if action == "accept"
-            else common_labels if action == "modify" else []
+            else common_labels
+            if action == "modify"
+            else []
         )
         event_flags = (
             list(row.get("flags") or [])
             if action == "accept"
-            else common_flags if action == "modify" else []
+            else common_flags
+            if action == "modify"
+            else []
         )
         event_id = str(
             uuid.uuid5(
@@ -1185,10 +1189,11 @@ def _ensemble_soft_mean_result(
     *,
     metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Reproduce la media de scores crudos congelada por 03_07."""
+    """Reproduce una mezcla suave congelada por 03_07/03_07b."""
 
     taxonomy = load_taxonomy()
-    if len(events) != 3 or registry.get("ensemble_kind") != "soft_mean":
+    ensemble_kind = registry.get("ensemble_kind")
+    if len(events) != 3 or ensemble_kind not in {"soft_mean", "soft_optimized"}:
         raise ValueError("El ensemble suave requiere los tres miembros congelados")
     raw_scores = {
         label: sum(
@@ -1198,14 +1203,30 @@ def _ensemble_soft_mean_result(
         / len(events)
         for label in taxonomy.target_labels
     }
-    scores = calibrate_score_mapping(
-        raw_scores,
-        list(registry.get("score_calibrators") or []),
-        taxonomy.target_labels,
-    )
+    if ensemble_kind == "soft_optimized":
+        weights_by_slot = (registry.get("inference") or {}).get("weights") or {}
+        member_ids = (registry.get("inference") or {}).get("member_ids") or {}
+        weights_by_id = {
+            str(member_ids[slot]): float(weights_by_slot[slot])
+            for slot in ("classical", "transformer", "qwen")
+        }
+        if set(weights_by_id) != {str(event["model_id"]) for event in events}:
+            raise ValueError("Los pesos no coinciden con los miembros del ensemble")
+        scores = {
+            label: sum(
+                weights_by_id[str(event["model_id"])] * float(event["scores"][label])
+                for event in events
+            )
+            for label in taxonomy.target_labels
+        }
+    else:
+        scores = calibrate_score_mapping(
+            raw_scores,
+            list(registry.get("score_calibrators") or []),
+            taxonomy.target_labels,
+        )
     thresholds = {
-        label: float(registry["thresholds"][label])
-        for label in taxonomy.target_labels
+        label: float(registry["thresholds"][label]) for label in taxonomy.target_labels
     }
     labels = [
         label for label in taxonomy.target_labels if scores[label] >= thresholds[label]
@@ -1238,9 +1259,13 @@ def _ensemble_soft_mean_result(
         "chunk_id": (metadata or {}).get("chunk_id") or f"production-{event_id}",
         "text": events[0]["text"],
         "model_id": str(registry["model_id"]),
-        "model_family": "ensemble:soft_mean",
+        "model_family": f"ensemble:{ensemble_kind}",
         "model_slot": "ensemble",
-        "model_label": "Ensemble ganador · promedio suave",
+        "model_label": (
+            "Ensemble ganador · mezcla suave optimizada"
+            if ensemble_kind == "soft_optimized"
+            else "Ensemble ganador · promedio suave"
+        ),
         "taxonomy_contract": taxonomy.contract_id,
         "raw_scores": raw_scores,
         "scores": scores,
@@ -1408,10 +1433,10 @@ def serve(
 
     def default_production_mode() -> str:
         payload, paths = registry_state()
-        if (
-            set(paths) == set(PRODUCTION_SLOTS)
-            and payload.get("ensemble_kind") == "soft_mean"
-        ):
+        if set(paths) == set(PRODUCTION_SLOTS) and payload.get("ensemble_kind") in {
+            "soft_mean",
+            "soft_optimized",
+        }:
             return "ensemble"
         return next(slot for slot in PRODUCTION_SLOTS if slot in paths)
 
@@ -1470,10 +1495,9 @@ def serve(
         mode_name = mode_name.casefold().strip()
         if mode_name not in PRODUCTION_MODES:
             raise ValueError(f"Modo productivo no válido: {mode_name}")
-        ensemble_available = (
-            set(registry_paths) == set(PRODUCTION_SLOTS)
-            and registry_payload.get("ensemble_kind") == "soft_mean"
-        )
+        ensemble_available = set(registry_paths) == set(
+            PRODUCTION_SLOTS
+        ) and registry_payload.get("ensemble_kind") in {"soft_mean", "soft_optimized"}
         if mode_name in PRODUCTION_SLOTS:
             slots = [mode_name]
         elif mode_name == "compare":
@@ -1612,10 +1636,12 @@ def serve(
                     ]
                     if len(registry_paths) >= 2:
                         available_modes.append("compare")
-                    if (
-                        set(registry_paths) == set(PRODUCTION_SLOTS)
-                        and registry_payload.get("ensemble_kind") == "soft_mean"
-                    ):
+                    if set(registry_paths) == set(
+                        PRODUCTION_SLOTS
+                    ) and registry_payload.get("ensemble_kind") in {
+                        "soft_mean",
+                        "soft_optimized",
+                    }:
                         available_modes.append("ensemble")
                         registry_models["ensemble"] = {
                             "model_id": registry_payload["model_id"],
@@ -1671,7 +1697,9 @@ def serve(
                         "default_production_mode": (
                             "ensemble"
                             if "ensemble" in available_modes
-                            else available_modes[0] if available_modes else None
+                            else available_modes[0]
+                            if available_modes
+                            else None
                         ),
                         "reviews": str(review_path),
                     }
@@ -2052,9 +2080,7 @@ def serve(
                     salt = os.getenv("MODPERU_REVIEW_SALT", taxonomy.contract_id)
                     pseudonym = (
                         "reviewer-"
-                        + hashlib.sha256(
-                            f"{salt}|{reviewer}".encode()
-                        ).hexdigest()[:16]
+                        + hashlib.sha256(f"{salt}|{reviewer}".encode()).hexdigest()[:16]
                     )
                     with persistence_lock:
                         summary, events = _labeling_bulk_events(
@@ -2111,9 +2137,7 @@ def serve(
                 salt = os.getenv("MODPERU_REVIEW_SALT", taxonomy.contract_id)
                 pseudonym = (
                     "reviewer-"
-                    + hashlib.sha256(f"{salt}|{reviewer}".encode()).hexdigest()[
-                        :16
-                    ]
+                    + hashlib.sha256(f"{salt}|{reviewer}".encode()).hexdigest()[:16]
                 )
                 final_labels = payload.get("final_labels", [])
                 if mode == "production" and payload.get("action") == "reject":
