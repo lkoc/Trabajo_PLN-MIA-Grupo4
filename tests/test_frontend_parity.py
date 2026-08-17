@@ -774,6 +774,56 @@ def test_registry_materializes_the_frozen_soft_mean(tmp_path):
     }
 
 
+def test_registry_materializes_the_frozen_optimized_soft_ensemble(tmp_path):
+    taxonomy = load_taxonomy()
+    dataset = tmp_path / "dataset.jsonl"
+    dataset.write_text('{"fixture":true}\n', encoding="utf-8")
+    candidates = tmp_path / "candidates"
+    _candidate(candidates, dataset, "classical:sgd", "classic", 0.7)
+    _candidate(candidates, dataset, "flat_minilm", "transformer", 0.8)
+    _candidate(candidates, dataset, "qwen_lora", "qwen", 0.9)
+    members = ["classic", "transformer", "qwen"]
+    calibrators = [
+        {"type": "sigmoid_platt", "coefficient": 1.0, "intercept": 0.0}
+        for _ in taxonomy.target_labels
+    ]
+    freeze = tmp_path / "freeze.json"
+    write_json_atomic(
+        freeze,
+        {
+            "selected_id": "ensemble_soft_optimized",
+            "members": members,
+            "ensemble_weights": [0.1, 0.65, 0.25],
+            "dataset_sha256": sha256_file(dataset),
+            "comparison_signature": "fixture-optimized-signature",
+            "thresholds": {label: 0.5 for label in taxonomy.target_labels},
+            "score_calibrators": [],
+            "member_score_calibrators": {
+                member: calibrators for member in members
+            },
+            "member_thresholds": {
+                member: {label: 0.5 for label in taxonomy.target_labels}
+                for member in members
+            },
+            "any_damage_threshold": 0.2,
+            "needs_review_policy": {"selected_delta": 0.03},
+            "winner_status": "selected_pairwise_advantage_inconclusive",
+        },
+    )
+    registry = tmp_path / "registro.json"
+
+    result = publish_frozen_ensemble_registry(freeze, [candidates], registry)
+    payload = json.loads(registry.read_text(encoding="utf-8"))
+
+    assert result["selected"] == "ensemble_soft_optimized"
+    assert payload["ensemble_kind"] == "soft_optimized"
+    assert payload["inference"]["weights"] == {
+        "classical": 0.1,
+        "transformer": 0.65,
+        "qwen": 0.25,
+    }
+
+
 def _model_event(
     event_id: str, slot: str, labels: list[str], text: str = "texto uno"
 ) -> dict:
@@ -840,6 +890,49 @@ def test_frozen_soft_mean_averages_raw_scores_then_calibrates():
     assert result["requires_review"] is False
     assert result["scores"][taxonomy.safe_label] > 0.95
     assert max(result["scores"][label] for label in taxonomy.damage_labels) < 0.02
+
+
+def test_frozen_optimized_soft_ensemble_weights_member_probabilities():
+    taxonomy = load_taxonomy()
+    events = [
+        _model_event("e1", "classical", [taxonomy.safe_label]),
+        _model_event("e2", "transformer", [taxonomy.safe_label]),
+        _model_event("e3", "qwen", [taxonomy.safe_label]),
+    ]
+    safe_scores = {"classical": 0.2, "transformer": 0.8, "qwen": 0.4}
+    for event in events:
+        event["scores"] = {
+            label: safe_scores[event["model_slot"]]
+            if label == taxonomy.safe_label
+            else 0.1
+            for label in taxonomy.target_labels
+        }
+    registry = {
+        "model_id": "ensemble_soft_optimized",
+        "ensemble_kind": "soft_optimized",
+        "thresholds": {label: 0.5 for label in taxonomy.target_labels},
+        "any_damage_threshold": 0.2,
+        "needs_review_policy": {"selected_delta": 0.0},
+        "inference": {
+            "weights": {"classical": 0.1, "transformer": 0.65, "qwen": 0.25},
+            "member_ids": {
+                "classical": "model-classical",
+                "transformer": "model-transformer",
+                "qwen": "model-qwen",
+            },
+        },
+    }
+
+    result = _ensemble_soft_mean_result(events, registry)
+
+    assert result["model_family"] == "ensemble:soft_optimized"
+    assert result["labels"] == [taxonomy.safe_label]
+    assert result["requires_review"] is False
+    assert result["scores"][taxonomy.safe_label] == pytest.approx(0.64)
+    assert all(
+        result["scores"][label] == pytest.approx(0.1)
+        for label in taxonomy.damage_labels
+    )
 
 
 def test_production_feedback_is_append_only_linked_deduplicated_and_conflict_safe(

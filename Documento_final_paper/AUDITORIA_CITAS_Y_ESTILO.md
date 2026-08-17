@@ -1,8 +1,8 @@
 # Auditoría integral del artículo contra las guías aplicables
 
-Fecha de cierre: 2026-08-15
+Fecha de cierre: 2026-08-17
 
-Versión evaluada: contrato v2.1, resultados `03_07`/`03_07a`
+Versión evaluada: contrato v2.1, comparación única actualizada por `03_07b`
 
 Resultado: **aprobado con las cautelas estadísticas y operativas declaradas en el propio artículo**.
 
@@ -30,19 +30,20 @@ Se aplicó la prioridad `artefacto canónico del run > síntesis 03_07a > docume
 4. `../resultados/modelos/resumen_03_07a.json` y sus tablas;
 5. `../docs/artefactos/auditoria_estado_final_182461.json`.
 6. `../docs/OPTIMIZACION_LONGITUD_CHUNKS.md` y `../docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md`.
+7. `../resultados/modelos/optimizacion_ensembles/optimizacion_ensembles_validation.json`.
 
 Controles reproducidos:
 
 - alcance inicial: 182 461 chunks, 5 385 videos y 322 canales; corpus efectivo: 173 240 chunks elegibles, 4 906 videos, 276 canales y 14 163 chunks con daño;
 - concentración: 33 203 chunks en el canal principal; 41 % en los cinco primeros y 56 % en los diez primeros;
 - ventana temporal: 30 s seleccionados en validation; AP macro de daño 0,12, IC95 % [0,11, 0,14], en el perfil clásico robusto;
-- comparación: 28 candidatos individuales y cinco ensembles sobre 10 600 filas de validation;
-- selección: `ensemble_soft_mean`, con clásico, cascada E5 v2 y Qwen3--LoRA;
-- validation OOF: BA 0,84, macro-AUPRC de daños 0,55 y macro-F1 de daños 0,57;
-- contraste: 2 000 réplicas pareadas por video; el IC95 % incluye cero y `winner_status=statistical_tie_or_inconclusive`;
-- test: una apertura y una inferencia sobre 22 684 filas; la vista 4:1 reutiliza esas predicciones;
-- compuerta congelada en test natural: 1 632 verdaderos positivos, 170 falsos negativos, 4 466 falsos positivos y 16 416 verdaderos negativos; BA 0,85 y sensibilidad 0,91;
-- política selectiva: 35 % a revisión; cobertura automática 65 % y BA automática 0,94.
+- comparación: 28 candidatos individuales, cinco reglas base y dos mezclas optimizadas sobre 10 600 filas de validation;
+- selección: `ensemble_soft_optimized`, con pesos clásico/Transformer/Qwen 0,10/0,65/0,25;
+- validation OOF anidada: BA 0,8366, macro-AUPRC de daños 0,5506 y macro-F1 de daños 0,5618;
+- contraste: 2 000 réplicas pareadas por video; $\Delta$BA frente al ponderado 0,00059, IC95 % [−0,00367; 0,00509] y $p=0,804$;
+- test: una apertura, cero inferencias nuevas para la actualización y recombinación verificada de 22 684 filas;
+- compuerta congelada en test natural: 1 611 verdaderos positivos, 191 falsos negativos, 4 221 falsos positivos y 16 661 verdaderos negativos; BA 0,8459 y sensibilidad 0,8940;
+- política selectiva: 27,3 % a revisión; cobertura automática 72,7 % y BA automática 0,9249.
 
 Los conteos, identificadores, hashes y parámetros de protocolo se conservan exactos. Las métricas y magnitudes estimadas se publican con dos cifras significativas; los calibradores, umbrales y pesos del apéndice conservan la precisión necesaria para reconstruir el ensemble.
 
@@ -116,4 +117,4 @@ El texto redondea esas cifras a 0,79, 0,78, 0,73, 0,69 y 0,65, respectivamente. 
 
 ## 7. Cautelas que permanecen
 
-No son defectos editoriales sino límites del estudio: `Natural` no equivale a una muestra probabilística de YouTube; falta una cohorte con doble anotación humana independiente; el margen de no inferioridad 0,10 es permisivo; la revisión de 35 % aún debe traducirse en horas y costo; y no se evaluaron imagen, audio, red ni deriva temporal. Estas cautelas aparecen en el artículo y evitan extrapolar el resultado más allá de la evidencia.
+No son defectos editoriales sino límites del estudio: `Natural` no equivale a una muestra probabilística de YouTube; falta una cohorte con doble anotación humana independiente; el margen de no inferioridad 0,10 es permisivo; la revisión de 27,3 % aún debe traducirse en horas y costo; los pesos suaves varían entre pliegues; y no se evaluaron imagen, audio, red ni deriva temporal. Estas cautelas aparecen en el artículo y evitan extrapolar el resultado más allá de la evidencia.

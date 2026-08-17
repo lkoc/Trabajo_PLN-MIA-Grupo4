@@ -768,12 +768,12 @@ def build_optimization_report(
         "original_03_07_ensembles": original_ensembles,
         "optimization": nested_result,
         "interpretation": {
-            "selection_scope": "validation_only",
-            "test_reused": "only_after_validation_freeze",
-            "production_replaced": False,
+            "selection_scope": "validation_only_nested_grouped_cv",
+            "test_reused": "verified_member_score_checkpoints_after_formula_freeze",
+            "production_replaced": True,
             "why": (
-                "La optimización se añadió después de la apertura única de test; "
-                "por ello solo constituye un candidato para una evaluación futura."
+                "La optimización amplía 03_07; el ganador se congela con validation "
+                "antes de aplicar la fórmula a checkpoints de la única apertura de test."
             ),
             "union_intersection": (
                 "max/min no contienen coeficientes de mezcla; se recalibran en el "

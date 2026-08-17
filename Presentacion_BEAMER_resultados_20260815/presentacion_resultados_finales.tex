@@ -154,7 +154,7 @@
     \node[anchor=north west]
       at ([xshift=7mm,yshift=-86mm]current page.north west)
       {\pill{Teal}{173\,240 chunks elegibles}\quad
-       \pill{Blue}{33 candidatos}\quad\pill{Purple}{Humano en control}};
+       \pill{Blue}{28 individuos + 7 ensembles}\quad\pill{Purple}{Humano en control}};
   \end{tikzpicture}
 \end{frame}
 
@@ -208,6 +208,33 @@
   \end{columns}
   \takeaway{El producto no reemplaza al moderador: reduce el espacio de búsqueda y entrega evidencia localizada para decidir.}
   \mixedNote{Moderación y responsabilidad~\cite{gorwa2020moderation}; clasificación selectiva~\cite{geifman2017selective,mozannar2020defer}.}{\texttt{test\_final\_abierto\_una\_vez.json}, test natural.}
+\end{frame}
+
+\begin{frame}[shrink=3]{Por qué moderar subtítulos no es solo clasificar texto}
+  \framesubtitle{Escala, contexto y responsabilidad deben resolverse al mismo tiempo}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.31\textwidth}
+      \smallcard{Coral}{Daño heterogéneo}{Discriminación, ataques por identidad, acoso, amenazas y sexualización pueden coexistir o expresarse de modo implícito.}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \smallcard{Gold}{Contexto ambiguo}{Una noticia puede citar una amenaza; el humor puede encubrir un blanco; una expresión peruana cambia de sentido según hablante y entorno.}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \smallcard{Blue}{Decisión auditable}{Revisar cada video completo no escala; una alerta sin texto, intervalo, incertidumbre ni procedencia tampoco permite decidir responsablemente.}
+    \end{column}
+  \end{columns}
+  \vspace{4mm}
+  \centering
+  \begin{tikzpicture}[
+    n/.style={draw,rounded corners=3pt,text width=31mm,minimum height=12mm,align=center,inner sep=2mm,font=\scriptsize},
+    a/.style={-{Stealth[length=1.8mm]},thick,draw=Muted}]
+    \node[n,draw=Blue!45,fill=Blue!7] (sub) {Subtítulo + tiempo + procedencia};
+    \node[n,draw=Purple!45,fill=Purple!7,right=5mm of sub] (mod) {Cinco scores + compuerta + calibración};
+    \node[n,draw=Teal!45,fill=Teal!7,right=5mm of mod] (hum) {Evidencia y motivo para revisión humana};
+    \draw[a] (sub)--(mod); \draw[a] (mod)--(hum);
+  \end{tikzpicture}
+  \takeaway{El problema es priorizar contenido sin perder el contexto que explica la alerta ni trasladar al modelo la responsabilidad final.}
+  \externalNote{Moderación y responsabilidad~\cite{gorwa2020moderation}; abuso explícito/implícito y dirigido/generalizado~\cite{waseem2017abuse,banko2020taxonomy}; contexto peruano~\cite{defensoria2021violenciaenlinea}.}
 \end{frame}
 
 \begin{frame}{Formulación del problema en tres niveles}
@@ -267,6 +294,36 @@
   \vspace{2mm}
   \takeaway{La contribución es el sistema completo: datos + etiquetas + modelos + selección + supervisión.}
   \externalNote{Diseño y evaluación iterativa de artefactos~\cite{hevner2004dsr,peffers2007dsrm}.}
+\end{frame}
+
+\begin{frame}[shrink=5]{DSR conecta cada brecha con evidencia verificable}
+  \framesubtitle{La construcción y la evaluación forman un solo ciclo del artefacto}
+  \centering
+  \begin{tikzpicture}[
+    p/.style={draw,rounded corners=3pt,text width=22mm,minimum height=14mm,align=center,inner sep=2mm,font=\scriptsize},
+    a/.style={-{Stealth[length=1.8mm]},thick,draw=Muted}]
+    \node[p,draw=Coral!45,fill=Coral!7] (b) {1. Brecha y requisitos};
+    \node[p,draw=Blue!45,fill=Blue!7,right=3mm of b] (d) {2. Diseño y construcción};
+    \node[p,draw=Purple!45,fill=Purple!7,right=3mm of d] (m) {3. Demostración};
+    \node[p,draw=Teal!45,fill=Teal!7,right=3mm of m] (e) {4. Evaluación};
+    \node[p,draw=Gold!55,fill=Gold!9,right=3mm of e] (c) {5. Comunicación};
+    \draw[a] (b)--(d); \draw[a] (d)--(m); \draw[a] (m)--(e); \draw[a] (e)--(c);
+    \draw[a,dashed] (e.south) |- ++(0,-5mm) -| (d.south);
+  \end{tikzpicture}
+  \vspace{4mm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{.31\textwidth}
+      \smallcard{Blue}{Datos}{Corpus y taxonomía versionados; particiones por video y procedencia de cada chunk.}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \smallcard{Purple}{Modelos}{Comparación común, optimización anidada, calibración y test separado.}
+    \end{column}
+    \begin{column}{.31\textwidth}
+      \smallcard{Teal}{Operación}{Frontend, evidencia temporal, derivación humana y eventos trazables.}
+    \end{column}
+  \end{columns}
+  \takeaway{Los resultados finales no son una segunda fase aislada: evalúan el mismo artefacto construido y motivan la siguiente iteración sin reusar test para seleccionar.}
+  \externalNote{Ciencia del diseño y proceso DSR~\cite{hevner2004dsr,peffers2007dsrm}; separación de selección y evaluación~\cite{cawley2010selection}.}
 \end{frame}
 
 \section{2. Estado del arte y enfoques de solución}
@@ -729,7 +786,7 @@
   \resultNote{Los dos identificadores de contexto 256 del ranking reproducen las mismas métricas; no constituyen réplicas independientes. El ensemble usa el LoRA base.}
 \end{frame}
 
-\begin{frame}[shrink=8]{Metodología del ensemble optimizado}
+\begin{frame}[shrink=12]{Metodología del ensemble optimizado}
   \framesubtitle{Calibración por miembro y pesos aprendidos sin consultar test}
   \centering
   \begin{tikzpicture}[
@@ -745,14 +802,14 @@
   \vspace{2mm}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{.47\textwidth}
-      \smallcard{Teal}{Fusión suave}{Cada score se calibra dentro del pliegue; los pesos no negativos suman uno.}
+      \smallcard{Teal}{1 · Ajuste interno}{En cada train externo, 5 pliegues por vídeo generan scores OOF; allí se ajustan Platt y umbrales, y se evalúan 861 ternas no negativas de paso 0,025.}
     \end{column}
     \begin{column}{.47\textwidth}
-      \smallcard{Purple}{Optimización anidada}{5 pliegues externos e internos por vídeo; grid 0,025 con 861 ternas.}
+      \smallcard{Purple}{2 · Estimación externa}{Se elige por BA $\uparrow$, $R_{0,67}\downarrow$ y macro-AUPRC $\uparrow$; los pesos se aplican al quinto externo intacto. Los 5 quintos forman el ranking anidado.}
     \end{column}
   \end{columns}
   \takeaway{Se optimizan todas las mezclas parametrizadas; unión e intersección no reciben coeficientes artificiales.}
-  \externalNote{Diversidad y voto~\cite{dietterich2000ensemble,lam1997majority}; combinación aprendida~\cite{wolpert1992stacked,vanderlaan2007superlearner}; objetivo lexicográfico: propuesta propia.}
+  \externalNote{Calibración~\cite{platt1999probabilistic}; selección anidada~\cite{cawley2010selection}; combinación aprendida~\cite{wolpert1992stacked,vanderlaan2007superlearner}. Malla y objetivo lexicográfico: propuesta propia.}
 \end{frame}
 
 \begin{frame}[shrink=9]{Estrategias de ensemble evaluadas}
@@ -851,7 +908,7 @@
       \smallcard{Purple}{3 · Riesgo y pesos}{$R_{0,67}=0,1587$; ajuste final C/T/Q = 0,10/0,65/0,25.}
     \end{column}
   \end{columns}
-  \takeaway{El suave optimizado es el único seleccionado; frente al ponderado, $\Delta$BA=+0,00059$, IC95\,\% $[-0,00367;0,00509]$, $p=0,804$: ventaja inconclusa.}
+  \takeaway{El suave optimizado es el único seleccionado; frente al ponderado, $\Delta\mathrm{BA}=+0{,}00059$, IC95\,\% $[-0,00367;0,00509]$, $p=0,804$: ventaja inconclusa.}
   \externalNote{Bootstrap pareado por video~\cite{field2007clusterbootstrap}; criterio interno: \texttt{docs/CRITERIO\_SELECCION\_MODELOS\_03.md}.}
 \end{frame}
 
@@ -866,7 +923,20 @@
   \begin{columns}[T,onlytextwidth]
     \begin{column}{.72\textwidth}
       \centering
-      \includegraphics[width=\linewidth,height=55mm,keepaspectratio]{assets/ranking_global_validation.png}
+      \begin{tikzpicture}
+        \begin{axis}[
+          xbar,width=.92\linewidth,height=56mm,xmin=.81,xmax=.839,
+          symbolic y coords={Intersección,Mayoría,Duro optimizado,Promedio,Unión,Ponderado,Suave optimizado},
+          ytick=data,axis y line*=left,axis x line*=bottom,
+          xtick={.81,.82,.83,.84},scaled x ticks=false,
+          tick label style={font=\tiny},nodes near coords,point meta=x,
+          every node near coord/.append style={font=\tiny\bfseries,/pgf/number format/fixed,/pgf/number format/precision=4},
+          enlarge y limits=.08]
+          \addplot[fill=Blue!45,draw=Blue] coordinates {(.8149,Intersección) (.8272,Mayoría) (.8272,Duro optimizado) (.8328,Promedio) (.8334,Unión) (.8360,Ponderado)};
+          \addplot[fill=Teal!80,draw=Teal] coordinates {(.8366,Suave optimizado)};
+        \end{axis}
+      \end{tikzpicture}
+      {\tiny Exactitud balanceada anidada de las siete variantes de ensemble.}
     \end{column}
     \begin{column}{.25\textwidth}
       \metriccard{Teal}{0,8366}{BA anidada}{ANY\_DAMAGE; cobertura completa}
@@ -928,7 +998,19 @@
   \begin{columns}[T,onlytextwidth]
     \begin{column}{.50\textwidth}
       \centering
-      \includegraphics[width=\linewidth,height=55mm,keepaspectratio]{assets/frontera_ba_macro_auprc_validation.png}
+      \begin{tikzpicture}
+        \begin{axis}[
+          width=\linewidth,height=55mm,xmin=.43,xmax=.57,ymin=.81,ymax=.84,
+          xlabel={macro-AUPRC},ylabel={BA},
+          tick label style={font=\tiny},label style={font=\scriptsize},
+          grid=both,grid style={Line!12}]
+          \addplot[only marks,mark=*,mark size=2.2pt,Muted] coordinates {(.5369,.8334) (.5604,.8328) (.4547,.8272) (.4415,.8272) (.5131,.8149)};
+          \addplot[only marks,mark=diamond*,mark size=3pt,Gold] coordinates {(.5614,.8360)};
+          \addplot[only marks,mark=star,mark size=4pt,Teal] coordinates {(.5506,.8366)};
+          \node[font=\tiny\bfseries,text=Teal,anchor=south east] at (axis cs:.5506,.8366) {suave opt.};
+          \node[font=\tiny\bfseries,text=Gold,anchor=north west] at (axis cs:.5614,.8360) {ponderado};
+        \end{axis}
+      \end{tikzpicture}
     \end{column}
     \begin{column}{.47\textwidth}
       \smallcard{Teal}{Selección vigente}{\texttt{ensemble\_soft\_optimized} ocupa el rango uno y es el único ganador actual.}
@@ -952,7 +1034,7 @@
       \metriccard{Coral}{0,894}{sensibilidad al daño}{omite 10,60\,\% del daño}
     \end{column}
     \begin{column}{.31\textwidth}
-      \metriccard{Blue}{0,530}{AP de daño}{prevalencia natural 7,94\,\%}
+      \metriccard{Blue}{0,531}{AP de daño}{prevalencia natural 7,94\,\%}
     \end{column}
   \end{columns}
   \vspace{4mm}
@@ -1099,13 +1181,13 @@
           every node near coord/.append style={font=\tiny\bfseries,/pgf/number format/fixed,/pgf/number format/precision=3},
           enlarge y limits=.12]
           \addplot[fill=Muted!45,draw=Muted] coordinates {(.6461,DETOXIS) (.687,HateXplain) (.730,HatEval) (.7839,OffendES) (.7944,EXIST)};
-          \addplot[fill=Teal!75,draw=Teal] coordinates {(.655949,Este trabajo)};
+          \addplot[fill=Teal!75,draw=Teal] coordinates {(.662418,Este trabajo)};
         \end{axis}
       \end{tikzpicture}
       {\tiny F1 reportado; este trabajo usa vista test 4:1 y compuerta binaria congelada.}
     \end{column}
     \begin{column}{.31\textwidth}
-      \smallcard{Teal}{Posición contextual}{F1 = 0,656: comparable con DETOXIS (0,646) y HateXplain (0,687).}
+      \smallcard{Teal}{Posición contextual}{F1 = 0,662: comparable con DETOXIS (0,646) y HateXplain (0,687).}
       \vspace{2mm}
       \smallcard{Gold}{No es una liga común}{HatEval 0,730; OffendES 0,784; EXIST 0,794, pero cambian corpus, idioma, prevalencia, etiquetas y partición.}
       \vspace{2mm}
@@ -1123,7 +1205,7 @@
       \centering
       \begin{tikzpicture}[x=1mm,y=1mm]
         \draw[very thick,Line] (5,27)--(82,27);
-        \foreach \x/\v/\lab/\col in {15/.34/NaijaHate representativo/Coral,38/.530/Este trabajo natural/Teal,72/.83--.90/NaijaHate enriquecido/Gold}{
+        \foreach \x/\v/\lab/\col in {15/.34/NaijaHate representativo/Coral,38/.531/Este trabajo natural/Teal,72/.83--.90/NaijaHate enriquecido/Gold}{
           \fill[\col] (\x,27) circle (3.3);
           \node[font=\scriptsize\bfseries,text=\col,align=center,above=3mm] at (\x,27) {\v};
           \node[font=\tiny,text=Ink,align=center,below=4mm,text width=24mm] at (\x,27) {\lab};
@@ -1136,7 +1218,7 @@
     \begin{column}{.40\textwidth}
       \smallcard{Coral}{Hallazgo externo}{NaijaHate obtiene AP 0,34 en una muestra representativa y 0,83--0,90 en conjuntos enriquecidos~\cite{tonneau2024naijahate}.}
       \vspace{2mm}
-      \smallcard{Teal}{Hallazgo propio}{En test natural, con 7,94\,\% de daño, la compuerta obtiene AP 0,530.}
+      \smallcard{Teal}{Hallazgo propio}{En test natural, con 7,94\,\% de daño, la compuerta obtiene AP 0,531.}
       \vspace{2mm}
       \smallcard{Gold}{Interpretación}{No son datasets comparables; juntos muestran por qué reportar prevalencia y mantener una vista natural es una fortaleza metodológica.}
     \end{column}
@@ -1148,7 +1230,7 @@
   \framesubtitle{Competitivo como sistema aplicado; la supremacía en benchmark aún requiere evidencia externa}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{.48\textwidth}
-      \smallcard{Green}{Sí es comparable en alcance científico}{Aborda clasificación de lenguaje dañino en contenido social, reporta F1/BA/AUPRC y obtiene F1 0,656 en una vista 4:1: magnitud próxima a DETOXIS y HateXplain.}
+      \smallcard{Green}{Sí es comparable en alcance científico}{Aborda clasificación de lenguaje dañino en contenido social, reporta F1/BA/AUPRC y obtiene F1 0,662 en una vista 4:1: magnitud próxima a DETOXIS y HateXplain.}
       \vspace{2mm}
       \smallcard{Teal}{Alineado con buenas prácticas actuales}{Incluye splits y bootstrap por video, predicciones fuera de muestra (OOF), test natural sellado, cinco familias de salida, evidencia temporal y revisión humana.}
       \vspace{2mm}
@@ -1260,7 +1342,7 @@
     El artefacto conecta \href{http://127.0.0.1:8765/}{etiquetado}, entrenamiento, comparación, \href{http://127.0.0.1:8876/}{inferencia de producción}, revisión y corrección sin romper procedencia.\\[2mm]
     \rowcolor{Purple!7}
     \textbf{Contribución}\newline Competitividad contextual &
-    F1 0,656 en vista 4:1, dentro del rango publicado 0,646--0,794 para tareas relacionadas. &
+    F1 0,662 en vista 4:1, dentro del rango publicado 0,646--0,794 para tareas relacionadas. &
     El resultado es comparable en magnitud y más rico operacionalmente, aunque no constituye una comparación head-to-head.\\
     \bottomrule
   \end{tabularx}

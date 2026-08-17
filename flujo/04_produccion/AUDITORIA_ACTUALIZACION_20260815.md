@@ -1,5 +1,12 @@
 # Auditoría de actualización de producción · 15 de agosto de 2026
 
+> **Actualización vigente, 17 de agosto de 2026.** `03_07b` sustituyó el
+> promedio simple por `ensemble_soft_optimized`, con mezcla de probabilidades
+> calibradas y pesos clásico/Transformer/Qwen `0,10/0,65/0,25`. El registro,
+> el servidor y las comprobaciones automatizadas aceptan esta nueva fórmula.
+> Las referencias posteriores al promedio simple en este documento describen
+> la prueba funcional histórica del 15 de agosto, no la selección vigente.
+
 ## Resultado
 
 El frontend y el servidor quedaron alineados con la selección congelada por `03_07` y fueron verificados con inferencia real local sobre CPU:

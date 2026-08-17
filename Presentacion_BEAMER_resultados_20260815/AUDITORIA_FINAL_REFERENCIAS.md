@@ -1,6 +1,6 @@
 # Auditoría final de autores, referencias y citado
 
-**Fecha:** 15 de agosto de 2026  
+**Fecha:** 17 de agosto de 2026  
 **Artefactos auditados:** `presentacion_resultados_finales.tex`, `referencias.bib`, `presentacion_resultados_finales.bbl` y PDF compilado  
 **Estado:** aprobada
 
@@ -41,7 +41,8 @@ Se incorporó una precisión metodológica necesaria: esas fuentes sustentan las
 - Las definiciones de exactitud balanceada (BA) y área bajo la curva precisión--sensibilidad (AUPRC), así como la decisión de no sumar métricas redundantes, remiten a fuentes metodológicas y al criterio predeclarado del proyecto.
 - Las cifras del corpus, validación, test natural y política de revisión se rotulan como “Resultado propio” y remiten a los artefactos del run 03_07/03_07a.
 - Las capturas de los frontends se identifican como evidencia interna y, cuando corresponde, como capturas históricas; no se usan como respaldo bibliográfico externo.
-- Las conclusiones cuantitativas reproducen los valores mostrados en las diapositivas de resultados: BA 0,840 y macro-AUPRC 0,555 en validación; BA 0,846 en test natural; BA 0,940 con 65,2 % de cobertura automática.
+- Las conclusiones cuantitativas reproducen el flujo final integrado: ensemble suave optimizado con BA 0,8366 y macro-AUPRC 0,5506 en validación anidada; BA 0,8459 en test natural; BA 0,9249 con 72,7 % de cobertura automática.
+- Dos diapositivas adaptadas del primer Beamer amplían el contexto del problema y el ciclo DSR. Sus cifras históricas no se trasladaron; las referencias ya estaban presentes en la bibliografía final.
 
 ## Controles nominales
 

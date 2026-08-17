@@ -23,7 +23,7 @@ Ensemble & \path{ensemble_soft_optimized} & Mezcla convexa de probabilidades cal
 \end{tabularx}
 \end{table}
 
-La Tabla~\ref{tab:formulas_ensemble_app} especifica todas las reglas de la comparación actualizada. $D_{mk}=\mathbb{1}(p_{mk}\ge t_{mk})$ representa el voto binario de un miembro. Las dos mezclas optimizadas buscan pesos en el simplex de paso 0,025; máximo y mínimo no tienen coeficientes aplicables.
+La optimización se ejecuta en cinco pliegues externos \texttt{GroupKFold} por video. Dentro de cada entrenamiento externo, otros cinco pliegues generan probabilidades calibradas OOF y votos $D_{mk}=\mathbf{1}(p_{mk}\ge t_{mk})$. Sobre estas predicciones internas se enumeran las 861 ternas no negativas que suman uno en un simplex de paso 0,025; para cada terna se vuelven a estimar los umbrales y se ordena por mayor BA, menor $R_{0,67}$, mayor macro-AUPRC y, solo ante empate, menor distancia a pesos iguales. La terna elegida se evalúa en el pliegue externo intacto, y la concatenación de los cinco pliegues produce los resultados de la Tabla~\ref{tab:formulas_ensemble_app}. Este esquema anidado reduce el optimismo de escoger y evaluar hiperparámetros sobre los mismos datos \cite{cawley2010selection}; la mezcla convexa aprendida sigue el principio de \emph{stacking}/Super Learner \cite{wolpert1992stacked,vanderlaan2007superlearner}. La malla, el orden lexicográfico y el desempate son decisiones propuestas por este trabajo. Máximo y mínimo no tienen coeficientes aplicables.
 
 \begin{table}[H]
 \centering
@@ -128,7 +128,7 @@ La Tabla~\ref{tab:test_views_app} compara la vista natural y la secundaria 4:1 o
 \toprule
 \textbf{Vista} & \textbf{Filas} & \textbf{BA} & \textbf{F1 any} & \textbf{AUPRC daño} & \textbf{F1 daño} & \textbf{F1 cinco} & \textbf{ECE} & \textbf{Brier} \\
 \midrule
-Natural & 22\,684 & 0,846 & 0,422 & 0,412 & 0,423 & 0,530 & 0,025 & 0,027 \\
+Natural & 22\,684 & 0,846 & 0,422 & 0,412 & 0,423 & 0,531 & 0,025 & 0,027 \\
 4:1 secundaria & 9\,010 & 0,846 & 0,662 & 0,564 & 0,545 & 0,621 & 0,019 & 0,047 \\
 \bottomrule
 \end{tabular}

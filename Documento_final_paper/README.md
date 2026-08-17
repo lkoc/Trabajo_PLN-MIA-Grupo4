@@ -8,7 +8,7 @@
 
 ## Artículo IEEE actualizado
 
-El manuscrito presenta el contrato v2.1 y los resultados vigentes de `03_07`/`03_07a`. Las versiones antiguas se mencionan únicamente como antecedentes de la mejora metodológica; sus métricas no se mezclan con la comparación actual.
+El manuscrito presenta el contrato v2.1 y la comparación única actualizada por `03_07b`. Las versiones antiguas se mencionan únicamente como antecedentes de la mejora metodológica; sus métricas no se mezclan con la comparación actual.
 
 Las cinco salidas aprendidas son `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`.
 
@@ -17,11 +17,11 @@ Las cinco salidas aprendidas son `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR
 - Corpus: 182 461 chunks observados y 173 240 elegibles de 4 906 videos y 276 canales; 14 163 contienen al menos un daño.
 - Concentración: el canal principal aporta 19 %; los cinco primeros, 41 %; los diez primeros, 56 %.
 - Ventana temporal: 30 s, seleccionada en validation mediante comparación pareada de 15--35 s.
-- Comparación: 28 modelos individuales y cinco ensembles sobre una validación común de 10 600 filas.
-- Selección congelada: `ensemble_soft_mean`, compuesto por regresión logística TF--IDF, cascada E5 v2 y Qwen3--0.6B con LoRA.
-- Validation OOF: BA 0,84; macro-AUPRC de daños 0,55; macro-F1 de daños 0,57.
-- Test natural abierto una vez: 22 684 chunks; BA 0,85 y sensibilidad 0,91 para cualquier daño.
-- Política selectiva: 35 % a revisión; sobre el 65 % automático, BA 0,94.
+- Comparación: 28 modelos individuales, cinco reglas base y dos mezclas optimizadas sobre 10 600 filas, con validación 5×5 agrupada por video.
+- Selección congelada: `ensemble_soft_optimized`, con pesos clásico/Transformer/Qwen 0,10/0,65/0,25.
+- Validation OOF anidada: BA 0,8366; macro-AUPRC de daños 0,5506; macro-F1 de daños 0,5618.
+- Test natural abierto una vez: 22 684 chunks; BA 0,8459 y sensibilidad 0,8940 para cualquier daño.
+- Política selectiva: 27,3 % a revisión; sobre el 72,7 % automático, BA 0,9249.
 
 La métrica primaria es BA de `ANY_DAMAGE` OOF a cobertura completa. Macro-AUPRC de los cuatro daños actúa como salvaguarda; macro-F1 describe la decisión después de fijar umbrales y no gobierna el primer orden del ranking.
 
@@ -47,9 +47,10 @@ El estado inferencial sigue siendo `statistical_tie_or_inconclusive`: el ensembl
 1. `../resultados/modelos/seleccion_congelada.json` para miembros, calibradores, umbrales y política de revisión.
 2. `../resultados/modelos/comparacion_individual_ensemble_validation.json` para ranking, Pareto y bootstrap.
 3. `../resultados/modelos/test_final_abierto_una_vez.json` para test natural y vista secundaria 4:1.
-4. `../resultados/modelos/resumen_03_07a.json` y sus tablas para la síntesis editorial.
-5. `../docs/artefactos/auditoria_estado_final_182461.json` para corpus, particiones y auditoría del etiquetado.
-6. `../docs/OPTIMIZACION_LONGITUD_CHUNKS.md` y `../docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md` para la ventana de 30 s.
+4. `../resultados/modelos/optimizacion_ensembles/optimizacion_ensembles_validation.json` para pliegues, pesos y comparación anidada.
+5. `../resultados/modelos/resumen_03_07a.json` y sus tablas para la síntesis editorial.
+6. `../docs/artefactos/auditoria_estado_final_182461.json` para corpus, particiones y auditoría del etiquetado.
+7. `../docs/OPTIMIZACION_LONGITUD_CHUNKS.md` y `../docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md` para la ventana de 30 s.
 
 ## Compilación
 
