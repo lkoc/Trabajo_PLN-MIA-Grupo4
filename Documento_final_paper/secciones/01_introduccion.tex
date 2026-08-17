@@ -9,10 +9,10 @@ Este estudio diseña, compara y empaqueta un moderador textual semiautomático m
 \begin{figure*}[t]
 \centering
 \resizebox{\textwidth}{!}{\input{figuras/brechas_problema.tex}}
-\caption{Problema estudiado en tres niveles. El estado deseado es priorizar evidencia para una decisión humana informada, no sancionar automáticamente. Elaboración propia.}
+\caption{Problema estudiado en tres niveles. El estado deseado es priorizar evidencia para una decisión humana informada, no sancionar automáticamente. Fuente: elaboración propia.}
 \label{fig:brechas}
 \end{figure*}
 
-El trabajo aporta cuatro resultados vigentes: 1) un corpus v2.1 de 173\,240 chunks y 4\,906 videos, con cinco salidas aprendidas y separación por video; 2) una comparación común de 28 candidatos individuales, cinco reglas base de ensamble y dos variantes optimizadas mediante predicciones fuera de pliegue; 3) un artefacto congelado que combina regresión logística, una cascada E5 y Qwen3--LoRA con pesos aprendidos, aplicado sin reajuste a las matrices de la única apertura de 22\,684 chunks de test; y 4) una política de revisión con cobertura, errores y carga humana explícitos, integrada con evidencia temporal y registro de correcciones.
+El trabajo entrega un corpus v2.1 de 173\,240 chunks y 4\,906 videos, con cinco salidas aprendidas y separación por video. Sobre ese corpus compara 28 candidatos individuales, cinco reglas base de ensamble y dos variantes optimizadas mediante predicciones fuera de pliegue. El artefacto final combina regresión logística, una cascada E5 y Qwen3--LoRA con pesos aprendidos; la fórmula congelada se aplica sin reajuste a las matrices de la única apertura de 22\,684 chunks de test. El cuarto aporte es una política de revisión que informa cobertura, errores y carga humana, junto con evidencia temporal y un registro de correcciones.
 
 Los intentos anteriores con cuatro daños y \texttt{SEGURO} derivado sirvieron para detectar debilidades de contrato, ampliar datos y probar estructuras. No se mezclan sus métricas con las actuales. El artículo se concentra en el protocolo v2.1, donde \texttt{SEGURO} es una quinta salida aprendida y las cuatro categorías de daño pueden coexistir.

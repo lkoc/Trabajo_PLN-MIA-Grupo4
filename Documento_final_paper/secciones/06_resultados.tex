@@ -8,7 +8,7 @@ La comparación contiene 28 candidatos individuales y cinco reglas base de ensem
 
 \begin{table}[t]
 \centering
-\caption{Mejor candidato por tipo en validation OOF}
+\caption{Mejor candidato por tipo en validation OOF. Fuente: elaboración propia a partir de la comparación integrada 03-07b.}
 \label{tab:tipos}
 \footnotesize
 \resizebox{\columnwidth}{!}{%
@@ -32,7 +32,7 @@ Las siete variantes usan los mismos tres miembros y se reevalúan con calibraci�
 
 \begin{table}[t]
 \centering
-\caption{Comparación actualizada de ensembles en validation anidada}
+\caption{Comparación de las siete variantes de ensemble en validation anidada. Fuente: elaboración propia a partir de la ejecución 03-07b.}
 \label{tab:ensembles}
 \footnotesize
 \resizebox{\columnwidth}{!}{%
@@ -56,7 +56,7 @@ Los coeficientes congelados del ganador se muestran en la Tabla~\ref{tab:pesos_g
 
 \begin{table}[t]
 \centering
-\caption{Coeficientes del único ensemble ganador actual}
+\caption{Coeficientes del único ensemble ganador actual. Fuente: elaboración propia a partir del ajuste final de 03-07b.}
 \label{tab:pesos_ganador}
 \footnotesize
 \begin{tabular}{@{}lr@{}}
@@ -82,7 +82,7 @@ Con los calibradores de despliegue ajustados en toda validation, el ensemble opt
 
 \begin{table}[t]
 \centering
-\caption{Ensemble seleccionado por categoría en validation}
+\caption{Desempeño del ensemble seleccionado por categoría en validation. Fuente: elaboración propia a partir del ajuste final de 03-07b.}
 \label{tab:ensemble_categorias}
 \footnotesize
 \begin{tabular}{@{}lrrrrr@{}}
@@ -103,7 +103,7 @@ Los mejores candidatos dependen de la categoría. Qwen3--LoRA con contexto 256 l
 \begin{figure*}[t]
 \centering
 \includegraphics[width=.88\textwidth]{figuras/seleccion_por_categoria_validation_03_07.png}
-\caption{Mejor desempeño por categoría en validation entre candidatos que superan la salvaguarda global. Elaboración propia.}
+\caption{Mejor desempeño por categoría en validation entre candidatos que superan la salvaguarda global. Fuente: elaboración propia a partir de la comparación integrada 03-07b.}
 \label{fig:categorias_final}
 \end{figure*}
 
@@ -115,7 +115,7 @@ En la tarea multietiqueta completa, la macro-AUPRC de daños es 0,412 y la macro
 
 \begin{table}[t]
 \centering
-\caption{Desempeño por salida en el test natural}
+\caption{Desempeño por salida del ensemble optimizado en el test natural. Fuente: elaboración propia a partir de la apertura única de test.}
 \label{tab:test_categorias}
 \footnotesize
 \begin{tabular}{@{}lrrrrr@{}}
@@ -137,7 +137,7 @@ La política congelada deriva 6\,184 chunks (27,3\%) y deja 16\,500 (72,7\%) en 
 
 \begin{table}[t]
 \centering
-\caption{Compuerta completa y ruta automática en test natural}
+\caption{Compuerta completa y ruta automática en test natural. Fuente: elaboración propia a partir de la política congelada y la apertura única de test.}
 \label{tab:revision_test}
 \footnotesize
 \begin{tabular}{@{}lrrrrr@{}}

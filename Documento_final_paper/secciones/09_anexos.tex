@@ -4,11 +4,11 @@
 \section{Especificación del ensemble congelado}
 \label{app:ensemble}
 
-El artefacto \texttt{seleccion\_congelada.json}, esquema 5.0.0, fija la firma de comparación, el hash del dataset, los tres miembros, calibradores, pesos, umbrales y política de revisión. Los scores crudos se calibran por miembro y salida, $p_{mk}=\sigma(a_{mk}s_{mk}+b_{mk})$, antes de combinarlos. Esta capa común evita que la escala propia de un modelo domine la mezcla.
+El artefacto \texttt{seleccion\_congelada.json}, esquema 5.0.0, fija la firma de comparación, el hash del dataset, los tres miembros, calibradores, pesos, umbrales y política de revisión. Los scores crudos se calibran por miembro y salida, $p_{mk}=\sigma(a_{mk}s_{mk}+b_{mk})$, antes de combinarlos. Esta capa común evita que la escala propia de un modelo domine la mezcla. La Tabla~\ref{tab:ensemble_members_app} identifica los cuatro artefactos publicados y resume la arquitectura y el desempeño de cada miembro y de su combinación.
 
 \begin{table}[H]
 \centering
-\caption{Miembros del ensemble de producción}
+\caption{Miembros y artefacto combinado del ensemble de producción. Fuente: elaboración propia a partir del registro congelado y la comparación 03-07b.}
 \label{tab:ensemble_members_app}
 \small
 \begin{tabularx}{\textwidth}{>{\bfseries}p{25mm}p{58mm}X rrr}
@@ -27,7 +27,7 @@ La optimización se ejecuta en cinco pliegues externos \texttt{GroupKFold} por v
 
 \begin{table}[H]
 \centering
-\caption{Fórmulas, coeficientes y resultados de todos los ensembles actualizados}
+\caption{Fórmulas, coeficientes y resultados de las siete variantes de ensemble. Fuente: elaboración propia a partir de la ejecución 03-07b.}
 \label{tab:formulas_ensemble_app}
 \small
 \begin{tabularx}{\textwidth}{p{39mm}X p{40mm}rrrr}
@@ -54,7 +54,7 @@ La Tabla~\ref{tab:pesos_pliegues_app} reporta los coeficientes efectivamente apr
 
 \begin{table}[H]
 \centering
-\caption{Coeficientes optimizados por pliegue externo y ajuste final}
+\caption{Coeficientes optimizados por pliegue externo y ajuste final. Fuente: elaboración propia a partir de la validación anidada 5\,$\times$\,5 de 03-07b.}
 \label{tab:pesos_pliegues_app}
 \small
 \begin{tabular}{lrrrrrr}
@@ -75,7 +75,7 @@ Para reproducir la fórmula ganadora se necesitan además los 15 calibradores de
 
 \begin{table}[H]
 \centering
-\caption{Calibradores de Platt del ensemble suave optimizado}
+\caption{Calibradores de Platt del ensemble suave optimizado. Fuente: elaboración propia a partir del ajuste final sobre validation de 03-07b.}
 \label{tab:calibradores_miembro_app}
 \small
 \begin{tabular}{lrrr}
@@ -101,7 +101,7 @@ La Tabla~\ref{tab:ganadores_categoria_app} separa los líderes por salida y mét
 
 \begin{table}[H]
 \centering
-\caption{Ganadores por categoría en validation, restringidos a candidatos que superan la salvaguarda global}
+\caption{Ganadores por categoría en validation, restringidos a candidatos que superan la salvaguarda global. Fuente: elaboración propia a partir de la comparación integrada.}
 \label{tab:ganadores_categoria_app}
 \small
 \begin{tabularx}{\textwidth}{>{\bfseries}p{38mm}X r X r X rr}
@@ -121,7 +121,7 @@ La Tabla~\ref{tab:test_views_app} compara la vista natural y la secundaria 4:1 o
 
 \begin{table}[H]
 \centering
-\caption{Métricas globales de las dos vistas derivadas de una sola apertura de test}
+\caption{Métricas globales de las dos vistas derivadas de una sola apertura de test. Fuente: elaboración propia a partir de los mismos scores congelados.}
 \label{tab:test_views_app}
 \small
 \begin{tabular}{lrrrrrrrr}
@@ -138,7 +138,7 @@ La vista 4:1 selecciona de forma determinista 7\,208 seguros y conserva los 1\,8
 
 \begin{table}[H]
 \centering
-\caption{Matriz binaria de cualquier daño en test natural}
+\caption{Matriz binaria de cualquier daño en test natural. Fuente: elaboración propia a partir de la apertura única de test y la política congelada.}
 \label{tab:confusion_app}
 \small
 \begin{tabular}{lrrrr}
@@ -160,7 +160,7 @@ La ontología liviana distingue evidencia, anotación, categoría operativa, pre
 \begin{figure}[H]
 \centering
 \resizebox{.98\textwidth}{!}{\input{figuras/ontologia_trazabilidad.tex}}
-\caption{Ontología de trazabilidad desde el video hasta la decisión humana y la retroalimentación. Elaboración propia.}
+\caption{Ontología de trazabilidad desde el video hasta la decisión humana y la retroalimentación. Fuente: elaboración propia.}
 \label{fig:ontologia_app}
 \end{figure}
 
@@ -177,7 +177,7 @@ La Tabla~\ref{tab:artefactos_app} identifica la fuente canónica usada para cada
 
 \begin{table}[H]
 \centering
-\caption{Artefactos fuente de los resultados vigentes}
+\caption{Artefactos canónicos que sustentan cada bloque de resultados vigente. Fuente: elaboración propia a partir del inventario reproducible del proyecto.}
 \label{tab:artefactos_app}
 \small
 \begin{tabularx}{\textwidth}{p{50mm}X p{45mm}}
