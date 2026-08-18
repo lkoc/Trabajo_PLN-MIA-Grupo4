@@ -1,14 +1,14 @@
 \section{Resultados}
 
-Todos los resultados pertenecen al contrato v2.1 de cinco salidas y al mismo snapshot. Validation determina candidato, calibradores, umbrales y política; test solo estima el desempeño del artefacto ya congelado.
+Todos los resultados pertenecen al contrato de cinco salidas y al mismo corpus final. El conjunto de validación determina candidato, calibradores, umbrales y política; el test solo estima el desempeño del artefacto ya congelado.
 
-\subsection{Comparación global en validation}
+\subsection{Comparación global en el conjunto de validación}
 
-La comparación contiene 28 candidatos individuales y cinco reglas base de ensemble; la actualización añade optimización simétrica de las mezclas suave y dura dentro del mismo flujo. Qwen3--LoRA es el mejor individuo y la mezcla suave optimizada ocupa el primer lugar actual. Su evaluación anidada obtiene BA 0,8366 y macro-AUPRC 0,5506; frente a Qwen OOF, las diferencias descriptivas son $+0,0052$ y $+0,0349$. Las Tablas~\ref{tab:tipos} y~\ref{tab:ensembles} presentan los resultados vigentes sin intercalar un segundo ranking histórico.
+La comparación contiene 28 candidatos individuales y cinco reglas base de ensemble; la actualización añade la optimización simétrica de los ensembles suave y duro dentro del mismo flujo. Qwen3--LoRA es el mejor individuo y el ensemble suave optimizado ocupa el primer lugar actual. Su evaluación anidada obtiene BA 0,8366 y macro-AUPRC 0,5506; frente a Qwen OOF, las diferencias descriptivas son $+0,0052$ y $+0,0349$. Las Tablas~\ref{tab:tipos} y~\ref{tab:ensembles} presentan los resultados vigentes y el hardware empleado, sin intercalar un segundo ranking histórico.
 
 \begin{table}[t]
 \centering
-\caption{Mejor candidato por tipo en validation OOF. Fuente: elaboración propia a partir de la comparación integrada 03-07b.}
+\caption{Mejor candidato por tipo en el conjunto de validación OOF. Fuente: elaboración propia a partir de los registros de la comparación integrada.}
 \label{tab:tipos}
 \footnotesize
 \resizebox{\columnwidth}{!}{%
@@ -17,22 +17,22 @@ La comparación contiene 28 candidatos individuales y cinco reglas base de ensem
 \textbf{Tipo} & \textbf{BA} & \textbf{AUPRC} & \textbf{F1} & \textbf{FNR} & \textbf{FPR} \\
 \midrule
 Clásico, logística $C=0,5$ & 0,80 & 0,48 & 0,50 & 0,18 & 0,22 \\
-Transformer, cascada v2 & 0,82 & 0,45 & 0,52 & 0,16 & 0,21 \\
+Transformer, cascada segura & 0,82 & 0,45 & 0,52 & 0,16 & 0,21 \\
 Qwen3--LoRA & 0,83 & 0,52 & 0,55 & 0,17 & 0,17 \\
 \textbf{Ensemble suave optimizado} & \textbf{0,837} & \textbf{0,551} & \textbf{0,562} & \textbf{0,150} & 0,177 \\
 \bottomrule
 \end{tabular}%
 }
 \begin{minipage}{.98\columnwidth}\vspace{1mm}\footnotesize
-\emph{Nota:} AUPRC y F1 son promedios macro de los cuatro daños; BA, FNR y FPR corresponden a \texttt{ANY\_DAMAGE} OOF a cobertura completa.
+\emph{Nota:} AUPRC y F1 son promedios macro de los cuatro daños; BA, FNR y FPR corresponden a \texttt{ANY\_DAMAGE} OOF a cobertura completa. Hardware de ajuste: clásico, CPU Intel x86\_64 con cuatro hilos; Transformer, NVIDIA L4 de 23~GiB en BF16; Qwen, NVIDIA A100-SXM4 de 40~GB en BF16; ensemble, CPU AMD Ryzen 7 8845HS. Las GPU corresponden a sesiones independientes de Google Colab y no trabajaron en paralelo.
 \end{minipage}
 \end{table}
 
-Las siete variantes usan los mismos tres miembros y se reevalúan con calibración interna idéntica (Tabla~\ref{tab:ensembles}). La optimización cambia el resultado: la mezcla suave aprendida pasa al rango uno. El ponderado heurístico conserva mayor macro-AUPRC y F1, pero tiene BA y riesgo inferiores según el orden predeclarado. Unión e intersección carecen de coeficientes; por eso solo se recalibran.
+Las siete variantes usan los mismos tres miembros y se reevalúan con calibración interna idéntica (Tabla~\ref{tab:ensembles}). La optimización cambia el resultado: el ensemble suave aprendido pasa al rango uno. El ensemble ponderado heurístico conserva mayor macro-AUPRC y F1, pero tiene BA y riesgo inferiores según el orden predeclarado. Los ensembles de unión e intersección carecen de coeficientes; por eso solo se recalibran.
 
 \begin{table}[t]
 \centering
-\caption{Comparación de las siete variantes de ensemble en validation anidada. Fuente: elaboración propia a partir de la ejecución 03-07b.}
+\caption{Comparación de las siete variantes de ensemble mediante validación anidada. Fuente: elaboración propia a partir del cuaderno reproducible de optimización.}
 \label{tab:ensembles}
 \footnotesize
 \resizebox{\columnwidth}{!}{%
@@ -40,13 +40,13 @@ Las siete variantes usan los mismos tres miembros y se reevalúan con calibraci�
 \toprule
 \textbf{Regla} & \textbf{BA} & $\boldsymbol{R_{0,67}}$ & \textbf{Macro-AUPRC} & \textbf{Macro-F1} \\
 \midrule
-\textbf{Suave optimizado} & \textbf{0,8366} & \textbf{0,1587} & 0,5506 & 0,5618 \\
-Ponderado por AUPRC & 0,8360 & 0,1612 & \textbf{0,5614} & 0,5675 \\
-Unión / máximo & 0,8334 & 0,1684 & 0,5369 & 0,5621 \\
-Promedio suave & 0,8328 & 0,1673 & 0,5604 & \textbf{0,5703} \\
-Duro optimizado & 0,8272 & 0,1731 & 0,4547 & 0,5584 \\
-Mayoría dura & 0,8272 & 0,1731 & 0,4415 & 0,5638 \\
-Intersección / mínimo & 0,8149 & 0,1887 & 0,5131 & 0,5373 \\
+\textbf{Ensemble suave optimizado} & \textbf{0,8366} & \textbf{0,1587} & 0,5506 & 0,5618 \\
+Ensemble ponderado AUPRC & 0,8360 & 0,1612 & \textbf{0,5614} & 0,5675 \\
+Ensemble de unión & 0,8334 & 0,1684 & 0,5369 & 0,5621 \\
+Ensemble de promedio suave & 0,8328 & 0,1673 & 0,5604 & \textbf{0,5703} \\
+Ensemble duro optimizado & 0,8272 & 0,1731 & 0,4547 & 0,5584 \\
+Ensemble de mayoría dura & 0,8272 & 0,1731 & 0,4415 & 0,5638 \\
+Ensemble de intersección & 0,8149 & 0,1887 & 0,5131 & 0,5373 \\
 \bottomrule
 \end{tabular}%
 }
@@ -56,7 +56,7 @@ Los coeficientes congelados del ganador se muestran en la Tabla~\ref{tab:pesos_g
 
 \begin{table}[t]
 \centering
-\caption{Coeficientes del único ensemble ganador actual. Fuente: elaboración propia a partir del ajuste final de 03-07b.}
+\caption{Coeficientes del único ensemble ganador actual. Fuente: elaboración propia a partir del ajuste final sobre el conjunto de validación.}
 \label{tab:pesos_ganador}
 \footnotesize
 \begin{tabular}{@{}lr@{}}
@@ -64,7 +64,7 @@ Los coeficientes congelados del ganador se muestran en la Tabla~\ref{tab:pesos_g
 \textbf{Miembro} & $\boldsymbol{w_m}$ \\
 \midrule
 Regresión logística $C=0,5$ & 0,10 \\
-Cascada E5 v2 & 0,65 \\
+Cascada E5 segura & 0,65 \\
 Qwen3--LoRA & 0,25 \\
 \midrule
 Suma & 1,00 \\
@@ -74,15 +74,15 @@ Suma & 1,00 \\
 
 \subsection{Frontera de Pareto e incertidumbre}
 
-El retador más cercano es el ponderado por AUPRC. En 2\,000 réplicas pareadas por video, la diferencia de BA ganador menos retador es 0,00059, IC95\% $[-0,00367,\,0,00509]$, con $p=0,80$ sin corrección. El intervalo incluye cero: \texttt{ensemble\_soft\_optimized} es el único seleccionado por la regla lexicográfica, no un sistema cuya superioridad estadística esté demostrada. Además, los pesos suaves de los pliegues externos varían ---en particular el peso Transformer---; el Apéndice~\ref{app:ensemble} cuantifica esta inestabilidad.
+El retador más cercano es el ensemble ponderado por AUPRC. En 2\,000 réplicas pareadas por video, la diferencia de BA entre el ganador y el retador es 0,00059, con IC95\% $[-0,00367,\,0,00509]$ y $p=0,80$ sin corrección. El intervalo incluye cero. La regla lexicográfica selecciona \texttt{ensemble\_soft\_optimized} como único ganador, pero el contraste no demuestra superioridad estadística. Los pesos suaves también varían entre los pliegues externos, sobre todo el peso del Transformer; el Apéndice~\ref{app:ensemble} cuantifica esa variación.
 
 \subsection{Desempeño del ensemble por salida}
 
-Con los calibradores de despliegue ajustados en toda validation, el ensemble optimizado alcanza macro-AUPRC 0,55 y macro-F1 0,55 sobre los cuatro daños (Tabla~\ref{tab:ensemble_categorias}). Contenido sexual obtiene el mayor F1 (0,63) y género/identidad el menor (0,42). Estos valores descriptivos del ajuste final no reemplazan la estimación anidada usada para seleccionar.
+Con los calibradores de despliegue ajustados en todo el conjunto de validación, el ensemble optimizado alcanza macro-AUPRC 0,55 y macro-F1 0,55 sobre los cuatro daños (Tabla~\ref{tab:ensemble_categorias}). Contenido sexual obtiene el mayor F1 (0,63) y género/identidad el menor (0,42). Estos valores descriptivos del ajuste final no reemplazan la estimación anidada usada para seleccionar.
 
 \begin{table}[t]
 \centering
-\caption{Desempeño del ensemble seleccionado por categoría en validation. Fuente: elaboración propia a partir del ajuste final de 03-07b.}
+\caption{Desempeño del ensemble seleccionado por categoría en el conjunto de validación. Fuente: elaboración propia a partir del ajuste final.}
 \label{tab:ensemble_categorias}
 \footnotesize
 \begin{tabular}{@{}lrrrrr@{}}
@@ -98,20 +98,20 @@ Con los calibradores de despliegue ajustados en toda validation, el ensemble opt
 \end{tabular}
 \end{table}
 
-Los mejores candidatos dependen de la categoría. Qwen3--LoRA con contexto 256 lidera AUPRC en racismo (0,57) y género/identidad (0,40); el promedio ponderado lidera acoso/amenaza (0,61) y \texttt{SEGURO} (0,97); el promedio simple lidera contenido sexual (0,69). La Fig.~\ref{fig:categorias_final} muestra AUPRC y F1 de esos especialistas. El detalle de ganadores por métrica se conserva en el Apéndice~\ref{app:resultados}. Para operación se mantiene un único ensemble global, evitando reglas por categoría elegidas \emph{post hoc}.
+Los mejores candidatos dependen de la categoría. Qwen3--LoRA con contexto 256 lidera AUPRC en racismo (0,57) y género/identidad (0,40); el ensemble ponderado lidera acoso/amenaza (0,61) y \texttt{SEGURO} (0,97); el ensemble de promedio simple lidera contenido sexual (0,69). La Fig.~\ref{fig:categorias_final} muestra AUPRC y F1 de esos especialistas. El detalle de ganadores por métrica se conserva en el Apéndice~\ref{app:resultados}. Para operación se mantiene un único ensemble global, evitando reglas por categoría elegidas \emph{post hoc}.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=.88\textwidth]{figuras/seleccion_por_categoria_validation_03_07.png}
-\caption{Mejor desempeño por categoría en validation entre candidatos que superan la salvaguarda global. Fuente: elaboración propia a partir de la comparación integrada 03-07b.}
+\includegraphics[width=.88\textwidth]{figuras/seleccion_por_categoria_conjunto_validacion.png}
+\caption{Mejor desempeño por categoría en el conjunto de validación entre candidatos que superan la salvaguarda global. Fuente: elaboración propia a partir de la comparación integrada.}
 \label{fig:categorias_final}
 \end{figure*}
 
 \subsection{Apertura única de test natural}
 
-El test contiene 22\,684 chunks, 1\,802 con algún daño (7,9\%). La compuerta optimizada identifica 1\,611 y omite 191: sensibilidad 0,894, especificidad 0,798 y BA 0,846. Frente a la fórmula de promedio simple, la BA cambia solo $+0,00004$; disminuyen los falsos positivos (4\,466 a 4\,221), pero aumentan los falsos negativos (170 a 191). Estas cifras no se usaron para recalibrar ni volver a escoger el modelo.
+El test contiene 22\,684 chunks, 1\,802 con algún daño (7,9\%). La compuerta optimizada identifica 1\,611 y omite 191: sensibilidad 0,894, especificidad 0,798 y BA 0,846. Frente al ensemble de promedio simple, la BA cambia solo $+0,00004$; disminuyen los falsos positivos (4\,466 a 4\,221), pero aumentan los falsos negativos (170 a 191). Estas cifras no se usaron para recalibrar ni volver a escoger el modelo.
 
-En la tarea multietiqueta completa, la macro-AUPRC de daños es 0,412 y la macro-F1 0,423. La caída respecto de la vista 4:1 se concentra en precisión y AUPRC porque el test natural contiene 12 seguros por daño; sensibilidad y BA de la compuerta se mantienen. La Tabla~\ref{tab:test_categorias} localiza esa variación por salida. Esta diferencia confirma que AUPRC debe interpretarse junto con la prevalencia \cite{tonneau2024naijahate}.
+En la tarea multietiqueta completa, la macro-AUPRC de daños es 0,412 y la macro-F1 0,423. La caída respecto de la vista 4:1 se concentra en precisión y AUPRC porque el test natural contiene 12 seguros por daño; la sensibilidad y la BA de la compuerta se mantienen. La Tabla~\ref{tab:test_categorias} localiza la variación por salida. El contraste entre ambas vistas confirma que AUPRC debe interpretarse junto con la prevalencia \cite{tonneau2024naijahate}.
 
 \begin{table}[t]
 \centering
@@ -133,7 +133,7 @@ En la tarea multietiqueta completa, la macro-AUPRC de daños es 0,412 y la macro
 
 \subsection{Política de revisión humana}
 
-La política congelada deriva 6\,184 chunks (27,3\%) y deja 16\,500 (72,7\%) en la ruta automática. Dentro de esta ruta, la sensibilidad es 0,902, la especificidad 0,948 y la BA 0,925; quedan 96 daños como falsos negativos automáticos. La Tabla~\ref{tab:revision_test} compara la cobertura completa con esta ruta selectiva. La mejora no procede de cambiar el clasificador, sino de reservar para revisión los conflictos y márgenes inciertos. La carga queda por debajo del máximo predeclarado de 40\%, pero sigue siendo material.
+La política congelada deriva 6\,184 chunks (27,3\%) y deja 16\,500 (72,7\%) en la ruta automática. Dentro de esta ruta, la sensibilidad es 0,902, la especificidad 0,948 y la BA 0,925; quedan 96 daños como falsos negativos (FN) automáticos. La Tabla~\ref{tab:revision_test} compara la cobertura completa con esta ruta selectiva. La mejora no procede de cambiar el clasificador, sino de reservar para revisión los conflictos y márgenes inciertos. La carga queda por debajo del máximo predeclarado de 40\%, pero sigue siendo material.
 
 \begin{table}[t]
 \centering

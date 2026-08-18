@@ -1,7 +1,7 @@
 \section{Prompt operativo de etiquetado por API}
 \label{app:prompt_operativo}
 
-El texto siguiente es una transcripción estructurada y completa del prompt histórico v1.1, preservado en \path{archivo/contrato_4_danos_seguro_derivado/03_2_etiquetado_llm_api/}. Una copia idéntica reside en el archivo de la implementación local anterior. El prompt declara que compila la guía, las instrucciones de transporte y la taxonomía; acredita las corridas históricas, no el contrato v2.
+El texto siguiente es una transcripción estructurada y completa del prompt histórico preservado en los materiales de trazabilidad. El prompt declara que compila la guía, las instrucciones de transporte y la taxonomía; acredita las corridas históricas, no el contrato final.
 
 \subsection*{Rol}
 
@@ -69,6 +69,6 @@ Para cada fragmento, devolver su identificador, las etiquetas y señales aplicab
 
 El prompt incluye ocho casos mínimos: una votación como segura; ironía sobre una política como segura marcada; burla al habla andina como racismo lingüístico, étnico y regional con humor encubridor; inferiorización cultural de personas de la sierra como racismo encubierto y regional; mandato de volver a cocinar como misoginia; advertencia de conocer el domicilio como acoso y amenaza; atribución de empleo al cuerpo como cosificación y posible misoginia; y circulación de fotos íntimas como contenido no consensual y posible acoso personal.
 
-\subsection*{Ensamblaje y alcance acreditado}
+\subsection*{Composición y alcance acreditado}
 
-El proceso antepone la identidad del clasificador, inserta este prompt y la taxonomía completa, y añade reglas para lotes, salida estructurada, orden de identificadores, vocabulario literal y límites de longitud. La llamada usa temperatura 0 y razonamiento desactivado. Los manifiestos de los lotes anotados por API registran la versión del prompt. Este prompt guía la anotación y no forma parte de la entrada textual del clasificador Qwen3--LoRA.
+El proceso antepone la identidad del clasificador, inserta este prompt y la taxonomía completa, y añade reglas para lotes, salida estructurada, orden de identificadores, vocabulario literal y límites de longitud. La llamada usa temperatura 0 y razonamiento desactivado. Los manifiestos de los lotes etiquetados mediante la API registran el prompt utilizado. Este prompt guía el etiquetado y no forma parte de la entrada textual del clasificador Qwen3--LoRA.

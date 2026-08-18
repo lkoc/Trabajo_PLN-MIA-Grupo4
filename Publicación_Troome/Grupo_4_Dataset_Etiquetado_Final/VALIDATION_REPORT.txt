@@ -1,0 +1,20 @@
+STATUS: PASS
+Dataset: dataset_etiquetado_final_documentado_173240.json
+Rows: 173240
+Unique chunk_id: 173240
+Release ID: grupo4-moderacion-youtube-peru-2026-08-17-v1.1.0
+Unique provenance tokens: 173240
+Provenance algorithm: HMAC-SHA256(release_id|chunk_id|text_sha256)
+Provenance key commitment: 76f0e0d5f59bda914abf64575284ff89341c4442a40c5638b95dc36cdeebef07
+Synthetic canary rows: 0
+Videos: 4906
+Splits: train=123239; validation=27317; test=22684
+Temporal locations: 173240
+Temporal method: exact_chunk_id_and_text
+Missing temporal locations: 0
+Temporal conflicts: 0
+Selected transcript records: 4906
+Transcript partition files inspected: 341
+Canonical training JSONL SHA-256: 013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86
+Documented JSON SHA-256: f0661dc3778b5e42a1e65e844a5c5db70fcee414685a44fb9738e17657859a49
+Checks: semantic identity of original fields; required fields; unique IDs and provenance tokens; links; timestamps; text hashes; reconstructed chunk IDs; HMAC generation; labels; masks; splits; manifest hashes.

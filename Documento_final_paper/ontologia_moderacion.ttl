@@ -8,11 +8,10 @@
 
 mod:ModerationOntology a owl:Ontology ;
   rdfs:label "Ontología de trazabilidad del moderador textual"@es ;
-  rdfs:comment "Vocabulario liviano que alinea corpus, anotaciones, modelos, predicciones y decisiones de supervisión. No constituye una ontología legal de daño."@es ;
+  rdfs:comment "Vocabulario liviano que alinea corpus, etiquetado, modelos, predicciones y decisiones de supervisión. No constituye una ontología legal de daño."@es ;
   dcterms:creator "Grupo 4, Maestría en Inteligencia Artificial, Universidad Nacional de Ingeniería"@es ;
   dcterms:created "2026-07-29"^^xsd:date ;
-  dcterms:source <https://github.com/lkoc/Trabajo_PLN-MIA-Grupo4/blob/main/datos/model_ready/transformer_grueso/dataset_integrado_todas_pasadas.manifest.json> ;
-  owl:versionInfo "1.0.0" .
+  dcterms:source <https://github.com/lkoc/Trabajo_PLN-MIA-Grupo4/blob/main/resultados/publicacion_dataset_documentado/dataset_schema.json> .
 
 mod:Video a owl:Class ;
   rdfs:label "video público"@es ;
@@ -26,18 +25,18 @@ mod:Chunk a owl:Class ;
   rdfs:label "chunk de evidencia"@es ;
   skos:definition "Unidad textual con tiempo de inicio y fin; cierre al alcanzar 30 segundos o 600 caracteres, después de depurar repetición entre segmentos VTT."@es .
 
-mod:Annotation a owl:Class ;
-  rdfs:label "anotación"@es ;
+mod:Labeling a owl:Class ;
+  rdfs:label "etiquetado"@es ;
   skos:definition "Aserción versionada que asigna cero o más conceptos de moderación a un chunk."@es .
 
-mod:LLMPreannotation a owl:Class ;
-  rdfs:subClassOf mod:Annotation ;
-  rdfs:label "preanotación asistida por LLM"@es .
+mod:LLMPrelabeling a owl:Class ;
+  rdfs:subClassOf mod:Labeling ;
+  rdfs:label "preetiquetado asistido por LLM"@es .
 
 mod:FinalAssistedAdjudication a owl:Class ;
-  rdfs:subClassOf mod:Annotation ;
+  rdfs:subClassOf mod:Labeling ;
   rdfs:label "adjudicación final asistida"@es ;
-  skos:definition "Decisión final tomada con la propuesta Pro visible y un identificador de anotador; los artefactos no documentan la naturaleza de todos los identificadores ni acreditan doble anotación."@es .
+  skos:definition "Decisión final tomada con la propuesta del modelo visible y un identificador de responsable; los artefactos no acreditan doble etiquetado humano independiente."@es .
 
 mod:ModerationConcept a owl:Class ;
   rdfs:label "concepto de moderación"@es .
@@ -110,12 +109,12 @@ mod:segmentedInto a owl:ObjectProperty ;
   rdfs:domain mod:SubtitleTrack ;
   rdfs:range mod:Chunk .
 
-mod:annotatedBy a owl:ObjectProperty ;
+mod:labeledBy a owl:ObjectProperty ;
   rdfs:domain mod:Chunk ;
-  rdfs:range mod:Annotation .
+  rdfs:range mod:Labeling .
 
 mod:assignsConcept a owl:ObjectProperty ;
-  rdfs:domain mod:Annotation ;
+  rdfs:domain mod:Labeling ;
   rdfs:range mod:ModerationConcept .
 
 mod:memberOf a owl:ObjectProperty ;
@@ -178,22 +177,19 @@ mod:artifactVersion a owl:DatatypeProperty ;
   rdfs:domain mod:VersionedArtifact ;
   rdfs:range xsd:string .
 
-mod:CorpusIntegrado20260727 a mod:DatasetArtifact ;
-  rdfs:label "Corpus integrado de moderación textual G4"@es ;
-  mod:artifactVersion "schema-2.0; corte-2026-07-27" ;
-  mod:artifactPath "datos/model_ready/transformer_grueso/dataset_integrado_todas_pasadas.jsonl" ;
-  mod:artifactHash "3f01b76d285d4cdd2a0922df1d2437a7f01abc4e05e2699c218b1f5faaba2069" ;
-  mod:hasSplit mod:MuestraComun4a1 .
+mod:CorpusFinal a mod:DatasetArtifact ;
+  rdfs:label "Corpus final de moderación textual del Grupo 4"@es ;
+  mod:artifactPath "datos/model_ready/v2/dataset_5_salidas.jsonl" ;
+  mod:artifactHash "013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86" ;
+  mod:hasSplit mod:ParticionAgrupadaPorVideo .
 
-mod:MuestraComun4a1 a mod:DataSplit ;
-  rdfs:label "Muestra común 4:1 agrupada por video"@es ;
-  mod:artifactVersion "semilla-20261273" ;
-  mod:artifactPath "datos/model_ready/transformer_grueso/dataset_balanceado_4a1_particionado.jsonl" ;
-  mod:artifactHash "df2ac01183271e44b6dcfb9cb4850bd6b1ef1cd11d9fc51c881be944670ef20f" .
+mod:ParticionAgrupadaPorVideo a mod:DataSplit ;
+  rdfs:label "Partición de entrenamiento, conjunto de validación y test agrupada por video"@es ;
+  mod:artifactPath "datos/model_ready/v2/dataset_5_salidas.jsonl" ;
+  mod:artifactHash "013d60ba1b173d7752f453d5d05629a3439b09c71f0c343da1b5e498662c1f86" .
 
-mod:QwenOperativoEpoca3 a mod:ModelArtifact ;
-  rdfs:label "Qwen3-0.6B LoRA, adaptador operativo de época 3"@es ;
-  mod:artifactVersion "Qwen/Qwen3-0.6B-Base@da87bfb; LoRA-epoch-03" ;
-  mod:artifactPath "modelos/qwen3_06b_lora_acoso_amenaza_4/epoch_adapters/epoch_03/adapter_model.safetensors" ;
-  mod:artifactHash "c88f7061daed34ab62055aafaf2abd198341b5ff7c5c72a728ce7912d93ac334" ;
-  mod:trainedOn mod:MuestraComun4a1 .
+mod:EnsembleProduccion a mod:ModelArtifact ;
+  rdfs:label "Ensemble suave optimizado de producción"@es ;
+  mod:artifactPath "resultados/modelos/seleccion_congelada.json" ;
+  mod:artifactHash "f90c4402af033e963c81c15bdfeb7a0907dc31066b060d74ad26196bfe3db917" ;
+  mod:trainedOn mod:CorpusFinal .

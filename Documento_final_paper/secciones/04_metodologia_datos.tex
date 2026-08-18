@@ -2,22 +2,22 @@
 
 \subsection{Diseño de investigación}
 
-La investigación sigue DSR: identifica una necesidad, define objetivos, construye el artefacto, lo demuestra, lo evalúa y comunica los resultados \cite{hevner2004dsr,peffers2007dsrm}. Cada iteración produjo evidencia versionada de datos, etiquetas, modelos o operación. Los experimentos anteriores con un contrato distinto se usan únicamente como antecedentes de diseño; la evaluación reportada en este artículo pertenece al snapshot v2.1 y a la comparación 03\_07. La Fig.~\ref{fig:dsr} resume las iteraciones que conducen desde el corpus hasta la evaluación y el demostrador vigentes.
+La investigación sigue la metodología DSR: identifica una necesidad, define objetivos, construye el artefacto, lo demuestra, lo evalúa y comunica los resultados \cite{hevner2004dsr,peffers2007dsrm}. Cada iteración produjo evidencia versionada de datos, etiquetas, modelos y operación. La Fig.~\ref{fig:dsr} resume las iteraciones que conducen desde el corpus hasta la evaluación y el demostrador vigentes.
 
 \begin{figure*}[t]
 \centering
 \resizebox{\textwidth}{!}{\input{figuras/ciclo_dsr.tex}}
-\caption{Ciclo DSR aplicado al corpus v2.1, comparación común, congelación, apertura única de test y demostrador. Fuente: elaboración propia basada en Peffers \emph{et al.} \cite{peffers2007dsrm}.}
+\caption{Ciclo DSR aplicado al corpus,  comparación común, congelación, apertura única de test y demostrador. Fuente: elaboración propia basada en Peffers \emph{et al.} \cite{peffers2007dsrm}.}
 \label{fig:dsr}
 \end{figure*}
 
 \subsection{Adquisición, limpieza y unidad de análisis}
 
-El universo de adquisición comprende videos públicos de YouTube vinculados con el Perú y con subtítulos disponibles en español. La búsqueda incluye periodismo, política, opinión, humor, entretenimiento, deportes, gastronomía y viajes, además de búsquedas dirigidas para aumentar categorías poco frecuentes. El alcance previo a exclusiones reunió 182\,461 chunks, 5\,385 videos y 322 canales. Por ello el corpus permite entrenar y comparar, pero no estima la prevalencia de daño de toda la plataforma. La documentación de origen, anotación y límites sigue las recomendaciones de \emph{data statements} y \emph{data cards} \cite{bender2018datastatements,pushkarna2022datacards}.
+El universo de adquisición comprende videos públicos de YouTube vinculados con el Perú y con subtítulos disponibles en español. La búsqueda incluye periodismo, política, opinión, humor, entretenimiento, deportes, gastronomía y viajes, además de consultas dirigidas para aumentar categorías poco frecuentes. Antes de las exclusiones se reunieron 182\,461 chunks, 5\,385 videos y 322 canales. El corpus permite entrenar y comparar modelos, pero no estima la prevalencia de daño en toda la plataforma. La documentación del origen, el etiquetado y los límites sigue las recomendaciones de \emph{data statements} y \emph{data cards} \cite{bender2018datastatements,pushkarna2022datacards}.
 
-Las pistas VTT se recuperan con \texttt{yt-dlp} o YouTube Transcript API \cite{ytdlp2026,depoix2026transcript}. No se descarga audio ni se ejecuta reconocimiento de voz propio. La limpieza usa normalización Unicode NFKC \cite{unicode2025normalization}, unifica espacios y elimina repeticiones consecutivas del VTT. La unidad de análisis es el chunk: texto contiguo con \texttt{video\_id}, tiempos inicial/final, posición, canal y procedencia. La segmentación se cierra al alcanzar 30 segundos o 600 caracteres y exige al menos 90 caracteres; no introduce solapamiento deliberado. La Fig.~\ref{fig:pipeline} muestra la transformación y los controles que separan datos, particiones, selección y test.
+Los subtítulos en formato WebVTT (VTT) se recuperan con la librería \texttt{yt-dlp} de Python o con la librería \texttt{youtube-transcript-api} de Python \cite{ytdlp2026,depoix2026transcript}. No se descarga audio ni se ejecuta reconocimiento de voz propio. La limpieza usa la librería \texttt{unicodedata} de Python para aplicar la forma de normalización de compatibilidad canónica (NFKC) definida por Unicode \cite{python2026unicodedata,unicode2025normalization}; además, unifica espacios y elimina repeticiones consecutivas del VTT. La unidad de análisis es el texto troceado o chunk: texto contiguo con \texttt{video\_id}, tiempos inicial/final, posición, canal y procedencia. La segmentación se cierra al alcanzar 30 segundos o 600 caracteres y exige al menos 90 caracteres; no introduce solapamiento deliberado. La Fig.~\ref{fig:pipeline} muestra la transformación y los controles que separan datos, particiones, selección y test.
 
-El tamaño temporal se selecciona en un ejercicio independiente con los mismos videos de referencia y ventanas de 15, 20, 25, 30 y 35 segundos. Los modelos se vuelven a entrenar y la decisión usa solo validation; 1\,000 réplicas pareadas por video cuantifican la incertidumbre. La ventana de 30 segundos alcanza AP macro de daño de 0,12, IC95\% [0,11, 0,14], en el perfil clásico robusto y queda congelada antes de consultar test. Las comprobaciones con MiniLM y un modelo generativo no aportan evidencia suficiente para sustituirla. Esta elección conserva más contexto que las ventanas cortas sin asumir que una duración observada es óptima fuera del corpus \cite{cawley2010selection,saito2015pr}.
+El tamaño temporal se selecciona en un ejercicio independiente con los mismos videos de referencia y ventanas de 15, 20, 25, 30 y 35 segundos. Los modelos se vuelven a entrenar y la decisión usa solo el conjunto de validación; 1\,000 réplicas pareadas por video cuantifican la incertidumbre. La ventana de 30 segundos alcanza AP macro de daño de 0,12, con un intervalo de confianza del 95\% (IC95\%) de [0,11, 0,14], en el perfil clásico robusto y queda congelada antes de consultar el conjunto de test. Las comprobaciones con MiniLM y un modelo generativo no aportan evidencia suficiente para sustituirla. Esta elección conserva más contexto que las ventanas cortas sin asumir que una duración observada es óptima fuera del corpus \cite{cawley2010selection,saito2015pr}.
 
 La construcción enfrenta tres dificultades principales: disponibilidad cambiante o incompleta de subtítulos; concentración por canal y búsquedas dirigidas que impiden interpretar el corpus como muestra probabilística; y modismos, ironía, humor, contexto truncado y daños coexistentes que vuelven insuficiente la coincidencia de palabras. La materialización de las transcripciones, las exclusiones trazables, la separación por video, las señales de revisión y la conservación del texto con sus tiempos controlan estos riesgos sin eliminarlos.
 
@@ -28,13 +28,13 @@ La construcción enfrenta tres dificultades principales: disponibilidad cambiant
 \label{fig:pipeline}
 \end{figure*}
 
-\subsection{Corpus v2.1}
+\subsection{Corpus del proyecto}
 
-Después de deduplicar y excluir 9\,221 decisiones no elegibles (5,1\% del alcance), el snapshot contiene 173\,240 chunks de 4\,906 videos y 276 canales efectivos. Hay 159\,077 chunks \texttt{SEGURO} (92\%) y 14\,163 con al menos un daño (8,2\%), una relación de 11:1; estos últimos reúnen 17\,052 asignaciones y 2\,709 casos multietiqueta. La Tabla~\ref{tab:fuentes} muestra la distribución operacional.
+Después de deduplicar y excluir 9\,221 decisiones no elegibles (5,1\% del alcance), el corpus final contiene 173\,240 chunks de 4\,906 videos y 276 canales efectivos. Hay 159\,077 chunks \texttt{SEGURO} (92\%) y 14\,163 con al menos un daño (8,2\%), una relación de 11:1; estos últimos reúnen 17\,052 asignaciones y 2\,709 casos multietiqueta. La Tabla~\ref{tab:fuentes} muestra la distribución operacional.
 
 \begin{table}[t]
 \centering
-\caption{Tamaño y distribución del corpus v2.1. Fuente: elaboración propia a partir del snapshot v2.1 auditado.}
+\caption{Tamaño y distribución del corpus del proyecto. Fuente: elaboración propia.}
 \label{tab:fuentes}
 \small
 \begin{tabular}{@{}lr@{}}
@@ -57,11 +57,11 @@ Chunks con más de un daño & 2\,709 \\
 \end{minipage}
 \end{table}
 
-La distribución por fuente presenta una cola larga. Un video aporta en promedio 35 chunks, con mediana de 19 y máximo de 767; un canal aporta en promedio 630, con mediana de 26 y máximo de 33\,203. Esta diferencia entre media y mediana revela concentración y justifica informar los canales principales (Tabla~\ref{tab:concentracion_canales}) y evaluar en el futuro generalización hacia canales no observados.
+La distribución por fuente presenta una cola larga. Cada video aporta en promedio 35 chunks, con una mediana de 19 y un máximo de 767; por canal, el promedio es 630, la mediana 26 y el máximo 33\,203. La distancia entre las medias y las medianas revela concentración. Por esa razón, la Tabla~\ref{tab:concentracion_canales} informa los canales principales, y una evaluación futura deberá medir la generalización hacia canales no observados.
 
 \begin{table}[t]
 \centering
-\caption{Canales con mayor número de chunks elegibles y concentración acumulada. Fuente: elaboración propia a partir del snapshot v2.1 auditado.}
+\caption{Canales con mayor número de chunks elegibles y concentración acumulada. Fuente: elaboración propia.}
 \label{tab:concentracion_canales}
 \footnotesize
 \begin{tabular}{@{}lrr@{}}
@@ -106,25 +106,25 @@ Las dimensiones generales se apoyan en tipologías de abuso y contenido dañino 
 
 \subsection{Etiquetado y control de calidad}
 
-La preanotación combina definiciones versionadas, salida JSON validable y revisión por etapas. Un modelo amplio propone categorías; una segunda revisión atiende daños, baja confianza y negativos difíciles; la cola final permite aceptar, rechazar o modificar cada propuesta. El historial conserva 55\,966 eventos. Un panel estratificado congelado contiene 16\,694 chunks y la huella combinada de auditoría alcanza 17\,635 chunks únicos (10\% del universo elegible). Estas cifras representan decisiones asistidas y trazables; no equivalen a doble anotación humana independiente ni autorizan reportar acuerdo interanotador general.
+El preetiquetado combina definiciones controladas, salida en notación de objetos de JavaScript (JSON) validable y revisión por etapas. DeepSeek Flash realizó la primera propuesta y DeepSeek Pro atendió la revisión dirigida mediante la interfaz de programación de aplicaciones (API) del proveedor, con salida estructurada y razonamiento desactivado \cite{deepseek2026v4,deepseek2026json,deepseek2026thinking}. El cliente local se ejecutó en un equipo GMKtec NucBox K8 Plus con procesador AMD Ryzen 7 8845HS, 28,8~GiB de memoria y sin usar la unidad de procesamiento gráfico (GPU) Radeon integrada; el proveedor no expuso el acelerador remoto. La cola final permite aceptar, rechazar o modificar cada propuesta. El historial conserva 55\,966 eventos. Un panel estratificado congelado contiene 16\,694 chunks y la huella combinada de auditoría alcanza 17\,635 chunks únicos (10\% del universo elegible). Estas cifras representan decisiones asistidas y trazables; no equivalen a doble etiquetado humano independiente ni autorizan reportar un acuerdo general entre etiquetadores.
 
 La precedencia es revisión final asistida sobre las propuestas anteriores. Los casos sin resolución suficiente se excluyen del entrenamiento. Las etiquetas finas y flags actúan como objetivos auxiliares en modelos que los soportan; nunca se entregan como predictores \emph{gold} durante la inferencia.
 
 \subsection{Partición y muestras de entrenamiento}
 
-La separación se realiza por \texttt{video\_id}; ningún video cruza train, validation y test. El snapshot conserva la prevalencia de cada partición (Tabla~\ref{tab:splits}). Para el ajuste y la comparación se mantienen todos los daños y se seleccionan cuatro seguros por cada chunk dañino mediante hash y semilla declarada. Así, train usa 51\,205 filas (10\,241 daños + 40\,964 seguros) y validation 10\,600 (2\,120 + 8\,480). El test permanece completo y sellado con 22\,684 filas. Tras una sola inferencia se produce también una vista secundaria 4:1, sin reabrir test.
+La separación se realiza por \texttt{video\_id}; ningún video cruza los conjuntos de entrenamiento, validación y test. El corpus conserva la prevalencia de cada partición (Tabla~\ref{tab:splits}). Para el ajuste y la comparación se mantienen todos los daños y se seleccionan cuatro seguros por cada chunk dañino mediante hash y semilla declarada. Así, el conjunto de entrenamiento usa 51\,205 filas (10\,241 daños + 40\,964 seguros) y el conjunto de validación, 10\,600 (2\,120 + 8\,480). El test permanece completo y sellado con 22\,684 filas. Tras una sola inferencia se produce también una vista secundaria 4:1, sin reabrir test.
 
 \begin{table}[t]
 \centering
-\caption{Partición natural del snapshot por video. Fuente: elaboración propia a partir del snapshot v2.1 auditado.}
+\caption{Partición natural del corpus por video. Fuente: elaboración propia.}
 \label{tab:splits}
 \small
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
-\textbf{Split} & \textbf{Chunks} & \textbf{Videos} & \textbf{Daño} & \textbf{Seguro} \\
+\textbf{Partición} & \textbf{Chunks} & \textbf{Videos} & \textbf{Daño} & \textbf{Seguro} \\
 \midrule
-Train & 123\,239 & 3\,478 & 10\,241 & 112\,998 \\
-Validation & 27\,317 & 754 & 2\,120 & 25\,197 \\
+Entrenamiento & 123\,239 & 3\,478 & 10\,241 & 112\,998 \\
+Conjunto de validación & 27\,317 & 754 & 2\,120 & 25\,197 \\
 Test & 22\,684 & 674 & 1\,802 & 20\,882 \\
 \bottomrule
 \end{tabular}

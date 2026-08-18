@@ -8,11 +8,11 @@
 \node[box] (source) {Videos públicos\\con subtítulos};
 \node[box,right=4mm of source] (chunk) {VTT, limpieza\\chunks con tiempos};
 \node[human,right=4mm of chunk] (label) {Etiquetado por etapas\\y auditoría};
-\node[box,right=4mm of label] (data) {Corpus v2.1\\partición por video};
+\node[box,right=4mm of label] (data) {Corpus final\\partición por video};
 \node[model,right=4mm of data] (train) {Entrenamiento\\tres familias};
 \foreach \a/\b in {source/chunk,chunk/label,label/data,data/train}{\draw[arr] (\a)--(\b);}
 
-\node[model,below=9mm of train] (compare) {Validation OOF\\28 + 5 candidatos};
+\node[model,below=9mm of train] (compare) {Conjunto de validación OOF\\28 + 5 candidatos};
 \node[model,left=4mm of compare] (freeze) {Congelación\\modelo + política};
 \node[human,left=4mm of freeze] (test) {Test natural\\una apertura};
 \node[human,left=4mm of test] (front) {Frontend\\revisión humana};

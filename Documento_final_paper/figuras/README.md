@@ -15,7 +15,7 @@ El contrato representado contiene `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_PO
 - `pipeline_moderacion.tex`: corpus, etiquetado, particiones, entrenamiento y test único.
 - `familias_modelo.tex`: familias comparadas y ganadores actuales.
 - `despliegue.tex`: tres miembros, ensemble suave y revisión humana.
-- `ontologia_trazabilidad.tex`: relaciones entre evidencia, anotación, predicción y decisión.
+- `ontologia_trazabilidad.tex`: relaciones entre evidencia, etiquetado, predicción y decisión.
 - `ranking_global_validation_03_07.png`: 28 individuos y cinco ensembles.
 - `frontera_ba_macro_auprc_validation_03_07.png`: frontera BA--macro-AUPRC.
 - `seleccion_por_categoria_validation_03_07.png`: desempeño del ensemble por salida.

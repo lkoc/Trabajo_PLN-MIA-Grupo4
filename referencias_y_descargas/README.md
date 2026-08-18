@@ -9,15 +9,18 @@
 ## Referencias y descargas
 
 Esta carpeta reúne las fuentes citadas de forma efectiva en el artículo. El
-inventario se cerró el 29 de julio de 2026 contra
+inventario se auditó y cerró el 17 de agosto de 2026 contra
 `Documento_final_paper/secciones/*.tex` y
 `Documento_final_paper/referencias.bib`.
 
 ## Resumen del inventario
 
-- Fuentes citadas e indexadas: 117.
-- PDF locales válidos: 81 (76,21 MiB).
-- Fuentes sin PDF local: 36.
+- Fuentes citadas e indexadas: 101.
+- Referencias con DOI verificado: 65.
+- Referencias sin DOI asignado: 36.
+- PDF locales vinculados a referencias vigentes: 72 (65,95 MiB).
+- Fuentes vigentes sin PDF local: 29.
+- PDF históricos de entradas que ya no se citan: 13.
 - Claves citadas sin entrada BibTeX: 0.
 - PDF cuya firma inicial no sea `%PDF`: 0.
 
@@ -27,6 +30,12 @@ estados distinguen entre un PDF validado, una fuente web sin versión PDF, una
 obra impresa o editorial sin copia abierta localizada y una descarga abierta
 bloqueada por el servidor. Así se evita confundir «no descargado» con «fuente
 inexistente».
+
+El informe `AUDITORIA_REFERENCIAS_2026-08-17.md` documenta el contraste de
+existencia, identidad, DOI, metadatos y correspondencia de los PDF. Los 13 PDF
+históricos se conservan porque pertenecen al catálogo bibliográfico del
+proyecto, pero no se contabilizan como respaldo de las 101 referencias que
+aparecen en la versión vigente del artículo.
 
 | Patrón de `estado` | Lectura práctica |
 |---|---|
@@ -48,17 +57,22 @@ PDF.
 
 Cada archivo sigue la convención
 `clave_bibtex__autor_anio_titulo-corto.pdf`. Todos los PDF locales se validaron
-por su firma binaria inicial `%PDF`; una extensión `.pdf` por sí sola no se
-consideró suficiente.
+por su firma binaria inicial `%PDF` y por lectura de metadatos. En los 72 PDF
+vinculados también se cotejaron título y autor con la entrada BibTeX: 71
+superaron la comprobación textual automatizada y el informe escaneado de Chow
+(1970), sin capa de texto, se confirmó mediante inspección visual. Una
+extensión `.pdf` por sí sola no se consideró suficiente.
 
 ## Actualización reproducible
 
 `generar_indice_referencias.ps1` vuelve a leer las citas del artículo, cruza
 las claves con la bibliografía y detecta los PDF presentes. El script imprime
-el CSV actualizado en la salida estándar y no descarga ni modifica fuentes:
+el CSV en la salida estándar y, si se indica `-OutputPath`, también lo guarda;
+no descarga ni modifica las fuentes:
 
 ```powershell
-pwsh -NoProfile -File .\referencias_y_descargas\generar_indice_referencias.ps1
+pwsh -NoProfile -File .\referencias_y_descargas\generar_indice_referencias.ps1 `
+  -OutputPath .\referencias_y_descargas\indice_referencias.csv
 ```
 
 Si después se agregan o quitan citas, debe regenerarse

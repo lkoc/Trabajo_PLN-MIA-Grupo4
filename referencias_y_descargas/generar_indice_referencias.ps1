@@ -1,3 +1,8 @@
+[CmdletBinding()]
+param(
+    [string] $OutputPath
+)
+
 $ErrorActionPreference = 'Stop'
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -6,7 +11,7 @@ $sectionsRoot = Join-Path $paperRoot 'secciones'
 $bibPath = Join-Path $paperRoot 'referencias.bib'
 
 $keys = foreach ($file in Get-ChildItem -LiteralPath $sectionsRoot -Filter '*.tex' -File) {
-    $content = Get-Content -Raw -LiteralPath $file.FullName
+    $content = Get-Content -Raw -Encoding UTF8 -LiteralPath $file.FullName
     $pattern = '\\(?:parencite|textcite|autocite|footcite|nocite|citep|citet|cite)(?:\s*\[[^\]]*\]){0,2}\s*\{([^}]+)\}'
     foreach ($match in [regex]::Matches($content, $pattern)) {
         $match.Groups[1].Value -split ',' |
@@ -16,7 +21,7 @@ $keys = foreach ($file in Get-ChildItem -LiteralPath $sectionsRoot -Filter '*.te
 }
 $keys = $keys | Sort-Object -Unique
 
-$bib = Get-Content -Raw -LiteralPath $bibPath
+$bib = Get-Content -Raw -Encoding UTF8 -LiteralPath $bibPath
 $entryPattern = '(?ms)^@(?<type>[A-Za-z]+)\{(?<key>[^,]+),\s*(?<body>.*?)(?=^@[A-Za-z]+\{|\z)'
 $entries = @{}
 foreach ($match in [regex]::Matches($bib, $entryPattern)) {
@@ -48,10 +53,14 @@ function Convert-LatexText([string] $Value) {
 
     $Value = $Value -replace '[{}]', ''
     $pairs = @(
-        @("\'a", 'á'), @("\'e", 'é'), @("\'i", 'í'), @("\'o", 'ó'), @("\'u", 'ú'),
-        @("\'A", 'Á'), @("\'E", 'É'), @("\'I", 'Í'), @("\'O", 'Ó'), @("\'U", 'Ú'),
-        @('\~n', 'ñ'), @('\~N', 'Ñ'), @('\"u', 'ü'), @('\"U', 'Ü'),
-        @('\&', '&'), @('\_', '_'), @('\%', '%'), @('``', '“'), @("''", '”')
+        @("\'a", ([char]0x00E1).ToString()), @("\'e", ([char]0x00E9).ToString()),
+        @("\'i", ([char]0x00ED).ToString()), @("\'o", ([char]0x00F3).ToString()),
+        @("\'u", ([char]0x00FA).ToString()), @("\'A", ([char]0x00C1).ToString()),
+        @("\'E", ([char]0x00C9).ToString()), @("\'I", ([char]0x00CD).ToString()),
+        @("\'O", ([char]0x00D3).ToString()), @("\'U", ([char]0x00DA).ToString()),
+        @('\~n', ([char]0x00F1).ToString()), @('\~N', ([char]0x00D1).ToString()),
+        @('\"u', ([char]0x00FC).ToString()), @('\"U', ([char]0x00DC).ToString()),
+        @('\&', '&'), @('\_', '_'), @('\%', '%'), @('``', '"'), @("''", '"')
     )
     foreach ($pair in $pairs) {
         $Value = $Value.Replace($pair[0], $pair[1])
@@ -63,7 +72,7 @@ $pdfByKey = @{}
 Get-ChildItem -LiteralPath $PSScriptRoot -Filter '*.pdf' -File | ForEach-Object {
     $key = $_.BaseName.Split('__')[0]
     if ($pdfByKey.ContainsKey($key)) {
-        throw "Más de un PDF local usa la clave BibTeX '$key'."
+        throw "Mas de un PDF local usa la clave BibTeX '$key'."
     }
 
     $bytes = [byte[]]::new(4)
@@ -76,7 +85,7 @@ Get-ChildItem -LiteralPath $PSScriptRoot -Filter '*.pdf' -File | ForEach-Object 
     }
     $signature = if ($read -eq 4) { [Text.Encoding]::ASCII.GetString($bytes) } else { '' }
     if ($signature -ne '%PDF') {
-        throw "El archivo '$($_.Name)' tiene extensión .pdf pero no firma %PDF."
+        throw "El archivo '$($_.Name)' tiene extension .pdf pero no firma %PDF."
     }
 
     $pdfByKey[$key] = 'referencias_y_descargas/' + $_.Name
@@ -117,6 +126,8 @@ $state = @{
     wilson1927probable = 'fuente_editorial_sin_pdf_oa_localizado'
     youtube2023terms = 'terminos_servicio_web_oficial_sin_pdf'
     youtube2026sexualpolicy = 'politica_plataforma_web_oficial_sin_pdf'
+    vanderlaan2007superlearner = 'pdf_autor_descarga_bloqueada_403'
+    wolpert1992stacked = 'fuente_editorial_sin_pdf_oa_localizado'
     ytdlp2026 = 'repositorio_software_web_sin_pdf'
     zavala2007discurso = 'fuente_impresa_sin_pdf_oa_localizado'
     zavala2017racismo = 'repositorio_oficial_solo_epub_embargado'
@@ -170,4 +181,9 @@ $rows = foreach ($key in $keys) {
     }
 }
 
-$rows | ConvertTo-Csv -NoTypeInformation
+if ($OutputPath) {
+    $rows | Export-Csv -NoTypeInformation -Encoding UTF8 -LiteralPath $OutputPath
+}
+else {
+    $rows | ConvertTo-Csv -NoTypeInformation
+}

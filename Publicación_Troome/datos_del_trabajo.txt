@@ -1,0 +1,15 @@
+Asunto: Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural
+------------------------------------------------------------------------------------
+Tema: Moderación semiautomática de videos peruanos de YouTube mediante modelos clásicos y neuronales de procesamiento del lenguaje natural
+Integrantes:
+- Luis Enrique Koc Góngora — luis.koc@gmail.com
+- Alex Felipe Mancilla Antay — amancillaa@uni.pe
+- Herbert Antonio Meléndez García — hamg.94@gmail.com
+- Dennis Jack Paitán Cano — dennis.paitan.c@uni.pe
+
+Resumen:
+El trabajo desarrolla un sistema semiautomático para moderar subtítulos de videos peruanos de YouTube.
+Integra un corpus etiquetado de 173 240 chunks con modelos clásicos, Transformers y Qwen.
+La comparación única actualizada selecciona un ensemble suave optimizado de las tres familias.
+En test natural alcanza BA 0,8459; la política selectiva logra BA 0,9249 con 72,7 % de cobertura automática.
+La solución mantiene revisión humana, trazabilidad de resultados y abstención ante casos inciertos.

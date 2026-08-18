@@ -1,12 +1,12 @@
 # Auditoría final visual y gráfica
 
-**Fecha:** 15 de agosto de 2026  
+**Fecha:** 17 de agosto de 2026
 **Artefacto auditado:** `presentacion_resultados_finales.pdf`  
 **Estado:** aprobada para exposición
 
 ## Alcance
 
-Se revisaron las 59 páginas renderizadas de la presentación, incluidos portada, ocho separadores de capítulo, 43 diapositivas temáticas y siete páginas de referencias. La revisión se hizo sobre imágenes rasterizadas del PDF final, no únicamente sobre el código LaTeX.
+Se revisaron las 61 páginas renderizadas de la presentación, incluidos portada, ocho separadores de capítulo, 45 diapositivas temáticas y siete páginas de referencias. La revisión se hizo sobre imágenes rasterizadas del PDF final, no únicamente sobre el código LaTeX.
 
 ## Comprobaciones realizadas
 
@@ -25,24 +25,24 @@ Se revisaron las 59 páginas renderizadas de la presentación, incluidos portada
 | Capturas de frontend | Ampliadas con proporción conservada y condición histórica declarada |
 | Taxonomía | Diagrama legible y tabla bibliográfica complementaria en la página siguiente |
 | Ensemble | Miembros, regla de promedio y alternativas comparadas en páginas consecutivas |
-| Referencias | Redistribuidas de nueve a siete páginas; se eliminó una página final casi vacía |
+| Referencias | 57 fuentes distribuidas en siete páginas; los 38 DOI disponibles son visibles y la última página no queda reducida a dos entradas |
 | Enlaces operativos | Botones visibles en conclusiones; etiquetado y producción respondieron HTTP 200 |
-| Compilación | 0 cajas desbordadas, 0 errores fatales, 0 citas indefinidas y 59 páginas generadas |
+| Compilación | 0 cajas desbordadas, 0 errores fatales, 0 citas indefinidas y 61 páginas generadas |
 
 ## Hallazgos y correcciones
 
 1. Se incorporó un índice inmediatamente después de la portada y se retiró de esa página cualquier bloque inferior que invadiera el pie.
 2. Las gráficas horizontales ocultaban sus etiquetas al desactivar el eje vertical. Se restituyeron los nombres de clases, canales, tipos de modelo y papers, y se redujo el ancho de los ejes para conservar los márgenes.
 3. La radiografía del corpus distingue 182 461 chunks/5 385 videos/322 canales del alcance inicial frente a 173 240/4 906/276 efectivos; no se mezclan universos.
-4. El estado del arte se adelantó: la página 8 abre el capítulo y las páginas 9--12 explican métodos, benchmarks, explicabilidad y muestreo antes de presentar los datos propios. Las páginas 41--44 quedan reservadas para el contraste posterior con resultados.
+4. El estado del arte se adelantó: primero se explican métodos, benchmarks, explicabilidad y muestreo, antes de presentar los datos propios; el contraste cuantitativo posterior queda separado y aparece junto con los resultados.
 5. Las diapositivas nuevas de métricas y estado del arte se revisaron individualmente: fórmulas, tablas, subtítulos y notas permanecen dentro del área útil.
 6. Las conclusiones muestran dos controles clicables sin desplazar la tabla ni el bloque de síntesis.
-7. Las 54 referencias continúan distribuidas en siete páginas y no se añadió una página final residual.
+7. Las 57 referencias quedan distribuidas en siete páginas. La bibliografía se compactó de forma leve para mostrar los 38 DOI sin crear una página final residual.
 8. Se añadió una diapositiva específica para los entrenamientos Qwen. La revisión individual confirmó que las cuatro rutas, sus hiperparámetros, métricas y condición LoRA/no LoRA permanecen legibles y dentro del área útil.
 
 ## Evidencia de revisión
 
-Las páginas rasterizadas y hojas de contacto quedan en `.audit_final_visual/`. Los grupos `contacto_01_08.png` a `contacto_57_59.png` permiten repetir la revisión panorámica; los archivos `slide-01.png` a `slide-59.png` permiten inspección individual.
+Las páginas rasterizadas y hojas de contacto quedan en `.audit_final_visual/`. Los archivos vigentes `slide-01.png` a `slide-61.png` permiten repetir la inspección individual; las imágenes de contacto anteriores se conservan como apoyo histórico y no sustituyen esa serie final.
 
 ## Dictamen
 

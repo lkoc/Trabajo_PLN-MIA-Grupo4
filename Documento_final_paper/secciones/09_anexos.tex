@@ -4,57 +4,55 @@
 \section{Especificación del ensemble congelado}
 \label{app:ensemble}
 
-El artefacto \texttt{seleccion\_congelada.json}, esquema 5.0.0, fija la firma de comparación, el hash del dataset, los tres miembros, calibradores, pesos, umbrales y política de revisión. Los scores crudos se calibran por miembro y salida, $p_{mk}=\sigma(a_{mk}s_{mk}+b_{mk})$, antes de combinarlos. Esta capa común evita que la escala propia de un modelo domine la mezcla. La Tabla~\ref{tab:ensemble_members_app} identifica los cuatro artefactos publicados y resume la arquitectura y el desempeño de cada miembro y de su combinación.
+El artefacto \texttt{seleccion\_congelada.json} fija la firma de comparación, el hash del dataset, los tres miembros, calibradores, pesos, umbrales y política de revisión. Los scores crudos se calibran por miembro y salida, $p_{mk}=\sigma(a_{mk}s_{mk}+b_{mk})$, antes de integrarlos. Esta capa común evita que la escala propia de un modelo domine el ensemble y sigue el uso de calibración sigmoide descrito por Platt y por Niculescu-Mizil y Caruana \cite{platt1999probabilistic,niculescu2005probabilities}. La Tabla~\ref{tab:ensemble_members_app} identifica los cuatro artefactos publicados y resume la arquitectura y el desempeño de cada miembro y del ensemble.
 
 \begin{table}[H]
 \centering
-\caption{Miembros y artefacto combinado del ensemble de producción. Fuente: elaboración propia a partir del registro congelado y la comparación 03-07b.}
+\caption{Miembros y artefacto del ensemble de producción. Fuente: elaboración propia a partir del registro congelado y la comparación integrada.}
 \label{tab:ensemble_members_app}
 \small
 \begin{tabularx}{\textwidth}{>{\bfseries}p{25mm}p{58mm}X rrr}
 \toprule
 \textbf{Tipo} & \textbf{Identificador} & \textbf{Arquitectura} & \textbf{BA} & \textbf{AUPRC} & \textbf{F1} \\
 \midrule
-Clásico & \path{classical-logistic_regression_c0p5-54f7971c6000} & TF--IDF palabra 1--2 + carácter 3--5; OVR enmascarado; logística $C=0,5$. & 0,80 & 0,48 & 0,50 \\
-Transformer & \path{cascade_v2-af78eba77883} & E5 compuerta \texttt{ANY\_DAMAGE} + E5 rama de cinco salidas; enrutamiento seguro. & 0,82 & 0,45 & 0,52 \\
+Clásico & \path{classical-logistic_regression_c0p5-54f7971c6000} & TF--IDF palabra 1--2 + carácter 3--5; uno contra el resto (OVR) enmascarado; logística $C=0,5$. & 0,80 & 0,48 & 0,50 \\
+Transformer & \path{cascade_v2-af78eba77883} & Cascada E5 segura: compuerta \texttt{ANY\_DAMAGE} + rama E5 de cinco salidas. & 0,82 & 0,45 & 0,52 \\
 Qwen & \path{qwen_lora-4aa5ce04df05} & Qwen3--0.6B-Base; LoRA ($r=8$, $\alpha=16$, $p=0{,}05$) en Q/K/V/O; cabeza de 22 logits. & 0,83 & 0,52 & 0,55 \\
-Ensemble & \path{ensemble_soft_optimized} & Mezcla convexa de probabilidades calibradas: $0,10$ clásico $+0,65$ Transformer $+0,25$ Qwen. & 0,837 & 0,551 & 0,562 \\
+Ensemble & \path{ensemble_soft_optimized} & Ensemble convexo de probabilidades calibradas: $0,10$ clásico $+0,65$ Transformer $+0,25$ Qwen. & 0,837 & 0,551 & 0,562 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-La optimización se ejecuta en cinco pliegues externos \texttt{GroupKFold} por video. Dentro de cada entrenamiento externo, otros cinco pliegues generan probabilidades calibradas OOF y votos $D_{mk}=\mathbf{1}(p_{mk}\ge t_{mk})$. Sobre estas predicciones internas se enumeran las 861 ternas no negativas que suman uno en un simplex de paso 0,025; para cada terna se vuelven a estimar los umbrales y se ordena por mayor BA, menor $R_{0,67}$, mayor macro-AUPRC y, solo ante empate, menor distancia a pesos iguales. La terna elegida se evalúa en el pliegue externo intacto, y la concatenación de los cinco pliegues produce los resultados de la Tabla~\ref{tab:formulas_ensemble_app}. Este esquema anidado reduce el optimismo de escoger y evaluar hiperparámetros sobre los mismos datos \cite{cawley2010selection}; la mezcla convexa aprendida sigue el principio de \emph{stacking}/Super Learner \cite{wolpert1992stacked,vanderlaan2007superlearner}. La malla, el orden lexicográfico y el desempate son decisiones propuestas por este trabajo. Máximo y mínimo no tienen coeficientes aplicables.
+La optimización se ejecuta en cinco pliegues externos \texttt{GroupKFold} por video. Dentro de cada entrenamiento externo, otros cinco pliegues generan probabilidades calibradas OOF y votos $D_{mk}=\mathbf{1}(p_{mk}\ge t_{mk})$. Sobre estas predicciones internas se enumeran las 861 ternas no negativas que suman uno en un simplex de paso 0,025; para cada terna se vuelven a estimar los umbrales y se ordena por mayor BA, menor $R_{0,67}$, mayor macro-AUPRC y, solo ante empate, menor distancia a pesos iguales. La terna elegida se evalúa en el pliegue externo intacto, y la concatenación de los cinco pliegues produce los resultados de la Tabla~\ref{tab:formulas_ensemble_app}. Este esquema anidado reduce el optimismo de escoger y evaluar hiperparámetros sobre los mismos datos \cite{cawley2010selection}; el ensemble convexo aprendido sigue el principio de \emph{stacking}/Super Learner \cite{wolpert1992stacked,vanderlaan2007superlearner}. La malla, el orden lexicográfico y el desempate son decisiones propuestas por este trabajo. Los ensembles de máximo y mínimo no tienen coeficientes aplicables. En la tabla, C/T/Q denota clásico/Transformer/Qwen.
 
 \begin{table}[H]
 \centering
-\caption{Fórmulas, coeficientes y resultados de las siete variantes de ensemble. Fuente: elaboración propia a partir de la ejecución 03-07b.}
+\caption{Fórmulas, coeficientes y resultados de las siete variantes de ensemble. Fuente: elaboración propia a partir del cuaderno reproducible de optimización.}
 \label{tab:formulas_ensemble_app}
 \small
 \begin{tabularx}{\textwidth}{p{39mm}X p{40mm}rrrr}
 \toprule
 \textbf{Caso} & \textbf{Fórmula por salida $k$} & \textbf{Pesos C/T/Q} & \textbf{BA} & $\boldsymbol{R_{0,67}}$ & \textbf{AP} & \textbf{F1} \\
 \midrule
-Suave optimizado & $\sum_m w_mp_{mk}$ & 0,100 / 0,650 / 0,250 & 0,8366 & 0,1587 & 0,5506 & 0,5618 \\
-Ponderado por AUPRC & $\sum_m w_mp_{mk}$ & 0,3317 / 0,3110 / 0,3573 & 0,8360 & 0,1612 & 0,5614 & 0,5675 \\
-Unión & $\max_m p_{mk}$ & No aplica & 0,8334 & 0,1684 & 0,5369 & 0,5621 \\
-Promedio suave & $\sum_m p_{mk}/3$ & 0,3333 / 0,3333 / 0,3333 & 0,8328 & 0,1673 & 0,5604 & 0,5703 \\
-Duro optimizado & $\sum_m w_mD_{mk}$ & 0,300 / 0,325 / 0,375 & 0,8272 & 0,1731 & 0,4547 & 0,5584 \\
-Mayoría dura & $\sum_m D_{mk}/3$ & 0,3333 / 0,3333 / 0,3333 & 0,8272 & 0,1731 & 0,4415 & 0,5638 \\
-Intersección & $\min_m p_{mk}$ & No aplica & 0,8149 & 0,1887 & 0,5131 & 0,5373 \\
+Ensemble suave optimizado & $\sum_m w_mp_{mk}$ & 0,100 / 0,650 / 0,250 & 0,8366 & 0,1587 & 0,5506 & 0,5618 \\
+Ensemble ponderado por AUPRC & $\sum_m w_mp_{mk}$ & 0,3317 / 0,3110 / 0,3573 & 0,8360 & 0,1612 & 0,5614 & 0,5675 \\
+Ensemble de unión & $\max_m p_{mk}$ & No aplica & 0,8334 & 0,1684 & 0,5369 & 0,5621 \\
+Ensemble de promedio suave & $\sum_m p_{mk}/3$ & 0,3333 / 0,3333 / 0,3333 & 0,8328 & 0,1673 & 0,5604 & 0,5703 \\
+Ensemble duro optimizado & $\sum_m w_mD_{mk}$ & 0,300 / 0,325 / 0,375 & 0,8272 & 0,1731 & 0,4547 & 0,5584 \\
+Ensemble de mayoría dura & $\sum_m D_{mk}/3$ & 0,3333 / 0,3333 / 0,3333 & 0,8272 & 0,1731 & 0,4415 & 0,5638 \\
+Ensemble de intersección & $\min_m p_{mk}$ & No aplica & 0,8149 & 0,1887 & 0,5131 & 0,5373 \\
 \bottomrule
 \end{tabularx}
 \begin{minipage}{.98\textwidth}\vspace{1mm}\footnotesize
-\emph{Nota:} C/T/Q denota clásico/Transformer/Qwen; AP y F1 son macro sobre los cuatro daños. Todas las cifras son OOF de los cinco pliegues externos anidados. La ponderación por AUPRC, unión e intersección son propuestas exploratorias del trabajo; las mezclas convexas se fundamentan en \emph{stacking}/Super Learner \cite{wolpert1992stacked,vanderlaan2007superlearner}.
+\emph{Nota:} AP y F1 son macro sobre los cuatro daños. Todas las cifras son OOF de los cinco pliegues externos anidados. Los ensembles ponderado por AUPRC, de unión y de intersección son propuestas exploratorias del trabajo; los ensembles convexos se fundamentan en \emph{stacking}/Super Learner \cite{wolpert1992stacked,vanderlaan2007superlearner}.
 \end{minipage}
 \end{table}
 
-La auditoría también conserva el resultado previo a introducir la capa común y la optimización: promedio suave (BA 0,8400; AP 0,5549; F1 0,5683), ponderado (0,8383; 0,5560; 0,5694), unión (0,8328; 0,5236; 0,5648), mayoría (0,8288; 0,4606; 0,5723) e intersección (0,8242; 0,5165; 0,5381). Esas cifras explican la decisión de investigar pesos, pero no constituyen un segundo ganador vigente; la Tabla~\ref{tab:formulas_ensemble_app} reemplaza la comparación de ensembles bajo el protocolo común.
-
-La Tabla~\ref{tab:pesos_pliegues_app} reporta los coeficientes efectivamente aprendidos. La dispersión del peso Transformer en la mezcla suave (0,15--0,775 entre pliegues) muestra que la ventaja es sensible a la partición; el ajuste completo 0,10/0,65/0,25 es el único congelado para inferencia. La mezcla dura resulta mucho más estable.
+La Tabla~\ref{tab:pesos_pliegues_app} reporta los coeficientes efectivamente aprendidos. La dispersión del peso Transformer en el ensemble suave (0,15--0,775 entre pliegues) muestra que la ventaja es sensible a la partición; el ajuste completo 0,10/0,65/0,25 es el único congelado para inferencia. El ensemble duro resulta mucho más estable.
 
 \begin{table}[H]
 \centering
-\caption{Coeficientes optimizados por pliegue externo y ajuste final. Fuente: elaboración propia a partir de la validación anidada 5\,$\times$\,5 de 03-07b.}
+\caption{Coeficientes optimizados por pliegue externo y ajuste final. Fuente: elaboración propia a partir de la validación anidada 5\,$\times$\,5.}
 \label{tab:pesos_pliegues_app}
 \small
 \begin{tabular}{lrrrrrr}
@@ -75,7 +73,7 @@ Para reproducir la fórmula ganadora se necesitan además los 15 calibradores de
 
 \begin{table}[H]
 \centering
-\caption{Calibradores de Platt del ensemble suave optimizado. Fuente: elaboración propia a partir del ajuste final sobre validation de 03-07b.}
+\caption{Calibradores de Platt del ensemble suave optimizado. Fuente: elaboración propia a partir del ajuste final sobre el conjunto de validación.}
 \label{tab:calibradores_miembro_app}
 \small
 \begin{tabular}{lrrr}
@@ -91,7 +89,7 @@ Para reproducir la fórmula ganadora se necesitan además los 15 calibradores de
 \end{tabular}
 \end{table}
 
-La salida final es $E_k=0,10p_{Ck}+0,65p_{Tk}+0,25p_{Qk}$. Los umbrales de categoría son 0,46 (\texttt{SEGURO}), 0,17 (\Rac), 0,18 (\Gen), 0,39 (\Ame) y 0,47 (\Sex); la compuerta de cualquier daño usa 0,072919 sobre el máximo de las cuatro salidas dañinas. Estos valores, junto con $\delta=0,03$, se fijaron con validation antes de recombinar los checkpoints del test.
+La salida final es $E_k=0,10p_{Ck}+0,65p_{Tk}+0,25p_{Qk}$. Los umbrales de categoría son 0,46 (\texttt{SEGURO}), 0,17 (\Rac), 0,18 (\Gen), 0,39 (\Ame) y 0,47 (\Sex); la compuerta de cualquier daño usa 0,072919 sobre el máximo de las cuatro salidas dañinas. Estos valores, junto con $\delta=0,03$, se fijaron con el conjunto de validación antes de recombinar los checkpoints del test.
 
 \clearpage
 \section{Resultados ampliados}
@@ -101,7 +99,7 @@ La Tabla~\ref{tab:ganadores_categoria_app} separa los líderes por salida y mét
 
 \begin{table}[H]
 \centering
-\caption{Ganadores por categoría en validation, restringidos a candidatos que superan la salvaguarda global. Fuente: elaboración propia a partir de la comparación integrada.}
+\caption{Ganadores por categoría en el conjunto de validación, restringidos a candidatos que superan la salvaguarda global. Fuente: elaboración propia a partir de la comparación integrada.}
 \label{tab:ganadores_categoria_app}
 \small
 \begin{tabularx}{\textwidth}{>{\bfseries}p{38mm}X r X r X rr}
@@ -110,14 +108,14 @@ La Tabla~\ref{tab:ganadores_categoria_app} separa los líderes por salida y mét
 \midrule
 \texttt{SEGURO} & Ensemble ponderado & 0,97 & Qwen ctx256 & 0,92 & SVM $C=2$ & 0,97 & 0,86 \\
 \Rac & Qwen ctx256 & 0,57 & Qwen ctx256 & 0,62 & Qwen ctx256 & 0,68 & 0,57 \\
-\Gen & Qwen ctx256 & 0,40 & Mayoría dura & 0,47 & Ensemble ponderado & 0,55 & 0,39 \\
-\Ame & Ensemble ponderado & 0,61 & Unión & 0,58 & Unión & 0,63 & 0,54 \\
-\Sex & Promedio simple & 0,69 & Unión & 0,64 & Unión & 0,64 & 0,64 \\
+\Gen & Qwen ctx256 & 0,40 & Ensemble de mayoría dura & 0,47 & Ensemble ponderado & 0,55 & 0,39 \\
+\Ame & Ensemble ponderado & 0,61 & Ensemble de unión & 0,58 & Ensemble de unión & 0,63 & 0,54 \\
+\Sex & Ensemble de promedio simple & 0,69 & Ensemble de unión & 0,64 & Ensemble de unión & 0,64 & 0,64 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-La Tabla~\ref{tab:test_views_app} compara la vista natural y la secundaria 4:1 obtenidas de la misma inferencia, por lo que sus diferencias no proceden de otro modelo ni de una reapertura de test.
+La Tabla~\ref{tab:test_views_app} compara la vista natural y la secundaria 4:1 obtenidas de la misma inferencia, por lo que sus diferencias no proceden de otro modelo ni de una reapertura de test. También informa el error esperado de calibración (ECE) y la puntuación de Brier.
 
 \begin{table}[H]
 \centering
@@ -134,7 +132,7 @@ Natural & 22\,684 & 0,846 & 0,422 & 0,412 & 0,423 & 0,531 & 0,025 & 0,027 \\
 \end{tabular}
 \end{table}
 
-La vista 4:1 selecciona de forma determinista 7\,208 seguros y conserva los 1\,802 daños. Reutiliza exactamente los scores de la vista natural. La diferencia de F1 y AUPRC refleja prevalencia, no otro modelo ni otra inferencia. La Tabla~\ref{tab:confusion_app} conserva los conteos exactos que explican la compuerta completa y la ruta selectiva.
+La vista 4:1 selecciona de forma determinista 7\,208 seguros y conserva los 1\,802 daños. Reutiliza exactamente los scores de la vista natural. La diferencia de F1 y AUPRC refleja prevalencia, no otro modelo ni otra inferencia. La Tabla~\ref{tab:confusion_app} conserva los conteos exactos que explican la compuerta completa y la ruta selectiva: verdaderos positivos (TP), falsos negativos (FN), falsos positivos (FP) y verdaderos negativos (TN).
 
 \begin{table}[H]
 \centering
@@ -155,7 +153,7 @@ Ruta automática selectiva & 886 & 96 & 814 & 14\,705 \\
 \section{Ontología y vocabulario controlado}
 \label{app:ontologia}
 
-La ontología liviana distingue evidencia, anotación, categoría operativa, predicción, decisión humana y registro reentrenable. El archivo \path{ontologia_moderacion.ttl} conserva la versión legible por máquina; la Fig.~\ref{fig:ontologia_app} resume las relaciones empleadas por el artículo y el demostrador.
+La ontología liviana distingue evidencia, etiquetado, categoría operativa, predicción, decisión humana y registro reentrenable. El archivo \path{ontologia_moderacion.ttl} conserva la representación legible por máquina; la Fig.~\ref{fig:ontologia_app} resume las relaciones definidas en el marco teórico y empleadas por el artículo y el demostrador.
 
 \begin{figure}[H]
 \centering
@@ -186,15 +184,15 @@ La Tabla~\ref{tab:artefactos_app} identifica la fuente canónica usada para cada
 \midrule
 \path{docs/artefactos/auditoria_estado_final_182461.json} & Totales elegibles, etiquetas, videos, particiones y huella de auditoría. & Corpus y etiquetado. \\
 \path{docs/OPTIMIZACION_LONGITUD_CHUNKS.md} y \path{docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md} & Comparación de 15--35 s, perfiles clásico y neuronal, bootstrap y decisión congelada. & Longitud temporal de 30 s. \\
-\path{resultados/modelos/comparacion_individual_ensemble_validation.json} y \path{resultados/modelos/optimizacion_ensembles/optimizacion_ensembles_validation.json} & Ranking inicial y comparación anidada de siete variantes, pesos, bootstrap y hashes de entrada. & Selección en validation. \\
+Matrices de comparación individual y optimización de ensembles & Ranking y comparación anidada de siete variantes, pesos, bootstrap y hashes de entrada. & Selección en el conjunto de validación. \\
 \path{resultados/modelos/seleccion_congelada.json} & Miembros, calibradores, umbrales y política \texttt{NEEDS\_REVIEW}. & Especificación desplegable. \\
 \path{resultados/modelos/test_final_abierto_una_vez.json} & Test natural, vista 4:1 y métricas selectivas. & Evaluación final. \\
-\path{resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md} & Tablas y análisis crítico legible. & Control editorial y reproducibilidad. \\
+Reporte reproducible de comparación de modelos & Tablas y análisis crítico legible. & Control editorial y reproducibilidad. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-GitHub (\url{https://github.com/lkoc/Trabajo_PLN-MIA-Grupo4}) conserva scripts, cuadernos y documentación. Google Drive (\url{https://drive.google.com/drive/folders/1H3PKr7CWd-RwavZgEnfLhh94eq-NO9P3}) conserva corpus, pesos y artefactos de mayor tamaño bajo acceso controlado. La disponibilidad técnica no concede por sí sola permiso de reutilización; deben revisarse licencias, privacidad y términos de YouTube \cite{youtube2023terms,aoir2020ethics}.
+Para replicar el entrenamiento solo se requieren los \href{https://github.com/lkoc/Trabajo_PLN-MIA-Grupo4/tree/main/flujo/03_entrenamiento}{cuadernos y configuraciones} y el \href{https://drive.google.com/file/d/1-fAxh7Lj0RE_Imh2SL3fKPcc_TX2R_yJ/view?usp=drivesdk}{ZIP del dataset final documentado}. El ZIP ocupa 63\,066\,165 bytes (SHA-256: \path{c67ab95b2a3bf34a2426ca2502adb79ea3176fbaa65c7061a29512c8c6cb0ffc}) e incluye el JSON de 396\,581\,052 bytes (SHA-256: \path{f0661dc3778b5e42a1e65e844a5c5db70fcee414685a44fb9738e17657859a49}), su esquema y el validador. La Tabla~\ref{tab:artefactos_app} localiza los parámetros finales. No se requieren subtítulos crudos, cachés, corpus intermedios ni pesos del proyecto. La reutilización exige revisar licencias, privacidad y términos de YouTube \cite{youtube2023terms,aoir2020ethics}.
 
 \clearpage
 \twocolumn

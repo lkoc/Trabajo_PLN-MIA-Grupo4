@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "Si utiliza este dataset, cite esta edición y a sus autores."
+type: dataset
+title: "Dataset etiquetado final documentado para moderación semiautomática de videos peruanos de YouTube"
+version: "1.1.0"
+date-released: "2026-08-17"
+authors:
+  - family-names: "Koc Góngora"
+    given-names: "Luis Enrique"
+    email: "luis.koc@gmail.com"
+  - family-names: "Mancilla Antay"
+    given-names: "Alex Felipe"
+    email: "amancillaa@uni.pe"
+  - family-names: "Meléndez García"
+    given-names: "Herbert Antonio"
+    email: "hamg.94@gmail.com"
+  - family-names: "Paitán Cano"
+    given-names: "Dennis Jack"
+    email: "dennis.paitan.c@uni.pe"
+keywords:
+  - procesamiento del lenguaje natural
+  - moderación de contenido
+  - YouTube
+  - Perú
+  - clasificación multietiqueta

@@ -49,7 +49,7 @@ CONTRACT_SUMMARY_DOCUMENTS = (
 
 def test_active_notebooks_are_ordered_and_clean():
     notebooks = sorted((ROOT / "flujo").rglob("*.ipynb"))
-    assert len(notebooks) == 22
+    assert len(notebooks) == 23
     executed_evidence_notebooks = {
         "01_03_limpieza_troceado_incremental.ipynb",
         "02_00_preparacion_bundle_colab.ipynb",
@@ -62,6 +62,7 @@ def test_active_notebooks_are_ordered_and_clean():
         "03_03_transformer_cascada.ipynb",
         "03_04_transformer_multitarea.ipynb",
         "03_07_comparacion_final.ipynb",
+        "03_07b_optimizacion_ensembles.ipynb",
         "03_08_auditoria_finas_flags.ipynb",
     }
     optionally_executed_notebooks = {
@@ -349,7 +350,7 @@ def test_required_frontends_are_small_templates():
     assert "/api/analyze" in production_source
     assert "/api/stats" in production_source
     assert "youtube.com" in production_source
-    assert "Ensemble ganador · promedio suave" in production_source
+    assert "Ensemble ganador · mezcla suave optimizada" in production_source
     assert "Comparar los cuatro sistemas" in production_source
     assert "Dataset para reentrenar" in production_source
     assert "event.key.toLowerCase()==='r'" in human_source
@@ -523,7 +524,7 @@ def test_root_readme_summarizes_and_reproduces_the_active_workflow():
     for folder, expected_count in {
         "01_datos": 4,
         "02_etiquetado": 6,
-        "03_entrenamiento": 11,
+        "03_entrenamiento": 12,
         "04_produccion": 1,
     }.items():
         notebooks = sorted((ROOT / "flujo" / folder).glob("*.ipynb"))

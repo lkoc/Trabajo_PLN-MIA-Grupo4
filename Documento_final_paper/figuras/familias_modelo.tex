@@ -15,11 +15,11 @@
 \draw[arr] (text.east) -- ++(4mm,0) |- (qwen.west);
 
 \node[winner,right=9mm of classic] (cw) {Ganador clásico\\logística ($C=0{,}5$)};
-\node[winner,right=9mm of trans] (tw) {Ganador Transformer\\cascada E5 v2};
+\node[winner,right=9mm of trans] (tw) {Ganador Transformer\\cascada E5 segura};
 \node[winner,right=9mm of qwen] (qw) {Ganador Qwen\\Qwen3--LoRA};
 \draw[arr] (classic)--(cw); \draw[arr] (trans)--(tw); \draw[arr] (qwen)--(qw);
 
-\node[final,right=13mm of tw] (ens) {Ensemble ganador\\promedio suave\\+ calibración};
+\node[final,right=13mm of tw] (ens) {Ensemble ganador\\regla suave optimizada\\+ calibración};
 \draw[arr] (cw.east) -- ++(5mm,0) |- (ens.west);
 \draw[arr] (tw)--(ens);
 \draw[arr] (qw.east) -- ++(5mm,0) |- (ens.west);

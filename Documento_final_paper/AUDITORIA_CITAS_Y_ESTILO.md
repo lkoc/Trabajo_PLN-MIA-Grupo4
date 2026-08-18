@@ -49,17 +49,17 @@ Los conteos, identificadores, hashes y parámetros de protocolo se conservan exa
 
 ## 3. Auditoría de citas y bibliografía
 
-La compilación efectiva contiene 18 fuentes TeX, 125 comandos de cita y 208 apariciones de claves. El resultado bibliográfico es:
+La compilación efectiva contiene 18 fuentes TeX, 131 comandos de cita y 218 apariciones de claves. El resultado bibliográfico es:
 
-- 100 referencias numeradas en el PDF;
-- 141 registros en `referencias.bib`;
+- 101 referencias numeradas en el PDF;
+- 142 registros bibliográficos en `referencias.bib`, además de la entrada de control de `IEEEtran`;
 - 41 registros inactivos que no se emiten en el PDF;
 - 0 claves citadas sin entrada BibTeX;
 - 0 claves BibTeX duplicadas;
 - 0 citas o referencias cruzadas indefinidas;
-- 33 etiquetas, sin duplicados, y 0 etiquetas sin referencia entrante.
+- 34 etiquetas, sin duplicados, y 0 etiquetas sin referencia entrante.
 
-El inventario de procedencia contiene 121 fuentes: 81 PDF de acceso abierto validados y presentes localmente, y 40 recursos sin PDF local con estado y justificación explícitos. No se interpreta la disponibilidad de un PDF como prueba de que toda tarea externa sea comparable con el corpus propio.
+El inventario de procedencia contiene exactamente las 101 fuentes vigentes: 72 PDF validados y presentes localmente, y 29 recursos sin PDF local con estado y justificación explícitos. Se verificaron 65 DOI contra sus metadatos canónicos; las 36 fuentes restantes no tienen DOI asignado en su publicación de referencia. La carpeta conserva además 13 PDF históricos de entradas que ya no se citan, sin mezclarlos con el conteo vigente. El procedimiento y las correcciones de metadatos se documentan en `../referencias_y_descargas/AUDITORIA_REFERENCIAS_2026-08-17.md`. No se interpreta la disponibilidad de un PDF como prueba de que toda tarea externa sea comparable con el corpus propio.
 
 Se reabrieron las fuentes primarias de los números comparativos más visibles:
 
@@ -89,15 +89,17 @@ El texto redondea esas cifras a 0,79, 0,78, 0,73, 0,69 y 0,65, respectivamente. 
 | Métricas | La fórmula no bastaba para explicar por qué BA gobierna y F1 no. | Alta | Justificación de variables y decisión. | Se añadió interpretación, dirección, dependencia del umbral y descarte razonado de accuracy, micro-F1, ROC-AUC y suma de métricas. | Cerrado |
 | Entrenamientos Qwen | Las variantes podían leerse como un único ajuste o como si todas utilizaran LoRA. | Alta | Estados de entrenador, configuraciones de adaptador y ranking vigente. | Se separaron LoRA base 128, continuación LoRA 256, tres brazos LoRA estructurados y ajuste completo histórico sin LoRA; se identificó el ganador y el miembro usado por el ensemble. | Cerrado |
 | Especificaciones de modelos | BF16 podía confundirse con cuantización y faltaba precisar la escala de Qwen y MiniLM. | Media | Configuraciones, tensores locales y tarjetas oficiales. | Se añadieron parámetros, capas, fracción LoRA, ausencia de 4/8 bits, almacenamiento FP32 y significado de cálculo mixto BF16. | Cerrado |
-| Bibliografía maestra | 41 entradas no se citan en esta versión. | Baja | BibTeX solo emite las claves usadas. | Se conservan como catálogo compartido; ninguna aparece como referencia huérfana en el PDF. | Aceptado |
+| Bibliografía maestra | 41 entradas no se citan en esta versión. | Baja | BibTeX solo emite las claves usadas. | Se conservan como catálogo compartido; ninguna aparece como referencia huérfana en el PDF. Las 101 referencias emitidas fueron verificadas y los 65 DOI disponibles se normalizaron. | Aceptado |
 | Registro LaTeX | Persisten avisos `Underfull` por URL e identificadores largos. | Baja | No implican recorte. | Inspección visual confirmó márgenes y legibilidad; no hay `Overfull`. | Aceptado |
+| Redacción final | Algunos pasajes acumulaban enumeraciones, oraciones extensas o transiciones repetitivas. | Media | Claridad y tono académico. | Se aplicó una edición mínima de sintaxis, artículos y ritmo sin cambiar cifras, cautelas ni atribuciones. | Cerrado |
+| Captura de producción | La imagen anterior todavía nombraba al ganador histórico `ensemble_soft_mean`. | Alta | Coherencia entre evidencia visual y registro congelado. | Se republicó el registro y se regeneró la captura con `ensemble_soft_optimized` y “mezcla suave optimizada”. | Cerrado |
 
 ## 5. Revisión científica y editorial
 
-- El resumen es autocontenido, contiene 236 palabras y declara método, muestra, resultados, conclusión de uso y límite operacional.
+- El resumen es autocontenido, contiene 239 palabras y declara método, muestra, resultados, conclusión de uso y límite operacional.
 - El problema se expone en los niveles real, subyacente y tecnológico.
 - Datos, particiones, pseudoetiquetado, revisión humana y límites de validez están separados de resultados.
-- Los 28 modelos y cinco ensembles se describen con atención especial a los tres miembros ganadores y al promedio suave.
+- Los 28 modelos individuales, cinco reglas base y dos variantes optimizadas se describen con atención especial a los tres miembros y a la mezcla suave optimizada ganadora.
 - La evaluación distingue validation OOF, test natural primario y vista 4:1 secundaria; test no modifica selección, calibradores ni umbrales.
 - El contrato aprende las cinco salidas literales `SEGURO`, `RACISMO_DISCRIMINACION`, `ATAQUE_POR_GENERO_IDENTIDAD`, `ACOSO_AMENAZA` y `CONTENIDO_SEXUAL`; `SEGURO` es excluyente y no se presenta como mero complemento.
 - La salida Qwen se describe correctamente como cabeza clasificadora de 22 logits; la taxonomía Markdown y el JSON estructurado pertenecen al proceso de anotación, no a esta inferencia.
@@ -108,9 +110,10 @@ El texto redondea esas cifras a 0,79, 0,78, 0,73, 0,69 y 0,65, respectivamente. 
 ## 6. Revisión visual y compilación
 
 - Documento `IEEEtran` en modo conferencia, papel A4 físico: 595,276 × 841,89 pt (210 × 297 mm).
-- PDF final: 23 páginas.
+- PDF final: 24 páginas; la última página de referencias quedó equilibrada tras incorporar los DOI.
 - 0 errores fatales, 0 citas indefinidas, 0 referencias indefinidas y 0 cajas `Overfull`.
-- Portada, texto a dos columnas, 17 tablas, 11 figuras, fórmulas, apéndices y 100 referencias fueron inspeccionados tras rasterizar las 23 páginas.
+- Portada, texto a dos columnas, 20 tablas, 9 figuras, fórmulas, apéndices y 101 referencias fueron inspeccionados tras rasterizar las 24 páginas.
+- Los 29 elementos visuales incluidos tienen `caption`, fuente explícita, etiqueta única y al menos una referencia natural desde el cuerpo o el anexo correspondiente; no quedan tablas ni figuras huérfanas.
 - Las tablas del ensemble y de resultados ampliados son legibles a tamaño normal.
 - Las capturas de etiquetado y producción ocupan el ancho útil y conservan texto reconocible.
 - Los apéndices y la bibliografía no contienen páginas vacías ni elementos cortados.

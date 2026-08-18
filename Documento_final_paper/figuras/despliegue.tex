@@ -7,12 +7,12 @@
   store/.style={box,fill=purple!8,text width=28mm},
   arr/.style={-{Stealth[length=1.8mm]},thick}
 ]
-\node[input] (entry) {Texto o URL\\con subtítulos};
+\node[input] (entry) {Texto o dirección web\\con subtítulos};
 \node[input,right=6mm of entry] (prep) {Limpieza y chunks\\con tiempos};
 \node[model,right=8mm of prep,yshift=21mm] (classic) {Clásico ganador\\logística ($C=0{,}5$)};
-\node[model,right=8mm of prep,yshift=7mm] (trans) {Transformer ganador\\cascada E5 v2};
+\node[model,right=8mm of prep,yshift=7mm] (trans) {Transformer ganador\\cascada E5 segura};
 \node[model,right=8mm of prep,yshift=-7mm] (qwen) {Qwen ganador\\Qwen3--LoRA};
-\node[model,right=8mm of prep,yshift=-21mm] (ens) {Ensemble ganador\\promedio suave};
+\node[model,right=8mm of prep,yshift=-21mm] (ens) {Ensemble ganador\\regla suave\\optimizada};
 \draw[arr] (entry)--(prep);
 \foreach \m in {classic,trans,qwen,ens}{\draw[arr] (prep.east) -- ++(4mm,0) |- (\m.west);}
 \node[human,right=16mm of qwen,yshift=7mm] (decision) {Resultado elegido\\categorías, scores\\y razón de revisión};

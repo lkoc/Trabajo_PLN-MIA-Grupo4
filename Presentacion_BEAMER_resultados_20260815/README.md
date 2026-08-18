@@ -18,7 +18,7 @@ Nueva versión independiente de la presentación Beamer. No modifica la carpeta 
 - assets/: figuras de resultados y capturas usadas.
 - datos_fuente/: tablas CSV copiadas desde los últimos resultados de 03_07a.
 - FUENTES_Y_TRAZABILIDAD.md: correspondencia entre afirmaciones, cifras y fuentes.
-- AUDITORIA_FINAL_VISUAL.md: revisión visual y gráfica de las 59 páginas renderizadas.
+- AUDITORIA_FINAL_VISUAL.md: revisión visual y gráfica de las 61 páginas renderizadas.
 - AUDITORIA_FINAL_REFERENCIAS.md: control de autores, referencias y citas de la versión final.
 
 ## Compilación
@@ -27,9 +27,9 @@ Desde esta carpeta:
 
     latexmk -pdf -interaction=nonstopmode -halt-on-error presentacion_resultados_finales.tex
 
-La presentación usa resultados de 03_07 y 03_07a disponibles localmente el 15 de agosto de 2026. Las capturas documentan los entornos de etiquetado y producción; la de producción refleja el selector v2.1 con clásico, Transformer, Qwen y ensemble, pero no se usa como evidencia de desempeño.
+La presentación usa resultados de 03_07, 03_07a y 03_07b disponibles localmente el 17 de agosto de 2026. Las capturas documentan los entornos de etiquetado y producción; la de producción refleja el selector v2.1 con clásico, Transformer, Qwen y ensemble, pero no se usa como evidencia de desempeño.
 
-La versión compilada contiene 59 páginas: portada, ocho separadores de capítulo, 43 diapositivas temáticas —incluidos el índice, un capítulo inicial de estado del arte y enfoques, la estadística descriptiva del corpus, la explicación diferenciada de los entrenamientos Qwen, la explicación de métricas, la comparación externa y los enlaces operativos— y siete páginas de referencias.
+La versión compilada contiene 61 páginas: portada, ocho separadores de capítulo, 45 diapositivas temáticas —incluidos el índice, la formulación ampliada del problema, un capítulo inicial de estado del arte y enfoques, la estadística descriptiva del corpus, la explicación diferenciada de los entrenamientos Qwen, la metodología de optimización de ensembles, la explicación de métricas, la comparación externa y los enlaces operativos— y siete páginas de referencias.
 
 Los botones de conclusiones abren los servicios locales activos en
 <http://127.0.0.1:8765/> (etiquetado) y <http://127.0.0.1:8876/> (producción).

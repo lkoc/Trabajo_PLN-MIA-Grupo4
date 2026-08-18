@@ -12,19 +12,19 @@
 ]
 % La mayor separación vertical y la tipografía ampliada priorizan la lectura
 % al ancho de una página A4 de una columna.
-\node[lane] at (-1.75,1.05) {Evidencia y anotación};
+\node[lane] at (-1.75,1.05) {Evidencia y etiquetado};
 \node[class] (video) at (0,0) {Video público};
 \node[class] (subtitle) at (6,0) {Pista de subtítulos};
 \node[class] (chunk) at (12,0) {Chunk de evidencia};
-\node[label] (annotation) at (18,0) {Anotación};
+\node[label] (labeling) at (18,0) {Etiquetado};
 \draw[relation] (video.east)--node[edgeword,above]{contiene}(subtitle.west);
 \draw[relation] (subtitle.east)--node[edgeword,above]{segmenta}(chunk.west);
-\draw[relation] (chunk.east)--node[edgeword,above]{anota}(annotation.west);
+\draw[relation] (chunk.east)--node[edgeword,above]{etiqueta}(labeling.west);
 
 \node[artifact] (dataset) at (12,-2.6) {Artefacto de datos\\versión y partición};
 \node[label] (concept) at (18,-2.6) {Concepto de\\moderación};
 \draw[relation] (chunk.south)--node[edgeword,right]{integra}(dataset.north);
-\draw[relation] (annotation.south)--node[edgeword,right]{clasifica}(concept.north);
+\draw[relation] (labeling.south)--node[edgeword,right]{clasifica}(concept.north);
 
 \node[lane] at (-1.75,-4.2) {Taxonomía operativa};
 \node[label] (safe) at (6,-5.3) {Estado \texttt{SEGURO}\\derivado};

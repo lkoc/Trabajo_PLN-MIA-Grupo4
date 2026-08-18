@@ -419,6 +419,7 @@ full fine-tuning de cuatro épocas.
 | 03_04 | E5, 1 pasada | 22 binarias | completo | medio | hoy duplica `flat_e5` |
 | 03_05 | Qwen Base, 1 pasada | 22 binarias | LoRA + cabeza | alto | más latencia; sin prompt |
 | 03_06 | Qwen Base, 1 pasada | 22 binarias estructuradas | LoRA desde 03_05; full histórico separado | alto | peso de penalización y dependencia del padre |
+| 03_06b | Qwen3-0.6B conversacional | uno de cinco JSON permitidos | LoRA causal con 800 ejemplos toy | alto | experimento aislado; no participa en 03_07 |
 
 La AUPRC es preferible como lectura principal con salidas dañinas desbalanceadas
 [15]. La selección usa únicamente `validation`; reutilizar test para escoger
@@ -471,6 +472,8 @@ modifica y qué combinación pertenece al proyecto.
 | 03_04 | Morgan *et al.* aplicaron Transformers multitarea a toxicidad, engagement y afirmaciones factuales [23] | representación compartida para objetivos relacionados | sus tres objetivos y datos alemanes no son nuestras categorías gruesas, finas y flags; sus resultados no prueban transferencia aquí |
 | 03_05 | Christodoulou ajustó Mistral para clasificación de odio, objetivo y postura mediante LoRA y *prompt tuning* [24] | PEFT/LoRA sobre un LLM usado como clasificador | aquí se usa Qwen3-0.6B-Base, un adaptador único de 22 salidas y no se usa *prompt tuning* |
 | 03_05 | Hasan *et al.* combinaron términos TF–IDF, prompts de clasificación y LoRA sobre Llama para odio en bengalí [25] | adaptación LoRA de un LLM a moderación | `03_05` usa Qwen Base como clasificador de 22 logits y no recibe prompt ni aplica su selección TF–IDF de términos |
+| 03_05 | Kmainasi *et al.* especializaron un LLM multilingüe para analizar noticias y contenido de redes [26] | adaptación de un LLM a varios idiomas y dominios sociales | el proyecto usa un Qwen mucho menor y lo ajusta como clasificador multietiqueta local; no reproduce LlamaLens |
+| 03_05 | Ghorbanpour *et al.* evaluaron *prompting* cero y pocos ejemplos para detectar odio en varios idiomas [27] | uso multilingüe de LLM para detección de odio | `03_05` entrena LoRA y una cabeza de 22 logits; no es un esquema de *prompting* cero o pocos ejemplos |
 | 03_06 | HiAGM [10] y HMTL [22] incorporan relaciones jerárquicas dentro del aprendizaje | uso de estructura de etiquetas para reducir incoherencias | la penalización `0.2·p(SEGURO)·max p(daño)` es una formulación local; no se atribuye a esos autores |
 
 Los diagramas Mermaid de este documento son esquemas originales elaborados a

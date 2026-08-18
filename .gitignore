@@ -137,3 +137,14 @@ resultados/drive_staging/**/publications/run_outputs-*.part*
 datos/raw/subtitulos/
 datos/raw/transcripts_raw.jsonl
 datos/raw/transcripts_cache/
+
+# Claves privadas de procedencia: nunca se publican ni versionan.
+datos/private/
+
+# Dataset de publicación: los archivos pesados se conservan localmente y en
+# Google Drive; GitHub versiona su documentación y el enlace de descarga.
+/Publicación_Troome/Grupo_4_Dataset_Etiquetado_Final.zip
+/Publicación_Troome/Grupo_4_Dataset_Etiquetado_Final_Documentado.zip
+/Publicación_Troome/Grupo_4_Dataset_Etiquetado_Final/dataset_etiquetado_final_173240.json
+/Publicación_Troome/Grupo_4_Dataset_Etiquetado_Final/dataset_etiquetado_final_documentado_173240.json
+/resultados/publicacion_dataset_documentado/dataset_etiquetado_final_documentado_173240.json

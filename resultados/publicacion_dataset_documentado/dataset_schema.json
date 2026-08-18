@@ -1,0 +1,357 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dataset etiquetado final documentado — Grupo 4",
+  "description": "Contrato de un arreglo JSON con 173 240 chunks etiquetados y localización temporal verificable.",
+  "type": "array",
+  "minItems": 173240,
+  "maxItems": 173240,
+  "items": {
+    "type": "object",
+    "required": [
+      "schema_version",
+      "taxonomy_version",
+      "publication_metadata_version",
+      "release_id",
+      "provenance_token",
+      "provenance_key_commitment",
+      "chunk_id",
+      "video_id",
+      "video_url",
+      "start_seconds",
+      "end_seconds",
+      "start_timestamp",
+      "end_timestamp",
+      "timestamp_url",
+      "chunker_version",
+      "chunking_signature",
+      "text_sha256",
+      "transcript_sha256",
+      "temporal_verification",
+      "source_partition",
+      "source_partition_sha256",
+      "channel_id",
+      "channel_title",
+      "text",
+      "coarse_labels",
+      "fine_labels",
+      "flags_reference_only",
+      "coarse_observed_mask",
+      "fine_observed_mask",
+      "flags_observed_mask",
+      "label_source",
+      "prompt_sha256",
+      "sample_weight",
+      "campaign",
+      "split",
+      "channel_split",
+      "needs_review",
+      "training_eligible",
+      "decision_status",
+      "legacy_coarse_labels",
+      "label_source_original",
+      "migration_warning"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "type": "string",
+        "const": "2.1.0",
+        "description": "Versión del contrato de etiquetas usado para entrenar."
+      },
+      "taxonomy_version": {
+        "type": "string",
+        "const": "2.1.0",
+        "description": "Versión de la taxonomía de moderación."
+      },
+      "publication_metadata_version": {
+        "type": "string",
+        "const": "1.1.0",
+        "description": "Versión de los metadatos editoriales añadidos al paquete."
+      },
+      "release_id": {
+        "type": "string",
+        "const": "grupo4-moderacion-youtube-peru-2026-08-17-v1.1.0",
+        "description": "Identificador público e inmutable de esta edición del dataset."
+      },
+      "provenance_token": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$",
+        "description": "HMAC-SHA256 privado que vincula release_id, chunk_id y text_sha256 sin modificar la observación."
+      },
+      "provenance_key_commitment": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$",
+        "description": "SHA-256 público de la clave HMAC privada; permite verificar una revelación posterior de la clave."
+      },
+      "chunk_id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{11}_[0-9a-f]{20}$",
+        "description": "Identificador estable del chunk; vincula video, tiempos, texto y configuración de troceado."
+      },
+      "video_id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{11}$",
+        "description": "Identificador de once caracteres del video de YouTube."
+      },
+      "video_url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Enlace canónico reconstruido a partir de video_id."
+      },
+      "start_seconds": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Inicio exacto del chunk en segundos desde el comienzo del video."
+      },
+      "end_seconds": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Fin exacto del chunk en segundos desde el comienzo del video."
+      },
+      "start_timestamp": {
+        "type": "string",
+        "pattern": "^[0-9]{2,}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}$",
+        "description": "Inicio legible con formato HH:MM:SS.mmm."
+      },
+      "end_timestamp": {
+        "type": "string",
+        "pattern": "^[0-9]{2,}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}$",
+        "description": "Fin legible con formato HH:MM:SS.mmm."
+      },
+      "timestamp_url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Enlace al video iniciado en el segundo entero inmediatamente anterior o igual al inicio exacto."
+      },
+      "chunker_version": {
+        "type": "string",
+        "const": "2.2.0",
+        "description": "Versión del algoritmo que materializó el chunk temporal."
+      },
+      "chunking_signature": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$",
+        "description": "SHA-256 de la versión y configuración completa del troceador."
+      },
+      "text_sha256": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$",
+        "description": "SHA-256 del texto normalizado en minúsculas Unicode."
+      },
+      "transcript_sha256": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$",
+        "description": "SHA-256 de la secuencia temporal y textual normalizada de la transcripción usada por el troceador."
+      },
+      "temporal_verification": {
+        "type": "string",
+        "const": "exact_chunk_id_and_text",
+        "description": "Indica coincidencia exacta simultánea del chunk_id regenerado y del texto."
+      },
+      "source_partition": {
+        "type": "string",
+        "description": "Ruta relativa de la partición de transcripciones que permitió regenerar la localización."
+      },
+      "source_partition_sha256": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$",
+        "description": "SHA-256 de la partición fuente indicada en source_partition."
+      },
+      "channel_id": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Identificador del canal, si estaba disponible."
+      },
+      "channel_title": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Nombre del canal, si estaba disponible."
+      },
+      "text": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Texto normalizado del fragmento de subtítulos."
+      },
+      "coarse_labels": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 5,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "enum": [
+            "SEGURO",
+            "RACISMO_DISCRIMINACION",
+            "ATAQUE_POR_GENERO_IDENTIDAD",
+            "ACOSO_AMENAZA",
+            "CONTENIDO_SEXUAL"
+          ]
+        },
+        "description": "Una o más etiquetas gruesas; SEGURO es excluyente."
+      },
+      "fine_labels": {
+        "type": "array",
+        "maxItems": 14,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "enum": [
+            "seguro",
+            "seguro_ironia_marcada",
+            "racismo_etnico_explicito",
+            "racismo_encubierto",
+            "clasismo_racial",
+            "discriminacion_regional",
+            "racismo_linguistico",
+            "misoginia_acoso_genero",
+            "homofobia_transfobia",
+            "acoso_personal",
+            "amenaza_directa",
+            "sexual_explicito",
+            "sexual_cosificacion",
+            "sexual_no_consensual"
+          ]
+        },
+        "description": "Etiquetas finas observadas; una lista vacía puede coexistir con máscara parcial."
+      },
+      "flags_reference_only": {
+        "type": "array",
+        "maxItems": 3,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "enum": [
+            "humor_encubridor",
+            "contexto_necesario",
+            "ironia_ambigua"
+          ]
+        },
+        "description": "Indicadores contextuales de referencia, no objetivos sancionadores."
+      },
+      "coarse_observed_mask": {
+        "type": "array",
+        "minItems": 5,
+        "maxItems": 5,
+        "items": {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "description": "Máscara de observación de las cinco salidas gruesas en el orden de la taxonomía."
+      },
+      "fine_observed_mask": {
+        "type": "array",
+        "minItems": 14,
+        "maxItems": 14,
+        "items": {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "description": "Máscara de observación de las catorce salidas finas."
+      },
+      "flags_observed_mask": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "description": "Máscara de observación de los tres flags contextuales."
+      },
+      "label_source": {
+        "type": "string",
+        "enum": [
+          "deepseek_remote_historical_recovered",
+          "human_modified",
+          "llm_remote_review_historical_recovered",
+          "deepseek_remote",
+          "llm_remote_review",
+          "human_accepted"
+        ],
+        "description": "Procedencia efectiva de la etiqueta tras aplicar revisión y precedencia."
+      },
+      "prompt_sha256": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$",
+        "description": "SHA-256 del prompt de etiquetado asociado."
+      },
+      "sample_weight": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "description": "Peso de la muestra usado por el contrato de entrenamiento."
+      },
+      "campaign": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Campaña de revisión específica; nulo en este snapshot."
+      },
+      "split": {
+        "type": "string",
+        "enum": [
+          "train",
+          "validation",
+          "test"
+        ],
+        "description": "Partición experimental final conservada antes del entrenamiento."
+      },
+      "channel_split": {
+        "type": "string",
+        "enum": [
+          "train",
+          "validation",
+          "test"
+        ],
+        "description": "Partición auxiliar por canal para análisis de robustez."
+      },
+      "needs_review": {
+        "type": "boolean",
+        "const": false,
+        "description": "Marca de revisión pendiente; falsa para todas las filas publicadas."
+      },
+      "training_eligible": {
+        "type": "boolean",
+        "const": true,
+        "description": "Indica que la fila fue elegible para el entrenamiento final."
+      },
+      "decision_status": {
+        "type": "string",
+        "const": "resolved",
+        "description": "Estado consolidado de la decisión de etiquetado."
+      },
+      "legacy_coarse_labels": {
+        "type": "array",
+        "maxItems": 0,
+        "description": "Etiquetas gruesas heredadas; vacío tras la migración consolidada."
+      },
+      "label_source_original": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Fuente anterior a una migración, cuando corresponde."
+      },
+      "migration_warning": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Advertencia de migración; nula en las filas publicadas."
+      }
+    }
+  }
+}

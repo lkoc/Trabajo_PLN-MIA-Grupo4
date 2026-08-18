@@ -8,10 +8,11 @@
 
 | Control | Resultado |
 |---|---:|
-| Llamadas `\cite{...}` | 92 |
-| Apariciones de claves dentro de las llamadas | 133 |
-| Claves bibliográficas únicas citadas | 54 |
-| Entradas incluidas en la bibliografía final | 54 |
+| Llamadas `\cite{...}` | 98 |
+| Apariciones de claves dentro de las llamadas | 140 |
+| Claves bibliográficas únicas citadas | 57 |
+| Entradas incluidas en la bibliografía final | 57 |
+| DOI canónicos visibles en la bibliografía | 38 |
 | Claves citadas ausentes de `referencias.bib` | 0 |
 | Citas indefinidas en LaTeX | 0 |
 | Advertencias de BibTeX | 0 |
@@ -47,6 +48,8 @@ Se incorporó una precisión metodológica necesaria: esas fuentes sustentan las
 ## Controles nominales
 
 Se contrastaron los nombres mostrados en la nueva tabla taxonómica con las entradas de `referencias.bib` y con las secciones `02_bases.tex` y `04_metodologia_datos.tex` del artículo. Se verificaron en particular las autorías compuestas susceptibles de abreviarse o confundirse: Zavala–Zariquiey, Zavala–Back, Almeida–Zavala, Lovón-Cueva–Lovón-Cueva y Zeinert–Inie–Derczynski.
+
+Las 57 claves son un subconjunto de las 101 referencias verificadas en la auditoría final del artículo. Sus entradas se sincronizaron con los metadatos corregidos del manuscrito: DOI en forma `https://doi.org/`, ISBN de *Racismo y lenguaje* y catálogos comprobables para Callirgos, Zavala y Zariquiey. La recompilación final no dejó errores de BibTeX, citas indefinidas ni cajas `Overfull`.
 
 ## Dictamen
 
