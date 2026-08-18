@@ -171,28 +171,52 @@ La ontología liviana distingue evidencia, etiquetado, categoría operativa, pre
 \section{Trazabilidad y disponibilidad}
 \label{app:disponibilidad}
 
-La Tabla~\ref{tab:artefactos_app} identifica la fuente canónica usada para cada bloque del manuscrito y separa resultados, selección y evaluación final.
+La Tabla~\ref{tab:artefactos_app} identifica la fuente canónica usada para cada bloque del manuscrito y separa resultados, selección y evaluación final. Se usan nombres breves en la primera columna y se reserva la columna central, más ancha, para las rutas y su contenido.
 
 \begin{table}[H]
 \centering
 \caption{Artefactos canónicos que sustentan cada bloque de resultados vigente. Fuente: elaboración propia a partir del inventario reproducible del proyecto.}
 \label{tab:artefactos_app}
 \small
-\begin{tabularx}{\textwidth}{p{50mm}X p{45mm}}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{38mm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{39mm}@{}}
 \toprule
-\textbf{Artefacto} & \textbf{Contenido} & \textbf{Uso en el artículo} \\
+\textbf{Artefacto} & \textbf{Fuente canónica y contenido} & \textbf{Aporte al artículo} \\
 \midrule
-\path{docs/artefactos/auditoria_estado_final_182461.json} & Totales elegibles, etiquetas, videos, particiones y huella de auditoría. & Corpus y etiquetado. \\
-\path{docs/OPTIMIZACION_LONGITUD_CHUNKS.md} y \path{docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md} & Comparación de 15--35 s, perfiles clásico y neuronal, bootstrap y decisión congelada. & Longitud temporal de 30 s. \\
-Matrices de comparación individual y optimización de ensembles & Ranking y comparación anidada de siete variantes, pesos, bootstrap y hashes de entrada. & Selección en el conjunto de validación. \\
-\path{resultados/modelos/seleccion_congelada.json} & Miembros, calibradores, umbrales y política \texttt{NEEDS\_REVIEW}. & Especificación desplegable. \\
-\path{resultados/modelos/test_final_abierto_una_vez.json} & Test natural, vista 4:1 y métricas selectivas. & Evaluación final. \\
-Reporte reproducible de comparación de modelos & Tablas y análisis crítico legible. & Control editorial y reproducibilidad. \\
+\textbf{Auditoría del corpus} & \path{docs/artefactos/auditoria_estado_final_182461.json}. Totales elegibles, etiquetas, videos, particiones y huella de auditoría. & Corpus y etiquetado. \\
+\addlinespace[2pt]
+\textbf{Longitud temporal} & \path{docs/OPTIMIZACION_LONGITUD_CHUNKS.md} y \path{docs/ROBUSTEZ_NEURONAL_LONGITUD_CHUNKS.md}. Comparación de 15--35 s, perfiles clásico y neuronal, bootstrap y decisión congelada. & Elección de chunks de 30 s. \\
+\addlinespace[2pt]
+\textbf{Comparación y ensembles} & \path{resultados/modelos/comparacion_individual_ensemble_validation.json} y \path{resultados/modelos/optimizacion_ensembles/optimizacion_ensembles_validation.json}. Ranking anidado, coeficientes, bootstrap y hashes de entrada. & Selección en el conjunto de validación. \\
+\addlinespace[2pt]
+\textbf{Ensemble congelado} & \path{resultados/modelos/seleccion_congelada.json}. Miembros, calibradores, umbrales y política \texttt{NEEDS\_REVIEW}. & Especificación desplegable. \\
+\addlinespace[2pt]
+\textbf{Evaluación final} & \path{resultados/modelos/test_final_abierto_una_vez.json}. Test natural, vista 4:1 y métricas selectivas. & Apertura única del test. \\
+\addlinespace[2pt]
+\textbf{Reporte reproducible} & \path{resultados/modelos/REPORTE_COMPARACION_MODELOS_03_07.md}. Tablas finales y análisis crítico de la comparación integrada. & Control editorial y reproducibilidad. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Para replicar el entrenamiento solo se requieren los \href{https://github.com/lkoc/Trabajo_PLN-MIA-Grupo4/tree/main/flujo/03_entrenamiento}{cuadernos y configuraciones} y el \href{https://drive.google.com/file/d/1-fAxh7Lj0RE_Imh2SL3fKPcc_TX2R_yJ/view?usp=drivesdk}{ZIP del dataset final documentado}. El ZIP ocupa 63\,408\,649 bytes (SHA-256: \path{e34f96c8777262f55cb7eafff5b6f2482981ba181fca4217b3f097f876545c24}) e incluye el JSON de 396\,581\,052 bytes (SHA-256: \path{f0661dc3778b5e42a1e65e844a5c5db70fcee414685a44fb9738e17657859a49}), su esquema y el validador. La Tabla~\ref{tab:artefactos_app} localiza los parámetros finales. No se requieren subtítulos crudos, cachés, corpus intermedios ni pesos del proyecto. La reutilización exige revisar licencias, privacidad y términos de YouTube \cite{youtube2023terms,aoir2020ethics}.
+Para que los accesos puedan copiarse incluso si el visor no resalta los hipervínculos, se muestran las direcciones completas:
+
+\begin{itemize}
+  \setlength{\itemsep}{3pt}
+  \setlength{\parsep}{0pt}
+  \setlength{\parskip}{0pt}
+  \item \textbf{Dataset final, ZIP en Google Drive:}\\
+  \url{https://drive.google.com/file/d/1-fAxh7Lj0RE_Imh2SL3fKPcc_TX2R_yJ/view?usp=drivesdk}
+  \item \textbf{Carpeta del dataset en Google Drive:}\\
+  \url{https://drive.google.com/drive/folders/1HerBZnhCpazblQn-SXzcG6RYdy2W-nF4}
+  \item \textbf{Cuadernos y configuraciones:}\\
+  \url{https://github.com/lkoc/Trabajo_PLN-MIA-Grupo4/tree/main/flujo/03_entrenamiento}
+  \item \textbf{Resultados publicados por el cuaderno 03\_07 en Google Drive:}\\
+  \url{https://drive.google.com/drive/folders/1V-oHSklbHQ4sisVPdwayF-Tv66b6av0-}
+  \item \textbf{Artefactos pesados del proyecto en Google Drive:}\\
+  \url{https://drive.google.com/drive/folders/1H3PKr7CWd-RwavZgEnfLhh94eq-NO9P3}
+\end{itemize}
+
+Los cuadernos tienen a GitHub como fuente canónica para evitar copias divergentes; Google Drive conserva el dataset final y los resultados pesados de las ejecuciones. Para replicar el entrenamiento basta esa carpeta de cuadernos y el ZIP documentado. El ZIP ocupa 63\,408\,649 bytes (SHA-256: \path{e34f96c8777262f55cb7eafff5b6f2482981ba181fca4217b3f097f876545c24}) e incluye el JSON de 396\,581\,052 bytes (SHA-256: \path{f0661dc3778b5e42a1e65e844a5c5db70fcee414685a44fb9738e17657859a49}), su esquema y el validador. La Tabla~\ref{tab:artefactos_app} localiza los parámetros finales. No se requieren subtítulos crudos, cachés ni corpus intermedios. La reutilización exige revisar licencias, privacidad y términos de YouTube \cite{youtube2023terms,aoir2020ethics}.
 
 \clearpage
 \twocolumn

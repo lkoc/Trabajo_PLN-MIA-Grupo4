@@ -16,15 +16,15 @@ La comparación contiene 28 candidatos individuales y cinco reglas base de ensem
 \toprule
 \textbf{Tipo} & \textbf{BA} & \textbf{AUPRC} & \textbf{F1} & \textbf{FNR} & \textbf{FPR} \\
 \midrule
-Clásico, logística $C=0,5$ & 0,80 & 0,48 & 0,50 & 0,18 & 0,22 \\
-Transformer, cascada segura & 0,82 & 0,45 & 0,52 & 0,16 & 0,21 \\
-Qwen3--LoRA & 0,83 & 0,52 & 0,55 & 0,17 & 0,17 \\
-\textbf{Ensemble suave optimizado} & \textbf{0,837} & \textbf{0,551} & \textbf{0,562} & \textbf{0,150} & 0,177 \\
+Clásico, logística $C=0,5$\textsuperscript{a} & 0,80 & 0,48 & 0,50 & 0,18 & 0,22 \\
+Transformer, cascada segura\textsuperscript{b} & 0,82 & 0,45 & 0,52 & 0,16 & 0,21 \\
+Qwen3--LoRA\textsuperscript{c} & 0,83 & 0,52 & 0,55 & 0,17 & 0,17 \\
+\textbf{Ensemble suave optimizado}\textsuperscript{d} & \textbf{0,837} & \textbf{0,551} & \textbf{0,562} & \textbf{0,150} & 0,177 \\
 \bottomrule
 \end{tabular}%
 }
 \begin{minipage}{.98\columnwidth}\vspace{1mm}\footnotesize
-\emph{Nota:} AUPRC y F1 son promedios macro de los cuatro daños; BA, FNR y FPR corresponden a \texttt{ANY\_DAMAGE} OOF a cobertura completa. Hardware de ajuste: clásico, CPU Intel x86\_64 con cuatro hilos; Transformer, NVIDIA L4 de 23~GiB en BF16; Qwen, NVIDIA A100-SXM4 de 40~GB en BF16; ensemble, CPU AMD Ryzen 7 8845HS. Las GPU corresponden a sesiones independientes de Google Colab y no trabajaron en paralelo.
+\emph{Nota:} AUPRC y F1 son promedios macro de los cuatro daños; BA, FNR y FPR corresponden a \texttt{ANY\_DAMAGE} OOF a cobertura completa. Hardware: \textsuperscript{a}CPU Intel64, cuatro hilos; \textsuperscript{b}NVIDIA L4 de 23~GiB; \textsuperscript{c}NVIDIA A100-SXM4 de 40~GB; \textsuperscript{d}CPU AMD Ryzen 7 8845HS. La Tabla~\ref{tab:hardware_tiempos} detalla las tareas y los tiempos.
 \end{minipage}
 \end{table}
 
@@ -149,3 +149,30 @@ Ruta automática & 72,7\% & 0,925 & 0,902 & 0,948 & 96 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsection{Hardware y tiempo de ejecución}
+
+El hardware se asignó según la carga. El etiquetado automático usó la API remota de DeepSeek: el cuaderno local envió solicitudes y validó el JSON, pero el proveedor no informó el acelerador de sus servidores. La regresión logística y la optimización del ensemble se ejecutaron en CPU porque operan, respectivamente, sobre matrices dispersas y sobre matrices pequeñas de scores ya calculados. Los ajustes densos se realizaron en sesiones independientes de Google Colab: una NVIDIA L4 para las dos redes E5 y una NVIDIA A100-SXM4 de 40~GB para Qwen3--LoRA. En ambos casos se usó CUDA con BF16 para reducir memoria y tiempo de cálculo; las GPU no trabajaron en paralelo.
+
+La Tabla~\ref{tab:hardware_tiempos} resume los tiempos de pared conservados en los manifiestos, resúmenes de ajuste y salidas de los cuadernos. No constituye un \emph{benchmark} entre equipos: las filas procesan tareas y volúmenes distintos. En particular, el tiempo de DeepSeek mide la respuesta del servicio completo y no permite separar red, cola y cómputo del proveedor. La repetición cronometrada del ensemble fue de solo lectura, reprodujo el mismo ganador y no abrió nuevamente el test.
+
+\begin{table}[!t]
+\centering
+\caption{Hardware efectivo y desempeño temporal de las etapas de etiquetado y ajuste. Fuente: elaboración propia a partir de los manifiestos de ejecución y las salidas reproducibles de los cuadernos.}
+\label{tab:hardware_tiempos}
+\scriptsize
+\renewcommand{\arraystretch}{1.14}
+\begin{tabularx}{\columnwidth}{@{}p{.52\columnwidth}X@{}}
+\toprule
+\textbf{Etapa, hardware y alcance} & \textbf{Tiempo o rendimiento registrado} \\
+\midrule
+\textbf{Etiquetado DeepSeek Flash/Pro.} API remota; acelerador del proveedor no informado. El cliente solo orquestó y validó. Calibración de 2\,000 respuestas y tramo Pro de 40\,704 etiquetas nuevas. & Calibración: 219,8~s. Pro: 4\,741,9~s (79,0~min), 515,0 chunks/min. \\
+\textbf{Clásico $C=0,5$\textsuperscript{a}.} CPU Intel64 Family 6 Model 170, 14 procesadores lógicos/cuatro hilos; 51\,205 filas y 225\,000 columnas TF--IDF. & TF--IDF: 53,9~s; ajuste: 33,3~s; validación: 5,2~s. \\
+\textbf{Cascada E5\textsuperscript{b}.} NVIDIA L4 de 23~GiB, CUDA 12.8 y BF16; dos redes, 51\,205 filas y tres épocas por red. & Compuerta: 1\,209,7~s; rama: 1\,224,5~s; total: 2\,434,2~s (40,6~min). \\
+\textbf{Qwen3--LoRA\textsuperscript{c}.} NVIDIA A100-SXM4 de 40~GB, CUDA 12.8 y BF16; 51\,205 filas, detenido tras la época 3. & 1\,438,2~s (24,0~min); 142,4 muestras/s. \\
+\textbf{Ensemble optimizado\textsuperscript{d}.} CPU AMD Ryzen 7 8845HS, 8 núcleos/16 hilos y 28,83~GiB; 10\,600 filas, 716 videos, 5$\times$5, 861 ternas y bootstrap. & Carga: 26,1~s; optimización: 209,3~s; total: 235,5~s (3,9~min). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\FloatBarrier

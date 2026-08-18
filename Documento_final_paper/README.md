@@ -60,4 +60,4 @@ Desde esta carpeta:
 latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error paper_moderador_contenido_youtube_ieee.tex
 ```
 
-El PDF vigente tiene 23 páginas A4. El cierre exige cero errores, citas o referencias indefinidas y cajas `Overfull`, además de inspección visual de todas las páginas.
+El PDF vigente tiene 24 páginas A4. El cierre exige cero errores, citas o referencias indefinidas y cajas `Overfull`, además de inspección visual de todas las páginas.

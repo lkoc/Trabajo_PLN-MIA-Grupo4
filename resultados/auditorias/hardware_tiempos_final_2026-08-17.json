@@ -1,0 +1,60 @@
+{
+  "captured_on": "2026-08-17",
+  "purpose": "Evidencia consolidada para la tabla de hardware y tiempos del artículo",
+  "measurements": [
+    {
+      "stage": "automatic_labeling_deepseek_flash_pro",
+      "hardware": "remote_api_provider_accelerator_not_disclosed",
+      "calibration_responses": 2000,
+      "calibration_elapsed_seconds": 219.843,
+      "pro_new_labels": 40704,
+      "pro_elapsed_seconds": 4741.879,
+      "pro_chunks_per_minute": 515.049,
+      "source": "flujo/02_etiquetado/02_01_etiquetado_deepseek_flash_pro.ipynb"
+    },
+    {
+      "stage": "classical_logistic_regression_c0p5",
+      "hardware": "Intel64 Family 6 Model 170 Stepping 4, 14 logical processors, 4 workers",
+      "train_rows": 51205,
+      "tfidf_columns": 225000,
+      "tfidf_elapsed_seconds": 53.936573700004374,
+      "fit_elapsed_seconds": 33.30697710000095,
+      "validation_inference_metrics_seconds": 5.160864700010279,
+      "source": "regularization_screen/runs/classical-54f7971c6000eae5/logistic_regression_c0p5/candidate.json"
+    },
+    {
+      "stage": "transformer_e5_safe_cascade",
+      "hardware": "NVIDIA L4, 23 GiB, CUDA 12.8, bfloat16",
+      "train_rows": 51205,
+      "epochs_per_network": 3,
+      "gate_train_runtime_seconds": 1209.7125,
+      "specialist_train_runtime_seconds": 1224.4804,
+      "total_train_runtime_seconds": 2434.1929,
+      "source": "runs/cascade_v2-af78eba77883921f/fit_summary.json"
+    },
+    {
+      "stage": "qwen3_lora",
+      "hardware": "NVIDIA A100-SXM4-40GB, CUDA 12.8, bfloat16",
+      "train_rows": 51205,
+      "stopped_after_epoch": 3,
+      "train_runtime_seconds": 1438.1651,
+      "train_samples_per_second": 142.418,
+      "source": "runs/qwen_lora-4aa5ce04df057144/fit_summary.json"
+    },
+    {
+      "stage": "optimized_soft_ensemble_read_only_reproduction",
+      "hardware": "AMD Ryzen 7 8845HS, 8 cores, 16 threads, 28.83 GiB RAM",
+      "validation_rows": 10600,
+      "videos": 716,
+      "outer_folds": 5,
+      "inner_folds": 5,
+      "simplex_weight_triplets": 861,
+      "load_seconds": 26.118077,
+      "optimization_seconds": 209.336127,
+      "total_seconds": 235.454205,
+      "winner_reproduced": "ensemble_soft_optimized",
+      "test_accessed": false,
+      "source": "flujo/03_entrenamiento/03_07b_optimizacion_ensembles.ipynb"
+    }
+  ]
+}

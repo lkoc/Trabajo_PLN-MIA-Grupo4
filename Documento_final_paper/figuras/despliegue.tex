@@ -21,5 +21,6 @@
 \node[store,below=8mm of review] (store) {Registro versionado\\modelo, evidencia\\y decisión};
 \draw[arr] (decision)--(review);
 \draw[arr] (review)--(store);
-\draw[arr,dashed] (store.south) -- ++(0,-5mm) -| node[pos=.55,below]{futura versión} (prep.south);
+\draw[arr,dashed] (store.south) -- ++(0,-5mm) -|
+  node[pos=.55,above=1.5mm,fill=white,inner sep=1pt]{versión futura} (prep.south);
 \end{tikzpicture}

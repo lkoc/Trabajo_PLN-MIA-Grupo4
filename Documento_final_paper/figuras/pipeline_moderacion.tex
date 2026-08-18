@@ -20,5 +20,10 @@
 \draw[arr] (compare)--(freeze);
 \draw[arr] (freeze)--(test);
 \draw[arr] (test)--(front);
-\draw[arr,dashed] (front.west) -- ++(-6mm,0) |- node[pos=.25,left]{versión futura} (data.south);
+\coordinate (feedbacklevel) at ($(source.south)!0.5!(source.south |- front.north)$);
+\coordinate (feedbackturn) at ($(front.west)+(-6mm,0)$);
+\draw[arr,dashed] (front.west) -- (feedbackturn)
+  -- (feedbackturn |- feedbacklevel)
+  -- node[midway,above=1mm,inner sep=0pt]{versión futura}
+  (feedbacklevel -| data.south) -- (data.south);
 \end{tikzpicture}
