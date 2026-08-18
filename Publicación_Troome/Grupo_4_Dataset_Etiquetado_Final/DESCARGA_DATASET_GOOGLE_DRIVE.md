@@ -6,8 +6,7 @@ supera el límite de tamaño de GitHub:
 - Archivo: `Grupo_4_Dataset_Etiquetado_Final_Documentado.zip`
 - Descarga: <https://drive.google.com/file/d/1-fAxh7Lj0RE_Imh2SL3fKPcc_TX2R_yJ/view?usp=drivesdk>
 - Carpeta: <https://drive.google.com/drive/folders/1HerBZnhCpazblQn-SXzcG6RYdy2W-nF4>
-- Tamaño del ZIP: 63 066 165 bytes
-- SHA-256 del ZIP: `c67ab95b2a3bf34a2426ca2502adb79ea3176fbaa65c7061a29512c8c6cb0ffc`
+- Verificación del contenido: `MANIFEST.sha256`
 - JSON incluido: `dataset_etiquetado_final_documentado_173240.json`
 - Tamaño del JSON: 396 581 052 bytes
 - SHA-256 del JSON: `f0661dc3778b5e42a1e65e844a5c5db70fcee414685a44fb9738e17657859a49`

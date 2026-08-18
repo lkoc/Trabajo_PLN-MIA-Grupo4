@@ -12,8 +12,7 @@ Autores: Luis Enrique Koc Góngora; Alex Felipe Mancilla Antay; Herbert Antonio 
 
 El JSON completo no se almacena en GitHub por su tamaño. El paquete documentado
 se descarga desde [Google Drive](https://drive.google.com/file/d/1-fAxh7Lj0RE_Imh2SL3fKPcc_TX2R_yJ/view?usp=drivesdk).
-El ZIP ocupa 63 066 165 bytes y su SHA-256 es
-`c67ab95b2a3bf34a2426ca2502adb79ea3176fbaa65c7061a29512c8c6cb0ffc`.
+La integridad de los archivos del paquete se verifica con `MANIFEST.sha256`.
 Al descomprimirlo se obtiene el JSON de 396 581 052 bytes, cuya huella SHA-256
 es `f0661dc3778b5e42a1e65e844a5c5db70fcee414685a44fb9738e17657859a49`,
 junto con el esquema, el manifiesto, la procedencia y el validador. El acceso
